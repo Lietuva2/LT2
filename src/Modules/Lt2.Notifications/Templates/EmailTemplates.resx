@@ -47,6 +47,7 @@
 <data name="Feedback.Notice.Subject" xml:space="preserve"><value>Lietuva 2.0: nauji atsiliepimai ({0})</value></data>
 <data name="Feedback.Notice.Body" xml:space="preserve"><value>Naujų atsiliepimų: {0}. Juos rasite {1} (reikia darbuotojo prieigos rakto).</value></data><data name="Email.Privacy" xml:space="preserve"><value>Kaip tvarkome duomenis, rašoma privatumo pranešime: {0}</value></data>
 <data name="Email.WithoutLink" xml:space="preserve"><value>Nenorite spausti nuorodos laiške? Naršyklėje patys atverkite {0} ir įveskite šį kodą:</value></data>
+  <data name="Email.StopNotices" xml:space="preserve"><value>Nebegauti šių laiškų</value></data>
   <data name="Email.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
 <data name="Digest.Subject" xml:space="preserve"><value>Lietuva 2.0 suvestinė Seimo nariams, {0}</value></data>

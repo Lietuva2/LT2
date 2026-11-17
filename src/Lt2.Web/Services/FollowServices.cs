@@ -81,6 +81,16 @@ internal sealed class ServerFollowsApi(IFollows follows, IFollowerCounts followe
         UserId is { } id ? errors.ToApiResult(await action(id)) : ApiResult.Fail(errors.ToProblem(SignInRequired));
 }
 
+/// <summary>Server-side <see cref="INoticeStopApi"/> (design 8.24.1) for the server-rendered page "Nebegauti laiškų".</summary>
+internal sealed class ServerNoticeStopApi(IFollows follows, IHttpContextAccessor accessor, Lt2.Web.Security.IpHasher ipHasher) : INoticeStopApi
+{
+    public async Task<ApiResult> StopAsync(string token, CancellationToken cancellationToken = default)
+    {
+        await follows.StopByLinkAsync(token, accessor.HttpContext is { } context ? ipHasher.Hash(context) : null, cancellationToken);
+        return ApiResult.Ok();
+    }
+}
+
 /// <summary>Server-side <see cref="INoticeFrequencyApi"/> (design 8.24) for prerendered islands, as the signed-in person of the request.</summary>
 internal sealed class ServerNoticeFrequencyApi(IFollows follows, IHttpContextAccessor accessor, ErrorMapper errors, Lt2.Web.Security.IpHasher ipHasher) : INoticeFrequencyApi
 {

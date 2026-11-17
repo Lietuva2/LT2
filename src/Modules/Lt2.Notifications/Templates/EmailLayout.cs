@@ -37,7 +37,8 @@ internal static class EmailLayout
     /// as the link, with the address printed in small type under it; any other address of the site in a line is a plain link.
     /// The links are the addresses themselves: nothing is rewritten or tracked (AGENTS.md). The plain part is unchanged.
     /// </summary>
-    public static EmailMessage Build(string to, string subject, IReadOnlyList<string> paragraphs, string footer, int? highlighted = null)
+    public static EmailMessage Build(
+        string to, string subject, IReadOnlyList<string> paragraphs, string footer, int? highlighted = null, IReadOnlyDictionary<string, string>? headers = null)
     {
         ArgumentNullException.ThrowIfNull(paragraphs);
         var text = string.Join("\n\n", paragraphs) + "\n\n" + footer + "\n";
@@ -48,8 +49,34 @@ internal static class EmailLayout
             to,
             subject,
             text,
-            $"<!doctype html><html lang=\"lt\"><body style=\"font-family:system-ui,sans-serif;color:#1e293b\">{html}{MemberFooterHtml(footer)}</body></html>");
+            $"<!doctype html><html lang=\"lt\"><body style=\"font-family:system-ui,sans-serif;color:#1e293b\">{html}{MemberFooterHtml(footer)}</body></html>",
+            Headers: headers);
     }
+
+    /// <summary>
+    /// The line under "…galite pakeisti savo paskyroje" of every email in the member's rhythm (design 8.24.1): "Nebegauti šių
+    /// laiškų: {the page}", the page without sign-in whose button turns every email switch off. Without a token, the line alone.
+    /// </summary>
+    public static string WithStopLine(IStringLocalizer l, string? siteAddress, string line, string? stopToken)
+    {
+        ArgumentNullException.ThrowIfNull(l);
+        return stopToken is null
+            ? line
+            : line + "\n" + LinkLine(l[EmailText.StopNotices], SiteLinks.Absolute(siteAddress, MemberMailLinks.Page(stopToken)));
+    }
+
+    /// <summary>
+    /// The headers of every email in the member's rhythm (design 8.24.1): <c>List-Unsubscribe</c> with the one-click stop and
+    /// <c>List-Unsubscribe-Post</c> (RFC 8058), as an MP's summary has (design 8.19.3). None without a token.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string>? StopHeaders(string? siteAddress, string? stopToken) =>
+        stopToken is null
+            ? null
+            : new Dictionary<string, string>
+            {
+                [MpMailTemplates.ListUnsubscribe] = "<" + SiteLinks.Absolute(siteAddress, MemberMailLinks.OneClick(stopToken)) + ">",
+                [MpMailTemplates.ListUnsubscribePost] = "List-Unsubscribe=One-Click",
+            };
 
     /// <summary>A paragraph's HTML, each of its lines through <see cref="LinkLineHtml"/>.</summary>
     internal static string LinkedHtml(string paragraph) =>
@@ -124,6 +151,9 @@ internal static class EmailText
     public const string Contact = "Email.Contact";
     public const string Statement = "Email.Statement";
     public const string Privacy = "Email.Privacy";
+
+    /// <summary>"Nebegauti šių laiškų": the stop link's label in every email of the member's rhythm (design 8.24.1).</summary>
+    public const string StopNotices = "Email.StopNotices";
 
     /// <summary>The way without an email's link (owner, 2026-11-17): the page to open and the code to type there.</summary>
     public const string WithoutLink = "Email.WithoutLink";

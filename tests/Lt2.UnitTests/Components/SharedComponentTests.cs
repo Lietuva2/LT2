@@ -139,6 +139,19 @@ public sealed class SharedComponentTests : BunitContext
         panel.FindAll(".tag--ink").ShouldBeEmpty("the panel is on the bill's own page");
     }
 
+    [Fact]
+    public void A_queued_argument_links_to_itself_on_the_bills_page()
+    {
+        var reason = new QueueReasonResponse(Item, Guid.NewGuid(), new BillRefResponse("XVP-0412", "Pataisa"), "against", "Argumentas.", "Rūta Mockutė",
+            "published", false, [], [], [], DateTimeOffset.UnixEpoch);
+
+        var link = Render<QueueReasonItem>(p => p.Add(c => c.Reason, reason)).Find("a.tag--ink");
+
+        link.GetAttribute("href").ShouldBe($"/seimas/XVP-0412?argumentas={Item:N}#reason-{Item:D}");
+        link.GetAttribute("title").ShouldBe("Pataisa");
+        link.TextContent.ShouldBe("XVP-0412");
+    }
+
     [Theory]
     [InlineData(0, "0")]
     [InlineData(999, "999")]

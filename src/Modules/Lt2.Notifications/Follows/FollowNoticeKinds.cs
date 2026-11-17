@@ -195,7 +195,7 @@ internal sealed class PlannedNotices(IDbContextFactory<NotificationsDb> contexts
                 if (tell)
                 {
                     due.Add(new DueNotice(f.UserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowPlannedEmail, new FollowPlannedEmail(
-                        to, bill.Number, bill.Title, plan.Stage, plan.Date, FollowEvents.BillPath(bill.Number), NoticeDelivery.AccountPath))));
+                        to.To, bill.Number, bill.Title, plan.Stage, plan.Date, FollowEvents.BillPath(bill.Number), NoticeDelivery.AccountPath, to.StopToken))));
                 }
             }
 
@@ -313,8 +313,8 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
                     .OrderBy(c => c.Name, LithuanianOrder)
                     .ToList();
                 due.Add(new DueNotice(userId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowVotedEmail, new FollowVotedEmail(
-                    to, bill.Number, bill.Title, vote.Stage, day, vote.IsConsensus, vote.For, vote.Against, vote.Abstain,
-                    vote.OfficialNote, votePath, theirs, NoticeDelivery.AccountPath))));
+                    to.To, bill.Number, bill.Title, vote.Stage, day, vote.IsConsensus, vote.For, vote.Against, vote.Abstain,
+                    vote.OfficialNote, votePath, theirs, NoticeDelivery.AccountPath, to.StopToken))));
             }
 
             FollowEvents.Taken(e, pass);
@@ -396,8 +396,8 @@ internal sealed class StatementNotices(IDbContextFactory<NotificationsDb> contex
                 if (FollowRules.IsStatementRecipient(f.CreatedAt, e.FirstSeen, statement.FirstPublicAt) && pass.Tells(f.UserId, e.FirstSeen, n => n.Statements))
                 {
                     due.Add(new DueNotice(f.UserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowStatementEmail, new FollowStatementEmail(
-                        to, organisation.Name, organisation.ConfirmedBy, organisation.ConfirmedDomain, bill.Number, bill.Title, statement.Stance,
-                        FollowEvents.BillPath(bill.Number), NoticeDelivery.AccountPath, day))));
+                        to.To, organisation.Name, organisation.ConfirmedBy, organisation.ConfirmedDomain, bill.Number, bill.Title, statement.Stance,
+                        FollowEvents.BillPath(bill.Number), NoticeDelivery.AccountPath, day, to.StopToken))));
                 }
             }
 
@@ -521,7 +521,7 @@ internal sealed class ResponseNotices(
                 var day = VilniusTime.DateOf(told.Max(r => r.AnnouncedAt));
                 var listed = Listed(told, mpsOf, factions);
                 due.Add(new DueNotice(f.UserId, mine.Min(s => s.Event.FirstSeen), to => OutboxMessage.Create(MessageKinds.FollowResponsesEmail, new FollowResponsesEmail(
-                    to, bill.Number, bill.Title, day, listed, FollowEvents.BillPath(bill.Number) + "#atsakymai", NoticeDelivery.AccountPath))));
+                    to.To, bill.Number, bill.Title, day, listed, FollowEvents.BillPath(bill.Number) + "#atsakymai", NoticeDelivery.AccountPath, to.StopToken))));
             }
         }
 
@@ -615,12 +615,13 @@ internal sealed class MemberNotices(
                 if (FollowRules.IsMemberArgumentRecipient(f.UserId, author.UserId, f.CreatedAt, e.FirstSeen, argument.PublishedAt) && pass.Tells(f.UserId, e.FirstSeen, n => n.Members))
                 {
                     due.Add(new DueNotice(f.UserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowMemberEmail, new FollowMemberEmail(
-                        to, author.DisplayName, bill.Number, bill.Title,
+                        to.To, author.DisplayName, bill.Number, bill.Title,
                         FollowRules.TextPath(bill.Number, argument.Kind, argument.Id),
                         MemberAddress.Page(author.ProfileId, author.DisplayName),
                         NoticeDelivery.AccountPath,
                         argument.Kind,
-                        VilniusTime.DateOf(argument.PublishedAt)))));
+                        VilniusTime.DateOf(argument.PublishedAt),
+                        to.StopToken))));
                 }
             }
 
@@ -742,7 +743,7 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
             // argument shown, its "Aptarimas" open, that comment marked; one no longer shown leaves the page as usual.
             var line = new CommentedArgumentLine(bill.Number, bill.Title, BillTextLinks.ToComment(bill.Number, argument.CommentId), VilniusTime.DateOf(lastSeen));
             due.Add(new DueNotice(argument.AuthorUserId, firstSeen, to => OutboxMessage.Create(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(
-                to, [line], NoticeDelivery.AccountPath))));
+                to.To, [line], NoticeDelivery.AccountPath, to.StopToken))));
         }
 
         return due;

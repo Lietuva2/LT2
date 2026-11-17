@@ -230,7 +230,7 @@ MP mail (design 8.19) adds:
 | `LT2_MP_SMTP_HOST`, `LT2_MP_SMTP_PORT`, `LT2_MP_SMTP_SECURITY`, `LT2_MP_SMTP_USERNAME` | `Email:Mp:Smtp`: MP mail's own SMTP account (port 587 and `StartTls` by default); with the host empty MP mail uses the common account (`LT2_SMTP_*`). Its password is the secret `mp_smtp_password`. |
 | `LT2_RATE_MP_MAIL` | Requests per client address to an MP's link pages and token routes in 15 minutes (default 60); only the local `.env` raises it. |
 
-and two secrets, `mail_hash_key` (web and worker: the suppression list's keyed hashes and the MPs' link tokens; changing
+and two secrets, `mail_hash_key` (web and worker: the suppression list's keyed hashes, the MPs' link tokens and the members' stop links of design 8.24.1; changing
 it breaks every link already emailed and forgets the suppressed addresses) and `mp_smtp_password` (worker; empty while
 MP mail uses the common account). **On an existing deployment, run `init-secrets.py` again (with the same directory, as
 root on Linux) before using the new compose file:** it creates the two missing files and keeps the others; without them

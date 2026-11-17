@@ -87,8 +87,8 @@ src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per f
                            the menu, AccountMenu with js/lt2-account.js, the footer) and the terms and privacy pages
                            (Components/Pages/Terms, Privacy, LegalText.resx)
 src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
-                           (Observability.AddLt2Observability), with SecretPaths replacing an MP link's token in every log
-                           line and trace; no module references it
+                           (Observability.AddLt2Observability), with SecretPaths replacing an MP link's or a member's stop
+                           link's token in every log line and trace; no module references it
 src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients (logging at Warning
                            and above only, owner 2026-11-17: no console line per request); the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
@@ -326,8 +326,8 @@ code review.
   known browser's `__Host-lt2.device` (design 8.20.2, the same attributes, a year): it never authenticates, lengthens a session
   or skips a code; it only chooses which code allowance and which codes apply, and it is stored only as a keyed hash
   (`Security:DeviceHashKey`, the secret `device_hash_key`). Every state-changing
-  call needs the antiforgery header and passes the Origin check, except the one-click stop of an MP's emails (design 8.19.4),
-  which mail programs send. CORS stays off.
+  call needs the antiforgery header and passes the Origin check, except the one-click stops that mail programs send: an MP's
+  emails (design 8.19.4) and a member's notice emails (design 8.24.1). CORS stays off.
 - **Nothing non-essential in the browser (design 8.22.1), so no cookie banner.** No third-party analytics, no third-party script, font or
   embed, no advertising or measurement cookie. What the site keeps is one list, `Security/BrowserStorage.Inventory` (the
   session, the passkey step, the request-forgery and the known-browser cookies; `lt2-theme` in local storage once a theme is
@@ -353,8 +353,10 @@ code review.
   it beside the copied link, and the page opened without a `#` asks for it (`<CodeEntry>`, which puts it after the page's own `#`).
   Every request presenting one is limited per client address (`RateLimitPolicies.OneTimeCode`, `RateLimits:OneTimeCode`); an
   unknown, malformed, used or expired code gets the link's one answer.
-  The MP's mail links are the exception the design names (8.19.4: the one-click stop needs its token in the address): their
-  paths are logged with the token replaced.
+  Two exceptions the design names carry their token in the path, because the one-click stop a mail program sends needs it in
+  the address: the MP's mail links (8.19.4) and a member's stop link (8.24.1, `/laiskai/nebegauti/{token}` and
+  `POST /api/v1/notices/{token}/stop`). Their paths are logged with the token replaced (`Lt2.Hosting.SecretPaths`, the
+  Caddyfile's filter), and their pages are `noindex` and `no-store` (`SecurityHeaders`).
 - Forwarding headers count only from the proxy named in `ReverseProxy:Address`. A page answered to a signed-in session is
   `no-store`.
 
@@ -382,7 +384,8 @@ text gets a new, later version: every member is asked again. A member whose acce
 (`TermsOfUse.NeedsAcceptance`; `GET /me` says `termsRequired`) is sent to `/taisykles/sutikimas` after signing in and by
 any island refused with `terms.required` (`InteractiveBase`); until they accept, reads work and every API write is refused in
 one place, `Security/TermsGate` (before authorization, so a new write route is covered by default; `TermsTests` sweeps every
-mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes, and
+mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes, a
+member's stop link `POST /notices/{token}/stop`, and
 (owner, 2026-11-17) withdrawing a consent: `DELETE /me/profile/public`, `DELETE /me/consents/positions`,
 `DELETE /me/party-support`; giving one again stays refused). The export is a read. The version stays 2026-11-17 until the
 launch although the text changed while building (owner, 2026-11-17): nobody accepted an earlier one. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
@@ -672,6 +675,17 @@ page's "Balsuota".
   voted, statements, MPs' answers, followed members (`MemberNotices`, switch `members`) and comments under one's arguments
   (`CommentNotices`, switch `comments`); codes, account and moderation
   notices, feedback and MP mail never go through it.
+- **The stop link (design 8.24.1, owner 2026-11-17; what one press stops is the designer's proposal awaiting the owner).**
+  Every email of the rhythm carries `List-Unsubscribe` (`/api/v1/notices/{token}/stop`) with `List-Unsubscribe-Post`
+  (`EmailLayout.StopHeaders`) and, under the account line, "Nebegauti šių laiškų: …/laiskai/nebegauti/{token}"
+  (`EmailLayout.WithStopLine`); paths in `MemberMailLinks` (SharedKernel) and `NoticeStopRoutes` (contracts). The token is one
+  per account, `MailKeys.MemberStopToken` (the mail key, account id, generation 0), its hash in `notify.member_mail_token`
+  (withheld, deleted with the account, not exported), made by `NoticeDelivery` with the first email; the clear token travels
+  in the payload's `StopToken` (`DueNotice.Write` takes a `NoticeAddress`). One press (`IFollows.StopByLinkAsync`) turns every
+  email switch off, the follows stay; audited `notices.stopped-by-link` with the account as target and no actor or detail.
+  The page `NoticeStopPage` (server-rendered, no script, GET changes nothing) and `NoticeStopEndpoint` (mapped outside the API
+  group's filter, on `TermsExemptions.Routes`) answer the same for any token; limited under `RateLimitPolicies.MpMail` and
+  the per-token limiter; no confirmation email.
 - Taking a side follows the bill (design 8.11.2, owner 2026-11-15): a member's first side on a bill (no side before)
   follows it in the same request, composed by the host (`Lt2.Web/Services/TakingSides`: the Appeals module saves the
   side, then `IFollows.FollowBillAsync`), on the bill's page and in a front-page row alike. The side is never refused or
@@ -768,8 +782,9 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
   row. The moderators' preview is the same text.
 - The MP's link (8.19.4): `/suvestines/nustatymai/{token}`, server-rendered forms (no script); the token is derived from the
   person number and a generation under `Security:MailHashKey` and stored hashed; "Atsiųsti naują nuorodą" moves to the next
-  generation. The one-click stop `POST /api/v1/mp-mail/{token}/stop` is the only write mapped outside the API group's
-  same-origin and antiforgery filter (`OneClickStopEndpoint`); `MpMailTests` proves the other token routes still need it. Token
+  generation. The one-click stop `POST /api/v1/mp-mail/{token}/stop` is the only write of MP mail mapped outside the API group's
+  same-origin and antiforgery filter (`OneClickStopEndpoint`; the one other is a member's stop link, `NoticeStopEndpoint`,
+  design 8.24.1); `MpMailTests` proves the other token routes still need it. Token
   routes and pages are limited per address and per token (`RateLimits:MpMail`, `RateLimits:MpMailToken`) and answer the same for
   an unknown and a wrong token. Every change is confirmed to the official address. An extra recipient is confirmed from the
   official address (a page with a button, 24 hours, one use) and each copy has its own "Nebegauti kopijų" page. A linked account

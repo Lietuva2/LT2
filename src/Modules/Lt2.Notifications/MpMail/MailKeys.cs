@@ -36,6 +36,13 @@ internal sealed class MailKeys(IConfiguration configuration)
     public string DerivedToken(long seimasPersonId, string kind, int generation) =>
         Base64Url(HMACSHA256.HashData(Key, Encoding.UTF8.GetBytes(FormattableString.Invariant($"token\n{kind}\n{seimasPersonId}\n{generation}"))));
 
+    /// <summary>
+    /// A member's stop link token (design 8.24.1) in its <paramref name="generation"/>: derived from the account id under the same
+    /// key with a kind of its own, so it never equals an MP link's token; 32 bytes, URL-safe.
+    /// </summary>
+    public string MemberStopToken(Guid userId, int generation) =>
+        Base64Url(HMACSHA256.HashData(Key, Encoding.UTF8.GetBytes(FormattableString.Invariant($"token\nmember-stop\n{userId:N}\n{generation}"))));
+
     /// <summary>A one-time token of 32 random bytes, URL-safe (the extra recipient's confirmation).</summary>
     public static string RandomToken() => Base64Url(RandomNumberGenerator.GetBytes(32));
 

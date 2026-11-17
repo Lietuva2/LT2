@@ -32,7 +32,7 @@ FILES = {
     "db_worker_password": 24,
     "db_readonly_password": 24,
     "ip_hash_key": 24,
-    "mail_hash_key": 32,  # keys the suppression list's hashes and the MPs' preference links (design 8.19.4, 8.19.6)
+    "mail_hash_key": 32,  # keys the suppression list's hashes, the MPs' preference links and the members' stop links (design 8.19.4, 8.19.6, 8.24.1)
     "device_hash_key": 32,  # keys the known browsers' hashes (design 8.20.2)
     "data_protection_key": 32,  # wraps the data-protection key ring; must be exactly 32 bytes
     "smtp_password": 0,  # empty locally: Mailpit needs no password

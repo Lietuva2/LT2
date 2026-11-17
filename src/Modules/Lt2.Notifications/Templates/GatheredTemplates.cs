@@ -54,8 +54,9 @@ internal sealed class GatheredTemplates(IStringLocalizer<EmailTemplates> l, IOpt
             paragraphs.Add(group.Part.Render(group.Items));
         }
 
-        paragraphs.Add(l.Format("Gathered.Footer", SiteLinks.Absolute(site.Value.Address, model.AccountPath)));
+        paragraphs.Add(EmailLayout.WithStopLine(l, site.Value.Address, l.Format("Gathered.Footer", SiteLinks.Absolute(site.Value.Address, model.AccountPath)), model.StopToken));
         paragraphs.Add(l[EmailText.Signature]);
-        return EmailLayout.Build(model.To, l["Gathered.Subject." + rhythm], paragraphs, EmailLayout.Footer(l, site.Value.Address));
+        return EmailLayout.Build(
+            model.To, l["Gathered.Subject." + rhythm], paragraphs, EmailLayout.Footer(l, site.Value.Address), headers: EmailLayout.StopHeaders(site.Value.Address, model.StopToken));
     }
 }

@@ -291,6 +291,13 @@ internal sealed class HttpNoticeFrequencyApi(ApiHttp http) : Lt2.Api.Contracts.F
         http.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Follows.NoticeFrequencyRoutes.Mine, request, cancellationToken);
 }
 
+/// <summary>Design 8.24.1: a member's stop link; the page is server-rendered, so the browser calls this only for completeness.</summary>
+internal sealed class HttpNoticeStopApi(ApiHttp http) : Lt2.Api.Contracts.Follows.INoticeStopApi
+{
+    public Task<ApiResult> StopAsync(string token, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, Lt2.Api.Contracts.Follows.NoticeStopRoutes.StopOf(token), new { }, cancellationToken);
+}
+
 
 internal sealed class HttpFeedbackApi(ApiHttp http) : Lt2.Api.Contracts.Feedback.IFeedbackApi
 {

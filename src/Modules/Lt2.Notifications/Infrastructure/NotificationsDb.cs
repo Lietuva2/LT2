@@ -31,6 +31,9 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 
     public DbSet<Lt2.Notifications.Follows.BillEvent> BillEvents => Set<Lt2.Notifications.Follows.BillEvent>();
 
+    /// <summary>The members' stop links, by their hash (design 8.24.1).</summary>
+    public DbSet<Lt2.Notifications.Follows.MemberMailToken> MemberMailTokens => Set<Lt2.Notifications.Follows.MemberMailToken>();
+
     /// <summary>The daily and weekly emails made, one row per period (design 8.24): never two for one day or one week.</summary>
     public DbSet<Rhythm.RhythmPassMade> RhythmPasses => Set<Rhythm.RhythmPassMade>();
 
@@ -146,6 +149,13 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 
             // Each pass reads one kind's events by when they were first seen, and the comments' notice the latest of its kind.
             b.HasIndex(x => new { x.Kind, x.FirstSeen });
+        });
+        modelBuilder.Entity<Lt2.Notifications.Follows.MemberMailToken>(b =>
+        {
+            b.ToTable("member_mail_token");
+            b.HasKey(x => x.UserId);
+            b.Property(x => x.TokenHash).HasMaxLength(64);
+            b.HasIndex(x => x.TokenHash).IsUnique();
         });
         modelBuilder.Entity<Rhythm.RhythmPassMade>(b =>
         {

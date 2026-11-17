@@ -399,7 +399,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         {
             var root = payload.RootElement;
             root.EnumerateObject().Select(p => p.Name).Order()
-                .ShouldBe(["accountPath", "billNumber", "billTitle", "day", "memberName", "profilePath", "textPath", "to", "what"]);
+                .ShouldBe(["accountPath", "billNumber", "billTitle", "day", "memberName", "profilePath", "stopToken", "textPath", "to", "what"]);
             root.GetProperty("memberName").GetString().ShouldBe("Autorė Pavyzdytė");
             root.GetProperty("profilePath").GetString().ShouldBe("/nariai/autore-pavyzdyte-" + id);
             root.GetProperty("accountPath").GetString().ShouldBe(AccountScreens.FollowsList);

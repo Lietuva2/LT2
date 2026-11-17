@@ -315,6 +315,7 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `follow` | (`user_id`, `kind`, `key`) primary key, created time. `kind`: bill (key: the number) or mp (key: the Seimas person id). Who follows is shown to nobody but the person; exported and deleted with the account (8.11.2). How many follow each thing is public: a number counted from this table when an answer is made, nothing per follower (8.11.2, owner 2026-11-16; built 2026-11-16). [changed while building (8.14.14, stage B): or `organisation` (key: the organisation's id); `kind` up to 16 characters.] [built 2026-11-16 (8.25.5): or `member` (key: the public profile id), only while that member's profile is public; ended when it is switched off.] |
 | `notice_setting` | Per account: which follow emails are on (`planned`, `voted`); no row means both on. [changed while building (8.14.14, stage B): and `statements` (a followed organisation's statement became public); no row means all three on.] [changed while building (8.20.1): and `responses`; no row means all four on.] [built 2026-11-16 (8.23.9): and `comments`, an argument's author told of new comments under it; no row means on.] [built 2026-11-16 (8.24): and `frequency` (`immediate`, `daily`, `weekly`), the member's email rhythm, with `frequency_since`, `previous_frequency` and `previous_since`; no row means `immediate`.] [built 2026-11-16 (8.25.5): and `members`, a followed member published something; no row means all on.] |
 | `bill_event` | (`bill_number`, `kind`, `key`) primary key, first seen, sent time, outcome. `kind`: planned (key: the date) or voted (key: the vote id). What followers are told about, recorded once (8.11.2). No person in it. [changed while building: an `outcome` column (`waiting`, `sent`, `skipped`, `superseded`) tells an event never to be sent from one waiting for the next day] [changed while building (8.14.14, stage B): `kind` `statement` (key: the statement's id) records, under its bill, that a followed organisation's statement became public; no person and no text in it] [built 2026-11-16 (8.24): `daily_at`, `weekly_at`, `early_at`, the marks of the gathered emails beside `outcome` and `sent_at` (the runs' emails); `kind` `response` per MP's answer (key: the person number and when the stance became public)] [built 2026-11-16 (8.25.5): `kind` `member` (key: the text's id) records, under its bill, that a followed member's argument or own-voice comment became public; no person and no text in it] [built 2026-11-16 (8.23.9, 8.23.14): `kind` `comment` (key: the argument's id and the run's moment) records that a run found comments under an argument; no person] [built 2026-11-16 (8.24): an index on (`kind`, `first_seen`); rows older than 30 days are deleted by the daily housekeeping, a planned date only once past (the designer's proposal, 12)] [built 2026-11-16 (8.24): `notify.rhythm_pass` (`pass`, `period`, `made_at`) says the daily email of a day or the weekly of a week was made; no person] |
+| `member_mail_token` | [built 2026-11-17 (8.24.1)] Per account: the stop link's SHA-256 (unique), its generation and when it was made; the token itself is derived under the mail key and never stored. Deleted with the account; not exported; withheld from `lt2_readonly`. |
 
 ### 5.5 `audit`
 
@@ -646,7 +647,10 @@ changes what a person can do on the site; the questions that do are in section 1
   representative's invitation. The browser never sends that part, so no proxy and no application log can hold it,
   on a shared server included (9.2). The page reads it in the browser and passes it to the API in a request body,
   never in a path or a query. A link in the old form (`?kodas=…`) still works, and the proxy's filter that drops
-  `kodas` from the logged address stays for those (6.2).
+  `kodas` from the logged address stays for those (6.2). Two exceptions carry their token in the path, because the
+  one-click stop of RFC 8058 that mail programs send has nowhere else to put it: an MP's mail links (8.19.4) and, since
+  2026-11-17, a member's stop link in every email of the rhythm (8.24.1). Logs and the proxy keep their paths with the
+  token replaced.
 - **A way in without the link: a typeable one-time code [decided by the owner on 2026-11-17: "one should be able to go
   on without using that url, as it's not safe to click links in email"; "Yes, add codes"].** Three one-time links carry
   their secret as a code a person can type: an MP's take-over link (8.5.2), an office member's invitation (8.5.3) and an
@@ -3054,7 +3058,8 @@ sending domain and a provider).
   suppresses the address (8.19.6).
 - [changed while building: a permanent refusal is an SMTP 5xx answer to the recipient (`RecipientNotAccepted`); a refused
   sender or a 4xx is retried. A copy to an extra recipient carries `List-Unsubscribe` with its own "Nebegauti kopijų" page
-  and no `List-Unsubscribe-Post`, so the MP's one-click stop stays the only write without the same-origin check. Lead
+  and no `List-Unsubscribe-Post`, so the MP's one-click stop stays the only write of MP mail without the same-origin
+  check (a member's stop link, 8.24.1, is the one other, outside MP mail). Lead
   committees are not imported, so that group of the order is empty.]
 
 #### 8.19.4 Preferences without an account
@@ -3067,7 +3072,8 @@ sending domain and a provider).
   session, no other data. The page is not indexed and sends no referrer; request logs do not keep the path's token (as
   for the organisations' invitation links).
 - **One-click stop:** the `List-Unsubscribe` address accepts a POST with the token and sets "Nesiųsti". It is the one
-  write that needs no same-origin check, because mail programs send it; it can do nothing else.
+  write that needs no same-origin check, because mail programs send it; it can do nothing else. [2026-11-17: a member's
+  stop link (8.24.1) is the second such write, on the same pattern.]
 - **Every change is confirmed by email to the official address**, with the new choice and the link, so a change made by
   someone the email was forwarded to is seen and undone. "Nesiųsti" is confirmed once too, and after it nothing more is
   sent to that MP except what the MP asks for from this page.
@@ -3120,7 +3126,8 @@ sending domain and a provider).
   affected.
 - [changed while building: the key is handled as the IP hash's is (a secret file, HMAC-SHA-256), but it is its own secret,
   `mail_hash_key` (`Security:MailHashKey`), because the IP key may be rotated (6.5) and a suppressed address must stay
-  suppressed. "Removing an entry" that is not a listed MP is done by typing its address.]
+  suppressed. "Removing an entry" that is not a listed MP is done by typing its address.] [2026-11-17: the same key also
+  derives the members' stop links (8.24.1), so changing it breaks those links in emails already sent too.]
 
 #### 8.19.7 Data and API
 
@@ -3389,6 +3396,8 @@ privacy notice correct as drafts as the site changes; the lawyer reads them once
 - Its part **"Slapukai ir naršyklės atmintis"** lists the inventory of 8.22.1 with what each is for and how long it
   lasts.
 - Linked from the footer, the registration form, the consent before the first side, and every email's footer.
+- [2026-11-17 (8.24.1): its part on the person's rights says that the line "Nebegauti šių laiškų" at the bottom of every
+  email about what they follow turns all of those emails off, without signing in.]
 - [changed while building (2026-11-16): the facts the design does not give (who is responsible and their contacts, the
   email, server and backup providers, the inspectorate's contacts, where other requests go, the legal basis of the
   technical logs) are marked "[bus įrašyta]" in the text for the owner and the lawyer to fill in.]
@@ -3974,6 +3983,57 @@ for comments under one's arguments (8.23.9) and followed members (8.25.5), which
   not edited for it. The kinds, in their parts' order: planned, voted, organisations' statements, MPs' answers, followed
   members' texts (8.25.5) and comments under one's arguments (8.23.9, 8.23.14). The look-back for votes, statements and
   members' texts is 14 days, so a weekly email can still read what it reports.]
+
+#### 8.24.1 Stopping them from the email
+
+**[The owner, 2026-11-17: "draft it and implement it": members' emails get a one-click stop like the MPs' summaries
+(8.19.4). Built 2026-11-17. Which emails, how it works and what the link may reach are the owner's direction; what one press
+stops is the designer's proposal awaiting the owner (section 12).]**
+
+- **Which emails.** Every email that goes through the rhythm above: planned, voted, organisations' statements, MPs'
+  answers, followed members' texts, comments under one's arguments, and the gathered email. Not sign-in and confirmation
+  codes, account and security notices, moderators' statements, answers to feedback or MP mail: those are not a list a
+  person subscribed to, and they keep going.
+- **What one press stops [the designer's proposal, 2026-11-17, awaiting the owner].** All of the account's notice emails:
+  every switch of "Sekimas ir laiškai" (planned, voted, statements, MPs' answers, followed members, comments) is turned off.
+  The follows stay, with their "Sekėjai" numbers and the person's own list. Turning switches on again on
+  `/paskyra/sekimas` undoes it; the same link stops them again. Reason: a mail program's "Unsubscribe" means "stop this
+  sender's list", and the gathered email mixes kinds, so stopping only the kind of the email in hand would leave the person
+  getting the others under the same sender. The choice of how often (above) is left as it was.
+- **In every such email.** The headers `List-Unsubscribe: <https://…/api/v1/notices/{token}/stop>` and
+  `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058), on the member stream; and, under the line "…galite
+  pakeisti savo paskyroje: …", which stays, its own action line "Nebegauti šių laiškų: https://…/laiskai/nebegauti/{token}"
+  (the page, never the API). Nothing is rewritten or tracked: the link is the address itself.
+- **The token.** One per account, derived with HMAC-SHA-256 under the mail key of 8.19.6 (`Security:MailHashKey`) from the
+  account id and a generation (0), with a kind of its own, so it never equals an MP's token; 32 bytes, URL-safe. Every email
+  carries the same link. Only its SHA-256 is kept, in `notify.member_mail_token` (account, hash, generation, when made),
+  made when the account's first email of the rhythm is written; the clear token travels only in the outbox row's payload
+  until the email is sent, as an MP's does. It does not expire. It goes with the account (and `IOutbox.ForgetAsync`
+  already takes unsent mail). It is not in the export: it is a key, not the person's data. The table is withheld from
+  `lt2_readonly`.
+- **The addresses.** The page `/laiskai/nebegauti/{token}` is server-rendered, without sign-in and without script: its GET
+  changes nothing (mail systems' link scanners open links), and shows "Nebegauti laiškų", one sentence ("Paspaudę mygtuką
+  nebegausite laiškų apie tai, ką sekate.") and a button "Nebegauti laiškų", a plain form posting back to the page. After it:
+  "Laiškų apie tai, ką sekate, nebesiųsime. Vėl įjungti juos galite savo paskyroje." with the link to the follows screen.
+  The one-click `POST /api/v1/notices/{token}/stop` (the page's button calls the same operation) is mapped outside the API
+  group's same-origin and antiforgery filter exactly as the MP's one-click stop is, reads no body, can do nothing but turn
+  the switches off, and is on `TermsExemptions.Routes`: stopping emails is never refused for unaccepted terms.
+- **The same answer for every token.** An unknown, a malformed and a valid token get the same page and the same answer
+  (204 from the API): nothing tells whether a link was valid or whose it is, and the page shows no name or address. A token
+  of an account no longer a member changes nothing.
+- **Limits.** Per client address and per token under the MP link's policies (`RateLimits:MpMail`, `RateLimits:MpMailToken`):
+  no new setting. The page is not indexed, not stored, sends no referrer, and is left out of the usage list (8.27).
+- **The second exception to "codes and tokens are not sent in addresses" (6.8),** for the reason of 8.19.4: the one-click
+  form a mail program sends has nowhere else to put the token. Request logs and traces keep both paths with the token
+  replaced (`Lt2.Hosting.SecretPaths`), as the proxy's filter does (deploy/Caddyfile).
+- **Audit.** `notices.stopped-by-link` with the account as the subject (the target), no actor (whoever holds the link acted),
+  the hashed address of the request and no details. Nothing is audited when every switch was already off. No confirmation
+  email: there is nothing left to confirm into, and the account page shows the switches.
+- **Done when:** a followed bill's email carries both headers and the line; the one-click POST without Origin or
+  antiforgery turns every switch off and the next run tells the person nothing while another follower is told; opening the
+  page changes nothing and its button stops the same way; an unknown and a malformed token get the identical page and
+  answer; the per-token and per-address limits hold; an account that has not accepted the terms can still stop; deleting
+  the account removes the token; logs carry neither path's token.
 
 ### 8.25 A member's public profile, and following a member
 
@@ -5034,6 +5094,22 @@ Each is built as written; "no" names what changes.
    pass marks the date per person, which the record (no person in it) cannot do.
 13. The follow job's records are kept 30 days (past the 14-day look-back, a weekly email's week and the three-day rule),
    a planned date only until it is past; the daily housekeeping deletes older ones. If no: another number of days.
+
+**Proposed by the designer while building the stop link of members' emails (8.24.1), 2026-11-17, awaiting the owner**
+
+Built as written; "no" names what changes.
+
+1. One press of "Nebegauti šių laiškų" (or a mail program's "Unsubscribe") turns every email switch off, whichever email it
+   came from: planned, voted, statements, MPs' answers, followed members, comments. The follows, the follower numbers and
+   the choice of how often stay; switches turned on again on `/paskyra/sekimas` undo it. If no: the press turns off only
+   the kinds the email in hand held (a gathered email: all of its parts), with a token per account and kind.
+2. No confirmation email after a stop, and nothing audited when every switch was already off. If no: one short email
+   saying the emails stopped, with the link to turn them on again (a confirmation into the list just left).
+3. The page names nobody and answers the same for any token, valid or not; the link does not expire and has no "new link"
+   (generation 0 for every account). If no: an expiry, or a way to replace the link from the account page.
+4. The texts: the email line "Nebegauti šių laiškų"; the page "Nebegauti laiškų", "Paspaudę mygtuką nebegausite laiškų
+   apie tai, ką sekate.", the button "Nebegauti laiškų", and after it "Laiškų apie tai, ką sekate, nebesiųsime. Vėl
+   įjungti juos galite savo paskyroje." A native speaker reads them before they are shown externally.
 
 **Decisions needed before the stage that uses them**
 

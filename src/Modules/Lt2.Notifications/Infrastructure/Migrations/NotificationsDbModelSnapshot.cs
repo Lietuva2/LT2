@@ -484,6 +484,37 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                     b.ToTable("follow", "notify");
                 });
 
+            modelBuilder.Entity("Lt2.Notifications.Follows.MemberMailToken", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("Generation")
+                        .HasColumnType("integer")
+                        .HasColumnName("generation");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_member_mail_token");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_member_mail_token_token_hash");
+
+                    b.ToTable("member_mail_token", "notify");
+                });
+
             modelBuilder.Entity("Lt2.Notifications.Follows.NoticeSetting", b =>
                 {
                     b.Property<Guid>("UserId")
