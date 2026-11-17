@@ -538,13 +538,14 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             (await RunJobAsync()).ShouldNotBeNull();
             (await Database.CommentNoticesAsync(bill.ArgumentAuthorEmail)).ShouldBeEmpty("one's own comment tells nobody");
 
-            await member.CommentOkAsync("reason", bill.ReasonId, "Slaptas komentaro tekstas, kurio laiške būti neturi.");
+            var first = await member.CommentOkAsync("reason", bill.ReasonId, "Slaptas komentaro tekstas, kurio laiške būti neturi.");
             await member.CommentOkAsync("reason", bill.ReasonId, "Dar vienas komentaras tame pačiame bėgime.");
             await RunJobAsync();
             var notice = (await Database.CommentNoticesAsync(bill.ArgumentAuthorEmail)).ShouldHaveSingleItem("two comments in one run make one email");
             var line = notice.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem();
             line.GetProperty("billNumber").GetString().ShouldBe(Bill);
-            line.GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, bill.ReasonId));
+            // Design 8.23.14 point 4: the link lands in the discussion, on the first new comment the email reports.
+            line.GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToComment(Bill, first));
             notice.GetRawText().ShouldNotContain("Slaptas komentaro tekstas");
             notice.GetRawText().ShouldNotContain("Komentuojanti Kitam");
 

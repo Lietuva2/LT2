@@ -6,8 +6,11 @@ namespace Lt2.SharedKernel;
 /// </summary>
 public sealed record CommentedArgument(Guid AuthorUserId, Guid ReasonId, string BillNumber);
 
-/// <summary>One shown comment by someone else under an argument, with when it was written (design 8.23.9, 8.24): no text, no writer.</summary>
-public sealed record CommentedArgumentAt(Guid AuthorUserId, Guid ReasonId, string BillNumber, DateTimeOffset At);
+/// <summary>
+/// One shown comment by someone else under an argument, with when it was written (design 8.23.9, 8.24) and its id, which the
+/// notice links to (8.23.14 point 4): no text, no writer.
+/// </summary>
+public sealed record CommentedArgumentAt(Guid AuthorUserId, Guid ReasonId, string BillNumber, DateTimeOffset At, Guid CommentId);
 
 /// <summary>The arguments commented on, for the author's notice (design 8.23.9). Implemented by the Appeals module.</summary>
 public interface ICommentFeed

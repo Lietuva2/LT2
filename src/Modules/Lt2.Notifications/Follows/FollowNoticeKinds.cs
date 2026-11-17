@@ -704,7 +704,8 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
         var still = new Dictionary<(string Number, string Key), CommentedArgumentAt>();
         foreach (var (run, (since, until)) in windows)
         {
-            foreach (var comment in times.Where(c => c.At >= since && c.At < until))
+            // The earliest comment of each run's window under each argument: the email links to the first new one (8.23.14).
+            foreach (var comment in times.Where(c => c.At >= since && c.At < until).OrderByDescending(c => c.At).ThenByDescending(c => c.CommentId))
             {
                 still[(comment.BillNumber, FollowRules.CommentKey(comment.ReasonId, run))] = comment;
             }
@@ -722,7 +723,7 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
 
             var key = (argument.AuthorUserId, argument.ReasonId);
             told[key] = told.TryGetValue(key, out var seen)
-                ? (argument, seen.FirstSeen < e.FirstSeen ? seen.FirstSeen : e.FirstSeen, seen.LastSeen > e.FirstSeen ? seen.LastSeen : e.FirstSeen)
+                ? (argument.At < seen.Argument.At ? argument : seen.Argument, seen.FirstSeen < e.FirstSeen ? seen.FirstSeen : e.FirstSeen, seen.LastSeen > e.FirstSeen ? seen.LastSeen : e.FirstSeen)
                 : (argument, e.FirstSeen, e.FirstSeen);
             FollowEvents.Taken(e, pass);
         }
@@ -737,7 +738,9 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
             }
 
             var bill = facts.GetValueOrDefault(argument.BillNumber) ?? new BillFacts(argument.BillNumber, argument.BillNumber);
-            var line = new CommentedArgumentLine(bill.Number, bill.Title, BillTextLinks.ToReason(bill.Number, argument.ReasonId), VilniusTime.DateOf(lastSeen));
+            // The link lands in the discussion, on the first new comment the email reports (design 8.23.6, 8.23.14 point 4): the
+            // argument shown, its "Aptarimas" open, that comment marked; one no longer shown leaves the page as usual.
+            var line = new CommentedArgumentLine(bill.Number, bill.Title, BillTextLinks.ToComment(bill.Number, argument.CommentId), VilniusTime.DateOf(lastSeen));
             due.Add(new DueNotice(argument.AuthorUserId, firstSeen, to => OutboxMessage.Create(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(
                 to, [line], NoticeDelivery.AccountPath))));
         }

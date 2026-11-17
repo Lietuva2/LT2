@@ -469,9 +469,9 @@ internal sealed class CommentsService(
                           where c.TargetKind == CommentKinds.Reason && c.Status == CommentStatuses.Published && c.CreatedAt >= since && c.CreatedAt < until
                               && r.Status == ReasonStatuses.Published && (b.Status == BillRecordStatuses.Open || b.Status == BillRecordStatuses.Closed)
                               && (c.AuthorUserId == null || c.AuthorUserId != r.AuthorUserId)
-                          select new { r.AuthorUserId, ReasonId = r.Id, b.BillNumber, c.CreatedAt })
+                          select new { r.AuthorUserId, ReasonId = r.Id, b.BillNumber, c.CreatedAt, CommentId = c.Id })
             .ToListAsync(cancellationToken);
-        return rows.Select(r => new CommentedArgumentAt(r.AuthorUserId, r.ReasonId, r.BillNumber, r.CreatedAt)).ToList();
+        return rows.Select(r => new CommentedArgumentAt(r.AuthorUserId, r.ReasonId, r.BillNumber, r.CreatedAt, r.CommentId)).ToList();
     }
 
     /// <summary>A comment that is published with its target shown, and its bill (not hidden); null otherwise.</summary>

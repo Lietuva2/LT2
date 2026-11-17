@@ -3384,8 +3384,9 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
   the answer is the same 404 (`comment.not-found`) for all of them, so nothing tells a hidden comment from none. Every
   such link is made by one helper (`BillTextLinks.ToComment`, in the contracts and the shared kernel), never by hand.
   **An argument the same way:** `?argumentas={reason id}` with `#reason-{id}` (`BillTextLinks.ToReason`) shows that
-  argument even beyond the first two of its side and marks it (`said--linked`); it opens no discussion. The links to an
-  argument in the follow emails (a followed member's argument, the comments under one's own) use it.
+  argument even beyond the first two of its side and marks it (`said--linked`); it opens no discussion. The follow
+  email about a followed member's argument uses it; the notice of comments under one's own argument links to the first
+  new comment it reports (8.23.9).
 - **What bounds the page's weight.** Comments are rendered only under the targets the server renders: the arguments the
   page shows before "show all" (two per side, 8.12.1), the statements, and the responses of the current page of ten;
   under each, at most the first ten comments. At the default cap that is up to about 20 KB of comment text per target,
@@ -3463,7 +3464,9 @@ reported comment is in the moderators' list; a moderator can hide it with a stat
 
 - **An argument's author [proposed 2026-11-16, not objected to; when it goes is the owner's rhythm, 8.24].** A notice of
   its own kind, not a follow email (follow emails say nothing about other people, 8.11.2): "there are new comments under
-  your argument", the bill's number and title and the link to the argument on the bill's page. Never a comment's text,
+  your argument", the bill's number and title and the link into that discussion on the bill's page [2026-11-17, the
+  designer's proposal: the link of 8.23.6 to the first new comment the email reports, so the argument shows, its
+  "Aptarimas" opens and that comment is marked; one no longer shown by then leaves the page as usual]. Never a comment's text,
   its writer, how many, or anything about "Sutinku". It goes in the person's rhythm (8.24): with "Iš karto" at the next
   run of the follow job, in that run's one email to the person, naming each of their arguments that got a comment since
   the last run; with the daily or weekly choice, in the gathered email. One busy argument therefore makes at most one
@@ -3624,7 +3627,8 @@ build needed decided one way; each is the smallest choice that keeps the rules a
    in that run's email, the daily or weekly choice in the gathered one, where it is its own part ("Nauji komentarai po jūsų
    argumentais"), one line per argument. When the email is made the window is read again, so an argument whose comments
    are all deleted or hidden by then, or that is no longer shown, is left out. One thing alone is the email
-   `email.comment-notice`.
+   `email.comment-notice`. [2026-11-17, the designer's proposal: each line links to the first new comment it reports,
+   the earliest still shown in its windows when the email is made (`BillTextLinks.ToComment`, 8.23.6); no other rule.]
 5. **A comment's moderation notices** reuse the existing kinds: to a person `email.moderation-notice` (notices
    `comment-hidden`, `comment-restored`, with the moderators' contact address), to an organisation's representatives
    `email.organisation-notice` (`comment-hidden`, `comment-restored`), to the MP's account `email.mp-response-notice`

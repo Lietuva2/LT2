@@ -720,7 +720,8 @@ be deleted, `comment.hidden`). Member controls render only once the island runs,
 member and visitor. While an "Aptarimas" is open under an argument the sides stand in one column. The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
 under responses), the caller's answer `CommentState` (browser only), reports target `comment`, moderators' list
 `CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is one kind of the rhythm,
-`CommentNotices` (Notifications; outbox kind `email.comment-notice` alone, its own part of the gathered email; switch
+`CommentNotices` (Notifications; each line links to the first new comment it reports with `BillTextLinks.ToComment`;
+outbox kind `email.comment-notice` alone, its own part of the gathered email; switch
 `comments`, the last on the follows screen). A person's name links to their public profile when they have one (8.25.4).
 A link to a comment or an argument (design 8.23.6, the designer's proposal of 2026-11-17) is made only by `BillTextLinks`
 (`ToComment`, `ToReason`; one file in SharedKernel compiled also into the contracts): `?komentaras={id}#komentaras-{id}` or

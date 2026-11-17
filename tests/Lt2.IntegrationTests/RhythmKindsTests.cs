@@ -82,7 +82,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
     [Fact]
     public async Task Kartą_per_dieną_holds_a_followed_members_argument_and_comments_under_ones_own_for_the_morning_as_their_own_parts()
     {
-        var (email, followed, own, _, browsers) = await ArrangeAsync(NoticeFrequencies.Daily);
+        var (email, followed, _, newComment, browsers) = await ArrangeAsync(NoticeFrequencies.Daily);
         try
         {
             var seen = _started.AddMinutes(5);
@@ -103,7 +103,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
             member.GetProperty("textPath").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, followed));
             member.GetProperty("memberName").GetString().ShouldBe("Sekama Autorė");
             var comment = notices.Single(n => n.GetProperty("kind").GetString() == MessageKinds.CommentNoticeEmail).GetProperty("payload");
-            comment.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem().GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, own));
+            comment.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem().GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToComment(Bill, newComment));
             HoldsNoText(gathered);
 
             await RunAtAsync(morning.AddMinutes(15));
@@ -192,9 +192,11 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
 
             var own = await WrittenAsync(author, "for", OwnText);
             var at = new List<DateTimeOffset>();
+            var ids = new List<Guid>();
             for (var i = 1; i <= 3; i++)
             {
                 var comment = await commenter.CommentOkAsync("reason", own, $"Komentaras numeris {i}.");
+                ids.Add(comment);
                 at.Add(new DateTimeOffset(DateTime.SpecifyKind(await Database.ScalarAsync<DateTime>("SELECT created_at FROM appeals.comment WHERE id = @c", ("c", comment)), DateTimeKind.Utc)));
             }
 
@@ -211,7 +213,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
             var (kind, notice) = (await MailAsync(authorEmail)).ShouldHaveSingleItem();
             kind.ShouldBe(MessageKinds.CommentNoticeEmail, "one thing alone: the argument once");
             var line = notice.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem();
-            line.GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, own));
+            line.GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToComment(Bill, ids[0]), "the first new comment of the three runs (design 8.23.14)");
             line.GetProperty("day").GetString().ShouldNotBeNullOrEmpty();
         }
         finally
