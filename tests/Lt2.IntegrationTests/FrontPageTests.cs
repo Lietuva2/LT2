@@ -129,7 +129,7 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         using var raw = await first.Client.GetAsync(ApiRoutes.Me.Bills + "?" + query);
         raw.Headers.CacheControl!.NoStore.ShouldBeTrue("a member's own answer is never stored");
         using var document = JsonDocument.Parse(await raw.Content.ReadAsStringAsync());
-        document.RootElement.EnumerateObject().Select(p => p.Name).ShouldBe(["bills", "hasPositionConsent"]);
+        document.RootElement.EnumerateObject().Select(p => p.Name).ShouldBe(["bills", "hasPositionConsent", "mpAccount"]);
         document.RootElement.GetProperty("hasPositionConsent").GetBoolean().ShouldBeTrue("the caller's own consent, once on the answer");
         foreach (var row in document.RootElement.GetProperty("bills").EnumerateArray())
         {
