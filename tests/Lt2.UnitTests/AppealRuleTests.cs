@@ -393,6 +393,22 @@ public sealed class ClosingRuleTests
         ClosingRules.ShouldClose(BillRecordStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
     }
 
+    /// <summary>Owner, 2026-11-17: an argument with fewer words than the setting is too short; a word is a run of letters or digits.</summary>
+    [Theory]
+    [InlineData("Taip", 3, true)]
+    [InlineData("Taip!!! 👍", 3, true)]
+    [InlineData("Mažesni mokesčiai šeimoms", 3, false)]
+    [InlineData("32 % tarifas", 3, true)]
+    [InlineData("Tarifas – 32 %, ne 20 %", 3, false)]
+    [InlineData("Žodis", 0, false)]
+    [InlineData("", 1, true)]
+    public void An_argument_with_fewer_words_than_the_setting_is_too_short_and_0_switches_it_off(string text, int minWords, bool tooShort) =>
+        ReasonWords.TooShort(text, minWords).ShouldBe(tooShort);
+
+    [Fact]
+    public void Words_are_runs_of_letters_or_digits_with_lithuanian_letters_counted_whole() =>
+        ReasonWords.Count("Ūkininkų pajamos-mokesčiai, 2026 m.").ShouldBe(5);
+
     /// <summary>Owner, 2026-11-17: the author edits an argument until someone reacts, since the reactions were given to its exact words.</summary>
     [Theory]
     [InlineData("published", true, 0, 0, null)]

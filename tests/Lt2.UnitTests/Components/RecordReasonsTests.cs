@@ -331,6 +331,34 @@ public sealed class RecordReasonsTests : BunitContext
         _appeals.Calls.Skip(_appeals.Calls.LastIndexOf("EditReasonAsync")).ShouldContain("GetRecordAsync", "read again in place");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17: a too short argument is asked about in place before it is published: "Papildyti" goes back to the text,
+    /// "Vis tiek skelbti" publishes it (the server flags it and it waits for a moderator).
+    /// </summary>
+    [Fact]
+    public void A_too_short_argument_is_asked_about_first_and_published_only_when_the_person_says_so()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500) { MinReasonWords = 3 }));
+        _appeals.On("FindSimilarAsync", ApiResult<IReadOnlyList<ReasonResponse>>.Ok([]));
+        _appeals.On("WriteReasonAsync", ApiResult<ReasonCreatedResponse>.Ok(new ReasonCreatedResponse(Guid.NewGuid(), "pending")));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+        reasons.Find("#add-reason").Click();
+        reasons.Find("#reason-text").Input("Taip.");
+        reasons.Find("#write-reason").Submit();
+
+        reasons.Find("#too-short-text").TextContent.ShouldStartWith("Argumentas labai trumpas.");
+        _appeals.Calls.ShouldNotContain("WriteReasonAsync");
+        _appeals.Calls.ShouldNotContain("FindSimilarAsync");
+        reasons.Find("#too-short-more").Click();
+        reasons.FindAll("#too-short").ShouldBeEmpty("back to the text");
+
+        reasons.Find("#write-reason").Submit();
+        reasons.Find("#too-short-anyway").Click();
+        reasons.WaitForAssertion(() => reasons.Markup.ShouldContain("Argumentą pirma peržiūrės moderatorius."));
+        _appeals.Calls.ShouldContain("WriteReasonAsync");
+    }
+
     /// <summary>Opens the writing box, writes an argument for "už" and publishes it; the record is then read as <paramref name="after"/>.</summary>
     private IRenderedComponent<RecordReasons> WriteAnArgument(ReasonCreatedResponse created, BillRecordResponse after)
     {

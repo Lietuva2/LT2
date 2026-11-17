@@ -228,6 +228,10 @@ page's "Balsuota".
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
   a reason is on its author's side. The author can withdraw their own reason while the bill is open. Writing a reason
   needs no positions consent: it is the author's own deliberate publication, public with name and chosen side.
+- **Too short arguments (owner, 2026-11-17; design 8.3).** Fewer words than `Appeals:MinReasonWords` (3; 0 = off; `ReasonWords`
+  in SharedKernel, also compiled into Lt2.Web.Client): `RecordReasons` asks in place before publishing ("Papildyti", "Vis tiek
+  skelbti"); the server adds the flag `too-short` (`AppealsService.ReasonFlagsAsync`, writing and editing) and the argument
+  waits for a moderator ("Per trumpas"). Arguments only.
 - **Editing until someone reacts (owner, 2026-11-17; design 8.2, 8.23.3).** The author edits a reason's text and side
   (`PUT /reasons/{id}`, `AppealsService.EditReasonAsync`) or a comment's text (`PUT /comments/{id}`, `CommentsService.EditAsync`,
   in the voice it was written in) while the bill is open and nobody reacted: `AppealRules.CheckEdit` (no "Man svarbu", no

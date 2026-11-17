@@ -78,6 +78,13 @@
 <data name="Reasons.WithdrawConfirm" xml:space="preserve"><value>Argumentas bus ištrintas kartu su jo „Man svarbu“ žymomis. Jau sudarytose suvestinėse jo tekstas liks.</value></data>
 <data name="Reasons.WithdrawYes" xml:space="preserve"><value>Atsiimti argumentą</value></data>
 <data name="Reasons.Withdrawn" xml:space="preserve"><value>Argumentas atsiimtas.</value></data>
+<data name="Reasons.TooShort" xml:space="preserve"><value>Argumentas labai trumpas. Parašykite, kodėl prašote balsuoti už ar prieš – tokį argumentą kiti galės pažymėti „Man svarbu“.</value></data>
+<data name="Reasons.TooShort.More" xml:space="preserve"><value>Papildyti</value></data>
+<data name="Reasons.TooShort.Anyway" xml:space="preserve"><value>Vis tiek skelbti</value></data>
+<data name="Mod.Flag.too-short" xml:space="preserve"><value>Per trumpas</value></data>
+<data name="Admin.Setting.Appeals:MinReasonWords" xml:space="preserve"><value>Mažiausiai žodžių argumente</value></data>
+<data name="Admin.Help.Appeals:MinReasonWords" xml:space="preserve"><value>Trumpesnio argumento forma pirma paklausia, ar jį papildyti; paskelbtas vis tiek, jis pažymimas „Per trumpas“ ir laukia moderatoriaus. Žodis – raidžių ar skaitmenų seka. Komentarams netaikoma. 0 – netikrinama.</value></data>
+<data name="Admin.Unit.Appeals:MinReasonWords" xml:space="preserve"><value>žodžiai (0 – netikrinama)</value></data>
 <data name="Reasons.Edit" xml:space="preserve"><value>Redaguoti</value></data>
 <data name="Reasons.EditTitle" xml:space="preserve"><value>Redaguoti argumentą</value></data>
 <data name="Reasons.Save" xml:space="preserve"><value>Išsaugoti</value></data>

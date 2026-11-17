@@ -151,6 +151,12 @@ public static class SettingKeys
     public static readonly SettingKey<int> AppealsReasonsPerPerson = new("Appeals:ReasonsPerPerson", 0, v => v is >= 0 and <= 100);
 
     /// <summary>
+    /// An argument with fewer words than this is too short (owner, 2026-11-17): the form asks first, and one published anyway
+    /// is flagged <c>too-short</c> and waits for a moderator. 0 = off. Arguments only.
+    /// </summary>
+    public static readonly SettingKey<int> AppealsMinReasonWords = new("Appeals:MinReasonWords", 3, v => v is >= 0 and <= 50);
+
+    /// <summary>
     /// The longest text, in characters, of what members write for others to read (design 5.6, 8.2, owner 2026-11-16): an
     /// argument, an organisation's statement, an MP's response (and comments and "Apie mane" when they are built). Texts a
     /// person reviews anyway (a bill's description by a moderator) and short fields keep their own limits. 0 = no limit but
@@ -239,6 +245,7 @@ public static class SettingKeys
         DigestReviewHours,
         DigestPartyGroupMinimum,
         AppealsReasonsPerPerson,
+        AppealsMinReasonWords,
         TextsMaxLength,
         AppealsEndorsementsPerPerson,
         OrganisationsPerAccount,

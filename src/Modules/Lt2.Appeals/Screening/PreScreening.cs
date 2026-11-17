@@ -9,6 +9,9 @@ internal static class ScreeningFlags
     public const string Phone = "phone";
     public const string PersonalCode = "personal-code";
     public const string Link = "link";
+
+    /// <summary>An argument with fewer words than <c>Appeals:MinReasonWords</c> (owner, 2026-11-17; arguments only).</summary>
+    public const string TooShort = "too-short";
 }
 
 /// <summary>

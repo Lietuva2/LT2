@@ -364,6 +364,21 @@ internal sealed class AppealsService(
     }
 
     /// <summary>
+    /// What pre-screening finds in an argument (design 8.3): the rules every screened text has, and an argument with fewer words
+    /// than <c>Appeals:MinReasonWords</c> is too short (owner, 2026-11-17: arguments only). Any flag makes it wait for a moderator.
+    /// </summary>
+    private async Task<IReadOnlyList<string>> ReasonFlagsAsync(string text, CancellationToken ct)
+    {
+        var flags = (await screening.ScreenAsync(text, ct)).ToList();
+        if (ReasonWords.TooShort(text, await settings.GetAsync(SettingKeys.AppealsMinReasonWords, ct)))
+        {
+            flags.Add(ScreeningFlags.TooShort);
+        }
+
+        return flags;
+    }
+
+    /// <summary>
     /// The side and the text of an argument against the rules, with the length the setting allows now (design 8.2, 6.8:
     /// checked here for every caller); a too-long text's error names that number.
     /// </summary>
@@ -386,7 +401,7 @@ internal sealed class AppealsService(
         }
 
         var text = AppealRules.NormaliseText(request.Text);
-        var flags = await screening.ScreenAsync(text, cancellationToken);
+        var flags = await ReasonFlagsAsync(text, cancellationToken);
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -462,7 +477,7 @@ internal sealed class AppealsService(
         }
 
         var text = AppealRules.NormaliseText(request.Text);
-        var flags = await screening.ScreenAsync(text, cancellationToken);
+        var flags = await ReasonFlagsAsync(text, cancellationToken);
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);

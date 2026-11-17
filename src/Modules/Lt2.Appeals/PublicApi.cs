@@ -144,7 +144,11 @@ public sealed record MyBillRecord(
 /// limit, the default). <paramref name="AiSummaries"/>: the summary job can make descriptions (design 8.13: a provider is
 /// configured, official texts can be read and <c>Ai:SummariesPerDay</c> is not 0); while false nothing promises one.
 /// </summary>
-public sealed record AppealRulesInfo(int ThresholdDefault, int ThresholdMinimum, int TextMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries);
+public sealed record AppealRulesInfo(int ThresholdDefault, int ThresholdMinimum, int TextMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries)
+{
+    /// <summary>The setting <c>Appeals:MinReasonWords</c>: fewer words make an argument too short (owner, 2026-11-17); 0 = off.</summary>
+    public int MinReasonWords { get; init; }
+}
 
 public sealed record NewReason(string Side, string Text);
 

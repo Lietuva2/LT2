@@ -231,10 +231,21 @@
                     @* Design 8.2 (owner, 2026-11-16): the length is the setting Texts:MaxLength; with 0 (no limit) only the
                        technical ceiling holds and no counter is shown. *@
                     <textarea class="textarea" id="reason-text" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-describedby="@DescribedBy("text", "reason-text", "reason-hint", "reason-layout")"
-                              aria-invalid="@Invalid("text")" @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
+                              aria-invalid="@Invalid("text")" @bind="_text" @bind:event="oninput" disabled="@Locked" @ref="_textArea"></textarea>
                     <p class="field__hint num" id="reason-hint">@(_maxLength is > 0 and var max ? L.Format("Reasons.Hint", Display.Number(_text.Length), Display.Number(max)) : L["Reasons.HintNoLimit"].Value)</p>
                     <TextLayoutHint Id="reason-layout" />
                 </div>
+                @if (_tooShort)
+                {
+                    @* Owner, 2026-11-17: asked in place before a too short argument is published. *@
+                    <div class="note note--quiet stack stack--tight" role="group" aria-labelledby="too-short-text" id="too-short">
+                        <p id="too-short-text">@L["Reasons.TooShort"]</p>
+                        <div class="row">
+                            <button type="button" class="btn" id="too-short-more" disabled="@Locked" @onclick="AddMoreAsync">@L["Reasons.TooShort.More"]</button>
+                            <button type="button" class="btn btn--plain" id="too-short-anyway" disabled="@Locked" @onclick="PublishAnywayAsync">@L["Reasons.TooShort.Anyway"]</button>
+                        </div>
+                    </div>
+                }
                 @if (_similar is { Count: > 0 } similar)
                 {
                     <div class="stack stack--tight" role="group" aria-labelledby="similar-title">
@@ -615,11 +626,47 @@
     /// </summary>
     private Task StartWritingAsync() => RunAsync(async () =>
     {
-        // The length an argument may have is a runtime setting (design 8.2): read once, when writing starts.
-        _maxLength ??= (await Appeals.GetRulesAsync()).Value?.TextMaxLength;
+        // The length an argument may have and the fewest words it should have are runtime settings (design 8.2, owner
+        // 2026-11-17): read when writing starts.
+        var rules = (await Appeals.GetRulesAsync()).Value;
+        _maxLength = rules?.TextMaxLength ?? _maxLength;
+        _minWords = rules?.MinReasonWords ?? 0;
         _side = Mine?.Side;
         _writing = true;
     });
+
+    /// <summary>The setting <c>Appeals:MinReasonWords</c> (0 = off), read when writing starts.</summary>
+    private int _minWords;
+
+    /// <summary>The form asks about a too short argument (owner, 2026-11-17), in place, before publishing it.</summary>
+    private bool _tooShort;
+
+    /// <summary>The person chose "Vis tiek skelbti": the argument goes as it is, and waits for a moderator.</summary>
+    private bool _shortConfirmed;
+
+    private ElementReference _textArea;
+
+    /// <summary>"Papildyti": back to the text, the focus in it.</summary>
+    private async Task AddMoreAsync()
+    {
+        _tooShort = false;
+        try
+        {
+            await _textArea.FocusAsync();
+        }
+        catch (Microsoft.JSInterop.JSException)
+        {
+            // The field is gone (the form closed meanwhile).
+        }
+    }
+
+    /// <summary>"Vis tiek skelbti": published as it is; pre-screening flags it and a moderator decides.</summary>
+    private Task PublishAnywayAsync()
+    {
+        _shortConfirmed = true;
+        _tooShort = false;
+        return SubmitAsync();
+    }
 
     private void ChooseSide(string side)
     {
@@ -663,6 +710,13 @@
         if (_side is null)
         {
             FieldFails("side", L["Reasons.ChooseSide"]);
+            return;
+        }
+
+        // Owner, 2026-11-17: a too short argument is asked about first, the same step as the similar ones; the server decides too.
+        if (!_shortConfirmed && ReasonWords.TooShort(_text, _minWords))
+        {
+            _tooShort = true;
             return;
         }
 
@@ -710,6 +764,8 @@
         _side = null;
         _text = "";
         _similar = null;
+        _tooShort = false;
+        _shortConfirmed = false;
         Errors = NoErrors();
     }
 
