@@ -137,6 +137,13 @@ public static class SettingKeys
     public static readonly SettingKey<int> DigestApprovalHours = new("Digest:ApprovalHours", 24, v => v is > 0 and <= 168);
 
     /// <summary>
+    /// Design 6.3, 8.4 (owner, 2026-11-17): the smallest group of participants on a side who said they support the MP's party
+    /// for that side's party number to be shown in a summary; 0 = no floor (any group of one or more). Default 10, the
+    /// designer's recommendation the owner did not object to; the lawyer's reading before launch may set another value.
+    /// </summary>
+    public static readonly SettingKey<int> DigestPartyGroupMinimum = new("Digest:PartyGroupMinimum", 10, v => v is >= 0 and <= 1000);
+
+    /// <summary>
     /// Arguments one person may write on one bill (design 8.2); 0 = no limit, the default (decided by the owner on
     /// 2026-11-13: limits are switched on when the need shows).
     /// </summary>
@@ -229,6 +236,7 @@ public static class SettingKeys
         DigestNotableChange,
         DigestSending,
         DigestApprovalHours,
+        DigestPartyGroupMinimum,
         AppealsReasonsPerPerson,
         TextsMaxLength,
         AppealsEndorsementsPerPerson,

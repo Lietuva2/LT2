@@ -187,26 +187,24 @@ internal static class CountRules
 }
 
 /// <summary>
-/// Group numbers (for example supporters of a party, design 6.3, 8.2): published only for groups of at least 20 people.
-/// Nothing uses it before the summaries.
+/// Group numbers (supporters of the MP's party on a side, design 6.3, 8.4): published only for groups of at least the
+/// setting <c>Digest:PartyGroupMinimum</c> (owner, 2026-11-17; 0 = no floor). An empty group is no group and is never shown.
 /// </summary>
 internal static class GroupRules
 {
-    public const int MinimumGroupSize = 20;
+    public static bool MayPublish(int groupSize, int minimum) => groupSize > 0 && groupSize >= minimum;
 
-    public static bool MayPublish(int groupSize) => groupSize >= MinimumGroupSize;
-
-    /// <summary>The number to publish for a group, or <c>null</c> when the group is too small to show.</summary>
-    public static int? Publishable(int groupSize) => MayPublish(groupSize) ? groupSize : null;
+    /// <summary>The number to publish for a group, or <c>null</c> when the group is empty or too small to show.</summary>
+    public static int? Publishable(int groupSize, int minimum) => MayPublish(groupSize, minimum) ? groupSize : null;
 
     /// <summary>
-    /// A group shown beside a total it is part of (a party's supporters beside a side's count): the group needs at least
-    /// 20, and so does the rest of the total, or the rest could be worked out by subtraction. A rest of none is fine.
+    /// A group shown beside a total it is part of (a party's supporters beside a side's count): the group needs at least the
+    /// minimum, and so does the rest of the total, or the rest could be worked out by subtraction. A rest of none is fine.
     /// </summary>
-    public static int? PublishableBeside(int groupSize, int total)
+    public static int? PublishableBeside(int groupSize, int total, int minimum)
     {
         var rest = total - groupSize;
-        return MayPublish(groupSize) && (rest == 0 || MayPublish(rest)) ? groupSize : null;
+        return MayPublish(groupSize, minimum) && (rest == 0 || MayPublish(rest, minimum)) ? groupSize : null;
     }
 }
 

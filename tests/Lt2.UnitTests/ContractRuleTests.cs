@@ -69,6 +69,19 @@ public sealed class ContractRuleTests
         SettingKeys.DigestNotableChange.IsValid(JsonSerializer.SerializeToElement(1.5)).ShouldBeFalse();
     }
 
+    /// <summary>Design 8.4 (owner, 2026-11-17): the party group minimum takes 0 (no floor) up to 1 000, never a negative number.</summary>
+    [Fact]
+    public void The_party_group_minimum_takes_zero_and_refuses_a_negative_number()
+    {
+        SettingKeys.All.ShouldContain(SettingKeys.DigestPartyGroupMinimum);
+        SettingKeys.DigestPartyGroupMinimum.IsValid(JsonSerializer.SerializeToElement(0)).ShouldBeTrue();
+        SettingKeys.DigestPartyGroupMinimum.IsValid(JsonSerializer.SerializeToElement(20)).ShouldBeTrue();
+        SettingKeys.DigestPartyGroupMinimum.IsValid(JsonSerializer.SerializeToElement(1000)).ShouldBeTrue();
+        SettingKeys.DigestPartyGroupMinimum.IsValid(JsonSerializer.SerializeToElement(-1)).ShouldBeFalse();
+        SettingKeys.DigestPartyGroupMinimum.IsValid(JsonSerializer.SerializeToElement(1001)).ShouldBeFalse();
+        SettingKeys.DigestPartyGroupMinimum.IsValid(JsonSerializer.SerializeToElement(2.5)).ShouldBeFalse();
+    }
+
     [Fact]
     public void Setting_defaults_follow_the_design()
     {
@@ -76,6 +89,7 @@ public sealed class ContractRuleTests
         SettingKeys.DigestThresholdDefault.Default.ShouldBe(100);
         SettingKeys.DigestMaxPerWeek.Default.ShouldBe(2);
         SettingKeys.DigestNotableChange.Default.ShouldBe(0.10m);
+        SettingKeys.DigestPartyGroupMinimum.Default.ShouldBe(10);
         SettingKeys.SurgeMinimumShare.Default.ShouldBe(0.30m);
         SettingKeys.SurgeMinimumAccounts.Default.ShouldBe(50);
         SettingKeys.SurgeWindowHours.Default.ShouldBe(72);

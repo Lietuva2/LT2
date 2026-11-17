@@ -10,7 +10,7 @@ namespace Lt2.Appeals.Application;
 /// seen (design 8.3), the two most endorsed per side (design 8.4); no author, no person.
 /// </summary>
 internal sealed class DigestSource(
-    IDbContextFactory<AppealsDb> contexts, AppealReads reads, IBillCatalogue bills, IPlannedAgenda agenda, IPartySupporters supporters) : IDigestSource
+    IDbContextFactory<AppealsDb> contexts, AppealReads reads, IBillCatalogue bills, IPlannedAgenda agenda, IPartySupporters supporters, ISettings settings) : IDigestSource
 {
     public const int ReasonsPerSide = 2;
 
@@ -116,6 +116,7 @@ internal sealed class DigestSource(
         }
 
         var ids = recordIds.ToList();
+        var minimum = await settings.GetAsync(SettingKeys.DigestPartyGroupMinimum, cancellationToken);
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var totals = await reads.CountsAsync(db, ids, cancellationToken);
 
@@ -142,12 +143,12 @@ internal sealed class DigestSource(
                 var forCount = sides.FirstOrDefault(s => s.Side == Sides.For).Count;
                 var againstCount = sides.FirstOrDefault(s => s.Side == Sides.Against).Count;
 
-                // Each side's group is published only from 20 people (design 6.3, 8.4), and only when the rest of that
-                // side is not a smaller group that subtraction from the total shown beside it would reveal.
+                // Each side's group is published only from Digest:PartyGroupMinimum people (design 6.3, 8.4), and only when
+                // the rest of that side is not a smaller group that subtraction from the total shown beside it would reveal.
                 var published = new PartyNumbers(
                     party,
-                    GroupRules.PublishableBeside(forCount, totals[recordId].For),
-                    GroupRules.PublishableBeside(againstCount, totals[recordId].Against));
+                    GroupRules.PublishableBeside(forCount, totals[recordId].For, minimum),
+                    GroupRules.PublishableBeside(againstCount, totals[recordId].Against, minimum));
                 if (published.For is not null || published.Against is not null)
                 {
                     numbers.Add(published);

@@ -369,6 +369,9 @@
 <data name="Admin.Setting.Digest:NotableChange" xml:space="preserve"><value>Pastebimas dalyvių pokytis</value></data>
 <data name="Admin.Help.Digest:NotableChange" xml:space="preserve"><value>Projektas vėl patenka į savaitinę suvestinę, jei jo dalyvių skaičius nuo paskutinės suvestinės pasikeitė bent tiek.</value></data>
 <data name="Admin.Unit.Digest:NotableChange" xml:space="preserve"><value>dalis (0.10 = 10 %)</value></data>
+<data name="Admin.Setting.Digest:PartyGroupMinimum" xml:space="preserve"><value>Mažiausia partijos palaikytojų grupė</value></data>
+<data name="Admin.Help.Digest:PartyGroupMinimum" xml:space="preserve"><value>Seimo nario suvestinėje rodoma, kiek vienos pusės dalyvių nurodė, kad palaiko jo partiją, tik kai jų yra bent tiek; 0 – rodoma, kad ir kiek jų būtų.</value></data>
+<data name="Admin.Unit.Digest:PartyGroupMinimum" xml:space="preserve"><value>žmonės (0 – be ribos)</value></data>
 <data name="Admin.Setting.Surge:MinimumShare" xml:space="preserve"><value>Šuolis: naujų paskyrų dalis</value></data>
 <data name="Admin.Help.Surge:MinimumShare" xml:space="preserve"><value>Pastaba apie šuolį rodoma, kai bent tokią dalį naujų pozicijų per laikotarpį pateikė per tą laiką sukurtos paskyros.</value></data>
 <data name="Admin.Unit.Surge:MinimumShare" xml:space="preserve"><value>dalis (0.30 = 30 %)</value></data>

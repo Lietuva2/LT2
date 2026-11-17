@@ -97,7 +97,7 @@ public sealed class ProfileRuleTests
     {
         PartyPublicLimits.ConsentVersion.ShouldBe(PartyPublicConsent.TextVersion);
         PartyPublicConsent.Kind.ShouldBe("party-public");
-        new PartySupportResponse(null, []).ConsentVersion.ShouldBe(PartyPublicConsent.TextVersion);
+        new PartySupportResponse(null, [], SettingKeys.DigestPartyGroupMinimum.Default).ConsentVersion.ShouldBe(PartyPublicConsent.TextVersion);
     }
 
     [Fact]

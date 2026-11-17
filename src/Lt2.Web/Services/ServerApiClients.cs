@@ -51,7 +51,7 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
 }
 
-internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration, AnalyticsCopies analytics) : IMeApi
+internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration, AnalyticsCopies analytics, ISettings settings) : IMeApi
 {
     /// <summary>
     /// The account as a page rendered on the server sees it: without the MP offer or link (design 8.5.4: nothing about it is
@@ -105,7 +105,8 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
     public async Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default)
     {
         var choices = await mps.PartiesAsync(cancellationToken);
-        return errors.ToApiResult(await identity.GetPartySupportAsync(User, cancellationToken), state => Mapping.ToResponse(state, choices));
+        var minimum = await settings.GetAsync(SettingKeys.DigestPartyGroupMinimum, cancellationToken);
+        return errors.ToApiResult(await identity.GetPartySupportAsync(User, cancellationToken), state => Mapping.ToResponse(state, choices, minimum));
     }
 
     public async Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default) =>
@@ -162,8 +163,8 @@ internal static class Mapping
     public static RegistrationCompletion ToCompletion(CompleteRegistrationRequest request) =>
         new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode, request.AcceptsTerms);
 
-    public static PartySupportResponse ToResponse(PartySupportState state, IReadOnlyList<string> choices) =>
-        new(state.Party, choices, state.Public, state.ProfilePublic, state.ConsentVersion);
+    public static PartySupportResponse ToResponse(PartySupportState state, IReadOnlyList<string> choices, int groupMinimum) =>
+        new(state.Party, choices, groupMinimum, state.Public, state.ProfilePublic, state.ConsentVersion);
 
     public static MeResponse ToResponse(AccountSummary account) => new()
     {

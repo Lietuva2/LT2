@@ -439,10 +439,12 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         method.ShouldContain("Argumentų dėl vieno projekto</dt><dd class=\"num\">neribojama");
         method.ShouldContain("„Man svarbu“ žymų dėl vieno projekto</dt><dd class=\"num\">neribojama");
         method.ShouldContain("kai bent 30 % per paskutines 72 valandas");
-        method.ShouldContain("bent 20 žmonių");
+        // Design 8.4 (owner, 2026-11-17): the party group minimum is the setting Digest:PartyGroupMinimum, as it holds now.
+        var groupMinimum = Lt2.SharedKernel.SettingKeys.DigestPartyGroupMinimum.Default;
+        method.ShouldContain($"rodomi tik kai grupėje žmonių yra bent {groupMinimum}");
 
         var api = await stranger.GetJsonAsync<Lt2.Api.Contracts.Digests.DigestRulesResponse>(Lt2.Api.Contracts.Digests.DigestRoutes.Rules);
-        api.ShouldBe(new Lt2.Api.Contracts.Digests.DigestRulesResponse(100, 50, "07:00", "12:00", 2, 0.10m, 0.30m, 50, 72, 20, 30, 2));
+        api.ShouldBe(new Lt2.Api.Contracts.Digests.DigestRulesResponse(100, 50, "07:00", "12:00", 2, 0.10m, 0.30m, 50, 72, groupMinimum, 30, 2));
     }
 
     [Fact]
