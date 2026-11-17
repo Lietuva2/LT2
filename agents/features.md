@@ -22,7 +22,7 @@ Read the part for the feature you change, after its design file ([design/README.
   `EmailRenderer<T>` registered in `NotificationsModule`; shared texts use the `Email.*` keys of `EmailTemplates.resx`.
   `Build` and `BuildMp` take the footer (`EmailLayout.Footer(l, site.Value.Address)`: the privacy notice's full address,
   design 8.22.3), so no email goes without it. In `Build`'s HTML part (owner, 2026-11-17) a line ending "text: https://…" is that
-  text (its last sentence) as a bold green link (in the footer, every link in its small grey type), the address not printed (owner, 2026-11-17: noise), any other address a plain link
+  text (its last sentence) as a bold green link (in the footer, every link the footer's grey, underlined: `color:#64748b;text-decoration:underline`, the MP footer too), the address not printed (owner, 2026-11-17: noise), any other address a plain link
   (`EmailLayout.LinkedHtml`); a template writes an action line with `EmailLayout.LinkLine(label, url)`; the plain part is unchanged
   and nothing is rewritten or tracked. An email of the member's rhythm is built by `EmailLayout.BuildNotice` (design 8.24.1):
   its footer holds the reason (`*.Reason` keys, no link), "Keisti periodiškumą arba atsisakyti laiškų" (`Email.Notices.*`;

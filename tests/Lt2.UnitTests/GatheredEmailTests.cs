@@ -83,7 +83,7 @@ public sealed class GatheredEmailTests
             "Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0.\n"
             + "Keisti periodiškumą: https://lietuva2.test/paskyra/sekimas#laisku-daznis\n"
             + "Kaip tvarkome duomenis, rašoma privatumo pranešime: https://lietuva2.test/privatumas\n");
-        email.HtmlBody!.ShouldContain("<a href=\"https://lietuva2.test/paskyra/sekimas#laisku-daznis\">Keisti periodiškumą</a>");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lietuva2.test/paskyra/sekimas#laisku-daznis\" style=\"color:#64748b;text-decoration:underline\">Keisti periodiškumą</a>");
         email.HtmlBody!.ShouldNotContain("<img", Case.Insensitive, "no tracking");
     }
 

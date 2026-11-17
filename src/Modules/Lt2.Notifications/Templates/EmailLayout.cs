@@ -61,8 +61,12 @@ internal static class EmailLayout
             ? LinkLine(l[EmailText.ChangeRhythm], rhythm)
             : l.Format(EmailText.NoticeLinksText, rhythm, stop);
         var linksHtml = stop is null
-            ? Anchor(rhythm, l[EmailText.ChangeRhythm])
-            : string.Format(CultureInfo.InvariantCulture, WebUtility.HtmlEncode(l[EmailText.NoticeLinks]), Anchor(rhythm, l[EmailText.ChangeRhythm]), Anchor(stop, l[EmailText.StopNotices]));
+            ? Anchor(rhythm, l[EmailText.ChangeRhythm], FooterLinkStyle)
+            : string.Format(
+                CultureInfo.InvariantCulture,
+                WebUtility.HtmlEncode(l[EmailText.NoticeLinks]),
+                Anchor(rhythm, l[EmailText.ChangeRhythm], FooterLinkStyle),
+                Anchor(stop, l[EmailText.StopNotices], FooterLinkStyle));
         return Compose(
             to,
             subject,
@@ -113,27 +117,31 @@ internal static class EmailLayout
     /// One line of a member's email as HTML: "…sentence. Link text: https://…" becomes the earlier sentences as text, then the
     /// link text as a bold link in the site's green (owner, 2026-11-17: "I had no problems with those green links"), without the
     /// address printed under it (owner, 2026-11-17: it was noise); any other line keeps its text with its addresses as plain links.
-    /// In the footer (<paramref name="footer"/>) the link has no look of its own: it stays in the footer's small grey type.
+    /// In the footer (<paramref name="footer"/>) every link is the footer's grey, underlined (<see cref="FooterLinkStyle"/>).
     /// </summary>
     internal static string LinkLineHtml(string line, bool footer = false)
     {
         var match = LinkAtEnd.Match(line);
         if (!match.Success)
         {
-            return Links.Replace(Encode(line), m => $"<a href=\"{m.Value}\">{m.Value}</a>");
+            return footer
+                ? Links.Replace(Encode(line), m => $"<a href=\"{m.Value}\" style=\"{FooterLinkStyle}\">{m.Value}</a>")
+                : Links.Replace(Encode(line), m => $"<a href=\"{m.Value}\">{m.Value}</a>");
         }
 
-        return Encode(match.Groups["lead"].Value) + Anchor(match.Groups["url"].Value, match.Groups["label"].Value.Trim(), footer ? null : ActionLinkStyle);
+        return Encode(match.Groups["lead"].Value) + Anchor(match.Groups["url"].Value, match.Groups["label"].Value.Trim(), footer ? FooterLinkStyle : ActionLinkStyle);
     }
 
     /// <summary>The look of a "text: url" line's link in a member's email: bold, in the site's green.</summary>
     private const string ActionLinkStyle = "font-weight:600;color:#1f6b3a";
 
     /// <summary>
-    /// A link: the address itself (nothing rewritten or tracked) around the encoded text. Without a style it takes the look
-    /// around it: every link of the footer ("Keisti periodiškumą", "atsisakyti laiškų", the privacy notice) stays in its small
-    /// grey type.
+    /// The look of every link in a member's email footer ("Keisti periodiškumą", "atsisakyti laiškų", the privacy notice): the
+    /// footer's grey, underlined, so it is grey in every mail program rather than the program's own link colour.
     /// </summary>
+    private const string FooterLinkStyle = "color:#64748b;text-decoration:underline";
+
+    /// <summary>A link: the address itself (nothing rewritten or tracked) around the encoded text, with its look when given.</summary>
     private static string Anchor(string url, string text, string? style = null) =>
         $"<a href=\"{WebUtility.HtmlEncode(url)}\"{(style is null ? "" : $" style=\"{style}\"")}>{Encode(text)}</a>";
 
@@ -187,9 +195,12 @@ internal static class EmailLayout
     private static readonly System.Text.RegularExpressions.Regex Links =
         new(@"https://[^\s<>""]+[^\s<>"".,;:)]", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
-    /// <summary>The footer in small grey type under a rule, its address a plain link (nothing rewritten or tracked).</summary>
+    /// <summary>
+    /// The footer in small grey type under a rule, its address a link in the footer's grey (<see cref="FooterLinkStyle"/>, as in
+    /// a member's footer; nothing rewritten or tracked).
+    /// </summary>
     private static string FooterHtml(string footer) =>
-        $"<p style=\"margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:13px;color:#64748b\">{Links.Replace(Encode(footer), m => $"<a href=\"{m.Value}\">{m.Value}</a>")}</p>";
+        $"<p style=\"margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:13px;color:#64748b\">{Links.Replace(Encode(footer), m => $"<a href=\"{m.Value}\" style=\"{FooterLinkStyle}\">{m.Value}</a>")}</p>";
 
     private static string Encode(string paragraph) =>
         WebUtility.HtmlEncode(paragraph.ReplaceLineEndings("\n")).Replace("\n", "<br>", StringComparison.Ordinal);

@@ -110,8 +110,8 @@ public sealed class MemberStopLinkTests
             var footer = html[footerAt..];
             footer.ShouldBe(
                 FooterStart + System.Net.WebUtility.HtmlEncode(Reasons[i])
-                + $"<br><a href=\"{System.Net.WebUtility.HtmlEncode(Site + Account)}\">Keisti periodiškumą</a> arba <a href=\"{Site}/laiskai/nebegauti/{Token}\">atsisakyti laiškų</a>"
-                + $"<br><a href=\"{Site}/privatumas\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p></body></html>",
+                + $"<br><a href=\"{System.Net.WebUtility.HtmlEncode(Site + Account)}\" style=\"color:#64748b;text-decoration:underline\">Keisti periodiškumą</a> arba <a href=\"{Site}/laiskai/nebegauti/{Token}\" style=\"color:#64748b;text-decoration:underline\">atsisakyti laiškų</a>"
+                + $"<br><a href=\"{Site}/privatumas\" style=\"color:#64748b;text-decoration:underline\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p></body></html>",
                 email.Subject);
             html[..footerAt].ShouldNotContain("laiskai/nebegauti", Case.Sensitive, "only the footer links the stop page");
             html[..footerAt].ShouldNotContain("Keisti periodiškumą", Case.Sensitive);
@@ -128,7 +128,7 @@ public sealed class MemberStopLinkTests
             without[i].Headers.ShouldBeNull(without[i].Subject);
             without[i].TextBody.ShouldNotContain("laiskai/nebegauti", Case.Sensitive);
             without[i].TextBody.ShouldContain($"\nKeisti periodiškumą: {Site}{Account}\n", Case.Sensitive, without[i].Subject);
-            without[i].HtmlBody.ShouldNotBeNull().ShouldContain($"<br><a href=\"{System.Net.WebUtility.HtmlEncode(Site + Account)}\">Keisti periodiškumą</a><br>");
+            without[i].HtmlBody.ShouldNotBeNull().ShouldContain($"<br><a href=\"{System.Net.WebUtility.HtmlEncode(Site + Account)}\" style=\"color:#64748b;text-decoration:underline\">Keisti periodiškumą</a><br>");
             without[i].HtmlBody!.ShouldNotContain("atsisakyti", Case.Insensitive);
             with[i].TextBody.Replace($" · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{Token}", "", StringComparison.Ordinal)
                 .ShouldBe(without[i].TextBody, "the token adds the stop link and nothing else");
