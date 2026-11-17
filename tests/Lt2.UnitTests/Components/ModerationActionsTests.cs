@@ -61,6 +61,25 @@ public sealed class ModerationActionsTests : BunitContext
     private static string[] Offered(IRenderedComponent<ModerationActions> actions) =>
         actions.FindAll("[role=group] button").Select(b => b.Id!.Replace("action-", "", StringComparison.Ordinal).Replace("-" + Key(actions), "", StringComparison.Ordinal)).ToArray();
 
+    /// <summary>
+    /// Owner, 2026-11-17: "Palikti" on a published argument only when it does something: an open report, or not yet seen (it
+    /// then marks it seen); never on a seen one without a report, on an open or a closed record.
+    /// </summary>
+    [Theory]
+    [InlineData(false, false, "open", true)]
+    [InlineData(true, true, "open", true)]
+    [InlineData(true, false, "open", false)]
+    [InlineData(true, false, "closed", false)]
+    [InlineData(true, true, "closed", true)]
+    public void Palikti_on_a_published_argument_only_when_it_is_reported_or_not_yet_seen(bool seen, bool reported, string recordStatus, bool offered)
+    {
+        var actions = Render<ModerationActions>(p => p
+            .Add(c => c.Id, Item).Add(c => c.Kind, "reason").Add(c => c.Status, "published").Add(c => c.RecordStatus, recordStatus)
+            .Add(c => c.Seen, seen).Add(c => c.Reported, reported));
+        Offered(actions).Contains("keep").ShouldBe(offered);
+        Offered(actions).ShouldContain("hide");
+    }
+
     [Fact]
     public void An_open_bill_offers_the_description_the_timing_actions_and_keep_only_when_something_was_reported()
     {

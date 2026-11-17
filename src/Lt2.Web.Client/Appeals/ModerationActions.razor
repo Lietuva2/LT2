@@ -205,6 +205,18 @@
     /// <summary>The item has open reports or date flags, so "keep" means something.</summary>
     [Parameter] public bool HasOpenItems { get; set; }
 
+    /// <summary>For an argument: a moderator has seen it (design 8.3).</summary>
+    [Parameter] public bool Seen { get; set; }
+
+    /// <summary>For an argument: it has an open report.</summary>
+    [Parameter] public bool Reported { get; set; }
+
+    /// <summary>
+    /// "Palikti" on a published argument only when it does something (owner, 2026-11-17): it answers an open report or marks an
+    /// argument not yet seen as seen, taking it out of the queue. On a seen one without a report it would change nothing.
+    /// </summary>
+    private string[] KeepReason => Reported || !Seen ? ["keep"] : [];
+
     /// <summary>The start of every element id here (<c>panel-</c> in the panel on the bill's page), so ids stay unique.</summary>
     [Parameter] public string IdPrefix { get; set; } = "";
 
@@ -224,10 +236,10 @@
     {
         ("record", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "threshold", "planned", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
         ("record", "closed") => [.. (HasOpenItems ? new[] { "keep" } : []), .. ClosedDescriptionActions, "hide"],
-        ("reason", "published") when RecordStatus == "closed" => ["keep", "hide"],
+        ("reason", "published") when RecordStatus == "closed" => [.. KeepReason, "hide"],
         ("reason", _) when RecordStatus == "closed" => ["hide"],
         ("reason", "pending") => ["publish", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
-        ("reason", _) => ["keep", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
+        ("reason", _) => [.. KeepReason, "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
         _ => [],
     };
 

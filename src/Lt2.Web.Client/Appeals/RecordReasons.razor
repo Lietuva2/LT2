@@ -168,7 +168,7 @@
                                 @if (_moderating == reason.Id && Moderated(reason.Id) is { } moderated)
                                 {
                                     <div class="act__panel sheet sheet--quiet moderate" id="moderation-@reason.Id">
-                                        <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="ModeratorActedAsync" OnRestricted="ModeratorActedAsync" />
+                                        <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" Seen="moderated.Seen" Reported="moderated.Reports.Count > 0" OnDone="ModeratorActedAsync" OnRestricted="ModeratorActedAsync" />
                                     </div>
                                 }
                             </div>
