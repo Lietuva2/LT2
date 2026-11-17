@@ -475,14 +475,15 @@ internal sealed class ModerationService(
                 return Error.Conflict("merge.target-invalid");
             }
 
-            // Endorsements move with it (design 8.3); someone who marked both keeps one mark.
+            // Endorsements move with it (design 8.3); someone who marked both keeps one mark; the target's own author's mark
+            // is dropped, since nobody marks their own argument (owner, 2026-11-17).
             await db.Database.ExecuteSqlRawAsync(
                 """
                 INSERT INTO appeals.endorsement (reason_id, user_id, record_id, created_at)
-                SELECT {1}, e.user_id, e.record_id, e.created_at FROM appeals.endorsement e WHERE e.reason_id = {0}
+                SELECT {1}, e.user_id, e.record_id, e.created_at FROM appeals.endorsement e WHERE e.reason_id = {0} AND e.user_id <> {2}
                 ON CONFLICT (reason_id, user_id) DO NOTHING
                 """,
-                [reasonId, intoReasonId],
+                [reasonId, intoReasonId, into.AuthorUserId],
                 cancellationToken);
             await db.Endorsements.Where(e => e.ReasonId == reasonId).ExecuteDeleteAsync(cancellationToken);
 

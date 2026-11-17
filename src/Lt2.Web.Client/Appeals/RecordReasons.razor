@@ -14,8 +14,9 @@
    nothing in an argument's markup depends on its author's side. A moderator or an administrator in a staff-passkey session
    also gets the queue's actions on each argument, behind "Moderuoti" (design 8.12.3, decided 2026-11-14): what they need
    comes from the moderators' own answer, asked for only once the island runs in the browser (the panel beside it hands
-   over its own, MyBillState), and for anyone else the server refuses it, so nothing of it renders. Each argument is keyed by its id: "Man svarbu" re-sorts the list, and an
-   open form must stay with its own argument. *@
+   over its own, MyBillState), and for anyone else the server refuses it, so nothing of it renders. Each argument is keyed by its id, and after the person's own action the
+   shown order is kept (owner, 2026-11-17: a mark moves nothing on the page), so an open form stays with its own argument
+   and the pressed button keeps its place and its focus. *@
 <section class="sheet stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Record is { } record)
@@ -55,8 +56,8 @@
                                     @if (_signedIn)
                                     {
                                         var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
-                                        <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")"
-                                                disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)"
+                                        <button class="mark num" type="button" id="mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")"
+                                                disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)" @ref="_marks[reason.Id]"
                                                 @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</button>
                                         <button class="linkish small" type="button" disabled="@Locked" @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
                                         @if (IsMine(reason) && record.Status == "open")
@@ -203,6 +204,30 @@
     private IReadOnlyList<ReasonResponse>? _similar;
     private Guid? _reporting;
 
+    /// <summary>Each shown argument's "Man svarbu" button, to give the focus back after pressing it.</summary>
+    private readonly Dictionary<Guid, ElementReference> _marks = [];
+
+    /// <summary>The argument whose "Man svarbu" was just pressed; its button gets the focus back once enabled again.</summary>
+    private Guid? _refocus;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (_refocus is { } id && !Busy && _marks.TryGetValue(id, out var button))
+        {
+            _refocus = null;
+            try
+            {
+                // Without scrolling: the argument stays where it stood (owner, 2026-11-17).
+                await button.FocusAsync(preventScroll: true);
+            }
+            catch (Microsoft.JSInterop.JSException)
+            {
+                // The button is gone (the argument was withdrawn meanwhile): nothing to focus.
+            }
+        }
+    }
+
     /// <summary>The setting Texts:MaxLength (0 = no limit), read when writing starts; null until then or if unread.</summary>
     private int? _maxLength;
 
@@ -303,6 +328,18 @@
         return threads;
     }
 
+    /// <summary>The fresh record with its arguments in the order they stand on the page; arguments not shown before come last, in the answer's order.</summary>
+    public static BillRecordResponse? StableOrder(BillRecordResponse? fresh, BillRecordResponse? shown)
+    {
+        if (fresh is null || shown is null)
+        {
+            return fresh;
+        }
+
+        var at = shown.Reasons.Select((r, i) => (r.Id, i)).ToDictionary(x => x.Id, x => x.i);
+        return fresh with { Reasons = fresh.Reasons.OrderBy(r => at.TryGetValue(r.Id, out var i) ? i : int.MaxValue).ToList() };
+    }
+
     /// <summary>The arguments shown before "show all": the first two of each side (design 8.12.1).</summary>
     private static HashSet<Guid> FirstShown(IReadOnlyList<ReasonResponse> reasons) =>
         AppealLimits.Sides.SelectMany(side => reasons.Where(r => r.Side == side).Take(Shown)).Select(r => r.Id).ToHashSet();
@@ -347,17 +384,24 @@
         Errors = NoErrors();
     }
 
+    /// <summary>
+    /// "Man svarbu" on someone else's argument of one's own side, within the limit (design 8.2); never on one's own (owner,
+    /// 2026-11-17), known from the never-cached "mine" answer, so the served HTML stays the same for everyone.
+    /// </summary>
     private bool MayEndorse(ReasonResponse reason, bool endorsed) =>
-        Record?.Status == "open" && Mine is { } mine && (endorsed || (mine.Side == reason.Side && mine.EndorsementsLeft is null or > 0));
+        Record?.Status == "open" && Mine is { } mine && (endorsed || (!IsMine(reason) && mine.Side == reason.Side && mine.EndorsementsLeft is null or > 0));
 
     private string? EndorseHint(ReasonResponse reason, bool endorsed) =>
         MayEndorse(reason, endorsed) ? null
+            : IsMine(reason) ? L["Reasons.OwnReason"].Value
             : Mine?.Side is null ? L["Reasons.NeedSide"].Value
             : Mine.Side != reason.Side ? L["Reasons.OwnSideOnly"].Value
             : L["Reasons.NoEndorsementsLeft"].Value;
 
     private Task ToggleEndorsementAsync(Guid reasonId, bool endorsed) => RunAsync(async () =>
     {
+        // The button is disabled while the action runs, which takes the focus from it: it gets it back once it is enabled.
+        _refocus = reasonId;
         if (!Succeeded(endorsed ? await Appeals.RemoveEndorsementAsync(reasonId) : await Appeals.EndorseAsync(reasonId)))
         {
             return;
@@ -414,10 +458,16 @@
         Errors = NoErrors();
     }
 
+    /// <summary>
+    /// Reads the record again after the person's own action and keeps the arguments where they stand (owner, 2026-11-17: "the
+    /// view is scrolled away after clicking 'Man svarbu'"): the answer is ordered by the marks, so a mark could move the argument
+    /// the person just pressed, or push it behind "show all", and the browser lost both the place and the focus. The new numbers
+    /// show in place; a new argument comes last; the order by marks returns when the page is read again.
+    /// </summary>
     private async Task ReloadAsync()
     {
         State.Forget(Number);
-        Record = (await Appeals.GetRecordAsync(Number)).Value ?? Record;
+        Record = StableOrder((await Appeals.GetRecordAsync(Number)).Value, Record) ?? Record;
         Threads = await ThreadsAsync();
         Mine = await State.MineAsync(Number) ?? Mine;
     }

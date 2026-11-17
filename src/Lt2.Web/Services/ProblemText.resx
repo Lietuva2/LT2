@@ -74,6 +74,7 @@
 <data name="restriction.until-past" xml:space="preserve"><value>Paskutinė apribojimo diena negali būti praeityje.</value></data>
 <data name="reason.author-only" xml:space="preserve"><value>Atsiimti galite tik savo argumentą.</value></data>
 <data name="endorsement.other-side" xml:space="preserve"><value>„Man svarbu“ galite pažymėti tik argumentus tos pusės, kurios prašote patys.</value></data>
+<data name="endorsement.own-reason" xml:space="preserve"><value>Savo argumento „Man svarbu“ žymėti negalima.</value></data>
 <data name="endorsement.limit" xml:space="preserve"><value>Dėl šio projekto „Man svarbu“ jau pažymėjote tiek argumentų, kiek dabar leidžiama vienam žmogui.</value></data>
 <data name="description.empty" xml:space="preserve"><value>Trumpai ir neutraliai aprašykite, ką keičia projektas.</value></data>
 <data name="description.too-long" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>

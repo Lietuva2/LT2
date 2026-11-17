@@ -495,7 +495,11 @@ page's "Balsuota".
   links keep their own limits. A long text shows its beginning and "Rodyti daugiau", opened "Rodyti mažiau" under the
   rest (`TextExcerpt`, one file in SharedKernel compiled also into Lt2.Web.Client; `Components/LongText`): an argument
   about 300 characters, a statement or a response about 1 500; the moderators' queue keeps texts whole.
-- "Man svarbu" endorses a reason on your own side.
+- "Man svarbu" endorses a reason on your own side, never one you wrote (owner, 2026-11-17: `AppealRules.CheckEndorsement`,
+  `endorsement.own-reason`; the island disables it on one's own argument from the never-cached answer; a merge drops a mark
+  that would land on its giver's own argument). A mark moves nothing on the page: `RecordReasons` keeps the shown order
+  after the person's own action (`StableOrder`, the order by marks returns on the next read) and gives the pressed button
+  the focus back without scrolling.
 - Reasons and marks per person per bill are settings (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`);
   0 = no limit, the default. A limit switched on later removes nothing and counts only shown or waiting reasons.
 - **Threshold:** one for all bills, `Digest:ThresholdDefault`, never below `Digest:ThresholdMinimum`; a moderator may set

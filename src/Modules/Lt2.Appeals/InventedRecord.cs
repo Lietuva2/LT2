@@ -237,7 +237,8 @@ public static class InventedRecord
 
             await using var endorsements = await connection.BeginBinaryImportAsync(
                 "COPY appeals.endorsement (reason_id, user_id, record_id, created_at) FROM STDIN (FORMAT BINARY)", cancellationToken);
-            foreach (var user in r.EndorsedBy)
+            // Nobody marks their own argument (owner, 2026-11-17), the invented members neither.
+            foreach (var user in r.EndorsedBy.Where(u => u != r.AuthorUserId))
             {
                 await endorsements.StartRowAsync(cancellationToken);
                 await endorsements.WriteAsync(reasonId, NpgsqlDbType.Uuid, cancellationToken);

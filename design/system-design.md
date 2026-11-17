@@ -281,7 +281,7 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `position` | (`record_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `record_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
 | `reason` | `id`, `record_id`, `side`, `author_user_id`, text (`text`, any length), status, `merged_into_id`, `first_public_at` (when it first became public: the follow line of 8.25.5 and the member's page read it; built 2026-11-16) | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). How long a text may be is the members' texts setting `Texts:MaxLength` (5.6), checked where an argument is written; the column sets no limit (**owner, 2026-11-16**; migration `ReasonTextAnyLength`). |
-| `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side; how many per bill is a setting, no limit by default (8.2). |
+| `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side, never on a reason you wrote (owner, 2026-11-17); how many per bill is a setting, no limit by default (8.2). |
 | `mp_response` | bill number, the Seimas's person number, stance (for, against, undecided), text (`text`, any length; its length is the members' texts setting `Texts:MaxLength`, 5.6, checked where it is written; **owner, 2026-11-16**, migration `MemberTextsAnyLength`), status (published, hidden, withdrawn), published, edited and withdrawn times, `written_by_user_id` | One per MP per bill; versions are kept in `revision` and are public (8.5.5). Withheld from the read-only role. [changed while building: also `screening_flags` and `seen_at` (the queue), `hidden_at` and `hide_statement` (the statement shown in its place); the one-per-bill index holds whatever the status, so a response written again after a withdrawal is the same row; a version is kept as JSON in `revision` (`entity_kind` `response`, field `version`) with no person.] |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. [proposed: the target `comment` (8.23). A member's public profile and its "Apie mane" are reported to Identity, which owns them: `identity.profile_report`, built 2026-11-16 (8.25.6)] |
 | `comment` | `id`, `target_kind`, `target_id`, `bill_number`, `speaks_as` (person, organisation, mp) with the organisation or the MP, `author_user_id`, text (up to `Texts:MaxLength`), status (published, hidden), created and hidden times | [built 2026-11-16, 8.23.11] A remark in "Aptarimas" under an argument, a statement or a response: a member's, or an organisation's or MP's under its own text. No editing and no history; deleted for good when deleted or with its target (8.23.7); a person's own go with the account. Withheld from the read-only role. |
@@ -847,6 +847,17 @@ correction makes it a moderator's text (8.12.3).
 - "Man svarbu" stays on one's own side only, within the setting above; a person without a side cannot mark. Changing or
   clearing a side drops the marks, never the person's reasons; withdrawing the consent deletes positions and marks,
   not reasons.
+- **Never on one's own argument [decided by the owner on 2026-11-17: "I can now 'Man svarbu' on my own argument", a
+  hole].** The marks choose which arguments are sent to MPs (8.4), so an author does not mark their own: refused where
+  the mark is written (`endorsement.own-reason`, "Savo argumento „Man svarbu“ žymėti negalima."), and the button beside
+  one's own argument is disabled with that sentence as its hint, known from the person's never-cached answer (the served
+  page stays the same for everyone). When a moderator merges an argument into another (8.3), a mark that would move onto
+  its giver's own argument is dropped; the others move as before. "Sutinku" already had the same rule (8.23.10: not on a
+  comment one wrote).
+- **A mark moves nothing on the page [owner, 2026-11-17: "the view is scrolled away after clicking 'Man svarbu'"].**
+  The arguments are ordered by their marks when the page is read; after the person's own action (a mark, its removal, a
+  new or withdrawn argument) the island shows the new numbers in place and keeps the shown order, a new argument last,
+  and the pressed button gets the focus back without scrolling. The order by marks returns when the page is read again.
 - Pages, summaries and emails head reasons as "argumentai už / prieš" (reasons to vote for or against), never as the
   reasons of the people on that side.
 - Published numbers: both sides, always together, always with the count for accounts older than 30 days. Group numbers
@@ -4581,6 +4592,10 @@ Decided for comments, the email rhythm and public profiles (8.23-8.25; all three
 - "Add party to public profile": 8.25.9 as proposed: the supported party, by its own box "Rodyti viešame profilyje" and
   consent `party-public`, only while the profile is public; withdrawn at once with the box, the party or the profile and not
   given back by switching the profile on again; nothing for the MP's account; the "at least 20" rule unchanged.
+- "I can now 'Man svarbu' on my own argument": an argument's author cannot mark it (8.2); a merge drops a mark that would
+  land on its giver's own argument.
+- "The view is scrolled away after clicking 'Man svarbu'": a mark moves nothing on the page until it is read again, and the
+  pressed button keeps the focus (8.2).
 
 **Decided by the owner on 2026-11-16: the analytics page (8.26)**
 
