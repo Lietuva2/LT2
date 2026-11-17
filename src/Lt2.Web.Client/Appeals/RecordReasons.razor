@@ -40,8 +40,9 @@
                     {
                         <div class="said @(LinkedReason == reason.Id ? "said--linked" : null)" id="@BillTextLinks.ReasonElement(reason.Id)" @key="reason.Id">
                             <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"reason-more-{reason.Id}")" />
-                            @* The name, then the actions as one group that never wraps item by item (owner, 2026-11-13): when
-                               the two do not fit side by side, the name takes its own line above. *@
+                            @* Line 1: the name (design 8.16.1). Line 2: the action row, one line that never wraps: "Man svarbu · n",
+                               "Aptarimas (n)" and "⋯" with the rarer actions; a chosen action and the discussion open below the
+                               whole row, at its width. *@
                             <div class="said__by">
                                 @if (reason.AuthorProfileId is { } profileId)
                                 {
@@ -52,50 +53,64 @@
                                 {
                                     <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
                                 }
-                                <span class="said__actions" id="said-actions-@reason.Id">
+                            </div>
+                            <div class="act" id="said-actions-@reason.Id">
+                                @if (_signedIn)
+                                {
+                                    var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
+                                    <button class="mark act__item num" type="button" id="mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")"
+                                            disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)" @ref="_marks[reason.Id]"
+                                            @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></button>
+                                }
+                                else
+                                {
+                                    <span class="mark act__item num"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></span>
+                                }
+                                @* Design 8.23.6: "Aptarimas" under the argument; prerendered with the island for the arguments shown
+                                   first, read when first opened for those revealed by "show all". *@
+                                <CommentThread Kind="reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
+                                               Open="@(AskedFor(reason.Id) is not null)" Asked="@AskedFor(reason.Id)" Marked="@CommentPaging.Marked(reason.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
+                                <MoreMenu Id="@($"more-reason-{reason.Id}")">
                                     @if (_signedIn)
                                     {
-                                        var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
-                                        <button class="mark num" type="button" id="mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")"
-                                                disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)" @ref="_marks[reason.Id]"
-                                                @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</button>
-                                        <button class="linkish small" type="button" disabled="@Locked" @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
+                                        var menu = MoreMenu.MenuOf($"more-reason-{reason.Id}");
+                                        <button class="menu__item" type="button" id="report-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
+                                                @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
                                         @if (IsMine(reason) && record.Status == "open")
                                         {
-                                            <button class="linkish small" type="button" id="withdraw-@reason.Id" disabled="@Locked"
+                                            <button class="menu__item" type="button" id="withdraw-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                     @onclick="() => _withdrawing = _withdrawing == reason.Id ? null : reason.Id">@L["Reasons.Withdraw"]</button>
+                                        }
+                                        @if (Moderated(reason.Id) is not null)
+                                        {
+                                            <button class="menu__item" type="button" id="moderate-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
+                                                    @onclick="() => _moderating = _moderating == reason.Id ? null : reason.Id">@L["ModReason.Open"]</button>
                                         }
                                     }
                                     else
                                     {
-                                        <span class="mark num">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span>
                                         <VisitorReport Contact="@Contact" />
                                     }
-                                </span>
+                                </MoreMenu>
+                                @if (_reporting == reason.Id)
+                                {
+                                    <div class="act__panel"><ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" /></div>
+                                }
+                                @if (_withdrawing == reason.Id)
+                                {
+                                    <div class="act__panel row sheet sheet--quiet" role="group" aria-label="@L["Reasons.Withdraw"]">
+                                        <p class="small">@L["Reasons.WithdrawConfirm"]</p>
+                                        <button class="btn" type="button" id="withdraw-confirm" disabled="@Locked" @onclick="() => WithdrawAsync(reason.Id)">@L["Reasons.WithdrawYes"]</button>
+                                        <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = null">@L["Cancel"]</button>
+                                    </div>
+                                }
+                                @if (_moderating == reason.Id && Moderated(reason.Id) is { } moderated)
+                                {
+                                    <div class="act__panel sheet sheet--quiet moderate" id="moderation-@reason.Id">
+                                        <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="Reload" OnRestricted="ReloadPage" />
+                                    </div>
+                                }
                             </div>
-                            @if (_reporting == reason.Id)
-                            {
-                                <ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" />
-                            }
-                            @if (Moderated(reason.Id) is { } moderated)
-                            {
-                                <details class="more moderate" id="moderate-@reason.Id">
-                                    <summary class="linkish small">@L["ModReason.Open"]</summary>
-                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="Reload" OnRestricted="ReloadPage" />
-                                </details>
-                            }
-                            @* Design 8.23.6: "Aptarimas" under the argument, on its sheet; prerendered with the island for the
-                               arguments shown first, read when first opened for those revealed by "show all". *@
-                            <CommentThread Kind="reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
-                                           Open="@(AskedFor(reason.Id) is not null)" Asked="@AskedFor(reason.Id)" Marked="@CommentPaging.Marked(reason.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
-                            @if (_withdrawing == reason.Id)
-                            {
-                                <div class="row" role="group" aria-label="@L["Reasons.Withdraw"]">
-                                    <p class="small">@L["Reasons.WithdrawConfirm"]</p>
-                                    <button class="btn" type="button" id="withdraw-confirm" disabled="@Locked" @onclick="() => WithdrawAsync(reason.Id)">@L["Reasons.WithdrawYes"]</button>
-                                    <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = null">@L["Cancel"]</button>
-                                </div>
-                            }
                         </div>
                     }
                 </div>
@@ -203,6 +218,9 @@
     private Guid? _withdrawing;
     private IReadOnlyList<ReasonResponse>? _similar;
     private Guid? _reporting;
+
+    /// <summary>The argument whose moderator's actions are open below its row ("⋯" → "Moderuoti", design 8.12.3).</summary>
+    private Guid? _moderating;
 
     /// <summary>Each shown argument's "Man svarbu" button, to give the focus back after pressing it.</summary>
     private readonly Dictionary<Guid, ElementReference> _marks = [];

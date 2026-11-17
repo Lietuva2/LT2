@@ -98,7 +98,7 @@ public sealed class ProfileCommentTests(DatabaseFixture database) : ApiTest(data
             var listed = texts.Items.ShouldHaveSingleItem();
             (listed.Id, listed.Kind, listed.On, listed.Side).ShouldBe((comment, MemberTextKinds.Comment, "reason", (string?)null));
             var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(profileId, "Komentuojanti Autorė"), TestContext.Current.CancellationToken));
-            page.ShouldContain($"/seimas/{Bill}#{CommentLimits.ElementId(comment)}");
+            page.ShouldContain(Lt2.Api.Contracts.Comments.BillTextLinks.ToComment(Bill, comment), Case.Sensitive, "a link that lands on the comment (design 8.23.6)");
             page.ShouldContain("komentaras po argumentu");
             (await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(representativeProfile, 10))).Items.ShouldBeEmpty("a comment in an organisation's name is not the person's");
 
@@ -107,7 +107,7 @@ public sealed class ProfileCommentTests(DatabaseFixture database) : ApiTest(data
             using (var payload = JsonDocument.Parse((await Database.LatestEmailAsync(MessageKinds.FollowMemberEmail, followerEmail))!))
             {
                 payload.RootElement.GetProperty("what").GetString().ShouldBe(MemberTextKinds.Comment);
-                payload.RootElement.GetProperty("textPath").GetString().ShouldBe($"/seimas/{Bill}#{CommentLimits.ElementId(comment)}");
+                payload.RootElement.GetProperty("textPath").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToComment(Bill, comment));
                 payload.RootElement.GetRawText().ShouldNotContain("Slaptas");
             }
 

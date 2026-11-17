@@ -252,7 +252,12 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         var moderator = (await ModeratorAsync()).Browser;
         await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
         var reasonId = (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
-        (await initiator.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        // Another member of the side marks it (an author never marks their own, owner 2026-11-17).
+        var (marker, _) = await Factory.MemberAsync();
+        using var _k = marker;
+        (await marker.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await marker.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var (reporter, _) = await Factory.MemberAsync();
         using var _r = reporter;
         (await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "reason", TargetId = reasonId, Ground = "insult", Text = "Įžeidžia." }))
@@ -264,7 +269,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
 
         (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideReason, reasonId), new StatementRequest { Statement = "Įžeidus tonas." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons.ShouldBeEmpty();
-        (await initiator.MineAsync(AppealSteps.ThirdBill)).Endorsed.ShouldBeEmpty();
+        (await marker.MineAsync(AppealSteps.ThirdBill)).Endorsed.ShouldBeEmpty();
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.report WHERE target_id = @t AND status = 'open'", ("t", reasonId))).ShouldBe(0);
         (await NoticesAsync(email, "reason-hidden")).ShouldBe(1);
         (await AuditAsync("moderation.reason.hide", reasonId)).ShouldBe(1);
@@ -282,9 +287,13 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         using var _a = author;
         (await author.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var duplicate = await (await author.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Akcijų pardavimo įskaičiavimas paliestų vienkartinius šeimos verslo pardavimus.")).ReadAsync<ReasonCreatedResponse>();
-        (await author.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(duplicate.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await author.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(original.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await initiator.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(duplicate.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var (third, _) = await Factory.MemberAsync();
+        using var _t = third;
+        (await third.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await third.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(duplicate.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await third.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(original.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var queued = (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Reasons.Single(r => r.Id == duplicate.Id);
         queued.Seen.ShouldBeFalse();
@@ -295,7 +304,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
 
         var reasons = (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons;
         reasons.Single().Id.ShouldBe(original.Id);
-        reasons.Single().Endorsements.ShouldBe(2, "the author's mark and the initiator's moved mark; the author's two marks became one");
+        reasons.Single().Endorsements.ShouldBe(2, "the author's mark and the third member's two marks as one; the initiator's would have landed on their own argument (owner, 2026-11-17)");
         (await NoticesAsync(email, "reason-merged")).ShouldBe(1);
         (await Database.ScalarAsync<string>(
             "SELECT payload->>'excerpt' FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to", ("to", email)))

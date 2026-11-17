@@ -271,12 +271,13 @@ public static class DemoAppeal
 
         var forIds = positions.Where(p => p.Side == "for").Select(p => p.UserId).ToList();
         var againstIds = positions.Where(p => p.Side == "against").Select(p => p.UserId).ToList();
+        // Nobody marks their own argument (owner, 2026-11-17): each author is left out of their own argument's marks.
         var reasons = new List<InventedReason>
         {
-            new(Id(2), "for", "Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.", forIds.Take(1920).ToList()),
-            new(Id(3), "for", "Gynyba finansuojama nekeliant PVM.", forIds.Skip(1000).Take(1310).ToList()),
-            new(Id(1), "against", "Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą.", againstIds.Take(1480).ToList()),
-            new(Id(4), "against", "Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą.", againstIds.Skip(800).Take(970).ToList()),
+            new(Id(2), "for", "Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.", forIds.Where(u => u != Id(2)).Take(1920).ToList()),
+            new(Id(3), "for", "Gynyba finansuojama nekeliant PVM.", forIds.Where(u => u != Id(3)).Skip(1000).Take(1310).ToList()),
+            new(Id(1), "against", "Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą.", againstIds.Where(u => u != Id(1)).Take(1480).ToList()),
+            new(Id(4), "against", "Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą.", againstIds.Where(u => u != Id(4)).Skip(800).Take(970).ToList()),
         };
 
         var opened = now.AddDays(-75);
@@ -356,8 +357,8 @@ public static class DemoAppeal
         var againstIds = positions.Where(p => p.Side == "against").Select(p => p.UserId).ToList();
         var reasons = new List<InventedReason>
         {
-            new(Id(1), "for", "Greitai paskelbtos sutartys leidžia laiku pastebėti neįprastus pakeitimus.", forIds.Take(410).ToList()),
-            new(Id(2), "against", "Pakelta mažos vertės pirkimų riba sumažintų konkurenciją mažuose pirkimuose.", againstIds.Take(290).ToList()),
+            new(Id(1), "for", "Greitai paskelbtos sutartys leidžia laiku pastebėti neįprastus pakeitimus.", forIds.Where(u => u != Id(1)).Take(410).ToList()),
+            new(Id(2), "against", "Pakelta mažos vertės pirkimų riba sumažintų konkurenciją mažuose pirkimuose.", againstIds.Where(u => u != Id(2)).Take(290).ToList()),
         };
         return (members, new InventedRecordSpec(ClosedBill, ClosedDescription, opened, positions, reasons));
     }

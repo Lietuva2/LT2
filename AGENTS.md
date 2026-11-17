@@ -92,7 +92,8 @@ src/Lt2.Hosting            what the web host and the worker set up the same way:
 src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
-                           ProjectTabs and MenuSections (design 8.21), BrowserKeys (the storage keys, design 8.22.1),
+                           ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
+                           js/lt2-menus.js), BrowserKeys (the storage keys, design 8.22.1),
                            LongText (a long member's text with "Rodyti daugiau")
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
@@ -235,7 +236,12 @@ pre-merge run found.
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
   server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to a part of the
   same page carries the page's path (`/metodika#sekimas`, never a bare `#sekimas`): the pages carry `<base href="/">`, so
-  a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. A link to copy is
+  a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. Under every member's text (argument, statement, MP's response, comment) the
+  actions are one action row (design 8.16.1, the designer's proposal of 2026-11-17): `<div class="act">` holding the toggles
+  ("Man svarbu", `CommentThread`'s "Aptarimas" summary, "Sutinku" as `.act__item`) and `<MoreMenu>` ("⋯", the browser's
+  popover, placed by `js/lt2-menus.js`) whose `button.menu__item`s close it (`popovertargetaction="hide"`) and open their form
+  below the row as `div.act__panel`; `CommentThread` renders `details.discuss` (summary only) plus `.discuss__panel`, which
+  the row lays below itself. Icons are `<Icon>` (inline SVG, currentColor). A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells

@@ -9,16 +9,21 @@
 @inject MyBillState BillState
 @inject IAppealsApi Appeals
 
-@* "Aptarimas (n)" under one argument, statement or response (design 8.23.6): the browser's own <details class="more">, so it
-   opens and reads with JavaScript off. Inside, the shown comments oldest first, each with its name (a person's display name; an
-   organisation's name with "Organizacija"; an MP's name with "Seimo narys arba jo biuras"), its time, its text (an https
-   address as a link, nothing fetched from it), who agreed ("Sutinka: …"), "Pranešti" and, for whoever may, "Ištrinti"; then
-   "Rodyti daugiau komentarų" by the page's address and the writing box. The list is the same for every reader: what the
-   caller may delete, wrote and agreed with comes from the never-cached answer (CommentState), read in the browser only. Inside
-   an island (the arguments, the statements) this renders with it; on the server-rendered responses part it is an island of its
-   own. Lies on its target's sheet, set in (design 8.16); the writing box opens as a quiet sheet. *@
-<details class="more stack stack--tight comments" id="aptarimas-@Key" open="@Open" @ontoggle="ToggledAsync">
-    <summary class="linkish small" id="aptarimas-summary-@Key">@(ShownCount > 0 ? L.Format("Comments.Title.Count", Display.Number(ShownCount)) : L["Comments.Title"])</summary>
+@* "Aptarimas (n)" under one argument, statement or response (design 8.23.6): the browser's own <details>, so it opens with
+   JavaScript off; since the action row (design 8.16.1, the designer's proposal of 2026-11-17) the <details> holds only its
+   summary, which stands in the row beside "Man svarbu" and "⋯", and the discussion is the panel right after it
+   (.discuss__panel), which the stylesheet shows only while the <details> is open (`.discuss:not([open]) + .discuss__panel`)
+   and lays below the whole row at its full width. Inside, the shown comments oldest first, each with its name (a person's
+   display name; an organisation's name with "Organizacija"; an MP's name with "Seimo narys arba jo biuras"), its time, its
+   text (an https address as a link, nothing fetched from it), who agreed ("Sutinka: …"), then its own action row:
+   "Sutinku" and "⋯" ("Pranešti", for whoever may "Ištrinti", for a moderator "Moderuoti"); then "Rodyti daugiau komentarų"
+   by the page's address and the writing box. The list is the same for every reader: what the caller may delete, wrote and
+   agreed with comes from the never-cached answer (CommentState), read in the browser only. Inside an island (the arguments,
+   the statements) this renders with it; on the server-rendered responses part it is an island of its own. *@
+<details class="discuss" id="aptarimas-@Key" open="@Open" @ontoggle="ToggledAsync">
+    <summary class="act__item discuss__toggle" id="aptarimas-summary-@Key" aria-controls="aptarimas-panel-@Key"><Icon Name="chat" /><span class="discuss__word">@L["Comments.Title"]</span>@if (ShownCount > 0) {@(" ")<span class="num">(@Display.Number(ShownCount))</span>}</summary>
+</details>
+<div class="discuss__panel comments stack stack--tight" id="aptarimas-panel-@Key">
     @if (_thread is { } thread)
     {
         @* Design 8.25.4: the card of each public profile among this thread's names, once per thread, for js/lt2-cards.js. *@
@@ -33,34 +38,18 @@
                 {
                     var c = thread.Items[position - 1];
                     var id = CommentLimits.ElementId(c.Id);
+                    var moderated = Moderated(c.Id);
+                    var deletable = _signedIn && _mine?.Deletable.Contains(c.Id) == true && thread.BillOpen;
                     <li class="comment stack stack--tight @(Marked == c.Id ? "comment--linked" : null)" id="@id" @key="c.Id">
                         <p class="row comment__who" id="@CommentPaging.PositionAnchor(TargetId, position)">
                             @Name(c.Author)
                             <span class="small num">@Display.DayTime(c.CreatedAt)</span>
                         </p>
                         <LongText Text="@c.Text" BubbleClass="bubble bubble--people voice comment__text" Links="true" Id="@($"{id}-more")" />
-                        <div class="said__by comment__meta">
-                            <span class="small comment__agreed" id="@id-agreed">@Agreed(c)</span>
-                            <span class="said__actions">
-                                @if (_signedIn)
-                                {
-                                    @if (MayAgree(c, out var agreed))
-                                    {
-                                        <button class="mark" type="button" id="@id-agree" aria-pressed="@(agreed ? "true" : "false")" disabled="@Locked"
-                                                title="@(agreed ? null : L["Comments.Agree.Hint"].Value)" @onclick="() => AgreeAsync(c.Id, agreed)">@(agreed ? L["Comments.Agree.Undo"] : L["Comments.Agree"])</button>
-                                    }
-                                    <button class="linkish small" type="button" id="@id-report" disabled="@Locked" @onclick="() => _reporting = _reporting == c.Id ? null : c.Id">@L["Report.Open"]</button>
-                                    @if (_mine?.Deletable.Contains(c.Id) == true && thread.BillOpen)
-                                    {
-                                        <button class="linkish small" type="button" id="@id-delete" disabled="@Locked" @onclick="() => _deleting = _deleting == c.Id ? null : c.Id">@L["Comments.Delete"]</button>
-                                    }
-                                }
-                                else
-                                {
-                                    <VisitorReport Contact="@Contact" />
-                                }
-                            </span>
-                        </div>
+                        @if (c.AgreedBy.Count > 0)
+                        {
+                            <p class="small comment__agreed" id="@id-agreed">@Agreed(c)</p>
+                        }
                         @if (c.AgreedBy.Count > 2)
                         {
                             <details class="more stack stack--tight" id="@id-all-agreed">
@@ -68,34 +57,62 @@
                                 <p class="small">@for (var i = 0; i < c.AgreedBy.Count; i++) { @(i > 0 ? ", " : "")@Person(c.AgreedBy[i]) }</p>
                             </details>
                         }
-                        @if (_confirming == c.Id)
-                        {
-                            @* Design 8.23.10, 8.15: what becomes public and under whose name is said inline, before the first "Sutinku". *@
-                            <div class="row note note--quiet" role="group" aria-label="@L["Comments.Agree"]" id="@id-confirm">
-                                <p class="small">@L["Comments.Agree.Confirm"]</p>
-                                <button class="btn" type="button" id="@id-confirm-yes" disabled="@Locked" @onclick="() => AgreeConfirmedAsync(c.Id)">@L["Comments.Agree"]</button>
-                                <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _confirming = null">@L["Cancel"]</button>
-                            </div>
-                        }
-                        @if (_deleting == c.Id)
-                        {
-                            <div class="row" role="group" aria-label="@L["Comments.Delete"]">
-                                <p class="small">@L["Comments.DeleteConfirm"]</p>
-                                <button class="btn" type="button" id="@id-delete-yes" disabled="@Locked" @onclick="() => DeleteAsync(c.Id)">@L["Comments.DeleteYes"]</button>
-                                <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _deleting = null">@L["Cancel"]</button>
-                            </div>
-                        }
-                        @if (_reporting == c.Id)
-                        {
-                            <ReportForm TargetKind="comment" TargetId="c.Id" OnClose="() => _reporting = null" />
-                        }
-                        @if (Moderated(c.Id) is { } moderated)
-                        {
-                            <details class="more moderate" id="@id-moderate">
-                                <summary class="linkish small">@L["ModReason.Open"]</summary>
-                                <CommentModerationActions Id="c.Id" Status="@moderated.Status" Reported="moderated.Reports.Count > 0" IdPrefix="page-" OnDone="ReloadAsync" />
-                            </details>
-                        }
+                        @* The action row (design 8.16.1): "Sutinku", then "⋯" with the rarer actions; a chosen one opens below it. *@
+                        <div class="act" id="@id-actions">
+                            @if (_signedIn && MayAgree(c, out var agreed))
+                            {
+                                <button class="mark act__item" type="button" id="@id-agree" aria-pressed="@(agreed ? "true" : "false")" disabled="@Locked"
+                                        title="@(agreed ? null : L["Comments.Agree.Hint"].Value)" @onclick="() => AgreeAsync(c.Id, agreed)">@(agreed ? L["Comments.Agree.Undo"] : L["Comments.Agree"])</button>
+                            }
+                            <MoreMenu Id="@($"{id}-more-actions")">
+                                @if (_signedIn)
+                                {
+                                    <button class="menu__item" type="button" id="@id-report" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
+                                            @onclick="() => _reporting = _reporting == c.Id ? null : c.Id">@L["Report.Open"]</button>
+                                    @if (deletable)
+                                    {
+                                        <button class="menu__item" type="button" id="@id-delete" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
+                                                @onclick="() => _deleting = _deleting == c.Id ? null : c.Id">@L["Comments.Delete"]</button>
+                                    }
+                                    @if (moderated is not null)
+                                    {
+                                        <button class="menu__item" type="button" id="@id-moderate" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
+                                                @onclick="() => _moderating = _moderating == c.Id ? null : c.Id">@L["ModReason.Open"]</button>
+                                    }
+                                }
+                                else
+                                {
+                                    <VisitorReport Contact="@Contact" />
+                                }
+                            </MoreMenu>
+                            @if (_confirming == c.Id)
+                            {
+                                @* Design 8.23.10, 8.15: what becomes public and under whose name is said inline, before the first "Sutinku". *@
+                                <div class="act__panel row note note--quiet" role="group" aria-label="@L["Comments.Agree"]" id="@id-confirm">
+                                    <p class="small">@L["Comments.Agree.Confirm"]</p>
+                                    <button class="btn" type="button" id="@id-confirm-yes" disabled="@Locked" @onclick="() => AgreeConfirmedAsync(c.Id)">@L["Comments.Agree"]</button>
+                                    <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _confirming = null">@L["Cancel"]</button>
+                                </div>
+                            }
+                            @if (_deleting == c.Id)
+                            {
+                                <div class="act__panel row sheet sheet--quiet" role="group" aria-label="@L["Comments.Delete"]">
+                                    <p class="small">@L["Comments.DeleteConfirm"]</p>
+                                    <button class="btn" type="button" id="@id-delete-yes" disabled="@Locked" @onclick="() => DeleteAsync(c.Id)">@L["Comments.DeleteYes"]</button>
+                                    <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _deleting = null">@L["Cancel"]</button>
+                                </div>
+                            }
+                            @if (_reporting == c.Id)
+                            {
+                                <div class="act__panel"><ReportForm TargetKind="comment" TargetId="c.Id" OnClose="() => _reporting = null" /></div>
+                            }
+                            @if (moderated is not null && _moderating == c.Id)
+                            {
+                                <div class="act__panel sheet sheet--quiet moderate" id="@id-moderation">
+                                    <CommentModerationActions Id="c.Id" Status="@moderated.Status" Reported="moderated.Reports.Count > 0" IdPrefix="page-" OnDone="ReloadAsync" />
+                                </div>
+                            }
+                        </div>
                     </li>
                 }
             </ol>
@@ -125,7 +142,7 @@
         <p class="small">@L["Loading"]</p>
     }
     <Messages Message="@Message" Info="@Info" />
-</details>
+</div>
 
 @code {
     private bool _signedIn;
@@ -136,6 +153,9 @@
     private Guid? _reporting;
     private Guid? _deleting;
     private Guid? _confirming;
+
+    /// <summary>The comment whose moderator's actions are open below its row ("⋯" → "Moderuoti").</summary>
+    private Guid? _moderating;
     private CommentThreadResponse? _thread;
     private MyCommentsResponse? _mine;
     private MyRestrictionResponse? _restriction;

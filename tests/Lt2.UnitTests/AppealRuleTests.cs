@@ -159,7 +159,8 @@ public sealed class AppealRuleTests
     public void Man_svarbu_is_never_on_ones_own_argument()
     {
         AppealRules.CheckEndorsement(ownReason: true, Sides.For, Sides.For, 0, limit: 0).ShouldBe("endorsement.own-reason");
-        AppealRules.CheckEndorsement(ownReason: true, null, Sides.For, 0, limit: 0).ShouldBe("endorsement.own-reason");
+        AppealRules.CheckEndorsement(ownReason: true, Sides.For, Sides.For, 5, limit: 3).ShouldBe("endorsement.own-reason", "before the limit");
+        AppealRules.CheckEndorsement(ownReason: true, null, Sides.For, 0, limit: 0).ShouldBe("position.required", "a side first, as for any mark");
         AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.For, 0, limit: 0).ShouldBeNull("someone else's argument of one's own side");
     }
 

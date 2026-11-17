@@ -2635,6 +2635,39 @@ nothing said which is for what, and the start page had its main content on the g
 looked at in the light theme against the test, with the result listed page by page; no quiet sheet stands on the
 ground; no sheet is inside a sheet.
 
+#### 8.16.1 The action row under a text [the designer's proposal, 2026-11-17, awaiting the owner; built]
+
+The owner, from a phone (~390 px), 2026-11-17: under an argument the name stood on its own line, "Man svarbu · 0" and
+"Pranešti" on the next, "Aptarimas" on a third and further left than the rest, and for a moderator "even more
+complicated": "Can we design a whole non breaking line for commands, or icons, or something to make it nice?"
+
+- **One row under every member's text, the same everywhere:** arguments, organisations' statements, MPs' responses and
+  comments. Line 1: the author's name (a link with its card for a public profile, 8.25.4), for a comment its time; for a
+  statement and a response the line with the dates as before. Line 2: one row that never wraps, from 360 px up and in a
+  side's column on a wide screen: "Man svarbu · n" (arguments only; a toggle as before, filled when marked),
+  "Aptarimas (n)" (8.23.6), "Sutinku" (comments only, 8.23.10) and "⋯" at the end. Every item is 44 px tall and they
+  share one baseline; the name and the row stand on the text's own left edge (an MP's response, drawn mirrored, on its
+  right edge), so nothing under a text is indented differently.
+- **"⋯" ("Daugiau veiksmų") holds the rarer actions:** "Pranešti", the author's own "Atsiimti" (an argument) or
+  "Ištrinti" (a comment), and for a moderator in a staff-passkey session "Moderuoti", which opens the moderator's actions
+  for that text (keep, hide, merge, restrict…) below the row. It is the browser's own popover, as a hint is (8.15): it
+  opens without JavaScript (then in the middle of the screen), a press elsewhere or Escape closes it and the focus stays on
+  or goes back to "⋯"; a small script places it beside "⋯". A chosen action closes the menu and its form opens below the
+  whole row as a quiet sheet (8.16), as report forms did. A visitor's "Pranešti" note works without script; a member's
+  items stay disabled until the island runs; the trigger itself is never disabled (it only shows the menu).
+- **"Aptarimas" opens below the row at its full width:** the `<details>` holds only its summary, which stands in the row;
+  the discussion is the panel right after it, shown only while the `<details>` is open, and laid below the whole row by
+  the row's own layout (no `display: contents` on `<details>`, which browsers treat differently). The summary keeps its
+  expanded state for assistive technology and names the panel it controls.
+- **Words with small icons:** a heart beside "Man svarbu", a speech bubble beside "Aptarimas", three dots for "⋯", drawn
+  inline in the text's colour; no icon library and nothing fetched. "Man svarbu" always keeps its words (a term the icon
+  alone would not say). Where the row is narrower than about 20rem (a 360 px phone, a side's column at 1 280 px) the
+  word "Aptarimas" is kept only for screen readers and the row shows the bubble and the count; at 390 px and wider the
+  word shows. [Open for the owner: keep the word at any width and let the two sides stand one above the other on wide
+  screens instead.]
+- **The served page is the same for every member and visitor** as before: what is the caller's own (their "Atsiimti",
+  "Ištrinti", "Sutinku", a moderator's "Moderuoti") comes from the island in the browser.
+
 ### 8.17 The list of MPs' ballots on a vote
 
 **[Decided by the owner on 2026-11-15: the list of up to 141 MPs must be searchable and shown a part at a time, "possibly
@@ -3321,7 +3354,9 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
   oldest first, each with its name (the author's display name, a link with its card when they have a public profile,
   8.25; or the organisation's name and mark; or the MP's name and "Seimo narys arba jo biuras"), the time
   (`Display.DayTime`), the text, "Sutinku" with who agreed (8.23.10), "Pranešti" and, for whoever may delete it,
-  "Ištrinti"; then the writing box. A comment's element id is `komentaras-{id}`.
+  "Ištrinti"; then the writing box. A comment's element id is `komentaras-{id}`. [2026-11-17, the designer's proposal:
+  the summary stands in the text's action row and the discussion opens below the row; "Pranešti", "Ištrinti" and a
+  moderator's "Moderuoti" are in each comment's "⋯" (8.16.1).]
 - **Server-rendered and the same for everyone.** The list is part of the target's part as the server renders it (the
   arguments' and statements' islands prerender it; the responses' part is server-rendered), so it opens and reads with
   JavaScript off. Which comments the caller may delete and which they agreed with come from a never-cached answer, read
@@ -4721,6 +4756,7 @@ search engine's copy outlives switching the profile off. With follower numbers b
 | Public profile: a display name to switch it on (8.25.6) | **Proposed (built so):** "Viešas profilis" needs a display name, and the name cannot be emptied while the profile is public (`profile.name-required`). Or: a page without a name, titled "Narys". | Before going live |
 | Public profile: no cache, 410 and 404 marked `noindex` (8.25.2) | **Proposed (built so):** the page is `no-cache` for everyone so switching off is at once; the 410 and 404 answers carry `X-Robots-Tag: noindex`. Or: ordinary caching. | Before going live |
 | A comment in an organisation's name when its last representative's account is deleted (8.23.7, 8.14.14) | Open, found while connecting comments and profiles: 8.23.7 says a comment written in an organisation's name stays when its writer's account is deleted (as statements do), but deleting the last representative's account closes the organisation (8.14.14), which withdraws its statements, and a withdrawn statement takes its comments with it (8.23.7). The code does both as written; since an organisation comments only under its own statement (8.23.2), the comments of the last representative go with the statements when the account is deleted, and the rule "stays" holds only while another representative remains. Either: keep it so (the closing decides); or keep a closed organisation's statements and their comments; or move the comment's rule to "stays unless its organisation is closed". | Before going live |
+| The action row under a text (8.16.1) | **Proposed (built so, 2026-11-17):** one row under every argument, statement, MP's response and comment, never wrapping from 360 px: "Man svarbu · n", "Aptarimas (n)", "Sutinku", then "⋯" (the browser's popover) with "Pranešti", one's own "Atsiimti"/"Ištrinti" and a moderator's "Moderuoti"; forms and the discussion open below the row; small inline icons beside the words; the word "Aptarimas" only for screen readers where the row is narrower than about 20rem (360 px phones, a side's column at 1 280 px). Or: keep that word at every width and put the sides one above the other on wide screens; or icons alone. | Before going live |
 | A link to a comment or an argument (8.23.6, 8.23.14 point 8) | **Proposed (built so, 2026-11-17):** `?komentaras={id}` / `?argumentas={id}` with the element's own fragment, resolved by the server: the target shown even behind "show all" or the responses' paging, its "Aptarimas" open through the linked comment rounded up to the next ten, the linked one marked; a comment not shown changes nothing (one 404 for hidden and unknown). Or: the fragment alone with a script that opens the thread (no help without script, and none for a comment not rendered). | Before going live |
 | Public profile: the party shown (8.25.9) – the texts | Built 2026-11-17 (the row above). The box's sentence (`UiText` `Party.PublicText`, version 2026-11-17), the page's line ("Palaikoma partija: …"), `Party.Text`, and the privacy notice's `Privacy.Data.Fact7.Value`, `Privacy.Data.Fact12.Value`, `Privacy.Rights.Fact3.Value`, the terms' `Terms.Publish.6` and the methodology's `Method.Privacy.Follow` go to the native reader and the lawyer's one reading with the others. | Before going live |
 

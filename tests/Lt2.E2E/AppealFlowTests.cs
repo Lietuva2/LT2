@@ -69,7 +69,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         }
 
         await Assertions.Expect(a.Locator("#moderation-panel")).ToHaveCountAsync(0);
-        await Assertions.Expect(a.Locator("details.moderate")).ToHaveCountAsync(0);
+        await Assertions.Expect(a.Locator("[id^='moderate-']")).ToHaveCountAsync(0);
         await IslandsBeforeStartTests.NothingUsableBeforeStartAsync(a.Context, $"/seimas/{bill}");
 
         // 2. Before taking any side the member writes an argument: nothing is preselected, so they must choose.
@@ -132,11 +132,13 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(b.Locator("#share-line")).ToBeVisibleAsync(new() { Timeout = 30_000 });
         (await b.Locator("#share-link").GetAttributeAsync("href"))!.ShouldContain("tikslas=%2Fseimas%2F" + bill, Case.Sensitive, "the share link lands on the bill's page");
 
-        // 4. ... and marks their argument "Man svarbu", now that it is on their own side.
-        await mine.Locator("button.mark").ClickAsync();
-        await Assertions.Expect(mine.Locator("button.mark")).ToHaveAttributeAsync("aria-pressed", "true");
+        // 4. ... and cannot mark their own argument "Man svarbu" (owner, 2026-11-17); "Atsiimti" is in its "⋯" (design 8.16.1).
+        await Assertions.Expect(mine.Locator("button.mark")).ToBeDisabledAsync();
+        await Assertions.Expect(mine.Locator("button.mark")).ToHaveAttributeAsync("title", "Savo argumento „Man svarbu“ žymėti negalima.");
         await Assertions.Expect(b.Locator("#not-a-poll")).ToContainTextAsync("Tai nėra reprezentatyvi apklausa");
-        await Assertions.Expect(mine.GetByRole(AriaRole.Button, new() { Name = "Atsiimti", Exact = true })).ToBeVisibleAsync();
+        await mine.Locator(".act__more").ClickAsync();
+        await Assertions.Expect(b.Locator(".menu:popover-open").GetByRole(AriaRole.Button, new() { Name = "Atsiimti", Exact = true })).ToBeVisibleAsync();
+        await b.Keyboard.PressAsync("Escape");
         await ActionsOnOneLineAsync(b);
         await E2ESteps.NoSidewaysScrollAsync(b);
         await b.ScreenshotAsync(new() { Path = Shot($"bill-open-{width}.png"), FullPage = true });
@@ -165,14 +167,15 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(a.Locator("#count-against .figure__num")).ToHaveTextAsync(Number(againstBefore + 1));
         await E2ESteps.NoSidewaysScrollAsync(a);
         await Assertions.Expect(a.Locator("#reasons-for .said").Filter(new() { HasText = text }).GetByRole(AriaRole.Button, new() { Name = "Atsiimti" })).ToHaveCountAsync(0);
-        await own.GetByRole(AriaRole.Button, new() { Name = "Atsiimti", Exact = true }).ClickAsync();
+        await own.Locator(".act__more").ClickAsync();
+        await a.Locator(".menu:popover-open").GetByRole(AriaRole.Button, new() { Name = "Atsiimti", Exact = true }).ClickAsync();
         await a.GetByRole(AriaRole.Button, new() { Name = "Atsiimti argumentą" }).ClickAsync();
         await Assertions.Expect(a.GetByText("Argumentas atsiimtas.")).ToBeVisibleAsync();
         await Assertions.Expect(own).ToHaveCountAsync(0);
 
-        // The demonstration bill, signed in: "Man svarbu" and "Pranešti" on one line under each argument.
+        // The demonstration bill, signed in: "Man svarbu", "Aptarimas" and "⋯" on one line under each argument.
         await b.GotoAsync($"{Base}/seimas/XVP-0412");
-        await Assertions.Expect(b.Locator("#reasons-against .said__actions button.linkish").First).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await Assertions.Expect(b.Locator("#reasons-against .menu__item").First).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await ActionsOnOneLineAsync(b);
         await b.Locator("#reasons").ScreenshotAsync(new() { Path = Shot($"argument-actions-{width}.png") });
 
@@ -226,7 +229,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await w.GotoAsync($"{Base}/seimas/{Bill}");
         await Assertions.Expect(w.Locator("#add-reason")).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await Assertions.Expect(w.Locator("#moderation-panel")).ToHaveCountAsync(0);
-        await Assertions.Expect(w.Locator("details.moderate")).ToHaveCountAsync(0, new() { Timeout = 5_000 });
+        await Assertions.Expect(w.Locator("[id^='moderate-']")).ToHaveCountAsync(0, new() { Timeout = 5_000 });
         (await w.ContentAsync()).ShouldNotContain("panel-reason-");
 
         // The moderator's page: the panel, the waiting argument in it, "Moderuoti" under the shown one.
@@ -256,9 +259,13 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         // Hide the shown argument from "Moderuoti" under it: the queue's action, told to the author with the bill's link.
         await ShowAllReasonsAsync(mod);
         var shown = mod.Locator("#reasons-for .said").Filter(new() { HasText = shownText });
-        var moderate = shown.Locator("details.moderate");
-        await Assertions.Expect(moderate).ToBeVisibleAsync(new() { Timeout = 60_000 });
-        await moderate.Locator("summary").ClickAsync();
+        // Design 8.16.1: "Moderuoti" is in the argument's "⋯"; its actions open below the row.
+        await shown.Locator(".act__more").ClickAsync();
+        var open = mod.Locator(".menu:popover-open").GetByRole(AriaRole.Button, new() { Name = "Moderuoti", Exact = true });
+        await Assertions.Expect(open).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await open.ClickAsync();
+        var moderate = shown.Locator(".moderate");
+        await Assertions.Expect(moderate).ToBeVisibleAsync(new() { Timeout = 10_000 });
         await Assertions.Expect(moderate.Locator("button[id^='action-']")).ToHaveTextAsync(["Palikti", "Paslėpti", "Riboti autoriaus rašymą"], new() { Timeout = 10_000 });
         await moderate.ScreenshotAsync(new() { Path = Shot("moderate-argument-1280.png") });
         await ActAsync(moderate, "hide", "Bandymas: argumentas paslepiamas puslapyje.");
@@ -734,26 +741,32 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await item.Locator("button[id^='action-submit-']").First.ClickAsync();
     }
 
-    /// <summary>Under each argument, "Man svarbu", "Pranešti" and "Atsiimti" share one line (owner, 2026-11-13).</summary>
+    /// <summary>
+    /// Under each argument one action row (design 8.16.1): "Man svarbu", "Aptarimas" and "⋯" on one line, one height of at
+    /// least 44 px, inside their column, under the name and on the name's left edge.
+    /// </summary>
     internal static async Task ActionsOnOneLineAsync(IPage page)
     {
         var report = await page.EvaluateAsync<string[]>(
             """
-            () => [...document.querySelectorAll('#reasons .said__actions')].flatMap(group => {
-              const tops = [...group.children].filter(c => c.offsetParent !== null).map(c => Math.round(c.getBoundingClientRect().top + c.getBoundingClientRect().height / 2));
-              const by = group.closest('.said__by');
-              const name = by?.querySelector('.said__name')?.getBoundingClientRect();
-              const box = group.getBoundingClientRect();
+            () => [...document.querySelectorAll('#reasons .said > .act')].flatMap(row => {
+              const items = [...row.children].filter(c => c.matches('.mark, .discuss, .act__more'));
+              const boxes = items.map(c => c.getBoundingClientRect());
+              const mids = boxes.map(b => Math.round(b.top + b.height / 2));
+              const said = row.closest('.said');
+              const name = said.querySelector('.said__name')?.getBoundingClientRect();
               const out = [];
-              if (tops.length > 1 && Math.max(...tops) - Math.min(...tops) > 3) out.push(group.id + ': the actions wrap (' + tops.join(',') + ')');
-              if (box.right > by.getBoundingClientRect().right + 1) out.push(group.id + ': the actions overflow their column');
-              // On one line the taller "Man svarbu" starts a little above the centred name; above means wholly above it.
-              if (name && box.bottom <= name.top + 1) out.push(group.id + ': the actions sit above the name');
+              if (items.length !== 3) out.push(row.id + ': ' + items.length + ' items');
+              if (mids.length > 1 && Math.max(...mids) - Math.min(...mids) > 3) out.push(row.id + ': the row wraps (' + mids.join(',') + ')');
+              if (boxes.some(b => b.height < 43.5)) out.push(row.id + ': an item lower than 44 px');
+              if (Math.max(...boxes.map(b => b.right)) > said.getBoundingClientRect().right + 1) out.push(row.id + ': the row overflows its column');
+              if (name && boxes[0].top < name.bottom - 1) out.push(row.id + ': the row is not under the name');
+              if (name && Math.abs(boxes[0].left - name.left) > 1) out.push(row.id + ': not on the name\'s left edge');
               return out;
             })
             """);
         report.ShouldBeEmpty();
-        (await page.Locator("#reasons .said__actions").CountAsync()).ShouldBeGreaterThan(0, "the check is not empty");
+        (await page.Locator("#reasons .said > .act").CountAsync()).ShouldBeGreaterThan(0, "the check is not empty");
     }
 
     /// <summary>One moderator for the class: registered, given a passkey, granted the role by the migrator, activated.</summary>

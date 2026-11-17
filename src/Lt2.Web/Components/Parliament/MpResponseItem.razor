@@ -52,8 +52,12 @@
         {
             <span class="small num"><span class="nowrap">@F.T.Format("Responses.Published", Display.Day(Response.PublishedAt))</span>@if (Response.EditedAt is { } edited) {<text> · </text><span class="nowrap">@F.T.Format("Responses.Edited", Display.Day(edited))</span>}</span>
         }
-        @ChildContent
     </div>
+    @if (ChildContent is not null)
+    {
+        @* The action row (design 8.16.1): "Aptarimas (n)" and "⋯" on the bill's page, as under every text. *@
+        <div class="act" id="@(IdPrefix)actions">@ChildContent</div>
+    }
     @if (Response.Status == "published" && Response.Vote is { } vote)
     {
         @* Design 8.5.5: two facts side by side, without a word of judgement; nothing anywhere adds them up. *@
@@ -90,7 +94,7 @@
     /// <summary>The start of the item's own element ids, unique on the page.</summary>
     [Parameter] public string IdPrefix { get; set; } = "";
 
-    /// <summary>The report control beside the dates (an island on the bill's page).</summary>
+    /// <summary>The action row under the response (design 8.16.1): on the bill's page the discussion and "⋯", both islands.</summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
     private string Label => Mp is { } mp ? $"{mp.FirstName} {mp.LastName}" : Bill?.Number ?? F.T["Responses.Mark"];

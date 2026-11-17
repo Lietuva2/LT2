@@ -72,6 +72,9 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
                   const enabled = [];
                   for (const el of document.querySelectorAll('[data-lt2-island]:is(input, textarea, select, button)')) {
                     if (el.type === 'hidden' || el.matches(':disabled')) continue;
+                    // A button that only shows a popover (the action row's "⋯", design 8.16.1) works without script, as a
+                    // <details> summary does; the menu's own items must be disabled like any other control.
+                    if (el.matches('button.act__more[popovertarget]:not([popovertargetaction])')) continue;
                     enabled.push(el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + ' "' + (el.textContent || el.getAttribute('aria-label') || el.name || '').trim().slice(0, 40) + '"');
                   }
                   const notes = [...document.querySelectorAll('noscript')].filter(n => n.textContent.includes('JavaScript')).length;

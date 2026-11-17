@@ -66,7 +66,8 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
                 page.ShouldContain($"id=\"{CommentLimits.ElementId(id)}\"");
             }
 
-            page.ShouldContain("Aptarimas (1)");
+            // Design 8.16.1: the summary's word and count, the word kept for screen readers on narrow rows.
+            page.ShouldContain("<span class=\"discuss__word\">Aptarimas</span> <span class=\"num\">(1)</span>");
             page.ShouldContain("Argumentas svarus, bet trūksta skaičių.");
             page.ShouldContain("Ačiū už atsakymą, laukiame balsavimo.");
 

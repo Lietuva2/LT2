@@ -117,8 +117,10 @@ public sealed class OrganisationFlowTests(AppealFlowTests.ModeratorFixture moder
             await PasskeyTests.RegisterAsync(rp, "Pranešanti Narė");
             await rp.GotoAsync($"{Base}/seimas/XVP-0412");
             var reported = rp.Locator("#organisations article.statement").Filter(new() { HasText = name });
-            var report = reported.GetByRole(AriaRole.Button, new() { Name = "Pranešti" });
+            // Design 8.16.1: "Pranešti" is in the statement's "⋯".
+            var report = reported.Locator("button.menu__item[id^='report-statement-']");
             await Assertions.Expect(report).ToBeEnabledAsync(new() { Timeout = 60_000 });
+            await reported.Locator(".act__more").ClickAsync();
             await report.ClickAsync();
             await rp.Locator("#organisations").GetByLabel("Apsimeta kita organizacija").CheckAsync();
             await rp.Locator("#organisations").GetByRole(AriaRole.Button, new() { Name = "Pranešti moderatoriams" }).ClickAsync();

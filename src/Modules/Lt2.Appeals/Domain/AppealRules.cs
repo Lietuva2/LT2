@@ -108,11 +108,6 @@ internal static class AppealRules
     /// </summary>
     public static string? CheckEndorsement(bool ownReason, string? endorsersSide, string reasonSide, int endorsementsAlreadyOnBill, int limit)
     {
-        if (ownReason)
-        {
-            return "endorsement.own-reason";
-        }
-
         if (endorsersSide is null)
         {
             return "position.required";
@@ -121,6 +116,11 @@ internal static class AppealRules
         if (endorsersSide != reasonSide)
         {
             return "endorsement.other-side";
+        }
+
+        if (ownReason)
+        {
+            return "endorsement.own-reason";
         }
 
         return MayAdd(endorsementsAlreadyOnBill, limit) ? null : "endorsement.limit";

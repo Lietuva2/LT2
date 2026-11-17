@@ -434,7 +434,8 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Kitas argumentas prieš šį projektą.")).StatusCode.ShouldBe(HttpStatusCode.Created);
         var reasonId = (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons[0].Id;
-        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await initiator.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await initiator.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.MineAsync(AppealSteps.ThirdBill)).Side.ShouldBe("against");
         (await member.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PositionConsent)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
