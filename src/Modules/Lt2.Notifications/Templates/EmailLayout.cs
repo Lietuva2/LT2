@@ -33,8 +33,9 @@ internal static class EmailLayout
 
     /// <summary>
     /// A member's email (design 5.6): paragraphs as plain text and as light HTML. In the HTML part (owner, 2026-11-17: "make it a
-    /// normal link"; the address printed under it dropped the same day as noise) a line that ends "text: https://…" shows that
-    /// text, from its last sentence, as the link, and nothing more; any other address of the site in a line is a plain link.
+    /// normal link"; the address printed under it dropped the same day as noise, the bold green kept) a line that ends
+    /// "text: https://…" shows that text, from its last sentence, as a bold green link, and nothing more; any other address of
+    /// the site in a line is a plain link.
     /// The links are the addresses themselves: nothing is rewritten or tracked (AGENTS.md). The plain part is unchanged.
     /// </summary>
     public static EmailMessage Build(
@@ -107,8 +108,8 @@ internal static class EmailLayout
 
     /// <summary>
     /// One line of a member's email as HTML: "…sentence. Link text: https://…" becomes the earlier sentences as text, then the
-    /// link text as a normal link to the address, without the address printed (owner, 2026-11-17: it was noise); any other line
-    /// keeps its text with its addresses as plain links.
+    /// link text as a bold link in the site's green (owner, 2026-11-17: "I had no problems with those green links"), without the
+    /// address printed under it (owner, 2026-11-17: it was noise); any other line keeps its text with its addresses as plain links.
     /// </summary>
     internal static string LinkLineHtml(string line)
     {
@@ -118,11 +119,18 @@ internal static class EmailLayout
             return Links.Replace(Encode(line), m => $"<a href=\"{m.Value}\">{m.Value}</a>");
         }
 
-        return Encode(match.Groups["lead"].Value) + Anchor(match.Groups["url"].Value, match.Groups["label"].Value.Trim());
+        return Encode(match.Groups["lead"].Value) + Anchor(match.Groups["url"].Value, match.Groups["label"].Value.Trim(), ActionLinkStyle);
     }
 
-    /// <summary>A normal link: the address itself (nothing rewritten or tracked) around the encoded text.</summary>
-    private static string Anchor(string url, string text) => $"<a href=\"{WebUtility.HtmlEncode(url)}\">{Encode(text)}</a>";
+    /// <summary>The look of a "text: url" line's link in a member's email: bold, in the site's green.</summary>
+    private const string ActionLinkStyle = "font-weight:600;color:#1f6b3a";
+
+    /// <summary>
+    /// A link: the address itself (nothing rewritten or tracked) around the encoded text. Without a style it takes the look
+    /// around it: the footer's "Keisti periodiškumą" and "atsisakyti laiškų" stay in its small grey type.
+    /// </summary>
+    private static string Anchor(string url, string text, string? style = null) =>
+        $"<a href=\"{WebUtility.HtmlEncode(url)}\"{(style is null ? "" : $" style=\"{style}\"")}>{Encode(text)}</a>";
 
     /// <summary>
     /// A line ending "text: https://…": <c>lead</c> is the line's earlier sentences (and a list's dash), <c>label</c> the last

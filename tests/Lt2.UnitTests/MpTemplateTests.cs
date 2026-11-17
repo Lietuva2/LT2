@@ -32,7 +32,7 @@ public sealed class MpTemplateTests
 
         // Owner, 2026-11-17: the way without the link: the page to open and the code to type there.
         email.TextBody.ShouldContain("Naršyklėje patys atverkite https://lt2.test/seimo-narys/perimti ir įveskite šį kodą:\n\nABCD-EFGH-JKMN\n\n");
-        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/perimti#ABCD-EFGH-JKMN\">Perimti profilį</a></p>", customMessage: "a normal link, the address not printed under it (owner, 2026-11-17)");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/perimti#ABCD-EFGH-JKMN\" style=\"font-weight:600;color:#1f6b3a\">Perimti profilį</a></p>", customMessage: "a bold green link, the address not printed under it (owner, 2026-11-17)");
         email.HtmlBody!.ShouldContain("letter-spacing:4px\">ABCD-EFGH-JKMN</p>", customMessage: "the code shown large");
     }
 
@@ -51,7 +51,7 @@ public sealed class MpTemplateTests
         email.TextBody.ShouldContain("galioja iki 2026-11-24 12:30", customMessage: "Vilnius time");
         email.TextBody.ShouldContain("kito kvietimo nereikia", customMessage: "the office invitation counts as the invitation");
         email.TextBody.ShouldContain("https://lt2.test/privatumas", customMessage: "design 8.22.3: every email has the footer");
-        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/biuras#ABCD-EFGH-JKMN\">Priimti kvietimą</a></p>");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/biuras#ABCD-EFGH-JKMN\" style=\"font-weight:600;color:#1f6b3a\">Priimti kvietimą</a></p>");
         email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/biuras\">https://lt2.test/seimo-narys/biuras</a>");
         email.HtmlBody!.ShouldNotContain("<img", customMessage: "no tracking pixel");
     }

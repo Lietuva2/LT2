@@ -371,8 +371,8 @@ Built as written; "no" names what changes.
   (the first part to `/paskyra/sekimas#laisku-daznis`, the second to the stop page) and the privacy line, in the footer;
   the body's line "…galite pakeisti savo paskyroje: …" and the line "Nebegauti šių laiškų: …" are gone. The plain part reads
   "Keisti periodiškumą: https://… · Atsisakyti laiškų: https://…". The `List-Unsubscribe` headers are unchanged.
-- In the HTML part of a member's email a line "text: https://…" is the text as a normal link; the address is no longer
-  printed under it.
+- In the HTML part of a member's email a line "text: https://…" is the text as a link, bold in the site's green as before; the
+  address is no longer printed under it. The footer's two links take its small grey type.
 
 **Decided by the owner on 2026-11-17: what is new on followed bills (8.11.8); the designer's choices (the owner accepted 2, 3, 4, 6, 7 and 8 on 2026-11-17; 1, 5 and 9 await the owner)**
 

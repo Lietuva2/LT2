@@ -23,7 +23,7 @@ public sealed class EmailFooterTests
 
         email.TextBody.TrimEnd().ShouldEndWith(Footer);
         email.HtmlBody.ShouldNotBeNull().ShouldContain(
-            "font-size:13px;color:#64748b\"><a href=\"https://lt2.test/privatumas\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p>");
+            "font-size:13px;color:#64748b\"><a href=\"https://lt2.test/privatumas\" style=\"font-weight:600;color:#1f6b3a\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p>");
         email.HtmlBody!.IndexOf("privatumas", StringComparison.Ordinal).ShouldBeGreaterThan(email.HtmlBody.IndexOf("482915", StringComparison.Ordinal), "at the end");
 
         // Only the emails of the member's rhythm carry "Keisti periodiškumą arba atsisakyti laiškų" (design 8.24.1).
