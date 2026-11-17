@@ -80,8 +80,28 @@ public sealed class MpMailTemplateTests
         text.ShouldContain("· Trumpas argumentas. (12)");
         text.Split('\n').Count(l => l.Contains("Visas argumentas", StringComparison.Ordinal)).ShouldBe(1, "only a cut argument gets the link");
 
-        // The moderators' preview is the same text (design 8.19.2).
+        // The text part is the same paragraphs.
         string.Join("\n\n", Templates().Text(model).Paragraphs).ShouldContain("Visas argumentas: https://lt2.test/suvestines/2026-11-16#" + anchor);
+    }
+
+    [Fact]
+    public void An_office_members_copy_says_whose_it_is_carries_its_own_one_click_stop_and_never_the_mps_link()
+    {
+        var model = Email("extra") with
+        {
+            To = "biuras@pavyzdys.test",
+            Recipient = "office",
+            UnsubscribePath = MpMailPaths.OneClick(Token),
+            Delivery = new DeliveryRef(Guid.NewGuid(), "laima-uosyte", "office", Guid.NewGuid()),
+        };
+        var email = Templates().Digest(model);
+        email.Subject.ShouldBe("Lietuva 2.0 suvestinės kopija, 2026-11-16");
+        email.TextBody.ShouldContain("Tai Seimo nario suvestinės kopija, siunčiama jums kaip jo biuro nariui. Seimo narys: Laima Uosytė.");
+        email.TextBody.ShouldContain("pasirenkate savo paskyroje: https://lt2.test/paskyra/dalyvavimas");
+        email.TextBody.ShouldContain("Nebegauti kopijų: https://lt2.test/suvestines/kopijos/" + Token);
+        email.TextBody.ShouldNotContain("/suvestines/nustatymai/", Case.Sensitive, "never the MP's own link");
+        email.Headers!["List-Unsubscribe"].ShouldBe("<https://lt2.test/api/v1/mp-mail/" + Token + "/stop>");
+        email.Headers["List-Unsubscribe-Post"].ShouldBe("List-Unsubscribe=One-Click", "design 8.19.3: the member's one-click stop");
     }
 
     [Fact]

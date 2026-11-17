@@ -19,18 +19,21 @@ internal static class MpMailKinds
     public const string Stream = "mp";
 }
 
-/// <summary>Which delivery row an email is, so the dispatcher can mark it sent, failed or bounced (design 8.19.3).</summary>
-internal sealed record DeliveryRef(Guid RunId, string MpSlug, string Recipient);
+/// <summary>
+/// Which delivery row an email is, so the dispatcher can mark it sent, failed or bounced (design 8.19.3); an office member's copy
+/// names the member's account (owner, 2026-11-17), one row per member.
+/// </summary>
+internal sealed record DeliveryRef(Guid RunId, string MpSlug, string Recipient, Guid? OfficeUserId = null);
 
 /// <summary>One bill in one MP's summary: the frozen item, the MP's party numbers (groups of 20 or more) and the MP's response.</summary>
 internal sealed record MpDigestBill(DigestItemInfo Item, DeliveryParty? Party, MpStance? Response);
 
 /// <summary>
 /// Payload of <see cref="MpMailKinds.Digest"/> (design 8.19.3, appendix A): one MP's summary, to the official address or, as a
-/// copy, to the confirmed extra recipient. A copy carries the MP's name, its own "Nebegauti kopijų" link and never the MP's
-/// preferences link.
+/// copy, to the confirmed extra recipient or an office member (design 8.19.3, owner 2026-11-17). A copy carries the MP's name,
+/// its own "Nebegauti kopijų" link and never the MP's preferences link; an office member's also its own one-click stop.
 /// </summary>
-/// <param name="Recipient"><c>official</c> or <c>extra</c>.</param>
+/// <param name="Recipient"><c>official</c>, <c>extra</c> or <c>office</c>.</param>
 /// <param name="MpName">The MP's first and last name, in the nominative.</param>
 /// <param name="Kind">The summary's kind: <c>weekly</c>, <c>before-vote</c> or <c>urgent</c>.</param>
 /// <param name="PreferencesPath">The MP's page (official only).</param>

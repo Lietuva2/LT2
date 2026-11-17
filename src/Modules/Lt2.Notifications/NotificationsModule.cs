@@ -45,6 +45,9 @@ public static class NotificationsModule
         services.AddScoped<IMpMail>(sp => sp.GetRequiredService<MpMail.MpMailService>());
         services.AddScoped<IMpMailAdministration>(sp => sp.GetRequiredService<MpMail.MpMailService>());
         services.AddScoped<IDigests, Digests.DigestService>();
+
+        // Design 8.19.3 (owner, 2026-11-17): Identity ends an office member's copies when the office link ends.
+        services.AddSingleton<IOfficeCopiesEnd, MpMail.OfficeCopiesEnd>();
         services.AddScoped<IFollows, Follows.FollowService>();
 
         // Design 8.24: the member emails that go in the person's rhythm, each declaring itself; the delivery knows none of them.

@@ -30,6 +30,7 @@ internal sealed class PoliticianHandlers(
     IPositionErasure positions,
     Profiles.ProfileHandlers profiles,
     IOutbox outbox,
+    IOfficeCopiesEnd officeCopies,
     TimeProvider clock,
     ILogger<PoliticianHandlers> logger) : IPoliticians
 {
@@ -717,20 +718,37 @@ internal sealed class PoliticianHandlers(
     private Task<int> OfficeCountAsync(long person, CancellationToken cancellationToken) =>
         PoliticianAccess.OpenLinks(db).CountAsync(l => l.SeimasPersonId == person && l.Part == PoliticianParts.Office, cancellationToken);
 
-    private Task<int> EndAsync(Guid linkId, Guid by, string reason, DateTimeOffset now, CancellationToken cancellationToken) =>
-        db.PoliticianLinks.Where(l => l.Id == linkId && l.EndedAt == null).ExecuteUpdateAsync(
+    private async Task<int> EndAsync(Guid linkId, Guid by, string reason, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var link = await db.PoliticianLinks.AsNoTracking().Where(l => l.Id == linkId && l.EndedAt == null)
+            .Select(l => new { l.UserId, l.SeimasPersonId, l.Part }).FirstOrDefaultAsync(cancellationToken);
+        var ended = await db.PoliticianLinks.Where(l => l.Id == linkId && l.EndedAt == null).ExecuteUpdateAsync(
             s => s.SetProperty(l => l.EndedAt, now).SetProperty(l => l.EndedByUserId, by).SetProperty(l => l.EndReason, reason),
             cancellationToken);
+        if (ended > 0 && link is { Part: PoliticianParts.Office })
+        {
+            // Design 8.19.3 (owner, 2026-11-17): a member who leaves or is removed gets no more copies; their choice goes.
+            await officeCopies.EndAsync(link.UserId, link.SeimasPersonId, Transaction(), cancellationToken);
+        }
+
+        return ended;
+    }
 
     /// <summary>When the MP's link ends, the office it added ends with it; its unused invitations stop working too.</summary>
     private async Task<int> EndOfficeAsync(long person, Guid by, DateTimeOffset now, CancellationToken cancellationToken)
     {
         await db.PoliticianTokens.Where(t => t.SeimasPersonId == person && t.Kind == PoliticianTokenKinds.Office && t.UsedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.UsedAt, now), cancellationToken);
-        return await db.PoliticianLinks.Where(l => l.SeimasPersonId == person && l.Part == PoliticianParts.Office && l.EndedAt == null).ExecuteUpdateAsync(
+        var ended = await db.PoliticianLinks.Where(l => l.SeimasPersonId == person && l.Part == PoliticianParts.Office && l.EndedAt == null).ExecuteUpdateAsync(
             s => s.SetProperty(l => l.EndedAt, now).SetProperty(l => l.EndedByUserId, by).SetProperty(l => l.EndReason, "mp-ended"),
             cancellationToken);
+        await officeCopies.EndAsync(null, person, Transaction(), cancellationToken);
+        return ended;
     }
+
+    /// <summary>The transaction a link ends in; the office's copies end in it too (design 8.19.3).</summary>
+    private DbTransaction Transaction() =>
+        db.Database.CurrentTransaction?.GetDbTransaction() ?? throw new InvalidOperationException("A link ends inside the change's transaction.");
 
     /// <summary>A notice to the MP's account (the official address when it took the profile over); null when there is none.</summary>
     private async Task<AccountNoticeEmail?> MpNoticeAsync(long person, string notice, string? mpName, string? statement, CancellationToken cancellationToken)

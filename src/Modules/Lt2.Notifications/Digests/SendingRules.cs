@@ -117,6 +117,17 @@ internal static class SendingRules
         : DeliveryStatuses.Queued;
 
     /// <summary>
+    /// What happens to an office member's copy (design 8.19.3, owner 2026-11-17), whatever the MP's own choice: never to a
+    /// suppressed address; not when the member's own choice excludes this kind; not over the member's own weekly ceiling (an
+    /// urgent summary may exceed it by one); otherwise queued.
+    /// </summary>
+    public static string OfficeStatus(bool suppressed, string frequency, string kind, int alreadyThisWeek, int maxPerWeek) =>
+        suppressed ? DeliveryStatuses.Suppressed
+        : !PreferenceAllows(frequency, kind) ? DeliveryStatuses.SkippedPreference
+        : !DigestRules.WithinCeiling(alreadyThisWeek, maxPerWeek, kind == DigestRules.Urgent) ? DeliveryStatuses.SkippedCeiling
+        : DeliveryStatuses.Queued;
+
+    /// <summary>
     /// A confirmed extra recipient gets a copy only of what the MP gets: an email the MP's own address was sent, and never at a
     /// suppressed address.
     /// </summary>

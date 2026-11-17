@@ -146,8 +146,11 @@ internal sealed class DigestDelivery
 
     public string MpSlug { get; set; } = "";
 
-    /// <summary><c>official</c> or <c>extra</c>.</summary>
+    /// <summary><c>official</c>, <c>extra</c> or <c>office</c>.</summary>
     public string Recipient { get; set; } = Recipients.Official;
+
+    /// <summary>For an office member's copy, the member's account (design 8.19.3); <see cref="Guid.Empty"/> otherwise. Never public.</summary>
+    public Guid OfficeUserId { get; set; }
 
     /// <summary>The MP's Seimas person id (0 on rows made before sending was built).</summary>
     public long SeimasPersonId { get; set; }
@@ -162,6 +165,31 @@ internal static class Recipients
 {
     public const string Official = "official";
     public const string Extra = "extra";
+
+    /// <summary>An office member's copy (design 8.19.3, owner 2026-11-17), one row per member: <see cref="DigestDelivery.OfficeUserId"/>.</summary>
+    public const string Office = "office";
+}
+
+/// <summary>
+/// <c>notify.office_copy</c> (design 8.19.3, owner 2026-11-17): an office member's own choice of copies of their MP's summaries,
+/// independent of the MP's (<see cref="Frequencies"/>; no row is <c>default</c>), and the hash of the member's own stop link.
+/// Deleted when the office link ends or the account goes. Never public; the address is not kept here.
+/// </summary>
+internal sealed class OfficeCopy
+{
+    public Guid UserId { get; set; }
+
+    public long SeimasPersonId { get; set; }
+
+    public string Frequency { get; set; } = Frequencies.Default;
+
+    /// <summary>Counts the stop links made, so each is a new token.</summary>
+    public int Generation { get; set; }
+
+    /// <summary>SHA-256 of the member's current stop token, hex; set when the first copy is queued.</summary>
+    public string? StopTokenHash { get; set; }
+
+    public DateTimeOffset ChangedAt { get; set; }
 }
 
 /// <summary>What happened to one delivery (design 8.19.3). <c>dry-run</c>: the run went while sending was off.</summary>

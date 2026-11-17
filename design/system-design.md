@@ -1234,6 +1234,8 @@ link that cannot be guessed, and it binds a passkey, as 6.2 already decided.
     trial's invitation (6.2).
   - Limits as before (five members per MP, seven days, one use) and, against a runaway sender, at most ten invitations a
     day per MP, copied or emailed (`PoliticianRules.OfficeInvitationsPerDay`; `mp.office-invitation-limit`).
+- **An office member gets copies of the MP's summaries [owner, 2026-11-17],** by their own choice of how often, whatever
+  the MP chose; leaving the office ends them (8.19.3).
 
 #### 8.5.4 What a linked account can do
 
@@ -3108,6 +3110,28 @@ approve it. It replaces "a moderator lets it go" (the `approval` mode, "Siųsti"
   sender or a 4xx is retried. A copy to an extra recipient carries `List-Unsubscribe` with its own "Nebegauti kopijų" page
   and no `List-Unsubscribe-Post`, so the MP's one-click stop stays the only write without the same-origin check. Lead
   committees are not imported, so that group of the order is empty.]
+- **Copies for the MP's office [decided by the owner on 2026-11-17].** Every office member of a linked MP (8.5.3) gets a
+  copy of each summary that goes to that MP's recipients, at their own account's address, in the copy's format ("Tai Seimo
+  nario suvestinės kopija, siunčiama jums kaip jo biuro nariui. Seimo narys: {0}."), whatever the MP chose for their own
+  summaries. Each member has their **own frequency** (the same four choices, default "Kas savaitę ir prieš balsavimus"), kept
+  in Notifications (`notify.office_copy`, one row per member and MP; no row is the default) and changed on "Dalyvavimas"
+  (`GET|PUT /api/v1/me/mp/office/copies`) for themselves only, in any session, since it is the member's own mail and does not
+  speak for the MP [the designer's choice; 8.19.4's passkey session stays for the MP's own choice]. The MP stopping their
+  summaries does not stop the office's, and the other way round.
+- Each copy has its own delivery row (`recipient` = `office`, the member's account in `office_user_id`, never the address),
+  its own weekly ceiling (`Digest:MaxPerWeek`, counted per member; the MP's own count is unchanged), and the suppression
+  list applies to the member's address. The copy carries `List-Unsubscribe` with the one-click form to the same route as the
+  MP's (`POST /api/v1/mp-mail/{token}/stop`), with the member's own token: it stops that member's copies and nothing else, so
+  the one write outside the same-origin check stays one route [the designer's choice]; the email's own "Nebegauti kopijų"
+  line opens the copies' page (`/suvestines/kopijos/{token}`). The token is derived from the member's account, the MP and a
+  generation under the mail key, and only its hash is kept on the member's row; both paths are already kept out of logs.
+- Sending off (a dry run) or a lock of 8.19.1 sends no copies either; an urgent summary is copied like the others.
+- Ending the office link (the member leaves or is removed, the MP gives the profile up or an administrator ends it, the
+  account is deleted) ends the copies and deletes the member's choice in the same transaction (`IOfficeCopiesEnd`, called by
+  Identity; the account's deletion through Notifications' account data). Addresses come only from Identity's `IMpLinks`
+  (`OfficeMembersAsync`), for the outbox row.
+- Never public: no public copy, page, API answer or log says that office members exist or that copies went; the public
+  copy's "Išsiųsta Seimo nariams: {n}" and the screen's MP count count MPs only.
 
 #### 8.19.4 Preferences without an account
 
@@ -3179,7 +3203,9 @@ approve it. It replaces "a moderator lets it go" (the `approval` mode, "Siųsti"
 `notify`: `digest_run.status` takes the values of 8.19.1, with `due_at`, `sent_at`, `approved_by`, `approved_at`,
 `cancelled_by`, `cancelled_at`, `statement`, `sent_count` (owner, 2026-11-17); kind `introduction` with the letter's
 version. `digest_choice` (8.19.2): per prepared run, the chosen arguments by id with their record, side, place, whether one
-came in for a hidden one, and when one left; no author. `digest_delivery`: key (run, MP, recipient), statuses of 8.19.3.
+came in for a hidden one, and when one left; no author. `digest_delivery` also names an office member's account
+(`office_user_id`, recipient `office`), and `office_copy` holds each office member's own choice of copies and the hash of
+their stop token (8.19.3, owner 2026-11-17). `digest_delivery`: key (run, MP, recipient), statuses of 8.19.3.
 `mp_email_pref`: per Seimas person: frequency, extra address, its confirmation, changed time. `mp_mail_token`: hashed
 token per MP and kind (`preferences`, `extra-confirm`), expiry for the second. `introduction_letter`: version, subject,
 text, signer, who wrote it, sent time. `suppression` as in 8.19.6. All withheld from the read-only role.
@@ -3197,6 +3223,7 @@ DELETE /api/v1/mp-mail/{token}/extra
 POST   /api/v1/mp-mail/extra/confirm               from the link sent to the official address
 POST   /api/v1/mp-mail/extra/stop                  from a copy
 GET|PUT /api/v1/me/mp/mail                         a linked account, passkey session
+GET|PUT /api/v1/me/mp/office/copies                an office member's own copies, any session
 GET|PUT /api/v1/admin/introduction                 administrator
 POST   /api/v1/admin/introduction/test             to the administrator's own address
 POST   /api/v1/admin/introduction/send             fresh passkey confirmation
@@ -5076,6 +5103,17 @@ Built, awaiting the owner's word:
   projektai", "12 projektų") rather than the fixed "{n} projektų".
 - `Digest:ReviewHours` takes 1 to 72 hours; the statements line of a future organisations part (8.14.9) follows the same
   rule as arguments (public when prepared).
+
+**Decided by the owner on 2026-11-17: copies of the summaries for an MP's office (8.19.3)**
+
+- Every office member of a linked MP gets a copy of each summary that goes for that MP, at their own account's address, in
+  the copy's format, with their own frequency (the MP's four choices; default on), independent of the MP's; their own
+  delivery row and weekly ceiling; the suppression list applies; sending off or a lock sends none. Ending the office link
+  ends the copies and deletes the choice. Never public.
+- The designer's choices: the member changes the choice on "Dalyvavimas" in any session (their own mail, not speaking for
+  the MP); the copy's one-click stop goes to the MP's one-click route with the member's own token (so one route stays the
+  only write outside the same-origin check) and its "Nebegauti kopijų" line to the copies' page; the MP's own account has no
+  copies (it gets the summary); the stop sends no confirmation email; a dry run makes no office rows.
 
 **Decided by the owner on 2026-11-17: `/projektai` by the latest activity (8.12.5)**
 

@@ -78,12 +78,16 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     public (string Subject, IReadOnlyList<string> Paragraphs) Text(MpDigestEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        var copy = model.Recipient == Recipients.Extra;
+        // A copy: to the MP's confirmed extra recipient, or to an office member (design 8.19.3, owner 2026-11-17).
+        var office = model.Recipient == Recipients.Office;
+        var copy = office || model.Recipient == Recipients.Extra;
         var day = model.RunDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var paragraphs = new List<string> { l[EmailText.Greeting] };
         if (copy)
         {
-            paragraphs.Add(l.Format("Digest.CopyOf", model.MpName));
+            paragraphs.Add(office
+                ? l.Format("Digest.CopyOfOffice", model.MpName, Link(AccountScreens.Taking))
+                : l.Format("Digest.CopyOf", model.MpName));
         }
 
         paragraphs.Add(l.Format("Digest.Intro", model.Bills.Count));

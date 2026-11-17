@@ -496,7 +496,8 @@ page's "Balsuota".
   anything is stored, and the session becomes a passkey session under a new key (`SessionRotation`); `GET /me` says
   `passkeySession`. Giving the profile up (`DELETE /me/mp`), an administrator's end
   (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; no screen yet) and deleting the account end the
-  link and the office with it. Every change is audited and told to the MP's account's own address (`AccountNotices.Mp*`),
+  link and the office with it. An office member gets copies of the MP's summaries by their own choice (owner, 2026-11-17; see
+  "Copies for the MP's office" under Summaries to MPs); any end of the office link ends them. Every change is audited and told to the MP's account's own address (`AccountNotices.Mp*`),
   never naming an office member.
 - The MP's own account takes no part (decided by the owner, 2026-11-17): no side, argument, "Man svarbu", party
   support or organisation (`mp.takes-no-part`, `MpAccounts` in SharedKernel); it follows like anyone; office members are not
@@ -786,6 +787,15 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
   holds both sides with the 30-day counts, the MP's own published response or the link to answer, the closing lines, and
   `List-Unsubscribe` with `List-Unsubscribe-Post`. The address comes only from `IMpMailAddresses` and travels only in the outbox
   row.
+- **Copies for the MP's office (design 8.19.3, owner 2026-11-17).** Each office member linked now (addresses only from
+  `IMpLinks.OfficeMembersAsync`, Identity) gets a copy of every summary that goes for the MP (`DigestService.OfficeCopiesAsync`,
+  recipient `office`, one delivery row per member with `office_user_id`, never an address), whatever the MP chose: by the
+  member's own choice (`notify.office_copy`, the four `Frequencies`, no row = default; `GET|PUT /me/mp/office/copies`, any
+  session, `MyMp` on "Dalyvavimas"), own weekly ceiling (`SendingRules.OfficeStatus`) and the suppression list. The copy's
+  one-click stop is the MP's route `POST /api/v1/mp-mail/{token}/stop` with the member's own token (derived per account, MP and
+  generation, its hash on the member's row), and its "Nebegauti kopijų" page the copies' page; both stop only that member.
+  Ending the office link ends them and deletes the choice (`IOfficeCopiesEnd`, Notifications, called by Identity's
+  `PoliticianHandlers`; an account's deletion through Notifications' `IAccountData`). Nothing public counts or names them.
 - The MP's link (8.19.4): `/suvestines/nustatymai/{token}`, server-rendered forms (no script); the token is derived from the
   person number and a generation under `Security:MailHashKey` and stored hashed; "Atsiųsti naują nuorodą" moves to the next
   generation. The one-click stop `POST /api/v1/mp-mail/{token}/stop` is the only write mapped outside the API group's

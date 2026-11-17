@@ -238,7 +238,19 @@ public interface IMpMail
 
     /// <summary>Sets the frequency for a linked account in a passkey session; confirmed by email to the official address too.</summary>
     Task<Lt2.SharedKernel.Result<MpMailChoice>> SetForPersonAsync(long seimasPersonId, string frequency, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// An office member's own choice of copies of their MP's summaries (design 8.19.3, owner 2026-11-17), independent of the MP's;
+    /// the host checked that the account is that MP's office member. <c>mp.not-found</c>.
+    /// </summary>
+    Task<Lt2.SharedKernel.Result<OfficeCopyChoice>> OfficeCopiesAsync(Guid userId, long seimasPersonId, CancellationToken cancellationToken);
+
+    /// <summary>Changes it, for the member only and without any email; <c>mp-mail.frequency-invalid</c>.</summary>
+    Task<Lt2.SharedKernel.Result<OfficeCopyChoice>> SetOfficeCopiesAsync(Guid userId, long seimasPersonId, string frequency, CancellationToken cancellationToken);
 }
+
+/// <summary>An office member's own choice of copies (design 8.19.3): the MP by name and the member's frequency.</summary>
+public sealed record OfficeCopyChoice(string Slug, string FirstName, string LastName, string Frequency);
 
 /// <summary>One version of the introduction letter (design 8.19.5).</summary>
 public sealed record IntroductionVersion(int Version, string Subject, string Text, string SignerName, string SignerRole, DateTimeOffset WrittenAt, DateTimeOffset? SentAt);

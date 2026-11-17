@@ -58,6 +58,28 @@ internal static class MpMailEndpoints
             .WithName("SetMyMpMail").WithTags("MpMail").RequireAuthorization(Policies.Member)
             .WithValidation<MpMailFrequencyRequest>()
             .Produces<MpMailChoiceResponse>().ProducesProblem(StatusCodes.Status404NotFound);
+
+        // Design 8.19.3 (owner, 2026-11-17): an office member's own copies of the MP's summaries.
+        api.MapGet(ApiEndpoints.Relative(MpMailRoutes.OfficeCopies), OfficeCopiesAsync)
+            .WithName("GetMyOfficeCopies").WithTags("MpMail").RequireAuthorization(Policies.Member)
+            .Produces<MpOfficeCopiesResponse>().ProducesProblem(StatusCodes.Status404NotFound);
+
+        api.MapPut(ApiEndpoints.Relative(MpMailRoutes.OfficeCopies), SetOfficeCopiesAsync)
+            .WithName("SetMyOfficeCopies").WithTags("MpMail").RequireAuthorization(Policies.Member)
+            .WithValidation<MpMailFrequencyRequest>()
+            .Produces<MpOfficeCopiesResponse>().ProducesProblem(StatusCodes.Status404NotFound);
+    }
+
+    private static async Task<IResult> OfficeCopiesAsync(ClaimsPrincipal user, MpMailHost host, ErrorMapper errors, CancellationToken ct)
+    {
+        var result = await host.OfficeCopiesAsync(user, null, ct);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : errors.ToResult(result.Error!);
+    }
+
+    private static async Task<IResult> SetOfficeCopiesAsync(ClaimsPrincipal user, MpMailFrequencyRequest request, MpMailHost host, ErrorMapper errors, CancellationToken ct)
+    {
+        var result = await host.OfficeCopiesAsync(user, request.Frequency, ct);
+        return result.IsSuccess ? TypedResults.Ok(result.Value) : errors.ToResult(result.Error!);
     }
 
     private static async Task<IResult> GetAsync(string token, IMpMail mail, ErrorMapper errors, CancellationToken ct) =>

@@ -25,7 +25,9 @@ internal sealed class DigestService(
     IAuditLog audit,
     IOutbox outbox,
     IStaffAddresses staff,
+    IMpLinks links,
     MpSender sender,
+    MailKeys keys,
     MailLocks locks,
     TimeProvider clock) : IDigests
 {
@@ -723,10 +725,86 @@ internal sealed class DigestService(
             }
         }
 
+        await OfficeCopiesAsync(db, run, info, plan, partyJson, responses, ct);
         run.Status = RunStatuses.Sent;
         run.SentCount = plan.Count(p => p.Official == DeliveryStatuses.Queued);
         await source.MarkSummarisedAsync(
             await db.DigestItems.Where(i => i.RunId == run.Id).Select(i => i.RecordId).ToListAsync(ct), now, db.Database.CurrentTransaction!.GetDbTransaction(), ct);
+    }
+
+    /// <summary>
+    /// The copies for the MPs' offices (design 8.19.3, owner 2026-11-17), in the caller's transaction: every office member linked
+    /// now to an MP the summary went out for gets a copy at their own address, whatever the MP's own choice, by the member's own
+    /// choice, weekly ceiling and the suppression list; one delivery row per member (never the address), the member's own
+    /// one-click stop. Not counted as MPs anywhere public.
+    /// </summary>
+    private async Task OfficeCopiesAsync(
+        NotificationsDb db, DigestRun run, DigestRunInfo info, IReadOnlyList<PlannedDelivery> plan, Func<string, string> partyJson,
+        IReadOnlyList<MpStance> responses, CancellationToken ct)
+    {
+        var byPerson = plan.GroupBy(p => p.Mp.SeimasPersonId).ToDictionary(g => g.Key, g => g.First());
+        var members = await links.OfficeMembersAsync(byPerson.Keys.ToList(), ct);
+        if (members.Count == 0)
+        {
+            return;
+        }
+
+        var maxPerWeek = await settings.GetAsync(SettingKeys.DigestMaxPerWeek, ct);
+        var users = members.Select(m => m.UserId).Distinct().ToList();
+        var choices = await db.OfficeCopies.Where(c => users.Contains(c.UserId)).ToListAsync(ct);
+        var suppressed = await sender.SuppressedAsync(db, members.Select(m => m.Email), ct);
+        var counts = await OfficeCeilingCountsAsync(db, DigestRules.WeekStart(run.RunDate), run.Id, ct);
+        foreach (var member in members)
+        {
+            var p = byPerson[member.SeimasPersonId];
+            var choice = choices.FirstOrDefault(c => c.UserId == member.UserId && c.SeimasPersonId == member.SeimasPersonId);
+            var status = SendingRules.OfficeStatus(
+                sender.IsSuppressed(suppressed, member.Email), choice?.Frequency ?? Frequencies.Default, run.Kind, counts.GetValueOrDefault(member.UserId), maxPerWeek);
+            var json = partyJson(p.Mp.Slug);
+            db.DigestDeliveries.Add(new DigestDelivery
+            {
+                RunId = run.Id, MpSlug = p.Mp.Slug, SeimasPersonId = p.Mp.SeimasPersonId, Recipient = Recipients.Office, OfficeUserId = member.UserId,
+                Status = status, PartyNumbers = json,
+            });
+            if (status != DeliveryStatuses.Queued)
+            {
+                continue;
+            }
+
+            if (choice is null)
+            {
+                choice = new OfficeCopy { UserId = member.UserId, SeimasPersonId = member.SeimasPersonId, ChangedAt = clock.GetUtcNow() };
+                db.OfficeCopies.Add(choice);
+                choices.Add(choice);
+            }
+
+            var token = keys.DerivedToken(member.SeimasPersonId, OfficeStopKind(member.UserId), choice.Generation);
+            choice.StopTokenHash = MailKeys.TokenHash(token);
+            var party = JsonSerializer.Deserialize<List<DeliveryParty>>(json, JsonSerializerOptions.Web) ?? [];
+            await sender.EnqueueAsync(
+                db,
+                MpMailKinds.Digest,
+                Email(info, p.Mp, member.Email, Recipients.Office, bill => party.FirstOrDefault(x => x.BillNumber == bill), responses,
+                    null, MpMailPaths.OneClick(token), MpMailPaths.StopCopies(token), new DeliveryRef(run.Id, p.Mp.Slug, Recipients.Office, member.UserId)),
+                ct);
+        }
+    }
+
+    /// <summary>The kind an office member's stop token is derived under: per account, so each member has their own.</summary>
+    internal static string OfficeStopKind(Guid userId) => "office-stop:" + userId.ToString("N");
+
+    /// <summary>How many copies each office member has this week (design 8.19.3: the ceiling per recipient).</summary>
+    private static async Task<IReadOnlyDictionary<Guid, int>> OfficeCeilingCountsAsync(NotificationsDb db, DateOnly weekStart, Guid exclude, CancellationToken ct)
+    {
+        var runStatuses = SendingRules.CountingStatuses(sendingOn: true).ToList();
+        var deliveryStatuses = SendingRules.CeilingDeliveryStatuses.ToList();
+        var weekEnd = weekStart.AddDays(7);
+        return await (from d in db.DigestDeliveries
+                      join r in db.DigestRuns on d.RunId equals r.Id
+                      where d.Recipient == Recipients.Office && runStatuses.Contains(r.Status) && deliveryStatuses.Contains(d.Status)
+                            && r.RunDate >= weekStart && r.RunDate < weekEnd && r.Id != exclude
+                      group d by d.OfficeUserId into g
+                      select new { g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.Key, x => x.Count, ct);
     }
 
     /// <summary>One MP's email: the bills in the MP's order, each with the MP's party numbers and own response.</summary>

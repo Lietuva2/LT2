@@ -37,4 +37,21 @@ internal sealed class MpLinks(IdentityDb db) : IMpLinks
             .GroupBy(l => l.UserId)
             .ToDictionary(g => g.Key, g => g.First().SeimasPersonId);
     }
+
+    public async Task<IReadOnlyList<OfficeMemberAddress>> OfficeMembersAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken)
+    {
+        if (seimasPersonIds.Count == 0)
+        {
+            return [];
+        }
+
+        var people = seimasPersonIds.ToList();
+        return (await (from l in PoliticianAccess.OpenLinks(db).AsNoTracking()
+                       join u in db.Users.AsNoTracking() on l.UserId equals u.Id
+                       where people.Contains(l.SeimasPersonId) && l.Part == PoliticianParts.Office && u.Email != null
+                       select new { l.SeimasPersonId, l.UserId, u.Email })
+                .ToListAsync(cancellationToken))
+            .Select(m => new OfficeMemberAddress(m.SeimasPersonId, m.UserId, m.Email!))
+            .ToList();
+    }
 }

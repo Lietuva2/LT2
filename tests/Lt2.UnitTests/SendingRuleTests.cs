@@ -138,6 +138,17 @@ public sealed class SendingRuleTests
     }
 
     [Fact]
+    public void An_office_member_gets_a_copy_by_their_own_choice_and_ceiling_whatever_the_mp_chose_and_never_at_a_suppressed_address()
+    {
+        SendingRules.OfficeStatus(suppressed: true, "default", "weekly", alreadyThisWeek: 0, maxPerWeek: 2).ShouldBe("suppressed");
+        SendingRules.OfficeStatus(false, "before-vote", "weekly", 0, 2).ShouldBe("skipped-preference", "the member's own choice");
+        SendingRules.OfficeStatus(false, "stopped", "urgent", 0, 2).ShouldBe("skipped-preference");
+        SendingRules.OfficeStatus(false, "weekly", "weekly", 1, 2).ShouldBe("queued");
+        SendingRules.OfficeStatus(false, "default", "weekly", 2, 2).ShouldBe("skipped-ceiling", "the member's own ceiling");
+        SendingRules.OfficeStatus(false, "default", "urgent", 2, 2).ShouldBe("queued", "an urgent summary may exceed it by one");
+    }
+
+    [Fact]
     public void An_extra_recipient_gets_a_copy_only_once_confirmed_only_of_what_the_mp_gets_and_never_at_a_suppressed_address()
     {
         SendingRules.ExtraStatus("queued", extraConfirmed: true, extraSuppressed: false).ShouldBe("queued");

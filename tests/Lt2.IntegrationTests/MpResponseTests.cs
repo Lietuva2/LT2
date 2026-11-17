@@ -621,7 +621,15 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
     }
 
     /// <summary>A page without the markers Blazor writes for its islands, which carry a new id on every request.</summary>
-    private static string Stable(string body) => System.Text.RegularExpressions.Regex.Replace(body, "<!--Blazor[^>]*-->", "");
+    /// <summary>
+    /// A page or answer without Blazor's markers and without a bill's last activity (owner, 2026-11-17: a response made public is
+    /// the bill's activity, design 8.12.5; only the "naujausia" order reads it, and these comparisons are of the others).
+    /// </summary>
+    private static string Stable(string body) =>
+        System.Text.RegularExpressions.Regex.Replace(
+            System.Text.RegularExpressions.Regex.Replace(body, "<!--Blazor[^>]*-->", ""),
+            "\"lastActivityAt\":(\"[^\"]*\"|null)",
+            "\"lastActivityAt\":…");
 
     private async Task<string> CandidatesAsync(string bill)
     {

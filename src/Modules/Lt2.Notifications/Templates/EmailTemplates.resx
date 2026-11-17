@@ -259,4 +259,5 @@
   <data name="DigestReview.Reason.One" xml:space="preserve"><value>{0} argumentas</value></data>
   <data name="DigestReview.Reason.Few" xml:space="preserve"><value>{0} argumentai</value></data>
   <data name="DigestReview.Reason.Many" xml:space="preserve"><value>{0} argumentų</value></data>
+  <data name="Digest.CopyOfOffice" xml:space="preserve"><value>Tai Seimo nario suvestinės kopija, siunčiama jums kaip jo biuro nariui. Seimo narys: {0}. Kaip dažnai gauti kopijas, pasirenkate savo paskyroje: {1}</value></data>
 </root>

@@ -651,11 +651,18 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
     /// A page without what changes on every request: the request-forgery token, a script's nonce and the islands' markers with
     /// their protected state (which the islands' visible markup, compared, renders).
     /// </summary>
+    /// <summary>
+    /// A page or answer without what changes on every request, and without a bill's last activity (owner, 2026-11-17: a comment is
+    /// the bill's activity, design 8.12.5; only the "naujausia" order reads it, and these comparisons are of the others).
+    /// </summary>
     private static string Steady(string html) =>
         System.Text.RegularExpressions.Regex.Replace(
-            System.Text.RegularExpressions.Regex.Replace(html, "(name=\"__RequestVerificationToken\" value=\"|nonce=\")[^\"]*\"", "$1\""),
-            "<!--Blazor[^>]*-->",
-            "<!--Blazor-->");
+            System.Text.RegularExpressions.Regex.Replace(
+                System.Text.RegularExpressions.Regex.Replace(html, "(name=\"__RequestVerificationToken\" value=\"|nonce=\")[^\"]*\"", "$1\""),
+                "<!--Blazor[^>]*-->",
+                "<!--Blazor-->"),
+            "\"lastActivityAt\":(\"[^\"]*\"|null)",
+            "\"lastActivityAt\":…");
 
     /// <summary>Each thread's list of comments as the server rendered it.</summary>
     private static List<string> CommentLists(string html) =>

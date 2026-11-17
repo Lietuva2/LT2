@@ -108,9 +108,11 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
                 .ShouldBe("XVP-0618", "the linked bill's item comes first");
             (await stranger.Client.GetAsync(DigestRoutes.OfRecordOn("XVP-9999"))).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
-            (await Database.ScalarAsync<long>(
-                "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'notify' AND table_name LIKE 'digest%' AND (column_name LIKE '%user%' OR column_name LIKE '%email%' OR column_name LIKE '%address%')"))
-                .ShouldBe(0, "a summary table has no column for a person or an address");
+            // The one exception (design 8.19.3, owner 2026-11-17): an office member's copy has its own delivery row, naming the
+            // member's account for its own weekly ceiling; never public, erased with the account. No address anywhere.
+            (await Database.ScalarAsync<string>(
+                "SELECT coalesce(string_agg(table_name || '.' || column_name, ','), '') FROM information_schema.columns WHERE table_schema = 'notify' AND table_name LIKE 'digest%' AND (column_name LIKE '%user%' OR column_name LIKE '%email%' OR column_name LIKE '%address%')"))
+                .ShouldBe("digest_delivery.office_user_id", "a summary table has no column for a person or an address but the office copy's row");
 
             // Nothing was sent: no summary is in the outbox, and the run wrote nothing to an MP address. (Since design 8.5 an
             // MP's own linked account gets its notices at the official address, so other tests leave such rows behind.)

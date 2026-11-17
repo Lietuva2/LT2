@@ -115,6 +115,26 @@ else if (Link is { } link)
             </div>
         }
 
+        @* Design 8.19.3 (owner, 2026-11-17): an office member's own copies of the MP's summaries, whatever the MP chose for
+           their own; the member's own mail, so any session may change it. *@
+        @if (link.Part == "office" && _copies is not null)
+        {
+            <div class="stack stack--tight" id="mp-copies">
+                <h4>@L["Mp.Copies.Title"]</h4>
+                <fieldset class="stack stack--tight" id="mp-copies-choice">
+                    <legend class="small">@L["Mp.Copies.Lead"]</legend>
+                    @foreach (var f in Lt2.Api.Contracts.Digests.MpMailFrequencies.All)
+                    {
+                        <label class="check">
+                            <input type="radio" name="mp-copies-frequency" id="mp-copies-@f" value="@f" checked="@(_copies == f)" disabled="@Locked" @onchange="() => _copies = f" />
+                            <span>@L["Mp.Mail.Frequency." + f]</span>
+                        </label>
+                    }
+                </fieldset>
+                <p><button type="button" class="btn btn--plain" id="mp-copies-save" disabled="@Locked" @onclick="SaveCopiesAsync">@L["Mp.Mail.Save"]</button></p>
+            </div>
+        }
+
         @if (_confirmEnd)
         {
             <p class="note" role="alert">@L[link.Part == "mp" ? "Mp.GiveUpWarning" : "Mp.LeaveWarning"]</p>
@@ -146,6 +166,7 @@ else if (Link is { } link)
     private bool _sent;
     private bool _confirmEnd;
     private string? _frequency;
+    private string? _copies;
     private MpOfficeInvitationResponse? _invitation;
     private string _inviteEmail = "";
 
@@ -171,7 +192,18 @@ else if (Link is { } link)
         Link = me?.Mp;
         Office = Link is { Part: "mp" } ? (await MpApi.GetOfficeAsync()).Value : null;
         _frequency = Link is { MayWrite: true } ? (await MailApi.GetMineAsync()).Value?.Frequency : null;
+        _copies = Link is { Part: "office" } ? (await MailApi.GetOfficeCopiesAsync()).Value?.Frequency : null;
     }
+
+    private Task SaveCopiesAsync() => RunAsync(async () =>
+    {
+        var saved = await MailApi.SetOfficeCopiesAsync(new Lt2.Api.Contracts.Digests.MpMailFrequencyRequest { Frequency = _copies ?? "" });
+        if (Succeeded(saved))
+        {
+            _copies = saved.Value!.Frequency;
+            Info = L["Mp.Copies.Saved"];
+        }
+    });
 
     private Task SaveMailAsync() => RunAsync(async () =>
     {

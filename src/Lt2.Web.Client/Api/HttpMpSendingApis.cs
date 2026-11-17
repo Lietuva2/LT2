@@ -60,6 +60,12 @@ internal sealed class HttpMpMailApi(ApiHttp http) : IMpMailApi
 
     public Task<ApiResult<MpMailChoiceResponse>> SetMineAsync(MpMailFrequencyRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<MpMailChoiceResponse>(HttpMethod.Put, MpMailRoutes.Mine, request, cancellationToken);
+
+    public Task<ApiResult<MpOfficeCopiesResponse>> GetOfficeCopiesAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<MpOfficeCopiesResponse>(HttpMethod.Get, MpMailRoutes.OfficeCopies, null, cancellationToken);
+
+    public Task<ApiResult<MpOfficeCopiesResponse>> SetOfficeCopiesAsync(MpMailFrequencyRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<MpOfficeCopiesResponse>(HttpMethod.Put, MpMailRoutes.OfficeCopies, request, cancellationToken);
 }
 
 /// <summary>The browser's <see cref="IMpSendingAdminApi"/> (design 8.19.5, 8.19.6).</summary>

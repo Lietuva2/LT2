@@ -101,7 +101,7 @@ internal sealed class OutboxDispatcher(
         && (int)smtp.StatusCode is >= 500 and < 600;
 
     /// <summary>The delivery row an MP email stands for, read from its payload; null for any other email.</summary>
-    private static (Guid RunId, string MpSlug, string Recipient)? DeliveryOf((Guid Id, string Kind, string Payload, int Attempts) row)
+    private static (Guid RunId, string MpSlug, string Recipient, Guid OfficeUserId)? DeliveryOf((Guid Id, string Kind, string Payload, int Attempts) row)
     {
         if (!MpMail.MpMailKinds.All.Contains(row.Kind))
         {
@@ -109,9 +109,14 @@ internal sealed class OutboxDispatcher(
         }
 
         using var payload = System.Text.Json.JsonDocument.Parse(row.Payload);
-        return payload.RootElement.TryGetProperty("delivery", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.Object
-            ? (d.GetProperty("runId").GetGuid(), d.GetProperty("mpSlug").GetString()!, d.GetProperty("recipient").GetString()!)
-            : null;
+        if (!payload.RootElement.TryGetProperty("delivery", out var d) || d.ValueKind != System.Text.Json.JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        // An office member's copy names the member (design 8.19.3); every other row has none.
+        var office = d.TryGetProperty("officeUserId", out var o) && o.ValueKind == System.Text.Json.JsonValueKind.String ? o.GetGuid() : Guid.Empty;
+        return (d.GetProperty("runId").GetGuid(), d.GetProperty("mpSlug").GetString()!, d.GetProperty("recipient").GetString()!, office);
     }
 
     private static async Task MarkDeliveryAsync(
@@ -123,13 +128,14 @@ internal sealed class OutboxDispatcher(
         }
 
         await using var command = new NpgsqlCommand(
-            "UPDATE notify.digest_delivery SET status = @status WHERE run_id = @run AND mp_slug = @mp AND recipient = @recipient AND status = 'queued'",
+            "UPDATE notify.digest_delivery SET status = @status WHERE run_id = @run AND mp_slug = @mp AND recipient = @recipient AND office_user_id = @office AND status = 'queued'",
             connection,
             transaction);
         command.Parameters.AddWithValue("status", status);
         command.Parameters.AddWithValue("run", delivery.RunId);
         command.Parameters.AddWithValue("mp", delivery.MpSlug);
         command.Parameters.AddWithValue("recipient", delivery.Recipient);
+        command.Parameters.AddWithValue("office", delivery.OfficeUserId);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
