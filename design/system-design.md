@@ -3173,7 +3173,9 @@ lines on a phone.
   focus leaving, the same small script), holding its three tabs, "Darbotvarkė", "Projektai", "Suvestinės"; the current page
   is marked in it, and the item itself is marked current on the three pages and everything under them, as before. The tab
   row stays under the three pages' headings. The menu still fits one line from 360 px; under 32rem the logo stands without
-  its words, as before [changed while building: see the line below for what else the narrow widths needed].
+  its words, as before. [changed while building, measured on the stack: with four items the line did not fit under 26rem
+  (at 360 px "Projektai" ran into the mark); under 26rem the gaps close up, the mark is a little smaller (2.25rem) and the
+  arrows sit closer, and under 24rem the items take the smallest type size (13 px); the line then fits from 340 px.]
 - **Done when:** the menu is one line at 360, 390 and 1280 px; each of the three tabs is reachable from the other two
   and marked (the fourth, "Analitika", became "Statistika" in the menu, owner 2026-11-17); every page that was in the old
   menu is one press from the menu or the footer; the account item works

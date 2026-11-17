@@ -26,6 +26,7 @@ public sealed class MenuTests : E2ETest
               if (items.length !== 4) return 'expected four menu items, found ' + items.length;
               const middles = [brand, ...items].map(r => Math.round(r.top + r.height / 2));
               if (Math.max(...middles) - Math.min(...middles) > 8) return 'not one line: ' + middles.join(',');
+              if (Math.min(...items.map(r => r.left)) < brand.right) return 'an item runs into the brand';
               const right = Math.max(...items.map(r => r.right));
               if (right > document.documentElement.clientWidth) return 'past the right edge: ' + right;
               return null;

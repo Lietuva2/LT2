@@ -906,6 +906,18 @@ body { padding-block-end: 4.5rem; }
   }
   .top__nav { column-gap: var(--sp-3); font-size: var(--fs-1); }
 }
+/* With "Statistika" (owner, 2026-11-17) the four items need more room on a phone, measured: under 26rem the gaps close up,
+   the mark is a little smaller and the arrows sit closer; under 24rem the items take the smallest type size. One line from
+   340 px. */
+@media (max-width: 26rem) {
+  .top { gap: var(--sp-2); }
+  .top__brand svg { width: 2.25rem; }
+  .top__nav { column-gap: var(--sp-2); }
+  .account__toggle, .drop__toggle { gap: var(--sp-1); }
+}
+@media (max-width: 24rem) {
+  .top__nav { font-size: var(--fs-0); }
+}
 
 /* "Paskyra" and "Projektai": disclosures (no script needed); the panel lies over the page under the item ("Paskyra" at its
    right edge, "Projektai" at its left), at a readable width and never wider than the window. js/lt2-account.js fills the
