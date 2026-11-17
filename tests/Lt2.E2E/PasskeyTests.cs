@@ -38,6 +38,8 @@ public sealed partial class PasskeyTests : E2ETest
         await page.WaitForURLAsync(new Regex("/$"));
         await SignInWithPasskeyAsync(page);
 
+        // Design 8.21: the sessions are on "Saugumas ir duomenys".
+        await page.GotoAsync(E2ESteps.Base + "/paskyra/saugumas");
         var current = page.Locator(".rows li").Filter(new() { HasText = "Ši sesija" });
         await Assertions.Expect(current).ToContainTextAsync("prisijungta prieigos raktu");
         (await MeAsync(page)).GetProperty("email").GetString().ShouldBe(email);
@@ -109,8 +111,9 @@ public sealed partial class PasskeyTests : E2ETest
         var code = ActivationCode().Match(output).Value;
         code.ShouldNotBeNullOrEmpty("the migrator prints the activation code");
 
-        await page.ReloadAsync();
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Darbuotojo vaidmens aktyvinimas" })).ToBeVisibleAsync();
+        // Design 8.21: a granted role is activated on "Dalyvavimas".
+        await page.GotoAsync(E2ESteps.Base + "/paskyra/dalyvavimas");
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Darbuotojo vaidmens aktyvinimas" })).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await SignUpTests.WaitForInteractivityAsync(page);
         await page.GetByLabel("Aktyvinimo kodas").FillAsync(code.ToLowerInvariant());
         await page.GetByRole(AriaRole.Button, new() { Name = "Aktyvinti" }).ClickAsync();

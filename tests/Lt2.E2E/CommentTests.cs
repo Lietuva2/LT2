@@ -42,7 +42,8 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             // At 1280 an open "Aptarimas" reads in the arguments' full width, not in a side's column (browser look of 2026-11-16;
             // the sheet's own width at 1280 is about 580 px, so the measure is the share of the arguments' area, not a number).
             var box = await writer.Page.Locator($"#aptarimas-{reason:N}").BoundingBoxAsync();
-            var pair = await writer.Page.Locator(".pair--reasons").BoundingBoxAsync();
+            // The arguments' pair is the one holding this discussion (the organisations' statements use the same layout).
+            var pair = await writer.Page.Locator(".pair--reasons").Filter(new() { Has = writer.Page.Locator($"#aptarimas-{reason:N}") }).BoundingBoxAsync();
             box.ShouldNotBeNull().Width.ShouldBeGreaterThan(pair.ShouldNotBeNull().Width * 0.75f, "the sides stand one above the other while a discussion is open");
 
             await AgreeAsync(reader.Page, reason, comment);

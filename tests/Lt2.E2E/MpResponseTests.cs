@@ -94,9 +94,10 @@ public sealed partial class MpResponseTests : E2ETest
 
             // 3b. The morning after (design 8.20.1): the follower's email, with the MP's name and stance and no explanation.
             // Design 8.24: under "Iš karto" (the follower's default) the answer comes at the job's next run, without waiting for
-            // the morning, so nothing is moved and no setting changed.
-            var (subject, text) = await Mailpit.MessageAsync(followerEmail, $"Seimo narių atsakymai dėl {Bill}", TimeSpan.FromMinutes(3));
-            subject.ShouldBe($"Lietuva 2.0: Seimo narių atsakymai dėl {Bill}");
+            // the morning, so nothing is moved and no setting changed. When the same run also tells the bill's planned date (the
+            // follow is new), both come in one gathered email (design 8.24), so the email is found by the MP's name.
+            var (_, subject, text, _, _) = await Mailpit.FullAsync($"to:\"{followerEmail}\" \"{Name}\"", TimeSpan.FromMinutes(3));
+            subject.ShouldBeOneOf($"Lietuva 2.0: Seimo narių atsakymai dėl {Bill}", "Lietuva 2.0: naujienos apie tai, ką sekate");
             text.ShouldContain($"{Name}");
             text.ShouldContain("balsuos už");
             text.ShouldContain($"/seimas/{Bill}#atsakymai");
