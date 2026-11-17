@@ -52,6 +52,12 @@
         <div class="page" id="mp-offer-notice" data-mp-offer-notice data-skip="@($"{Lt2.Api.Contracts.Mps.MpRoutes.TakeoverPage} {Lt2.SharedKernel.AccountScreens.Taking}")" hidden>
             <p class="note" role="note"><span data-mp-offer-text data-format="@T["Notice.MpOffer"]"></span>@(" ")<a href="@Lt2.SharedKernel.AccountScreens.MpOffer" id="mp-offer-notice-link">@T["Notice.MpOfferLink"]</a></p>
         </div>
+        @* Design 8.19.2 (owner, 2026-11-17): a staff account (by its role, in any session) is told on every page while a summary to
+           MPs is prepared and nobody approved or declined it. The same hidden markup for every member; js/lt2-account.js shows it
+           from the account's own GET /api/v1/me (digestReview, given to staff accounts only), never on the summaries screen. *@
+        <div class="page" id="digest-review-notice" data-digest-review-notice data-skip="@Lt2.Api.Contracts.Digests.DigestRoutes.ModerationPage" hidden>
+            <p class="note" role="note"><span data-digest-review-text data-format="@T["Notice.DigestReview"]" data-bills="@T["Notice.DigestReview.Bills"]" data-reasons="@T["Notice.DigestReview.Reasons"]"></span>@(" ")<a href="@Lt2.Api.Contracts.Digests.DigestRoutes.ModerationPage" id="digest-review-notice-link"><b>@T["Notice.DigestReviewLink"]</b></a></p>
+        </div>
     </Authorized>
 </AuthorizeView>
 

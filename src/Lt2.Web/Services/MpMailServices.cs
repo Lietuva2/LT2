@@ -46,6 +46,26 @@ internal sealed class MpMailHost(IMpMail mail, IPoliticians politicians, IIdenti
         return choice.IsSuccess ? Map(choice.Value, withExtra: false) : choice.Error!;
     }
 
+    /// <summary>
+    /// An office member's own choice of copies (design 8.19.3, owner 2026-11-17): only for an account in an MP's office, in any
+    /// session (the member's own mail; it does not speak for the MP). <c>mp.not-office</c> for anyone else, the MP's own account
+    /// included (it gets the summary itself).
+    /// </summary>
+    public async Task<Result<MpOfficeCopiesResponse>> OfficeCopiesAsync(ClaimsPrincipal user, string? frequency, CancellationToken ct)
+    {
+        if (await politicians.SpeakerAsync(user, ct) is not { Part: "office" } member)
+        {
+            return NotOffice;
+        }
+
+        var choice = frequency is null
+            ? await mail.OfficeCopiesAsync(member.UserId, member.SeimasPersonId, ct)
+            : await mail.SetOfficeCopiesAsync(member.UserId, member.SeimasPersonId, frequency, ct);
+        return choice.IsSuccess ? new MpOfficeCopiesResponse(choice.Value.Slug, choice.Value.FirstName, choice.Value.LastName, choice.Value.Frequency) : choice.Error!;
+    }
+
+    public static readonly Error NotOffice = Error.NotFound("mp.not-office");
+
     /// <summary>The test copy goes to the signed-in administrator's own address (design 8.19.5).</summary>
     public async Task<Result<Unit>> TestAsync(ClaimsPrincipal user, StaffActor administrator, CancellationToken ct)
     {
@@ -92,6 +112,16 @@ internal sealed class ServerMpMailApi(IMpMail mail, MpMailHost host, IHttpContex
         accessor.HttpContext?.User is { } user
             ? errors.ToApiResult(await host.SetMineAsync(user, request?.Frequency ?? "", cancellationToken), c => c)
             : ApiResult<MpMailChoiceResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+
+    public async Task<ApiResult<MpOfficeCopiesResponse>> GetOfficeCopiesAsync(CancellationToken cancellationToken = default) =>
+        accessor.HttpContext?.User is { } user
+            ? errors.ToApiResult(await host.OfficeCopiesAsync(user, null, cancellationToken), c => c)
+            : ApiResult<MpOfficeCopiesResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+
+    public async Task<ApiResult<MpOfficeCopiesResponse>> SetOfficeCopiesAsync(MpMailFrequencyRequest request, CancellationToken cancellationToken = default) =>
+        accessor.HttpContext?.User is { } user
+            ? errors.ToApiResult(await host.OfficeCopiesAsync(user, request?.Frequency ?? "", cancellationToken), c => c)
+            : ApiResult<MpOfficeCopiesResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
 }
 
 /// <summary>Server-side <see cref="IMpSendingAdminApi"/> for the administrators' screens' first render.</summary>

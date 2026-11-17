@@ -50,6 +50,26 @@ public interface IMpLinks
     /// of the follow email to the MP's account and office (design 8.20.1); never shown, logged or combined with anything else.
     /// </summary>
     Task<IReadOnlyDictionary<Guid, long>> SpeaksForAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The office members linked now (design 8.5.3) of the given MPs, with each one's own address: only for the copies of the
+    /// MP's summaries (design 8.19.3, owner 2026-11-17), written to an outbox row and never logged, shown or stored elsewhere.
+    /// </summary>
+    Task<IReadOnlyList<OfficeMemberAddress>> OfficeMembersAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
+}
+
+/// <summary>An office member of an MP (design 8.5.3) as the summaries' copies need one: the account, its own address, the MP.</summary>
+public sealed record OfficeMemberAddress(long SeimasPersonId, Guid UserId, string Email);
+
+/// <summary>
+/// Design 8.19.3 (owner, 2026-11-17): when an office link ends (the member leaves or is removed, the MP's link ends, the account is
+/// deleted), the member's copies of the MP's summaries end and their choice is deleted, in the caller's transaction.
+/// Implemented by Notifications; called by Identity.
+/// </summary>
+public interface IOfficeCopiesEnd
+{
+    /// <summary>Of one member (<paramref name="userId"/>), of every member of one MP (<paramref name="seimasPersonId"/>), or of that pair.</summary>
+    Task EndAsync(Guid? userId, long? seimasPersonId, DbTransaction transaction, CancellationToken cancellationToken);
 }
 
 /// <summary>Facts about members, for the Appeals module. Implemented by Identity.</summary>

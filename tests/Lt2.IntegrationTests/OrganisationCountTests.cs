@@ -118,12 +118,12 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
             html.ShouldContain(AppealSteps.ThirdBill);
             html.ShouldNotContain(Marker, Case.Insensitive);
             html.ShouldNotContain(name, Case.Insensitive);
-            var mps = await moderator.Browser.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
-            var preview = await moderator.Browser.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug));
-            preview.Text.ShouldContain(AppealSteps.ThirdBill);
-            preview.Text.ShouldNotContain(Marker, Case.Insensitive);
-            preview.Text.ShouldNotContain(name, Case.Insensitive);
-            preview.Text.ShouldNotContain("organizacij", Case.Insensitive);
+            var screen = System.Text.Json.JsonSerializer.Serialize(
+                (await moderator.Browser.GetJsonAsync<DigestModerationResponse>(DigestRoutes.Moderation)).Runs.Single(r => r.Id == weekly.Id));
+            screen.ShouldContain(AppealSteps.ThirdBill);
+            screen.ShouldNotContain(Marker, Case.Insensitive);
+            screen.ShouldNotContain(name, Case.Insensitive);
+            screen.ShouldNotContain("organizacij", Case.Insensitive);
         }
         finally
         {
@@ -135,7 +135,15 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
     }
 
     /// <summary>A page without the markers Blazor writes for its islands, which carry a new id on every request.</summary>
-    private static string Stable(string body) => System.Text.RegularExpressions.Regex.Replace(body, "<!--Blazor[^>]*-->", "");
+    /// <summary>
+    /// A page or answer without Blazor's markers and without a bill's last activity (owner, 2026-11-17: a statement made public is
+    /// the bill's activity, design 8.12.5; only the "naujausia" order reads it, and these comparisons are of the others).
+    /// </summary>
+    private static string Stable(string body) =>
+        System.Text.RegularExpressions.Regex.Replace(
+            System.Text.RegularExpressions.Regex.Replace(body, "<!--Blazor[^>]*-->", ""),
+            "\"lastActivityAt\":(\"[^\"]*\"|null)",
+            "\"lastActivityAt\":…");
 
     private async Task<string> CandidatesAsync()
     {

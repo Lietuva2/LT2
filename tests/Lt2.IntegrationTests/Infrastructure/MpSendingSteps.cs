@@ -22,7 +22,8 @@ public static class MpSendingSteps
 
     /// <summary>
     /// Forgets everything MP mail left: the choices, links, suppression entries, letters, introduction runs and every summary
-    /// a test let go (their deliveries cascade), and the MP mail waiting in the outbox (it holds addresses).
+    /// a test prepared, let go, declined or dropped (their deliveries and chosen arguments cascade; dry runs stay), and the MP
+    /// mail and the moderators' notices waiting in the outbox (they hold addresses).
     /// </summary>
     public static async Task ResetMpMailAsync(this DatabaseFixture database)
     {
@@ -32,11 +33,18 @@ public static class MpSendingSteps
             DELETE FROM notify.mp_mail_token;
             DELETE FROM notify.suppression;
             DELETE FROM notify.introduction_letter;
-            DELETE FROM notify.digest_run WHERE kind = 'introduction' OR status IN ('waiting', 'sent', 'cancelled', 'expired');
-            DELETE FROM notify.outbox WHERE kind = ANY(@kinds);
+            DELETE FROM notify.digest_run WHERE kind = 'introduction' OR status IN ('prepared', 'sent', 'cancelled', 'dropped');
+            DELETE FROM notify.outbox WHERE kind = ANY(@kinds) OR kind = 'email.digest-review';
             """,
             ("kinds", MpMailKinds));
     }
+
+    /// <summary>
+    /// Forgets the summaries a test prepared and did not let go: a prepared summary goes at the next run of the job whatever week
+    /// a later test runs it for, so none is left behind (design 8.19.2).
+    /// </summary>
+    public static Task ForgetPreparedAsync(this DatabaseFixture database) =>
+        database.ExecuteAsync("DELETE FROM notify.digest_run WHERE status = 'prepared'; DELETE FROM notify.outbox WHERE kind = 'email.digest-review'");
 
     /// <summary>Writes the letter and sends it to every sitting MP (a fresh passkey confirmation first); returns how many got it.</summary>
     public static async Task<int> IntroduceAsync(this StaffMember administrator, string subject = "Lietuva 2.0 – kas tai ir ko tikėtis")
@@ -59,16 +67,12 @@ public static class MpSendingSteps
         return (await sent.ReadAsync<IntroductionSentResponse>()).Mps;
     }
 
-    /// <summary>"Siųsti" on a waiting summary, after the fresh passkey confirmation it needs (design 6.2, 8.19.2).</summary>
-    public static async Task<HttpResponseMessage> SendDigestAsync(this StaffMember staff, Guid runId)
-    {
-        using (var confirmed = await staff.Browser.ConfirmPasskeyAsync(staff.Authenticator))
-        {
-            confirmed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await confirmed.Content.ReadAsStringAsync());
-        }
+    /// <summary>"Patvirtinti" on a prepared summary (owner, 2026-11-17): a staff-passkey session is enough, it sends nothing.</summary>
+    public static Task<HttpResponseMessage> ApproveDigestAsync(this StaffMember staff, Guid runId) =>
+        staff.Browser.PostAsync(DigestRoutes.ApproveOf(runId), new { });
 
-        return await staff.Browser.PostAsync(DigestRoutes.SendOf(runId), new { });
-    }
+    /// <summary>The summaries of one kind among those a run of the job prepared or let go.</summary>
+    public static DigestRunInfo Of(this IReadOnlyList<DigestRunInfo> runs, string kind) => runs.Single(r => r.Kind == kind);
 
     /// <summary>Sets a runtime setting after a fresh passkey confirmation (design 6.9), for tests longer than ten minutes.</summary>
     public static async Task SetFreshAsync(this StaffMember administrator, string key, object value)

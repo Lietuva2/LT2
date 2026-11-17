@@ -794,6 +794,12 @@ internal sealed class OrganisationsService(
             existing.EditedAt = now;
             existing.WrittenByUserId = userId;
             await db.SaveChangesAsync(cancellationToken);
+            if (status == StatementStatuses.Published)
+            {
+                // Design 8.12.5: a statement made public or changed in public is the bill's activity.
+                await RecordActivity.TouchBillAsync(db, existing.BillNumber, now, cancellationToken);
+            }
+
             await transaction.CommitAsync(cancellationToken);
             return new StatementSaved(existing.Id, existing.Status);
         }
@@ -817,6 +823,11 @@ internal sealed class OrganisationsService(
         if (!await SaveAsync(db, cancellationToken))
         {
             return Error.Conflict("statement.exists");
+        }
+
+        if (status == StatementStatuses.Published)
+        {
+            await RecordActivity.TouchBillAsync(db, statement.BillNumber, now, cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);

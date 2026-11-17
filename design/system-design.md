@@ -872,7 +872,7 @@ correction makes it a moderator's text (8.12.3).
   resources, the one not in force `display: none`; flex `order` draws it after the rest). One pure function cuts
   (`TextExcerpt`, one source file compiled into SharedKernel and the browser's assembly), one component shows
   (`LongText`). The moderators' queue and panels show every text whole; the email to MPs shortens reasons the same way,
-  with a link, and the moderators' preview of a summary is that same email text (8.19.3).
+  with a link (8.19.3); the moderators' summaries screen shows the part common to every MP (8.19.2).
 - **No limit per person by default [decided 2026-11-13].** How many reasons a person may write on a bill, and how many
   "Man svarbu" marks they may give on a bill, are two runtime settings for all bills (`Appeals:ReasonsPerPerson`,
   `Appeals:EndorsementsPerPerson`); 0 means no limit, and both start at 0. Nobody knows yet whether people will write
@@ -999,7 +999,9 @@ except arguments that pre-screening flags or people report.
 - A report button is on every argument and on a bill's description (Digital Services Act notice-and-action applies to any
   hosting service, however small). [Later also on organisations, statements and responses (8.14.14, 8.5.5); proposed on
   every comment (8.23.8).]
-- Only reasons a moderator has seen can appear in a summary email.
+- **A summary holds published arguments, seen by a moderator or not [decided by the owner on 2026-11-17; it was "only
+  reasons a moderator has seen"].** A person still passes everything that reaches MPs: each summary is prepared a day ahead
+  and the moderators review it, hiding an argument there with the normal action (8.19.2).
 - Rules for moderators are public, like the statistics methodology.
 
 ### 8.4 Summary emails to MPs
@@ -1015,6 +1017,7 @@ and factions are treated on equal terms. MPs who have not joined LT2 are include
 | **Weekly summary** | Monday 07:00 Vilnius time, in weeks when the Seimas sits. Lists eligible bills that are on that week's agenda or changed notably since the last summary. No changes, no email. | `Digest:Weekly` |
 | Changed notably | A bill never yet in a summary, or one whose participants (both sides together) rose or fell by at least 10 % since the last summary that held it **[decided 2026-11-13]** | `Digest:NotableChange` |
 | **Before-vote summary** | 12:00 on the working day before a sitting whose agenda has an eligible bill at a voting stage, unless that week's Monday summary already covered the same sitting. | `Digest:BeforeVote` |
+| Review before it goes | Each weekly and before-vote summary is prepared 24 hours before its time (Monday 07:00 on Sunday 07:00; 12:00 on the working day before a sitting on the day before at 12:00): its bills and arguments are fixed then, moderators are told and may hide an argument, hold a bill, approve it or decline it; the numbers are read when it goes **[owner, 2026-11-17, 8.19.2]** | `Digest:ReviewHours` |
 | Ceiling per MP | Two summaries a week | `Digest:MaxPerWeek` |
 | Party group numbers | Shown for a side when at least 10 of its participants said they support the MP's party (and the rest of the side is none or at least as many); 0 = no floor, any group of one or more **[owner, 2026-11-17]** | `Digest:PartyGroupMinimum` |
 | Re-sending after an item slips | Only in the next regular summary; never an extra email because a date moved | – |
@@ -1076,10 +1079,11 @@ the agenda in the coming days, then the rest by participation. For each bill:
   they support the MP's party: those numbers **[owner, 2026-11-17: a setting, was a fixed 20]**. Taking part is private:
   nobody can see who took a side at all, and no list ties a side to a person inside the system, so a small group number
   reveals little from within the system. The rule is a pure function (`GroupRules`), the value is read when the summary
-  is made, and the moderators' preview, the email and the stored snapshot carry what it allowed then; the public copy
+  is read when the summary goes (8.19.2), and the email and the stored snapshot carry what it allowed then; the public copy
   carries no party numbers;
 - the two most endorsed reasons per side, with their "Man svarbu" counts and without their authors' names **[decided
-  2026-11-13]**: the same in the email, the public copy and the stored snapshot, so a summary holds no person. A
+  2026-11-13]**: chosen among the published ones when the summary is prepared, each count read when it goes **[owner,
+  2026-11-17, 8.19.2]**; the same in the email, the public copy and the stored snapshot, so a summary holds no person. A
   reason longer than about 300 characters plus 100 is shortened in the email at a word boundary, as on the page, with
   "…" and a plain line "Visas argumentas: {link}" to that reason on the summary's public copy; the snapshot keeps the
   whole text and the public copy shows it behind "Rodyti daugiau" (8.19.3, **owner, 2026-11-16**);
@@ -1234,6 +1238,8 @@ link that cannot be guessed, and it binds a passkey, as 6.2 already decided.
     trial's invitation (6.2).
   - Limits as before (five members per MP, seven days, one use) and, against a runaway sender, at most ten invitations a
     day per MP, copied or emailed (`PoliticianRules.OfficeInvitationsPerDay`; `mp.office-invitation-limit`).
+- **An office member gets copies of the MP's summaries [owner, 2026-11-17],** by their own choice of how often, whatever
+  the MP chose; leaving the office ends them (8.19.3).
 
 #### 8.5.4 What a linked account can do
 
@@ -2038,7 +2044,8 @@ bill's page. "Kreipimasis" stays the word for what people on a bill ask of MPs a
 - [Confirmed by the owner on 2026-11-14, on the built result: one threshold for all bills with a moderator's override,
   and that a bill once sent stays eligible.]
 - Everything else in 8.4 stays: the schedule, the ceiling, "changed notably", hold and release, the urgent summary,
-  the dry run, the public copies, and that only arguments a moderator has seen appear in a summary.
+  the dry run and the public copies. [Owner, 2026-11-17: a summary holds published arguments whether or not a moderator
+  has seen them, and is reviewed before it goes, 8.19.2.]
 - A bill enters the moderators' queue as "under its threshold and on the agenda" only when it has at least one
   participant.
 
@@ -2147,6 +2154,14 @@ the team, so no notice is owed.
   is a link that applies at once, without script, keeping the search and the order, marked while on; no checkbox waiting
   for "Rodyti". Each row shows the sides' numbers, "už 6 800 (…) · prieš 4 281 (…)" with the counts for accounts older than
   30 days in brackets as the agenda's rows have them, beside its bar instead of in the text line.
+  **[Owner, 2026-11-17: a third order,] "pagal naujausią veiklą"** (`rikiuoti=naujausia`, the API's `sort=latest`): the
+  bill's last activity first. Last activity is the latest of: a side taken, changed or withdrawn; an argument published; a
+  comment written; an organisation's statement made public or changed; an MP's response made public or changed. It is one
+  time per bill, kept on its record (`appeals.bill_record.last_activity_at`) and written in the same transaction as each of
+  those (Appeals, `RecordActivity`); nothing about who acted is kept. Bills without any come last (then the usual ties). In
+  that order each row shows "Paskutinė veikla {yyyy-MM-dd HH:mm}". [the designer's choices: the link reads "pagal naujausią
+  veiklą" like its two neighbours; taking the same side again is no activity; an argument restored by a moderator is not
+  "published" again; a statement or response on a bill without a record marks nothing, since nothing is created for it.]
 - **The agenda (8.11.1)** shows both sides for every bill; a bill nobody took part in says so and links to its page.
   "Kreipimosi prašo N" is gone.
 - **The front page (8.7, 8.11.1)** keeps "Artimiausiu metu Seime"; the cards below are the six bills with the most
@@ -2254,7 +2269,7 @@ never overwrites a person's text, and a reported summary reaches the queue and c
   it is.
 - **Not in what MPs receive:** checked, not changed: `DigestCandidate` and the summary snapshot carry no description; a
   test makes a summary of a bill with an AI summary and finds its text in neither the snapshot, the public copy (page and
-  API) nor an MP's preview.
+  API) nor the moderators' summaries screen.
 
 **[Decided by the owner on 2026-11-14, after seeing 8.13 built. These three replace what is said above where they
 differ.]**
@@ -2389,7 +2404,8 @@ confirmed organisations that a moderator has not kept out of summaries (8.14.9).
 - In the summary (8.4), each bill gets one more line after the arguments: which organisations ask to vote for, which
   against, and which sent remarks. Names only, each linking to the statement on the public page; no statement text in
   the email.
-- Only statements a moderator has seen appear, the same rule as for arguments (8.3).
+- Only statements public when the summary is prepared appear, the same rule as for arguments (8.3, 8.19.2; the designer's
+  proposal, 2026-11-17, following the owner's change for arguments: it was "only statements a moderator has seen").
 - The line is frozen in the summary's snapshot and shown on its public copy (8.7).
 - A statement alone never makes a bill eligible for a summary: eligibility counts users only.
 
@@ -2529,7 +2545,7 @@ Still for the owner, on the built result: the details marked "designer's choice"
   threshold or the sending.
 - A blocked organisation's statements disappear and come back when the block is lifted.
 - Once the line joins the summaries: a summary lists the organisations by side with links, only confirmed ones not kept
-  out by a moderator, and only for statements a moderator has seen.
+  out by a moderator, and only for statements public when the summary was prepared (8.19.2).
 - No page, API answer, log line or email shows who registered through an organisation's link, who follows it, or how
   "its" members took sides.
 
@@ -2769,8 +2785,8 @@ reading of them; each can be changed on the built result.]
 - A person can register, take a side and see it counted in under two minutes on a phone.
 - No API response, page, log line or email reveals another person's position (tested, and reviewed in the penetration
   test).
-- A dry-run mode renders every MP's summary to a preview without sending; a moderator can read any of them before the
-  real send.
+- A dry-run mode makes every summary without sending; moderators review each one before it goes, real or dry (8.19.2:
+  its common text once; the per-MP preview went with the owner's change of 2026-11-17).
 - Summaries respect preferences, the suppression list, the weekly ceiling and each bill's threshold (never below the
   administrator's minimum) under test with a simulated month of agenda changes.
 - The agenda watcher survives a changed page layout by alerting and falling back to moderator-entered dates, not by
@@ -3036,9 +3052,10 @@ sending domain and a provider).
 
 #### 8.19.1 Three states of sending
 
-- **One setting, `Digest:Sending`:** `off` (the default: a dry run, as before), `approval` (a summary waits until a
-  moderator lets it go) or `automatic` (sent when made). On the settings screen under "Suvestinės", changed by an
+- **One setting, `Digest:Sending`:** `off` (the default: a summary is prepared and reviewed the same way, then made as a
+  dry run, nothing sent) or `automatic` (sent at its time). On the settings screen under "Suvestinės", changed by an
   administrator with a fresh passkey confirmation like every setting, audited, and shown on the methodology page.
+  **[Owner, 2026-11-17: the `approval` mode is gone; every summary is reviewed a day ahead instead, 8.19.2.]**
 - **Nothing goes before the introduction letter (8.19.5).** While no introduction letter has been sent, summaries stay
   dry runs whatever the setting says, and the moderators' summaries screen says so.
 - **Invented data never reaches a real mailbox.** The data is invented when the deployment says so (`Demo:Allowed`) or
@@ -3048,39 +3065,76 @@ sending domain and a provider).
   is sent unless the deployment declares that all its mail is caught (`Email:Caught`, deployment configuration, true in the compose
   files that run Mailpit). Otherwise summaries stay dry runs and the screen says so. The stand-in MPs' addresses are on a
   real domain, so this is a second lock beside the transport.
-- **A run's status:** `dry-run`; `waiting` (made, awaiting a moderator); `sent` (let go: its deliveries are queued);
-  `cancelled` (a moderator declined it, with a statement); `expired` (nobody decided in time).
+- **A run's status [owner, 2026-11-17]:** `prepared` (its bills and arguments chosen, under review, goes at its time;
+  approved or not); `dry-run` (went while sending was off); `sent` (went: its deliveries are queued); `cancelled` (a
+  moderator declined it, with a statement); `dropped` (at its time no bill was left: all held or no longer open; nothing
+  went and nothing is public; the designer's proposal). `waiting` and `expired` are gone.
 - **Which runs count.** For the weekly ceiling, "changed notably since the last summary", "covered by Monday's summary"
-  and "never yet in a summary": while sending is on, only `waiting` and `sent` runs count; while it is off, dry runs
-  count as before. So the first real summary is not thinned by earlier dry runs, and a cancelled or expired one frees its
-  place. A bill counts as really summarised (`first_summarised_at`, 8.12.2) when a run that holds it becomes `sent`.
+  and "never yet in a summary": a `prepared` run always (it is going to go); while sending is on, `sent` runs; while it is
+  off, dry runs too. So the first real summary is not thinned by earlier dry runs, and a cancelled or dropped one frees
+  its place. A bill counts as really summarised (`first_summarised_at`, 8.12.2) when a run that holds it becomes `sent`.
   [changed while building: the Appeals module sets it through `IDigestSource.MarkSummarisedAsync` in the sender's own
   transaction, as `IPositionErasure` works across modules, rather than through an outbox event: the outbox carries only
-  emails. A cancelled or expired run still counts as "already made" for its week, so a declined weekly summary is not made
+  emails. A cancelled or dropped run still counts as "already made" for its week, so a declined weekly summary is not made
   again the same week. An MP's delivery replaced by the letter (`introduced`) counts towards the ceiling.]
 
-#### 8.19.2 A moderator lets it go
+#### 8.19.2 Reviewed a day ahead, not approved
 
-- With `approval`, the weekly and before-vote summaries are made on schedule as `waiting`: the snapshot is frozen then,
-  and nothing is queued. An urgent summary is already a moderator's decision (8.4) and is sent at once.
-- The moderators' summaries screen lists waiting ones first. Each shows the bills as frozen, how many MPs it would go
-  to, the text for any one MP (the existing preview), and two actions: "Siųsti" with the number of MPs in the button's
-  confirmation, and "Nesiųsti" with a statement of at least 20 characters.
-- Letting go needs a moderator's staff-passkey session (6.3). It is audited with the moderator; the public copy never
-  names the moderator.
-- **A waiting summary expires** 24 hours after it was made or when its sitting's day begins in Vilnius, whichever comes
-  first (`Digest:ApprovalHours`, 24). Nothing is sent late.
-- Recipients are worked out when it is let go, not when it was made: preferences, the suppression list and the ceiling
-  as they are at that moment.
+**[Rewritten on 2026-11-17 by the owner's decision: a summary is prepared a day before it goes and reviewed; nobody has to
+approve it. It replaces "a moderator lets it go" (the `approval` mode, "Siųsti", `Digest:ApprovalHours`, `waiting` and
+`expired`). Points marked "designer's proposal" are the agent's own choices while building and await the owner's word.]**
+
+- **Prepared ahead.** Each weekly and before-vote summary is prepared `Digest:ReviewHours` (a runtime setting, 24 by
+  default, on the settings screen and the methodology page) before its sending time, on the Vilnius clock: Monday 07:00 is
+  prepared on Sunday 07:00; 12:00 on the working day before a sitting is prepared at 12:00 the day before. Preparing fixes
+  **which bills** (eligible and not held at that moment, by the rules of 8.4) and, per bill and side, **which arguments**:
+  the two most endorsed among the published, not hidden arguments that were public by then. Whether a moderator has seen
+  one does not matter (8.3). A summary found after its time (the worker was down) is prepared and goes at once, on its
+  sending day only (designer's proposal).
+- **The numbers are read when it goes,** not when it was prepared: both sides, the 30-day counts, the party groups
+  (`GroupRules`), the surge note, the "Man svarbu" count beside each argument and the MP's own response. The snapshot and
+  the public copy are made then. A bill held during review, or no longer open (closed by the final vote, or its record
+  hidden), drops out when it goes; a bill that became eligible after the preparation waits for the next summary. With no
+  bill left nothing goes and the run is `dropped` (designer's proposal).
+- **Hiding brings the next argument in.** During review a moderator hides an argument from the summaries screen with the
+  normal action (8.3: a statement, audited, the author told; hidden on the bill's page too). The summary then takes the next
+  argument of that side by "Man svarbu" now, from the same pool (public when it was prepared, not hidden), never one chosen
+  before; the screen marks it "Įtrauktas vietoj paslėpto". The chosen list is stored (`digest_choice`) and stays as it is
+  apart from that: it is not sorted again by marks when it goes, so the list the screen shows is the one that goes (the
+  screen orders by the marks now). An argument that leaves the published ones any other way (withdrawn, merged) is
+  replaced the same way (designer's proposal).
+- **Approving and declining [owner, 2026-11-17].** A prepared summary offers two decisions, each needing a moderator's
+  staff-passkey session (6.3) and audited with the moderator, whom no public answer names:
+  - "Patvirtinti": the summary is marked reviewed (`approved_at`, `approved_by`). It still goes at its own time; nothing is
+    sent earlier, and hiding arguments and "Sulaikyti siuntimą" stay possible until then. It asks for no fresh passkey
+    confirmation, since it sends nothing. The screen then says "Patvirtinta {yyyy-MM-dd HH:mm}" beside "Išeis …".
+  - "Nesiųsti" with a statement of at least 20 characters, public on the copy: the summary is `cancelled`; its copy shows
+    what it held at that moment (designer's proposal) and says "Nesiųsta" with the statement.
+  - If nobody does either, it goes at its time as prepared.
+- An urgent summary is unchanged: a moderator approving it is its review (8.4), and it goes at once.
+- **Moderators are told.** At preparation one email (outbox kind `email.digest-review`, through `EmailLayout.Build`) goes to
+  every account holding an activated moderator or administrator role: which summary, when it goes, how many bills and
+  arguments, what they may do, and the link to `/moderavimas/suvestines`; never an argument's text or anything about an MP.
+  And on **every page**, for such an account (by its role, whatever its session), a box under the header while a prepared
+  summary nobody approved or declined has not gone: "Suvestinė Seimo nariams išeis {yyyy-MM-dd HH:mm}: {n} projektų, {m}
+  argumentų. Peržiūrėti" (the counts with their Lithuanian forms: "1 projektas", "3 projektai"; designer's choice), linking
+  to the screen. As the MP's offer (8.5.1), the served markup is hidden and the same for every member; the browser fills
+  and shows it from the account's own `GET /me` (`digestReview`, given to staff accounts only; the server-rendered page
+  holds nothing of it). "Patvirtinti" or "Nesiųsti" takes the box away for every staff account; it is not shown on the
+  summaries screen itself (designer's proposal).
+- **The summaries screen** `/moderavimas/suvestines` (a staff-passkey session; `<PasskeyStep Staff="true">` otherwise)
+  lists the prepared summaries first, soonest first, then the latest gone. Each shows its text common to every MP once, as
+  MPs read it: the bills with their numbers now (a prepared one) or as it went, the chosen arguments with "Paslėpti" (a
+  prepared one), each bill's "Sulaikyti siuntimą" or "Atnaujinti siuntimą", how many MPs it would go to now or went to, and
+  what happened. One line says that the party group numbers, the MP's own response and the personal links differ per MP;
+  there is no per-MP preview.
+- Recipients are worked out when it goes: preferences, the suppression list and the ceiling as they are at that moment.
 - **The public copy (8.7) says what happened**, in one line under the date: "Bandomoji suvestinė: niekam nesiųsta",
-  "Laukia moderatoriaus patvirtinimo", "Išsiųsta Seimo nariams: {n}" with the time, "Nesiųsta" with the moderator's
-  statement, or "Nesiųsta: nepatvirtinta laiku". Never which MPs.
+  "Išsiųsta Seimo nariams: {n}" with the time, or "Nesiųsta" with the moderator's statement. Never which MPs. A prepared or
+  dropped summary has no public copy.
 - [changed while building: there was no moderators' summaries screen to extend (only the preview endpoints), so it is a
-  new page, `/moderavimas/suvestines`, linked from the moderation queue. A waiting run keeps one delivery row per MP for the
-  preview and the count (`waiting`, or what would happen: `skipped-preference`, `suppressed` …); they are worked out again
-  when it is let go, and become `not-sent` when it is declined or expires. A weekly summary's "sitting" for the expiry is the
-  first planned date it holds from its day on. "Siųsti" also asks for the fresh passkey confirmation of 6.2 (within ten
-  minutes), as "approving a send" is listed there; "Nesiųsti" does not.]
+  new page, `/moderavimas/suvestines`, linked from the moderation queue. The worker's job runs every 15 minutes: it
+  prepares what is due and lets go what is due, each under the summaries' lock.]
 
 #### 8.19.3 What is sent, and to whom
 
@@ -3107,7 +3161,7 @@ sending domain and a provider).
     "Visas argumentas: {link}". The link is a full address (`SiteLinks.Absolute`, no tracking parameters) to that reason
     on the summary's public copy (`/suvestines/{day}#reason-{run}-{bill}-{side}-{place}`): the public copy always exists
     for a run that sends and shows the snapshot's text, while the bill's page may since have hidden or withdrawn the
-    reason. The snapshot keeps the whole text; the moderators' preview is the same text as the email. The email prints
+    reason. The snapshot keeps the whole text. The email prints
     no other member-written text: the MP's own response appears as its stance and date only.
 - Organisations stay out of summaries (8.14.11).
 - **Headers:** `List-Unsubscribe` with the one-click form (RFC 8058) and `List-Unsubscribe-Post`. No tracking pixel, no
@@ -3122,6 +3176,28 @@ sending domain and a provider).
   and no `List-Unsubscribe-Post`, so the MP's one-click stop stays the only write of MP mail without the same-origin
   check (a member's stop link, 8.24.1, is the one other, outside MP mail). Lead
   committees are not imported, so that group of the order is empty.]
+- **Copies for the MP's office [decided by the owner on 2026-11-17].** Every office member of a linked MP (8.5.3) gets a
+  copy of each summary that goes to that MP's recipients, at their own account's address, in the copy's format ("Tai Seimo
+  nario suvestinės kopija, siunčiama jums kaip jo biuro nariui. Seimo narys: {0}."), whatever the MP chose for their own
+  summaries. Each member has their **own frequency** (the same four choices, default "Kas savaitę ir prieš balsavimus"), kept
+  in Notifications (`notify.office_copy`, one row per member and MP; no row is the default) and changed on "Dalyvavimas"
+  (`GET|PUT /api/v1/me/mp/office/copies`) for themselves only, in any session, since it is the member's own mail and does not
+  speak for the MP [the designer's choice; 8.19.4's passkey session stays for the MP's own choice]. The MP stopping their
+  summaries does not stop the office's, and the other way round.
+- Each copy has its own delivery row (`recipient` = `office`, the member's account in `office_user_id`, never the address),
+  its own weekly ceiling (`Digest:MaxPerWeek`, counted per member; the MP's own count is unchanged), and the suppression
+  list applies to the member's address. The copy carries `List-Unsubscribe` with the one-click form to the same route as the
+  MP's (`POST /api/v1/mp-mail/{token}/stop`), with the member's own token: it stops that member's copies and nothing else, so
+  the one write outside the same-origin check stays one route [the designer's choice]; the email's own "Nebegauti kopijų"
+  line opens the copies' page (`/suvestines/kopijos/{token}`). The token is derived from the member's account, the MP and a
+  generation under the mail key, and only its hash is kept on the member's row; both paths are already kept out of logs.
+- Sending off (a dry run) or a lock of 8.19.1 sends no copies either; an urgent summary is copied like the others.
+- Ending the office link (the member leaves or is removed, the MP gives the profile up or an administrator ends it, the
+  account is deleted) ends the copies and deletes the member's choice in the same transaction (`IOfficeCopiesEnd`, called by
+  Identity; the account's deletion through Notifications' account data). Addresses come only from Identity's `IMpLinks`
+  (`OfficeMembersAsync`), for the outbox row.
+- Never public: no public copy, page, API answer or log says that office members exist or that copies went; the public
+  copy's "Išsiųsta Seimo nariams: {n}" and the screen's MP count count MPs only.
 
 #### 8.19.4 Preferences without an account
 
@@ -3192,14 +3268,19 @@ sending domain and a provider).
 
 #### 8.19.7 Data and API
 
-`notify`: `digest_run.status` takes the values of 8.19.1, with `decided_by`, `decided_at`, `statement`, `sent_count`;
-kind `introduction` with the letter's version. `digest_delivery`: key (run, MP, recipient), statuses of 8.19.3.
+`notify`: `digest_run.status` takes the values of 8.19.1, with `due_at`, `sent_at`, `approved_by`, `approved_at`,
+`cancelled_by`, `cancelled_at`, `statement`, `sent_count` (owner, 2026-11-17); kind `introduction` with the letter's
+version. `digest_choice` (8.19.2): per prepared run, the chosen arguments by id with their record, side, place, whether one
+came in for a hidden one, and when one left; no author. `digest_delivery` also names an office member's account
+(`office_user_id`, recipient `office`), and `office_copy` holds each office member's own choice of copies and the hash of
+their stop token (8.19.3, owner 2026-11-17). `digest_delivery`: key (run, MP, recipient), statuses of 8.19.3.
 `mp_email_pref`: per Seimas person: frequency, extra address, its confirmation, changed time. `mp_mail_token`: hashed
 token per MP and kind (`preferences`, `extra-confirm`), expiry for the second. `introduction_letter`: version, subject,
 text, signer, who wrote it, sent time. `suppression` as in 8.19.6. All withheld from the read-only role.
 
 ```
-POST   /api/v1/moderation/digests/{id}/send        moderator, staff passkey, fresh passkey confirmation
+GET    /api/v1/moderation/digests                  moderator, staff passkey: the summaries screen
+POST   /api/v1/moderation/digests/{id}/approve     moderator, staff passkey ("Patvirtinti"; sends nothing)
 POST   /api/v1/moderation/digests/{id}/cancel      moderator, staff passkey; statement
 GET    /api/v1/mp-mail/{token}                     the MP's name and choice
 PUT    /api/v1/mp-mail/{token}                     frequency
@@ -3210,6 +3291,7 @@ DELETE /api/v1/mp-mail/{token}/extra
 POST   /api/v1/mp-mail/extra/confirm               from the link sent to the official address
 POST   /api/v1/mp-mail/extra/stop                  from a copy
 GET|PUT /api/v1/me/mp/mail                         a linked account, passkey session
+GET|PUT /api/v1/me/mp/office/copies                an office member's own copies, any session
 GET|PUT /api/v1/admin/introduction                 administrator
 POST   /api/v1/admin/introduction/test             to the administrator's own address
 POST   /api/v1/admin/introduction/send             fresh passkey confirmation
@@ -3223,8 +3305,9 @@ unknown and a wrong token.
 #### 8.19.8 Done when
 
 - With sending off, everything is as before: dry runs, nothing in the outbox for MPs.
-- With `approval`, a due summary waits; a moderator sends it and each MP's mailbox gets one email with both sides, the
-  MP's own response where there is one, and working links; cancelled and expired ones send nothing and free the ceiling.
+- With sending on, a summary is prepared a day ahead, the moderators are told, and it goes at its time, approved or not;
+  each MP's mailbox gets one email with both sides, the MP's own response where there is one, and working links; a
+  declined or dropped one sends nothing and frees the ceiling (owner, 2026-11-17).
 - No summary goes before the introduction letter; with invented data none goes unless the mail is declared caught.
 - An MP changes the frequency, stops by the page and by the mail program's one-click, renews the link, and adds and
   removes an extra recipient confirmed from the official address; each is confirmed by email; the next summaries follow
@@ -3232,7 +3315,7 @@ unknown and a wrong token.
 - A permanently refused address gets no further MP mail; an administrator can add and remove entries.
 - The public copy says what happened to the summary and never which MPs received it; no page, API answer or log shows
   an MP's choice or an address.
-- A simulated month of agenda changes (8.9) holds with preferences, suppression, the ceiling and approval in play.
+- A simulated month of agenda changes (8.9) holds with preferences, suppression, the ceiling and review in play.
 
 ### 8.20 What participants hear about answers, and known browsers (M2b)
 
@@ -5117,6 +5200,48 @@ Built, awaiting the owner's word:
 - The MP's own account takes no part (8.5.4: until then the designer's proposal), and the forms it would be refused are
   not shown to it (8.5.4).
 - A bill's number and title are one link in the MP's list of bills and in the follow list, as on a member's page.
+
+**Decided by the owner on 2026-11-17: summaries reviewed a day ahead, no approval (8.19.2)**
+
+- A weekly or before-vote summary is prepared `Digest:ReviewHours` (24) before it goes: its bills and arguments are fixed
+  then; its numbers are read when it goes. The arguments are the most endorsed published ones, seen by a moderator or not
+  (8.3).
+- Hiding an argument during review brings the next of its side in, marked "Įtrauktas vietoj paslėpto"; a bill held during
+  review drops out.
+- No approval is needed: if nobody acts it goes at its time. "Patvirtinti" marks it reviewed (it still goes at its time;
+  no fresh passkey confirmation); "Nesiųsti" declines it with a public statement. The `approval` mode, "Siųsti",
+  `Digest:ApprovalHours`, `waiting` and `expired` are gone; `Digest:Sending` is `off` or `automatic`.
+- Moderators and administrators are told by email at preparation and by a box on every page until it is approved,
+  declined or gone. The screen shows each summary's common text once; no per-MP preview.
+
+**Proposed by the designer while building the review of summaries (8.19.2), 2026-11-17, awaiting the owner**
+
+- A summary with no bill left at its time is `dropped`: nothing goes, nothing is public, it counts as made for its week.
+- An argument withdrawn or merged during review is replaced like a hidden one.
+- A declined summary's public copy shows the bills and arguments as they were when it was declined, with the statement.
+- A summary found after its time (the worker was down) is prepared and goes at once, on its sending day only.
+- The box is not shown on the summaries screen itself; its counts take their Lithuanian forms ("1 projektas", "3
+  projektai", "12 projektų") rather than the fixed "{n} projektų".
+- `Digest:ReviewHours` takes 1 to 72 hours; the statements line of a future organisations part (8.14.9) follows the same
+  rule as arguments (public when prepared).
+
+**Decided by the owner on 2026-11-17: copies of the summaries for an MP's office (8.19.3)**
+
+- Every office member of a linked MP gets a copy of each summary that goes for that MP, at their own account's address, in
+  the copy's format, with their own frequency (the MP's four choices; default on), independent of the MP's; their own
+  delivery row and weekly ceiling; the suppression list applies; sending off or a lock sends none. Ending the office link
+  ends the copies and deletes the choice. Never public.
+- The designer's choices: the member changes the choice on "Dalyvavimas" in any session (their own mail, not speaking for
+  the MP); the copy's one-click stop goes to the MP's one-click route with the member's own token (so one route stays the
+  only write outside the same-origin check) and its "Nebegauti kopijų" line to the copies' page; the MP's own account has no
+  copies (it gets the summary); the stop sends no confirmation email; a dry run makes no office rows.
+
+**Decided by the owner on 2026-11-17: `/projektai` by the latest activity (8.12.5)**
+
+- A third order, "Naujausia veikla", by one time per bill: the last side, argument, comment, organisation's statement or
+  MP's response; bills without any last; each row then shows "Paskutinė veikla …". Nothing per person is kept. The
+  designer's choices (8.12.5): the link reads "pagal naujausią veiklą"; the same side again, a restored argument and a
+  statement or response on a bill without a record are no activity.
 
 **Proposed by the designer while building the email rhythm (8.24), 2026-11-16, awaiting the owner**
 

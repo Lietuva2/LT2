@@ -431,18 +431,24 @@ internal sealed class ModerationService(
     }
 
     public Task<Result<Unit>> PublishReasonAsync(Guid reasonId, string? statement, StaffActor moderator, CancellationToken cancellationToken) =>
-        Refused(statement, required: false) ?? OnReasonAsync(reasonId, moderator, "publish", statement, (_, reason, now) =>
+        Refused(statement, required: false) ?? OnReasonAsync(reasonId, moderator, "publish", statement, async (db, reason, now) =>
         {
             if (reason.Status is not (ReasonStatuses.Pending or ReasonStatuses.Published))
             {
-                return Task.FromResult<Result<string?>>(Error.Conflict("moderation.wrong-state"));
+                return Error.Conflict("moderation.wrong-state");
             }
 
             var wasPending = reason.Status == ReasonStatuses.Pending;
             reason.Status = ReasonStatuses.Published;
             reason.SeenAt = now;
-            reason.FirstPublicAt ??= now;
-            return Task.FromResult<Result<string?>>(wasPending ? ModerationNotices.ReasonPublished : null);
+            if (reason.FirstPublicAt is null)
+            {
+                // Design 8.12.5: an argument published (here, one that waited for a moderator) is the bill's activity.
+                reason.FirstPublicAt = now;
+                await RecordActivity.TouchAsync(db, reason.RecordId, now, cancellationToken);
+            }
+
+            return (Result<string?>)(wasPending ? ModerationNotices.ReasonPublished : null);
         }, cancellationToken);
 
     public Task<Result<Unit>> HideReasonAsync(Guid reasonId, string statement, StaffActor moderator, CancellationToken cancellationToken) =>

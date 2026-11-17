@@ -193,21 +193,27 @@ internal sealed class OrganisationModerationService(
         }, cancellationToken);
 
     public Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
-        Refused(statement, required: false) ?? OnStatementAsync(statementId, moderator, "publish", StatementRules.Normalise(statement), contact, (_, s, bill, now) =>
+        Refused(statement, required: false) ?? OnStatementAsync(statementId, moderator, "publish", StatementRules.Normalise(statement), contact, async (db, s, bill, now) =>
         {
             // A statement that still waited when the bill closed is never published (design 6.9).
             if (OrganisationRules.CheckPublish(s.Status, bill?.Finished == true) is { } refused)
             {
-                return Task.FromResult<(string?, string?)>((refused, null));
+                return ((string?)refused, (string?)null);
             }
 
             var waited = s.Status == StatementStatuses.Pending;
             s.Status = StatementStatuses.Published;
             s.SeenAt = now;
 
-            // A statement that waited becomes public now: its followers are told from this moment (design 8.14.14, stage B).
+            // A statement that waited becomes public now: its followers are told from this moment (design 8.14.14, stage B),
+            // and it is the bill's activity (design 8.12.5).
             s.FirstPublicAt ??= now;
-            return Task.FromResult<(string?, string?)>((null, waited ? OrganisationNotices.StatementPublished : OrganisationNotices.StatementKept));
+            if (waited)
+            {
+                await RecordActivity.TouchBillAsync(db, s.BillNumber, now, cancellationToken);
+            }
+
+            return ((string?)null, (string?)(waited ? OrganisationNotices.StatementPublished : OrganisationNotices.StatementKept));
         }, cancellationToken);
 
     /// <summary>

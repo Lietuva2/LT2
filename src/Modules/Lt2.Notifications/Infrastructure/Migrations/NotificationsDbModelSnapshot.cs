@@ -23,6 +23,47 @@ namespace Lt2.Notifications.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Lt2.Notifications.Digests.DigestChoice", b =>
+                {
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("run_id");
+
+                    b.Property<Guid>("ReasonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reason_id");
+
+                    b.Property<DateTimeOffset?>("LeftAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("left_at");
+
+                    b.Property<int>("Place")
+                        .HasColumnType("integer")
+                        .HasColumnName("place");
+
+                    b.Property<Guid>("RecordId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("record_id");
+
+                    b.Property<bool>("Replacement")
+                        .HasColumnType("boolean")
+                        .HasColumnName("replacement");
+
+                    b.Property<string>("Side")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("side");
+
+                    b.HasKey("RunId", "ReasonId")
+                        .HasName("pk_digest_choice");
+
+                    b.HasIndex("RunId", "RecordId")
+                        .HasDatabaseName("ix_digest_choice_run_id_record_id");
+
+                    b.ToTable("digest_choice", "notify");
+                });
+
             modelBuilder.Entity("Lt2.Notifications.Digests.DigestDelivery", b =>
                 {
                     b.Property<Guid>("RunId")
@@ -41,6 +82,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasDefaultValue("official")
                         .HasColumnName("recipient");
 
+                    b.Property<Guid>("OfficeUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("office_user_id");
+
                     b.Property<string>("PartyNumbers")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -56,8 +101,12 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("status");
 
-                    b.HasKey("RunId", "MpSlug", "Recipient")
+                    b.HasKey("RunId", "MpSlug", "Recipient", "OfficeUserId")
                         .HasName("pk_digest_delivery");
+
+                    b.HasIndex("OfficeUserId")
+                        .HasDatabaseName("ix_digest_delivery_office_user_id")
+                        .HasFilter("recipient = 'office'");
 
                     b.HasIndex("SeimasPersonId", "Status")
                         .HasDatabaseName("ix_digest_delivery_seimas_person_id_status");
@@ -152,25 +201,29 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
                     b.Property<Guid?>("ApprovedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("approved_by");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cancelled_by");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTimeOffset?>("DecidedAt")
+                    b.Property<DateTimeOffset?>("DueAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("decided_at");
-
-                    b.Property<Guid?>("DecidedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("decided_by");
-
-                    b.Property<DateTimeOffset?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
+                        .HasColumnName("due_at");
 
                     b.Property<string>("Kind")
                         .IsRequired()
@@ -189,6 +242,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                     b.Property<DateOnly>("RunDate")
                         .HasColumnType("date")
                         .HasColumnName("run_date");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
 
                     b.Property<int>("SentCount")
                         .HasColumnType("integer")
@@ -212,12 +269,12 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_digest_run");
 
+                    b.HasIndex("DueAt")
+                        .HasDatabaseName("ix_digest_run_due_at")
+                        .HasFilter("status = 'prepared'");
+
                     b.HasIndex("RunDate")
                         .HasDatabaseName("ix_digest_run_run_date");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("ix_digest_run_status")
-                        .HasFilter("status = 'waiting'");
 
                     b.ToTable("digest_run", "notify");
                 });
@@ -355,6 +412,48 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasDatabaseName("ix_mp_mail_token_seimas_person_id_kind");
 
                     b.ToTable("mp_mail_token", "notify");
+                });
+
+            modelBuilder.Entity("Lt2.Notifications.Digests.OfficeCopy", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<long>("SeimasPersonId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("seimas_person_id");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("Frequency")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("frequency");
+
+                    b.Property<int>("Generation")
+                        .HasColumnType("integer")
+                        .HasColumnName("generation");
+
+                    b.Property<string>("StopTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("stop_token_hash");
+
+                    b.HasKey("UserId", "SeimasPersonId")
+                        .HasName("pk_office_copy");
+
+                    b.HasIndex("SeimasPersonId")
+                        .HasDatabaseName("ix_office_copy_seimas_person_id");
+
+                    b.HasIndex("StopTokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_office_copy_stop_token_hash");
+
+                    b.ToTable("office_copy", "notify");
                 });
 
             modelBuilder.Entity("Lt2.Notifications.Digests.Suppression", b =>
@@ -652,6 +751,16 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasName("pk_rhythm_pass");
 
                     b.ToTable("rhythm_pass", "notify");
+                });
+
+            modelBuilder.Entity("Lt2.Notifications.Digests.DigestChoice", b =>
+                {
+                    b.HasOne("Lt2.Notifications.Digests.DigestRun", null)
+                        .WithMany()
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_digest_choice_digest_run_run_id");
                 });
 
             modelBuilder.Entity("Lt2.Notifications.Digests.DigestDelivery", b =>

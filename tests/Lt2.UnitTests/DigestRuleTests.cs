@@ -10,27 +10,55 @@ public sealed class DigestRuleTests
     private static readonly TimeOnly Seven = new(7, 0);
 
     private static DigestCandidate Candidate(string bill, bool reached = true, bool held = false, PlannedDate? planned = null, int participants = 100) =>
-        new(Guid.NewGuid(), bill, bill, participants, participants, 0, 0, 100, reached, held, null, null, planned, []);
+        new(Guid.NewGuid(), bill, bill, participants, participants, 0, 0, 100, reached, held, null, null, planned);
+
+    private static DateTimeOffset Vilnius(DateOnly day, int hour, int minute = 0) => DigestRules.At(day, new TimeOnly(hour, minute));
 
     [Fact]
-    public void The_weekly_summary_is_made_on_monday_from_the_set_time_in_a_sitting_week_once()
+    public void The_weekly_summary_goes_on_the_coming_monday_or_today_on_a_monday()
     {
-        DigestRules.WeeklyDue(Monday, new TimeOnly(7, 0), Seven, seimasSitsThisWeek: true, alreadyMade: false).ShouldBeTrue();
-        DigestRules.WeeklyDue(Monday, new TimeOnly(6, 59), Seven, true, false).ShouldBeFalse("before the time");
-        DigestRules.WeeklyDue(Monday.AddDays(1), new TimeOnly(8, 0), Seven, true, false).ShouldBeFalse("not Monday");
-        DigestRules.WeeklyDue(Monday, new TimeOnly(8, 0), Seven, seimasSitsThisWeek: false, alreadyMade: false).ShouldBeFalse("no sitting that week");
-        DigestRules.WeeklyDue(Monday, new TimeOnly(8, 0), Seven, true, alreadyMade: true).ShouldBeFalse("once a week");
-        DigestRules.WeeklyDue(Monday, new TimeOnly(8, 0), null, true, false).ShouldBeFalse("switched off");
+        DigestRules.WeeklySendingDay(Monday).ShouldBe(Monday);
+        DigestRules.WeeklySendingDay(Monday.AddDays(-1)).ShouldBe(Monday, "Sunday: tomorrow");
+        DigestRules.WeeklySendingDay(Monday.AddDays(-6)).ShouldBe(Monday, "Tuesday: the next Monday");
+        DigestRules.WeeklySendingDay(Monday.AddDays(1)).ShouldBe(Monday.AddDays(7));
     }
 
     [Fact]
-    public void The_before_vote_summary_comes_on_the_working_day_before_the_sitting_from_noon()
+    public void A_summary_is_prepared_the_review_hours_before_it_goes_so_mondays_on_sunday_at_the_same_time()
     {
-        var thursday = Monday.AddDays(3);
-        DigestRules.BeforeVoteDue(thursday.AddDays(-1), new TimeOnly(12, 0), new TimeOnly(12, 0), thursday, alreadyMade: false).ShouldBeTrue();
-        DigestRules.BeforeVoteDue(thursday.AddDays(-1), new TimeOnly(11, 59), new TimeOnly(12, 0), thursday, false).ShouldBeFalse();
-        DigestRules.BeforeVoteDue(thursday.AddDays(-2), new TimeOnly(13, 0), new TimeOnly(12, 0), thursday, false).ShouldBeFalse();
-        DigestRules.BeforeVoteDue(thursday.AddDays(-1), new TimeOnly(13, 0), new TimeOnly(12, 0), thursday, alreadyMade: true).ShouldBeFalse();
+        DigestRules.PreparedAt(Vilnius(Monday, 7), 24).ShouldBe(Vilnius(Monday.AddDays(-1), 7));
+        var wednesday = Monday.AddDays(2);
+        DigestRules.PreparedAt(Vilnius(wednesday, 12), 24).ShouldBe(Vilnius(wednesday.AddDays(-1), 12), "before a Thursday sitting: Tuesday noon");
+        DigestRules.PreparedAt(Vilnius(Monday, 7), 6).ShouldBe(Vilnius(Monday, 1));
+    }
+
+    [Fact]
+    public void Preparing_on_the_vilnius_clock_keeps_the_hour_across_the_night_the_clocks_change()
+    {
+        // 2026-10-25 is the last Sunday of October: the clocks go back that night; Monday 07:00 is still prepared at Sunday 07:00.
+        var monday = new DateOnly(2026, 10, 26);
+        var prepared = DigestRules.PreparedAt(DigestRules.At(monday, new TimeOnly(7, 0)), 24);
+        TimeZoneInfo.ConvertTime(prepared, VilniusTime.Zone).DateTime.ShouldBe(new DateTime(2026, 10, 25, 7, 0, 0));
+    }
+
+    [Fact]
+    public void A_summary_is_prepared_once_from_its_preparation_time_until_its_sending_day_ends()
+    {
+        var sendAt = Vilnius(Monday, 7);
+        DigestRules.PreparationDue(Vilnius(Monday.AddDays(-1), 6, 59), sendAt, 24, alreadyMade: false).ShouldBeFalse("before Sunday 07:00");
+        DigestRules.PreparationDue(Vilnius(Monday.AddDays(-1), 7), sendAt, 24, false).ShouldBeTrue("Sunday 07:00");
+        DigestRules.PreparationDue(Vilnius(Monday, 9), sendAt, 24, false).ShouldBeTrue("found late: prepared and gone at once");
+        DigestRules.PreparationDue(Vilnius(Monday.AddDays(1), 0, 5), sendAt, 24, false).ShouldBeFalse("its day is over");
+        DigestRules.PreparationDue(Vilnius(Monday.AddDays(-1), 8), sendAt, 24, alreadyMade: true).ShouldBeFalse("once");
+    }
+
+    [Fact]
+    public void A_prepared_summary_goes_at_its_time_and_not_before()
+    {
+        var sendAt = Vilnius(Monday, 7);
+        DigestRules.SendingDue(sendAt.AddSeconds(-1), sendAt).ShouldBeFalse();
+        DigestRules.SendingDue(sendAt, sendAt).ShouldBeTrue("nobody approves it");
+        DigestRules.SendingDue(sendAt, null).ShouldBeTrue("an urgent one goes at once");
     }
 
     [Fact]

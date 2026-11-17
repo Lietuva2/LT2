@@ -1,8 +1,8 @@
 namespace Lt2.Notifications.Digests;
 
 /// <summary>
-/// <c>notify.digest_run</c> (design 5.4, 8.19.7): one summary as made, or one sending of the introduction letter. Its status
-/// says what happened to it (<see cref="RunStatuses"/>); a dry run is made and published, never sent.
+/// <c>notify.digest_run</c> (design 5.4, 8.19.7): one summary, prepared for review and then gone, or one sending of the
+/// introduction letter. Its status says where it is (<see cref="RunStatuses"/>); a dry run is made and published, never sent.
 /// </summary>
 internal sealed class DigestRun
 {
@@ -11,53 +11,96 @@ internal sealed class DigestRun
     /// <summary><c>weekly</c>, <c>before-vote</c>, <c>urgent</c> or <c>introduction</c> (design 8.19.5).</summary>
     public string Kind { get; set; } = "";
 
-    /// <summary>The Vilnius day it was made; its public page is <c>/suvestines/{date}</c>.</summary>
+    /// <summary>The Vilnius day it goes (an urgent one: the day it was approved); its public page is <c>/suvestines/{date}</c>.</summary>
     public DateOnly RunDate { get; set; }
 
     /// <summary>For a before-vote summary: the sitting it is for.</summary>
     public DateOnly? SittingDate { get; set; }
 
+    /// <summary>When it was prepared (design 8.19.2): its bills and arguments were chosen then.</summary>
     public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>When it goes: the weekly or before-vote time; for an urgent one, when it was approved.</summary>
+    public DateTimeOffset? DueAt { get; set; }
 
     /// <summary>See <see cref="RunStatuses"/>.</summary>
     public string Status { get; set; } = RunStatuses.DryRun;
 
-    /// <summary>For an urgent summary: the moderator who approved it.</summary>
+    /// <summary>
+    /// The moderator who approved it (owner, 2026-11-17): "Patvirtinti" on a prepared summary marks it reviewed (it still goes
+    /// at its time), and an urgent summary is approved when it is made. Never public.
+    /// </summary>
     public Guid? ApprovedBy { get; set; }
 
-    /// <summary>MPs it would go to when it was made (within the ceiling, preferences and the suppression list then).</summary>
-    public int MpCount { get; set; }
+    /// <summary>When it was approved; null while nobody has.</summary>
+    public DateTimeOffset? ApprovedAt { get; set; }
 
-    /// <summary>Design 8.19.2: who let it go or declined it (a moderator; the system for an expiry). Never public.</summary>
-    public Guid? DecidedBy { get; set; }
+    /// <summary>"Nesiųsti" (design 8.19.2): the moderator who declined it. Never public.</summary>
+    public Guid? CancelledBy { get; set; }
 
-    /// <summary>When it was let go, declined or expired.</summary>
-    public DateTimeOffset? DecidedAt { get; set; }
+    /// <summary>When it was declined.</summary>
+    public DateTimeOffset? CancelledAt { get; set; }
 
     /// <summary>The moderator's statement when it was declined ("Nesiųsti"); public on its copy.</summary>
     public string? Statement { get; set; }
 
-    /// <summary>How many MPs it was sent to (official recipients queued) when it was let go.</summary>
-    public int SentCount { get; set; }
+    /// <summary>MPs it went to, or would have gone to as a dry run (within the ceiling, preferences and the suppression list then).</summary>
+    public int MpCount { get; set; }
 
-    /// <summary>For a waiting summary: when it expires unless a moderator decides (design 8.19.2).</summary>
-    public DateTimeOffset? ExpiresAt { get; set; }
+    /// <summary>When it went (sent or made as a dry run); its numbers and public copy are of that moment.</summary>
+    public DateTimeOffset? SentAt { get; set; }
+
+    /// <summary>How many MPs it was sent to (official recipients queued) when it went.</summary>
+    public int SentCount { get; set; }
 
     /// <summary>For a run of kind <c>introduction</c>: the letter's version sent.</summary>
     public int? LetterVersion { get; set; }
 }
 
-/// <summary>The statuses of a run (design 8.19.1).</summary>
+/// <summary>The statuses of a run (design 8.19.1, owner 2026-11-17: no approval).</summary>
 internal static class RunStatuses
 {
+    /// <summary>Prepared: its bills and arguments are chosen, moderators review it, it goes at <see cref="DigestRun.DueAt"/>.</summary>
+    public const string Prepared = "prepared";
+
+    /// <summary>Went while sending was off: made and published, never sent.</summary>
     public const string DryRun = "dry-run";
-    public const string Waiting = "waiting";
+
     public const string Sent = "sent";
+
+    /// <summary>A moderator declined it before its time ("Nesiųsti", with a public statement): nothing went.</summary>
     public const string Cancelled = "cancelled";
-    public const string Expired = "expired";
+
+    /// <summary>At its time every bill it held was held by a moderator or no longer open: nothing went, nothing is public.</summary>
+    public const string Dropped = "dropped";
 }
 
-/// <summary><c>notify.digest_item</c>: one record in a summary, frozen as it was (design 6.6, 8.7). No person in it.</summary>
+/// <summary>
+/// <c>notify.digest_choice</c> (design 8.19.2, owner 2026-11-17): an argument chosen for a prepared summary, in its place on
+/// its side. Chosen by "Man svarbu" when the summary was prepared; one that left the published arguments (hidden, merged,
+/// withdrawn) is marked <see cref="LeftAt"/> and the next of its side comes in (<see cref="Replacement"/>). No author.
+/// </summary>
+internal sealed class DigestChoice
+{
+    public Guid RunId { get; set; }
+
+    public Guid ReasonId { get; set; }
+
+    public Guid RecordId { get; set; }
+
+    public string Side { get; set; } = "";
+
+    /// <summary>Its order on its side as chosen: 1, 2 …; a replacement takes the next number.</summary>
+    public int Place { get; set; }
+
+    /// <summary>It came in for an argument hidden during review ("Įtrauktas vietoj paslėpto").</summary>
+    public bool Replacement { get; set; }
+
+    /// <summary>When it left the summary because it was no longer published; null while it is in.</summary>
+    public DateTimeOffset? LeftAt { get; set; }
+}
+
+/// <summary><c>notify.digest_item</c>: one record in a summary, frozen as it went (design 6.6, 8.7). No person in it.</summary>
 internal sealed class DigestItem
 {
     public Guid Id { get; set; }
@@ -103,8 +146,11 @@ internal sealed class DigestDelivery
 
     public string MpSlug { get; set; } = "";
 
-    /// <summary><c>official</c> or <c>extra</c>.</summary>
+    /// <summary><c>official</c>, <c>extra</c> or <c>office</c>.</summary>
     public string Recipient { get; set; } = Recipients.Official;
+
+    /// <summary>For an office member's copy, the member's account (design 8.19.3); <see cref="Guid.Empty"/> otherwise. Never public.</summary>
+    public Guid OfficeUserId { get; set; }
 
     /// <summary>The MP's Seimas person id (0 on rows made before sending was built).</summary>
     public long SeimasPersonId { get; set; }
@@ -119,17 +165,37 @@ internal static class Recipients
 {
     public const string Official = "official";
     public const string Extra = "extra";
+
+    /// <summary>An office member's copy (design 8.19.3, owner 2026-11-17), one row per member: <see cref="DigestDelivery.OfficeUserId"/>.</summary>
+    public const string Office = "office";
 }
 
 /// <summary>
-/// What happened to one delivery (design 8.19.3). <c>dry-run</c>, <c>waiting</c> and <c>not-sent</c> are the rows of runs
-/// that were never let go: made for the moderators' preview, one per MP.
+/// <c>notify.office_copy</c> (design 8.19.3, owner 2026-11-17): an office member's own choice of copies of their MP's summaries,
+/// independent of the MP's (<see cref="Frequencies"/>; no row is <c>default</c>), and the hash of the member's own stop link.
+/// Deleted when the office link ends or the account goes. Never public; the address is not kept here.
 /// </summary>
+internal sealed class OfficeCopy
+{
+    public Guid UserId { get; set; }
+
+    public long SeimasPersonId { get; set; }
+
+    public string Frequency { get; set; } = Frequencies.Default;
+
+    /// <summary>Counts the stop links made, so each is a new token.</summary>
+    public int Generation { get; set; }
+
+    /// <summary>SHA-256 of the member's current stop token, hex; set when the first copy is queued.</summary>
+    public string? StopTokenHash { get; set; }
+
+    public DateTimeOffset ChangedAt { get; set; }
+}
+
+/// <summary>What happened to one delivery (design 8.19.3). <c>dry-run</c>: the run went while sending was off.</summary>
 internal static class DeliveryStatuses
 {
     public const string DryRun = "dry-run";
-    public const string Waiting = "waiting";
-    public const string NotSent = "not-sent";
     public const string Queued = "queued";
     public const string Sent = "sent";
     public const string Failed = "failed";

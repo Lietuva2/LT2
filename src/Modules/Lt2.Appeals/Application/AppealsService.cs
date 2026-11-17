@@ -76,9 +76,10 @@ internal sealed class AppealsService(
                 var c = record is null ? SideCounts.None : counts[record.Id];
                 return new BillListItem(
                     record?.Id, b, BillRecordStatuses.Open, c, AppealReads.Threshold(record, c, threshold), planned.GetValueOrDefault(b.Number),
-                    record is null ? 0 : arguments.GetValueOrDefault(record.Id));
+                    record is null ? 0 : arguments.GetValueOrDefault(record.Id), record?.LastActivityAt);
             });
-        var ordered = BillListRules.Order(candidates, BillSorts.Of(query.Sort), i => i.Counts.Total, i => i.Arguments, i => i.Planned?.Date, i => i.Bill.Number);
+        var ordered = BillListRules.Order(
+            candidates, BillSorts.Of(query.Sort), i => i.Counts.Total, i => i.Arguments, i => i.Planned?.Date, i => i.Bill.Number, i => i.LastActivityAt);
         var page = ordered.Skip(Math.Min(offset, ordered.Count)).Take(PageSize).ToList();
         return new BillListPage(page, ordered.Count, Next(offset, page.Count, ordered.Count));
     }
@@ -266,6 +267,12 @@ internal sealed class AppealsService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        if (position is null || position.ChangedAt == now)
+        {
+            // Design 8.12.5: a side taken or changed is the bill's activity (the time only, never who).
+            await RecordActivity.TouchAsync(db, record.Value.Id, now, cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
         return position is null;
     }
@@ -289,7 +296,12 @@ internal sealed class AppealsService(
         }
 
         await db.Endorsements.Where(e => e.RecordId == record.Id && e.UserId == userId).ExecuteDeleteAsync(cancellationToken);
-        await db.Positions.Where(p => p.RecordId == record.Id && p.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        if (await db.Positions.Where(p => p.RecordId == record.Id && p.UserId == userId).ExecuteDeleteAsync(cancellationToken) > 0)
+        {
+            // Design 8.12.5: a side withdrawn is the bill's activity too.
+            await RecordActivity.TouchAsync(db, record.Id, clock.GetUtcNow(), cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
     }
@@ -398,6 +410,12 @@ internal sealed class AppealsService(
         reason.FirstPublicAt = reason.Status == ReasonStatuses.Published ? reason.CreatedAt : null;
         db.Reasons.Add(reason);
         await db.SaveChangesAsync(cancellationToken);
+        if (reason.FirstPublicAt is { } published)
+        {
+            // Design 8.12.5: an argument published is the bill's activity; one waiting for a moderator is not yet.
+            await RecordActivity.TouchAsync(db, record.Value.Id, published, cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
         return new ReasonCreated(reason.Id, reason.Status);
     }

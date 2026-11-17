@@ -122,6 +122,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("initiator_user_id");
 
+                    b.Property<DateTimeOffset?>("LastActivityAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_activity_at");
+
                     b.Property<DateTimeOffset>("OpenedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("opened_at");

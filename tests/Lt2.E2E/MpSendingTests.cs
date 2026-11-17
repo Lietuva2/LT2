@@ -7,15 +7,16 @@ namespace Lt2.E2E;
 /// <summary>
 /// Design 8.19 against the running local stack, whose MPs are the stand-in's invented ones and whose mail Mailpit catches
 /// (<c>Email:Caught</c> in deploy/.env): an administrator writes the introduction letter, sends a test copy to their own
-/// address and sends it to the MPs; sending is set to <c>approval</c>; a summary waits and a moderator sends it; Mailpit holds an
+/// address and sends it to the MPs; sending is switched on; a moderator is told of a prepared summary on every page, reviews it
+/// and approves it (design 8.19.2, owner 2026-11-17), and the box goes; an urgent summary is sent at once and Mailpit holds an
 /// MP's email with both sides and working links; through the link the MP changes the frequency, stops by the mail program's
 /// one-click, and adds an extra recipient confirmed from the official address. Screenshots at 1280 and 390 px (the MP's page
 /// also dark) go to <c>output/mp-sending</c>.
 ///
-/// The scheduled job cannot be made due from here, so the waiting summary is written as the job writes one (a run and its
-/// frozen item, from the bill's live numbers); everything after it (letting it go, the recipients, the email) is the
-/// application's. The class removes what it made: rows of MP mail made since it started (runs, deliveries, choices, links,
-/// suppression rows, letters), and puts <c>Digest:Sending</c> back as it was through the settings screen.
+/// The scheduled job cannot be made due from here, so the prepared summary is written as the job writes one (a run and its
+/// bill); the email comes from an urgent summary, which goes at once. The class removes what it made: rows of MP mail made since
+/// it started (runs, deliveries, choices, links, suppression rows, letters, the moderators' notices), and puts
+/// <c>Digest:Sending</c> back as it was through the settings screen.
 /// </summary>
 public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture moderator, AdministratorFixture administrator)
     : E2ETest, IClassFixture<AppealFlowTests.ModeratorFixture>, IClassFixture<AdministratorFixture>
@@ -29,7 +30,7 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
     private static string Shots => Path.Combine("output", "mp-sending");
 
     [Fact]
-    public async Task The_introduction_goes_first_a_moderator_sends_a_waiting_summary_and_the_mp_manages_it_from_the_link()
+    public async Task The_introduction_goes_first_a_moderator_reviews_a_prepared_summary_and_the_mp_manages_it_from_the_link()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         var started = (await SqlAsync("select to_char(clock_timestamp() at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS.US')")).Trim();
@@ -73,51 +74,51 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
             }
             await E2ESteps.ShootBothAsync(admin, Shots, "introduction-public");
 
-            // 2. Sending with approval, on the settings screen (a fresh passkey confirmation, which the virtual authenticator gives).
-            sendingBefore = await administrator.ChangeSettingAsync("Digest:Sending", "approval");
+            // 2. Sending on, on the settings screen (a fresh passkey confirmation, which the virtual authenticator gives).
+            sendingBefore = await administrator.ChangeSettingAsync("Digest:Sending", "automatic");
             await Assertions.Expect(admin.GetByText("Išsaugota: Siuntimas Seimo nariams", new() { Exact = false })).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
             await E2ESteps.ShootBothAsync(admin, Shots, "settings", admin.Locator("#group-summaries"));
 
-            // 3. A before-vote summary waiting for a moderator, as the job makes one at its hour.
+            // 3. A before-vote summary prepared for review (owner, 2026-11-17), as the job prepares one a day ahead: the run and its
+            // bill; it would go in two hours. The moderator is told on every page, reviews it and presses "Patvirtinti".
             var run = Guid.NewGuid();
             await SqlAsync(
                 $"""
-                insert into notify.digest_run (id, kind, run_date, sitting_date, created_at, status, mp_count, sent_count, expires_at)
-                values ('{run}', 'before-vote', (now() at time zone 'Europe/Vilnius')::date, (now() at time zone 'Europe/Vilnius')::date + 1, now(), 'waiting', 0, 0, now() + interval '2 hours');
+                insert into notify.digest_run (id, kind, run_date, sitting_date, created_at, due_at, status, mp_count, sent_count)
+                values ('{run}', 'before-vote', (now() at time zone 'Europe/Vilnius')::date, (now() at time zone 'Europe/Vilnius')::date + 1, now(), now() + interval '2 hours', 'prepared', 0, 0);
                 insert into notify.digest_item (id, run_id, position, record_id, bill_number, bill_title, stage, planned_date, for_count, for_older_than30days, against_count, against_older_than30days, reasons)
-                select gen_random_uuid(), '{run}', 0, r.id, r.bill_number, b.title, 'adoption', (now() at time zone 'Europe/Vilnius')::date + 1,
-                       count(*) filter (where p.side = 'for'), count(*) filter (where p.side = 'for' and p.member_since < now() - interval '30 days'),
-                       count(*) filter (where p.side = 'against'), count(*) filter (where p.side = 'against' and p.member_since < now() - interval '30 days'), '[]'
-                from appeals.bill_record r join parliament.bill b on b.number = r.bill_number left join appeals.position p on p.record_id = r.id
-                where r.bill_number = '{Bill}' and r.status = 'open' group by r.id, r.bill_number, b.title;
-                insert into notify.digest_delivery (run_id, mp_slug, recipient, seimas_person_id, status, party_numbers)
-                select distinct '{run}'::uuid, p.slug, 'official', p.seimas_person_id, 'waiting', '[]'::jsonb
-                from parliament.person p join parliament.mandate m on m.person_id = p.id join parliament.contact c on c.person_id = p.id
-                where m."to" is null and c.kind = 'El. p.' and c.value like '%@lrs.lt';
-                update notify.digest_run set mp_count = (select count(*) from notify.digest_delivery where run_id = '{run}') where id = '{run}';
+                select gen_random_uuid(), '{run}', 0, r.id, r.bill_number, b.title, 'adoption', (now() at time zone 'Europe/Vilnius')::date + 1, 0, 0, 0, 0, '[]'
+                from appeals.bill_record r join parliament.bill b on b.number = r.bill_number
+                where r.bill_number = '{Bill}' and r.status = 'open';
                 """);
             (await SqlAsync($"select count(*) from notify.digest_item where run_id = '{run}'")).Trim().ShouldBe("1", "the demonstration bill has an open record");
 
-            // 4. The moderator sees it first, reads one MP's text and sends it.
-            await mod.GotoAsync(Base + "/moderavimas/suvestines");
-            var waiting = mod.Locator($"#digmod-run-{run}");
-            await Assertions.Expect(waiting).ToContainTextAsync("Laukia patvirtinimo", new() { Timeout = E2ESteps.Slow });
-            await Assertions.Expect(mod.Locator("section.sheet").First).ToHaveIdAsync($"digmod-run-{run}");
-            await Assertions.Expect(mod.Locator("#digmod-sending")).ToContainTextAsync("Siuntimas su patvirtinimu");
-            await waiting.Locator("summary").ClickAsync();
-            var send = mod.Locator($"#digmod-send-{run}");
-            await Assertions.Expect(send).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
-            await mod.Locator($"#digmod-show-{run}").ClickAsync();
-            await Assertions.Expect(mod.Locator($"#digmod-text-{run}")).ToContainTextAsync("Prašo balsuoti už:", new() { Timeout = E2ESteps.Slow });
-            await E2ESteps.ShootBothAsync(mod, Shots, "moderators-waiting");
+            await mod.GotoAsync(Base + "/seimo-nariai");
+            await Assertions.Expect(mod.Locator("#digest-review-notice")).ToContainTextAsync("Suvestinė Seimo nariams išeis", new() { Timeout = E2ESteps.Slow });
+            await E2ESteps.ShootBothAsync(mod, Shots, "moderators-notice");
+            await mod.Locator("#digest-review-notice-link").ClickAsync();
+            var prepared = mod.Locator($"#digmod-run-{run}");
+            await Assertions.Expect(prepared).ToContainTextAsync("Išeis", new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(mod.Locator("#digmod-sending")).ToContainTextAsync("Siuntimas įjungtas");
+            await Assertions.Expect(prepared).ToContainTextAsync("Prašo balsuoti už:");
+            await Assertions.Expect(mod.Locator($"#digmod-per-mp-{run}")).ToBeVisibleAsync();
+            var approve = mod.Locator($"#digmod-approve-{run}");
+            await Assertions.Expect(approve).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
+            await E2ESteps.ShootBothAsync(mod, Shots, "moderators-prepared");
+            await approve.ClickAsync();
+            await Assertions.Expect(mod.Locator($"#digmod-status-{run}")).ToContainTextAsync("Patvirtinta", new() { Timeout = E2ESteps.Slow });
+            await mod.GotoAsync(Base + "/seimo-nariai");
+            await Assertions.Expect(mod.Locator("#digest-review-notice")).ToBeHiddenAsync(new() { Timeout = E2ESteps.Slow });
+
+            // 4. The job cannot be made due from here, so an urgent summary of the same bill (a moderator's decision, which goes at
+            // once) carries the email; the prepared one is removed with the class's other rows.
+            var record = (await SqlAsync($"select id from appeals.bill_record where bill_number = '{Bill}' and status = 'open'")).Trim();
             var date = (await SqlAsync("select to_char((now() at time zone 'Europe/Vilnius')::date, 'YYYY-MM-DD')")).Trim();
             var digestQuery = $"to:\"{Official}\" subject:\"Lietuva 2.0 suvestinė Seimo nariams, {date}\"";
             var digestsBefore = await Mailpit.CountAsync(digestQuery);
-            await send.ClickAsync();
-            await mod.Locator($"#digmod-send-confirm-{run}").ClickAsync();
-            await Assertions.Expect(mod.GetByText(new Regex("Išsiųsta Seimo nariams: \\d+\\."))).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
-            await Assertions.Expect(mod.Locator($"#digmod-status-{run}")).ToContainTextAsync("Išsiųsta Seimo nariams");
-            await E2ESteps.ShootBothAsync(mod, Shots, "moderators-sent");
+            var (urgentStatus, urgentBody) = await E2ESteps.ApiAsync(mod, "POST", $"/api/v1/moderation/records/{record}/urgent", new { statement = "Bandymas (E2E): skubi suvestinė." });
+            urgentStatus.ShouldBe(201, urgentBody);
+            urgentBody.ShouldContain("\"status\":\"sent\"");
 
             // 5. The MP's mailbox: one email with both sides, the answer link, the closing lines and the one-click header.
             var digest = await Mailpit.FullAsync(digestQuery);
@@ -244,7 +245,7 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
                     delete from notify.mp_email_pref where changed_at >= '{started}'::timestamp at time zone 'UTC';
                     delete from notify.suppression where created_at >= '{started}'::timestamp at time zone 'UTC';
                     delete from notify.introduction_letter where written_at >= '{started}'::timestamp at time zone 'UTC';
-                    delete from notify.outbox where kind like 'email.mp-%' and created_at >= '{started}'::timestamp at time zone 'UTC';
+                    delete from notify.outbox where (kind like 'email.mp-%' or kind = 'email.digest-review') and created_at >= '{started}'::timestamp at time zone 'UTC';
                     """);
             }
             catch (Exception ex) when (ex is Shouldly.ShouldAssertException or InvalidOperationException or System.ComponentModel.Win32Exception or HttpRequestException)

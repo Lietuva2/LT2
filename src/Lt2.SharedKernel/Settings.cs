@@ -124,17 +124,18 @@ public static class SettingKeys
     public static readonly SettingKey<decimal> DigestNotableChange = new("Digest:NotableChange", 0.10m, v => v is > 0 and <= 1);
 
     /// <summary>
-    /// Design 8.19.1: whether summaries really go to MPs. <c>off</c> (the default: a dry run, nothing sent), <c>approval</c>
-    /// (a weekly or before-vote summary waits until a moderator lets it go) or <c>automatic</c> (sent when made). Whatever it
-    /// says, nothing goes before the introduction letter, nor where the data is invented and the mail is not caught.
+    /// Design 8.19.1: whether summaries really go to MPs. <c>off</c> (the default: prepared and reviewed the same way, then made
+    /// as a dry run, nothing sent) or <c>automatic</c> (sent at its time). Whatever it says, nothing goes before the
+    /// introduction letter, nor where the data is invented and the mail is not caught.
     /// </summary>
-    public static readonly SettingKey<string> DigestSending = new("Digest:Sending", "off", v => v is "off" or "approval" or "automatic");
+    public static readonly SettingKey<string> DigestSending = new("Digest:Sending", "off", v => v is "off" or "automatic");
 
     /// <summary>
-    /// Design 8.19.2: a waiting summary expires so many hours after it was made, or when its sitting's day begins in
-    /// Vilnius, whichever comes first. Nothing is sent late.
+    /// Design 8.19.2 (owner, 2026-11-17): a weekly or before-vote summary is prepared so many hours before its sending time
+    /// (Vilnius wall-clock hours), so moderators can review it: which bills and which arguments are fixed then; the numbers
+    /// are read when it goes.
     /// </summary>
-    public static readonly SettingKey<int> DigestApprovalHours = new("Digest:ApprovalHours", 24, v => v is > 0 and <= 168);
+    public static readonly SettingKey<int> DigestReviewHours = new("Digest:ReviewHours", 24, v => v is >= 1 and <= 72);
 
     /// <summary>
     /// Design 6.3, 8.4 (owner, 2026-11-17): the smallest group of participants on a side who said they support the MP's party
@@ -235,7 +236,7 @@ public static class SettingKeys
         DigestMaxPerWeek,
         DigestNotableChange,
         DigestSending,
-        DigestApprovalHours,
+        DigestReviewHours,
         DigestPartyGroupMinimum,
         AppealsReasonsPerPerson,
         TextsMaxLength,

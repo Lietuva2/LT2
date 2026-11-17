@@ -37,6 +37,12 @@ public static class MpMailRoutes
     /// <summary><c>GET</c> / <c>PUT</c>: the same choice for a linked account in a passkey session (design 8.19.4).</summary>
     public const string Mine = ApiRoutes.Prefix + "/me/mp/mail";
 
+    /// <summary>
+    /// <c>GET</c> / <c>PUT</c>: an office member's own choice of copies of the MP's summaries (design 8.19.3, owner 2026-11-17),
+    /// independent of the MP's; any session, since it is the member's own mail.
+    /// </summary>
+    public const string OfficeCopies = ApiRoutes.Prefix + "/me/mp/office/copies";
+
     /// <summary>The MP's page of choices, from the link in every email.</summary>
     public const string PreferencesPage = "/suvestines/nustatymai";
 
@@ -62,6 +68,9 @@ public static class MpMailRoutes
 /// leaves it out), with <see cref="ExtraConfirmed"/> false while the official address has not confirmed it.
 /// </summary>
 public sealed record MpMailChoiceResponse(string Slug, string FirstName, string LastName, string Frequency, string? ExtraAddress, bool ExtraConfirmed);
+
+/// <summary>An office member's own choice of copies of the MP's summaries (design 8.19.3): the MP by name and the frequency.</summary>
+public sealed record MpOfficeCopiesResponse(string Slug, string FirstName, string LastName, string Frequency);
 
 public sealed record MpMailFrequencyRequest
 {
@@ -130,6 +139,11 @@ public interface IMpMailApi
 
     /// <summary>Changes it, in a passkey session (<c>mp.passkey-required</c> otherwise).</summary>
     Task<ApiResult<MpMailChoiceResponse>> SetMineAsync(MpMailFrequencyRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>An office member's own copies (design 8.19.3); <c>mp.not-office</c> for anyone but an office member.</summary>
+    Task<ApiResult<MpOfficeCopiesResponse>> GetOfficeCopiesAsync(CancellationToken cancellationToken = default);
+
+    Task<ApiResult<MpOfficeCopiesResponse>> SetOfficeCopiesAsync(MpMailFrequencyRequest request, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Administrators' routes and pages for MP mail (design 8.19.5, 8.19.6).</summary>

@@ -111,8 +111,6 @@ internal static class ApiEndpoints
         GetDigestsEndpoint.Map(api);
         GetDigestEndpoint.Map(api);
         GetRecordDigestsEndpoint.Map(api);
-        GetDigestMpsEndpoint.Map(api);
-        GetDigestPreviewEndpoint.Map(api);
         DigestSendingEndpoints.Map(api);
         MpMail.MpMailEndpoints.Map(api);
         MpSendingAdminEndpoints.Map(api);

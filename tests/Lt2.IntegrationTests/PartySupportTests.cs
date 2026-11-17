@@ -118,10 +118,11 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
 
             // An urgent summary (dry run): the MP of that party would read the minimum; nobody else, and no public copy, sees a party.
             var run = await UrgentAsync(moderator, record.Id);
-            var preview = await moderator.Browser.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(run.Id, "jonas-petraitis"));
-            preview.Text.ShouldContain($"Iš nurodžiusių, kad palaiko Reformų partija: {minimum} prašo balsuoti už.");
-            preview.Text.ShouldNotContain("prašo balsuoti prieš.\n", Case.Sensitive);
-            preview.Text.ShouldNotContain($": {againstParty} ");
+            // (The email's line "Iš nurodžiusių, kad palaiko …" is the template's, MpMailTemplateTests.)
+            var petraitis = (await PetraitisNumbersAsync(run.Id)).Replace(" ", "", StringComparison.Ordinal);
+            petraitis.ShouldContain($"\"party\":\"{Party.Replace(" ", "", StringComparison.Ordinal)}\"");
+            petraitis.ShouldContain($"\"for\":{minimum},");
+            petraitis.ShouldContain("\"against\":null");
 
             using var stranger = NewBrowser();
             var publicJson = await stranger.Client.GetStringAsync(DigestRoutes.DigestOn(run.RunDate));
@@ -174,9 +175,9 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
                 .ShouldBe(new PartyNumbers(Party, 1, null), "no party member against: an empty group is no number");
 
             var run = await UrgentAsync(moderator, record.Id);
-            var preview = await moderator.Browser.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(run.Id, "jonas-petraitis"));
-            preview.Text.ShouldContain("Iš nurodžiusių, kad palaiko Reformų partija: 1 prašo balsuoti už.");
-            preview.Text.ShouldNotContain("palaiko Reformų partija: 0");
+            var petraitis = (await PetraitisNumbersAsync(run.Id)).Replace(" ", "", StringComparison.Ordinal);
+            petraitis.ShouldContain("\"for\":1,");
+            petraitis.ShouldContain("\"against\":null", customMessage: "an empty group is no number");
 
             await admin.Browser.SetSettingAsync(SettingKeys.DigestPartyGroupMinimum.Name, 2);
             (await source.PartyNumbersAsync([record.Id], CancellationToken.None))[record.Id].ShouldBeEmpty("the setting is read when the numbers are made");
@@ -226,6 +227,12 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
             HttpMethod.Put, ApiRoutes.Admin.SettingByKey(SettingKeys.DigestPartyGroupMinimum.Name), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(-1) });
         await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "setting.invalid");
     }
+
+    /// <summary>The party numbers stored with Jonas Petraitis's (Reformų partija) delivery of a run: what his email showed.</summary>
+    private async Task<string> PetraitisNumbersAsync(Guid runId) =>
+        (await Database.ScalarAsync<string>(
+            "SELECT party_numbers::text FROM notify.digest_delivery WHERE run_id = @r AND mp_slug = 'jonas-petraitis' AND recipient = 'official'", ("r", runId)))
+        .ShouldNotBeNull("the run stored Jonas Petraitis's delivery");
 
     private static async Task<DigestRunResponse> UrgentAsync(StaffMember moderator, Guid recordId)
     {

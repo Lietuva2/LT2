@@ -40,6 +40,12 @@ internal sealed class MpMailService(
 
     public async Task<Result<Unit>> StopAsync(string token, CancellationToken cancellationToken)
     {
+        // The same one-click route stops an office member's copies with the member's own token (design 8.19.3), and nothing else.
+        if (await StopOfficeCopiesAsync(token, cancellationToken))
+        {
+            return Result.Ok();
+        }
+
         var result = await ChangeAsync(token, null, Frequencies.Stopped, cancellationToken);
         return result.IsSuccess ? Result.Ok() : result.Error!;
     }
@@ -185,6 +191,12 @@ internal sealed class MpMailService(
 
     public async Task<Result<Unit>> StopCopiesAsync(string stopToken, CancellationToken cancellationToken)
     {
+        // "Nebegauti kopijų" from an office member's copy (design 8.19.3) stops that member's copies.
+        if (await StopOfficeCopiesAsync(stopToken, cancellationToken))
+        {
+            return Result.Ok();
+        }
+
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         if (await FindAsync(db, stopToken, TokenKinds.ExtraStop, cancellationToken, forUpdate: true) is not { } found)
@@ -198,6 +210,70 @@ internal sealed class MpMailService(
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
+    }
+
+    public Task<Result<OfficeCopyChoice>> OfficeCopiesAsync(Guid userId, long seimasPersonId, CancellationToken cancellationToken) =>
+        OfficeChoiceAsync(userId, seimasPersonId, null, cancellationToken);
+
+    public Task<Result<OfficeCopyChoice>> SetOfficeCopiesAsync(Guid userId, long seimasPersonId, string frequency, CancellationToken cancellationToken) =>
+        Frequencies.All.Contains(frequency)
+            ? OfficeChoiceAsync(userId, seimasPersonId, frequency, cancellationToken)
+            : Task.FromResult<Result<OfficeCopyChoice>>(Error.Validation("mp-mail.frequency-invalid", "frequency"));
+
+    /// <summary>An office member's own choice of copies (design 8.19.3), read or, with <paramref name="frequency"/>, changed.</summary>
+    private async Task<Result<OfficeCopyChoice>> OfficeChoiceAsync(Guid userId, long person, string? frequency, CancellationToken ct)
+    {
+        var mp = (await mps.MpsAsync([person], ct)).GetValueOrDefault(person);
+        if (mp is null)
+        {
+            return Error.NotFound("mp.not-found");
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(ct);
+        var choice = await db.OfficeCopies.FirstOrDefaultAsync(c => c.UserId == userId && c.SeimasPersonId == person, ct);
+        if (frequency is not null && (choice?.Frequency ?? Frequencies.Default) != frequency)
+        {
+            if (choice is null)
+            {
+                choice = new OfficeCopy { UserId = userId, SeimasPersonId = person };
+                db.OfficeCopies.Add(choice);
+            }
+
+            choice.Frequency = frequency;
+            choice.ChangedAt = clock.GetUtcNow();
+            await db.SaveChangesAsync(ct);
+        }
+
+        return new OfficeCopyChoice(mp.Slug, mp.FirstName, mp.LastName, choice?.Frequency ?? Frequencies.Default);
+    }
+
+    /// <summary>
+    /// An office member's own stop (design 8.19.3), from the copy's one-click or its "Nebegauti kopijų" page: true when the token
+    /// is a member's, whose copies are then stopped (their choice "Nesiųsti"); nothing else changes.
+    /// </summary>
+    private async Task<bool> StopOfficeCopiesAsync(string? token, CancellationToken ct)
+    {
+        if (!MailKeys.LooksLikeToken(token))
+        {
+            return false;
+        }
+
+        var hash = MailKeys.TokenHash(token!);
+        await using var db = await contexts.CreateDbContextAsync(ct);
+        var choice = await db.OfficeCopies.FirstOrDefaultAsync(c => c.StopTokenHash == hash, ct);
+        if (choice is null)
+        {
+            return false;
+        }
+
+        if (choice.Frequency != Frequencies.Stopped)
+        {
+            choice.Frequency = Frequencies.Stopped;
+            choice.ChangedAt = clock.GetUtcNow();
+            await db.SaveChangesAsync(ct);
+        }
+
+        return true;
     }
 
     public async Task<IntroductionState> IntroductionAsync(CancellationToken cancellationToken)
@@ -319,8 +395,8 @@ internal sealed class MpMailService(
             CreatedAt = now,
             Status = RunStatuses.Sent,
             LetterVersion = letter.Version,
-            DecidedBy = administrator.UserId,
-            DecidedAt = now,
+            DueAt = now,
+            SentAt = now,
             MpCount = queued,
             SentCount = queued,
         };

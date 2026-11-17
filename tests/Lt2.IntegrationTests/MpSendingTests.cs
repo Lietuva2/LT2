@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Digests;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Notifications;
@@ -10,8 +12,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 8.19.1 to 8.19.3, 8.19.5: summaries really sent. Off: dry runs and nothing for MPs in the outbox; approval: a waiting
-/// summary a moderator sends or declines, or that expires; the two locks; who receives one; the introduction letter once per MP.
+/// Design 8.19.1 to 8.19.3, 8.19.5: summaries really sent. Off: dry runs and nothing for MPs in the outbox; on: a summary prepared
+/// the day before goes at its time, approved or not, unless a moderator declines it; the two locks; who receives one; the
+/// introduction letter once per MP.
 /// </summary>
 public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
 {
@@ -65,7 +68,7 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task With_approval_a_summary_waits_a_moderator_sends_it_once_and_each_mp_gets_one_email_with_both_sides()
+    public async Task A_summary_prepared_the_day_before_goes_at_its_time_whether_approved_or_not_and_each_mp_gets_one_email_with_both_sides()
     {
         await Database.ResetMpMailAsync();
         var (moderator, admin, bill, monday) = await SummaryWeekAsync(24);
@@ -73,42 +76,52 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
         {
             var introduced = await admin.IntroduceAsync();
             introduced.ShouldBeGreaterThan(0);
-            await admin.SetFreshAsync("Digest:Sending", "approval");
+            await admin.SetFreshAsync("Digest:Sending", "automatic");
             var since = await Database.ScalarAsync<DateTime>("SELECT clock_timestamp()");
 
-            var weekly = (await Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5))).Single();
-            weekly.Status.ShouldBe("waiting");
-            weekly.MpCount.ShouldBe(introduced);
-            weekly.ExpiresAt.ShouldNotBeNull();
-            (await Database.MpMailAsync(kind: "email.mp-digest")).ShouldBeEmpty("a waiting summary queues nothing");
-
-            // The public copy says it waits; the moderators' screen lists it first, with the sending state.
+            // Owner, 2026-11-17: prepared on Sunday at the same time, 24 hours ahead; nothing goes to MPs yet and nothing is public.
+            (await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(-1), 6, 55))).ShouldBeEmpty("before Sunday 07:00");
+            var prepared = (await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(-1), 7, 5))).Single();
+            (prepared.Status, prepared.Kind, prepared.RunDate).ShouldBe(("prepared", "weekly", monday));
+            prepared.DueAt.ShouldBe(MpSendingSteps.At(monday, 7).ToUniversalTime());
+            (await Database.MpMailAsync(kind: "email.mp-digest")).ShouldBeEmpty("a prepared summary queues nothing for MPs");
             using var stranger = NewBrowser();
             var date = monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-            WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/suvestines/" + date)).ShouldContain("Laukia moderatoriaus patvirtinimo");
-            var screen = await moderator.Browser.GetJsonAsync<DigestModerationResponse>(DigestRoutes.Moderation);
-            (screen.Sending, screen.SendingSetting, screen.Lock).ShouldBe(("approval", "approval", null));
-            screen.Runs[0].Id.ShouldBe(weekly.Id);
-            var listed = await moderator.Browser.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
-            listed.ShouldContain(m => m.FirstName == "Laima" && m.LastName == "Uosytė", "the MPs by name, in the nominative");
-            listed.Select(m => m.LastName).ShouldBe(
-                listed.Select(m => m.LastName).Order(StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("lt-LT"), false)).ToList(), "by last name");
-            (await stranger.Client.GetAsync(DigestRoutes.Moderation)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-            (await stranger.Client.PostAsync(DigestRoutes.SendOf(weekly.Id), null)).StatusCode.ShouldNotBe(HttpStatusCode.OK);
+            (await stranger.Client.GetAsync("/suvestines/" + date)).StatusCode.ShouldBe(HttpStatusCode.NotFound, "the public copy is made when it goes");
 
-            // Design 6.2, 8.19.2: approving a send needs the passkey confirmed in the last ten minutes; declining does not.
+            // The moderators' screen lists it first, with the sending state and what it would hold, the MPs only counted.
+            var screen = await moderator.Browser.GetJsonAsync<DigestModerationResponse>(DigestRoutes.Moderation);
+            (screen.Sending, screen.SendingSetting, screen.Lock).ShouldBe(("automatic", "automatic", null));
+            screen.Runs[0].Id.ShouldBe(prepared.Id);
+            screen.Runs[0].MpCount.ShouldBe(introduced);
+            screen.Runs[0].Items.ShouldContain(i => i.BillNumber == AppealSteps.ThirdBill);
+            JsonSerializer.Serialize(screen).ShouldNotContain("Uosytė", customMessage: "no MP is named on the screen");
+            (await stranger.Client.GetAsync(DigestRoutes.Moderation)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            (await stranger.Client.PostAsync(DigestRoutes.ApproveOf(prepared.Id), null)).StatusCode.ShouldNotBe(HttpStatusCode.OK);
+
+            // "Patvirtinti" needs no fresh passkey confirmation (it sends nothing) and is pressed once.
             await Database.ExecuteAsync(
                 "UPDATE identity.session SET passkey_confirmed_at = now() - interval '11 minutes' WHERE user_id = (SELECT id FROM identity.\"user\" WHERE email = @e)", ("e", moderator.Email));
-            using (var stale = await moderator.Browser.PostAsync(DigestRoutes.SendOf(weekly.Id), new { }))
+            using (var approved = await moderator.ApproveDigestAsync(prepared.Id))
             {
-                await stale.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "passkey.confirmation-required");
+                approved.StatusCode.ShouldBe(HttpStatusCode.OK, await approved.Content.ReadAsStringAsync());
+                var marked = await approved.ReadAsync<DigestRunResponse>();
+                marked.Status.ShouldBe("prepared", "it still goes at its own time");
             }
 
-            using var sent = await moderator.SendDigestAsync(weekly.Id);
-            sent.StatusCode.ShouldBe(HttpStatusCode.OK, await sent.Content.ReadAsStringAsync());
-            var run = await sent.ReadAsync<DigestRunResponse>();
+            using (var again = await admin.ApproveDigestAsync(prepared.Id))
+            {
+                await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.not-prepared");
+            }
+
+            (await moderator.Browser.GetJsonAsync<DigestModerationResponse>(DigestRoutes.Moderation)).Runs[0].ApprovedAt.ShouldNotBeNull();
+            (await Factory.RunDueAsync(MpSendingSteps.At(monday, 6, 55))).ShouldBeEmpty("approved, it still waits for its time");
+            (await Database.MpMailAsync(kind: "email.mp-digest")).ShouldBeEmpty();
+
+            var run = (await Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5))).Single();
             run.Status.ShouldBe("sent");
             run.SentCount.ShouldBe(introduced);
+            var weekly = run;
 
             // One email per MP, to the official address, with both sides and the links.
             var emails = await Database.MpMailAsync(kind: "email.mp-digest");
@@ -124,12 +137,8 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
             (await Database.ScalarAsync<DateTime?>("SELECT first_summarised_at FROM appeals.bill_record WHERE id = @r", ("r", bill.Id)))
                 .ShouldNotBeNull("design 8.12.2: a summary really sent counts as summarised");
 
-            // Sent once: a second press finds it sent.
-            using (var again = await admin.SendDigestAsync(weekly.Id))
-            {
-                await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.not-waiting");
-            }
-
+            // Sent once: a later run of the job sends nothing again.
+            (await Factory.RunDueAsync(MpSendingSteps.At(monday, 9))).ShouldBeEmpty();
             (await Database.MpMailAsync(kind: "email.mp-digest")).Count.ShouldBe(introduced);
 
             // The public copy says how many and when, never which MPs; the moderator is audited and named nowhere public.
@@ -139,7 +148,8 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
             page.ShouldNotContain("Uosytė");
             var api = await stranger.GetJsonAsync<List<DigestRunResponse>>(DigestRoutes.DigestOn(monday));
             JsonSerializer.Serialize(api).ShouldNotContain("lrs.lt");
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.sent' AND target = @t AND actor_role = 'moderator'", ("t", "digest:" + weekly.Id))).ShouldBe(1);
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.sent' AND target = @t AND actor_user_id IS NULL", ("t", "digest:" + weekly.Id))).ShouldBe(1, "the system let it go");
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.approved' AND target = @t AND actor_role = 'moderator'", ("t", "digest:" + weekly.Id))).ShouldBe(1);
             (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE details::text LIKE '%@%' AND occurred_at >= @s", ("s", since))).ShouldBe(0, "no address in an audit detail");
         }
         finally
@@ -155,11 +165,11 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
         var (moderator, admin, _, monday) = await SummaryWeekAsync(26);
         try
         {
-            await admin.IntroduceAsync();
-            await admin.SetFreshAsync("Digest:Sending", "approval");
+            var introduced = await admin.IntroduceAsync();
+            await admin.SetFreshAsync("Digest:Sending", "automatic");
             await admin.SetFreshAsync("Digest:MaxPerWeek", 1);
-            var weekly = (await Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5))).Single();
-            weekly.Status.ShouldBe("waiting");
+            var weekly = (await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(-1), 7, 5))).Single();
+            weekly.Status.ShouldBe("prepared");
 
             using (var tooShort = await moderator.Browser.PostAsync(DigestRoutes.CancelOf(weekly.Id), new CancelDigestRequest { Statement = "Per trumpa." }))
             {
@@ -173,60 +183,28 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
                 (await cancelled.ReadAsync<DigestRunResponse>()).Status.ShouldBe("cancelled");
             }
 
+            (await Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5))).ShouldBeEmpty("a declined summary does not go, nor is the week's made again");
             (await Database.MpMailAsync(kind: "email.mp-digest")).ShouldBeEmpty();
             using var stranger = NewBrowser();
             var html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/suvestines/" + monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)));
             html.ShouldContain("Nesiųsta");
             html.ShouldContain(Statement);
+            html.ShouldContain(AppealSteps.ThirdBill, customMessage: "the copy shows what it held when it was declined");
 
             // The bill's page says it too, in the row of the summary that held it: not read as sent.
             var bill = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
             System.Text.RegularExpressions.Regex.IsMatch(bill, $"id=\"digest-status-{weekly.Id}\"[^>]*>nesiųsta<").ShouldBeTrue("the row's status");
-            using (var send = await moderator.SendDigestAsync(weekly.Id))
+            using (var approve = await moderator.ApproveDigestAsync(weekly.Id))
             {
-                await send.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.not-waiting");
+                await approve.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.not-prepared");
             }
 
             // The ceiling of one a week: the declined summary holds no place, so Wednesday's before-vote one reaches every MP.
             var beforeVote = (await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(2), 12, 5))).Single();
             beforeVote.Kind.ShouldBe("before-vote");
-            beforeVote.Status.ShouldBe("waiting");
-            beforeVote.MpCount.ShouldBe(weekly.MpCount, "a cancelled summary frees its place");
+            beforeVote.Status.ShouldBe("sent");
+            beforeVote.MpCount.ShouldBe(introduced, "a cancelled summary frees its place");
             (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.digest_delivery WHERE run_id = @r AND status = 'skipped-ceiling'", ("r", beforeVote.Id))).ShouldBe(0);
-        }
-        finally
-        {
-            await CleanUpAsync(admin);
-        }
-    }
-
-    [Fact]
-    public async Task A_waiting_summary_nobody_decided_on_expires_and_nothing_is_sent_late()
-    {
-        await Database.ResetMpMailAsync();
-        var (moderator, admin, _, monday) = await SummaryWeekAsync(28);
-        try
-        {
-            await admin.IntroduceAsync();
-            await admin.SetFreshAsync("Digest:Sending", "approval");
-            var weekly = (await Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5))).Single();
-
-            // Planned for Thursday: 24 hours after Monday 07:05 come first.
-            weekly.ExpiresAt.ShouldBe(MpSendingSteps.At(monday, 7, 5).ToUniversalTime().AddHours(24));
-            (await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(1), 7, 4))).ShouldBeEmpty();
-            (await Database.ScalarAsync<string>("SELECT status FROM notify.digest_run WHERE id = @r", ("r", weekly.Id))).ShouldBe("waiting");
-            await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(1), 7, 10));
-            (await Database.ScalarAsync<string>("SELECT status FROM notify.digest_run WHERE id = @r", ("r", weekly.Id))).ShouldBe("expired");
-            using (var late = await moderator.SendDigestAsync(weekly.Id))
-            {
-                await late.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.not-waiting");
-            }
-
-            (await Database.MpMailAsync(kind: "email.mp-digest")).ShouldBeEmpty();
-            using var stranger = NewBrowser();
-            WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/suvestines/" + monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)))
-                .ShouldContain("Nesiųsta: nepatvirtinta laiku");
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.expired' AND target = @t AND actor_user_id IS NULL", ("t", "digest:" + weekly.Id))).ShouldBe(1);
         }
         finally
         {
@@ -485,27 +463,27 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task Two_moderators_letting_one_summary_go_at_the_same_moment_send_it_once()
+    public async Task Two_moderators_approving_one_summary_at_the_same_moment_approve_it_once_and_two_runs_of_the_job_send_it_once()
     {
         await Database.ResetMpMailAsync();
         var (moderator, admin, _, monday) = await SummaryWeekAsync(36);
         try
         {
             await admin.IntroduceAsync();
-            await admin.SetFreshAsync("Digest:Sending", "approval");
-            var weekly = (await Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5))).Single();
-            (await moderator.Browser.ConfirmPasskeyAsync(moderator.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            (await admin.Browser.ConfirmPasskeyAsync(admin.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            var answers = await Task.WhenAll(
-                moderator.Browser.PostAsync(DigestRoutes.SendOf(weekly.Id), new { }),
-                admin.Browser.PostAsync(DigestRoutes.SendOf(weekly.Id), new { }));
+            await admin.SetFreshAsync("Digest:Sending", "automatic");
+            var weekly = (await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(-1), 7, 5))).Single();
+            var answers = await Task.WhenAll(moderator.ApproveDigestAsync(weekly.Id), admin.ApproveDigestAsync(weekly.Id));
             answers.Select(a => a.StatusCode).Order().ShouldBe([HttpStatusCode.OK, HttpStatusCode.Conflict]);
             foreach (var answer in answers)
             {
                 answer.Dispose();
             }
 
-            (await Database.MpMailAsync(kind: "email.mp-digest")).Count.ShouldBe(weekly.MpCount, "one email per MP, not two");
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.approved' AND target = @t", ("t", "digest:" + weekly.Id))).ShouldBe(1);
+            var runs = await Task.WhenAll(Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5)), Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 6)));
+            var sent = runs.SelectMany(r => r).First(r => r.Id == weekly.Id);
+            sent.Status.ShouldBe("sent");
+            (await Database.MpMailAsync(kind: "email.mp-digest")).Count.ShouldBe(sent.SentCount, "one email per MP, not two");
             (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.sent' AND target = @t", ("t", "digest:" + weekly.Id))).ShouldBe(1);
         }
         finally
@@ -515,13 +493,13 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
     }
 
     /// <summary>
-    /// Design 8.9, 8.19.8: a simulated month of agenda changes with approval, preferences, the suppression list, the ceiling and
-    /// the thresholds in play. Week 1 sends Monday's summary and the before-vote one is covered by it; week 2 declines Monday's,
-    /// so a bill moved from Tuesday to Thursday gets two before-vote summaries within the ceiling; week 3's summary expires;
-    /// week 4 sends Monday's and Tuesday's and the third of the week meets the ceiling.
+    /// Design 8.9, 8.19.8: a simulated month of agenda changes with review, preferences, the suppression list, the ceiling and
+    /// the thresholds in play. Week 1 sends Monday's summary and the before-vote one is covered by it; week 2 declines Monday's
+    /// on Sunday, so a bill moved from Tuesday to Thursday gets two before-vote summaries within the ceiling; in week 3 the only
+    /// bill is held during review, so nothing goes; week 4 sends Monday's and Tuesday's and the third of the week meets the ceiling.
     /// </summary>
     [Fact]
-    public async Task A_simulated_month_of_agenda_changes_keeps_approval_preferences_suppression_the_ceiling_and_the_thresholds()
+    public async Task A_simulated_month_of_agenda_changes_keeps_review_preferences_suppression_the_ceiling_and_the_thresholds()
     {
         await Database.ResetMpMailAsync();
         var (moderator, admin) = await StaffAsync();
@@ -530,9 +508,10 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
         try
         {
             var (member, _) = await Factory.MemberAsync();
+            PreparedBill third;
             using (member)
             {
-                await Database.PrepareBillAsync(member, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
+                third = await Database.PrepareBillAsync(member, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
                 await Database.PrepareBillAsync(member, moderator.Browser, AppealSteps.SecondBill, "for", threshold: 50);
             }
 
@@ -546,45 +525,47 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
             await ChooseAsync(MpSteps.Liepaitis, "stopped");
             (await admin.Browser.PostAsync(MpSendingAdminRoutes.Suppression, new SuppressRequest { Address = MpSteps.Berzinyte.Address, Statement = "Bandymas." }))
                 .StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            await admin.SetFreshAsync("Digest:Sending", "approval");
+            await admin.SetFreshAsync("Digest:Sending", "automatic");
             await admin.SetFreshAsync("Digest:MaxPerWeek", 2);
 
-            async Task<DigestRunInfo?> DueAsync(DateOnly day, int hour) => (await Factory.RunDueAsync(MpSendingSteps.At(day, hour, 5))).SingleOrDefault();
-            async Task SendAsync(DigestRunInfo run) =>
-                (await moderator.SendDigestAsync(run.Id)).StatusCode.ShouldBe(HttpStatusCode.OK);
+            async Task<IReadOnlyList<DigestRunInfo>> DueAsync(DateOnly day, int hour) => await Factory.RunDueAsync(MpSendingSteps.At(day, hour, 5));
+            async Task StatementAsync(string route, Guid id, string statement) =>
+                (await moderator.Browser.PostAsync(AppealRoutes.With(route, id), new StatementRequest { Statement = statement })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
             // Week 1: Thursday; Monday's summary sent; Wednesday's would be the same sitting, covered by Monday's.
             await Database.PlanAsync(AppealSteps.ThirdBill, weeks[0].AddDays(3), "adoption");
             await Database.PlanAsync(AppealSteps.SecondBill, weeks[0].AddDays(3), "adoption");
-            var w1 = (await DueAsync(weeks[0], 7))!;
-            w1.Status.ShouldBe("waiting");
-            await SendAsync(w1);
-            (await DueAsync(weeks[0].AddDays(2), 12)).ShouldBeNull("covered by Monday's summary");
+            var w1 = (await DueAsync(weeks[0], 7)).Of("weekly");
+            w1.Status.ShouldBe("sent");
+            (await DueAsync(weeks[0].AddDays(2), 12)).ShouldBeEmpty("covered by Monday's summary");
 
-            // Week 2: Monday's declined; the bill planned for Tuesday, then moved to Thursday.
+            // Week 2: Monday's declined on Sunday; the bill planned for Tuesday, then moved to Thursday.
             await Database.PlanAsync(AppealSteps.ThirdBill, weeks[1].AddDays(1), "adoption");
-            var w2 = (await DueAsync(weeks[1], 7))!;
+            var w2 = (await DueAsync(weeks[1].AddDays(-1), 7)).Of("weekly");
+            w2.Status.ShouldBe("prepared");
             (await moderator.Browser.PostAsync(DigestRoutes.CancelOf(w2.Id), new CancelDigestRequest { Statement = "Bandymas: suvestinė atšaukiama mėnesio bandyme." }))
                 .StatusCode.ShouldBe(HttpStatusCode.OK);
-            var w2Tuesday = (await DueAsync(weeks[1], 12))!;
-            w2Tuesday.Kind.ShouldBe("before-vote");
+            // Monday morning: nothing weekly goes; Tuesday's before-vote summary is prepared (sent at noon).
+            (await DueAsync(weeks[1], 7)).ShouldAllBe(r => r.Kind == "before-vote" && r.Status == "prepared", "declined on Sunday, nothing goes on Monday");
+            var w2Tuesday = (await DueAsync(weeks[1], 12)).Of("before-vote");
+            w2Tuesday.Status.ShouldBe("sent");
             w2Tuesday.Items.Select(i => i.BillNumber).ShouldBe([AppealSteps.ThirdBill], "a declined Monday covers nothing");
-            await SendAsync(w2Tuesday);
             await Database.PlanAsync(AppealSteps.ThirdBill, weeks[1].AddDays(3), "adoption");
-            var w2Thursday = (await DueAsync(weeks[1].AddDays(2), 12))!;
-            await SendAsync(w2Thursday);
+            (await DueAsync(weeks[1].AddDays(2), 12)).Of("before-vote").Status.ShouldBe("sent");
 
-            // Week 3: nobody decides; it expires before its sitting's day.
-            await Database.PlanAsync(AppealSteps.ThirdBill, weeks[2].AddDays(1), "adoption");
-            var w3 = (await DueAsync(weeks[2], 7))!;
-            await Factory.RunDueAsync(MpSendingSteps.At(weeks[2].AddDays(1), 0, 1));
-            (await Database.ScalarAsync<string>("SELECT status FROM notify.digest_run WHERE id = @r", ("r", w3.Id))).ShouldBe("expired");
+            // Week 3: the only bill is held during review; nothing is left to go at Monday's time.
+            await Database.PlanAsync(AppealSteps.ThirdBill, weeks[2].AddDays(3), "adoption");
+            var w3 = (await DueAsync(weeks[2].AddDays(-1), 7)).Of("weekly");
+            w3.Items.Select(i => i.BillNumber).ShouldBe([AppealSteps.ThirdBill]);
+            await StatementAsync(AppealRoutes.HoldRecord, third.Id, "Bandymas: sulaikoma peržiūros metu.");
+            (await DueAsync(weeks[2], 7)).Of("weekly").Status.ShouldBe("dropped");
+            await StatementAsync(AppealRoutes.ReleaseRecord, third.Id, "Bandymas: siuntimas grąžinamas.");
 
             // Week 4: Monday's sent; a bill that reached its threshold after it is added for Tuesday (sent); the first bill moves
             // to Friday, and that third summary of the week meets the ceiling of two for every MP who had both.
             await Database.PlanAsync(AppealSteps.ThirdBill, weeks[3].AddDays(1), "adoption");
             await Database.PlanAsync(AppealSteps.SecondBill, weeks[3].AddDays(3), "adoption");
-            await SendAsync((await DueAsync(weeks[3], 7))!);
+            (await DueAsync(weeks[3], 7)).Of("weekly").Status.ShouldBe("sent");
             var (late, _) = await Factory.MemberAsync();
             using (late)
             {
@@ -592,12 +573,11 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
             }
 
             await Database.PlanAsync(AppealSteps.TaxBill, weeks[3].AddDays(1), "adoption");
-            var w4Tuesday = (await DueAsync(weeks[3], 12))!;
+            var w4Tuesday = (await DueAsync(weeks[3], 12)).Of("before-vote");
             w4Tuesday.Items.Select(i => i.BillNumber).ShouldBe([AppealSteps.TaxBill], "the first bill was covered by Monday's summary for the same sitting");
-            await SendAsync(w4Tuesday);
             await Database.PlanAsync(AppealSteps.ThirdBill, weeks[3].AddDays(4), "adoption");
-            var w4Friday = (await DueAsync(weeks[3].AddDays(3), 12))!;
-            await SendAsync(w4Friday);
+            var w4Friday = (await DueAsync(weeks[3].AddDays(3), 12)).Of("before-vote");
+            w4Friday.Status.ShouldBe("sent");
 
             // Over the month: the thresholds, the choices, the suppression list and the ceiling held for every MP.
             (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.digest_item i JOIN notify.digest_run r ON r.id = i.run_id WHERE i.bill_number = @b AND r.run_date >= @f",
@@ -639,8 +619,8 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
             (await OfAsync(MpSteps.Berzinyte)).ShouldAllBe(r => r.Status == "suppressed");
             (await Database.MpMailAsync(MpSteps.Berzinyte.Address, "email.mp-digest")).ShouldBeEmpty();
             (await Database.MpMailAsync(MpSteps.Liepaitis.Address, "email.mp-digest")).ShouldBeEmpty();
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.digest_delivery d JOIN notify.digest_run r ON r.id = d.run_id WHERE r.status IN ('cancelled', 'expired') AND d.status = 'queued'"))
-                .ShouldBe(0, "a declined or expired summary sent nothing");
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.digest_delivery d JOIN notify.digest_run r ON r.id = d.run_id WHERE r.status IN ('cancelled', 'dropped') AND d.status = 'queued'"))
+                .ShouldBe(0, "a declined or dropped summary sent nothing");
             var friday = await Database.ScalarAsync<long>("SELECT count(*) FROM notify.digest_delivery WHERE run_id = @r AND status = 'skipped-ceiling'", ("r", w4Friday.Id));
             friday.ShouldBeGreaterThan(0, "the third summary of the week meets the ceiling for MPs who had two");
             (await Database.DeliveryAsync(w4Friday.Id, MpSteps.Gluosnis.SeimasPersonId)).ShouldBe("queued", "he had only one before-vote summary that week");

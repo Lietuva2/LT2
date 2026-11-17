@@ -31,13 +31,44 @@ internal static class DigestRules
     public static TimeOnly? TimeOf(string setting) =>
         TimeOnly.TryParseExact(setting, "HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var t) ? t : null;
 
-    /// <summary>The weekly summary: Monday from the set time, in a week when the Seimas sits, once a week.</summary>
-    public static bool WeeklyDue(DateOnly today, TimeOnly now, TimeOnly? at, bool seimasSitsThisWeek, bool alreadyMade) =>
-        at is { } time && today.DayOfWeek == DayOfWeek.Monday && now >= time && seimasSitsThisWeek && !alreadyMade;
+    /// <summary>The arguments per side a summary holds (design 8.4): the most endorsed.</summary>
+    public const int ReasonsPerSide = 2;
 
-    /// <summary>The before-vote summary: from the set time on the working day before the sitting, once per sitting.</summary>
-    public static bool BeforeVoteDue(DateOnly today, TimeOnly now, TimeOnly? at, DateOnly sitting, bool alreadyMade) =>
-        at is { } time && today == WorkingDayBefore(sitting) && now >= time && !alreadyMade;
+    /// <summary>The Monday whose weekly summary is the next to go: today if it is Monday, otherwise the coming one.</summary>
+    public static DateOnly WeeklySendingDay(DateOnly today) => today.AddDays((8 - (int)today.DayOfWeek) % 7);
+
+    /// <summary>A Vilnius day at a Vilnius time, as a moment.</summary>
+    public static DateTimeOffset At(DateOnly day, TimeOnly time) => FromVilnius(day.ToDateTime(time));
+
+    /// <summary>A Vilnius wall-clock time as a moment; one the clocks skip in spring is read an hour later.</summary>
+    private static DateTimeOffset FromVilnius(DateTime local)
+    {
+        local = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
+        if (VilniusTime.Zone.IsInvalidTime(local))
+        {
+            local = local.AddHours(1);
+        }
+
+        return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(local, VilniusTime.Zone), TimeSpan.Zero);
+    }
+
+    /// <summary>
+    /// When a summary that goes at <paramref name="sendAt"/> is prepared (design 8.19.2, owner 2026-11-17):
+    /// <paramref name="reviewHours"/> earlier on the Vilnius clock, so Monday 07:00 is prepared on Sunday 07:00 whatever the
+    /// clocks did that night.
+    /// </summary>
+    public static DateTimeOffset PreparedAt(DateTimeOffset sendAt, int reviewHours) =>
+        FromVilnius(TimeZoneInfo.ConvertTime(sendAt, VilniusTime.Zone).DateTime.AddHours(-reviewHours));
+
+    /// <summary>
+    /// A weekly or before-vote summary is prepared from its preparation time until its sending day ends in Vilnius, once
+    /// (design 8.19.2). One found after its sending time (the worker was down) is prepared and goes in the same pass.
+    /// </summary>
+    public static bool PreparationDue(DateTimeOffset now, DateTimeOffset sendAt, int reviewHours, bool alreadyMade) =>
+        !alreadyMade && now >= PreparedAt(sendAt, reviewHours) && VilniusTime.DateOf(now) <= VilniusTime.DateOf(sendAt);
+
+    /// <summary>A prepared summary goes once its time has come; nobody approves it (owner, 2026-11-17).</summary>
+    public static bool SendingDue(DateTimeOffset now, DateTimeOffset? dueAt) => dueAt is not { } at || now >= at;
 
     /// <summary>A record enters summaries when it reached its own threshold and its sending is not held.</summary>
     public static bool Eligible(DigestCandidate candidate) => candidate.ReachedThreshold && !candidate.Held;

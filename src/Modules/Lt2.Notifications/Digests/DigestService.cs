@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Lt2.Notifications.Infrastructure;
 using Lt2.Notifications.MpMail;
-using Lt2.Notifications.Templates;
 using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -9,11 +8,14 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Lt2.Notifications.Digests;
 
 /// <summary>
-/// The summaries (design 8.4, 8.7, 8.9, 8.19): the weekly and before-vote rules, the per-MP ceiling, eligibility by threshold,
-/// held sending, the frozen snapshot with only arguments a moderator has seen, both sides with the 30-day counts and the surge
-/// note. While sending is off (<c>Digest:Sending</c>, or a lock of 8.19.1) a summary is a dry run and nothing reaches the
-/// outbox; otherwise it waits for a moderator or is sent, each MP's email queued with its address from the Parliament module's
-/// one call for sending. Every summary is made, let go, declined and expired under one lock, one at a time.
+/// The summaries (design 8.4, 8.7, 8.9, 8.19; owner 2026-11-17: reviewed a day ahead). A weekly or before-vote summary is
+/// prepared <c>Digest:ReviewHours</c> before its time: which bills (eligible and not held then) and, per bill and side, which
+/// arguments (the most endorsed published ones) are fixed, and every moderator and administrator is told. Moderators may hide
+/// an argument (the next of its side comes in), hold a bill (it drops out), approve it ("Patvirtinti": reviewed, it still goes at
+/// its time) or decline it ("Nesiųsti"); if nobody acts it goes at its time as prepared. When it goes every number is read
+/// then and the snapshot and public copy are made: a dry run while sending is off (<c>Digest:Sending</c>, or a lock of 8.19.1),
+/// otherwise each MP's email is queued with its address from the Parliament module's one call for sending. Every summary is
+/// prepared, changed and let go under one lock, one at a time.
 /// </summary>
 internal sealed class DigestService(
     IDbContextFactory<NotificationsDb> contexts,
@@ -21,69 +23,100 @@ internal sealed class DigestService(
     IMpDirectory mps,
     ISettings settings,
     IAuditLog audit,
+    IOutbox outbox,
+    IStaffAddresses staff,
+    IMpLinks links,
     MpSender sender,
+    MailKeys keys,
     MailLocks locks,
-    MpMailTemplates templates,
     TimeProvider clock) : IDigests
 {
     /// <summary>Summaries are made one at a time, so the weekly ceiling, "one urgent a week" and one send hold (design 6.8).</summary>
     internal const string LockSql = "SELECT pg_advisory_xact_lock(hashtextextended('lt2.digests', 0))";
 
+    /// <summary>The moderators' summaries screen (<c>DigestRoutes.ModerationPage</c> in the contracts; a unit test pins them).</summary>
+    internal const string ReviewPath = "/moderavimas/suvestines";
+
     /// <summary>The import does not know the bills' lead committees yet (design 8.19.3): that group of the order is empty.</summary>
     private static readonly IReadOnlySet<string> NoLeadCommittees = new HashSet<string>();
+
+    /// <summary>The statuses of a summary that has gone or was declined, which the public copy shows.</summary>
+    private static readonly string[] PublicStatuses = [RunStatuses.DryRun, RunStatuses.Sent, RunStatuses.Cancelled];
 
     public async Task<IReadOnlyList<DigestRunInfo>> RunDueAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
         now = now.ToUniversalTime();
-        await ExpireDueAsync(now, cancellationToken);
-        var local = TimeZoneInfo.ConvertTime(now, VilniusTime.Zone);
-        var today = DateOnly.FromDateTime(local.DateTime);
-        var time = TimeOnly.FromDateTime(local.DateTime);
-        var weekStart = DigestRules.WeekStart(today);
+        var today = VilniusTime.DateOf(now);
+        var reviewHours = await settings.GetAsync(SettingKeys.DigestReviewHours, cancellationToken);
         var weeklyAt = DigestRules.TimeOf(await settings.GetAsync(SettingKeys.DigestWeekly, cancellationToken));
         var beforeVoteAt = DigestRules.TimeOf(await settings.GetAsync(SettingKeys.DigestBeforeVote, cancellationToken));
-        var sittings = await mps.SittingDaysAsync(weekStart, today.AddDays(10), cancellationToken);
+        var touched = new List<Guid>();
 
-        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var sendingOn = (await StateAsync(db, cancellationToken)).On;
-        var made = new List<DigestRunInfo>();
-        IReadOnlyList<DigestCandidate>? candidates = null;
-
-        // "Already made" counts a weekly summary of any status: a declined one is not made again that week.
-        Task<bool> WeeklyMadeAsync() =>
-            db.DigestRuns.AnyAsync(r => r.Kind == DigestRules.Weekly && r.RunDate >= weekStart && r.RunDate < weekStart.AddDays(7), cancellationToken);
-        if (DigestRules.WeeklyDue(today, time, weeklyAt, sittings.Any(d => d >= weekStart && d < weekStart.AddDays(7)), await WeeklyMadeAsync()))
+        await using (var db = await contexts.CreateDbContextAsync(cancellationToken))
         {
-            candidates ??= await source.CandidatesAsync(cancellationToken);
-            var last = await LastParticipantsAsync(db, sendingOn, cancellationToken);
-            var notable = await settings.GetAsync(SettingKeys.DigestNotableChange, cancellationToken);
-            var items = DigestRules.WeeklyItems(candidates, weekStart, last, notable);
-            if (items.Count > 0
-                && await MakeAsync(db, DigestRules.Weekly, today, null, items, null, now, cancellationToken, stillDue: async () => !await WeeklyMadeAsync()) is { IsSuccess: true } weekly)
+            var sendingOn = (await StateAsync(db, cancellationToken)).On;
+            IReadOnlyList<DigestCandidate>? candidates = null;
+
+            // The weekly summary: the coming Monday's (today's on a Monday), in a week when the Seimas sits, once a week. "Already
+            // made" counts a summary of any status: a declined one is not made again that week.
+            if (weeklyAt is { } weeklyTime)
             {
-                made.Add(weekly.Value);
+                var monday = DigestRules.WeeklySendingDay(today);
+                var sendAt = DigestRules.At(monday, weeklyTime);
+                Task<bool> WeeklyMadeAsync() =>
+                    db.DigestRuns.AnyAsync(r => r.Kind == DigestRules.Weekly && r.RunDate >= monday && r.RunDate < monday.AddDays(7), cancellationToken);
+                if (DigestRules.PreparationDue(now, sendAt, reviewHours, await WeeklyMadeAsync())
+                    && (await mps.SittingDaysAsync(monday, monday.AddDays(6), cancellationToken)).Count > 0)
+                {
+                    candidates ??= await source.CandidatesAsync(cancellationToken);
+                    var last = await LastParticipantsAsync(db, sendingOn, cancellationToken);
+                    var notable = await settings.GetAsync(SettingKeys.DigestNotableChange, cancellationToken);
+                    var items = DigestRules.WeeklyItems(candidates, monday, last, notable);
+                    if (items.Count > 0 && await PrepareAsync(db, DigestRules.Weekly, monday, null, sendAt, items, now, null, async () => !await WeeklyMadeAsync(), cancellationToken) is { } weekly)
+                    {
+                        touched.Add(weekly.Id);
+                    }
+                }
+            }
+
+            // The before-vote summary: on the working day before a sitting, once per sitting.
+            if (beforeVoteAt is { } beforeVoteTime)
+            {
+                foreach (var sitting in await mps.SittingDaysAsync(today.AddDays(1), today.AddDays(10), cancellationToken))
+                {
+                    var day = DigestRules.WorkingDayBefore(sitting);
+                    var sendAt = DigestRules.At(day, beforeVoteTime);
+                    Task<bool> ExistsAsync() => db.DigestRuns.AnyAsync(r => r.Kind == DigestRules.BeforeVote && r.SittingDate == sitting, cancellationToken);
+                    if (!DigestRules.PreparationDue(now, sendAt, reviewHours, await ExistsAsync()))
+                    {
+                        continue;
+                    }
+
+                    candidates ??= await source.CandidatesAsync(cancellationToken);
+                    var covered = await CoveredByMondayAsync(db, DigestRules.WeekStart(sitting), sitting, sendingOn, cancellationToken);
+                    var items = DigestRules.BeforeVoteItems(candidates, sitting, covered);
+                    if (items.Count > 0 && await PrepareAsync(db, DigestRules.BeforeVote, day, sitting, sendAt, items, now, null, async () => !await ExistsAsync(), cancellationToken) is { } beforeVote)
+                    {
+                        touched.Add(beforeVote.Id);
+                    }
+                }
+            }
+
+            // Every prepared summary whose time has come goes, as prepared: nobody approves it.
+            var due = await db.DigestRuns.AsNoTracking()
+                .Where(r => r.Status == RunStatuses.Prepared && (r.DueAt == null || r.DueAt <= now))
+                .OrderBy(r => r.DueAt).Select(r => r.Id).ToListAsync(cancellationToken);
+            foreach (var id in due)
+            {
+                await GoAsync(id, now, cancellationToken);
+                touched.Add(id);
             }
         }
 
-        foreach (var sitting in sittings.Where(d => d > today))
-        {
-            Task<bool> ExistsAsync() => db.DigestRuns.AnyAsync(r => r.Kind == DigestRules.BeforeVote && r.SittingDate == sitting, cancellationToken);
-            if (!DigestRules.BeforeVoteDue(today, time, beforeVoteAt, sitting, await ExistsAsync()))
-            {
-                continue;
-            }
-
-            candidates ??= await source.CandidatesAsync(cancellationToken);
-            var covered = await CoveredByMondayAsync(db, DigestRules.WeekStart(sitting), sitting, sendingOn, cancellationToken);
-            var items = DigestRules.BeforeVoteItems(candidates, sitting, covered);
-            if (items.Count > 0
-                && await MakeAsync(db, DigestRules.BeforeVote, today, sitting, items, null, now, cancellationToken, stillDue: async () => !await ExistsAsync()) is { IsSuccess: true } beforeVote)
-            {
-                made.Add(beforeVote.Value);
-            }
-        }
-
-        return made;
+        await using var read = await contexts.CreateDbContextAsync(cancellationToken);
+        var ids = touched.Distinct().ToList();
+        var runs = await read.DigestRuns.AsNoTracking().Where(r => ids.Contains(r.Id)).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
+        return await InfoAsync(read, runs, cancellationToken);
     }
 
     public async Task<Result<DigestRunInfo>> UrgentAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken)
@@ -110,14 +143,23 @@ internal sealed class DigestService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var weekStart = DigestRules.WeekStart(today);
 
-        // Checked again under the lock, so two moderators approving at once make one urgent summary.
-        return await MakeAsync(
-            db, DigestRules.Urgent, today, null, [candidate], moderator, now, cancellationToken, statement.Trim(),
-            stillDue: async () => !await (from r in db.DigestRuns
-                                          join i in db.DigestItems on r.Id equals i.RunId
-                                          where r.Kind == DigestRules.Urgent && i.RecordId == recordId && r.RunDate >= weekStart && r.RunDate < weekStart.AddDays(7)
-                                          select r.Id).AnyAsync(cancellationToken),
-            notDue: Error.Conflict("digest.urgent-already"));
+        // Checked again under the lock, so two moderators approving at once make one urgent summary. Approving it is its
+        // review (design 8.4): it is prepared and goes at once.
+        var prepared = await PrepareAsync(
+            db, DigestRules.Urgent, today, null, now, [candidate], now, (moderator, statement.Trim()),
+            async () => !await (from r in db.DigestRuns
+                                join i in db.DigestItems on r.Id equals i.RunId
+                                where r.Kind == DigestRules.Urgent && i.RecordId == recordId && r.RunDate >= weekStart && r.RunDate < weekStart.AddDays(7)
+                                select r.Id).AnyAsync(cancellationToken),
+            cancellationToken);
+        if (prepared is null)
+        {
+            return Error.Conflict("digest.urgent-already");
+        }
+
+        await GoAsync(prepared.Id, now, cancellationToken, moderator);
+        var run = await db.DigestRuns.AsNoTracking().FirstAsync(r => r.Id == prepared.Id, cancellationToken);
+        return (await InfoAsync(db, [run], cancellationToken))[0];
     }
 
     public async Task<DigestSending> SendingAsync(CancellationToken cancellationToken)
@@ -127,14 +169,11 @@ internal sealed class DigestService(
         return new DigestSending(state.Mode, state.Setting, state.Lock);
     }
 
-    public async Task<Result<DigestRunInfo>> SendAsync(Guid runId, StaffActor moderator, CancellationToken cancellationToken)
+    public async Task<Result<DigestRunInfo>> ApproveAsync(Guid runId, StaffActor moderator, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(moderator);
         var now = clock.GetUtcNow();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var recipients = (await mps.SittingMpsAsync(cancellationToken)).Where(m => m.HasOfficialAddress).ToList();
-        var maxPerWeek = await settings.GetAsync(SettingKeys.DigestMaxPerWeek, cancellationToken);
-
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.ExecuteSqlRawAsync(LockSql, cancellationToken);
         var run = await db.DigestRuns.FirstOrDefaultAsync(r => r.Id == runId && r.Kind != SendingRules.Introduction, cancellationToken);
@@ -143,44 +182,18 @@ internal sealed class DigestService(
             return Error.NotFound("digest.not-found");
         }
 
-        // Read under the lock: a second moderator pressing at the same moment finds it sent already.
-        if (run.Status != RunStatuses.Waiting)
+        // Read under the lock: a second moderator pressing at the same moment finds it approved already.
+        if (run.Status != RunStatuses.Prepared || run.ApprovedAt is not null)
         {
-            return Error.Conflict("digest.not-waiting");
+            return Error.Conflict("digest.not-prepared");
         }
 
-        if (SendingRules.Expired(now, run.ExpiresAt))
-        {
-            await ExpireAsync(db, run, now, cancellationToken);
-            await db.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            return Error.Conflict("digest.expired");
-        }
-
-        var state = await StateAsync(db, cancellationToken);
-        if (!state.On)
-        {
-            return Error.Conflict("digest.sending-off");
-        }
-
-        // Recipients are worked out now, not when it was made (design 8.19.2): preferences, suppression and the ceiling as they are.
-        var info = (await InfoAsync(db, [run], cancellationToken))[0];
-        var weekStart = DigestRules.WeekStart(run.RunDate);
-        var counts = await CeilingCountsAsync(db, weekStart, sendingOn: true, exclude: run.Id, cancellationToken);
-        var plan = await PlanAsync(db, run.Kind, recipients, counts, maxPerWeek, cancellationToken);
-        var waiting = await db.DigestDeliveries.Where(d => d.RunId == run.Id).ToListAsync(cancellationToken);
-        db.DigestDeliveries.RemoveRange(waiting);
-        await db.SaveChangesAsync(cancellationToken);
-
-        // The MP's party numbers as frozen when it was made; an MP who joined since has none in this summary.
-        var partyOfMp = waiting.Where(d => d.Recipient == Recipients.Official).ToDictionary(d => d.MpSlug, d => d.PartyNumbers);
-        await LetGoAsync(db, run, info, plan, slug => partyOfMp.GetValueOrDefault(slug) ?? "[]", now, cancellationToken);
-        run.DecidedBy = moderator.UserId;
-        run.DecidedAt = now;
+        run.ApprovedBy = moderator.UserId;
+        run.ApprovedAt = now;
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
-            new AuditEntry("digest.sent", moderator.UserId, moderator.Role, "digest:" + run.Id,
-                JsonSerializer.SerializeToElement(new { kind = run.Kind, mps = run.SentCount }, JsonSerializerOptions.Web), moderator.IpHash),
+            new AuditEntry("digest.approved", moderator.UserId, moderator.Role, "digest:" + run.Id,
+                JsonSerializer.SerializeToElement(new { kind = run.Kind, dueAt = run.DueAt }, JsonSerializerOptions.Web), moderator.IpHash),
             transaction.GetDbTransaction(),
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -201,6 +214,7 @@ internal sealed class DigestService(
         }
 
         var now = clock.GetUtcNow();
+        var candidates = await source.CandidatesAsync(cancellationToken);
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.ExecuteSqlRawAsync(LockSql, cancellationToken);
@@ -210,17 +224,17 @@ internal sealed class DigestService(
             return Error.NotFound("digest.not-found");
         }
 
-        if (run.Status != RunStatuses.Waiting)
+        if (run.Status != RunStatuses.Prepared)
         {
-            return Error.Conflict("digest.not-waiting");
+            return Error.Conflict("digest.not-prepared");
         }
 
+        // The public copy says it was not sent and shows what it held at that moment, as it would have gone then.
+        await FreezeAsync(db, run, candidates, now, cancellationToken);
         run.Status = RunStatuses.Cancelled;
         run.Statement = statement.Trim();
-        run.DecidedBy = moderator.UserId;
-        run.DecidedAt = now;
-        await db.DigestDeliveries.Where(d => d.RunId == run.Id && d.Status == DeliveryStatuses.Waiting)
-            .ExecuteUpdateAsync(s => s.SetProperty(d => d.Status, DeliveryStatuses.NotSent), cancellationToken);
+        run.CancelledBy = moderator.UserId;
+        run.CancelledAt = now;
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             new AuditEntry("digest.cancelled", moderator.UserId, moderator.Role, "digest:" + run.Id,
@@ -231,32 +245,10 @@ internal sealed class DigestService(
         return (await InfoAsync(db, [run], cancellationToken))[0];
     }
 
-    public async Task<int> ExpireDueAsync(DateTimeOffset now, CancellationToken cancellationToken)
-    {
-        now = now.ToUniversalTime();
-        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        if (!await db.DigestRuns.AnyAsync(r => r.Status == RunStatuses.Waiting && r.ExpiresAt <= now, cancellationToken))
-        {
-            return 0;
-        }
-
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await db.Database.ExecuteSqlRawAsync(LockSql, cancellationToken);
-        var due = await db.DigestRuns.Where(r => r.Status == RunStatuses.Waiting && r.ExpiresAt <= now).ToListAsync(cancellationToken);
-        foreach (var run in due)
-        {
-            await ExpireAsync(db, run, now, cancellationToken);
-        }
-
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        return due.Count;
-    }
-
     public async Task<IReadOnlyList<DigestRunInfo>> ListAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var runs = await db.DigestRuns.AsNoTracking().Where(r => r.Kind != SendingRules.Introduction)
+        var runs = await db.DigestRuns.AsNoTracking().Where(r => r.Kind != SendingRules.Introduction && PublicStatuses.Contains(r.Status))
             .OrderByDescending(r => r.CreatedAt).Take(200).ToListAsync(cancellationToken);
         return await InfoAsync(db, runs, cancellationToken);
     }
@@ -264,7 +256,7 @@ internal sealed class DigestService(
     public async Task<IReadOnlyList<DigestRunInfo>> OnDateAsync(DateOnly date, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var runs = await db.DigestRuns.AsNoTracking().Where(r => r.RunDate == date && r.Kind != SendingRules.Introduction)
+        var runs = await db.DigestRuns.AsNoTracking().Where(r => r.RunDate == date && r.Kind != SendingRules.Introduction && PublicStatuses.Contains(r.Status))
             .OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
         return await InfoAsync(db, runs, cancellationToken);
     }
@@ -273,55 +265,94 @@ internal sealed class DigestService(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var runIds = db.DigestItems.Where(i => i.RecordId == recordId).Select(i => i.RunId);
-        var runs = await db.DigestRuns.AsNoTracking().Where(r => runIds.Contains(r.Id)).OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken);
+        var runs = await db.DigestRuns.AsNoTracking().Where(r => runIds.Contains(r.Id) && PublicStatuses.Contains(r.Status))
+            .OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken);
         return await InfoAsync(db, runs, cancellationToken, recordId);
     }
 
-    public async Task<Result<DigestPreview>> PreviewAsync(Guid runId, string mpSlug, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<DigestReview>> ReviewAsync(CancellationToken cancellationToken)
     {
+        var now = clock.GetUtcNow();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var run = await db.DigestRuns.AsNoTracking().FirstOrDefaultAsync(r => r.Id == runId && r.Kind != SendingRules.Introduction, cancellationToken);
-        var delivery = await db.DigestDeliveries.AsNoTracking()
-            .FirstOrDefaultAsync(d => d.RunId == runId && d.MpSlug == mpSlug && d.Recipient == Recipients.Official, cancellationToken);
-        var mp = await mps.FindMpAsync(mpSlug, cancellationToken);
-        if (run is null || delivery is null || mp is null)
+        var prepared = await db.DigestRuns.AsNoTracking().Where(r => r.Status == RunStatuses.Prepared)
+            .OrderBy(r => r.DueAt).Select(r => r.Id).ToListAsync(cancellationToken);
+        var result = new List<DigestReview>();
+        if (prepared.Count > 0)
         {
-            return Error.NotFound("digest.not-found");
+            var candidates = (await source.CandidatesAsync(cancellationToken)).ToDictionary(c => c.RecordId);
+            var state = await StateAsync(db, cancellationToken);
+            var recipients = (await mps.SittingMpsAsync(cancellationToken)).Where(m => m.HasOfficialAddress).ToList();
+            var maxPerWeek = await settings.GetAsync(SettingKeys.DigestMaxPerWeek, cancellationToken);
+            foreach (var id in prepared)
+            {
+                // An argument hidden since the last look is replaced now and stays replaced, so the list shown is the one that goes.
+                var pool = await ReconcileAsync(db, id, now, cancellationToken);
+                if (pool is null)
+                {
+                    continue;
+                }
+
+                var run = await db.DigestRuns.AsNoTracking().FirstAsync(r => r.Id == id, cancellationToken);
+                var items = await db.DigestItems.AsNoTracking().Where(i => i.RunId == id).OrderBy(i => i.Position).ToListAsync(cancellationToken);
+                var choices = await db.DigestChoices.AsNoTracking().Where(c => c.RunId == id && c.LeftAt == null).ToListAsync(cancellationToken);
+                var byId = pool.ToDictionary(r => r.Id);
+                var counts = await CeilingCountsAsync(db, DigestRules.WeekStart(run.RunDate), state.On, exclude: run.Id, cancellationToken);
+                var wouldGo = state.On
+                    ? (await PlanAsync(db, run.Kind, recipients, counts, maxPerWeek, cancellationToken)).Count(p => p.Official is DeliveryStatuses.Queued or DeliveryStatuses.Introduced)
+                    : recipients.Count(m => DigestRules.WithinCeiling(counts.GetValueOrDefault(m.Slug), maxPerWeek, run.Kind == DigestRules.Urgent));
+                result.Add(new DigestReview(
+                    run.Id, run.Kind, run.RunDate, run.SittingDate, run.CreatedAt, run.DueAt, run.Status, wouldGo, 0, null, run.ApprovedAt, null,
+                    items.Select(i =>
+                    {
+                        var c = candidates.GetValueOrDefault(i.RecordId);
+                        var reasons = Sides()
+                            .SelectMany(side => choices.Where(x => x.RecordId == i.RecordId && x.Side == side && byId.ContainsKey(x.ReasonId))
+                                .Select(x => (Choice: x, Reason: byId[x.ReasonId]))
+                                .OrderByDescending(x => x.Reason.Endorsements).ThenBy(x => x.Choice.Place)
+                                .Select(x => new DigestReviewReason(x.Reason.Id, side, x.Reason.Text, x.Reason.Endorsements, x.Choice.Replacement)))
+                            .ToList();
+                        return c is null
+                            ? new DigestReviewItem(i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.ForCount, i.ForOlderThan30Days, i.AgainstCount,
+                                i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, Held: false, Gone: true, reasons)
+                            : new DigestReviewItem(i.RecordId, c.BillNumber, c.BillTitle, c.Planned?.Stage ?? i.Stage, c.Planned?.Date ?? i.PlannedDate, c.For,
+                                c.ForOlderThan30Days, c.Against, c.AgainstOlderThan30Days, c.SurgeSharePercent, c.SurgeWindowHours, c.Held, Gone: false, reasons);
+                    }).ToList()));
+            }
         }
 
-        // The same text the email carries (design 8.9), with the MP's own numbers and response as they are now; the MP's
-        // personal links are left out.
-        var info = (await InfoAsync(db, [run], cancellationToken))[0];
-        var party = JsonSerializer.Deserialize<List<DeliveryParty>>(delivery.PartyNumbers, JsonSerializerOptions.Web) ?? [];
-        var responses = await source.PublishedResponsesAsync(info.Items.Select(i => i.BillNumber).ToList(), cancellationToken);
-        var model = Email(info, new MpRecipient(mp.Slug, mp.FirstName, mp.LastName, null, true, mp.SeimasPersonId), "", Recipients.Official,
-            bill => party.FirstOrDefault(p => p.BillNumber == bill), responses, MpMailPaths.Preferences("…"), null, null, null);
-        var (subject, paragraphs) = templates.Text(model);
-        var text = string.Join("\n\n", paragraphs) + "\n";
-        if (templates.SkippedNote(delivery.Status) is { } note)
+        // Then the latest that went or were declined, as they went.
+        var gone = await db.DigestRuns.AsNoTracking()
+            .Where(r => r.Kind != SendingRules.Introduction && r.Status != RunStatuses.Prepared)
+            .OrderByDescending(r => r.SentAt ?? r.CancelledAt ?? r.CreatedAt).Take(30).ToListAsync(cancellationToken);
+        var goneItems = await db.DigestItems.AsNoTracking().Where(i => gone.Select(r => r.Id).Contains(i.RunId)).OrderBy(i => i.Position).ToListAsync(cancellationToken);
+        foreach (var run in gone)
         {
-            text += "\n" + note + "\n";
+            result.Add(new DigestReview(
+                run.Id, run.Kind, run.RunDate, run.SittingDate, run.CreatedAt, run.DueAt, run.Status,
+                run.Status == RunStatuses.Sent ? run.SentCount : run.MpCount, run.SentCount, run.SentAt, run.ApprovedAt, run.Statement,
+                goneItems.Where(i => i.RunId == run.Id).Select(i => new DigestReviewItem(
+                    i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.ForCount, i.ForOlderThan30Days, i.AgainstCount,
+                    i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, false, false,
+                    Snapshot(i).Select(r => new DigestReviewReason(null, r.Side, r.Text, r.Endorsements, false)).ToList())).ToList()));
         }
 
-        return new DigestPreview(subject, text);
+        return result;
     }
 
-    public async Task<IReadOnlyList<DigestMpInfo>> MpsAsync(Guid runId, CancellationToken cancellationToken)
+    public async Task<DigestPending?> PendingAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var rows = await db.DigestDeliveries.AsNoTracking().Where(d => d.RunId == runId && d.Recipient == Recipients.Official)
-            .Select(d => new { d.MpSlug, d.SeimasPersonId, d.Status }).ToListAsync(cancellationToken);
-        var names = await mps.MpsAsync(rows.Select(r => r.SeimasPersonId).Where(p => p != 0).Distinct().ToList(), cancellationToken);
-        var lithuanian = StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("lt-LT"), false);
+        var run = await db.DigestRuns.AsNoTracking()
+            .Where(r => r.Status == RunStatuses.Prepared && r.ApprovedAt == null)
+            .OrderBy(r => r.DueAt).FirstOrDefaultAsync(cancellationToken);
+        if (run is null)
+        {
+            return null;
+        }
 
-        // The names in the nominative, by last name (a row from before 8.19 has no person number and keeps its slug).
-        return rows
-            .Select(r => names.GetValueOrDefault(r.SeimasPersonId) is { } mp
-                ? new DigestMpInfo(r.MpSlug, mp.FirstName, mp.LastName, r.Status)
-                : new DigestMpInfo(r.MpSlug, "", r.MpSlug, r.Status))
-            .OrderBy(m => m.LastName, lithuanian)
-            .ThenBy(m => m.FirstName, lithuanian)
-            .ToList();
+        var bills = await db.DigestItems.CountAsync(i => i.RunId == run.Id, cancellationToken);
+        var reasons = await db.DigestChoices.CountAsync(c => c.RunId == run.Id && c.LeftAt == null, cancellationToken);
+        return new DigestPending(run.DueAt ?? run.CreatedAt, bills, reasons);
     }
 
     /// <summary>Sending as it is now (design 8.19.1): the setting, the letter, and the deployment's word on invented data.</summary>
@@ -332,45 +363,41 @@ internal sealed class DigestService(
             await locks.InventedDataAsync(ct),
             locks.MailCaught);
 
+    private static string[] Sides() => ["for", "against"];
+
     /// <summary>
-    /// Makes one summary under the summaries' lock: <paramref name="stillDue"/> is asked again under it (another worker or
-    /// moderator may have made the same one meanwhile), and the per-MP ceiling counts what is there by then. A dry run while
-    /// sending is off; otherwise waiting (each MP's delivery worked out for the preview) or sent at once.
+    /// Prepares one summary under the summaries' lock (design 8.19.2): <paramref name="stillDue"/> is asked again under it
+    /// (another worker or moderator may have made the same one meanwhile). Fixes the bills and, per bill and side, the most
+    /// endorsed published arguments; tells every moderator and administrator, except for an urgent summary, which a moderator
+    /// approves (<paramref name="approved"/>) and which goes at once. Null when it was made meanwhile.
     /// </summary>
-    private async Task<Result<DigestRunInfo>> MakeAsync(
-        NotificationsDb db, string kind, DateOnly today, DateOnly? sitting, IReadOnlyList<DigestCandidate> items, StaffActor? approvedBy,
-        DateTimeOffset now, CancellationToken ct, string? statement = null, Func<Task<bool>>? stillDue = null, Error? notDue = null)
+    private async Task<DigestRun?> PrepareAsync(
+        NotificationsDb db, string kind, DateOnly runDate, DateOnly? sitting, DateTimeOffset dueAt, IReadOnlyList<DigestCandidate> items, DateTimeOffset now,
+        (StaffActor Moderator, string Statement)? approved, Func<Task<bool>> stillDue, CancellationToken ct)
     {
-        var recipients = (await mps.SittingMpsAsync(ct)).Where(m => m.HasOfficialAddress).ToList();
-        var maxPerWeek = await settings.GetAsync(SettingKeys.DigestMaxPerWeek, ct);
-        var approvalHours = await settings.GetAsync(SettingKeys.DigestApprovalHours, ct);
-        var weekStart = DigestRules.WeekStart(today);
-        var party = await source.PartyNumbersAsync(items.Select(i => i.RecordId).ToList(), ct);
+        var pool = await source.ReasonPoolAsync(items.Select(i => i.RecordId).ToList(), now, ct);
+        var chosen = ChoiceRules.Choose(pool, DigestRules.ReasonsPerSide);
+        var moderators = approved is null ? await staff.ModeratorAddressesAsync(ct) : [];
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.ExecuteSqlRawAsync(LockSql, ct);
-        if (stillDue is not null && !await stillDue())
+        if (!await stillDue())
         {
-            return notDue ?? Error.Conflict("digest.made-already");
+            return null;
         }
 
-        var state = await StateAsync(db, ct);
-        var counts = await CeilingCountsAsync(db, weekStart, state.On, exclude: null, ct);
         var run = new DigestRun
         {
             Id = Ids.New(clock),
             Kind = kind,
-            RunDate = today,
+            RunDate = runDate,
             SittingDate = sitting,
             CreatedAt = now.ToUniversalTime(),
-            ApprovedBy = approvedBy?.UserId,
-            Status = SendingRules.NewRunStatus(kind, state.Mode),
+            DueAt = dueAt.ToUniversalTime(),
+            Status = RunStatuses.Prepared,
+            ApprovedBy = approved?.Moderator.UserId,
+            ApprovedAt = approved is null ? null : now.ToUniversalTime(),
         };
-        if (run.Status == RunStatuses.Waiting)
-        {
-            run.ExpiresAt = SendingRules.ExpiresAt(run.CreatedAt, approvalHours, SendingRules.SittingOf(sitting, today, items.Select(i => i.Planned?.Date)));
-        }
-
         db.DigestRuns.Add(run);
         var position = 0;
         foreach (var c in items)
@@ -391,26 +418,190 @@ internal sealed class DigestService(
                 AgainstOlderThan30Days = c.AgainstOlderThan30Days,
                 SurgeSharePercent = c.SurgeSharePercent,
                 SurgeWindowHours = c.SurgeWindowHours,
-                Reasons = JsonSerializer.Serialize(c.Reasons, JsonSerializerOptions.Web),
             });
         }
 
+        foreach (var c in chosen)
+        {
+            db.DigestChoices.Add(new DigestChoice { RunId = run.Id, ReasonId = c.ReasonId, RecordId = c.RecordId, Side = c.Side, Place = c.Place });
+        }
+
+        await db.SaveChangesAsync(ct);
+        var dbTransaction = transaction.GetDbTransaction();
+        foreach (var address in moderators)
+        {
+            await outbox.EnqueueAsync(
+                OutboxMessage.Create(MessageKinds.DigestReviewEmail, new DigestReviewEmail(address, kind, run.DueAt!.Value, items.Count, chosen.Count, ReviewPath)),
+                dbTransaction,
+                ct);
+        }
+
+        await audit.WriteAsync(
+            approved is { } by
+                ? new AuditEntry("digest.urgent.approved", by.Moderator.UserId, by.Moderator.Role, "digest:" + run.Id,
+                    JsonSerializer.SerializeToElement(new { bills = items.Select(i => i.BillNumber), statement = by.Statement }, JsonSerializerOptions.Web), by.Moderator.IpHash)
+                : new AuditEntry("digest.prepared", null, null, "digest:" + run.Id,
+                    JsonSerializer.SerializeToElement(new { kind, dueAt = run.DueAt, bills = items.Count, reasons = chosen.Count }, JsonSerializerOptions.Web)),
+            dbTransaction,
+            ct);
+        await transaction.CommitAsync(ct);
+        return run;
+    }
+
+    /// <summary>
+    /// Hiding brings the next one in (design 8.19.2): in its own transaction under the lock, every chosen argument of a prepared
+    /// summary no longer published leaves and the next of its side by "Man svarbu" now comes in, from the arguments public when
+    /// it was prepared. Returns that pool, or null when the run is no longer prepared.
+    /// </summary>
+    private async Task<IReadOnlyList<DigestPoolReason>?> ReconcileAsync(NotificationsDb db, Guid runId, DateTimeOffset now, CancellationToken ct)
+    {
+        var run = await db.DigestRuns.AsNoTracking().FirstOrDefaultAsync(r => r.Id == runId, ct);
+        if (run is not { Status: RunStatuses.Prepared })
+        {
+            return null;
+        }
+
+        var records = await db.DigestItems.AsNoTracking().Where(i => i.RunId == runId).Select(i => i.RecordId).ToListAsync(ct);
+        var pool = await source.ReasonPoolAsync(records, run.CreatedAt, ct);
+        var current = await db.DigestChoices.AsNoTracking().Where(c => c.RunId == runId).ToListAsync(ct);
+        if (ChoiceRules.Replace(current.Select(ToChosen).ToList(), pool).IsEmpty)
+        {
+            return pool;
+        }
+
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        await db.Database.ExecuteSqlRawAsync(LockSql, ct);
+        if (!await db.DigestRuns.AnyAsync(r => r.Id == runId && r.Status == RunStatuses.Prepared, ct))
+        {
+            return null;
+        }
+
+        await ApplyReplacementsAsync(db, runId, pool, now, ct);
+        await transaction.CommitAsync(ct);
+        return pool;
+    }
+
+    /// <summary>Applies <see cref="ChoiceRules.Replace"/> to a run's chosen arguments, in the caller's transaction.</summary>
+    private static async Task ApplyReplacementsAsync(NotificationsDb db, Guid runId, IReadOnlyList<DigestPoolReason> pool, DateTimeOffset now, CancellationToken ct)
+    {
+        var tracked = await db.DigestChoices.Where(c => c.RunId == runId).ToListAsync(ct);
+        var change = ChoiceRules.Replace(tracked.Select(ToChosen).ToList(), pool);
+        foreach (var leaving in tracked.Where(c => change.Leaving.Contains(c.ReasonId)))
+        {
+            leaving.LeftAt = now.ToUniversalTime();
+        }
+
+        foreach (var c in change.Coming)
+        {
+            db.DigestChoices.Add(new DigestChoice { RunId = runId, ReasonId = c.ReasonId, RecordId = c.RecordId, Side = c.Side, Place = c.Place, Replacement = true });
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static ChosenReason ToChosen(DigestChoice c) => new(c.ReasonId, c.RecordId, c.Side, c.Place, c.Replacement, c.LeftAt is not null);
+
+    /// <summary>
+    /// The snapshot of a prepared summary at <paramref name="now"/>, in the caller's transaction (design 8.19.2): an argument
+    /// hidden since is replaced; a bill held or no longer open drops out; every number of the rest is read now, and the chosen
+    /// arguments are written in their places with their "Man svarbu" now. Returns how many bills stay.
+    /// </summary>
+    private async Task<int> FreezeAsync(NotificationsDb db, DigestRun run, IReadOnlyList<DigestCandidate> candidates, DateTimeOffset now, CancellationToken ct)
+    {
+        var items = await db.DigestItems.Where(i => i.RunId == run.Id).OrderBy(i => i.Position).ToListAsync(ct);
+        var pool = await source.ReasonPoolAsync(items.Select(i => i.RecordId).ToList(), run.CreatedAt, ct);
+        await ApplyReplacementsAsync(db, run.Id, pool, now, ct);
+        var choices = await db.DigestChoices.AsNoTracking().Where(c => c.RunId == run.Id && c.LeftAt == null).ToListAsync(ct);
+        var byId = pool.ToDictionary(r => r.Id);
+        var byRecord = candidates.ToDictionary(c => c.RecordId);
+        var kept = 0;
+        foreach (var item in items)
+        {
+            if (!byRecord.TryGetValue(item.RecordId, out var c) || c.Held)
+            {
+                db.DigestItems.Remove(item);
+                continue;
+            }
+
+            kept++;
+            item.BillNumber = c.BillNumber;
+            item.BillTitle = c.BillTitle;
+            item.Stage = c.Planned?.Stage ?? item.Stage;
+            item.PlannedDate = c.Planned?.Date ?? item.PlannedDate;
+            item.ForCount = c.For;
+            item.ForOlderThan30Days = c.ForOlderThan30Days;
+            item.AgainstCount = c.Against;
+            item.AgainstOlderThan30Days = c.AgainstOlderThan30Days;
+            item.SurgeSharePercent = c.SurgeSharePercent;
+            item.SurgeWindowHours = c.SurgeWindowHours;
+
+            // In the order chosen, not sorted again by marks (owner, 2026-11-17); the count beside each is read now.
+            item.Reasons = JsonSerializer.Serialize(
+                Sides().SelectMany(side => choices.Where(x => x.RecordId == item.RecordId && x.Side == side && byId.ContainsKey(x.ReasonId))
+                        .OrderBy(x => x.Place)
+                        .Select(x => new DigestReason(side, byId[x.ReasonId].Text, byId[x.ReasonId].Endorsements)))
+                    .ToList(),
+                JsonSerializerOptions.Web);
+        }
+
+        await db.SaveChangesAsync(ct);
+        return kept;
+    }
+
+    /// <summary>
+    /// Lets a prepared summary go at its time (design 8.19.2), under the summaries' lock: the snapshot is made now
+    /// (<see cref="FreezeAsync"/>); with no bill left nothing goes (<c>dropped</c>); while sending is off a dry run, otherwise each
+    /// MP's delivery as things are now, the party numbers read now.
+    /// </summary>
+    private async Task GoAsync(Guid runId, DateTimeOffset now, CancellationToken ct, StaffActor? approvedBy = null)
+    {
+        var candidates = await source.CandidatesAsync(ct);
+        var recipients = (await mps.SittingMpsAsync(ct)).Where(m => m.HasOfficialAddress).ToList();
+        var maxPerWeek = await settings.GetAsync(SettingKeys.DigestMaxPerWeek, ct);
+        await using var db = await contexts.CreateDbContextAsync(ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        await db.Database.ExecuteSqlRawAsync(LockSql, ct);
+        var run = await db.DigestRuns.FirstOrDefaultAsync(r => r.Id == runId, ct);
+        if (run is not { Status: RunStatuses.Prepared })
+        {
+            return;
+        }
+
+        run.SentAt = now.ToUniversalTime();
+        if (await FreezeAsync(db, run, candidates, now, ct) == 0)
+        {
+            run.Status = RunStatuses.Dropped;
+            await db.SaveChangesAsync(ct);
+            await audit.WriteAsync(
+                new AuditEntry("digest.dropped", null, null, "digest:" + run.Id, JsonSerializer.SerializeToElement(new { kind = run.Kind }, JsonSerializerOptions.Web)),
+                transaction.GetDbTransaction(),
+                ct);
+            await transaction.CommitAsync(ct);
+            return;
+        }
+
+        var state = await StateAsync(db, ct);
+        var counts = await CeilingCountsAsync(db, DigestRules.WeekStart(run.RunDate), state.On, exclude: run.Id, ct);
+        var recordIds = await db.DigestItems.Where(i => i.RunId == run.Id).Select(i => i.RecordId).ToListAsync(ct);
+        var numbers = await db.DigestItems.AsNoTracking().Where(i => i.RunId == run.Id).Select(i => new { i.RecordId, i.BillNumber }).ToListAsync(ct);
+        var party = await source.PartyNumbersAsync(recordIds, ct);
         string PartyJson(MpRecipient mp) => JsonSerializer.Serialize(
             mp.Party is null
                 ? []
-                : items.Select(i => party.GetValueOrDefault(i.RecordId)?.FirstOrDefault(p => p.Party == mp.Party) is { } n
+                : numbers.Select(i => party.GetValueOrDefault(i.RecordId)?.FirstOrDefault(p => p.Party == mp.Party) is { } n
                         ? new DeliveryParty(i.BillNumber, n.Party, n.For, n.Against)
                         : null)
                     .OfType<DeliveryParty>()
                     .ToList(),
             JsonSerializerOptions.Web);
 
+        run.Status = SendingRules.GoneStatus(state.Mode);
         if (run.Status == RunStatuses.DryRun)
         {
-            // Sending off: as before 8.19, every MP within the ceiling would have had it.
+            // Sending off: every MP within the ceiling would have had it.
             foreach (var mp in recipients)
             {
-                var within = DigestRules.WithinCeiling(counts.GetValueOrDefault(mp.Slug), maxPerWeek, kind == DigestRules.Urgent);
+                var within = DigestRules.WithinCeiling(counts.GetValueOrDefault(mp.Slug), maxPerWeek, run.Kind == DigestRules.Urgent);
                 db.DigestDeliveries.Add(new DigestDelivery
                 {
                     RunId = run.Id,
@@ -424,44 +615,15 @@ internal sealed class DigestService(
         }
         else
         {
-            var plan = await PlanAsync(db, kind, recipients, counts, maxPerWeek, ct);
+            var plan = await PlanAsync(db, run.Kind, recipients, counts, maxPerWeek, ct);
             run.MpCount = plan.Count(p => p.Official is DeliveryStatuses.Queued or DeliveryStatuses.Introduced);
-            if (run.Status == RunStatuses.Waiting)
-            {
-                // Frozen now, queued only when a moderator lets it go: one row per MP for the preview and the count.
-                foreach (var p in plan)
-                {
-                    db.DigestDeliveries.Add(new DigestDelivery
-                    {
-                        RunId = run.Id,
-                        MpSlug = p.Mp.Slug,
-                        SeimasPersonId = p.Mp.SeimasPersonId,
-                        Status = p.Official == DeliveryStatuses.Queued ? DeliveryStatuses.Waiting : p.Official,
-                        PartyNumbers = PartyJson(p.Mp),
-                    });
-                }
-            }
-            else
-            {
-                await db.SaveChangesAsync(ct);
-                var info = (await InfoAsync(db, [run], ct))[0];
-                var byslug = recipients.ToDictionary(m => m.Slug);
-                await LetGoAsync(db, run, info, plan, slug => PartyJson(byslug[slug]), now, ct);
-                run.DecidedBy = approvedBy?.UserId;
-                run.DecidedAt = now.ToUniversalTime();
-            }
+            await db.SaveChangesAsync(ct);
+            var info = (await InfoAsync(db, [run], ct))[0];
+            var bySlug = recipients.ToDictionary(m => m.Slug);
+            await LetGoAsync(db, run, info, plan, slug => PartyJson(bySlug[slug]), now, ct);
         }
 
         await db.SaveChangesAsync(ct);
-        if (approvedBy is not null)
-        {
-            await audit.WriteAsync(
-                new AuditEntry("digest.urgent.approved", approvedBy.UserId, approvedBy.Role, "digest:" + run.Id,
-                    JsonSerializer.SerializeToElement(new { bills = items.Select(i => i.BillNumber), statement }, JsonSerializerOptions.Web), approvedBy.IpHash),
-                transaction.GetDbTransaction(),
-                ct);
-        }
-
         if (run.Status == RunStatuses.Sent)
         {
             await audit.WriteAsync(
@@ -472,7 +634,6 @@ internal sealed class DigestService(
         }
 
         await transaction.CommitAsync(ct);
-        return (await InfoAsync(db, [run], ct))[0];
     }
 
     /// <summary>
@@ -564,10 +725,86 @@ internal sealed class DigestService(
             }
         }
 
+        await OfficeCopiesAsync(db, run, info, plan, partyJson, responses, ct);
         run.Status = RunStatuses.Sent;
         run.SentCount = plan.Count(p => p.Official == DeliveryStatuses.Queued);
         await source.MarkSummarisedAsync(
             await db.DigestItems.Where(i => i.RunId == run.Id).Select(i => i.RecordId).ToListAsync(ct), now, db.Database.CurrentTransaction!.GetDbTransaction(), ct);
+    }
+
+    /// <summary>
+    /// The copies for the MPs' offices (design 8.19.3, owner 2026-11-17), in the caller's transaction: every office member linked
+    /// now to an MP the summary went out for gets a copy at their own address, whatever the MP's own choice, by the member's own
+    /// choice, weekly ceiling and the suppression list; one delivery row per member (never the address), the member's own
+    /// one-click stop. Not counted as MPs anywhere public.
+    /// </summary>
+    private async Task OfficeCopiesAsync(
+        NotificationsDb db, DigestRun run, DigestRunInfo info, IReadOnlyList<PlannedDelivery> plan, Func<string, string> partyJson,
+        IReadOnlyList<MpStance> responses, CancellationToken ct)
+    {
+        var byPerson = plan.GroupBy(p => p.Mp.SeimasPersonId).ToDictionary(g => g.Key, g => g.First());
+        var members = await links.OfficeMembersAsync(byPerson.Keys.ToList(), ct);
+        if (members.Count == 0)
+        {
+            return;
+        }
+
+        var maxPerWeek = await settings.GetAsync(SettingKeys.DigestMaxPerWeek, ct);
+        var users = members.Select(m => m.UserId).Distinct().ToList();
+        var choices = await db.OfficeCopies.Where(c => users.Contains(c.UserId)).ToListAsync(ct);
+        var suppressed = await sender.SuppressedAsync(db, members.Select(m => m.Email), ct);
+        var counts = await OfficeCeilingCountsAsync(db, DigestRules.WeekStart(run.RunDate), run.Id, ct);
+        foreach (var member in members)
+        {
+            var p = byPerson[member.SeimasPersonId];
+            var choice = choices.FirstOrDefault(c => c.UserId == member.UserId && c.SeimasPersonId == member.SeimasPersonId);
+            var status = SendingRules.OfficeStatus(
+                sender.IsSuppressed(suppressed, member.Email), choice?.Frequency ?? Frequencies.Default, run.Kind, counts.GetValueOrDefault(member.UserId), maxPerWeek);
+            var json = partyJson(p.Mp.Slug);
+            db.DigestDeliveries.Add(new DigestDelivery
+            {
+                RunId = run.Id, MpSlug = p.Mp.Slug, SeimasPersonId = p.Mp.SeimasPersonId, Recipient = Recipients.Office, OfficeUserId = member.UserId,
+                Status = status, PartyNumbers = json,
+            });
+            if (status != DeliveryStatuses.Queued)
+            {
+                continue;
+            }
+
+            if (choice is null)
+            {
+                choice = new OfficeCopy { UserId = member.UserId, SeimasPersonId = member.SeimasPersonId, ChangedAt = clock.GetUtcNow() };
+                db.OfficeCopies.Add(choice);
+                choices.Add(choice);
+            }
+
+            var token = keys.DerivedToken(member.SeimasPersonId, OfficeStopKind(member.UserId), choice.Generation);
+            choice.StopTokenHash = MailKeys.TokenHash(token);
+            var party = JsonSerializer.Deserialize<List<DeliveryParty>>(json, JsonSerializerOptions.Web) ?? [];
+            await sender.EnqueueAsync(
+                db,
+                MpMailKinds.Digest,
+                Email(info, p.Mp, member.Email, Recipients.Office, bill => party.FirstOrDefault(x => x.BillNumber == bill), responses,
+                    null, MpMailPaths.OneClick(token), MpMailPaths.StopCopies(token), new DeliveryRef(run.Id, p.Mp.Slug, Recipients.Office, member.UserId)),
+                ct);
+        }
+    }
+
+    /// <summary>The kind an office member's stop token is derived under: per account, so each member has their own.</summary>
+    internal static string OfficeStopKind(Guid userId) => "office-stop:" + userId.ToString("N");
+
+    /// <summary>How many copies each office member has this week (design 8.19.3: the ceiling per recipient).</summary>
+    private static async Task<IReadOnlyDictionary<Guid, int>> OfficeCeilingCountsAsync(NotificationsDb db, DateOnly weekStart, Guid exclude, CancellationToken ct)
+    {
+        var runStatuses = SendingRules.CountingStatuses(sendingOn: true).ToList();
+        var deliveryStatuses = SendingRules.CeilingDeliveryStatuses.ToList();
+        var weekEnd = weekStart.AddDays(7);
+        return await (from d in db.DigestDeliveries
+                      join r in db.DigestRuns on d.RunId equals r.Id
+                      where d.Recipient == Recipients.Office && runStatuses.Contains(r.Status) && deliveryStatuses.Contains(d.Status)
+                            && r.RunDate >= weekStart && r.RunDate < weekEnd && r.Id != exclude
+                      group d by d.OfficeUserId into g
+                      select new { g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.Key, x => x.Count, ct);
     }
 
     /// <summary>One MP's email: the bills in the MP's order, each with the MP's party numbers and own response.</summary>
@@ -589,19 +826,6 @@ internal sealed class DigestService(
             copyStopPath,
             delivery,
             info.Id);
-
-    /// <summary>A waiting run whose time passed: nothing is sent late (design 8.19.2).</summary>
-    private async Task ExpireAsync(NotificationsDb db, DigestRun run, DateTimeOffset now, CancellationToken ct)
-    {
-        run.Status = RunStatuses.Expired;
-        run.DecidedAt = now;
-        await db.DigestDeliveries.Where(d => d.RunId == run.Id && d.Status == DeliveryStatuses.Waiting)
-            .ExecuteUpdateAsync(s => s.SetProperty(d => d.Status, DeliveryStatuses.NotSent), ct);
-        await audit.WriteAsync(
-            new AuditEntry("digest.expired", null, null, "digest:" + run.Id, JsonSerializer.SerializeToElement(new { kind = run.Kind }, JsonSerializerOptions.Web)),
-            db.Database.CurrentTransaction?.GetDbTransaction(),
-            ct);
-    }
 
     /// <summary>How many summaries each MP has this week, counting only the runs and deliveries of design 8.19.1.</summary>
     private static async Task<IReadOnlyDictionary<string, int>> CeilingCountsAsync(NotificationsDb db, DateOnly weekStart, bool sendingOn, Guid? exclude, CancellationToken ct)
@@ -652,7 +876,7 @@ internal sealed class DigestService(
         return result;
     }
 
-    /// <summary>Records that week's Monday summary (a counting one) already showed with the same sitting date.</summary>
+    /// <summary>Records that week's Monday summary (a counting one, prepared or gone) already holds with the same sitting date.</summary>
     private static async Task<IReadOnlySet<Guid>> CoveredByMondayAsync(NotificationsDb db, DateOnly weekStart, DateOnly sitting, bool sendingOn, CancellationToken ct)
     {
         var statuses = SendingRules.CountingStatuses(sendingOn).ToList();
@@ -661,6 +885,9 @@ internal sealed class DigestService(
                        where r.Kind == DigestRules.Weekly && r.RunDate == weekStart && i.PlannedDate == sitting && statuses.Contains(r.Status)
                        select i.RecordId).ToListAsync(ct)).ToHashSet();
     }
+
+    private static List<DigestReason> Snapshot(DigestItem i) =>
+        JsonSerializer.Deserialize<List<DigestReason>>(i.Reasons, JsonSerializerOptions.Web) ?? [];
 
     /// <summary>The runs as their public copy shows them; with <paramref name="recordId"/>, only that record's item.</summary>
     private static async Task<IReadOnlyList<DigestRunInfo>> InfoAsync(NotificationsDb db, IReadOnlyList<DigestRun> runs, CancellationToken ct, Guid? recordId = null)
@@ -688,14 +915,15 @@ internal sealed class DigestService(
                     i.AgainstOlderThan30Days,
                     i.SurgeSharePercent,
                     i.SurgeWindowHours,
-                    JsonSerializer.Deserialize<List<DigestReason>>(i.Reasons, JsonSerializerOptions.Web) ?? [])).ToList(),
+                    Snapshot(i))).ToList(),
                 r.SentCount,
-                r.DecidedAt,
+                r.SentAt,
+                r.DueAt,
                 r.Status == RunStatuses.Cancelled ? r.Statement : null,
-                r.Status == RunStatuses.Waiting ? r.ExpiresAt : null))
+                r.ApprovedAt))
             .ToList();
     }
 }
 
-/// <summary>The MP's party numbers for one bill in a delivery (groups of at least 20 only).</summary>
+/// <summary>The MP's party numbers for one bill in a delivery (groups of at least the party group minimum only).</summary>
 internal sealed record DeliveryParty(string BillNumber, string Party, int? For, int? Against);

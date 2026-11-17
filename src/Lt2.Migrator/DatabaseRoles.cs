@@ -84,8 +84,8 @@ public static class DatabaseRoles
         "identity.role_activation", "identity.role_claim",
         "identity.session", "identity.sign_in_code", "identity.user", "identity.user_claim", "identity.user_login",
         "identity.user_passkey", "identity.user_role", "identity.user_token",
-        "notify.bill_event", "notify.digest_delivery", "notify.digest_item", "notify.digest_run", "notify.follow",
-        "notify.notice_setting", "notify.outbox", "notify.rhythm_pass",
+        "notify.bill_event", "notify.digest_choice", "notify.digest_delivery", "notify.digest_item", "notify.digest_run", "notify.follow",
+        "notify.notice_setting", "notify.office_copy", "notify.outbox", "notify.rhythm_pass",
         "notify.member_mail_token", // design 8.24.1: the members' stop links, by hash, beside their accounts
         "notify.introduction_letter", "notify.mp_email_pref", "notify.mp_mail_token", "notify.suppression",
         "appeals.__ef_migrations_history", "audit.__ef_migrations_history", "identity.__ef_migrations_history",

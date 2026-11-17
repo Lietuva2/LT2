@@ -16,9 +16,22 @@ internal static class GetMeEndpoint
             .RequireAuthorization()
             .Produces<MeResponse>();
 
-    private static async Task<IResult> HandleAsync(ClaimsPrincipal user, IIdentityModule identity, ErrorMapper errors, CancellationToken cancellationToken)
+    private static async Task<IResult> HandleAsync(ClaimsPrincipal user, IIdentityModule identity, Lt2.Notifications.IDigests digests, ErrorMapper errors, CancellationToken cancellationToken)
     {
         var result = await identity.GetAccountAsync(user, cancellationToken);
-        return result.IsSuccess ? TypedResults.Ok(Mapping.ToResponse(result.Value)) : errors.ToResult(result.Error!);
+        if (!result.IsSuccess)
+        {
+            return errors.ToResult(result.Error!);
+        }
+
+        // Design 8.19.2 (owner, 2026-11-17): a staff account (by its role, in any session) is told on every page of a prepared
+        // summary nobody approved or declined; js/lt2-account.js shows the box from this answer. Never for anyone else.
+        var me = Mapping.ToResponse(result.Value);
+        if (result.Value.StaffAccount && await digests.PendingAsync(cancellationToken) is { } pending)
+        {
+            me = me with { DigestReview = new Lt2.Api.Contracts.Digests.DigestReviewNoticeResponse(pending.DueAt, pending.Bills, pending.Reasons) };
+        }
+
+        return TypedResults.Ok(me);
     }
 }

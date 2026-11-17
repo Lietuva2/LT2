@@ -6,14 +6,12 @@ using Microsoft.EntityFrameworkCore;
 namespace Lt2.Appeals.Application;
 
 /// <summary>
-/// <see cref="IDigestSource"/>: every open bill record with the numbers a summary would carry. Only arguments a moderator has
-/// seen (design 8.3), the two most endorsed per side (design 8.4); no author, no person.
+/// <see cref="IDigestSource"/>: every open bill record with the numbers a summary would carry, and the published arguments a
+/// summary chooses from (design 8.4, 8.19.2); no author, no person.
 /// </summary>
 internal sealed class DigestSource(
     IDbContextFactory<AppealsDb> contexts, AppealReads reads, IBillCatalogue bills, IPlannedAgenda agenda, IPartySupporters supporters, ISettings settings) : IDigestSource
 {
-    public const int ReasonsPerSide = 2;
-
     public async Task<IReadOnlyList<MpStance>> PublishedResponsesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(billNumbers);
@@ -67,11 +65,6 @@ internal sealed class DigestSource(
         var thresholdSettings = await reads.ThresholdSettingsAsync(cancellationToken);
         var titles = await bills.FindManyAsync(appeals.Select(a => a.BillNumber).ToList(), cancellationToken);
         var planned = await agenda.ForBillsAsync(appeals.Select(a => a.BillNumber).ToList(), cancellationToken);
-        var seen = await db.Reasons.AsNoTracking()
-            .Where(r => ids.Contains(r.RecordId) && r.Status == ReasonStatuses.Published && r.SeenAt != null)
-            .Select(r => new { r.Id, r.RecordId, r.Side, r.Text, r.CreatedAt })
-            .ToListAsync(cancellationToken);
-        var endorsements = await AppealReads.EndorsementCountsAsync(db, seen.Select(r => r.Id).ToList(), cancellationToken);
         var surges = await reads.SurgesAsync(db, ids, cancellationToken);
 
         var result = new List<DigestCandidate>();
@@ -80,12 +73,6 @@ internal sealed class DigestSource(
             var c = counts[record.Id];
             var threshold = AppealReads.Threshold(record, c, thresholdSettings);
             var surge = surges.GetValueOrDefault(record.Id);
-            var top = Sides.All
-                .SelectMany(side => seen.Where(r => r.RecordId == record.Id && r.Side == side)
-                    .OrderByDescending(r => endorsements.GetValueOrDefault(r.Id)).ThenBy(r => r.CreatedAt)
-                    .Take(ReasonsPerSide)
-                    .Select(r => new DigestReason(r.Side, r.Text, endorsements.GetValueOrDefault(r.Id))))
-                .ToList();
             result.Add(new DigestCandidate(
                 record.Id,
                 record.BillNumber,
@@ -99,11 +86,31 @@ internal sealed class DigestSource(
                 record.Sending == "held",
                 surge?.SharePercent,
                 surge?.WindowHours,
-                planned.GetValueOrDefault(record.BillNumber),
-                top));
+                planned.GetValueOrDefault(record.BillNumber)));
         }
 
         return result;
+    }
+
+    public async Task<IReadOnlyList<DigestPoolReason>> ReasonPoolAsync(IReadOnlyCollection<Guid> recordIds, DateTimeOffset publishedBy, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(recordIds);
+        if (recordIds.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = recordIds.ToList();
+        var by = publishedBy.ToUniversalTime();
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var published = await db.Reasons.AsNoTracking()
+            .Where(r => ids.Contains(r.RecordId) && r.Status == ReasonStatuses.Published && r.FirstPublicAt != null && r.FirstPublicAt <= by)
+            .Select(r => new { r.Id, r.RecordId, r.Side, r.Text, PublishedAt = r.FirstPublicAt!.Value })
+            .ToListAsync(cancellationToken);
+        var endorsements = await AppealReads.EndorsementCountsAsync(db, published.Select(r => r.Id).ToList(), cancellationToken);
+        return published
+            .Select(r => new DigestPoolReason(r.Id, r.RecordId, r.Side, r.Text, endorsements.GetValueOrDefault(r.Id), r.PublishedAt))
+            .ToList();
     }
 
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<PartyNumbers>>> PartyNumbersAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken)

@@ -36,7 +36,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task The_weekly_summary_freezes_both_sides_and_seen_arguments_publishes_them_and_sends_nothing()
+    public async Task The_weekly_summary_freezes_both_sides_and_published_arguments_publishes_them_and_sends_nothing()
     {
         var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
         await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
@@ -49,12 +49,14 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             var (member, _) = await Factory.MemberAsync("Giedrė Slapta");
             using var _m = member;
             (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            (await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Neperžiūrėtas argumentas dar nepatenka į suvestinę.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+            const string Unseen = "Moderatoriaus neperžiūrėtas argumentas irgi patenka į suvestinę.";
+            (await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", Unseen)).StatusCode.ShouldBe(HttpStatusCode.Created);
             await PlanAsync("XVP-0618", monday.AddDays(3));
 
-            var outboxBefore = await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox");
+            var outboxBefore = await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE kind <> 'email.digest-review'");
             var since = await Database.ScalarAsync<DateTime>("SELECT clock_timestamp()");
-            (await RunDueAsync(At(monday, 6, 30))).ShouldBeEmpty("before 07:00");
+            (await RunDueAsync(At(monday.AddDays(-1), 6, 30))).ShouldBeEmpty("before its preparation on Sunday at 07:00");
+            (await RunDueAsync(At(monday.AddDays(-1), 7, 15))).Single().Status.ShouldBe("prepared");
             var made = await RunDueAsync(At(monday, 7, 15));
             var weekly = made.Single();
             weekly.Kind.ShouldBe("weekly");
@@ -63,9 +65,9 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             var item = weekly.Items.Single(i => i.BillNumber == "XVP-0618");
             (item.For, item.ForOlderThan30Days, item.Against, item.AgainstOlderThan30Days).ShouldBe((1, 0, 1, 0));
             item.PlannedDate.ShouldBe(monday.AddDays(3));
-            item.Reasons.Select(r => r.Text).ShouldBe([AppealSteps.AgainstReason], "only arguments a moderator has seen");
+            item.Reasons.Select(r => r.Text).ShouldBe([Unseen, AppealSteps.AgainstReason], "owner, 2026-11-17: published arguments, seen by a moderator or not");
             (await RunDueAsync(At(monday, 9))).ShouldBeEmpty("one weekly summary a week");
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox")).ShouldBe(outboxBefore, "making summaries writes nothing to the outbox");
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE kind <> 'email.digest-review'")).ShouldBe(outboxBefore, "making summaries writes nothing for MPs to the outbox");
 
             // The public copy (page and API) holds the frozen numbers, says it was not sent, and holds no person.
             var date = monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
@@ -88,7 +90,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             var held = (await stranger.GetJsonAsync<List<RecordDigestResponse>>(DigestRoutes.OfRecordOn(AppealSteps.ThirdBill))).ShouldHaveSingleItem();
             (held.RunId, held.Kind, held.RunDate, held.Status).ShouldBe((weekly.Id, "weekly", monday, "dry-run"));
             (held.Item.BillNumber, held.Item.For, held.Item.Against).ShouldBe(("XVP-0618", 1, 1));
-            held.Item.Reasons.Select(r => r.Text).ShouldBe([AppealSteps.AgainstReason]);
+            held.Item.Reasons.Select(r => r.Text).ShouldBe([Unseen, AppealSteps.AgainstReason]);
             using var recordPage = await stranger.Client.GetAsync("/seimas/XVP-0618");
             var recordHtml = WebUtility.HtmlDecode(await recordPage.Content.ReadAsStringAsync());
             recordHtml.ShouldContain("Suvestinėse Seimo nariams");
@@ -106,22 +108,22 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
                 .ShouldBe("XVP-0618", "the linked bill's item comes first");
             (await stranger.Client.GetAsync(DigestRoutes.OfRecordOn("XVP-9999"))).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
-            (await Database.ScalarAsync<long>(
-                "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'notify' AND table_name LIKE 'digest%' AND (column_name LIKE '%user%' OR column_name LIKE '%email%' OR column_name LIKE '%address%')"))
-                .ShouldBe(0, "a summary table has no column for a person or an address");
+            // The one exception (design 8.19.3, owner 2026-11-17): an office member's copy has its own delivery row, naming the
+            // member's account for its own weekly ceiling; never public, erased with the account. No address anywhere.
+            (await Database.ScalarAsync<string>(
+                "SELECT coalesce(string_agg(table_name || '.' || column_name, ','), '') FROM information_schema.columns WHERE table_schema = 'notify' AND table_name LIKE 'digest%' AND (column_name LIKE '%user%' OR column_name LIKE '%email%' OR column_name LIKE '%address%')"))
+                .ShouldBe("digest_delivery.office_user_id", "a summary table has no column for a person or an address but the office copy's row");
 
             // Nothing was sent: no summary is in the outbox, and the run wrote nothing to an MP address. (Since design 8.5 an
             // MP's own linked account gets its notices at the official address, so other tests leave such rows behind.)
             (await Database.ScalarAsync<long>(
-                "SELECT count(*) FROM notify.outbox WHERE kind LIKE '%digest%' OR (payload::text ILIKE '%@lrs.lt%' AND created_at >= @since)", ("since", since))).ShouldBe(0);
+                "SELECT count(*) FROM notify.outbox WHERE (kind LIKE '%digest%' AND kind <> 'email.digest-review') OR (payload::text ILIKE '%@lrs.lt%' AND created_at >= @since)", ("since", since))).ShouldBe(0);
 
-            // A moderator reads what an MP would read; the public cannot.
-            var mps = await moderator.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
-            var preview = await moderator.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug));
-            preview.Text.ShouldContain("XVP-0618");
-            preview.Text.ShouldContain("Prašo balsuoti už: 1 (iš jų 0 – paskyros senesnės nei 30 d.)");
-            preview.Text.ShouldNotContain("Rūta Mockutė");
-            (await stranger.Client.GetAsync(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug))).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            // The moderators' screen shows its common text once, with no person; the public cannot read the screen.
+            var screen = JsonSerializer.Serialize((await moderator.GetJsonAsync<DigestModerationResponse>(DigestRoutes.Moderation)).Runs.Single(r => r.Id == weekly.Id));
+            screen.ShouldContain("XVP-0618");
+            screen.ShouldNotContain("Mockut");
+            (await stranger.Client.GetAsync(DigestRoutes.Moderation)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
 
             // A later change to the record does not change what the summary said.
             (await initiator.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -220,16 +222,10 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             weekly.Items.Single(i => i.BillNumber == "XVP-0533").Reasons.Select(r => r.Side).ShouldBe(["for", "for"]);
             weekly.Items.Single(i => i.BillNumber == "XVP-0533").Reasons.ShouldContain(r => r.Text == longReason, "the snapshot keeps the whole text");
 
-            var mps = await moderator.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
-            var text = (await moderator.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug))).Text;
-            Regex(text, "Argumentų už dar nėra.").ShouldBe(1, "XVP-0618 has none for");
-            Regex(text, "Argumentų prieš dar nėra.").ShouldBe(2, "neither record has one against");
-            text.ShouldContain("Vienintelis argumentas už.");
-            text.ShouldNotContain(longReason, Case.Sensitive, "the email and its preview carry the beginning only");
+            // The email's shortening and its link to the public copy are the template's (MpMailTemplateTests); here the copy
+            // holds the argument at the anchor the email links to.
             var place = weekly.Items.Single(i => i.BillNumber == "XVP-0533").Reasons.Where(r => r.Side == "for").Select((r, i) => (r, i)).Single(x => x.r.Text == longReason).i + 1;
             var anchor = DigestRoutes.ReasonAnchor(weekly.Id, "XVP-0533", "for", place);
-            text.ShouldContain("Visas argumentas: ");
-            text.ShouldContain("/suvestines/" + monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) + "#" + anchor);
 
             using var stranger = NewBrowser();
             var html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/suvestines/" + monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)));
@@ -267,9 +263,15 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             using var _s = second;
             var other = await Database.PrepareBillAsync(second, moderator, AppealSteps.SecondBill, "for", threshold: 1);
             await PlanAsync("XVP-0533", thursday, "consideration");
-            (await RunDueAsync(At(thursday.AddDays(-1), 11, 30))).ShouldBeEmpty("before noon");
+
+            // Wednesday noon's summary is prepared on Tuesday at noon (owner, 2026-11-17: 24 hours ahead) and goes on Wednesday.
+            (await RunDueAsync(At(thursday.AddDays(-2), 11, 30))).ShouldBeEmpty("before its preparation");
+            var prepared = (await RunDueAsync(At(thursday.AddDays(-2), 12, 5))).Single();
+            (prepared.Kind, prepared.Status, prepared.RunDate).ShouldBe(("before-vote", "prepared", thursday.AddDays(-1)));
+            (await RunDueAsync(At(thursday.AddDays(-1), 11, 55))).ShouldBeEmpty("it goes at noon, not before");
             var beforeVote = (await RunDueAsync(At(thursday.AddDays(-1), 12, 5))).Single();
-            beforeVote.Kind.ShouldBe("before-vote");
+            beforeVote.Id.ShouldBe(prepared.Id);
+            beforeVote.Status.ShouldBe("dry-run");
             beforeVote.SittingDate.ShouldBe(thursday);
             beforeVote.Items.Select(i => i.BillNumber).ShouldBe(["XVP-0533"], "XVP-0618 was in Monday's summary for the same sitting");
 

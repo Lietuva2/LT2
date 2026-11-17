@@ -72,10 +72,11 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 {
     /// <summary>
     /// The account as a page rendered on the server sees it: without the MP offer or link (design 8.5.4: nothing about it is
-    /// in the page the server renders). The island that shows them asks <c>GET /me</c> from the browser.
+    /// in the page the server renders) and without the prepared summary's notice (design 8.19.2). The island or script that
+    /// shows them asks <c>GET /me</c> from the browser.
     /// </summary>
     public async Task<ApiResult<MeResponse>> GetAsync(CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.GetAccountAsync(User, cancellationToken), account => Mapping.ToResponse(account) with { MpOffer = null, Mp = null });
+        errors.ToApiResult(await identity.GetAccountAsync(User, cancellationToken), account => Mapping.ToResponse(account) with { MpOffer = null, Mp = null, DigestReview = null });
 
     public async Task<ApiResult<IReadOnlyList<SessionResponse>>> GetSessionsAsync(CancellationToken cancellationToken = default)
     {

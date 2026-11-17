@@ -45,6 +45,9 @@ public static class NotificationsModule
         services.AddScoped<IMpMail>(sp => sp.GetRequiredService<MpMail.MpMailService>());
         services.AddScoped<IMpMailAdministration>(sp => sp.GetRequiredService<MpMail.MpMailService>());
         services.AddScoped<IDigests, Digests.DigestService>();
+
+        // Design 8.19.3 (owner, 2026-11-17): Identity ends an office member's copies when the office link ends.
+        services.AddSingleton<IOfficeCopiesEnd, MpMail.OfficeCopiesEnd>();
         services.AddScoped<IFollows, Follows.FollowService>();
 
         // Design 8.24: the member emails that go in the person's rhythm, each declaring itself; the delivery knows none of them.
@@ -80,6 +83,7 @@ public static class NotificationsModule
         services.AddSingleton<OrganisationTemplates>();
         services.AddSingleton<FollowTemplates>();
         services.AddSingleton<MpTemplates>();
+        services.AddSingleton<DigestReviewTemplate>();
 
         // Every outbox kind and the template that renders it.
         services.AddEmail<SignInCodeEmail, SignInCodeTemplate>(MessageKinds.SignInCodeEmail, t => t.Render);
@@ -88,6 +92,7 @@ public static class NotificationsModule
         services.AddEmail<WritingRestrictionEmail, WritingRestrictionTemplate>(MessageKinds.WritingRestrictionEmail, t => t.Render);
         services.AddEmail<FeedbackReplyEmail, FeedbackTemplates>(MessageKinds.FeedbackReplyEmail, t => t.Reply);
         services.AddEmail<FeedbackNoticeEmail, FeedbackTemplates>(MessageKinds.FeedbackNoticeEmail, t => t.Notice);
+        services.AddEmail<DigestReviewEmail, DigestReviewTemplate>(MessageKinds.DigestReviewEmail, t => t.Render);
         services.AddEmail<OrganisationCodeEmail, OrganisationTemplates>(MessageKinds.OrganisationCodeEmail, t => t.Render);
         services.AddEmail<OrganisationNoticeEmail, OrganisationTemplates>(MessageKinds.OrganisationNoticeEmail, t => t.Render);
         services.AddEmail<FollowPlannedEmail, FollowTemplates>(MessageKinds.FollowPlannedEmail, t => t.Planned);

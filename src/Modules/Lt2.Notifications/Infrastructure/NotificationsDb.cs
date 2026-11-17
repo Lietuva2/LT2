@@ -17,6 +17,10 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 
     public DbSet<Digests.DigestDelivery> DigestDeliveries => Set<Digests.DigestDelivery>();
 
+    public DbSet<Digests.DigestChoice> DigestChoices => Set<Digests.DigestChoice>();
+
+    public DbSet<Digests.OfficeCopy> OfficeCopies => Set<Digests.OfficeCopy>();
+
     public DbSet<Digests.MpEmailPref> MpEmailPrefs => Set<Digests.MpEmailPref>();
 
     public DbSet<Digests.MpMailToken> MpMailTokens => Set<Digests.MpMailToken>();
@@ -56,7 +60,17 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.Status).HasMaxLength(20);
             b.Property(x => x.Statement).HasMaxLength(StaffStatements.MaxLength);
             b.HasIndex(x => x.RunDate);
-            b.HasIndex(x => x.Status).HasFilter("status = 'waiting'");
+            b.HasIndex(x => x.DueAt).HasFilter("status = 'prepared'");
+        });
+
+        // Design 8.19.2 (owner, 2026-11-17): the arguments chosen for a prepared summary, kept apart from hides.
+        modelBuilder.Entity<Digests.DigestChoice>(b =>
+        {
+            b.ToTable("digest_choice");
+            b.HasKey(x => new { x.RunId, x.ReasonId });
+            b.Property(x => x.Side).HasMaxLength(16);
+            b.HasIndex(x => new { x.RunId, x.RecordId });
+            b.HasOne<Digests.DigestRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<Digests.DigestItem>(b =>
         {
@@ -72,7 +86,8 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
         modelBuilder.Entity<Digests.DigestDelivery>(b =>
         {
             b.ToTable("digest_delivery");
-            b.HasKey(x => new { x.RunId, x.MpSlug, x.Recipient });
+            b.HasKey(x => new { x.RunId, x.MpSlug, x.Recipient, x.OfficeUserId });
+            b.HasIndex(x => x.OfficeUserId).HasFilter("recipient = 'office'");
             b.Property(x => x.MpSlug).HasMaxLength(200);
             b.Property(x => x.Recipient).HasMaxLength(10).HasDefaultValue(Digests.Recipients.Official);
             b.Property(x => x.Status).HasMaxLength(20);
@@ -89,6 +104,15 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.SeimasPersonId).ValueGeneratedNever();
             b.Property(x => x.Frequency).HasMaxLength(16);
             b.Property(x => x.ExtraAddress).HasMaxLength(254);
+        });
+        modelBuilder.Entity<Digests.OfficeCopy>(b =>
+        {
+            b.ToTable("office_copy");
+            b.HasKey(x => new { x.UserId, x.SeimasPersonId });
+            b.Property(x => x.Frequency).HasMaxLength(16);
+            b.Property(x => x.StopTokenHash).HasMaxLength(64);
+            b.HasIndex(x => x.StopTokenHash).IsUnique();
+            b.HasIndex(x => x.SeimasPersonId);
         });
         modelBuilder.Entity<Digests.MpMailToken>(b =>
         {

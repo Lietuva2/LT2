@@ -4,14 +4,14 @@
 @using Lt2.Api.Contracts.Digests
 @inherits InteractiveBase<AppealUi>
 @inject IDigestsApi Digests
-@inject IAuthApi Auth
-@inject IMeApi Me
-@inject Passkeys PasskeyBrowser
+@inject IModerationApi Moderation
 
-@* Design 8.19.2: the moderators' summaries screen. Sending as it is now and why a lock keeps it off; the summaries, waiting ones
-   first, each with the bills as frozen, how many MPs it would go to, the text one MP would read, and for a waiting one
-   "Siųsti" (the number of MPs in the confirmation) and "Nesiųsti" (a statement of at least 20 characters, shown on the public
-   copy). Moderators in a staff-passkey session; the server refuses anything else and audits each decision. *@
+@* Design 8.19.2 (owner, 2026-11-17): the moderators' summaries screen. A weekly or before-vote summary is prepared a day ahead
+   and goes at its time unless declined; nobody has to approve it. Each summary's common text is shown once, as MPs read it: the
+   bills with their numbers now (a prepared one) or as it went, the chosen arguments with "Paslėpti" (the next of its side comes
+   in, marked) and the bill's "Sulaikyti siuntimą". A prepared one offers "Patvirtinti" (reviewed; it still goes at its time) and
+   "Nesiųsti" (a statement of at least 20 characters, public on the copy). Moderators in a staff-passkey session; the server
+   refuses anything else and audits each action. *@
 <PageTitle>@L["DigMod.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -53,6 +53,7 @@ else
 {
     @foreach (var run in Data.Runs)
     {
+        var prepared = run.Status == "prepared";
         <section class="sheet stack" aria-labelledby="digmod-h-@run.Id" id="digmod-run-@run.Id" @key="run.Id">
             <h2 id="digmod-h-@run.Id">@L["DigMod.Kind." + run.Kind] · <span class="num">@Display.Day(run.RunDate)</span></h2>
             <p class="small num" id="digmod-status-@run.Id">@StatusLine(run)</p>
@@ -60,83 +61,120 @@ else
             {
                 <p class="small">@L.Format("DigMod.Statement", statement)</p>
             }
-            <ul class="rows" id="digmod-bills-@run.Id">
-                @foreach (var item in run.Items)
-                {
-                    <li>
-                        <div class="rows__main">
-                            <a href="/seimas/@Uri.EscapeDataString(item.BillNumber)" class="num">@item.BillNumber</a>
-                            <span>@item.BillTitle</span>
-                        </div>
-                        <div class="rows__side small num">
-                            @L.Format("DigMod.Sides", Display.Number(item.For), Display.Number(item.Against))
-                        </div>
-                    </li>
-                }
-            </ul>
+            <p class="small" id="digmod-per-mp-@run.Id">@L["DigMod.PerMp"]</p>
 
-            <details class="more stack stack--tight" id="digmod-preview-@run.Id">
-                <summary class="linkish small">@L["DigMod.Preview"]</summary>
-                <div class="row">
-                    <label for="digmod-mp-@run.Id" class="small">@L["DigMod.PreviewMp"]</label>
-                    <select class="input" id="digmod-mp-@run.Id" disabled="@Locked" @onchange="e => _mp[run.Id] = e.Value?.ToString()" @onfocus="() => MpsAsync(run.Id)">
-                        <option value="">@L["DigMod.PreviewChoose"]</option>
-                        @foreach (var mp in _mps.GetValueOrDefault(run.Id) ?? [])
-                        {
-                            <option value="@mp.Slug" selected="@(_mp.GetValueOrDefault(run.Id) == mp.Slug)">@((mp.FirstName + " " + mp.LastName).Trim()) · @L["DigMod.Delivery." + mp.Status]</option>
-                        }
-                    </select>
-                    <button type="button" class="btn btn--plain" id="digmod-show-@run.Id" disabled="@Locked" @onclick="() => PreviewAsync(run.Id)">@L["DigMod.PreviewShow"]</button>
-                </div>
-                @if (_preview.GetValueOrDefault(run.Id) is { } preview)
-                {
-                    <div class="sheet--quiet stack stack--tight">
-                        <p><b>@preview.Subject</b></p>
-                        <pre class="preview" id="digmod-text-@run.Id">@preview.Text</pre>
-                    </div>
-                }
-            </details>
-
-            @if (run.Status == "waiting")
+            @foreach (var item in run.Items)
             {
-                <p class="small num" id="digmod-expires-@run.Id">@L.Format("DigMod.Expires", run.ExpiresAt is { } at ? Display.DayTime(at) : "")</p>
-                @if (_confirm == run.Id)
+                <section class="stack stack--tight" aria-labelledby="digmod-bill-@run.Id-@item.RecordId" id="digmod-item-@run.Id-@item.RecordId" @key="item.RecordId">
+                    <h3 id="digmod-bill-@run.Id-@item.RecordId"><a href="/seimas/@Uri.EscapeDataString(item.BillNumber)" class="num">@item.BillNumber</a> · @item.BillTitle</h3>
+                    <div class="row">
+                        @if (item.PlannedDate is { } planned)
+                        {
+                            <span class="tag num">@L.Format("DigMod.Planned", Display.Day(planned))</span>
+                        }
+                        @if (prepared && item.Held)
+                        {
+                            <span class="tag" id="digmod-held-@run.Id-@item.RecordId">@L["DigMod.Held"]</span>
+                        }
+                        @if (prepared && item.Gone)
+                        {
+                            <span class="tag">@L["DigMod.Gone"]</span>
+                        }
+                    </div>
+                    <p class="small num" id="digmod-numbers-@run.Id-@item.RecordId">
+                        @L.Format("DigMod.For", Display.Number(item.For), Display.Number(item.ForOlderThan30Days))<br />
+                        @L.Format("DigMod.Against", Display.Number(item.Against), Display.Number(item.AgainstOlderThan30Days))
+                    </p>
+                    @if (item.SurgeSharePercent is { } share)
+                    {
+                        <p class="note">@L.Format("Surge.Note", Display.Number(item.SurgeWindowHours), Display.Number(share))</p>
+                    }
+                    @foreach (var side in new[] { "for", "against" })
+                    {
+                        var reasons = item.Reasons.Where(r => r.Side == side).ToList();
+                        <div class="stack stack--tight">
+                            <h4><span class="choice choice--@side">@L["DigMod.Reasons." + side]</span></h4>
+                            @if (reasons.Count == 0)
+                            {
+                                <p class="small">@L["DigMod.NoReasons"]</p>
+                            }
+                            @foreach (var reason in reasons)
+                            {
+                                <div class="said" id="@(reason.Id is { } rid ? "digmod-reason-" + rid : null)">
+                                    <p class="bubble bubble--people voice">@reason.Text</p>
+                                    <div class="said__by small num">
+                                        @L.Format("DigMod.Endorsed", Display.Number(reason.Endorsements))
+                                        @if (reason.Replacement)
+                                        {
+                                            <span class="tag" id="@(reason.Id is { } rep ? "digmod-replacement-" + rep : null)">@L["DigMod.Replacement"]</span>
+                                        }
+                                    </div>
+                                    @if (prepared && reason.Id is { } reasonId)
+                                    {
+                                        @if (_open == ("hide", reasonId))
+                                        {
+                                            @StatementForm(reasonId, L["DigMod.HideHint"], L["Mod.Action.hide"], () => HideAsync(reasonId))
+                                        }
+                                        else
+                                        {
+                                            <p><button type="button" class="btn btn--plain" id="digmod-hide-@reasonId" disabled="@Locked" @onclick='() => Open("hide", reasonId)'>@L["Mod.Action.hide"]</button></p>
+                                        }
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    @if (prepared && !item.Gone)
+                    {
+                        var action = item.Held ? "release" : "hold";
+                        @if (_open == (action, item.RecordId))
+                        {
+                            @StatementForm(item.RecordId, L[item.Held ? "DigMod.ReleaseHint" : "DigMod.HoldHint"], L["Mod.Action." + action], () => HoldAsync(item.RecordId, item.Held))
+                        }
+                        else
+                        {
+                            <p><button type="button" class="btn btn--plain" id="digmod-@action-@run.Id-@item.RecordId" disabled="@Locked" @onclick="() => Open(action, item.RecordId)">@L["Mod.Action." + action]</button></p>
+                        }
+                    }
+                </section>
+            }
+
+            @if (prepared)
+            {
+                <div class="row">
+                    @if (run.ApprovedAt is null)
+                    {
+                        <button type="button" class="btn" id="digmod-approve-@run.Id" disabled="@Locked" @onclick="() => ApproveAsync(run.Id)">@L["DigMod.Approve"]</button>
+                    }
+                    @if (_open != ("cancel", run.Id))
+                    {
+                        <button type="button" class="btn btn--plain" id="digmod-cancel-open-@run.Id" disabled="@Locked" @onclick='() => Open("cancel", run.Id)'>@L["DigMod.Cancel"]</button>
+                    }
+                </div>
+                <p class="field__hint">@L["DigMod.ApproveHint"]</p>
+                @if (_open == ("cancel", run.Id))
                 {
-                    <div class="sheet--quiet stack stack--tight" id="digmod-confirm-@run.Id">
-                        <p role="alert">@L.Format("DigMod.SendConfirm", Display.Number(run.MpCount))</p>
+                    <div class="sheet--quiet stack stack--tight" id="digmod-cancel-@run.Id">
+                        <label for="digmod-statement-@run.Id">@L["DigMod.CancelLabel"]</label>
+                        <textarea class="textarea @ErrorClass("statement")" id="digmod-statement-@run.Id" rows="2" maxlength="1000"
+                                  aria-describedby="@DescribedBy("statement", "digmod-statement-" + run.Id, "digmod-statement-hint-" + run.Id)" aria-invalid="@Invalid("statement")"
+                                  @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
+                        <p class="field__hint" id="digmod-statement-hint-@run.Id">@L["DigMod.CancelHint"]</p>
+                        <FieldError Errors="Errors" Field="statement" For="@("digmod-statement-" + run.Id)" />
                         <div class="row">
-                            <button type="button" class="btn" id="digmod-send-confirm-@run.Id" disabled="@Locked" @onclick="() => SendAsync(run.Id)">@L["DigMod.SendYes"]</button>
-                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirm = null">@L["DigMod.Back"]</button>
+                            <button type="button" class="btn" id="digmod-cancel-button-@run.Id" disabled="@Locked" @onclick="() => CancelAsync(run.Id)">@L["DigMod.Cancel"]</button>
+                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="Close">@L["DigMod.Back"]</button>
                         </div>
                     </div>
                 }
-                else
-                {
-                    <div class="row">
-                        <button type="button" class="btn" id="digmod-send-@run.Id" disabled="@Locked" @onclick="() => _confirm = run.Id">@L.Format("DigMod.Send", Display.Number(run.MpCount))</button>
-                    </div>
-                }
-
-                <div class="stack stack--tight" id="digmod-cancel-@run.Id">
-                    <label for="digmod-statement-@run.Id">@L["DigMod.CancelLabel"]</label>
-                    <textarea class="textarea @ErrorClass("statement")" id="digmod-statement-@run.Id" rows="2" maxlength="1000"
-                              aria-describedby="@DescribedBy("statement", "digmod-statement-" + run.Id, "digmod-statement-hint-" + run.Id)" aria-invalid="@Invalid("statement")"
-                              value="@_statements.GetValueOrDefault(run.Id)" @onchange="e => _statements[run.Id] = e.Value?.ToString()" disabled="@Locked"></textarea>
-                    <p class="field__hint" id="digmod-statement-hint-@run.Id">@L["DigMod.CancelHint"]</p>
-                    <FieldError Errors="Errors" Field="statement" For="@("digmod-statement-" + run.Id)" />
-                    <p><button type="button" class="btn btn--plain" id="digmod-cancel-button-@run.Id" disabled="@Locked" @onclick="() => CancelAsync(run.Id)">@L["DigMod.Cancel"]</button></p>
-                </div>
             }
         </section>
     }
 }
 
 @code {
-    private readonly Dictionary<Guid, IReadOnlyList<DigestMpResponse>> _mps = [];
-    private readonly Dictionary<Guid, string?> _mp = [];
-    private readonly Dictionary<Guid, DigestPreviewResponse> _preview = [];
-    private readonly Dictionary<Guid, string?> _statements = [];
-    private Guid? _confirm;
+    private (string Action, Guid Id)? _open;
+    private string _statement = "";
     private bool _refused;
 
     [PersistentState] public DigestModerationResponse? Data { get; set; }
@@ -155,107 +193,87 @@ else
         }
     }
 
-    private string StatusLine(DigestRunResponse run) => run.Status switch
+    /// <summary>One statement form at a time (design 8.3: one action open per item).</summary>
+    private RenderFragment StatementForm(Guid id, string hint, string label, Func<Task> act) =>
+        @<div class="sheet--quiet stack stack--tight" id="digmod-form-@id">
+            <label for="digmod-act-@id">@L["Mod.Statement.Required"]</label>
+            <textarea class="textarea @ErrorClass("statement")" id="digmod-act-@id" rows="2" maxlength="@AppealLimits.StatementMaxLength"
+                      aria-describedby="@DescribedBy("statement", "digmod-act-" + id, "digmod-act-hint-" + id)" aria-invalid="@Invalid("statement")"
+                      @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
+            <p class="field__hint" id="digmod-act-hint-@id">@hint</p>
+            <FieldError Errors="Errors" Field="statement" For="@("digmod-act-" + id)" />
+            <div class="row">
+                <button type="button" class="btn" id="digmod-act-button-@id" disabled="@Locked" @onclick="act">@label</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="Close">@L["DigMod.Back"]</button>
+            </div>
+        </div>;
+
+    private string StatusLine(DigestReviewRunResponse run) => run.Status switch
     {
-        "waiting" => L.Format("DigMod.Line.waiting", Display.Number(run.MpCount)),
-        "sent" => L.Format("DigMod.Line.sent", Display.Number(run.SentCount), run.DecidedAt is { } at ? Display.DayTime(at) : ""),
+        "prepared" => L.Format("DigMod.Line.prepared", run.DueAt is { } due ? Display.DayTime(due) : "", Display.Number(run.MpCount))
+            + (run.ApprovedAt is { } approved ? " · " + L.Format("DigMod.Approved", Display.DayTime(approved)) : ""),
+        "sent" => L.Format("DigMod.Line.sent", Display.Number(run.MpCount), run.SentAt is { } at ? Display.DayTime(at) : ""),
         "cancelled" => L["DigMod.Line.cancelled"],
-        "expired" => L["DigMod.Line.expired"],
+        "dropped" => L["DigMod.Line.dropped"],
         _ => L.Format("DigMod.Line.dry-run", Display.Number(run.MpCount)),
     };
 
-    private async Task MpsAsync(Guid runId)
+    private void Open(string action, Guid id)
     {
-        if (_mps.ContainsKey(runId) || !RendererInfo.IsInteractive)
-        {
-            return;
-        }
-
-        var mps = await Digests.GetMpsAsync(runId);
-        if (mps.IsSuccess)
-        {
-            _mps[runId] = mps.Value!;
-        }
+        _open = (action, id);
+        _statement = "";
+        Message = null;
+        Info = null;
     }
 
-    private Task PreviewAsync(Guid runId) => RunAsync(async () =>
+    private void Close() => _open = null;
+
+    private Task HideAsync(Guid reasonId) => RunAsync(async () =>
     {
-        await MpsAsync(runId);
-        var slug = _mp.GetValueOrDefault(runId) ?? _mps.GetValueOrDefault(runId)?.FirstOrDefault()?.Slug;
-        if (slug is null)
+        if (!Succeeded(await Moderation.HideReasonAsync(reasonId, new StatementRequest { Statement = _statement }), "statement"))
         {
             return;
         }
 
-        _mp[runId] = slug;
-        var preview = await Digests.GetPreviewAsync(runId, slug);
-        if (Succeeded(preview))
-        {
-            _preview[runId] = preview.Value!;
-        }
+        _open = null;
+        await ReloadAsync();
+        Info ??= L["DigMod.Hidden"];
     });
 
-    private Task SendAsync(Guid runId) => RunAsync(async () =>
+    private Task HoldAsync(Guid recordId, bool held) => RunAsync(async () =>
     {
-        var sent = await Digests.SendAsync(runId);
-        if (sent.Problem?.Code == "passkey.confirmation-required")
+        var request = new StatementRequest { Statement = _statement };
+        if (!Succeeded(held ? await Moderation.ReleaseAsync(recordId, request) : await Moderation.HoldAsync(recordId, request), "statement"))
         {
-            // Design 6.2, 8.19.2: approving a send asks for the staff passkey again, then the same press once more.
-            if (!await ConfirmPasskeyAsync())
-            {
-                return;
-            }
-
-            sent = await Digests.SendAsync(runId);
-        }
-
-        _confirm = null;
-        if (!Succeeded(sent))
-        {
-            await ReloadAsync();
             return;
         }
 
+        _open = null;
         await ReloadAsync();
-        Info ??= L.Format("DigMod.Sent", Display.Number(sent.Value!.SentCount));
+        Info ??= L[held ? "Mod.Done.release" : "Mod.Done.hold"];
+    });
+
+    private Task ApproveAsync(Guid runId) => RunAsync(async () =>
+    {
+        var approved = await Digests.ApproveAsync(runId);
+        await ReloadAsync();
+        if (Succeeded(approved))
+        {
+            Info ??= L["DigMod.ApprovedDone"];
+        }
     });
 
     private Task CancelAsync(Guid runId) => RunAsync(async () =>
     {
-        var cancelled = await Digests.CancelAsync(runId, new CancelDigestRequest { Statement = _statements.GetValueOrDefault(runId) ?? "" });
-        if (!Succeeded(cancelled, "statement"))
+        if (!Succeeded(await Digests.CancelAsync(runId, new CancelDigestRequest { Statement = _statement }), "statement"))
         {
             return;
         }
 
-        _statements.Remove(runId);
+        _open = null;
         await ReloadAsync();
         Info ??= L["DigMod.Cancelled"];
     });
-
-    private async Task<bool> ConfirmPasskeyAsync()
-    {
-        if (!await PasskeyBrowser.IsSupportedAsync())
-        {
-            Message = L["Admin.Passkey.Unsupported"];
-            return false;
-        }
-
-        var options = await Auth.GetPasskeyRequestOptionsAsync();
-        if (!Succeeded(options))
-        {
-            return false;
-        }
-
-        var credential = await PasskeyBrowser.GetAsync(options.Value!);
-        if (credential is null)
-        {
-            Message = L["Admin.Passkey.Cancelled"];
-            return false;
-        }
-
-        return Succeeded(await Me.ConfirmPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }));
-    }
 
     private async Task ReloadAsync()
     {

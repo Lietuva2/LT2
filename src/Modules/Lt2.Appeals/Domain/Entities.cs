@@ -74,6 +74,14 @@ internal sealed class BillRecord
     /// <summary>When the bill first entered a summary really sent to MPs; from then on it stays eligible (design 8.12.2).</summary>
     public DateTimeOffset? FirstSummarisedAt { get; set; }
 
+    /// <summary>
+    /// The bill's last activity (design 8.12.5, owner 2026-11-17: "Naujausia veikla"): the latest side taken, changed or
+    /// withdrawn, argument published, comment written, organisation's statement made public or changed, or MP's response made
+    /// public or changed. Set by <see cref="Application.RecordActivity"/> in the same transaction as each; one time per bill,
+    /// nothing per person. Null while there was none.
+    /// </summary>
+    public DateTimeOffset? LastActivityAt { get; set; }
+
     public DateTimeOffset ChangedAt { get; set; }
 }
 

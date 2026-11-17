@@ -3,9 +3,9 @@ using Microsoft.Extensions.Localization;
 
 namespace Lt2.Api.Contracts.Digests;
 
-// Design 8.7, 8.8, 8.19: the public record of the summaries. Status dry-run | waiting | sent | cancelled | expired (8.19.1):
-// a dry run is made and published, never sent. Kind weekly | before-vote | urgent. No MP-specific figures, no person, and never
-// which MPs a summary went to.
+// Design 8.7, 8.8, 8.19: the public record of the summaries. Status dry-run | sent | cancelled in public (8.19.1; prepared and
+// dropped only on the moderators' screen): a dry run is made and published, never sent. Kind weekly | before-vote | urgent. No
+// MP-specific figures, no person, and never which MPs a summary went to.
 
 public sealed record DigestReasonResponse(string Side, string Text, int Endorsements);
 
@@ -23,9 +23,9 @@ public sealed record DigestItemResponse(
     IReadOnlyList<DigestReasonResponse> Reasons);
 
 /// <summary>
-/// A summary as its public copy shows it. <paramref name="MpCount"/>: MPs it would go to when made; <paramref name="SentCount"/>:
-/// MPs it was sent to; <paramref name="DecidedAt"/>: when it was sent, declined or expired; <paramref name="Statement"/>: a
-/// declined summary's statement (never who declined it).
+/// A summary as its public copy shows it. <paramref name="CreatedAt"/>: when it was prepared; <paramref name="MpCount"/>: MPs it
+/// went to (or would have, a dry run); <paramref name="SentCount"/>: MPs it was sent to; <paramref name="SentAt"/>: when it went,
+/// its numbers being of that moment; <paramref name="Statement"/>: a declined summary's statement (never who declined it).
 /// </summary>
 public sealed record DigestRunResponse(
     Guid Id,
@@ -37,24 +37,69 @@ public sealed record DigestRunResponse(
     int MpCount,
     IReadOnlyList<DigestItemResponse> Items,
     int SentCount = 0,
-    DateTimeOffset? DecidedAt = null,
-    string? Statement = null,
-    DateTimeOffset? ExpiresAt = null);
+    DateTimeOffset? SentAt = null,
+    string? Statement = null);
 
 /// <summary>One summary that held a record, with that record as the summary froze it (design 8.7: shown on the record page).</summary>
 public sealed record RecordDigestResponse(Guid RunId, string Kind, DateOnly RunDate, DateOnly? SittingDate, string Status, int MpCount, DigestItemResponse Item);
 
-/// <summary>What one MP would read; moderators only.</summary>
-public sealed record DigestPreviewResponse(string Subject, string Text);
+/// <summary>
+/// An argument of a summary on the moderators' screen (design 8.19.2): <paramref name="Id"/> while the summary is prepared (for
+/// "Paslėpti"), null once gone; <paramref name="Replacement"/>: it came in for a hidden one ("Įtrauktas vietoj paslėpto").
+/// </summary>
+public sealed record DigestReviewReasonResponse(Guid? Id, string Side, string Text, int Endorsements, bool Replacement);
 
-/// <summary>An MP of a summary and what happened, or would happen, for the MP's own address (design 8.19.3); staff only.</summary>
-public sealed record DigestMpResponse(string Slug, string Status, string FirstName = "", string LastName = "");
+/// <summary>
+/// A bill of a summary on the moderators' screen: for a prepared summary its numbers now, <paramref name="Held"/> (it drops out
+/// unless released) and <paramref name="Gone"/> (no longer open: it drops out); <paramref name="RecordId"/> for "Sulaikyti".
+/// </summary>
+public sealed record DigestReviewItemResponse(
+    Guid RecordId,
+    string BillNumber,
+    string BillTitle,
+    string? Stage,
+    DateOnly? PlannedDate,
+    int For,
+    int ForOlderThan30Days,
+    int Against,
+    int AgainstOlderThan30Days,
+    int? SurgeSharePercent,
+    int? SurgeWindowHours,
+    bool Held,
+    bool Gone,
+    IReadOnlyList<DigestReviewReasonResponse> Reasons);
+
+/// <summary>
+/// A summary on the moderators' screen (design 8.19.2, owner 2026-11-17): its common text once, as MPs read it. Status
+/// <c>prepared</c> (goes at <paramref name="DueAt"/>; <paramref name="ApprovedAt"/> once a moderator pressed "Patvirtinti"),
+/// <c>dry-run</c>, <c>sent</c>, <c>cancelled</c> (with the <paramref name="Statement"/>) or <c>dropped</c> (no bill was left at
+/// its time). <paramref name="MpCount"/>: MPs it would go to now (prepared) or went to.
+/// </summary>
+public sealed record DigestReviewRunResponse(
+    Guid Id,
+    string Kind,
+    DateOnly RunDate,
+    DateOnly? SittingDate,
+    DateTimeOffset PreparedAt,
+    DateTimeOffset? DueAt,
+    string Status,
+    int MpCount,
+    DateTimeOffset? SentAt,
+    DateTimeOffset? ApprovedAt,
+    string? Statement,
+    IReadOnlyList<DigestReviewItemResponse> Items);
+
+/// <summary>
+/// The prepared summary nobody approved or declined yet that goes first (design 8.19.2): in <c>GET /me</c> for a staff account
+/// only, from the browser only, for the box on every page.
+/// </summary>
+public sealed record DigestReviewNoticeResponse(DateTimeOffset DueAt, int Bills, int Reasons);
 
 /// <summary>
 /// The rules that decide what MPs receive, with their current values (design 8.4: shown on the methodology page).
 /// Times are Vilnius "HH:mm" or "off"; shares are fractions. <paramref name="Sending"/> is sending as it is now (design 8.19.1:
-/// <c>off</c>, <c>approval</c>, <c>automatic</c>), <paramref name="SendingSetting"/> what the setting says, and
-/// <paramref name="ApprovalHours"/> how long a summary waits for a moderator. <paramref name="GroupMinimum"/> is the setting
+/// <c>off</c> or <c>automatic</c>), <paramref name="SendingSetting"/> what the setting says, and <paramref name="ReviewHours"/>
+/// how long before its time a summary is prepared for review. <paramref name="GroupMinimum"/> is the setting
 /// <c>Digest:PartyGroupMinimum</c> (design 8.4): the smallest party group on a side whose number is shown; 0 or 1 = any group
 /// of one or more.
 /// </summary>
@@ -73,13 +118,13 @@ public sealed record DigestRulesResponse(
     int ReasonsPerSide,
     string Sending = "off",
     string SendingSetting = "off",
-    int ApprovalHours = 24);
+    int ReviewHours = 24);
 
 /// <summary>
 /// The moderators' summaries screen (design 8.19.2): sending as it is now with its lock (<c>no-introduction</c>,
-/// <c>not-caught</c> or null), and the summaries, waiting ones first.
+/// <c>not-caught</c> or null), and the summaries, prepared ones first.
 /// </summary>
-public sealed record DigestModerationResponse(string Sending, string SendingSetting, string? Lock, IReadOnlyList<DigestRunResponse> Runs);
+public sealed record DigestModerationResponse(string Sending, string SendingSetting, string? Lock, IReadOnlyList<DigestReviewRunResponse> Runs);
 
 /// <summary>Approving one urgent summary for a record (design 8.4); the reason is audited.</summary>
 public sealed record UrgentDigestRequest
@@ -110,15 +155,16 @@ public static class DigestRoutes
     public const string Rules = Digests + "/rules";
     public const string Digest = Digests + "/{date}";
     public const string OfRecord = ApiRoutes.Prefix + "/bills/{number}/record/digests";
-    public const string Mps = ApiRoutes.Prefix + "/moderation/digests/{id:guid}/mps";
-    public const string Preview = ApiRoutes.Prefix + "/moderation/digests/{id:guid}/mps/{slug}";
     public const string Urgent = ApiRoutes.Prefix + "/moderation/records/{id:guid}/urgent";
 
     /// <summary><c>GET</c>, moderators: the summaries screen (design 8.19.2).</summary>
     public const string Moderation = ApiRoutes.Prefix + "/moderation/digests";
 
-    /// <summary><c>POST</c>, moderators in a staff-passkey session: "Siųsti".</summary>
-    public const string Send = Moderation + "/{id:guid}/send";
+    /// <summary>
+    /// <c>POST</c>, moderators in a staff-passkey session: "Patvirtinti" (owner, 2026-11-17): the prepared summary is marked
+    /// reviewed; it still goes at its own time. No fresh passkey confirmation: it sends nothing.
+    /// </summary>
+    public const string Approve = Moderation + "/{id:guid}/approve";
 
     /// <summary><c>POST</c>, moderators in a staff-passkey session: "Nesiųsti" with a statement.</summary>
     public const string Cancel = Moderation + "/{id:guid}/cancel";
@@ -163,11 +209,7 @@ public static class DigestRoutes
     public static string ReasonAnchor(Guid runId, string number, string side, int place) =>
         $"reason-{runId:N}-{Uri.EscapeDataString(number)}-{side}-{place.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 
-    public static string MpsOf(Guid id) => $"{ApiRoutes.Prefix}/moderation/digests/{id}/mps";
-
-    public static string PreviewOf(Guid id, string slug) => $"{MpsOf(id)}/{Uri.EscapeDataString(slug)}";
-
-    public static string SendOf(Guid id) => $"{Moderation}/{id}/send";
+    public static string ApproveOf(Guid id) => $"{Moderation}/{id}/approve";
 
     public static string CancelOf(Guid id) => $"{Moderation}/{id}/cancel";
 }
@@ -177,7 +219,7 @@ public sealed record IntroductionLetterResponse(int Version, string Subject, str
 
 /// <summary>
 /// Design 8.8, 8.19: GET /digests, GET /digests/{date} and a record's summaries; the introduction letter; and the moderators'
-/// screen, preview, "Siųsti" and "Nesiųsti".
+/// screen, "Patvirtinti" and "Nesiųsti".
 /// </summary>
 public interface IDigestsApi
 {
@@ -190,17 +232,13 @@ public interface IDigestsApi
     /// <summary>The summaries that held the published record on a bill, newest first (empty until the first).</summary>
     Task<ApiResult<IReadOnlyList<RecordDigestResponse>>> GetRecordDigestsAsync(string number, CancellationToken cancellationToken = default);
 
-    Task<ApiResult<IReadOnlyList<DigestMpResponse>>> GetMpsAsync(Guid runId, CancellationToken cancellationToken = default);
-
-    Task<ApiResult<DigestPreviewResponse>> GetPreviewAsync(Guid runId, string slug, CancellationToken cancellationToken = default);
-
     /// <summary>The versions of the introduction letter sent, newest first; empty before the first (public).</summary>
     Task<ApiResult<IReadOnlyList<IntroductionLetterResponse>>> GetIntroductionAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>The moderators' summaries screen: sending as it is now and the summaries, waiting ones first.</summary>
+    /// <summary>The moderators' summaries screen: sending as it is now and the summaries, prepared ones first.</summary>
     Task<ApiResult<DigestModerationResponse>> GetModerationAsync(CancellationToken cancellationToken = default);
 
-    Task<ApiResult<DigestRunResponse>> SendAsync(Guid runId, CancellationToken cancellationToken = default);
+    Task<ApiResult<DigestRunResponse>> ApproveAsync(Guid runId, CancellationToken cancellationToken = default);
 
     Task<ApiResult<DigestRunResponse>> CancelAsync(Guid runId, CancelDigestRequest request, CancellationToken cancellationToken = default);
 }

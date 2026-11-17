@@ -583,10 +583,10 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             var html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/suvestines/" + date));
             html.ShouldContain(AppealSteps.ThirdBill);
             html.ShouldNotContain(Marker, Case.Insensitive);
-            var mps = await moderator.Browser.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
-            var preview = await moderator.Browser.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug));
-            preview.Text.ShouldContain(AppealSteps.ThirdBill);
-            preview.Text.ShouldNotContain(Marker, Case.Insensitive);
+            var screen = await moderator.Browser.GetJsonAsync<DigestModerationResponse>(DigestRoutes.Moderation);
+            var shown = System.Text.Json.JsonSerializer.Serialize(screen.Runs.Single(r => r.Id == weekly.Id));
+            shown.ShouldContain(AppealSteps.ThirdBill);
+            shown.ShouldNotContain(Marker, Case.Insensitive);
         }
         finally
         {

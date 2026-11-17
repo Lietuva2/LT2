@@ -258,4 +258,7 @@
   <data name="PublicProfile.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
   <data name="PublicProfile.SavedOn" xml:space="preserve"><value>Viešas profilis įjungtas.</value></data>
   <data name="PublicProfile.SavedOff" xml:space="preserve"><value>Viešas profilis išjungtas, jo adresas panaikintas.</value></data>
+  <data name="Mp.Copies.Title" xml:space="preserve"><value>Suvestinių kopijos jums</value></data>
+  <data name="Mp.Copies.Lead" xml:space="preserve"><value>Seimo nario suvestinių kopijas gaunate savo paskyros adresu. Kaip dažnai – pasirenkate patys; Seimo nario pasirinkimas jų nekeičia:</value></data>
+  <data name="Mp.Copies.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
 </root>

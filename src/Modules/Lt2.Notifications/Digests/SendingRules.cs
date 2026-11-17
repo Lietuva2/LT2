@@ -3,7 +3,7 @@ using Lt2.SharedKernel;
 namespace Lt2.Notifications.Digests;
 
 /// <summary>What sending is now (design 8.19.1): the setting, unless a lock keeps every summary a dry run.</summary>
-/// <param name="Mode"><c>off</c>, <c>approval</c> or <c>automatic</c>.</param>
+/// <param name="Mode"><c>off</c> or <c>automatic</c>.</param>
 /// <param name="Setting">What <c>Digest:Sending</c> says.</param>
 /// <param name="Lock">Why it is off although the setting says otherwise: <c>no-introduction</c> or <c>not-caught</c>; null when no lock holds.</param>
 internal sealed record SendingState(string Mode, string Setting, string? Lock)
@@ -12,15 +12,17 @@ internal sealed record SendingState(string Mode, string Setting, string? Lock)
 }
 
 /// <summary>
-/// Real sending (design 8.19), as pure functions: the effective state with its two locks, which runs count, when a waiting
-/// summary expires, which summaries a preference lets through, what happens to each MP's delivery, and the order of the bills
-/// in one MP's email.
+/// Real sending (design 8.19), as pure functions: the effective state with its two locks, which runs count, which summaries a
+/// preference lets through, what happens to each MP's delivery, and the order of the bills in one MP's email. Nobody approves a
+/// summary (owner, 2026-11-17): it is prepared for review and goes at its time.
 /// </summary>
 internal static class SendingRules
 {
     public const string Off = "off";
-    public const string Approval = "approval";
     public const string Automatic = "automatic";
+
+    /// <summary>A moderator's "Nesiųsti" needs a statement of at least so many characters (design 8.19.2).</summary>
+    public const int CancelStatementMinimum = 20;
     public const string Introduction = "introduction";
 
     /// <summary>The lock while no introduction letter has been sent (design 8.19.1).</summary>
@@ -35,7 +37,7 @@ internal static class SendingRules
     /// </summary>
     public static SendingState State(string setting, bool introductionSent, bool inventedData, bool mailCaught)
     {
-        var wanted = setting is Approval or Automatic ? setting : Off;
+        var wanted = setting is Automatic ? setting : Off;
         if (inventedData && !mailCaught)
         {
             return new SendingState(Off, wanted, wanted == Off ? null : NotCaught);
@@ -55,30 +57,25 @@ internal static class SendingRules
     /// </summary>
     public static bool MailMayLeave(bool inventedData, bool mailCaught) => !inventedData || mailCaught;
 
-    /// <summary>
-    /// The status of a summary when it is made (design 8.19.1, 8.19.2): a dry run while sending is off; an urgent summary is
-    /// a moderator's decision already and is sent at once; with approval the others wait; automatic sends them.
-    /// </summary>
-    public static string NewRunStatus(string kind, string mode) =>
-        mode == Off ? RunStatuses.DryRun
-        : kind == DigestRules.Urgent || mode == Automatic ? RunStatuses.Sent
-        : RunStatuses.Waiting;
+    /// <summary>What a prepared summary becomes at its time (design 8.19.1): a dry run while sending is off, otherwise sent.</summary>
+    public static string GoneStatus(string mode) => mode == Off ? RunStatuses.DryRun : RunStatuses.Sent;
 
     /// <summary>
     /// Which runs count for the weekly ceiling, "changed notably", "covered by Monday's summary" and "never yet in a
-    /// summary" (design 8.19.1): while sending is on, only waiting and sent ones, so earlier dry runs do not thin the first real
-    /// summary; while it is off, everything but a cancelled or expired run, as before. A cancelled or expired run frees its place.
+    /// summary" (design 8.19.1): a prepared one always (it goes unless declined or every bill drops out); while sending is on,
+    /// sent ones, so earlier dry runs do not thin the first real summary; while it is off, dry runs too. A cancelled or dropped
+    /// run never counts: it frees its place.
     /// </summary>
     public static bool Counts(string runStatus, bool sendingOn) => CountingStatuses(sendingOn).Contains(runStatus);
 
     /// <summary>The run statuses of <see cref="Counts"/>, as the database queries use them.</summary>
     public static IReadOnlyList<string> CountingStatuses(bool sendingOn) =>
-        sendingOn ? [RunStatuses.Waiting, RunStatuses.Sent] : [RunStatuses.DryRun, RunStatuses.Waiting, RunStatuses.Sent];
+        sendingOn ? [RunStatuses.Prepared, RunStatuses.Sent] : [RunStatuses.Prepared, RunStatuses.DryRun, RunStatuses.Sent];
 
-    /// <summary>The delivery statuses that count towards an MP's weekly ceiling: an email that went, or would go.</summary>
+    /// <summary>The delivery statuses that count towards an MP's weekly ceiling: an email that went, or would have gone.</summary>
     public static readonly IReadOnlyList<string> CeilingDeliveryStatuses =
     [
-        DeliveryStatuses.DryRun, DeliveryStatuses.Waiting, DeliveryStatuses.Queued, DeliveryStatuses.Sent, DeliveryStatuses.Failed,
+        DeliveryStatuses.DryRun, DeliveryStatuses.Queued, DeliveryStatuses.Sent, DeliveryStatuses.Failed,
         DeliveryStatuses.Bounced, DeliveryStatuses.Introduced,
     ];
 
@@ -93,28 +90,6 @@ internal static class SendingRules
     public static bool Introduced(string runKind, string deliveryStatus) =>
         deliveryStatus == DeliveryStatuses.Introduced
         || (runKind == Introduction && deliveryStatus is DeliveryStatuses.Queued or DeliveryStatuses.Sent);
-
-    /// <summary>
-    /// When a waiting summary expires (design 8.19.2): <paramref name="approvalHours"/> after it was made, or when its sitting's
-    /// day begins in Vilnius, whichever comes first.
-    /// </summary>
-    public static DateTimeOffset ExpiresAt(DateTimeOffset createdAt, int approvalHours, DateOnly? sittingDay)
-    {
-        var byHours = createdAt.AddHours(approvalHours);
-        if (sittingDay is not { } day)
-        {
-            return byHours;
-        }
-
-        var dayBegins = VilniusTime.StartOf(day);
-        return dayBegins < byHours ? dayBegins : byHours;
-    }
-
-    /// <summary>The sitting a summary is for: a before-vote summary's own; otherwise the first planned date it holds from its day on.</summary>
-    public static DateOnly? SittingOf(DateOnly? sittingDate, DateOnly runDate, IEnumerable<DateOnly?> plannedDates) =>
-        sittingDate ?? plannedDates.OfType<DateOnly>().Where(d => d >= runDate).Order().Cast<DateOnly?>().FirstOrDefault();
-
-    public static bool Expired(DateTimeOffset now, DateTimeOffset? expiresAt) => expiresAt is { } at && now >= at;
 
     /// <summary>
     /// The MP's choice against a summary's kind (design 8.19.4): the default lets everything through; "Tik kas savaitę" the
@@ -138,6 +113,17 @@ internal static class SendingRules
         suppressed ? DeliveryStatuses.Suppressed
         : !PreferenceAllows(frequency, kind) ? DeliveryStatuses.SkippedPreference
         : !introduced ? DeliveryStatuses.Introduced
+        : !DigestRules.WithinCeiling(alreadyThisWeek, maxPerWeek, kind == DigestRules.Urgent) ? DeliveryStatuses.SkippedCeiling
+        : DeliveryStatuses.Queued;
+
+    /// <summary>
+    /// What happens to an office member's copy (design 8.19.3, owner 2026-11-17), whatever the MP's own choice: never to a
+    /// suppressed address; not when the member's own choice excludes this kind; not over the member's own weekly ceiling (an
+    /// urgent summary may exceed it by one); otherwise queued.
+    /// </summary>
+    public static string OfficeStatus(bool suppressed, string frequency, string kind, int alreadyThisWeek, int maxPerWeek) =>
+        suppressed ? DeliveryStatuses.Suppressed
+        : !PreferenceAllows(frequency, kind) ? DeliveryStatuses.SkippedPreference
         : !DigestRules.WithinCeiling(alreadyThisWeek, maxPerWeek, kind == DigestRules.Urgent) ? DeliveryStatuses.SkippedCeiling
         : DeliveryStatuses.Queued;
 
@@ -172,7 +158,4 @@ internal static class SendingRules
         && at == address.Trim().LastIndexOf('@')
         && address.Trim()[(at + 1)..].Contains('.', StringComparison.Ordinal)
         && System.Net.Mail.MailAddress.TryCreate(address.Trim(), out _);
-
-    /// <summary>A moderator's "Nesiųsti" needs a statement of at least so many characters (design 8.19.2).</summary>
-    public const int CancelStatementMinimum = 20;
 }

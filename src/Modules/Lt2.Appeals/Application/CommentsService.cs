@@ -238,6 +238,9 @@ internal sealed class CommentsService(
         };
         db.Comments.Add(comment);
         await db.SaveChangesAsync(cancellationToken);
+
+        // Design 8.12.5: a comment written is the bill's activity.
+        await RecordActivity.TouchBillAsync(db, comment.BillNumber, comment.CreatedAt, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new CommentCreated(comment.Id);
     }

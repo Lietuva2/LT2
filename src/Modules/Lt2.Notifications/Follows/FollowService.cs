@@ -356,7 +356,10 @@ internal sealed class FollowAccountData(IDbContextFactory<NotificationsDb> conte
             .ToListAsync(cancellationToken);
         var notices = await db.NoticeSettings.AsNoTracking().Where(n => n.UserId == userId)
             .Select(n => new { planned = n.Planned, voted = n.Voted, statements = n.Statements, responses = n.Responses, members = n.Members, comments = n.Comments, frequency = n.Frequency, frequencySince = n.FrequencySince, previousFrequency = n.PreviousFrequency, previousSince = n.PreviousSince, changedAt = n.ChangedAt }).FirstOrDefaultAsync(cancellationToken);
-        return new { follows, emails = notices };
+        // Design 8.19.3 (owner, 2026-11-17): an office member's own choice of copies of the MP's summaries.
+        var officeCopies = await db.OfficeCopies.AsNoTracking().Where(c => c.UserId == userId)
+            .Select(c => new { mpSeimasPersonId = c.SeimasPersonId, frequency = c.Frequency, changedAt = c.ChangedAt }).ToListAsync(cancellationToken);
+        return new { follows, emails = notices, officeCopies };
     }
 
     public async Task EraseAsync(Guid userId, DbTransaction transaction, CancellationToken cancellationToken)
@@ -371,6 +374,10 @@ internal sealed class FollowAccountData(IDbContextFactory<NotificationsDb> conte
                  {
                      "DELETE FROM notify.follow WHERE user_id = @user", "DELETE FROM notify.notice_setting WHERE user_id = @user",
                      "DELETE FROM notify.member_mail_token WHERE user_id = @user",
+
+                     // An office member's copies (design 8.19.3): the choice, and the delivery rows that name the account.
+                     "DELETE FROM notify.office_copy WHERE user_id = @user",
+                     "DELETE FROM notify.digest_delivery WHERE recipient = 'office' AND office_user_id = @user",
                  })
         {
 #pragma warning disable CA2100 // Constant SQL.

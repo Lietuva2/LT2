@@ -65,7 +65,6 @@
 <data name="Digest.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Digest.PublicCopy" xml:space="preserve"><value>Ta pati suvestinė viešai: {0}</value></data>
 <data name="Digest.WholeReason" xml:space="preserve"><value>Visas argumentas: {0}</value></data>
-<data name="Digest.Skipped" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nebūtų siunčiama: viršytas savaitės laiškų skaičius.)</value></data>
 <data name="Stage.presentation" xml:space="preserve"><value>pateikimas</value></data>
 <data name="Stage.consideration" xml:space="preserve"><value>svarstymas</value></data>
 <data name="Stage.adoption" xml:space="preserve"><value>priėmimas</value></data>
@@ -173,9 +172,6 @@
   <data name="Digest.Preferences" xml:space="preserve"><value>Keisti suvestinių dažnumą arba jų atsisakyti: {0}</value></data>
   <data name="Digest.Takeover" xml:space="preserve"><value>Prisijungę prie Lietuva 2.0 šiuo adresu galite perimti savo Seimo nario profilį ir atsakyti visiems iš karto: {0}</value></data>
   <data name="Digest.CopyStop" xml:space="preserve"><value>Nebegauti kopijų: {0}</value></data>
-  <data name="Digest.Skipped.skipped-preference" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nesiunčiama: tokių suvestinių jis nepageidauja.)</value></data>
-  <data name="Digest.Skipped.suppressed" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nesiunčiama: jo adresas yra sąraše „Nesiunčiama“.)</value></data>
-  <data name="Digest.Skipped.introduced" xml:space="preserve"><value>(Šiam Seimo nariui vietoj šios suvestinės siunčiamas pristatymo laiškas: jo jis dar negavo.)</value></data>
   <data name="Intro.Test" xml:space="preserve"><value>[Bandomoji kopija: Seimo nariams šis laiškas dar neišsiųstas. Asmeninės nuorodos jame pakeistos pavyzdžiu.]</value></data>
   <data name="Intro.TestSubject" xml:space="preserve"><value>[Bandomoji kopija]</value></data>
   <data name="MpMail.Frequency.default" xml:space="preserve"><value>Kas savaitę ir prieš balsavimus</value></data>
@@ -252,4 +248,17 @@
   <data name="Comments.Notice.Line" xml:space="preserve"><value>{2} {0}: {1}</value></data>
   <data name="Comments.Notice.Footer.One" xml:space="preserve"><value>Šį laišką gavote, nes šis argumentas – jūsų. Šiuos laiškus galite išjungti savo paskyroje: {0}</value></data>
   <data name="Comments.Notice.Footer.Many" xml:space="preserve"><value>Šį laišką gavote, nes šie argumentai – jūsų. Šiuos laiškus galite išjungti savo paskyroje: {0}</value></data>
+  <data name="DigestReview.Subject" xml:space="preserve"><value>Suvestinė Seimo nariams išeis {0}</value></data>
+  <data name="DigestReview.Kind.weekly" xml:space="preserve"><value>Savaitinė suvestinė</value></data>
+  <data name="DigestReview.Kind.before-vote" xml:space="preserve"><value>Suvestinė prieš posėdį</value></data>
+  <data name="DigestReview.Body" xml:space="preserve"><value>{0} Seimo nariams paruošta ir išeis {1}: {2}, {3}.</value></data>
+  <data name="DigestReview.What" xml:space="preserve"><value>Jei niekas nieko nedarys, ji išeis tokia, kokia paruošta, o skaičiai bus tokie, kokie bus išsiunčiant. Iki tol galite paslėpti argumentą (jo vietą užims kitas tos pusės argumentas), sulaikyti projektą, patvirtinti suvestinę arba jos nesiųsti.</value></data>
+  <data name="DigestReview.Link" xml:space="preserve"><value>Peržiūrėti (reikia darbuotojo prieigos rakto): {0}</value></data>
+  <data name="DigestReview.Bill.One" xml:space="preserve"><value>{0} projektas</value></data>
+  <data name="DigestReview.Bill.Few" xml:space="preserve"><value>{0} projektai</value></data>
+  <data name="DigestReview.Bill.Many" xml:space="preserve"><value>{0} projektų</value></data>
+  <data name="DigestReview.Reason.One" xml:space="preserve"><value>{0} argumentas</value></data>
+  <data name="DigestReview.Reason.Few" xml:space="preserve"><value>{0} argumentai</value></data>
+  <data name="DigestReview.Reason.Many" xml:space="preserve"><value>{0} argumentų</value></data>
+  <data name="Digest.CopyOfOffice" xml:space="preserve"><value>Tai Seimo nario suvestinės kopija, siunčiama jums kaip jo biuro nariui. Seimo narys: {0}. Kaip dažnai gauti kopijas, pasirenkate savo paskyroje: {1}</value></data>
 </root>

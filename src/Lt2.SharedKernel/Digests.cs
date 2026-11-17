@@ -4,8 +4,8 @@ namespace Lt2.SharedKernel;
 public sealed record DigestReason(string Side, string Text, int Endorsements);
 
 /// <summary>
-/// A record as the summaries see it (design 8.4): both sides with the counts for accounts older than 30 days, the
-/// threshold, the surge note, the planned date, and the most endorsed arguments a moderator has seen.
+/// A record as the summaries see it now (design 8.4): both sides with the counts for accounts older than 30 days, the
+/// threshold, the surge note and the planned date. Its arguments come from <see cref="IDigestSource.ReasonPoolAsync"/>.
 /// </summary>
 public sealed record DigestCandidate(
     Guid RecordId,
@@ -20,8 +20,13 @@ public sealed record DigestCandidate(
     bool Held,
     int? SurgeSharePercent,
     int? SurgeWindowHours,
-    PlannedDate? Planned,
-    IReadOnlyList<DigestReason> Reasons);
+    PlannedDate? Planned);
+
+/// <summary>
+/// An argument a summary may hold (design 8.4, 8.19.2, owner 2026-11-17): published and not hidden, with its "Man svarbu" count
+/// now and when it first became public. No author.
+/// </summary>
+public sealed record DigestPoolReason(Guid Id, Guid RecordId, string Side, string Text, int Endorsements, DateTimeOffset PublishedAt);
 
 /// <summary>
 /// How many on each side said they support a party (design 8.4, 5.2 party_support). Only ever published for groups of at
@@ -34,6 +39,13 @@ public interface IDigestSource
 {
     /// <summary>Every open record with its numbers now; the summary rules decide which go in.</summary>
     Task<IReadOnlyList<DigestCandidate>> CandidatesAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The arguments a summary may choose from on the given records (design 8.19.2, owner 2026-11-17): published now (so
+    /// neither hidden, merged nor waiting) and first public no later than <paramref name="publishedBy"/>, the summary's
+    /// preparation. Whether a moderator has seen one does not matter.
+    /// </summary>
+    Task<IReadOnlyList<DigestPoolReason>> ReasonPoolAsync(IReadOnlyCollection<Guid> recordIds, DateTimeOffset publishedBy, CancellationToken cancellationToken);
 
     /// <summary>Per record and party, the supporters on each side, with every group under 20 already withheld.</summary>
     Task<IReadOnlyDictionary<Guid, IReadOnlyList<PartyNumbers>>> PartyNumbersAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken);
@@ -111,6 +123,16 @@ public interface IMpDirectory
     /// more than one such MP belongs to nobody. Null for every other address. No address leaves the module otherwise.
     /// </summary>
     Task<MpFacts?> OfficialAddressOwnerAsync(string email, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Design 8.19.2 (owner, 2026-11-17): where the notice of a prepared summary goes. Implemented by Identity: the own addresses of
+/// the accounts holding an activated moderator or administrator role (as <c>GET /me</c>'s <c>staffAccount</c>), used only to
+/// write outbox rows; never logged or shown.
+/// </summary>
+public interface IStaffAddresses
+{
+    Task<IReadOnlyList<string>> ModeratorAddressesAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>

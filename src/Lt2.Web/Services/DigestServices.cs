@@ -9,22 +9,25 @@ namespace Lt2.Web.Services;
 internal static class DigestMapping
 {
     public static DigestRunResponse Map(DigestRunInfo r) => new(
-        r.Id, r.Kind, r.RunDate, r.SittingDate, r.CreatedAt, r.Status, r.MpCount, r.Items.Select(Map).ToList(), r.SentCount, r.DecidedAt, r.Statement, r.ExpiresAt);
+        r.Id, r.Kind, r.RunDate, r.SittingDate, r.CreatedAt, r.Status, r.MpCount, r.Items.Select(Map).ToList(), r.SentCount, r.SentAt, r.Statement);
+
+    public static DigestReviewRunResponse Map(DigestReview r) => new(
+        r.Id, r.Kind, r.RunDate, r.SittingDate, r.PreparedAt, r.DueAt, r.Status, r.MpCount, r.SentAt, r.ApprovedAt, r.Statement,
+        r.Items.Select(i => new DigestReviewItemResponse(
+            i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.For, i.ForOlderThan30Days, i.Against, i.AgainstOlderThan30Days,
+            i.SurgeSharePercent, i.SurgeWindowHours, i.Held, i.Gone,
+            i.Reasons.Select(x => new DigestReviewReasonResponse(x.Id, x.Side, x.Text, x.Endorsements, x.Replacement)).ToList())).ToList());
 
     public static IntroductionLetterResponse Public(IntroductionVersion v) => new(v.Version, v.Subject, v.Text, v.SignerName, v.SignerRole, v.SentAt);
 
     public static IntroductionVersionResponse Map(IntroductionVersion v) => new(v.Version, v.Subject, v.Text, v.SignerName, v.SignerRole, v.WrittenAt, v.SentAt);
 
-    /// <summary>The moderators' summaries screen (design 8.19.2): sending now, and the summaries with the waiting ones first.</summary>
+    /// <summary>The moderators' summaries screen (design 8.19.2): sending now, the prepared summaries first, then the latest gone.</summary>
     public static async Task<DigestModerationResponse> ModerationAsync(IDigests digests, CancellationToken ct)
     {
         var sending = await digests.SendingAsync(ct);
-        var runs = await digests.ListAsync(ct);
-        return new DigestModerationResponse(
-            sending.Mode,
-            sending.Setting,
-            sending.Lock,
-            runs.OrderByDescending(r => r.Status == "waiting").ThenByDescending(r => r.CreatedAt).Take(30).Select(Map).ToList());
+        var runs = await digests.ReviewAsync(ct);
+        return new DigestModerationResponse(sending.Mode, sending.Setting, sending.Lock, runs.Select(Map).ToList());
     }
 
     /// <summary>
@@ -62,7 +65,7 @@ internal static class DigestMapping
         i.Reasons.Select(x => new DigestReasonResponse(x.Side, x.Text, x.Endorsements)).ToList());
 }
 
-/// <summary>Server-side <see cref="IDigestsApi"/> for the pages; the preview needs an active moderator role.</summary>
+/// <summary>Server-side <see cref="IDigestsApi"/> for the pages; the moderators' calls need an active moderator role.</summary>
 internal sealed class ServerDigestsApi(
     IDigests digests, IMpMailAdministration mpMail, Lt2.Appeals.IAppealsModule appeals, ISettings settings, IHttpContextAccessor accessor, ErrorMapper errors) : IDigestsApi
 {
@@ -89,7 +92,7 @@ internal sealed class ServerDigestsApi(
             ReasonsPerSide: 2,
             Sending: sending.Mode,
             SendingSetting: sending.Setting,
-            ApprovalHours: await settings.GetAsync(SettingKeys.DigestApprovalHours, ct));
+            ReviewHours: await settings.GetAsync(SettingKeys.DigestReviewHours, ct));
     }
 
     public async Task<ApiResult<IReadOnlyList<IntroductionLetterResponse>>> GetIntroductionAsync(CancellationToken cancellationToken = default) =>
@@ -101,22 +104,10 @@ internal sealed class ServerDigestsApi(
             ? ApiResult<DigestModerationResponse>.Ok(await DigestMapping.ModerationAsync(digests, cancellationToken))
             : ApiResult<DigestModerationResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
-    public async Task<ApiResult<DigestRunResponse>> SendAsync(Guid runId, CancellationToken cancellationToken = default)
-    {
-        if (await ModeratorAsync() is not { } moderator)
-        {
-            return ApiResult<DigestRunResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
-        }
-
-        // Design 6.2, 8.19.2: approving a send asks for the passkey again.
-        var identity = accessor.HttpContext!.RequestServices.GetRequiredService<Lt2.Identity.IIdentityModule>();
-        if (await Endpoints.Admin.FreshConfirmation.MissingAsync(identity, accessor.HttpContext.User, cancellationToken) is { } missing)
-        {
-            return ApiResult<DigestRunResponse>.Fail(errors.ToProblem(missing));
-        }
-
-        return errors.ToApiResult(await digests.SendAsync(runId, moderator, cancellationToken), DigestMapping.Map);
-    }
+    public async Task<ApiResult<DigestRunResponse>> ApproveAsync(Guid runId, CancellationToken cancellationToken = default) =>
+        await ModeratorAsync() is { } moderator
+            ? errors.ToApiResult(await digests.ApproveAsync(runId, moderator, cancellationToken), DigestMapping.Map)
+            : ApiResult<DigestRunResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
     public async Task<ApiResult<DigestRunResponse>> CancelAsync(Guid runId, CancelDigestRequest request, CancellationToken cancellationToken = default) =>
         await ModeratorAsync() is { } moderator
@@ -136,16 +127,6 @@ internal sealed class ServerDigestsApi(
 
     public async Task<ApiResult<IReadOnlyList<RecordDigestResponse>>> GetRecordDigestsAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await DigestMapping.ForRecordAsync(appeals, digests, number, cancellationToken), list => (IReadOnlyList<RecordDigestResponse>)list);
-
-    public async Task<ApiResult<IReadOnlyList<DigestMpResponse>>> GetMpsAsync(Guid runId, CancellationToken cancellationToken = default) =>
-        await IsModeratorAsync()
-            ? ApiResult<IReadOnlyList<DigestMpResponse>>.Ok((await digests.MpsAsync(runId, cancellationToken)).Select(m => new DigestMpResponse(m.Slug, m.Status, m.FirstName, m.LastName)).ToList())
-            : ApiResult<IReadOnlyList<DigestMpResponse>>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
-
-    public async Task<ApiResult<DigestPreviewResponse>> GetPreviewAsync(Guid runId, string slug, CancellationToken cancellationToken = default) =>
-        await IsModeratorAsync()
-            ? errors.ToApiResult(await digests.PreviewAsync(runId, slug, cancellationToken), p => new DigestPreviewResponse(p.Subject, p.Text))
-            : ApiResult<DigestPreviewResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
     private async Task<bool> IsModeratorAsync()
     {

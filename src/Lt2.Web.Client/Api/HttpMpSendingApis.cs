@@ -18,20 +18,14 @@ internal sealed class HttpDigestsApi(ApiHttp http) : IDigestsApi
     public Task<ApiResult<IReadOnlyList<RecordDigestResponse>>> GetRecordDigestsAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<RecordDigestResponse>>(HttpMethod.Get, DigestRoutes.OfRecordOn(number), null, cancellationToken);
 
-    public Task<ApiResult<IReadOnlyList<DigestMpResponse>>> GetMpsAsync(Guid runId, CancellationToken cancellationToken = default) =>
-        http.SendAsync<IReadOnlyList<DigestMpResponse>>(HttpMethod.Get, DigestRoutes.MpsOf(runId), null, cancellationToken);
-
-    public Task<ApiResult<DigestPreviewResponse>> GetPreviewAsync(Guid runId, string slug, CancellationToken cancellationToken = default) =>
-        http.SendAsync<DigestPreviewResponse>(HttpMethod.Get, DigestRoutes.PreviewOf(runId, slug), null, cancellationToken);
-
     public Task<ApiResult<IReadOnlyList<IntroductionLetterResponse>>> GetIntroductionAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<IntroductionLetterResponse>>(HttpMethod.Get, DigestRoutes.Introduction, null, cancellationToken);
 
     public Task<ApiResult<DigestModerationResponse>> GetModerationAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<DigestModerationResponse>(HttpMethod.Get, DigestRoutes.Moderation, null, cancellationToken);
 
-    public Task<ApiResult<DigestRunResponse>> SendAsync(Guid runId, CancellationToken cancellationToken = default) =>
-        http.SendAsync<DigestRunResponse>(HttpMethod.Post, DigestRoutes.SendOf(runId), new { }, cancellationToken);
+    public Task<ApiResult<DigestRunResponse>> ApproveAsync(Guid runId, CancellationToken cancellationToken = default) =>
+        http.SendAsync<DigestRunResponse>(HttpMethod.Post, DigestRoutes.ApproveOf(runId), new { }, cancellationToken);
 
     public Task<ApiResult<DigestRunResponse>> CancelAsync(Guid runId, CancelDigestRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<DigestRunResponse>(HttpMethod.Post, DigestRoutes.CancelOf(runId), request, cancellationToken);
@@ -66,6 +60,12 @@ internal sealed class HttpMpMailApi(ApiHttp http) : IMpMailApi
 
     public Task<ApiResult<MpMailChoiceResponse>> SetMineAsync(MpMailFrequencyRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<MpMailChoiceResponse>(HttpMethod.Put, MpMailRoutes.Mine, request, cancellationToken);
+
+    public Task<ApiResult<MpOfficeCopiesResponse>> GetOfficeCopiesAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<MpOfficeCopiesResponse>(HttpMethod.Get, MpMailRoutes.OfficeCopies, null, cancellationToken);
+
+    public Task<ApiResult<MpOfficeCopiesResponse>> SetOfficeCopiesAsync(MpMailFrequencyRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<MpOfficeCopiesResponse>(HttpMethod.Put, MpMailRoutes.OfficeCopies, request, cancellationToken);
 }
 
 /// <summary>The browser's <see cref="IMpSendingAdminApi"/> (design 8.19.5, 8.19.6).</summary>

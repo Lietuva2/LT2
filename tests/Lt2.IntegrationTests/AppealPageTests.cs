@@ -463,7 +463,9 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         method.ShouldContain("<dt id=\"riba\">Riba</dt><dd class=\"num\">dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – 50).</dd>");
         method.ShouldNotContain("visiems projektams");
         method.ShouldContain("pirmadienį 07:00");
-        method.ShouldContain("12:00 darbo dieną prieš posėdį");
+        method.ShouldContain("darbo dieną prieš posėdį, 12:00");
+        method.ShouldContain("kiekviena suvestinė paruošiama 24 val. anksčiau", customMessage: "design 8.19.2, owner 2026-11-17");
+        method.ShouldContain("Skaičiai – tokie, kokie yra išsiunčiant.");
         method.ShouldContain("2 suvestinės vienam Seimo nariui");
         method.ShouldContain("pasikeitė bent 10 %");
         method.ShouldContain("Argumentai yra vieši: kiekvienas rodomas su autoriaus vardu ir puse");
