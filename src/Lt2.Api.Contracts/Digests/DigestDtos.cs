@@ -136,9 +136,21 @@ public static class DigestRoutes
 
     public static string OfRecordOn(string number) => AppealRoutes.RecordOf(number) + "/digests";
 
-    /// <summary>The public summary page of a day, at one bill's item in one run.</summary>
+    /// <summary>The query parameter that puts one bill's item first on a summary page (owner, 2026-11-17).</summary>
+    public const string BillParameter = "projektas";
+
+    /// <summary>
+    /// The public summary page of a day with one bill's item first (owner, 2026-11-17): <c>?projektas=</c>, not a fragment, so the
+    /// page opens at its title and the item is the first thing under it, nothing scrolled away. The day's summaries that hold
+    /// the bill come before those that do not, so <paramref name="runId"/> is not in the address; it stays in the signature,
+    /// which the bill's page calls.
+    /// </summary>
     public static string PageAt(DateOnly date, Guid runId, string number) =>
-        "/suvestines/" + date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) + "#" + ItemAnchor(runId, number);
+        PageOf(date) + "?" + BillParameter + "=" + Uri.EscapeDataString(number);
+
+    /// <summary>The public summary page of a day.</summary>
+    public static string PageOf(DateOnly date) =>
+        "/suvestines/" + date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>The element id of one bill's item on a summary page.</summary>
     public static string ItemAnchor(Guid runId, string number) => $"item-{runId:N}-{Uri.EscapeDataString(number)}";

@@ -3,11 +3,19 @@
 @using Lt2.Api.Contracts.Mps
 @inherits InteractiveBase<UiText>
 @inject IMpApi MpApi
+@inject IMeApi MeApi
+@inject IAuthApi Auth
+@inject Passkeys PasskeyBrowser
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
-@* Design 8.5.3: an office member's one-time link, made by the MP's account and passed on by its own means. A member who
-   opens it in a passkey session and accepts becomes an office member of that MP. Design 6.8: the token is after the "#",
-   read in the browser and sent in the request body. *@
+@* Design 8.5.3: an office member's one-time link, made by the MP's account and passed on by its own means. Owner, 2026-11-17:
+   everything is done on this one page. A visitor signs in or registers here (the sign-in steps, which then reload this page);
+   a member signed in by code gets one button that makes a passkey or uses one and accepts in the same request, after which
+   the session is a passkey session; a passkey session gets "Priimti". Design 6.8: the token is after the "#", read in the
+   browser, never removed from the address, kept in no storage, and sent only in the request body. Opened without it, the
+   page asks for the code (the same one-time code, typed; design 6.8, owner 2026-11-17), and a person without an account
+   registers here with the invitation in place of an invitation code. *@
 <PageTitle>@L["MpOffice.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -15,52 +23,156 @@
     <NeedsScript />
     @if (_read && _token is null)
     {
-        <p class="note" role="alert" id="office-missing">@L["MpLink.Missing"]</p>
-    }
-    else if (_read && !_signedIn)
-    {
-        <p class="note" id="office-sign-in">@L["MpOffice.SignInFirst"] <a href="/prisijungti">@L["MpLink.SignIn"]</a></p>
+        @* Owner, 2026-11-17: opened without the link's code, the page asks for it (the email gives both). *@
+        <p id="office-code-lead">@L["MpOffice.CodeLead"]</p>
+        <CodeEntry Label="@L["MpOffice.CodeLabel"]" Entered="CodeEnteredAsync" IdPrefix="office-" />
     }
     else if (Joined is { } joined)
     {
         <p class="note note--quiet" role="status" id="office-joined">
-            @L.Format("Mp.OfficeOf", joined.FirstName + " " + joined.LastName) <a href="@AccountScreens.Taking">@L["MpOffice.ToAccount"]</a>
+            @L.Format("Mp.OfficeOf", joined.FirstName + " " + joined.LastName) <a href="@AccountScreens.MpLink">@L["MpOffice.ToAccount"]</a>
         </p>
     }
     else
     {
-        <section class="sheet stack" aria-labelledby="office-what" id="office-invitation">
-            <h2 id="office-what" class="visually-hidden">@L["MpOffice.What"]</h2>
-            <p>@L["MpOffice.Lead"]</p>
-            <p class="small">@L["MpOffice.PasskeyFirst"]</p>
-            <p><button type="button" class="btn" id="office-accept" disabled="@(Locked || !_read)" @onclick="AcceptAsync">@L["MpOffice.Accept"]</button></p>
-        </section>
+        <p>@L["MpOffice.Lead"]</p>
+        @if (_read && _me is not { RegistrationComplete: true })
+        {
+            @* Not signed in, or a registration still to finish: the steps are here and come back to this page. *@
+            <p class="note" id="office-sign-in">@L["MpOffice.SignInHere"]</p>
+            <div class="office-sign-in"><SignInFlow ReturnTo="@_here" OfficeInvitation="@_token" /></div>
+        }
+        else
+        {
+            <section class="sheet stack" aria-labelledby="office-what" id="office-invitation">
+                <h2 id="office-what" class="visually-hidden">@L["MpOffice.What"]</h2>
+                @switch (Way)
+                {
+                    case OfficeWay.Session:
+                        <p><button type="button" class="btn" id="office-accept" disabled="@(Locked || !_read)" @onclick="() => AcceptAsync(OfficeWay.Session)">@L["MpOffice.Accept"]</button></p>
+                        break;
+                    case OfficeWay.Passkey:
+                        <p class="small" id="office-passkey-hint">@L["MpOffice.PasskeyHint"]</p>
+                        <p><button type="button" class="btn" id="office-accept" disabled="@(Locked || !_read)" @onclick="() => AcceptAsync(OfficeWay.Passkey)">@L["MpOffice.SignInAndAccept"]</button></p>
+                        <p class="small">@L["MpOffice.NoKeyHere"] <button type="button" class="linkish" id="office-accept-new" disabled="@(Locked || !_read)" @onclick="() => AcceptAsync(OfficeWay.NewPasskey)">@L["MpOffice.AddAndAccept"]</button></p>
+                        break;
+                    default:
+                        <p class="small" id="office-passkey-hint">@L["MpOffice.NewPasskeyHint"]</p>
+                        <p><button type="button" class="btn" id="office-accept" disabled="@(Locked || !_read)" @onclick="() => AcceptAsync(OfficeWay.NewPasskey)">@L["MpOffice.AddAndAccept"]</button></p>
+                        break;
+                }
+            </section>
+        }
     }
     <Messages Message="@Message" Info="@Info" />
 </div>
 
 @code {
+    private enum OfficeWay { Session, Passkey, NewPasskey }
+
     private bool _read;
-    private bool _signedIn;
     private string? _token;
+    private string _here = MpRoutes.OfficeInvitationPage;
+    private MeResponse? _me;
 
     private MpLinkResponse? Joined { get; set; }
 
+    /// <summary>The one button the account gets: "Priimti" in a passkey session; otherwise with a passkey it has or a new one.</summary>
+    private OfficeWay Way => _me is { PasskeySession: true } ? OfficeWay.Session : _me is { PasskeyCount: > 0 } ? OfficeWay.Passkey : OfficeWay.NewPasskey;
+
     protected override async Task OnInitializedAsync()
     {
+        // Nothing until the browser has read the token: the server cannot know it.
         if (!RendererInfo.IsInteractive)
         {
             return;
         }
 
-        _token = InvitationLink.Fragment(Navigation.Uri);
-        _signedIn = await IsSignedInAsync();
+        var address = await BrowserAddressAsync();
+        _token = OneTimeCode.Normalize(InvitationLink.Fragment(address)) ?? InvitationLink.Fragment(address);
+        _here = MpRoutes.OfficeInvitationPage + (address.Contains('#', StringComparison.Ordinal) ? address[address.IndexOf('#', StringComparison.Ordinal)..] : "");
+        if (await IsSignedInAsync())
+        {
+            var me = await MeApi.GetAsync();
+            _me = me.IsSuccess ? me.Value : null;
+        }
+
         _read = true;
     }
 
-    private Task AcceptAsync() => RunAsync(async () =>
+    /// <summary>A code typed on the page: it is now after the "#" of the address too, so the sign-in steps keep it.</summary>
+    private async Task CodeEnteredAsync(string code)
     {
-        var accepted = await MpApi.AcceptOfficeInvitationAsync(new MpOfficeAcceptanceRequest { Token = _token ?? "" });
+        _token = code;
+        _here = MpRoutes.OfficeInvitationPage + "#" + code;
+        if (_me is null && await IsSignedInAsync())
+        {
+            var me = await MeApi.GetAsync();
+            _me = me.IsSuccess ? me.Value : null;
+        }
+    }
+
+    /// <summary>The address the browser shows, with its "#" part (the navigation manager's when the browser cannot be asked).</summary>
+    private async Task<string> BrowserAddressAsync()
+    {
+        try
+        {
+            return await JS.InvokeAsync<string?>("location.toString") ?? Navigation.Uri;
+        }
+        catch (JSException)
+        {
+            return Navigation.Uri;
+        }
+    }
+
+    private Task AcceptAsync(OfficeWay way) => RunAsync(async () =>
+    {
+        var request = new MpOfficeAcceptanceRequest { Token = _token ?? "" };
+        if (way != OfficeWay.Session)
+        {
+            if (!await PasskeyBrowser.IsSupportedAsync())
+            {
+                Message = L["Passkey.Unsupported"];
+                return;
+            }
+
+            if (way == OfficeWay.NewPasskey)
+            {
+                var options = await Auth.GetPasskeyCreationOptionsAsync();
+                if (!Succeeded(options))
+                {
+                    return;
+                }
+
+                var created = await PasskeyBrowser.CreateAsync(options.Value!);
+                if (created is null)
+                {
+                    Message = L["Passkey.Cancelled"];
+                    return;
+                }
+
+                request = request with { NewPasskey = created };
+            }
+            else
+            {
+                var options = await Auth.GetPasskeyRequestOptionsAsync();
+                if (!Succeeded(options))
+                {
+                    return;
+                }
+
+                var asserted = await PasskeyBrowser.GetAsync(options.Value!);
+                if (asserted is null)
+                {
+                    Message = L["Passkey.Cancelled"];
+                    return;
+                }
+
+                request = request with { Passkey = asserted };
+            }
+        }
+
+        var accepted = await MpApi.AcceptOfficeInvitationAsync(request);
         if (!accepted.IsSuccess)
         {
             Show(accepted.Problem);

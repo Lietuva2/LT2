@@ -31,7 +31,7 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
         var reports = await db.Reports.AsNoTracking().Where(r => r.ReporterUserId == userId)
             .Select(r => new { r.TargetKind, r.TargetId, r.Ground, r.Text, r.Status, r.CreatedAt }).ToListAsync(cancellationToken);
         var flags = (await db.Flags.AsNoTracking().Where(f => f.ReporterUserId == userId).ToListAsync(cancellationToken))
-            .Select(f => new { bill = bills.GetValueOrDefault(f.RecordId), f.Kind, f.Link, f.Note, f.Status, f.CreatedAt });
+            .Select(f => new { bill = bills.GetValueOrDefault(f.RecordId), f.Kind, f.Link, f.Note, date = f.ProposedDate, f.Status, f.CreatedAt });
 
         // Restrictions on the person's writing (design 8.3): the person's own data, without who set or lifted them.
         var restrictions = (await db.WritingRestrictions.AsNoTracking().Where(w => w.UserId == userId).ToListAsync(cancellationToken))

@@ -10,7 +10,7 @@ namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
 /// <c>POST /api/v1/bills/{number}/record/flags</c>: "the date is wrong" or "this is being voted sooner", with a link to
-/// the source (design 8.4). Only a participant (a member with a side on the open bill) who may write; one open flag per
+/// the source and, when the person knows it, the right date (design 8.4). Only a participant (a member with a side on the open bill) who may write; one open flag per
 /// person and bill, a second changes nothing. A moderator corrects the date.
 /// </summary>
 internal static class FlagDateEndpoint
@@ -28,7 +28,7 @@ internal static class FlagDateEndpoint
 
     private static async Task<IResult> HandleAsync(string number, FlagRequest request, ClaimsPrincipal user, IAppealsModule appeals, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await appeals.FlagDateAsync(number, user.UserId()!.Value, new NewFlag(request.Kind, request.Link, request.Note), cancellationToken);
+        var result = await appeals.FlagDateAsync(number, user.UserId()!.Value, new NewFlag(request.Kind, request.Link, request.Note, request.Date), cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }
 }

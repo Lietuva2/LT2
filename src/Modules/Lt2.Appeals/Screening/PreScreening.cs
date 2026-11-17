@@ -64,14 +64,18 @@ internal sealed partial class RuleBasedPreScreening : IPreScreening
     /// A Lithuanian phone number (owner, 2026-11-17): the 8-digit national number, which starts with 3–9 (a mobile 6xx xxxxx,
     /// Vilnius 5 xxx xxxx, another area's 2-digit code and 6 digits, the 7xx and 8xx services), written internationally after
     /// <c>+370</c> or <c>00370</c>, nationally after the trunk prefix <c>0</c> in use since 2025, or after the old prefix
-    /// <c>8</c> people still write; spaces, hyphens and brackets may stand between the digits. Nothing else: not a date, a
-    /// year span, a sum, a law's or a document's number, a percentage, nor digits inside an <c>https://</c> or <c>http://</c>
-    /// link.
+    /// <c>8</c> people still write; spaces, hyphens and brackets may stand between the digits. Also (owner, 2026-11-17) a mobile
+    /// number without any prefix: eight digits starting with 6, standing alone, written together (<c>61234567</c>) or grouped
+    /// as people write them (<c>612 34567</c>, <c>6123 4567</c>, <c>6 1234 567</c>, with a space or a hyphen); a landline
+    /// without a prefix stays unflagged. Nothing else: not a date, a year span, a sum (a thousands grouping such as
+    /// <c>60 000 000</c> is none of those shapes), a law's or a document's number (after <c>Nr.</c> or a letter and a hyphen),
+    /// a percentage, nor digits inside an <c>https://</c> or <c>http://</c> link.
     /// </summary>
     public static bool ContainsPhoneNumber(string text)
     {
         ArgumentNullException.ThrowIfNull(text);
-        return PhonePattern().IsMatch(LinkAddress().Replace(text, " "));
+        var withoutLinks = LinkAddress().Replace(text, " ");
+        return PhonePattern().IsMatch(withoutLinks) || MobileWithoutPrefixPattern().IsMatch(withoutLinks);
     }
 
     [GeneratedRegex(@"[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.\p{L}{2,}", RegexOptions.CultureInvariant)]
@@ -83,6 +87,14 @@ internal sealed partial class RuleBasedPreScreening : IPreScreening
         @"(?<![\p{N}][\s\-.,/]?)(?<![\p{L}])(?:(?:\+|00)\s*370|\(?[08])[\s\-()]*[3-9](?:[\s\-()]*\d){7}(?![\s\-.,/]?\d)",
         RegexOptions.CultureInvariant)]
     private static partial Regex PhonePattern();
+
+    // A mobile number without a prefix (owner, 2026-11-17): 6 and seven digits, together or as 3+5, 4+4 or 1+4+3 with one space
+    // or hyphen between the groups. Not inside a longer run of digits on either side, not after a letter or a letter and a
+    // hyphen or slash (XIV-61234567), not after "Nr." (a document's number) or a sign (+, €, $), not before a percent or currency sign.
+    [GeneratedRegex(
+        @"(?<![\p{N}][\s\-.,/]?)(?<![\p{L}][\-/]?)(?<![\p{L}])(?<![+€$])(?<![Nn]r\.\s?)6(?:\d{7}|\d{2}[ \-]\d{5}|\d{3}[ \-]\d{4}|[ \-]\d{4}[ \-]\d{3})(?![\s\-.,/]?\d)(?!\s?[%€$])",
+        RegexOptions.CultureInvariant)]
+    private static partial Regex MobileWithoutPrefixPattern();
 
     [GeneratedRegex(@"https?://\S+", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex LinkAddress();

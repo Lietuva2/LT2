@@ -6,9 +6,10 @@
 @inject Formats F
 
 @* The bills people can take part on (design 8.12.5, GET /appeals), server-rendered and readable without JavaScript: every
-   active bill, by activity (participants plus published arguments) unless another order is chosen: participants,
-   arguments or planned date. The search, the filter "Planuojami artimiausiu metu", the order, the closed tab and paging
-   are a plain form and plain links; each row shows its participants and arguments. *@
+   active bill, by activity (participants plus published arguments) unless sorted by planned date (owner, 2026-11-17: those
+   two orders only). The search is a plain form; the order, the filter "Planuojami per 14 dienų" (a link that applies at
+   once, keeping the search), the closed tab and paging are plain links. Each row shows its participants and arguments, and
+   the sides' numbers beside its bar. *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
 
 <div class="stack">
@@ -33,21 +34,21 @@
         {
             <input type="hidden" name="skirtukas" value="uzdaryti" />
         }
-        else if (Sort != "aktyvumas")
+        else
         {
-            <input type="hidden" name="rikiuoti" value="@Sort" />
+            @if (Sort != "aktyvumas")
+            {
+                <input type="hidden" name="rikiuoti" value="@Sort" />
+            }
+            @if (Planned)
+            {
+                <input type="hidden" name="planuojami" value="taip" />
+            }
         }
         <div class="field">
             <label for="q">@T["List.Search"]</label>
             <input class="input" id="q" name="q" type="search" value="@Q" autocomplete="off" />
         </div>
-        @if (!Closed)
-        {
-            <label class="check" for="planuojami">
-                <input type="checkbox" id="planuojami" name="planuojami" value="taip" checked="@Planned" />
-                <span>@T["List.Planned"]</span>
-            </label>
-        }
         <div class="row">
             <button class="btn" type="submit">@T["List.SearchButton"]</button>
             @if (Filtered)
@@ -60,6 +61,8 @@
 
 @if (!Closed)
 {
+    @* Owner, 2026-11-17: the filter is a link that applies at once (no script), on the ground above the list with the order. *@
+    <p class="small"><a class="toggle-link" href="@Link(null, Sort, !Planned)" id="planned" aria-current="@(Planned ? "true" : null)">@T["List.Planned"]</a></p>
     <p class="small" id="sort">
         @T["List.Sort"]@(" ")
         @for (var i = 0; i < SortNames.Length; i++)
@@ -75,7 +78,7 @@
             }
             else
             {
-                <a href="@Link(null, name)" id="sort-@name">@T["List.Sort." + name]</a>
+                <a href="@Link(null, name, Planned)" id="sort-@name">@T["List.Sort." + name]</a>
             }
         }
     </p>
@@ -110,7 +113,6 @@
                             </span>
                             @if (item.Counts.For + item.Counts.Against > 0)
                             {
-                                <span class="small num">@T.Format("List.Counts", Display.Number(item.Counts.For), Display.Number(item.Counts.ForOlderThan30Days), Display.Number(item.Counts.Against), Display.Number(item.Counts.AgainstOlderThan30Days))</span>
                                 <span class="small num">@T.Format("List.Limit", Display.Number(item.Threshold.Value))</span>
                             }
                             @if (item.Planned is { } plan)
@@ -119,6 +121,11 @@
                             }
                         </div>
                         <div class="rows__side">
+                            @if (item.Counts.For + item.Counts.Against > 0)
+                            {
+                                @* Owner, 2026-11-17: the sides' numbers beside the bar, not in the text line. *@
+                                <span class="small num" id="counts-@item.Bill.Number">@T.Format("List.Counts", Display.Number(item.Counts.For), Display.Number(item.Counts.ForOlderThan30Days), Display.Number(item.Counts.Against), Display.Number(item.Counts.AgainstOlderThan30Days))</span>
+                            }
                             <SplitBar For="item.Counts.For" Against="item.Counts.Against" Abstain="0" Small="true" />
                         </div>
                     </li>
@@ -131,7 +138,7 @@
                 }</p>
             @if (page.NextCursor is { } next)
             {
-                <p><a href="@Link(next, Sort)" id="more">@T["List.More"]</a></p>
+                <p><a href="@Link(next, Sort, Planned)" id="more">@T["List.More"]</a></p>
             }
         }
     </div>
@@ -152,12 +159,15 @@
 
     [SupplyParameterFromQuery(Name = "rikiuoti")] public string? SortParameter { get; set; }
 
-    /// <summary>The orders on the page (design 8.12.5), in Lithuanian in the address; the first is the default.</summary>
-    private static readonly string[] SortNames = ["aktyvumas", "dalyviai", "argumentai", "data"];
+    /// <summary>
+    /// The orders on the page (design 8.12.5; owner, 2026-11-17: activity and planned date only), in Lithuanian in the address;
+    /// the first is the default, and any other value (an old <c>dalyviai</c> or <c>argumentai</c>) falls back to it.
+    /// </summary>
+    private static readonly string[] SortNames = ["aktyvumas", "data"];
 
     private static readonly Dictionary<string, string> ApiSorts = new()
     {
-        ["aktyvumas"] = "activity", ["dalyviai"] = "participants", ["argumentai"] = "arguments", ["data"] = "planned",
+        ["aktyvumas"] = "activity", ["data"] = "planned",
     };
 
     private string Sort => SortParameter is { } s && ApiSorts.ContainsKey(s) ? s : "aktyvumas";
@@ -177,8 +187,8 @@
         _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
     }
 
-    /// <summary>The same search, filter and tab, with the given page (none = the first) and order.</summary>
-    private string Link(string? next, string sort)
+    /// <summary>The same search and tab, with the given page (none = the first), order and filter.</summary>
+    private string Link(string? next, string sort, bool planned)
     {
         var query = new List<string>();
         if (!Closed && sort != "aktyvumas")
@@ -191,7 +201,7 @@
             query.Add("q=" + Uri.EscapeDataString(Q.Trim()));
         }
 
-        if (Planned)
+        if (!Closed && planned)
         {
             query.Add("planuojami=taip");
         }

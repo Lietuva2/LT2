@@ -7,7 +7,8 @@ namespace Lt2.Notifications.Templates;
 
 /// <summary>
 /// The take-over link of an MP's profile (design 8.5.2), to the official address only: a full address
-/// (<see cref="SiteLinks.Absolute"/>) whose token is after the <c>#</c>, so no server log ever holds it; no tracking.
+/// (<see cref="SiteLinks.Absolute"/>) whose code is after the <c>#</c>, so no server log ever holds it, and the way without the
+/// link (owner, 2026-11-17): the page to open and the code to type there; no tracking.
 /// </summary>
 internal sealed class MpTemplates(IStringLocalizer<EmailTemplates> l, IOptions<SiteOptions> site)
 {
@@ -18,13 +19,39 @@ internal sealed class MpTemplates(IStringLocalizer<EmailTemplates> l, IOptions<S
         [
             l[EmailText.Greeting],
             l.Format("Mp.Takeover.Intro", model.MpName),
-            SiteLinks.Absolute(site.Value.Address, model.Path),
+            EmailLayout.LinkLine(l["Mp.Takeover.Link"], SiteLinks.Absolute(site.Value.Address, model.Path)),
+            l.Format(EmailText.WithoutLink, SiteLinks.Absolute(site.Value.Address, model.PagePath)),
+            model.Code,
             l.Format("Mp.Takeover.Validity", model.ValidHours.ToString(CultureInfo.InvariantCulture)),
             l["Mp.Takeover.What"],
             l["Mp.Takeover.Ignore"],
             l[EmailText.Signature],
         ];
-        return EmailLayout.Build(model.To, l["Mp.Takeover.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address));
+        return EmailLayout.Build(model.To, l["Mp.Takeover.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address), highlighted: 4);
+    }
+
+    /// <summary>
+    /// An invitation to an MP's office (design 8.5.3, owner 2026-11-17), to the address the MP's account typed: who invites and
+    /// what an office member does, "Priimti kvietimą" as a link, and the way without the link: the page's address to open
+    /// and the code to type there. Nothing tracked; the address and the code exist only in the outbox row until it is sent.
+    /// </summary>
+    public EmailMessage OfficeInvitation(MpOfficeInvitationEmail model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        var until = TimeZoneInfo.ConvertTime(model.ExpiresAt, VilniusTime.Zone).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+        string[] paragraphs =
+        [
+            l[EmailText.Greeting],
+            l.Format("Mp.Office.Intro", model.MpName),
+            l["Mp.Office.What"],
+            EmailLayout.LinkLine(l["Mp.Office.Accept"], SiteLinks.Absolute(site.Value.Address, model.Path)),
+            l.Format(EmailText.WithoutLink, SiteLinks.Absolute(site.Value.Address, model.PagePath)),
+            model.Code,
+            l.Format("Mp.Office.Validity", until),
+            l["Mp.Office.Ignore"],
+            l[EmailText.Signature],
+        ];
+        return EmailLayout.Build(model.To, l["Mp.Office.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address), highlighted: 5);
     }
 
     /// <summary>

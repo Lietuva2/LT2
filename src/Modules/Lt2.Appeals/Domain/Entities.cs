@@ -391,6 +391,9 @@ internal sealed class Flag
 
     public string? Note { get; set; }
 
+    /// <summary>The date the participant says is right, when they know it ("Tikroji data", owner, 2026-11-17); null if not given.</summary>
+    public DateOnly? ProposedDate { get; set; }
+
     public Guid ReporterUserId { get; set; }
 
     public string Status { get; set; } = "open";

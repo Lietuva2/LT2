@@ -48,21 +48,26 @@
                         <LongText Text="@c.Text" BubbleClass="bubble bubble--people voice comment__text" Links="true" Id="@($"{id}-more")" />
                         @if (c.AgreedBy.Count > 0)
                         {
-                            <p class="small comment__agreed" id="@id-agreed">@Agreed(c)</p>
+                            @* "Sutinka: A, B ir dar 5" (owner, 2026-11-17): "ir dar 5" opens the full list, oldest agreement first. *@
+                            <div class="small comment__agreed agreed" id="@id-agreed">
+                                <span>@Agreed(c)</span>
+                                @if (c.AgreedBy.Count > 2)
+                                {
+                                    <details class="more" id="@id-all-agreed">
+                                        <summary class="linkish" aria-controls="@id-all-agreed-list">@L.Format("Comments.Agreed.Rest", Display.Number(c.AgreedBy.Count - 2))</summary>
+                                    </details>
+                                    <p class="agreed__all" id="@id-all-agreed-list">@for (var i = 0; i < c.AgreedBy.Count; i++) { @(i > 0 ? ", " : "")@Person(c.AgreedBy[i]) }</p>
+                                }
+                            </div>
                         }
-                        @if (c.AgreedBy.Count > 2)
-                        {
-                            <details class="more stack stack--tight" id="@id-all-agreed">
-                                <summary class="linkish small">@L["Comments.AgreedAll"]</summary>
-                                <p class="small">@for (var i = 0; i < c.AgreedBy.Count; i++) { @(i > 0 ? ", " : "")@Person(c.AgreedBy[i]) }</p>
-                            </details>
-                        }
-                        @* The action row (design 8.16.1): "Sutinku", then "⋯" with the rarer actions; a chosen one opens below it. *@
+                        @* The action row (design 8.16.1): "Sutinku", then "⋯" with the rarer actions; a chosen one opens below it.
+                           "Sutinku" is a toggle like "Man svarbu" (owner, 2026-11-17): the same words in both states, its icon
+                           filled while agreed. *@
                         <div class="act" id="@id-actions">
                             @if (_signedIn && MayAgree(c, out var agreed))
                             {
                                 <button class="mark act__item" type="button" id="@id-agree" aria-pressed="@(agreed ? "true" : "false")" disabled="@Locked"
-                                        title="@(agreed ? null : L["Comments.Agree.Hint"].Value)" @onclick="() => AgreeAsync(c.Id, agreed)">@(agreed ? L["Comments.Agree.Undo"] : L["Comments.Agree"])</button>
+                                        title="@(agreed ? null : L["Comments.Agree.Hint"].Value)" @onclick="() => AgreeAsync(c.Id, agreed)"><Icon Name="agree" /><span>@L["Comments.Agree"]</span></button>
                             }
                             <MoreMenu Id="@($"{id}-more-actions")">
                                 @if (_signedIn)
@@ -264,8 +269,8 @@
     private string CardId(string profileId) => $"card-{Key}-{profileId}";
 
     /// <summary>
-    /// "Sutinka: Rūta Mockutė, Tomas ir dar 3" (design 8.23.10): the first two names, then how many more; a name of a member
-    /// with a public profile is a link to it with its card (design 8.25.4).
+    /// "Sutinka: Rūta Mockutė, Tomas" (design 8.23.10): the first two names; how many more ("ir dar 3") is the summary beside
+    /// it that opens the full list. A name of a member with a public profile is a link to it with its card (design 8.25.4).
     /// </summary>
     private RenderFragment Agreed(CommentResponse c) => __builder =>
     {
@@ -273,8 +278,7 @@
         {
             0 => "",
             1 => L.Format("Comments.Agreed.One", "\u0001"),
-            2 => L.Format("Comments.Agreed.Two", "\u0001", "\u0002"),
-            _ => L.Format("Comments.Agreed.More", "\u0001", "\u0002", Display.Number(c.AgreedBy.Count - 2)),
+            _ => L.Format("Comments.Agreed.Two", "\u0001", "\u0002"),
         };
         foreach (var piece in System.Text.RegularExpressions.Regex.Split(words, "([\u0001\u0002])"))
         {

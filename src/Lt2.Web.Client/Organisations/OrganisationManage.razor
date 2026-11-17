@@ -88,6 +88,9 @@
                     <div class="note note--quiet stack stack--tight" id="invite-link">
                         <p>@L.Format("Org.Invite.Made", Display.Day(invite.ExpiresAt))</p>
                         <p class="statement__link"><code id="invite-url">@Navigation.ToAbsoluteUri(invite.Path)</code></p>
+                        @* Owner, 2026-11-17: the way without the link, the same code typed on the invitation's page. *@
+                        <p class="small" id="invite-code-line">@L.Format("Org.Invite.CodeLine", Navigation.ToAbsoluteUri(OrganisationLimits.InvitePage).ToString())</p>
+                        <p class="code-big num" id="invite-code">@invite.Token</p>
                     </div>
                 }
             }

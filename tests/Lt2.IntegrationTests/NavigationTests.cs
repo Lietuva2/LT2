@@ -67,24 +67,32 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     }
 
     [Fact]
-    public async Task The_menu_holds_projektai_seimo_nariai_and_prisijungti_and_marks_the_section()
+    public async Task The_menu_holds_projektai_seimo_nariai_statistika_and_prisijungti_and_marks_the_section()
     {
         using var visitor = NewBrowser();
 
+        // Owner, 2026-11-17: "Projektai" is a dropdown of its three tabs, a disclosure that opens without script.
         var agenda = HeaderOf(await visitor.Client.GetStringAsync("/darbotvarke"));
-        agenda.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"page\">Projektai</a>");
+        agenda.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
+        WebUtility.HtmlDecode(agenda).ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-darbotvarke\" aria-current=\"page\">Darbotvarkė</a>");
+        agenda.ShouldContain("<a href=\"/projektai\" id=\"nav-tab-projektai\">Projektai</a>");
+        WebUtility.HtmlDecode(agenda).ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-suvestines\">Suvestinės</a>");
         agenda.ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\">Seimo nariai</a>");
+        agenda.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\">Statistika</a>");
         agenda.ShouldContain("<a href=\"/prisijungti\" id=\"nav-sign-in\">Prisijungti</a>");
-        Regex.Count(agenda, "<a ").ShouldBe(4, "the logo and three items");
+        Regex.Count(agenda, "<a ").ShouldBe(7, "the logo, the three tabs in the dropdown and three items");
         agenda.ShouldNotContain("Kaip skaičiuojama");
         agenda.ShouldNotContain("data-theme-switch", customMessage: "the theme switch is in the footer");
 
         HeaderOf(await visitor.Client.GetStringAsync("/seimas/XVP-0412"))
-            .ShouldContain("<a href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>");
+            .ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
         HeaderOf(await visitor.Client.GetStringAsync("/seimas/balsavimai"))
-            .ShouldContain("<a href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>");
+            .ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
         HeaderOf(await visitor.Client.GetStringAsync("/seimo-nariai"))
             .ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\" aria-current=\"page\">Seimo nariai</a>");
+        var statistics = HeaderOf(await visitor.Client.GetStringAsync("/statistika"));
+        statistics.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\" aria-current=\"page\">Statistika</a>");
+        statistics.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\">Projektai</summary>");
         var methodology = HeaderOf(await visitor.Client.GetStringAsync("/metodika"));
         methodology.ShouldNotContain("aria-current");
     }
@@ -93,21 +101,20 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     [InlineData("/darbotvarke", "tab-darbotvarke")]
     [InlineData("/projektai", "tab-projektai")]
     [InlineData("/suvestines", "tab-suvestines")]
-    [InlineData("/seimas/analitika", "tab-seimas-analitika")]
-    public async Task Each_of_the_four_pages_has_the_tab_row_with_its_own_tab_marked(string path, string tab)
+    public async Task Each_of_the_three_pages_has_the_tab_row_with_its_own_tab_marked(string path, string tab)
     {
         using var visitor = NewBrowser();
         var html = await visitor.Client.GetStringAsync(path);
 
         var row = Regex.Match(html, "<nav class=\"row tabs project-tabs\".*?</nav>", RegexOptions.Singleline);
         row.Success.ShouldBeTrue();
-        Regex.Count(row.Value, "<a ").ShouldBe(4);
+        Regex.Count(row.Value, "<a ").ShouldBe(3);
         row.Value.ShouldNotContain("/seimas/balsavimai", customMessage: "the history of votes is no tab");
+        row.Value.ShouldNotContain("/statistika", customMessage: "the statistics page is a menu item of its own (owner, 2026-11-17)");
         Regex.Count(row.Value, "aria-current=\"page\"").ShouldBe(1);
         row.Value.ShouldContain($"id=\"{tab}\" aria-current=\"page\"");
         html.IndexOf("<h1", StringComparison.Ordinal).ShouldBeLessThan(row.Index, "under the page's heading");
     }
-
     [Fact]
     public async Task The_methodology_page_is_called_metodika()
     {

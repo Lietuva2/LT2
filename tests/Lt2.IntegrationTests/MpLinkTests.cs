@@ -60,12 +60,29 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             state.ShouldContain("registrationComplete", customMessage: "the decoded state holds the account");
             state.ShouldNotContain("\"mpOffer\":{", Case.Insensitive);
             state.ShouldNotContain("laima-uosyte");
+
+            // Owner, 2026-11-17: the notice on every page is served hidden and without the name, the same for every member, and
+            // only to members; the browser fills it from GET /me.
+            var notice = NoticeOf(await mp.Client.GetStringAsync("/darbotvarke"));
+            notice.ShouldContain("hidden");
+            notice.ShouldContain("href=\"/paskyra/dalyvavimas#mp-offer\"");
+            WebUtility.HtmlDecode(notice).ShouldNotContain("Uosytė");
+            NoticeOf(await ordinary.Client.GetStringAsync("/darbotvarke")).ShouldBe(notice);
+            (await visitor.Client.GetStringAsync("/darbotvarke")).ShouldNotContain("mp-offer-notice");
         }
         finally
         {
             await mp.DeleteAccountAsync();
             await former.DeleteAccountAsync();
         }
+    }
+
+    /// <summary>The take-over notice's markup under the header (design 8.5.1, owner 2026-11-17).</summary>
+    private static string NoticeOf(string html)
+    {
+        var start = html.IndexOf("<div class=\"page\" id=\"mp-offer-notice\"", StringComparison.Ordinal);
+        start.ShouldBeGreaterThan(0, "a member's page carries the notice's markup");
+        return html[start..(html.IndexOf("</div>", start, StringComparison.Ordinal) + 6)];
     }
 
     [Fact]
@@ -590,6 +607,44 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
         finally
         {
             await mp.Browser.DeleteAccountAsync();
+        }
+    }
+
+    /// <summary>
+    /// Design 8.5.2, 6.8 (owner, 2026-11-17): the take-over link's secret is a typeable one-time code; the email gives the page and
+    /// the code beside the link, and the code works typed in any case with spaces.
+    /// </summary>
+    [Fact]
+    public async Task The_takeover_link_carries_a_typeable_code_the_email_also_gives_and_it_works_typed()
+    {
+        using var mp = await Factory.OfficialMemberAsync(MpSteps.Azuolaitis);
+        using var key = new SoftwareAuthenticator();
+        var slug = (await Database.SlugAsync(MpSteps.Azuolaitis))!;
+        try
+        {
+            using (var claimed = await mp.ClaimAsync(slug))
+            {
+                claimed.StatusCode.ShouldBe(HttpStatusCode.Accepted, await claimed.Content.ReadAsStringAsync());
+            }
+
+            var code = await Database.TakeoverTokenAsync(MpSteps.Azuolaitis.Address);
+            OneTimeCode.Normalize(code).ShouldBe(code, "a typeable one-time code in its one form");
+            var payload = await Database.ScalarAsync<string>(
+                "SELECT payload::text FROM notify.outbox WHERE kind = @k AND lower(payload->>'to') = lower(@to) ORDER BY created_at DESC, id DESC LIMIT 1",
+                ("k", MessageKinds.MpTakeoverLinkEmail), ("to", MpSteps.Azuolaitis.Address));
+            using (var document = JsonDocument.Parse(payload!))
+            {
+                document.RootElement.GetProperty("code").GetString().ShouldBe(code);
+                document.RootElement.GetProperty("pagePath").GetString().ShouldBe(MpRoutes.TakeoverPage);
+            }
+
+            using var taken = await mp.TakeOverAsync(key, code.ToLowerInvariant().Replace("-", " ", StringComparison.Ordinal));
+            taken.StatusCode.ShouldBe(HttpStatusCode.OK, await taken.Content.ReadAsStringAsync());
+            (await Database.OpenLinksAsync(MpSteps.Azuolaitis.SeimasPersonId, "mp")).ShouldBe(1);
+        }
+        finally
+        {
+            await mp.DeleteAccountAsync();
         }
     }
 }

@@ -9,6 +9,12 @@ public sealed record RegisterRequest
     public string Email { get; init; } = "";
 
     public string? InvitationCode { get; init; }
+
+    /// <summary>
+    /// An MP office member's invitation code in place of an invitation code (design 8.5.3, owner 2026-11-17): it lets the
+    /// registration through the closed trial's gate while it is valid; it is not kept on the pending account.
+    /// </summary>
+    public string? OfficeInvitation { get; init; }
 }
 
 public sealed record RequestCodeRequest

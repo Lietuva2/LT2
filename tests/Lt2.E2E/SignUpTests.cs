@@ -52,7 +52,8 @@ public sealed partial class SignUpTests : E2ETest
         var email = E2ESteps.NewEmail();
 
         await page.GotoAsync(BaseUrl!);
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToContainTextAsync("Lietuva");
+        // The front page's headline is its lead sentence (owner, 2026-11-17), not the site's name.
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToContainTextAsync("Seimas");
         // The front page links to registration (design 8.7: the form itself is on /prisijungti).
         await page.GetByRole(AriaRole.Link, new() { Name = "Registruokitės", Exact = true }).ClickAsync();
         await page.WaitForURLAsync(new System.Text.RegularExpressions.Regex("/prisijungti"));

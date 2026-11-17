@@ -65,7 +65,7 @@ else
                     <ul class="rows">
                         @foreach (var flag in record.DateFlags)
                         {
-                            <li><div class="rows__main"><b>@L["Flag." + flag.Kind]</b><a href="@flag.Link" rel="external noreferrer">@flag.Link</a>@if (flag.Note is { } note) {<span class="small">@note</span>}</div></li>
+                            <li><div class="rows__main"><b>@L["Flag." + flag.Kind]</b>@if (flag.Date is { } right) {<span class="num" id="date-flag-date-@flag.Id">@L.Format("Mod.FlagDate", Display.Day(right))</span>}<a href="@flag.Link" rel="external noreferrer">@flag.Link</a>@if (flag.Note is { } note) {<span class="small">@note</span>}</div></li>
                         }
                     </ul>
                 }

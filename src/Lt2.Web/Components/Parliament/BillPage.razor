@@ -19,60 +19,60 @@
 @inject IHttpContextAccessor Http
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService Authorization
 
-@* The bill and the record are one page (design 8.12.1), server-rendered and readable without JavaScript: number, title,
-   stage and "Planuojama …" (a participant's "Data neteisinga?" under it); what the bill is about (8.13) with its label; both sides with the counts for accounts older
-   than 30 days, the threshold and the share line; the arguments; the summaries that held the bill (8.7); the Seimas votes.
-   Every active bill is open at once: before anyone has taken part the same controls show zero counts and one line saying
-   so. A finished bill nobody took part in shows the bill only; one whose record a moderator hid says that taking part is
-   closed, with the statement. Taking a side, the arguments and the moderators' panel are WebAssembly islands. Nothing
-   here tells who took part first. *@
+@* The bill and the record are one page (design 8.12.1), server-rendered and readable without JavaScript. The header: the
+   way back ("Projektai / Įstatymo projektas XVP-0412"), the title and one line with the stage tags, "Planuojama …", "Sekti"
+   and "Sekėjai: n". Beside the side column: what the bill is about (8.13) with its label; both sides with the counts for
+   accounts older than 30 days, the threshold and the share line; the Seimas result of a closed bill. The side column: the
+   stages (a participant's "Data neteisinga?" under them), the summaries that held the bill (8.7). Then at the page's full
+   width (owner, 2026-11-17): MPs' responses and organisations' statements, each only when there is one, then the
+   arguments; then the Seimas votes. Every active bill is open at once: before anyone has taken part the same controls
+   show zero counts and one line saying so. A finished bill nobody took part in shows the bill only; one whose record a
+   moderator hid says that taking part is closed, with the statement. Taking a side, the arguments and the moderators'
+   panel are WebAssembly islands. Nothing here tells who took part first. *@
 @if (_bill is { } b)
 {
     <PageTitle>@b.Number · @b.Title · Lietuva 2.0</PageTitle>
     <div class="stack">
+        @* Owner, 2026-11-17: the kind and the number in the way back, no label line of their own. *@
         <ol class="crumbs">
             <li><a href="/projektai">@A["Nav.Appeals"]</a></li>
-            <li>@b.Number</li>
+            <li>@F.T["Bill.Label"] <span class="num">@b.Number</span></li>
         </ol>
-        <p class="label num">@F.T["Bill.Label"] · @b.Number</p>
         <h1>@b.Title</h1>
-        <p class="row" id="bill-planned">
-            @if (b.Planned is { } plan)
-            {
-                @if (plan.Stage is { } plannedStage)
-                {
-                    <span class="tag">@F.Stage(plannedStage)</span>
-                }
-                <span class="tag" id="planned">@A.Format("Bill.Planned", F.Date(plan.Date))</span>
-                @* Design 8.4, 8.15 (owner, 2026-11-16): where the date comes from, beside it: one hint, and the agenda page it
-                   was read from (only an https address; the local stand-in's is not). A moderator's date says so instead. *@
-                <span class="small" id="planned-source">
-                    <Lt2.Web.Client.Components.Hint Id="planned-from" Text="@A["Planned.Hint"]"
-                        Answer="@(plan.SetByModerator ? A["Planned.Answer.moderator"] : A["Planned.Answer.agenda"])" More="/metodika#planuojamos-datos" />
-                    @if (!plan.SetByModerator && b.PlannedAgendaUrl is { } agendaPage && agendaPage.StartsWith("https://", StringComparison.Ordinal))
-                    {
-                        @(" · ")<a href="@agendaPage" rel="external" id="planned-agenda">@A["Planned.AgendaLink"]</a>
-                    }
-                </span>
-            }
-            else if (LastStage(b) is { } done)
-            {
-                <span class="tag" id="last-stage">@F.Stage(done)</span>
-            }
-            @if (_record?.Status == "closed")
-            {
-                <span class="tag" id="appeal-status">@A["Status.closed"]</span>
-            }
-        </p>
-        @if (b.Planned is not null && _record is { Status: "open" })
-        {
-            @* Design 8.4, 8.12.1 (owner, 2026-11-16): "Data neteisinga?" sits directly under the planned date it reports, for
-               participants only, and only while a date is shown. *@
-            <DateFlagForm Number="@b.Number" @rendermode="InteractiveWebAssembly" />
-        }
         <Lt2.Web.Client.Components.NeedsScript />
-        @* Design 8.11.2 (owner, 2026-11-16): with how many follow the bill, apart from the sides' figures, kept current by the button. *@
-        <FollowButton Kind="bill" Key="@b.Number" Followers="_followers" @rendermode="InteractiveWebAssembly" />
+        @* Owner, 2026-11-17: one compact line under the title: the stage tags, then "Sekti" and "Sekėjai: n" (design 8.11.2:
+           how many follow, apart from the sides' figures, kept current by the button). *@
+        <div class="row follow-line">
+            <p class="row" id="bill-planned">
+                @if (b.Planned is { } plan)
+                {
+                    @if (plan.Stage is { } plannedStage)
+                    {
+                        <span class="tag">@F.Stage(plannedStage)</span>
+                    }
+                    <span class="tag" id="planned">@A.Format("Bill.Planned", F.Date(plan.Date))</span>
+                    @* Design 8.4, 8.15 (owner, 2026-11-16): where the date comes from, beside it: one hint, and the agenda page it
+                       was read from (only an https address; the local stand-in's is not). A moderator's date says so instead. *@
+                    <span class="small" id="planned-source">
+                        <Lt2.Web.Client.Components.Hint Id="planned-from" Text="@A["Planned.Hint"]"
+                            Answer="@(plan.SetByModerator ? A["Planned.Answer.moderator"] : A["Planned.Answer.agenda"])" More="/metodika#planuojamos-datos" />
+                        @if (!plan.SetByModerator && b.PlannedAgendaUrl is { } agendaPage && agendaPage.StartsWith("https://", StringComparison.Ordinal))
+                        {
+                            @(" · ")<a href="@agendaPage" rel="external" id="planned-agenda">@A["Planned.AgendaLink"]</a>
+                        }
+                    </span>
+                }
+                else if (LastStage(b) is { } done)
+                {
+                    <span class="tag" id="last-stage">@F.Stage(done)</span>
+                }
+                @if (_record?.Status == "closed")
+                {
+                    <span class="tag" id="appeal-status">@A["Status.closed"]</span>
+                }
+            </p>
+            <FollowButton Kind="bill" Key="@b.Number" Followers="_followers" @rendermode="InteractiveWebAssembly" />
+        </div>
     </div>
 
     @if (_record is { Status: "rejected" } hidden)
@@ -229,19 +229,12 @@
                         }
                     </section>
                 }
-
-                <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" LinkedReason="_linkedReason" @rendermode="InteractiveWebAssembly" />
-
-                @* Design 8.14.14: organisations' statements, after the arguments; never counted. *@
-                <OrganisationPositions Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" @rendermode="InteractiveWebAssembly" />
-
-                @* Design 8.5.6: MPs' responses, after the organisations' positions; server-rendered, the same for everyone. *@
-                <BillResponses Number="@b.Number" Moderator="_moderator" Linked="_linked" />
             </div>
 
             <aside class="stack">
-                @* Design 8.12.1 (owner, 2026-11-16): the stages are the side column's first sheet, the same for everyone; the
-                   moderators' panels follow, then the summaries. *@
+                @* Design 8.12.1 (owner, 2026-11-16): the stages are the side column's first sheet, the same for everyone, with a
+                   participant's "Data neteisinga?" under them (owner, 2026-11-17); the moderators' panels follow, then the
+                   summaries. *@
                 @StagesSheet(b, inAside: true)
 
                 @if (_moderator)
@@ -280,11 +273,19 @@
                 <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
             </aside>
         </div>
+
+        @* Owner, 2026-11-17: the texts run at the page's full width below the top part, so each side's column has room and an
+           opened "Aptarimas" stays in its own column. MPs' responses first (design 8.5.6; server-rendered, the same for
+           everyone), then organisations' statements (8.14.14; never counted), each only when there is something to show, then
+           the members' arguments, always (they hold "Parašyti argumentą"). *@
+        <BillResponses Number="@b.Number" Moderator="_moderator" Linked="_linked" />
+        <OrganisationPositions Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" @rendermode="InteractiveWebAssembly" />
+        <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" LinkedReason="_linkedReason" @rendermode="InteractiveWebAssembly" />
     }
     else if (_record is null)
     {
         @* A finished bill nobody took part in shows the bill only, and the MPs' responses written while it was open. *@
-        <BillResponses Number="@b.Number" HideWhenEmpty="true" Linked="_linked" />
+        <BillResponses Number="@b.Number" Linked="_linked" />
     }
 
     @if (_record is null or { Status: "rejected" })
@@ -434,6 +435,12 @@
                     </li>
                 }
             </ol>
+            @if (inAside && b.Planned is not null && _record is { Status: "open" })
+            {
+                @* Design 8.4, 8.12.1 (owner, 2026-11-17): "Data neteisinga?" beside the planned stage's date it reports, for
+                   participants only, and only while a date is shown. *@
+                <DateFlagForm Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+            }
             @if (b.ESeimasUrl is { } documents)
             {
                 <p class="fine"><a href="@documents" rel="external">@F.T["Bill.ESeimas"]</a></p>

@@ -39,12 +39,13 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             comment = await WriteAsync(writer.Page, reason, "Argumentui trūksta skaičių: kiek tai kainuotų? (E2E)");
             await E2ESteps.ShootBothAsync(writer.Page, Shots, "reason-written", writer.Page.Locator($"#aptarimas-panel-{reason:N}"));
 
-            // At 1280 an open "Aptarimas" reads in the arguments' full width, not in a side's column (browser look of 2026-11-16;
-            // the sheet's own width at 1280 is about 580 px, so the measure is the share of the arguments' area, not a number).
+            // Owner, 2026-11-17: at 1280 an open "Aptarimas" stays in its own side's column, which is wide since the arguments run
+            // at the page's full width; the two sides stay side by side (the measure is the share of the arguments' area).
             var box = await writer.Page.Locator($"#aptarimas-panel-{reason:N}").BoundingBoxAsync();
             // The arguments' pair is the one holding this discussion (the organisations' statements use the same layout).
             var pair = await writer.Page.Locator(".pair--reasons").Filter(new() { Has = writer.Page.Locator($"#aptarimas-panel-{reason:N}") }).BoundingBoxAsync();
-            box.ShouldNotBeNull().Width.ShouldBeGreaterThan(pair.ShouldNotBeNull().Width * 0.75f, "the sides stand one above the other while a discussion is open");
+            box.ShouldNotBeNull().Width.ShouldBeLessThan(pair.ShouldNotBeNull().Width * 0.55f, "the sides stay side by side while a discussion is open");
+            box.Width.ShouldBeGreaterThan(400, "a side's column has room for the discussion");
 
             await AgreeAsync(reader.Page, reason, comment);
             await E2ESteps.NoSidewaysScrollAsync(reader.Page, "the bill's page with a comment at 390 px");

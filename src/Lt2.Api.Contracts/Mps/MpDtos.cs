@@ -35,7 +35,7 @@ public static class MpRoutes
 
     public static string EndLinkOf(string slug) => $"{ApiRoutes.Prefix}/admin/mps/{Uri.EscapeDataString(slug)}/link/end";
 
-    public static string OfficeInvitationPath(string token) => OfficeInvitationPage + "#" + Uri.EscapeDataString(token);
+    public static string OfficeInvitationPath(string code) => OfficeInvitationPage + "#" + Uri.EscapeDataString(code);
 }
 
 /// <summary>
@@ -60,10 +60,21 @@ public sealed record MpTakeoverRequest
     public string Credential { get; init; } = "";
 }
 
-/// <summary>An office member's one-time invitation token, read from the page's <c>#</c>.</summary>
+/// <summary>
+/// An office member's one-time invitation token, read from the page's <c>#</c> (design 8.5.3). Accepting needs a passkey
+/// session; a session signed in by code brings its passkey in the same request (owner, 2026-11-17): at most one of
+/// <see cref="NewPasskey"/> (a passkey made now for this account) and <see cref="Passkey"/> (one of the account's passkeys),
+/// after which the session becomes a passkey session.
+/// </summary>
 public sealed record MpOfficeAcceptanceRequest
 {
     public string Token { get; init; } = "";
+
+    /// <summary>The browser's <c>PublicKeyCredential.toJSON()</c> of a passkey made for this account (creation options first).</summary>
+    public string? NewPasskey { get; init; }
+
+    /// <summary>The browser's <c>PublicKeyCredential.toJSON()</c> of an assertion with one of the account's passkeys (request options first).</summary>
+    public string? Passkey { get; init; }
 }
 
 /// <summary>An office member as the MP's account sees them (design 8.5.3). Nobody else sees who they are.</summary>
@@ -72,8 +83,29 @@ public sealed record MpOfficeMemberResponse(Guid Id, string? DisplayName, DateTi
 /// <summary>The MP's office: its members and how many it may have.</summary>
 public sealed record MpOfficeResponse(IReadOnlyList<MpOfficeMemberResponse> Members, int Limit);
 
-/// <summary>A new office invitation, shown once: the page's path with the token after the <c>#</c>, and when it stops working.</summary>
-public sealed record MpOfficeInvitationResponse(string Path, DateTimeOffset ExpiresAt);
+/// <summary>
+/// A new office invitation, shown once: the page's path with the code after the <c>#</c>, when it stops working, the code itself
+/// (typed on the page instead of following the link, design 8.5.3) and whether the site emailed it (owner, 2026-11-17).
+/// </summary>
+public sealed record MpOfficeInvitationResponse(string Path, DateTimeOffset ExpiresAt, string Code = "", bool Emailed = false);
+
+/// <summary>
+/// A new office invitation (design 8.5.3): with <see cref="Email"/> the site sends it there (owner, 2026-11-17); the address is
+/// used only to send it and kept nowhere else. Without it, the MP's account copies the link and passes it on itself.
+/// </summary>
+public sealed record MpOfficeInvitationRequest
+{
+    public string? Email { get; init; }
+}
+
+public sealed class MpOfficeInvitationRequestValidator : AbstractValidator<MpOfficeInvitationRequest>
+{
+    public MpOfficeInvitationRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.Email!).Cascade(CascadeMode.Stop)
+            .MaximumLength(Auth.AuthRules.EmailMaxLength).WithMessage(l["Email.TooLong"])
+            .EmailAddress().WithMessage(l["Email.Invalid"])
+            .When(x => !string.IsNullOrWhiteSpace(x.Email));
+}
 
 public sealed class MpTakeoverRequestValidator : AbstractValidator<MpTakeoverRequest>
 {
@@ -86,8 +118,13 @@ public sealed class MpTakeoverRequestValidator : AbstractValidator<MpTakeoverReq
 
 public sealed class MpOfficeAcceptanceRequestValidator : AbstractValidator<MpOfficeAcceptanceRequest>
 {
-    public MpOfficeAcceptanceRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+    public MpOfficeAcceptanceRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
         RuleFor(x => x.Token).Cascade(CascadeMode.Stop).NotEmpty().WithMessage(l["MpLink.Required"]).MaximumLength(100).WithMessage(l["MpLink.Required"]);
+        RuleFor(x => x.NewPasskey).MaximumLength(16_384).WithMessage(l["Passkey.Required"]);
+        RuleFor(x => x.Passkey).MaximumLength(16_384).WithMessage(l["Passkey.Required"])
+            .Must((request, passkey) => string.IsNullOrEmpty(passkey) || string.IsNullOrEmpty(request.NewPasskey)).WithMessage(l["Passkey.Required"]);
+    }
 }
 
 /// <summary>Design 8.5: what an account does as or for an MP. Only the account's own answers; nothing here is public.</summary>
@@ -104,7 +141,7 @@ public interface IMpApi
 
     Task<ApiResult<MpOfficeResponse>> GetOfficeAsync(CancellationToken cancellationToken = default);
 
-    Task<ApiResult<MpOfficeInvitationResponse>> InviteOfficeMemberAsync(CancellationToken cancellationToken = default);
+    Task<ApiResult<MpOfficeInvitationResponse>> InviteOfficeMemberAsync(MpOfficeInvitationRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> RemoveOfficeMemberAsync(Guid memberId, CancellationToken cancellationToken = default);
 

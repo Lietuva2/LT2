@@ -51,7 +51,7 @@ public sealed class MyAgreementTests : BunitContext
 
         var part = Render<MyAgreement>();
 
-        part.Find("#mine-sign-in a").GetAttribute("href").ShouldBe("/prisijungti#tikslas=%2Fseimas%2Fanalitika");
+        part.Find("#mine-sign-in a").GetAttribute("href").ShouldBe("/prisijungti#tikslas=%2Fstatistika");
         _api.Calls.ShouldBeEmpty();
     }
 
@@ -63,7 +63,7 @@ public sealed class MyAgreementTests : BunitContext
 
         var part = Render<MyAgreement>();
 
-        part.Find("#mine-sign-in a").GetAttribute("href").ShouldBe("/prisijungti#tikslas=%2Fseimas%2Fanalitika");
+        part.Find("#mine-sign-in a").GetAttribute("href").ShouldBe("/prisijungti#tikslas=%2Fstatistika");
         _api.Calls.ShouldBeEmpty();
     }
 

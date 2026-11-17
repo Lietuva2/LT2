@@ -4,10 +4,11 @@ using Lt2.SharedKernel;
 namespace Lt2.Identity;
 
 /// <summary>Registration request as the module sees it; validated by the shared contracts first.</summary>
-public sealed record Registration(string Email, string? InvitationCode);
+/// <param name="OfficeInvitation">An MP office member's invitation code in place of an invitation code (design 8.5.3, owner 2026-11-17).</param>
+public sealed record Registration(string Email, string? InvitationCode, string? OfficeInvitation = null);
 
 /// <summary>What a person gives once their address is proven (design 6.2), with the terms of use accepted (design 8.22.2).</summary>
-public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAdult, string? InvitationCode, bool AcceptsTerms);
+public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAdult, string? InvitationCode, bool AcceptsTerms, string? OfficeInvitation = null);
 
 /// <summary>
 /// The signed-in person's own account. <paramref name="StaffAccount"/>: the account holds an activated staff role (whatever
@@ -28,7 +29,8 @@ public sealed record AccountSummary(
     bool StaffAccount = false,
     MpOffer? MpOffer = null,
     MpLinkState? Mp = null,
-    bool TermsRequired = false);
+    bool TermsRequired = false,
+    bool PasskeySession = false);
 
 /// <summary>
 /// Design 8.5.1: the account's proven address is this MP's official address and the account is not linked yet; it is
@@ -48,8 +50,11 @@ public sealed record OfficeMember(Guid Id, string? DisplayName, DateTimeOffset S
 /// <summary>The MP's office: its members and how many it may have.</summary>
 public sealed record MpOffice(IReadOnlyList<OfficeMember> Members, int Limit);
 
-/// <summary>An office member's one-time invitation, shown once: the token and when it stops working.</summary>
-public sealed record OfficeInvitation(string Token, DateTimeOffset ExpiresAt);
+/// <summary>
+/// An office member's one-time invitation, shown once: its code (the secret after the link's <c>#</c>, also typed on the page,
+/// design 8.5.3), when it stops working, and whether the site emailed it (owner, 2026-11-17).
+/// </summary>
+public sealed record OfficeInvitation(string Token, DateTimeOffset ExpiresAt, bool Emailed = false);
 
 /// <summary>
 /// MPs on the platform (design 8.5.1 to 8.5.4): the take-over of a profile through a link to the official address and a new
@@ -77,11 +82,19 @@ public interface IPoliticians
     /// <summary>The office members, for the MP's account only.</summary>
     Task<Result<MpOffice>> OfficeAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
-    /// <summary>A one-time invitation for an office member (seven days), made by the MP's account in a passkey session.</summary>
-    Task<Result<OfficeInvitation>> InviteOfficeMemberAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
+    /// <summary>
+    /// A one-time invitation for an office member (seven days), made by the MP's account in a passkey session; emailed by the site
+    /// to <paramref name="email"/> when one is given (owner, 2026-11-17), the address kept only in the outbox row.
+    /// </summary>
+    Task<Result<OfficeInvitation>> InviteOfficeMemberAsync(ClaimsPrincipal user, string? email, string? ipHash, CancellationToken cancellationToken);
 
-    /// <summary>A member in a passkey session accepts an office invitation and becomes an office member of that MP.</summary>
-    Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(ClaimsPrincipal user, string token, string? ipHash, CancellationToken cancellationToken);
+    /// <summary>
+    /// A member accepts an office invitation and becomes an office member of that MP (design 8.5.3): in a passkey session, or
+    /// (owner, 2026-11-17) in a code session with <paramref name="newPasskey"/> (a passkey made now, stored in the same
+    /// transaction) or <paramref name="passkey"/> (an assertion with one of the account's passkeys); the session then becomes
+    /// a passkey session under a new key.
+    /// </summary>
+    Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(ClaimsPrincipal user, string token, string? newPasskey, string? passkey, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>The MP's account removes an office member, in a passkey session.</summary>
     Task<Result<Unit>> RemoveOfficeMemberAsync(ClaimsPrincipal user, Guid memberId, string? ipHash, CancellationToken cancellationToken);

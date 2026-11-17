@@ -6,151 +6,162 @@
 @inject IOrganisationsApi Organisations
 @inject IAppealsApi Appeals
 
-@* "Organizacijų pozicijos" on the bill's page (design 8.14.3, 8.14.14), after the arguments: for and against side by side
-   (both always, an empty side included), remarks below, each in the order published; the section says statements are not
-   counted. Prerendered from the public, cacheable answer, so it reads without JavaScript. A representative's controls come
-   from the caller's own answer (GET …/organisations/mine), asked for only for a signed-in member; nothing in the public
-   markup tells who represents an organisation or ties a member's own side to it. *@
-<section class="sheet stack" aria-labelledby="h-organisations" id="organisations">
-    <h2 id="h-organisations">@L["Org.Section.Title"]</h2>
-    <p class="small" id="organisations-not-counted">@L["Org.Section.NotCounted"] <a href="/organizacijos">@L["Org.Section.All"]</a></p>
-    @if (Statements is { } statements)
-    {
-        <div class="pair pair--reasons">
-            @foreach (var stance in Sides)
+@* "Organizacijų pozicijos" on the bill's page (design 8.14.3, 8.14.14), after the MPs' responses and before the arguments
+   (owner, 2026-11-17), and only when there is something to show: a statement, or for a representative their organisation's
+   way to publish one. For and against side by side (both, an empty side included, once there is a statement), remarks
+   below, each in the order published; the section says statements are not counted. Prerendered from the public, cacheable
+   answer, so it reads without JavaScript. A representative's controls come from the caller's own answer
+   (GET …/organisations/mine), asked for only for a signed-in member; nothing in the public markup tells who represents an
+   organisation or ties a member's own side to it. *@
+@if (Shown)
+{
+    <section class="sheet stack" aria-labelledby="h-organisations" id="organisations">
+        <h2 id="h-organisations">@L["Org.Section.Title"]</h2>
+        <p class="small" id="organisations-not-counted">@L["Org.Section.NotCounted"] <a href="/organizacijos">@L["Org.Section.All"]</a></p>
+        @if (Statements is { } statements)
+        {
+            <div class="pair pair--reasons">
+                @foreach (var stance in Sides)
+                {
+                    var items = statements.Items.Where(i => i.Statement.Stance == stance).ToList();
+                    <div class="stack" id="organisations-@stance">
+                        <h3><span class="choice choice--@stance">@L["Org.Stance." + stance]</span></h3>
+                        @if (items.Count == 0)
+                        {
+                            <p class="small">@L["Org.Section.None"]</p>
+                        }
+                        @foreach (var item in items)
+                        {
+                            <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false" Actions="@Actions(item.Statement)" />
+                        }
+                    </div>
+                }
+            </div>
+            var remarks = statements.Items.Where(i => i.Statement.Stance == "remarks").ToList();
+            @if (remarks.Count > 0)
             {
-                var items = statements.Items.Where(i => i.Statement.Stance == stance).ToList();
-                <div class="stack" id="organisations-@stance">
-                    <h3><span class="choice choice--@stance">@L["Org.Stance." + stance]</span></h3>
-                    @if (items.Count == 0)
-                    {
-                        <p class="small">@L["Org.Section.None"]</p>
-                    }
-                    @foreach (var item in items)
+                <div class="stack" id="organisations-remarks">
+                    <h3><span class="choice choice--remarks">@L["Org.Stance.remarks"]</span></h3>
+                    @foreach (var item in remarks)
                     {
                         <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false" Actions="@Actions(item.Statement)" />
                     }
                 </div>
             }
-        </div>
-        var remarks = statements.Items.Where(i => i.Statement.Stance == "remarks").ToList();
-        @if (remarks.Count > 0)
-        {
-            <div class="stack" id="organisations-remarks">
-                <h3><span class="choice choice--remarks">@L["Org.Stance.remarks"]</span></h3>
-                @foreach (var item in remarks)
-                {
-                    <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false" Actions="@Actions(item.Statement)" />
-                }
-            </div>
+            @if (!statements.Open && statements.Items.Count > 0)
+            {
+                <p class="fine" id="organisations-frozen">@L["Org.Section.Frozen"]</p>
+            }
         }
-        @if (!statements.Open && statements.Items.Count > 0)
-        {
-            <p class="fine" id="organisations-frozen">@L["Org.Section.Frozen"]</p>
-        }
-    }
 
-    @if (_signedIn && Mine is { } mine)
-    {
-        @if (mine.Count == 0)
+        @if (_signedIn && Mine is { } mine)
         {
-            <p class="small" id="organisations-register"><a href="/organizacijos/nauja">@L["Org.Section.Register"]</a></p>
-        }
-        @foreach (var org in mine)
-        {
-            <div class="sheet sheet--quiet stack stack--tight" id="my-organisation-@org.Slug" aria-label="@org.Name" @key="org.Slug">
-                <p class="row"><b>@L.Format("Org.Mine.Title", org.Name)</b> <OrgLabel Label="org.Label" /></p>
-                <p class="fine">@L["Org.Mine.Private"]</p>
-                @if (org.Statement is { } own)
-                {
-                    <p class="row small">
-                        <span class="@OrganisationWords.StanceClass(own.Stance)">@L["Org.Stance." + own.Stance]</span>
-                        <span class="tag" id="my-statement-status-@org.Slug">@L["Org.Status." + own.Status]</span>
-                    </p>
-                }
-                @if (org.Refusal is { } refusal)
-                {
-                    <p class="note note--quiet" id="refusal-@org.Slug">@L["Org.Refusal." + refusal]</p>
-                }
-                else if (org.Statement is not { Status: "hidden" })
-                {
-                    @if (_editing != org.Slug)
+            @if (mine.Count == 0)
+            {
+                <p class="small" id="organisations-register"><a href="/organizacijos/nauja">@L["Org.Section.Register"]</a></p>
+            }
+            @foreach (var org in mine)
+            {
+                <div class="sheet sheet--quiet stack stack--tight" id="my-organisation-@org.Slug" aria-label="@org.Name" @key="org.Slug">
+                    <p class="row"><b>@L.Format("Org.Mine.Title", org.Name)</b> <OrgLabel Label="org.Label" /></p>
+                    <p class="fine">@L["Org.Mine.Private"]</p>
+                    @if (org.Statement is { } own)
                     {
-                        <div class="row">
-                            <button class="btn btn--plain" type="button" id="statement-open-@org.Slug" disabled="@Locked" @onclick="() => StartAsync(org)">
-                                @(org.Statement is null ? L["Org.Form.Publish"] : L["Org.Form.Change"])
-                            </button>
-                            @if (org.Statement is not null)
-                            {
-                                <button class="linkish small" type="button" id="statement-withdraw-@org.Slug" disabled="@Locked" @onclick="() => _withdrawing = _withdrawing == org.Slug ? null : org.Slug">@L["Org.Form.Withdraw"]</button>
-                            }
-                        </div>
-                        @if (_withdrawing == org.Slug)
-                        {
-                            <div class="row" role="group" aria-label="@L["Org.Form.Withdraw"]">
-                                <p class="small">@L["Org.Form.WithdrawConfirm"]</p>
-                                <button class="btn" type="button" id="statement-withdraw-confirm-@org.Slug" disabled="@Locked" @onclick="() => WithdrawAsync(org.Slug)">@L["Org.Form.WithdrawYes"]</button>
-                                <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = null">@L["Cancel"]</button>
-                            </div>
-                        }
+                        <p class="row small">
+                            <span class="@OrganisationWords.StanceClass(own.Stance)">@L["Org.Stance." + own.Stance]</span>
+                            <span class="tag" id="my-statement-status-@org.Slug">@L["Org.Status." + own.Status]</span>
+                        </p>
                     }
-                    else
+                    @if (org.Refusal is { } refusal)
                     {
-                        <form class="stack" @onsubmit="() => SaveAsync(org.Slug)" novalidate id="statement-form-@org.Slug" aria-labelledby="statement-form-title-@org.Slug">
-                            <h3 id="statement-form-title-@org.Slug">@L.Format("Org.Form.Title", org.Name)</h3>
-                            <p class="small">@L["Org.Form.Lead"]</p>
-                            <fieldset class="field stack stack--tight @ErrorClass("stance")">
-                                <legend>@L["Org.Form.Stance"]</legend>
-                                @foreach (var stance in OrganisationLimits.Stances)
+                        <p class="note note--quiet" id="refusal-@org.Slug">@L["Org.Refusal." + refusal]</p>
+                    }
+                    else if (org.Statement is not { Status: "hidden" })
+                    {
+                        @if (_editing != org.Slug)
+                        {
+                            <div class="row">
+                                <button class="btn btn--plain" type="button" id="statement-open-@org.Slug" disabled="@Locked" @onclick="() => StartAsync(org)">
+                                    @(org.Statement is null ? L["Org.Form.Publish"] : L["Org.Form.Change"])
+                                </button>
+                                @if (org.Statement is not null)
                                 {
-                                    <label class="check">
-                                        <input type="radio" name="stance-@org.Slug" id="stance-@stance-@org.Slug" value="@stance" checked="@(_stance == stance)"
-                                               @onchange="() => _stance = stance" disabled="@Locked" />
-                                        <span>@L["Org.Stance." + stance]</span>
-                                    </label>
+                                    <button class="linkish small" type="button" id="statement-withdraw-@org.Slug" disabled="@Locked" @onclick="() => _withdrawing = _withdrawing == org.Slug ? null : org.Slug">@L["Org.Form.Withdraw"]</button>
                                 }
-                                <FieldError Errors="Errors" Field="stance" For="@($"stance-{org.Slug}")" />
-                            </fieldset>
-                            <div class="field @ErrorClass("text")">
-                                <label for="statement-text-@org.Slug">@L["Org.Form.Text"]</label>
-                                <textarea class="textarea" id="statement-text-@org.Slug" rows="8" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-invalid="@Invalid("text")"
-                                          aria-describedby="@DescribedBy("text", $"statement-text-{org.Slug}", $"statement-text-hint-{org.Slug}")"
-                                          @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
-                                <p class="field__hint num" id="statement-text-hint-@org.Slug">@(_maxLength is > 0 and var max ? L.Format("Org.Form.TextHint", Display.Number(_text.Length), Display.Number(max)) : L.Format("Text.CountOnly", Display.Number(_text.Length)))</p>
-                                <FieldError Errors="Errors" Field="text" For="@($"statement-text-{org.Slug}")" />
                             </div>
-                            <div class="field @ErrorClass("link")">
-                                <label for="statement-link-@org.Slug">@L["Org.Form.Link"]</label>
-                                <p class="field__hint" id="statement-link-hint-@org.Slug">@L["Org.Form.LinkHint"]</p>
-                                <input class="input" type="url" inputmode="url" autocomplete="off" spellcheck="false" id="statement-link-@org.Slug" maxlength="@OrganisationLimits.LinkMaxLength"
-                                       aria-describedby="@DescribedBy("link", $"statement-link-{org.Slug}", $"statement-link-hint-{org.Slug}")" aria-invalid="@Invalid("link")" placeholder="https://" @bind="_link" @bind:event="oninput" disabled="@Locked" />
-                                <FieldError Errors="Errors" Field="link" For="@($"statement-link-{org.Slug}")" />
-                            </div>
-                            @if (_stance is "for" or "against")
+                            @if (_withdrawing == org.Slug)
                             {
-                                <div class="field @ErrorClass("goal")">
-                                    <label for="statement-goal-@org.Slug">@L["Org.Form.Goal"]</label>
-                                    <p class="field__hint" id="statement-goal-hint-@org.Slug">@L["Org.Form.GoalHint"]</p>
-                                    <input class="input num" type="text" inputmode="numeric" autocomplete="off" id="statement-goal-@org.Slug" aria-describedby="@DescribedBy("goal", $"statement-goal-{org.Slug}", $"statement-goal-hint-{org.Slug}")" aria-invalid="@Invalid("goal")"
-                                           @bind="_goal" @bind:event="oninput" disabled="@Locked" />
-                                    <FieldError Errors="Errors" Field="goal" For="@($"statement-goal-{org.Slug}")" />
+                                <div class="row" role="group" aria-label="@L["Org.Form.Withdraw"]">
+                                    <p class="small">@L["Org.Form.WithdrawConfirm"]</p>
+                                    <button class="btn" type="button" id="statement-withdraw-confirm-@org.Slug" disabled="@Locked" @onclick="() => WithdrawAsync(org.Slug)">@L["Org.Form.WithdrawYes"]</button>
+                                    <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = null">@L["Cancel"]</button>
                                 </div>
                             }
-                            <div class="row">
-                                <button type="submit" class="btn" id="statement-submit-@org.Slug" disabled="@(Locked || _stance is null || string.IsNullOrWhiteSpace(_text))">@L["Org.Form.Submit"]</button>
-                                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="Cancel">@L["Cancel"]</button>
-                            </div>
-                        </form>
+                        }
+                        else
+                        {
+                            <form class="stack" @onsubmit="() => SaveAsync(org.Slug)" novalidate id="statement-form-@org.Slug" aria-labelledby="statement-form-title-@org.Slug">
+                                <h3 id="statement-form-title-@org.Slug">@L.Format("Org.Form.Title", org.Name)</h3>
+                                <p class="small">@L["Org.Form.Lead"]</p>
+                                <fieldset class="field stack stack--tight @ErrorClass("stance")">
+                                    <legend>@L["Org.Form.Stance"]</legend>
+                                    @foreach (var stance in OrganisationLimits.Stances)
+                                    {
+                                        <label class="check">
+                                            <input type="radio" name="stance-@org.Slug" id="stance-@stance-@org.Slug" value="@stance" checked="@(_stance == stance)"
+                                                   @onchange="() => _stance = stance" disabled="@Locked" />
+                                            <span>@L["Org.Stance." + stance]</span>
+                                        </label>
+                                    }
+                                    <FieldError Errors="Errors" Field="stance" For="@($"stance-{org.Slug}")" />
+                                </fieldset>
+                                <div class="field @ErrorClass("text")">
+                                    <label for="statement-text-@org.Slug">@L["Org.Form.Text"]</label>
+                                    <textarea class="textarea" id="statement-text-@org.Slug" rows="8" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-invalid="@Invalid("text")"
+                                              aria-describedby="@DescribedBy("text", $"statement-text-{org.Slug}", $"statement-text-hint-{org.Slug}")"
+                                              @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
+                                    <p class="field__hint num" id="statement-text-hint-@org.Slug">@(_maxLength is > 0 and var max ? L.Format("Org.Form.TextHint", Display.Number(_text.Length), Display.Number(max)) : L.Format("Text.CountOnly", Display.Number(_text.Length)))</p>
+                                    <FieldError Errors="Errors" Field="text" For="@($"statement-text-{org.Slug}")" />
+                                </div>
+                                <div class="field @ErrorClass("link")">
+                                    <label for="statement-link-@org.Slug">@L["Org.Form.Link"]</label>
+                                    <p class="field__hint" id="statement-link-hint-@org.Slug">@L["Org.Form.LinkHint"]</p>
+                                    <input class="input" type="url" inputmode="url" autocomplete="off" spellcheck="false" id="statement-link-@org.Slug" maxlength="@OrganisationLimits.LinkMaxLength"
+                                           aria-describedby="@DescribedBy("link", $"statement-link-{org.Slug}", $"statement-link-hint-{org.Slug}")" aria-invalid="@Invalid("link")" placeholder="https://" @bind="_link" @bind:event="oninput" disabled="@Locked" />
+                                    <FieldError Errors="Errors" Field="link" For="@($"statement-link-{org.Slug}")" />
+                                </div>
+                                @if (_stance is "for" or "against")
+                                {
+                                    <div class="field @ErrorClass("goal")">
+                                        <label for="statement-goal-@org.Slug">@L["Org.Form.Goal"]</label>
+                                        <p class="field__hint" id="statement-goal-hint-@org.Slug">@L["Org.Form.GoalHint"]</p>
+                                        <input class="input num" type="text" inputmode="numeric" autocomplete="off" id="statement-goal-@org.Slug" aria-describedby="@DescribedBy("goal", $"statement-goal-{org.Slug}", $"statement-goal-hint-{org.Slug}")" aria-invalid="@Invalid("goal")"
+                                               @bind="_goal" @bind:event="oninput" disabled="@Locked" />
+                                        <FieldError Errors="Errors" Field="goal" For="@($"statement-goal-{org.Slug}")" />
+                                    </div>
+                                }
+                                <div class="row">
+                                    <button type="submit" class="btn" id="statement-submit-@org.Slug" disabled="@(Locked || _stance is null || string.IsNullOrWhiteSpace(_text))">@L["Org.Form.Submit"]</button>
+                                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="Cancel">@L["Cancel"]</button>
+                                </div>
+                            </form>
+                        }
                     }
-                }
-            </div>
+                </div>
+            }
         }
-    }
-    <Messages Message="@Message" Info="@Info" />
-</section>
+        <Messages Message="@Message" Info="@Info" />
+    </section>
+}
 
 @code {
     private static readonly string[] Sides = ["for", "against"];
+
+    /// <summary>
+    /// The part shows when an organisation has a statement shown on the bill, or the caller represents one (their way to
+    /// publish, change or withdraw its statement is here); otherwise nothing (owner, 2026-11-17).
+    /// </summary>
+    private bool Shown => Statements is { Items.Count: > 0 } || (_signedIn && Mine is { Count: > 0 });
     private bool _signedIn;
     private Guid? _reporting;
     private string? _editing;

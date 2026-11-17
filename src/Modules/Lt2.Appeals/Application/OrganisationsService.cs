@@ -488,10 +488,11 @@ internal sealed class OrganisationsService(
         }
 
         var now = clock.GetUtcNow();
-        var token = InviteTokens.New();
+        // Owner, 2026-11-17: the link's secret is a typeable one-time code, shown beside the link and typed on the page.
+        var token = OneTimeCode.New();
         var invite = new OrganisationInvite
         {
-            Id = Ids.New(clock), OrganisationId = o.Id, TokenHash = InviteTokens.Hash(token), CreatedByUserId = userId, CreatedAt = now,
+            Id = Ids.New(clock), OrganisationId = o.Id, TokenHash = OneTimeCode.Hash(token), CreatedByUserId = userId, CreatedAt = now,
             ExpiresAt = now + OrganisationRules.InviteLifetime,
         };
         db.OrganisationInvites.Add(invite);
@@ -503,7 +504,7 @@ internal sealed class OrganisationsService(
     public async Task<Result<InviteView>> InviteViewAsync(string token, Guid userId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var hash = InviteTokens.Hash(token);
+        var hash = OneTimeCode.Hash(token);
         var invite = await db.OrganisationInvites.AsNoTracking().FirstOrDefaultAsync(i => i.TokenHash == hash, cancellationToken);
         var o = invite is null ? null : await db.Organisations.AsNoTracking().FirstOrDefaultAsync(x => x.Id == invite.OrganisationId, cancellationToken);
         if (invite is null || o is null)
@@ -519,7 +520,7 @@ internal sealed class OrganisationsService(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var hash = InviteTokens.Hash(token);
+        var hash = OneTimeCode.Hash(token);
         var invite = await db.OrganisationInvites.FirstOrDefaultAsync(i => i.TokenHash == hash, cancellationToken);
         if (invite is null)
         {

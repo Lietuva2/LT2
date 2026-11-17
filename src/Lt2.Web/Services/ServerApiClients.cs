@@ -158,10 +158,10 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 internal static class Mapping
 {
     public static Registration ToRegistration(RegisterRequest request) =>
-        new(request.Email, request.InvitationCode);
+        new(request.Email, request.InvitationCode, request.OfficeInvitation);
 
     public static RegistrationCompletion ToCompletion(CompleteRegistrationRequest request) =>
-        new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode, request.AcceptsTerms);
+        new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode, request.AcceptsTerms, request.OfficeInvitation);
 
     public static PartySupportResponse ToResponse(PartySupportState state, IReadOnlyList<string> choices, int groupMinimum) =>
         new(state.Party, choices, groupMinimum, state.Public, state.ProfilePublic, state.ConsentVersion);
@@ -183,6 +183,7 @@ internal static class Mapping
         MpOffer = account.MpOffer is { } offer ? MpMapping.Map(offer) : null,
         Mp = account.Mp is { } link ? MpMapping.Map(link) : null,
         TermsRequired = account.TermsRequired,
+        PasskeySession = account.PasskeySession,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()

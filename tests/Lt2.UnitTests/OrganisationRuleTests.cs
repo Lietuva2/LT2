@@ -313,9 +313,6 @@ public sealed class OrganisationRuleTests
     public void A_one_time_link_works_once_within_seven_days()
     {
         var now = DateTimeOffset.UtcNow;
-        var token = InviteTokens.New();
-        token.Length.ShouldBeGreaterThanOrEqualTo(30);
-        InviteTokens.Hash(token).ShouldBe(InviteTokens.Hash(token));
         InviteTokens.IsUsable(now + OrganisationRules.InviteLifetime, null, now).ShouldBeTrue();
         InviteTokens.IsUsable(now.AddSeconds(-1), null, now).ShouldBeFalse();
         InviteTokens.IsUsable(now.AddDays(1), now, now).ShouldBeFalse();

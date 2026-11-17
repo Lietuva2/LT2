@@ -32,12 +32,14 @@ internal static class PoliticianRules
     /// <summary>At most five office members per MP (design 8.5.3).</summary>
     public const int OfficeMembersPerMp = 5;
 
-    /// <summary>A long random token: 32 bytes, base64url, 43 characters. It cannot be guessed (design 8.5.2).</summary>
-    public static string NewToken() =>
-        Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).Replace('+', '-').Replace('/', '_').TrimEnd('=');
+    /// <summary>
+    /// At most ten office invitations a day per MP (owner, 2026-11-17: the site sends them), copied or emailed, counted over the
+    /// last 24 hours: a guard against a runaway sender, not a rule of the office.
+    /// </summary>
+    public const int OfficeInvitationsPerDay = 10;
 
-    /// <summary>Only the hash is stored.</summary>
-    public static byte[] Hash(string? token) => SHA256.HashData(Encoding.UTF8.GetBytes((token ?? "").Trim()));
+    /// <summary>Whether the MP's account may make one more office invitation, with <paramref name="madeInLastDay"/> made in the last 24 hours.</summary>
+    public static bool MayMakeOfficeInvitation(int madeInLastDay) => madeInLastDay < OfficeInvitationsPerDay;
 
     /// <summary>
     /// A token presented for <paramref name="kind"/>: known, of that kind, unused, unexpired and, for a take-over link,

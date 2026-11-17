@@ -693,6 +693,7 @@ internal sealed class AppealsService(
             Kind = request.Kind,
             Link = request.Link.Trim(),
             Note = note,
+            ProposedDate = request.Date,
             ReporterUserId = userId,
             CreatedAt = clock.GetUtcNow(),
         });

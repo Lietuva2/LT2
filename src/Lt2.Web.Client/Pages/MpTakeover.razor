@@ -10,19 +10,22 @@
 @* Design 8.5.2, steps 2 and 3: the take-over link opens this page for the signed-in account. It says what taking over means,
    then "Sukurti prieigos raktą ir perimti" makes the passkey in the browser and sends it with the link's token in one
    request. Design 6.8: the token is after the "#", read in the browser and sent in the request body, so the page rendered on
-   the server knows nothing of it and no log or referrer holds it. *@
+   the server knows nothing of it and no log or referrer holds it. Opened without it, the page asks for the same code, typed
+   (owner, 2026-11-17: the email gives it beside the link). *@
 <PageTitle>@L["MpTakeover.PageTitle"]</PageTitle>
 
 <div class="stack">
     <h1>@L["MpTakeover.Title"]</h1>
     <NeedsScript />
-    @if (_read && _token is null)
-    {
-        <p class="note" role="alert" id="takeover-missing">@L["MpLink.Missing"]</p>
-    }
-    else if (_read && !_signedIn)
+    @if (_read && !_signedIn)
     {
         <p class="note" id="takeover-sign-in">@L["MpTakeover.SignInFirst"] <a href="/prisijungti">@L["MpLink.SignIn"]</a></p>
+    }
+    else if (_read && _token is null)
+    {
+        @* Owner, 2026-11-17: opened without the link's code, the page asks for the code the email gives beside the link. *@
+        <p id="takeover-code-lead">@L["MpTakeover.CodeLead"]</p>
+        <CodeEntry Label="@L["MpTakeover.CodeLabel"]" Entered="code => _token = code" IdPrefix="takeover-" />
     }
     else
     {

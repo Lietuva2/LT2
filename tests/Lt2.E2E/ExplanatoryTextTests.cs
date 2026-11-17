@@ -100,7 +100,7 @@ public sealed class ExplanatoryTextTests : E2ETest
         var page = await context.NewPageAsync();
 
         var anchors = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var path in new[] { "/", "/seimas/XVP-0412", "/projektai", "/darbotvarke", "/suvestines", "/seimas/analitika", "/organizacijos", "/o/pavyzdine-mokesciu-aiskumo-asociacija", "/prisijungti" })
+        foreach (var path in new[] { "/", "/seimas/XVP-0412", "/projektai", "/darbotvarke", "/suvestines", "/statistika", "/organizacijos", "/o/pavyzdine-mokesciu-aiskumo-asociacija", "/prisijungti" })
         {
             await page.GotoAsync(Base + path);
             foreach (var href in await page.EvaluateAsync<string[]>("() => [...document.querySelectorAll('a[href*=\"/metodika#\"]')].map(a => a.getAttribute('href'))"))

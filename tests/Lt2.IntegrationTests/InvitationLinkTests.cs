@@ -97,4 +97,33 @@ public sealed class InvitationLinkTests(DatabaseFixture database) : ApiTest(data
         // The old API address with the token in the path is gone.
         (await second.Client.GetAsync(ApiRoutes.Prefix + "/organisation-invites/" + invite.Token)).StatusCode.ShouldNotBe(HttpStatusCode.OK);
     }
+
+    /// <summary>
+    /// Design 6.8, 8.14.14 (owner, 2026-11-17): the representative's link carries a typeable one-time code, accepted as typed in any
+    /// case with spaces; an unknown and a malformed code get the one answer.
+    /// </summary>
+    [Fact]
+    public async Task A_representatives_invitation_is_a_typeable_code_accepted_as_typed()
+    {
+        var (first, _) = await Factory.MemberAsync("Pirmoji Atstovė");
+        using var _f = first;
+        var created = await first.RegisterOrganisationAsync();
+        var invite = await first.PostJsonAsync<InviteCreatedResponse>(OrganisationRoutes.InvitesOf(created.Slug), new { });
+        Lt2.SharedKernel.OneTimeCode.Normalize(invite.Token).ShouldBe(invite.Token);
+
+        var (second, _) = await Factory.MemberAsync("Antroji Atstovė");
+        using var _s = second;
+        var unknown = await (await second.PostAsync(OrganisationRoutes.Invite, new InviteTokenRequest { Token = Lt2.SharedKernel.OneTimeCode.New() })).ProblemAsync();
+        var malformed = await (await second.PostAsync(OrganisationRoutes.Invite, new InviteTokenRequest { Token = "ne-kodas" })).ProblemAsync();
+        (unknown.GetProperty("status").GetInt32(), unknown.GetProperty("code").GetString()).ShouldBe((404, "invite.not-found"));
+        (malformed.GetProperty("status").GetInt32(), malformed.GetProperty("code").GetString()).ShouldBe((404, "invite.not-found"));
+
+        var typed = " " + invite.Token.ToLowerInvariant().Replace("-", " ", StringComparison.Ordinal) + " ";
+        (await second.PostJsonAsync<InviteResponse>(OrganisationRoutes.Invite, new InviteTokenRequest { Token = typed })).Usable.ShouldBeTrue();
+        using (var accepted = await second.PostAsync(OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = typed }))
+        {
+            accepted.StatusCode.ShouldBe(HttpStatusCode.OK, await accepted.Content.ReadAsStringAsync());
+        }
+
+    }
 }

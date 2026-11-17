@@ -24,6 +24,7 @@ internal sealed class PoliticianHandlers(
     UserManager<User> users,
     SignInManager<User> signIn,
     PoliticianAccess access,
+    StaffAccess staff,
     AccountEvents events,
     IMpDirectory mps,
     IPositionErasure positions,
@@ -35,6 +36,9 @@ internal sealed class PoliticianHandlers(
     /// <summary>The page the take-over link opens; the token follows the <c>#</c> (design 6.8).</summary>
     public const string TakeoverPage = "/seimo-narys/perimti";
 
+    /// <summary>The page an office invitation opens; the code follows the <c>#</c> (design 6.8), or is typed there (design 8.5.3).</summary>
+    public const string OfficeInvitationPage = "/seimo-narys/biuras";
+
     internal static readonly Error NotOfficial = Error.Forbidden("mp.not-official-address");
     internal static readonly Error LinkInvalid = Error.Validation("mp.link-invalid", "token");
     internal static readonly Error AlreadyLinked = Error.Conflict("mp.already-linked");
@@ -44,8 +48,25 @@ internal sealed class PoliticianHandlers(
     internal static readonly Error NotMp = Error.Forbidden("mp.not-mp");
     internal static readonly Error OfficeFull = Error.Conflict("mp.office-full");
     internal static readonly Error MemberNotFound = Error.NotFound("mp.office-member-not-found");
+    internal static readonly Error OfficeInvitationLimit = new(ErrorKind.TooManyRequests, "mp.office-invitation-limit");
     private static readonly Error MemberRequired = Error.Forbidden("member.required");
     private const string PasskeyName = "Seimo nario prieigos raktas";
+
+    /// <summary>The name of a passkey made while accepting an office invitation (owner, 2026-11-17).</summary>
+    private const string OfficePasskeyName = "Prieigos raktas";
+
+    /// <summary>How an office invitation's acceptance shows a passkey (design 8.5.3, owner 2026-11-17).</summary>
+    private enum OfficeProof
+    {
+        /// <summary>The session is a passkey session already.</summary>
+        Session,
+
+        /// <summary>A passkey made now for the account, stored with the acceptance.</summary>
+        NewPasskey,
+
+        /// <summary>An assertion with one of the account's passkeys.</summary>
+        Passkey,
+    }
 
     public async Task<Result<Unit>> ClaimAsync(ClaimsPrincipal principal, string slug, string? ipHash, CancellationToken cancellationToken)
     {
@@ -81,14 +102,15 @@ internal sealed class PoliticianHandlers(
         await db.PoliticianTokens
             .Where(t => t.Kind == PoliticianTokenKinds.Takeover && t.SeimasPersonId == mp.SeimasPersonId && t.UsedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.UsedAt, now), cancellationToken);
-        var token = PoliticianRules.NewToken();
+        // Owner, 2026-11-17: the link's secret is a typeable one-time code, also typed on the take-over page.
+        var token = OneTimeCode.New();
         db.PoliticianTokens.Add(new PoliticianToken
         {
             Id = Ids.New(clock),
             Kind = PoliticianTokenKinds.Takeover,
             SeimasPersonId = mp.SeimasPersonId,
             UserId = user.Id,
-            TokenHash = PoliticianRules.Hash(token),
+            TokenHash = OneTimeCode.Hash(token),
             CreatedAt = now,
             ExpiresAt = now + PoliticianRules.TakeoverLifetime,
         });
@@ -97,7 +119,7 @@ internal sealed class PoliticianHandlers(
         await outbox.EnqueueAsync(
             OutboxMessage.Create(
                 MessageKinds.MpTakeoverLinkEmail,
-                new MpTakeoverLinkEmail(user.Email!, Name(mp), TakeoverPage + "#" + token, (int)PoliticianRules.TakeoverLifetime.TotalHours)),
+                new MpTakeoverLinkEmail(user.Email!, Name(mp), TakeoverPage + "#" + token, (int)PoliticianRules.TakeoverLifetime.TotalHours, TakeoverPage, token)),
             transaction.GetDbTransaction(),
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -112,7 +134,7 @@ internal sealed class PoliticianHandlers(
         }
 
         var now = clock.GetUtcNow();
-        var hash = PoliticianRules.Hash(token);
+        var hash = OneTimeCode.Hash(token);
         var found = await db.PoliticianTokens.AsNoTracking().FirstOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
         if (PoliticianRules.Check(found, PoliticianTokenKinds.Takeover, user.Id, now) != PoliticianTokenCheck.Valid)
         {
@@ -297,11 +319,19 @@ internal sealed class PoliticianHandlers(
         return new MpOffice(members, PoliticianRules.OfficeMembersPerMp);
     }
 
-    public async Task<Result<OfficeInvitation>> InviteOfficeMemberAsync(ClaimsPrincipal principal, string? ipHash, CancellationToken cancellationToken)
+    public async Task<Result<OfficeInvitation>> InviteOfficeMemberAsync(ClaimsPrincipal principal, string? email, string? ipHash, CancellationToken cancellationToken)
     {
         if (await MpWriterAsync(principal, cancellationToken) is not { } state)
         {
             return await RefusalAsync(principal, cancellationToken);
+        }
+
+        // Owner, 2026-11-17: the site may send the invitation. The address is used only to send it: it goes into the outbox row
+        // and nowhere else (not on the invitation, not in the audit).
+        var to = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+        if (to is not null && EmailAddress.Normalize(to) is null)
+        {
+            return Error.Validation("email.invalid", "email");
         }
 
         var now = clock.GetUtcNow();
@@ -313,44 +343,134 @@ internal sealed class PoliticianHandlers(
             return OfficeFull;
         }
 
-        var token = PoliticianRules.NewToken();
+        var since = now - TimeSpan.FromDays(1);
+        var made = await db.PoliticianTokens.CountAsync(
+            t => t.Kind == PoliticianTokenKinds.Office && t.SeimasPersonId == person && t.CreatedAt > since, cancellationToken);
+        if (!PoliticianRules.MayMakeOfficeInvitation(made))
+        {
+            return OfficeInvitationLimit;
+        }
+
+        // Design 8.5.3 (owner, 2026-11-17): the invitation's one secret is a code that can be typed as well as followed.
+        var code = OneTimeCode.New();
         var invitation = new PoliticianToken
         {
             Id = Ids.New(clock),
             Kind = PoliticianTokenKinds.Office,
             SeimasPersonId = person,
             UserId = state.UserId,
-            TokenHash = PoliticianRules.Hash(token),
+            TokenHash = OneTimeCode.Hash(code),
             CreatedAt = now,
             ExpiresAt = now + PoliticianRules.OfficeInvitationLifetime,
         };
         db.PoliticianTokens.Add(invitation);
         await db.SaveChangesAsync(cancellationToken);
-        await events.RecordAsync(transaction.GetDbTransaction(), "mp.office-invited", state.UserId, new Actor(state.UserId, Roles.Member, ipHash), new { mp = person }, null, cancellationToken);
+        await events.RecordAsync(
+            transaction.GetDbTransaction(), "mp.office-invited", state.UserId, new Actor(state.UserId, Roles.Member, ipHash), new { mp = person, emailed = to is not null }, null, cancellationToken);
+        if (to is not null)
+        {
+            await outbox.EnqueueAsync(
+                OutboxMessage.Create(
+                    MessageKinds.MpOfficeInvitationEmail,
+                    new MpOfficeInvitationEmail(to, await FactsAsync(person, cancellationToken) ?? "", OfficeInvitationPage + "#" + code, OfficeInvitationPage, code, invitation.ExpiresAt)),
+                transaction.GetDbTransaction(),
+                cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
-        return new OfficeInvitation(token, invitation.ExpiresAt);
+        return new OfficeInvitation(code, invitation.ExpiresAt, to is not null);
     }
 
-    public async Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(ClaimsPrincipal principal, string token, string? ipHash, CancellationToken cancellationToken)
+    public async Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(
+        ClaimsPrincipal principal, string token, string? newPasskey, string? passkey, string? ipHash, CancellationToken cancellationToken)
     {
-        if (await MemberAsync(principal, cancellationToken) is null)
+        if (await MemberAsync(principal, cancellationToken) is not { } user)
         {
             return MemberRequired;
         }
 
-        // A member accepts in a passkey session (design 8.5.3): their passkeys then change only in one.
+        // A member accepts in a passkey session (design 8.5.3): their passkeys then change only in one. Owner, 2026-11-17: a
+        // code session brings the passkey in this request, a new one or one the account has, and becomes a passkey session.
         var state = await access.ForAsync(principal, cancellationToken);
-        if (state is null || !state.PasskeySession)
+        if (state is null)
+        {
+            return MemberRequired;
+        }
+
+        var proof = !string.IsNullOrEmpty(newPasskey) ? OfficeProof.NewPasskey : !string.IsNullOrEmpty(passkey) ? OfficeProof.Passkey : OfficeProof.Session;
+        if (proof == OfficeProof.Session && !state.PasskeySession)
         {
             return PoliticianAccess.PasskeyRequired;
         }
 
         var now = clock.GetUtcNow();
-        var hash = PoliticianRules.Hash(token);
+        var hash = OneTimeCode.Hash(token);
         var found = await db.PoliticianTokens.AsNoTracking().FirstOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
         if (PoliticianRules.Check(found, PoliticianTokenKinds.Office, state.UserId, now) != PoliticianTokenCheck.Valid)
         {
             return LinkInvalid;
+        }
+
+        // Nothing is attested or stored for an account that cannot become an office member anyway.
+        if (state.Link is not null)
+        {
+            return AlreadyLinked;
+        }
+
+        PasskeyAttestationResult? attestation = null;
+        byte[]? sessionPasskey = null;
+        if (proof == OfficeProof.NewPasskey)
+        {
+            // The staff rule of 6.2: an account with an active staff role adds a passkey only in its staff session.
+            if ((await staff.ForAsync(principal, cancellationToken))?.AccountHasActiveStaffRole == true)
+            {
+                return StaffHandlers.StaffPasskeyRequired;
+            }
+
+            try
+            {
+                attestation = await signIn.PerformPasskeyAttestationAsync(newPasskey!);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogInformation(ex, "Office passkey attestation without a pending challenge");
+                return PasskeyHandlers.NotAdded;
+            }
+
+            if (!attestation.Succeeded || attestation.UserEntity.Id != user.Id.ToString())
+            {
+                logger.LogInformation("Office passkey attestation failed: {Reason}", attestation.Failure?.Message);
+                return PasskeyHandlers.NotAdded;
+            }
+
+            sessionPasskey = attestation.Passkey.CredentialId;
+        }
+        else if (proof == OfficeProof.Passkey)
+        {
+            PasskeyAssertionResult<User> assertion;
+            try
+            {
+                assertion = await signIn.PerformPasskeyAssertionAsync(passkey!);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogInformation(ex, "Office passkey assertion without a pending challenge");
+                return PasskeyHandlers.InvalidPasskey;
+            }
+
+            if (!assertion.Succeeded || assertion.User.Id != user.Id || !await signIn.CanSignInAsync(assertion.User))
+            {
+                logger.LogInformation("Office passkey assertion refused: {Reason}", assertion.Failure?.Message ?? "not this account's passkey");
+                return PasskeyHandlers.InvalidPasskey;
+            }
+
+            // The new signature counter must be stored, or the assertion does not count (as at sign-in).
+            if (!(await users.AddOrUpdatePasskeyAsync(assertion.User, assertion.Passkey)).Succeeded)
+            {
+                return PasskeyHandlers.InvalidPasskey;
+            }
+
+            sessionPasskey = assertion.Passkey.CredentialId;
         }
 
         var person = found!.SeimasPersonId;
@@ -384,6 +504,22 @@ internal sealed class PoliticianHandlers(
             return LinkInvalid;
         }
 
+        // A passkey made now is stored in the same transaction, before the link: on an account not yet linked a code session
+        // may add one (8.5.3), and the account is told as for any added passkey.
+        if (attestation?.Passkey is { } added)
+        {
+            added.Name = OfficePasskeyName;
+            if (!(await users.AddOrUpdatePasskeyAsync(user, added)).Succeeded)
+            {
+                return PasskeyHandlers.NotAdded;
+            }
+
+            await events.RecordAsync(
+                transaction.GetDbTransaction(), "passkey.added", user.Id, new Actor(user.Id, Roles.Member, ipHash),
+                new { credential = WebEncoders.Base64UrlEncode(added.CredentialId)[..12], officeInvitation = true },
+                new AccountNoticeEmail(user.Email!, AccountNotices.PasskeyAdded), cancellationToken);
+        }
+
         db.PoliticianLinks.Add(new PoliticianLink
         {
             Id = Ids.New(clock),
@@ -400,6 +536,17 @@ internal sealed class PoliticianHandlers(
             transaction.GetDbTransaction(), "mp.office-added", state.UserId, new Actor(state.UserId, Roles.Member, ipHash), new { mp = person },
             await MpNoticeAsync(person, AccountNotices.MpOfficeAdded, name, null, cancellationToken), cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+
+        // A code session that brought its passkey becomes a passkey session under a new key (as a staff session does, 6.2):
+        // the code session's row is deleted and a passkey session stored.
+        if (sessionPasskey is not null)
+        {
+            var signedIn = await signIn.CreateUserPrincipalAsync(user);
+            signedIn.Identities.First().AddClaim(new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey));
+            signedIn.Identities.First().AddClaim(new Claim(SessionTicketStore.PasskeyClaim, WebEncoders.Base64UrlEncode(sessionPasskey)));
+            await SessionRotation.SignInWithNewKeyAsync(signIn.Context, signedIn, new AuthenticationProperties { IsPersistent = true });
+        }
+
         return mp is null
             ? new MpLinkState("", "", "", PoliticianParts.Office, true)
             : new MpLinkState(mp.Slug, mp.FirstName, mp.LastName, PoliticianParts.Office, true);

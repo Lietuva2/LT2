@@ -15,6 +15,12 @@ public sealed record MeResponse
 
     public int PasskeyCount { get; init; }
 
+    /// <summary>
+    /// This session was signed in with a passkey still on the account (design 6.2), not by an emailed code; the office
+    /// invitation's page (design 8.5.3, owner 2026-11-17) offers its one button by it.
+    /// </summary>
+    public bool PasskeySession { get; init; }
+
     public DateTimeOffset CreatedAt { get; init; }
 
     /// <summary>
@@ -141,6 +147,9 @@ public sealed record CompleteRegistrationRequest
 
     /// <summary>Only when the code given at registration has run out or is no longer valid.</summary>
     public string? InvitationCode { get; init; }
+
+    /// <summary>An MP office member's invitation code in place of an invitation code (design 8.5.3, owner 2026-11-17), checked again here.</summary>
+    public string? OfficeInvitation { get; init; }
 }
 
 public sealed record SessionResponse

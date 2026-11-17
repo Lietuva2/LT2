@@ -36,6 +36,12 @@ public static class AccountScreens
     /// <summary>The personal invitation code (design 6.2).</summary>
     public const string MyInvitation = Taking + "#my-invitation";
 
+    /// <summary>The offer to take over an MP's profile (design 8.5.1); the notice on every page links here (owner, 2026-11-17).</summary>
+    public const string MpOffer = Taking + "#mp-offer";
+
+    /// <summary>The MP part of a linked account (design 8.5.4).</summary>
+    public const string MpLink = Taking + "#mp-link";
+
     /// <summary>The four screens in their order.</summary>
     public static readonly IReadOnlyList<string> All = [Profile, Follows, Taking, Security];
 }

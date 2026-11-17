@@ -107,10 +107,12 @@ internal static class OrganisationRepresentativeEndpoints
 
         api.MapPost(ApiEndpoints.Relative(OrganisationRoutes.Invite), InviteViewAsync)
             .WithName("GetOrganisationInvite").WithTags("Organisations").RequireAuthorization(Policies.Member)
+            .RequireRateLimiting(RateLimitPolicies.OneTimeCode)
             .Produces<InviteResponse>().ProducesProblem(StatusCodes.Status404NotFound);
 
         api.MapPost(ApiEndpoints.Relative(OrganisationRoutes.AcceptInvite), AcceptAsync)
             .WithName("AcceptOrganisationInvite").WithTags("Organisations").RequireAuthorization(Policies.Member)
+            .RequireRateLimiting(RateLimitPolicies.OneTimeCode)
             .Produces<InviteAcceptedResponse>().ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
         api.MapDelete(ApiEndpoints.Relative(OrganisationRoutes.Representative), RemoveAsync)
