@@ -9,8 +9,9 @@
 @* "Projektai, dėl kurių į jus kreipiamasi" (design 8.5.7): for an account linked to an MP (the MP's or an office member's; a
    code session may read it), reached from the account page. The summaries' list on a page, live: the open bills that
    reached the threshold and are not held, in the summaries' order, each with its number, title, stage, "Planuojama …", both
-   sides' numbers, and the MP's own response or a link to answer on the bill's page. Nothing about other MPs. Asked for only
-   in the browser. *@
+   sides' numbers, and the MP's own response or a link to answer on the bill's page; then (owner, 2026-11-17) the bills the MP
+   answered that are in no summary now, newest answer first, without the numbers. Nothing about other MPs. Asked for only in
+   the browser. *@
 <PageTitle>@L["MpBills.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -58,10 +59,18 @@ else
                                     <span class="num">@L.Format("MpBills.Planned", Display.Day(plan.Date))</span>
                                 </span>
                             }
-                            <span class="small num">
-                                <span class="choice choice--for">@L["MpBills.ForSide"]</span> @Display.Number(b.For) (@L.Format("MpBills.Older", Display.Number(b.ForOlderThan30Days)))
-                                · <span class="choice choice--against">@L["MpBills.AgainstSide"]</span> @Display.Number(b.Against) (@L.Format("MpBills.Older", Display.Number(b.AgainstOlderThan30Days)))
-                            </span>
+                            @if (b is { For: { } forCount, ForOlderThan30Days: { } forOlder, Against: { } againstCount, AgainstOlderThan30Days: { } againstOlder })
+                            {
+                                <span class="small num">
+                                    <span class="choice choice--for">@L["MpBills.ForSide"]</span> @Display.Number(forCount) (@L.Format("MpBills.Older", Display.Number(forOlder)))
+                                    · <span class="choice choice--against">@L["MpBills.AgainstSide"]</span> @Display.Number(againstCount) (@L.Format("MpBills.Older", Display.Number(againstOlder)))
+                                </span>
+                            }
+                            else
+                            {
+                                @* Owner, 2026-11-17: a bill the MP answered that is in no summary now. *@
+                                <span class="small" id="mp-bill-not-in-summary-@b.Number">@L["MpBills.NotInSummary"]</span>
+                            }
                         </div>
                         <div class="rows__side">
                             @if (b.Response is { Status: "published" } r)
@@ -78,7 +87,10 @@ else
                                 {
                                     <span class="small" id="mp-bill-response-@b.Number">@L["MpBills.Withdrawn"]</span>
                                 }
-                                <a class="btn btn--plain" href="/seimas/@Uri.EscapeDataString(b.Number)#atsakymai" id="mp-bill-answer-@b.Number">@L["MpBills.Answer"]</a>
+                                @if (b.Open)
+                                {
+                                    <a class="btn btn--plain" href="/seimas/@Uri.EscapeDataString(b.Number)#atsakymai" id="mp-bill-answer-@b.Number">@L["MpBills.Answer"]</a>
+                                }
                             }
                         </div>
                     </li>

@@ -537,8 +537,11 @@ page's "Balsuota".
   linked account's form is the island `MyMpResponse`, filled in the browser only (on an open bill nobody answered yet it
   stands alone with `Section`, bringing the part's sheet and heading for a linked account); reports are `ReportResponse` islands.
 - `/seimo-narys/projektai` (8.5.7, `MpBills`, linked from `MyMp`; `GET /me/mp/bills`): the bills in summaries now in the
-  summaries' order (`Lt2.Notifications.DigestLists.InSummariesNow`), with the MP's own response or "Atsakyti"; a code session
-  may read it; nothing about other MPs.
+  summaries' order (`Lt2.Notifications.DigestLists.InSummariesNow`), with the MP's own response or "Atsakyti"; then (owner,
+  2026-11-17) every other bill the MP answered, any state, newest first, without the counts ("Dabar suvestinėje nėra",
+  "Atsakyti" only while open); a code session may read it; nothing about other MPs. A first response follows the bill for
+  the account that wrote it (`MpResponseReads.SaveAsync`, as `TakingSides` for a first side; never refused or undone by the
+  follow; editing or withdrawing adds nothing).
 
 **Appeals (design 8.12, decided by the owner on 2026-11-14; replaces proposals, requests and initiators).**
 - The bill and the appeal are one object: the bill's page `/seimas/{number}`. Every active bill (in the catalogue, no

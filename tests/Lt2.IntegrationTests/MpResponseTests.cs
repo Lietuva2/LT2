@@ -3,6 +3,7 @@ using System.Text.Json;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Agenda;
 using Lt2.Api.Contracts.Appeals;
+using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Mps;
 using Lt2.Appeals;
 using Lt2.IntegrationTests.Infrastructure;
@@ -502,6 +503,55 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             await Database.ClearResponsesAsync(MpSteps.Gluosnis.SeimasPersonId);
             await RemoveSeededAsync();
             await Database.FreeBillAsync(Listed);
+        }
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17 ("I don't see the project in my projects list even though I've written my response"): a first
+    /// response follows the bill for the account that wrote it, as a first side does; editing, withdrawing and "Nebesekti" do
+    /// not undo or redo it; and the MP's bills hold an answered bill that is in no summary, after the summaries' ones, without
+    /// their counts, never another MP's.
+    /// </summary>
+    [Fact]
+    public async Task A_first_response_follows_the_bill_and_the_mps_bills_hold_an_answered_bill_in_no_summary()
+    {
+        const string Answered = AppealSteps.ThirdBill;
+        await Database.FreeBillAsync(Answered);
+        using var mp = await Factory.MpAccountAsync(MpSteps.Gluosnis);
+        using var other = await Factory.MpAccountAsync(MpSteps.Eglaite);
+        try
+        {
+            (await mp.Browser.GetJsonAsync<MpBillsResponse>(MpResponseRoutes.MyBills)).Items.ShouldNotContain(i => i.Number == Answered);
+
+            await other.Browser.RespondOkAsync(Answered, "against", "Kito Seimo nario atsakymas be suvestinės.");
+            await mp.Browser.RespondOkAsync(Answered, "for", "Mano atsakymas be suvestinės.");
+
+            // The writer's account follows the bill; the other MP's account follows its own, and neither learns of the other.
+            (await mp.Browser.GetJsonAsync<MyFollowsResponse>(FollowRoutes.Mine)).Bills.ShouldContain(b => b.Number == Answered);
+            (await other.Browser.GetJsonAsync<MyFollowsResponse>(FollowRoutes.Mine)).Bills.ShouldContain(b => b.Number == Answered);
+
+            // Listed after the summaries' bills, without their counts; open for a change of the answer.
+            var bills = await mp.Browser.GetJsonAsync<MpBillsResponse>(MpResponseRoutes.MyBills);
+            var row = bills.Items.Single(i => i.Number == Answered);
+            (row.For, row.Against, row.Open).ShouldBe(((int?)null, (int?)null, true));
+            row.Response!.Stance.ShouldBe("for");
+            bills.Items[^1].Number.ShouldBe(Answered);
+            var json = await mp.Browser.Client.GetStringAsync(MpResponseRoutes.MyBills);
+            json.ShouldNotContain("Kito Seimo nario atsakymas be suvestinės.");
+            json.ShouldNotContain(other.Slug);
+
+            // "Nebesekti" keeps the response; editing it follows nothing again; a withdrawn one stays listed.
+            (await mp.Browser.SendAsync(HttpMethod.Delete, FollowRoutes.BillOf(Answered))).Dispose();
+            await mp.Browser.RespondOkAsync(Answered, "for", "Mano pataisytas atsakymas be suvestinės.");
+            (await mp.Browser.GetJsonAsync<MyFollowsResponse>(FollowRoutes.Mine)).Bills.ShouldNotContain(b => b.Number == Answered);
+            (await mp.Browser.WithdrawResponseAsync(Answered)).Dispose();
+            (await mp.Browser.GetJsonAsync<MpBillsResponse>(MpResponseRoutes.MyBills)).Items.Single(i => i.Number == Answered).Response!.Status.ShouldBe("withdrawn");
+        }
+        finally
+        {
+            await EndAsync(mp);
+            await EndAsync(other);
+            await Database.FreeBillAsync(Answered);
         }
     }
 

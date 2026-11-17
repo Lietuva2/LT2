@@ -1314,6 +1314,15 @@ summaries now (they reached the threshold and are open), in the summary's order,
 "Planuojama …", both sides' numbers, and the MP's response or a link to answer. It is the summary email's list on a
 page, live. Nothing about other MPs is on it.
 
+**[Decided by the owner on 2026-11-17: "I don't see the project in my projects list even though I've written my response
+as a MP or office."]** After the summaries' bills the page lists every other bill this MP has a response on, in any
+state the MP's own view shows (published, withdrawn, hidden by the moderators), newest change first, once each: its
+number, title and "Planuojama …" while it is open, "Dabar suvestinėje nėra" in place of the numbers, and the response,
+with "Atsakyti" only while the bill is open. And a first response follows the bill for the account that wrote it
+(the MP's or an office member's), as a first side does (8.11.2): the response is saved first and is never refused or
+undone because the follow failed; editing it, withdrawing it or writing it again after a withdrawal follows nothing,
+and "Nebesekti" keeps the response. So an answered bill is also in the account's "Jūsų projektai" and follow list.
+
 #### 8.5.8 Done when
 
 An account registered with a stand-in MP's official address is told so at once and, with the setting on, needs no
@@ -1698,6 +1707,8 @@ A visitor sees a link to sign in instead.
     never about an event from before. This delivers, for a person with a side, the "planned" and "voted" notices of
     8.6 without a second mechanism.
   - Sides taken before this was built are left as they are: no follow is made for them afterwards.
+  - [Decided by the owner on 2026-11-17.] An MP's first response follows the bill the same way for the account that
+    wrote it (8.5.7): the MP's account and office members take no side, so this is how an answered bill becomes theirs.
   - "Jūsų projektai" (8.7) lists the bills the member follows, and only those [decided by the owner on 2026-11-17:
     "followed only"; until then a bill with a side alone stayed there without "Sekate"]: "Nebesekti" takes the bill off
     the list, and its side stays, shown in the bill's own row of the timeline and on its page.

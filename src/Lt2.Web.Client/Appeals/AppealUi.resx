@@ -130,10 +130,10 @@
   <data name="MpBills.PageTitle" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi · Lietuva 2.0</value></data>
   <data name="MpBills.Title" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi</value></data>
   <data name="MpBills.Account" xml:space="preserve"><value>Paskyra</value></data>
-  <data name="MpBills.Lead" xml:space="preserve"><value>Projektai, kurie dabar patektų į suvestinę Seimo nariams: pasiekę ribą ir dar nebalsuoti galutinai, suvestinės tvarka.</value></data>
+  <data name="MpBills.Lead" xml:space="preserve"><value>Projektai, kurie dabar patektų į suvestinę Seimo nariams (pasiekę ribą ir dar nebalsuoti galutinai, suvestinės tvarka), ir kiti projektai, į kuriuos atsakėte.</value></data>
   <data name="MpBills.NotLinked" xml:space="preserve"><value>Šis puslapis skirtas Seimo nario arba jo biuro paskyrai.</value></data>
   <data name="MpBills.Mp" xml:space="preserve"><value>Seimo narys: {0}.</value></data>
-  <data name="MpBills.None" xml:space="preserve"><value>Dabar suvestinėse projektų nėra.</value></data>
+  <data name="MpBills.None" xml:space="preserve"><value>Dabar suvestinėse projektų nėra, atsakymų taip pat.</value></data>
   <data name="MpBills.Planned" xml:space="preserve"><value>Planuojama {0}</value></data>
   <data name="MpBills.ForSide" xml:space="preserve"><value>Už</value></data>
   <data name="MpBills.AgainstSide" xml:space="preserve"><value>Prieš</value></data>
@@ -141,6 +141,7 @@
   <data name="MpBills.Answered" xml:space="preserve"><value>Atsakyta: {0}</value></data>
   <data name="MpBills.Hidden" xml:space="preserve"><value>Atsakymą paslėpė moderatoriai</value></data>
   <data name="MpBills.Withdrawn" xml:space="preserve"><value>Atsakymas atsiimtas</value></data>
+  <data name="MpBills.NotInSummary" xml:space="preserve"><value>Dabar suvestinėje nėra</value></data>
   <data name="MpBills.Answer" xml:space="preserve"><value>Atsakyti</value></data>
   <data name="MpBills.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Report.AppealOpen" xml:space="preserve"><value>Pranešti apie klaidą</value></data>

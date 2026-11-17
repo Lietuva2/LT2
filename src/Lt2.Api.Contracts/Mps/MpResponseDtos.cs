@@ -122,12 +122,17 @@ public sealed record MpResponseSavedResponse(Guid Id, string Status);
 
 /// <summary>
 /// A bill on the page of design 8.5.7: what the summary would say about it (number, title, the planned date and stage, both
-/// sides with the counts for accounts older than 30 days) and the MP's own response, if any.
+/// sides with the counts for accounts older than 30 days) and the MP's own response, if any. A bill the MP answered that is in
+/// no summary now (owner, 2026-11-17) has no counts (null) and says whether it is still open for an answer.
 /// </summary>
 public sealed record MpBillResponse(
-    string Number, string Title, PlannedDateResponse? Planned, int For, int ForOlderThan30Days, int Against, int AgainstOlderThan30Days, MpResponseResponse? Response);
+    string Number, string Title, PlannedDateResponse? Planned, int? For, int? ForOlderThan30Days, int? Against, int? AgainstOlderThan30Days,
+    MpResponseResponse? Response, bool Open = true);
 
-/// <summary>"Projektai, dėl kurių į jus kreipiamasi" (design 8.5.7): the summaries' list, live, for the MP the account speaks for.</summary>
+/// <summary>
+/// "Projektai, dėl kurių į jus kreipiamasi" (design 8.5.7): the summaries' list, live, for the MP the account speaks for, then
+/// the bills the MP answered that are not in it, newest answer first (owner, 2026-11-17).
+/// </summary>
 public sealed record MpBillsResponse(MpLinkResponse Mp, IReadOnlyList<MpBillResponse> Items);
 
 /// <summary>A response in the moderators' queue: flagged and not yet seen, or reported. Never who wrote it.</summary>
