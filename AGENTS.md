@@ -206,7 +206,8 @@ pre-merge run found.
   integration test over HTTP.
 - **Public pages work without JavaScript** and are server-rendered. Only signed-in features use WebAssembly.
 - **Island controls stay disabled until the island is interactive** (`InteractiveBase<TText>.Locked`, or `!RendererInfo.IsInteractive`),
-  fields included, and the page carries `<NeedsScript />`. `tests/Lt2.E2E/IslandsBeforeStartTests.cs` walks the pages with the
+  fields included, and the page carries `<NeedsScript />`; a button that only shows a popover ("⋯", a hint's trigger) works
+  without script and stays enabled. `tests/Lt2.E2E/IslandsBeforeStartTests.cs` walks the pages with the
   WebAssembly runtime blocked; add a new island page there.
 - **Counted rules are pure functions with unit tests** whose names read as the rule: statistics, thresholds, summary
   eligibility, the party group rule (`GroupRules`).
