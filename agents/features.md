@@ -315,7 +315,9 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `.stack--snug` (16px apart, owner 2026-11-18). Beside the side column: what it is about, the sides, a closed bill's
   result; the side column: "Stadijos Seime" with `#planned-source` ("Iš kur ši data?", the agenda link) and
   `DateFlagForm` under the stages, the
-  moderators' panels, the summaries. Then at the page's full width: `BillResponses`, `OrganisationPositions` (each only
+  moderators' panels, the summaries. The e-seimas link stands once: in `#description-source` or under `#no-description`
+  while the page has a side column; only the full-width `StagesSheet(inAside: false)` (hidden record, finished bill nobody
+  took part in) carries "Projektas e-seime" (owner, 2026-11-18). Then at the page's full width: `BillResponses`, `OrganisationPositions` (each only
   when there is something to show) and `RecordReasons` (always). An argument reads name, text, action row; "Aptarimas"
   opens in its side's column (no stacking of the sides); a chosen action of "⋯" opens under the row, above an open
   discussion (`.act > .act__panel` before `.discuss__panel` by `order`).

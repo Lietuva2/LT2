@@ -70,6 +70,12 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
                 stages.IndexOf("</ol>", StringComparison.Ordinal).ShouldBeLessThan(stages.IndexOf("id=\"planned-source\"", StringComparison.Ordinal));
                 stages.IndexOf("id=\"planned-source\"", StringComparison.Ordinal).ShouldBeLessThan(stages.IndexOf("id=\"planned-from\"", StringComparison.Ordinal));
                 stages.ShouldContain("id=\"planned-agenda\"");
+
+                // Owner, 2026-11-18: the bill's e-seimas address once, in "Apie ką projektas"; the side column's stages repeat it not.
+                var eSeimas = (await stranger.GetJsonAsync<Lt2.Api.Contracts.Parliament.BillResponse>(ParliamentRoutes.BillByNumber(AppealSteps.ThirdBill))).ESeimasUrl.ShouldNotBeNull();
+                html.Split($"href=\"{eSeimas}\"").Length.ShouldBe(2, "the e-seimas address once on the page");
+                html[html.IndexOf("id=\"about\"", StringComparison.Ordinal)..html.IndexOf("id=\"sides\"", StringComparison.Ordinal)].ShouldContain($"href=\"{eSeimas}\"");
+                stages.ShouldNotContain("Projektas e-seime");
                 html.IndexOf("class=\"stack stack--snug\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"bill-planned\"", StringComparison.Ordinal));
             }
 

@@ -88,6 +88,11 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         page.ShouldContain("Neteisėtas turinys.");
         page.ShouldNotContain("id=\"side-picker\"");
 
+        // Owner, 2026-11-18: no "Apie ką projektas" here, so the full-width "Stadijos Seime" keeps the e-seimas link.
+        var eSeimas = (await stranger.GetJsonAsync<Lt2.Api.Contracts.Parliament.BillResponse>(ParliamentRoutes.BillByNumber(AppealSteps.ThirdBill))).ESeimasUrl.ShouldNotBeNull();
+        page.ShouldNotContain("id=\"about\"");
+        page[page.IndexOf("id=\"stages\"", StringComparison.Ordinal)..].ShouldContain($"<a href=\"{eSeimas}\" rel=\"external\">Projektas e-seime</a>");
+
         using (var side = await member.TakeSideAsync(AppealSteps.ThirdBill, "for"))
         {
             await side.ShouldBeProblemAsync(HttpStatusCode.Conflict, "record.not-open");
