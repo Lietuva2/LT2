@@ -85,16 +85,17 @@ public interface IParticipants
     Task<IReadOnlyDictionary<Guid, string?>> DisplayNamesAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);
 }
 
-/// <summary>The explicit consent a person gives before their first position (design 6.5).</summary>
+/// <summary>The explicit consent a person gives before their first position or first "Man svarbu" (design 6.5).</summary>
 public static class PositionConsent
 {
     public const string Kind = "positions";
 
     /// <summary>
     /// The version of the consent text in force. The text itself is in the client's resources under this version; a new
-    /// wording gets a new version, and consents given to an older one are asked again.
+    /// wording gets a new version, and consents given to an older one are asked again. 2026-11-18 (owner): the text covers the
+    /// "Man svarbu" marks as well as the sides (2026-11-13: sides only).
     /// </summary>
-    public const string TextVersion = "2026-11-13";
+    public const string TextVersion = "2026-11-18";
 }
 
 /// <summary>

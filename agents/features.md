@@ -266,7 +266,9 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   rest (`TextExcerpt`, one file in SharedKernel compiled also into Lt2.Web.Client; `Components/LongText`): an argument
   about 300 characters, a statement or a response about 1 500; the moderators' queue keeps texts whole.
 - "Man svarbu" endorses a reason of either side, with or without a side of one's own, never one you wrote, and needs the
-  positions consent (owner, 2026-11-18; 2026-11-17 for one's own: `AppealRules.CheckEndorsement`, `endorsement.own-reason`,
+  positions consent, whose text names the marks since version 2026-11-18 (`PositionConsent.TextVersion`, `Consent.*` in
+  `AppealUi`, `PositionConsent.*` in `UiText`; a consent to an older text counts as none: `CurrentPositionConsent`)
+  (owner, 2026-11-18; 2026-11-17 for one's own: `AppealRules.CheckEndorsement`, `endorsement.own-reason`,
   `consent.required`; the island disables it on one's own argument from the never-cached answer and asks for the consent in
   place, `PositionConsentForm ForMark`, before a first mark; a merge drops a mark that would land on its giver's own
   argument). **A mark counts only while its giver's current side is the argument's side** (`AppealRules.MarkCounts`):
@@ -526,7 +528,9 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
 Demonstration data (design 8.26.5, owner 2026-11-18; only where `Demo:Allowed`, never in tests): thirty invented closed
 bills XVP-0701..0731 besides XVP-0707, their votes in the stand-in overlay (`tools/demo_closed_bills.py`, run by `tools/standin_overlay.py`; ballots of the overlay's 141 MPs, totals counted from them, XVP-0706 rejected with more than half "prieš"), their positions
 from `--demo-appeal`'s own invented accounts (`DemoClosedBills`, `InventedMembers.SinceAsync`: the fixed identifiers, on
-`pavyzdys.test`, with the consent); `--demo-sides-for ADDRESS|-` (`DemoSides`) gives one named account with the consent
+`pavyzdys.test`, with the consent in force; accounts made under an older consent text get the one in force when
+`--demo-appeal` runs again, `InventedMembers.GivePositionConsentAsync`, unless they withdrew it); `--demo-sides-for ADDRESS|-`
+(`DemoSides`) gives one named account with the consent in force (a real account consents itself, never by a script)
 random sides on them and adds them to the frozen counts (`InventedRecord.GiveClosedSidesAsync`), the address never logged.
 Integration: `DemoAppealTests`, `DemoSidesTests`.
 **Organisations (design 8.14, stage A of 8.14.14; built 2026-11-14).**

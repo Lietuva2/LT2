@@ -486,6 +486,54 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.MineAsync(AppealSteps.ThirdBill)).Endorsed.ShouldBe([reasonId]);
     }
+
+    /// <summary>
+    /// Design 6.5 as built: a consent given to an older text (2026-11-13, sides only) is not the consent in force. Nothing is
+    /// deleted: the person's side and marks stay stored and counted and show as theirs, and they can still take a side back or
+    /// remove a mark; a new side or mark asks for the consent again (<c>consent.required</c>), and once given to the text in
+    /// force everything goes on.
+    /// </summary>
+    [Fact]
+    public async Task A_consent_to_an_older_text_keeps_what_was_given_and_is_asked_again_before_anything_new()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var reasonId = (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        await Database.ExecuteAsync(
+            "UPDATE identity.consent SET text_version = '2026-11-13' WHERE kind = 'positions' AND user_id = @u", ("u", await Database.UserIdAsync(email)));
+
+        (await member.MeAsync()).HasPositionConsent.ShouldBeFalse();
+        var record = await member.RecordAsync(AppealSteps.ThirdBill);
+        record.Counts.Against.ShouldBe(2, "the side stays counted");
+        record.Reasons.Single().Endorsements.ShouldBe(1, "the mark stays counted");
+        var mine = await member.MineAsync(AppealSteps.ThirdBill);
+        (mine.Side, mine.HasPositionConsent).ShouldBe(("against", false));
+        mine.Endorsed.ShouldBe([reasonId]);
+
+        using (var changed = await member.TakeSideAsync(AppealSteps.ThirdBill, "for"))
+        {
+            await changed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "consent.required");
+        }
+
+        (await member.SendAsync(HttpMethod.Delete, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using (var marked = await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId)))
+        {
+            await marked.ShouldBeProblemAsync(HttpStatusCode.Conflict, "consent.required");
+        }
+
+        (await member.MineAsync(AppealSteps.ThirdBill)).Side.ShouldBe("against", "a refused change changes nothing");
+
+        (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, new PositionConsentRequest { TextVersion = PositionConsent.TextVersion })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await member.MeAsync()).HasPositionConsent.ShouldBeTrue();
+        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
     [Fact]
     public async Task A_similar_existing_argument_is_offered_before_a_new_one()
     {

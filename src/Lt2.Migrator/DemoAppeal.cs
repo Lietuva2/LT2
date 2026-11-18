@@ -42,8 +42,9 @@ public static class DemoAppeal
     /// <summary>
     /// What happened, for the console. <c>AiDescription</c>: <c>created</c>, <c>already there</c> or <c>left as it is</c>.
     /// <c>Organisations</c>: how many of the invented organisations on <see cref="Bill"/> were created (design 8.14.14).
+    /// <c>PositionConsentsGiven</c>: invented accounts made before the positions consent's newest text that gave it now (6.5).
     /// </summary>
-    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0, int TermsAccepted = 0, string ClosedBill = "left as it is", string ClosedBills = "");
+    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0, int TermsAccepted = 0, string ClosedBill = "left as it is", string ClosedBills = "", int PositionConsentsGiven = 0);
 
     public static async Task<Outcome> RunAsync(IConfiguration configuration, string connectionString, TimeProvider clock, CancellationToken cancellationToken)
     {
@@ -75,6 +76,10 @@ public static class DemoAppeal
         // Design 8.22.2: accounts made by an earlier run, before the terms of use (or before their newest version), accept them
         // now, so re-running this command brings an existing local database up to date.
         var termsAccepted = await InventedMembers.AcceptTermsAsync(connectionString, people.Members, cancellationToken);
+
+        // Design 6.5: likewise the positions consent's newest text (2026-11-18: it covers "Man svarbu" too), so the invented
+        // sides and marks rest on the consent in force and the closed bills still find these accounts.
+        var consentsGiven = await InventedMembers.GivePositionConsentAsync(connectionString, people.Members, cancellationToken);
         var outcome = await InventedRecord.SeedAsync(connectionString, people.Record, cancellationToken);
         if (outcome == InventedRecordOutcome.BillTaken)
         {
@@ -90,6 +95,7 @@ public static class DemoAppeal
         var organisations = Organisations();
         await InventedMembers.CreateAsync(connectionString, OrganisationMembers(now), cancellationToken);
         termsAccepted += await InventedMembers.AcceptTermsAsync(connectionString, OrganisationMembers(now), cancellationToken);
+        consentsGiven += await InventedMembers.GivePositionConsentAsync(connectionString, OrganisationMembers(now), cancellationToken);
         var organisationsCreated = await InventedOrganisations.SeedAsync(connectionString, organisations, now, cancellationToken);
 
         // Design 8.23: invented comments and "Sutinku" under the first argument and the first statement, by the organisations'
@@ -97,9 +103,10 @@ public static class DemoAppeal
         await SeedCommentsAsync(connectionString, now, cancellationToken);
 
         // Design 8.26.5: a bill the Seimas voted on finally, with invented positions, so the analytics page's comparison can be seen.
-        var (closedBill, closedCreated, closedTerms) = await SeedClosedBillAsync(connectionString, cancellationToken);
+        var (closedBill, closedCreated, closedTerms, closedConsents) = await SeedClosedBillAsync(connectionString, cancellationToken);
         created += closedCreated;
         termsAccepted += closedTerms;
+        consentsGiven += closedConsents;
 
         // Design 8.26.5: thirty more invented closed bills, sides only from the invented accounts made above.
         var closedBills = await DemoClosedBills.SeedAsync(connectionString, cancellationToken);
@@ -115,7 +122,8 @@ public static class DemoAppeal
             organisationsCreated,
             termsAccepted,
             closedBill,
-            closedBills.ToString());
+            closedBills.ToString(),
+            consentsGiven);
     }
 
     /// <summary>Two comments under the bill's first published argument and one under its first statement, with "Sutinku"; repeatable.</summary>
@@ -304,24 +312,25 @@ public static class DemoAppeal
         "Viešųjų pirkimų sutartys ir jų pakeitimai būtų skelbiami per tris darbo dienas nuo pasirašymo, o mažos vertės pirkimų riba pakelta iki 15 000 eurų.";
 
     /// <summary>Seeds and closes <see cref="ClosedBill"/>; "not imported yet" while the stand-in's vote is not in the data.</summary>
-    private static async Task<(string Status, int Created, int TermsAccepted)> SeedClosedBillAsync(string connectionString, CancellationToken cancellationToken)
+    private static async Task<(string Status, int Created, int TermsAccepted, int ConsentsGiven)> SeedClosedBillAsync(string connectionString, CancellationToken cancellationToken)
     {
         if (await ParliamentMaintenance.FinalVoteAsync(connectionString, ClosedBill, cancellationToken) is not { } vote)
         {
-            return ("not imported yet", 0, 0);
+            return ("not imported yet", 0, 0, 0);
         }
 
         var (members, record) = BuildClosed(vote.HeldAt);
         var created = await InventedMembers.CreateAsync(connectionString, members, cancellationToken);
         var terms = await InventedMembers.AcceptTermsAsync(connectionString, members, cancellationToken);
+        var consents = await InventedMembers.GivePositionConsentAsync(connectionString, members, cancellationToken);
         var seeded = await InventedRecord.SeedAsync(connectionString, record, cancellationToken);
         if (seeded == InventedRecordOutcome.BillTaken)
         {
-            return ("left as it is", created, terms);
+            return ("left as it is", created, terms, consents);
         }
 
         var closed = await InventedRecord.CloseAsync(connectionString, ClosedBill, vote.VoteId, vote.HeldAt.AddHours(1), cancellationToken);
-        return (closed ? "created and closed" : "already there", created, terms);
+        return (closed ? "created and closed" : "already there", created, terms, consents);
     }
 
     /// <summary>The invented people and the record of <see cref="ClosedBill"/>, the same on every run (fixed seed and identifiers).</summary>

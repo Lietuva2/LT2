@@ -171,6 +171,33 @@ public sealed class SharedComponentTests : BunitContext
         Display.TryReadDate("19.11.2026", out _).ShouldBeFalse();
     }
 
+    /// <summary>
+    /// Design 6.5 (owner, 2026-11-18): the positions consent is asked before a first side and before a first "Man svarbu", so
+    /// its text (version <see cref="Lt2.Api.Contracts.Me.PositionConsentText.Version"/>) covers both: the side on bills and
+    /// which arguments the person marks. The same form wherever it is asked; only the confirming button names the action.
+    /// </summary>
+    [Theory]
+    [InlineData(false, "Consent.Submit.for")]
+    [InlineData(true, "Consent.Submit.mark")]
+    public void The_positions_consent_form_covers_sides_and_man_svarbu_marks(bool forMark, string submit)
+    {
+        Lt2.Api.Contracts.Me.PositionConsentText.Version.ShouldBe("2026-11-18", "the wording that names the marks");
+        var form = Render<PositionConsentForm>(p => p.Add(c => c.Side, "for").Add(c => c.ForMark, forMark).Add(c => c.IdPrefix, "r-"));
+
+        form.Find("#r-consent-title").TextContent.ShouldBe(Text("Consent.Title"));
+        var text = form.Find("#r-consent p").TextContent;
+        text.ShouldBe(Text("Consent.Text"));
+        text.ShouldContain("ar prašote balsuoti už, ar prieš");
+        text.ShouldContain("kuriuos argumentus pažymite „Man svarbu“");
+        text.ShouldContain("visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos");
+        var check = form.Find("label.check span").TextContent;
+        check.ShouldBe(Text("Consent.Check"));
+        check.ShouldContain("mano pozicijas dėl įstatymų projektų ir „Man svarbu“ žymas");
+        form.Find("#r-consent-privacy").GetAttribute("href").ShouldBe("/privatumas#pozicijos");
+        form.Find("#r-consent-submit").TextContent.ShouldBe(Text(submit));
+        form.Find("#r-consent-submit").HasAttribute("disabled").ShouldBeTrue("not before the box is checked");
+    }
+
     [Fact]
     public void Today_comes_from_the_clock_in_vilnius()
     {

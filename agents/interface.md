@@ -27,7 +27,7 @@ Read before changing a page, a component or an island. The rules behind it are d
   `ModerationActions`, `CommentModerationActions`, `OrgModerationActions`, `ResponseModerationView` and
   `ProfileModerationView` use it; E2E tests choose an action with `E2ESteps.ChooseAsync`. Icons are `<Icon>` (inline SVG, currentColor). A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
-  `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
+  `<StatementQueueItem>`; the positions consent before a first side or a first "Man svarbu" is `<PositionConsentForm>` (`ForMark`); the bill page's islands
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
   the others after a member's action). **An action never reloads the page (owner, 2026-11-17):** on a bill's page the island
   that acted calls `MyBillState.Announce` (`byModerator` for a moderator's action) and the others read their part again

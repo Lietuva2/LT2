@@ -107,11 +107,11 @@ public sealed record TermsAcceptanceRequest
 /// <summary>The version of the consent text the client shows (design 6.5); the server accepts consent to this one only.</summary>
 public static class PositionConsentText
 {
-    public const string Version = "2026-11-13";
+    public const string Version = "2026-11-18";
 }
 
 /// <summary>
-/// The explicit consent before a first position (design 6.5), given to the text the page showed. The text version must
+/// The explicit consent before a first position or a first "Man svarbu" (design 6.5), given to the text the page showed. The text version must
 /// be the one in force.
 /// </summary>
 public sealed record PositionConsentRequest

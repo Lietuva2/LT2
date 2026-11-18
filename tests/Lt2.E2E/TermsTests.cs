@@ -51,7 +51,7 @@ public sealed class TermsTests : E2ETest
         JsonDocument.Parse(meBody).RootElement.GetProperty("termsRequired").GetBoolean().ShouldBeTrue();
         (await E2ESteps.ApiAsync(page, "GET", "/api/v1/me/export")).Status.ShouldBe(200);
         (await E2ESteps.ApiAsync(page, "GET", "/api/v1/bills/XVP-0412/record")).Status.ShouldBe(200);
-        var (refused, refusedBody) = await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-13" });
+        var (refused, refusedBody) = await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-18" });
         refused.ShouldBe(403);
         JsonDocument.Parse(refusedBody).RootElement.GetProperty("code").GetString().ShouldBe("terms.required");
 
@@ -74,7 +74,7 @@ public sealed class TermsTests : E2ETest
         var (me, after) = await E2ESteps.ApiAsync(page, "GET", "/api/v1/me");
         me.ShouldBe(200);
         JsonDocument.Parse(after).RootElement.GetProperty("termsRequired").GetBoolean().ShouldBeFalse();
-        (await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-13" })).Status.ShouldBe(204);
+        (await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-18" })).Status.ShouldBe(204);
 
         // Signing in again goes straight on.
         await page.GotoAsync(E2ESteps.Base + "/paskyra");

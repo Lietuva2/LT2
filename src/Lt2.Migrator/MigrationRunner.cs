@@ -173,8 +173,8 @@ public static class MigrationRunner
                 case "--demo-appeal":
                     var demo = await DemoAppeal.RunAsync(configuration, connectionString, TimeProvider.System, cancellationToken);
                     Log.Information(
-                        "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}; invented accounts that accepted the terms of use now: {Terms}; closed demonstration bill {ClosedBill}: {Closed}; invented closed bills: {ClosedBills}",
-                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations, demo.TermsAccepted, DemoAppeal.ClosedBill, demo.ClosedBill, demo.ClosedBills);
+                        "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}; invented accounts that accepted the terms of use now: {Terms}; invented accounts that gave the positions consent's newest text now: {Consents}; closed demonstration bill {ClosedBill}: {Closed}; invented closed bills: {ClosedBills}",
+                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations, demo.TermsAccepted, demo.PositionConsentsGiven, DemoAppeal.ClosedBill, demo.ClosedBill, demo.ClosedBills);
                     break;
                 case "--demo-sides-for" when i + 1 < args.Count:
                     // The address is never logged: only what was given (design 8.26.5).

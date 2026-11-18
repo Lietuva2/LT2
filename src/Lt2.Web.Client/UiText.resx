@@ -104,10 +104,10 @@
 <data name="Staff.Nav" xml:space="preserve"><value>Darbuotojo darbai</value></data>
 <data name="Staff.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
 <data name="Staff.Settings" xml:space="preserve"><value>Nustatymai</value></data>
-<data name="PositionConsent.Title" xml:space="preserve"><value>Sutikimas saugoti pozicijas</value></data>
-<data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai ir komentarai liks. „Man svarbu“ privatus, o „Sutinku“ prie komentaro viešas su jūsų vardu ir jūsų pusės neparodo.</value></data>
-<data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas</value></data>
-<data name="PositionConsent.Withdrawn" xml:space="preserve"><value>Sutikimas atšauktas, jūsų pozicijos ištrintos.</value></data><data name="Party.Title" xml:space="preserve"><value>Kurią partiją palaikote</value></data>
+<data name="PositionConsent.Title" xml:space="preserve"><value>Sutikimas saugoti pozicijas ir žymas</value></data>
+<data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų ir tai, kuriuos argumentus pažymite „Man svarbu“. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai ir komentarai liks. „Man svarbu“ privatus, o „Sutinku“ prie komentaro viešas su jūsų vardu ir jūsų pusės neparodo.</value></data>
+<data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas bei žymas</value></data>
+<data name="PositionConsent.Withdrawn" xml:space="preserve"><value>Sutikimas atšauktas, jūsų pozicijos ir „Man svarbu“ žymos ištrintos.</value></data><data name="Party.Title" xml:space="preserve"><value>Kurią partiją palaikote</value></data>
 <data name="Party.Text" xml:space="preserve"><value>Nebūtina. Jūsų pasirinkimo niekam nerodome, nebent pažymėsite „Rodyti viešame profilyje“. Seimo nariui jo suvestinėje parodytume tik bendrą skaičių, kiek palaikančių jo partiją prašo balsuoti už ar prieš, ir tik tada, kai jų yra bent {0}.</value></data>
 <data name="Party.TextAny" xml:space="preserve"><value>Nebūtina. Jūsų pasirinkimo niekam nerodome, nebent pažymėsite „Rodyti viešame profilyje“. Seimo nariui jo suvestinėje parodytume tik bendrą skaičių, kiek palaikančių jo partiją prašo balsuoti už ar prieš, kad ir kiek jų būtų.</value></data>
 <data name="Party.Label" xml:space="preserve"><value>Partija</value></data>

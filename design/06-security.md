@@ -55,6 +55,14 @@ summary) are published only for groups of at least the runtime setting `Digest:P
 
 - **Explicit consent** before the first position or the first "Man svarbu" (owner, 2026-11-18: a mark is about a political
   question; 8.2), with the consent text versioned and stored. Withdrawing deletes the positions and the marks.
+  **[Owner, 2026-11-18: the text covers both.]** The form says that the person's side on bills and which arguments they mark
+  "Man svarbu" are their political opinion, kept only with this consent and shown to nobody, and that withdrawing deletes
+  both; the box is "Sutinku, kad Lietuva 2.0 saugotų mano pozicijas dėl įstatymų projektų ir „Man svarbu“ žymas taip, kaip
+  aprašyta." (version 2026-11-18; until then 2026-11-13, sides only). The account page's part is "Sutikimas saugoti
+  pozicijas ir žymas". **[The designer's proposal, awaiting a native speaker and the lawyer's one reading (12).]**
+  [As built: a consent to an older text is not the consent in force: the form is asked again, in place, before the next new
+  side or mark; until then nothing is deleted, the person's sides and marks stay stored and counted, and taking a side back
+  or removing a mark works. What the account page offers meanwhile is open (12-open).]
 - **Minimisation.** No personal code, address or document number (as the concept promises). No phone number is
   collected at the start; if phone verification is added, only a keyed hash is kept. No per-person history of changed
   positions.
