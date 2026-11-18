@@ -613,9 +613,16 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
               const out = [];
               for (const r of await (await fetch('/api/v1/moderation/restrictions')).json())
                 if (r.displayName === 'Ribojama Autorė') out.push((await post('/api/v1/moderation/restrictions/' + r.id + '/lift', { statement: 'Bandymo pabaiga.' })).status);
-              const record = await (await fetch('/api/v1/bills/XVP-0412/record')).json();
-              for (const r of record.reasons)
-                if (r.text.startsWith(text)) out.push((await post('/api/v1/moderation/reasons/' + r.id + '/hide', { statement: 'Bandymo duomenys išvalomi.' })).status);
+              // Every argument of both sides, a page at a time (owner, 2026-11-19: the bill's answer carries each side's first two).
+              const found = [];
+              for (const side of ['for', 'against'])
+                for (let cursor = ''; cursor !== null;) {
+                  const page = await (await fetch('/api/v1/bills/XVP-0412/record/reasons?side=' + side + '&limit=100' + (cursor ? '&cursor=' + cursor : ''))).json();
+                  found.push(...page.items.filter(r => r.text.startsWith(text)));
+                  cursor = page.nextCursor;
+                }
+              for (const r of found)
+                out.push((await post('/api/v1/moderation/reasons/' + r.id + '/hide', { statement: 'Bandymo duomenys išvalomi.' })).status);
               return JSON.stringify(out);
             }
             """,
