@@ -138,7 +138,7 @@ public sealed partial class JobsDashboardTests(DatabaseFixture database) : ApiTe
 
         // The worker registers its recurring jobs at start-up; here the test does, through the web host's own storage (lt2_app).
         var jobs = Factory.Services.GetRequiredService<IRecurringJobManager>();
-        jobs.AddOrUpdate<ParliamentImportJob>(id, job => job.RunAsync(CancellationToken.None), "*/15 * * * *");
+        jobs.AddOrUpdate<ParliamentImportJob>(id, job => job.RunAsync(null, CancellationToken.None), "*/15 * * * *");
         try
         {
             var enqueued = await EnqueuedImportsAsync();
@@ -169,6 +169,57 @@ public sealed partial class JobsDashboardTests(DatabaseFixture database) : ApiTe
         finally
         {
             jobs.RemoveIfExists(id);
+        }
+    }
+
+    [Fact]
+    public async Task The_imports_manual_jobs_are_listed_never_scheduled_and_an_administrator_triggers_one_audited()
+    {
+        using var admin = await AdministratorAsync();
+        string[] ids = [ParliamentImportPartsJob.Members, ParliamentImportPartsJob.Sittings, ParliamentImportPartsJob.Votes, ParliamentImportPartsJob.Everything];
+
+        // The worker's own registration (design 7.2, owner 2026-11-18), here through the web host's storage.
+        var jobs = Factory.Services.GetRequiredService<IRecurringJobManager>();
+        ParliamentImportPartsJob.Register(jobs, Lt2.SharedKernel.VilniusTime.Zone);
+        try
+        {
+            ids.ShouldBe(["parliament-members", "parliament-sittings", "parliament-votes", "parliament-everything"]);
+            foreach (var id in ids)
+            {
+                // Never due: no next execution, below every score the scheduler takes (from 0 to now).
+                (await Database.ScalarAsync<string>("SELECT value FROM hangfire.hash WHERE key = @k AND field = 'NextExecution'", ("k", "recurring-job:" + id))).ShouldBeNullOrEmpty(id);
+                (await Database.ScalarAsync<double>("SELECT score FROM hangfire.set WHERE key = 'recurring-jobs' AND value = @v", ("v", id))).ShouldBeLessThan(0, id);
+            }
+
+            var page = WebUtility.HtmlDecode(await admin.Browser.Client.GetStringAsync(Dashboard + "/recurring"));
+            foreach (var name in new[]
+                     {
+                         "Seimas import by hand: MPs (terms, MP list with memberships and contacts, sessions)",
+                         "Seimas import by hand: sittings (every sitting list, agenda and proceedings)",
+                         "Seimas import by hand: votes (every per-MP result; run after the MPs are imported)",
+                         "Seimas import by hand: everything (MPs, then sittings, then votes)",
+                     })
+            {
+                page.ShouldContain(name);
+            }
+
+            var enqueued = await EnqueuedAsync("EverythingAsync");
+            var audited = await AuditCountAsync();
+            var (header, token) = await TokenAsync(admin.Browser);
+            using (var trigger = await PostFormAsync(admin.Browser, Trigger, (header, token), "jobs[]=" + ParliamentImportPartsJob.Everything))
+            {
+                trigger.StatusCode.ShouldBe(HttpStatusCode.NoContent, await trigger.Content.ReadAsStringAsync());
+            }
+
+            (await EnqueuedAsync("EverythingAsync")).ShouldBe(enqueued + 1);
+            (await AuditCountAsync()).ShouldBe(audited + 1);
+        }
+        finally
+        {
+            foreach (var id in ids)
+            {
+                jobs.RemoveIfExists(id);
+            }
         }
     }
 
@@ -239,4 +290,9 @@ public sealed partial class JobsDashboardTests(DatabaseFixture database) : ApiTe
     private Task<long> EnqueuedImportsAsync() =>
         Database.ScalarAsync<long>(
             "SELECT count(*) FROM hangfire.job WHERE statename = 'Enqueued' AND invocationdata::text LIKE '%Lt2.Jobs.ParliamentImportJob%'");
+
+    private Task<long> EnqueuedAsync(string method) =>
+        Database.ScalarAsync<long>(
+            "SELECT count(*) FROM hangfire.job WHERE statename = 'Enqueued' AND invocationdata::text LIKE '%Lt2.Jobs.ParliamentImportPartsJob%' AND invocationdata::text LIKE @m",
+            ("m", "%\"" + method + "\"%"));
 }

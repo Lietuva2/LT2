@@ -23,7 +23,7 @@ A modular monolith on .NET 10 (design sections 2–4):
 | `src/Modules/Lt2.Audit` | Append-only audit log and runtime settings — schemas `audit`, `config` |
 | `src/Modules/Lt2.Parliament` | Seimas open-data client, raw-response store, parsers, import, statistics — schema `parliament` (no pages yet) |
 | `src/Modules/Lt2.Appeals` | Empty module shell (schema and `DbContext` only) for milestone M2 |
-| `src/Lt2.Worker` | Hangfire server (PostgreSQL storage): the outbox dispatch loop and the parliament import (every 15 minutes on sitting days, hourly otherwise); its job classes are in `src/Lt2.Jobs`, and administrators see and trigger them at `/administravimas/darbai` |
+| `src/Lt2.Worker` | Hangfire server (PostgreSQL storage): the outbox dispatch loop and the parliament import (every 15 minutes on sitting days, hourly otherwise; by hand, whatever the schedule, the manual jobs `parliament-members`, `parliament-sittings`, `parliament-votes` and `parliament-everything`); its job classes are in `src/Lt2.Jobs`, and administrators see and trigger them at `/administravimas/darbai` |
 | `src/Lt2.Migrator` | Creates the database roles, applies every module's migrations, grants access; run once per deploy |
 | `tests/` | Unit, integration (Testcontainers), architecture (NetArchTest) and end-to-end (Playwright) tests |
 | `deploy/` | Dockerfile (with `.dockerignore` at the root), `compose.yaml`, `Caddyfile`, secret generators; `compose.shared-proxy.yaml` and `shared-proxy.Caddyfile` for a server whose Caddy already holds ports 80 and 443 |

@@ -74,9 +74,12 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs, IConfiguration co
             new RecurringJobOptions { TimeZone = vilnius });
         jobs.AddOrUpdate<ParliamentImportJob>(
             ParliamentImport,
-            job => job.RunAsync(CancellationToken.None),
+            job => job.RunAsync(null, CancellationToken.None),
             "*/15 * * * *",
             new RecurringJobOptions { TimeZone = vilnius });
+
+        // Design 7.2 (owner 2026-11-18): the import's parts forced by hand, never on a schedule: "Trigger now" only.
+        ParliamentImportPartsJob.Register(jobs, vilnius);
 
         jobs.AddOrUpdate<AppealsDailyJob>(
             "appeals-daily",

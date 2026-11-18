@@ -30,4 +30,36 @@ internal static class ImportSchedule
         var interval = now - heldAt < TimeSpan.FromDays(60) ? TimeSpan.FromDays(1) : TimeSpan.FromDays(7);
         return now - lastFetchedAt >= interval - Slack;
     }
+
+    /// <summary>Whether a request of <paramref name="part"/> is fetched whatever its freshness: its part is forced (owner 2026-11-18).</summary>
+    public static bool IsForced(ImportParts force, ImportParts part) => (force & part) != 0;
+
+    /// <summary>The forced parts in the walk's order, for the run's record and the log: "members, sittings, votes", or "none".</summary>
+    public static string Describe(ImportParts force)
+    {
+        var names = new List<string>(3);
+        if (IsForced(force, ImportParts.Members))
+        {
+            names.Add("members");
+        }
+
+        if (IsForced(force, ImportParts.Sittings))
+        {
+            names.Add("sittings");
+        }
+
+        if (IsForced(force, ImportParts.Votes))
+        {
+            names.Add("votes");
+        }
+
+        return names.Count == 0 ? "none" : string.Join(", ", names);
+    }
+
+    /// <summary>
+    /// The run's <c>import_run.source</c>: the address imported from, followed by the forced parts when an administrator forced
+    /// any ("https://apps.lrs.lt/sip/ forced: members, votes"); the scheduled run's is the address alone.
+    /// </summary>
+    public static string RunSource(string address, ImportParts force) =>
+        force == ImportParts.None ? address : $"{address} forced: {Describe(force)}";
 }

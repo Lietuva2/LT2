@@ -320,8 +320,11 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         (await CountAsync("ballot")).ShouldBe(91);
     }
 
-    [Fact]
-    public async Task Only_one_import_runs_at_a_time()
+    [Theory]
+    [InlineData(ImportParts.None)]
+    [InlineData(ImportParts.Members)]
+    [InlineData(ImportParts.All)]
+    public async Task Only_one_import_runs_at_a_time_a_forced_one_included(ImportParts force)
     {
         await using var import = new ImportHarness(database);
         await using var other = new NpgsqlConnection(database.UnpooledAdminConnectionString);
@@ -331,10 +334,130 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
             await command.ExecuteScalarAsync();
         }
 
-        var outcome = await import.RunAsync();
+        var outcome = await import.RunAsync(force);
 
         outcome.Status.ShouldBe("skipped");
+        outcome.RunId.ShouldBeNull();
         import.TakeRequests().ShouldBeEmpty();
+        (await CountAsync("import_run")).ShouldBe(0, "a run that did not start leaves no record");
+    }
+
+    [Fact]
+    public async Task Forcing_the_members_asks_for_the_terms_the_mp_list_and_the_sessions_again_however_fresh()
+    {
+        var responses = StandInFixture.Responses();
+        await using var import = new ImportHarness(database, responses);
+        await import.RunAsync();
+
+        const string members = "p2b.ad_seimo_nariai?kadencijos_id=10";
+        responses.Replace(members, responses.Text(members)
+            .Replace("reikšmė=\"pavyzdys.jonas.petraitis@lrs.lt\"", "reikšmė=\"pavyzdys.j.petraitis@lrs.lt\"", StringComparison.Ordinal));
+        import.Clock.Advance(TimeSpan.FromHours(1));
+        import.TakeRequests();
+
+        // The scheduled run leaves the hour-old MP list alone.
+        (await import.RunAsync()).Changes.ShouldBe(0);
+        import.TakeRequests().ShouldBe(["/sip/p2b.ad_seimo_posedziai?sesijos_id=99000102"]);
+
+        import.Clock.Advance(TimeSpan.FromMinutes(1));
+        var forced = await import.RunAsync(ImportParts.Members);
+
+        forced.Status.ShouldBe("succeeded");
+        forced.Changes.ShouldBeGreaterThan(0);
+        import.TakeRequests().ShouldBe(
+        [
+            "/sip/p2b.ad_seimo_kadencijos",
+            "/sip/" + members,
+            "/sip/p2b.ad_seimo_sesijos?kadencijos_id=10",
+            "/sip/p2b.ad_seimo_posedziai?sesijos_id=99000102",
+        ], "the forced part, then the rest of the walk by its own rules");
+        (await database.RowsAsync("SELECT c.value FROM parliament.contact c JOIN parliament.person p ON p.id = c.person_id WHERE p.seimas_person_id = 99000001"))
+            .ShouldBe(["pavyzdys.j.petraitis@lrs.lt"]);
+        (await database.RowsAsync("SELECT status, source FROM parliament.import_run ORDER BY started_at DESC LIMIT 1"))
+            .ShouldBe(["succeeded | http://seimas-standin.test/sip/ forced: members"]);
+    }
+
+    [Fact]
+    public async Task Forcing_the_sittings_asks_for_every_sitting_list_agenda_and_proceedings_however_old()
+    {
+        var responses = StandInFixture.Responses();
+        await using var import = new ImportHarness(database, responses);
+        await import.RunAsync();
+
+        // The 17 March sitting is long past the refetch window.
+        const string agenda = "p2b.ad_sp_darbotvarke?posedzio_id=99001001";
+        responses.Replace(agenda, responses.Text(agenda)
+            .Replace("pavadinimas=\"Dėl posėdžio darbotvarkės\"", "pavadinimas=\"Dėl posėdžio darbotvarkės tvirtinimo\"", StringComparison.Ordinal));
+        import.Clock.Advance(TimeSpan.FromHours(1));
+        await import.RunAsync();
+        (await database.ScalarAsync<string>("SELECT title FROM parliament.agenda_item WHERE id = 99010001")).ShouldBe("Dėl posėdžio darbotvarkės");
+        import.TakeRequests();
+
+        import.Clock.Advance(TimeSpan.FromMinutes(1));
+        var forced = await import.RunAsync(ImportParts.Sittings);
+
+        forced.Status.ShouldBe("succeeded");
+        var asked = import.TakeRequests();
+        asked.Count(r => r.Contains("p2b.ad_seimo_posedziai?", StringComparison.Ordinal)).ShouldBe(2, "both sessions, the closed one too");
+        asked.Count(r => r.Contains("p2b.ad_sp_darbotvarke?", StringComparison.Ordinal)).ShouldBe(4);
+        asked.Count(r => r.Contains("p2b.ad_sp_klausimo_svarstymo_eiga?", StringComparison.Ordinal)).ShouldBe(4);
+        asked.Count.ShouldBe(10, "no MP list and no vote result: those parts keep their own rules");
+        (await database.ScalarAsync<string>("SELECT title FROM parliament.agenda_item WHERE id = 99010001")).ShouldBe("Dėl posėdžio darbotvarkės tvirtinimo");
+        (await CountAsync("raw_document")).ShouldBe(21, "only the changed response is stored again");
+    }
+
+    [Fact]
+    public async Task Forcing_the_votes_asks_for_every_recorded_result_however_old_and_applies_a_change()
+    {
+        var responses = StandInFixture.Responses();
+        await using var import = new ImportHarness(database, responses);
+        await import.RunAsync();
+
+        // The 15 September vote is long past the refetch window, and its result is there: the schedule never asks again.
+        const string result = "p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=99100102";
+        responses.Replace(result, responses.Text(result).Replace(
+            "pavardė=\"Šermukšnytė\" frakcija=\"RAF\" kaip_balsavo=\"Susilaikė\"",
+            "pavardė=\"Šermukšnytė\" frakcija=\"RAF\" kaip_balsavo=\"Už\"",
+            StringComparison.Ordinal));
+        const string choice = "SELECT x.choice FROM parliament.ballot x JOIN parliament.person p ON p.id = x.person_id WHERE x.vote_id = 99100102 AND p.seimas_person_id = 99000012";
+        import.Clock.Advance(TimeSpan.FromHours(1));
+        await import.RunAsync();
+        (await database.ScalarAsync<string>(choice)).ShouldBe("Abstain");
+        import.TakeRequests();
+
+        import.Clock.Advance(TimeSpan.FromMinutes(1));
+        var forced = await import.RunAsync(ImportParts.Votes);
+
+        forced.Status.ShouldBe("succeeded");
+        var asked = import.TakeRequests();
+        asked.Count(r => r.Contains("p2b.ad_sp_balsavimo_rezultatai?", StringComparison.Ordinal)).ShouldBe(7, "every vote with per-MP results; not the consensus one");
+        asked.ShouldNotContain(r => r.Contains("p2b.ad_seimo_nariai", StringComparison.Ordinal) || r.Contains("p2b.ad_sp_darbotvarke", StringComparison.Ordinal));
+        (await database.ScalarAsync<string>(choice)).ShouldBe("For");
+        (await database.ScalarAsync<string>("SELECT position FROM parliament.faction_position WHERE vote_id = 99100102 AND faction_label = 'RAF'")).ShouldBe("For");
+        (await database.RowsAsync("SELECT s.voted_with_faction, s.votes_with_faction_position, s.free_votes FROM parliament.mp_stat s JOIN parliament.person p ON p.id = s.person_id WHERE p.seimas_person_id = 99000007"))
+            .ShouldBe(["4 | 5 | 1"], "the statistics are recomputed after a forced run that changed something");
+    }
+
+    [Fact]
+    public async Task Forcing_everything_asks_for_every_request_in_the_first_imports_order_and_changes_nothing_that_did_not_change()
+    {
+        await using var import = new ImportHarness(database);
+        await import.RunAsync();
+        var first = import.TakeRequests();
+        var expected = await database.SnapshotAsync();
+        import.Clock.Advance(TimeSpan.FromHours(1));
+
+        var forced = await import.RunAsync(ImportParts.All);
+
+        forced.Status.ShouldBe("succeeded");
+        forced.Requests.ShouldBe(20);
+        forced.Changes.ShouldBe(0, "a body already applied by this parser is not applied again");
+        var asked = import.TakeRequests();
+        asked.ShouldBe(first, "a full re-read as on an empty database: the MPs before the sittings, the sittings before the votes");
+        asked.IndexOf("/sip/p2b.ad_seimo_nariai?kadencijos_id=10").ShouldBeLessThan(asked.FindIndex(r => r.Contains("balsavimo_id=", StringComparison.Ordinal)));
+        (await database.SnapshotAsync()).ShouldBe(expected);
+        (await CountAsync("raw_document")).ShouldBe(20, "an unchanged response is not stored twice");
+        (await database.ScalarAsync<string>("SELECT source FROM parliament.import_run ORDER BY started_at DESC LIMIT 1")).ShouldEndWith(" forced: members, sittings, votes");
     }
 
     [Fact]
@@ -342,9 +465,10 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
     {
         await using var import = new ImportHarness(database);
         (await import.IsDueAsync()).ShouldBeTrue();
+        (await import.DueAsync()).LastStart.ShouldBeNull();
 
         await import.RunAsync();
-        (await import.IsDueAsync()).ShouldBeFalse();
+        (await import.DueAsync()).ShouldBe(new ImportDue(false, import.Clock.Now), "not due, and the last start is said");
 
         import.Clock.Advance(TimeSpan.FromMinutes(59));
         (await import.IsDueAsync()).ShouldBeTrue();

@@ -39,7 +39,20 @@ stands only on the profile, orders no list and is never added up per faction or 
 - **Backfill** once for term 10: terms → sessions → sittings → agenda items → votes → ballots. A few thousand requests,
   throttled to about one per second, resumable.
 - **Recurring:** MPs and memberships daily; sittings, agenda items and votes every 15 minutes on sitting days and hourly
-  otherwise; statistics recomputed after each run that changed anything.
+  otherwise; statistics recomputed after each run that changed anything. The scheduled job (`parliament-import`) is asked
+  every 15 minutes and imports only when due; a run that imports nothing says why, never silently: a log line at
+  information level ("Parliament import not due (last start yyyy-MM-dd HH:mm); skipped") and the parameter "Skipped" on
+  the job's page of the jobs dashboard (6.3), also when an administrator triggered it by hand. [owner 2026-11-18]
+- **By hand** [owner 2026-11-18]: four jobs on the jobs dashboard that never run on a schedule, only by "Trigger now":
+  `parliament-members` (the terms, the MP list with memberships and contacts, the sessions), `parliament-sittings` (every
+  session's sittings, every sitting's agenda and proceedings, however old), `parliament-votes` (every recorded vote's
+  per-MP result, however old) and `parliament-everything` (all three, a full re-read as on an empty database). Each is
+  the scheduled walk with its part forced: that part's requests are fetched again however fresh, the rest keeps the
+  recurring rules, and everything else is as in a scheduled run (raw storage by hash, an unchanged body not applied
+  again unless the parser is newer, one import at a time, one `import_run` per run with the forced parts after the
+  address in its source, statistics recomputed). Ballots are matched to the MPs already imported, so the MPs come before
+  the votes, and `parliament-everything` walks MPs, then sittings, then votes. A manual run that finds another import
+  running, or that the service fails, fails the job, listed with its reason; its outcome is the job's parameter "Outcome".
 - Every response is stored in `raw_document` with its hash; parsing is a separate, repeatable step. Upserts are keyed by
   Seimas identifiers, so re-running any step changes nothing.
 - **Vote classification.** One agenda item can have many votes (amendments, procedure, the stage result). A rule set over

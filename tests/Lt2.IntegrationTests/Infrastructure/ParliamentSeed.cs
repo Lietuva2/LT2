@@ -43,7 +43,7 @@ public static class ParliamentSeed
             services.AddHttpClient(SeimasClient.HttpClientName).ConfigurePrimaryHttpMessageHandler(() => standIn);
             await using var provider = services.BuildServiceProvider();
             await using var scope = provider.CreateAsyncScope();
-            var outcome = await scope.ServiceProvider.GetRequiredService<IParliamentImport>().RunAsync(CancellationToken.None);
+            var outcome = await scope.ServiceProvider.GetRequiredService<IParliamentImport>().RunAsync(ImportParts.None, CancellationToken.None);
             if (outcome.Status != "succeeded")
             {
                 throw new InvalidOperationException($"Seeding the invented parliament failed: {outcome.Error}");
