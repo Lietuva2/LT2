@@ -8,7 +8,7 @@ using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Appeals;
 
-/// <summary><c>PUT /api/v1/reasons/{id}/endorsement</c>: "Man svarbu" on an argument of one's own side, within the per-person setting (no limit by default).</summary>
+/// <summary><c>PUT /api/v1/reasons/{id}/endorsement</c>: "Man svarbu" on an argument of either side (counted only while the caller asks for its side; owner, 2026-11-18), with the positions consent, never on one's own, within the per-person setting (no limit by default).</summary>
 internal static class EndorseEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>

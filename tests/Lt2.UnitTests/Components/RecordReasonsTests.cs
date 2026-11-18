@@ -110,8 +110,8 @@ public sealed class RecordReasonsTests : BunitContext
         served.FindAll(".hint").Count.ShouldBe(1, "one hint beside the list, never one per argument");
         served.Find("#endorse-what").TextContent.ShouldBe("Kas yra „Man svarbu“?");
         var answer = served.Find("#endorse-what-panel .hint__answer").TextContent;
-        answer.ShouldContain("nurodžius, ko prašote");
-        answer.ShouldContain("tik savo pusės argumentus, ne savo parašytus");
+        answer.ShouldContain("bet kurios pusės, tik ne savo parašytus");
+        answer.ShouldContain("Skaičiuojamos tik žymos prie tos pusės argumentų, kurios prašote patys");
         served.Find("#endorse-what-panel .hint__more").GetAttribute("href").ShouldBe("/metodika#argumentai");
         served.Find("#h-why + #reasons-endorse-what").ShouldNotBeNull("beside the heading");
 
@@ -382,6 +382,82 @@ public sealed class RecordReasonsTests : BunitContext
 
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));
         Render<RecordReasons>(p => p.Add(c => c.Number, Bill)).Markup.ShouldNotContain("Paslėptas tekstas.");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-18: "Man svarbu" on either side, with or without a side of one's own; the person's own mark that does not
+    /// count now stays pressed with a short note, which the button is described by: without a side it says when it will count,
+    /// with the other side that it does not count.
+    /// </summary>
+    [Fact]
+    public void Man_svarbu_works_on_either_side_and_an_uncounted_own_mark_carries_a_short_note()
+    {
+        var against = Reason(Second, 0) with { Side = "against" };
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), against)));
+        _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse(null, [First], null, [], null, true) { Uncounted = [First] }));
+        var noSide = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        noSide.Find($"#mark-{First}").GetAttribute("aria-pressed").ShouldBe("true");
+        noSide.Find($"#mark-{First}").HasAttribute("disabled").ShouldBeFalse();
+        noSide.Find($"#mark-{Second}").HasAttribute("disabled").ShouldBeFalse("either side, without a side of one's own");
+        noSide.Find($"#mark-note-{First}").TextContent.ShouldBe("Bus skaičiuojama, kai prašysite balsuoti už.");
+        noSide.Find($"#mark-{First}").GetAttribute("aria-describedby").ShouldBe($"mark-note-{First}");
+        noSide.FindAll($"#mark-note-{Second}").ShouldBeEmpty("not marked");
+        noSide.FindAll("#reasons-note").ShouldBeEmpty("no side note: marking needs no side");
+
+        _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse("against", [First, Second], null, [], null, true) { Uncounted = [First] }));
+        Services.GetRequiredService<MyBillState>().Forget(Bill);
+        var against2 = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+        against2.Find($"#mark-note-{First}").TextContent.ShouldBe("Neskaičiuojama: jūs prašote balsuoti prieš.");
+        against2.FindAll($"#mark-note-{Second}").ShouldBeEmpty("a counted mark has no note");
+        against2.Find($"#mark-{Second}").HasAttribute("aria-describedby").ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Design 6.5, owner 2026-11-18: a first "Man svarbu" without the positions consent asks for it in place, under the
+    /// argument's row, with the side buttons' form; nothing is saved before "Sutinku ir pažymiu „Man svarbu“".
+    /// </summary>
+    [Fact]
+    public void A_first_mark_without_the_consent_asks_for_it_in_place_and_marks_after_it()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse(null, [], null, [], null, false)));
+        _appeals.On("EndorseAsync", ApiResult.Ok());
+        _me.On("GivePositionConsentAsync", ApiResult.Ok());
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        reasons.Find($"#mark-{First}").Click();
+        _appeals.Calls.ShouldNotContain("EndorseAsync");
+        reasons.Find($"#mark-consent-{First} #mark-{First}-consent-submit").TextContent.ShouldBe("Sutinku ir pažymiu „Man svarbu“");
+        reasons.Find($"#mark-{First}-consent-check").Change(true);
+        reasons.Find($"#mark-{First}-consent-submit").Click();
+
+        reasons.WaitForAssertion(() => _appeals.Calls.ShouldContain("EndorseAsync"));
+        _me.Calls.ShouldContain("GivePositionConsentAsync");
+        _appeals.Arguments[_appeals.Calls.IndexOf("EndorseAsync")][0].ShouldBe(First);
+        reasons.FindAll($"#mark-consent-{First}").ShouldBeEmpty("closed once given");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-18: the line directly above every bubble is its author's name, in the writing box's similar arguments too;
+    /// "Man svarbu" stays under the bubble, in the action row.
+    /// </summary>
+    [Fact]
+    public void A_similar_arguments_name_stands_above_its_bubble_and_man_svarbu_below()
+    {
+        _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
+        _appeals.On("FindSimilarAsync", ApiResult<IReadOnlyList<ReasonResponse>>.Ok([Reason(Second, 2)]));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+        reasons.Find("#add-reason").Click();
+        reasons.Find("#reason-text").Input("Mokesčiai turi būti paprastesni.");
+        reasons.Find("#write-reason").Submit();
+
+        var parts = reasons.Find($"#similar-{Second}").Children.Select(c => c.ClassName ?? "").ToList();
+        parts[0].ShouldContain("said__by");
+        reasons.Find($"#similar-{Second} > .said__by").TextContent.ShouldBe("Rūta Mockutė");
+        parts[1].ShouldNotContain("said__by", Case.Sensitive, "the bubble right under the name");
+        parts[2].ShouldBe("act");
+        reasons.Find($"#similar-{Second} > .act #similar-mark-{Second}").TextContent.ShouldBe("Man svarbu · 2");
     }
 
     /// <summary>Opens the writing box, writes an argument for "už" and publishes it; the record is then read as <paramref name="after"/>.</summary>

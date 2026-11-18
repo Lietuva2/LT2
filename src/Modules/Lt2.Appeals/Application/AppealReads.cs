@@ -138,13 +138,35 @@ internal sealed class AppealReads(
     public async Task<IReadOnlyDictionary<string, BillFacts>> BillsAsync(IReadOnlyCollection<string> numbers, CancellationToken ct) =>
         numbers.Count == 0 ? new Dictionary<string, BillFacts>() : await bills.FindManyAsync(numbers, ct);
 
-    /// <summary>Endorsement counts of the given arguments.</summary>
+    /// <summary>
+    /// The counted "Man svarbu" of the given arguments (owner, 2026-11-18, <see cref="AppealRules.MarkCounts"/>): only marks
+    /// whose giver's current side on the bill is the argument's side, joined with the positions when read, so a changed side
+    /// moves the counts and nothing stored can drift. Every figure, order and summary choice uses these. One query: the marks
+    /// by the endorsement's key (reason first), the argument and the position by theirs.
+    /// </summary>
     public static async Task<Dictionary<Guid, int>> EndorsementCountsAsync(AppealsDb db, IReadOnlyCollection<Guid> reasonIds, CancellationToken ct) =>
-        await db.Endorsements.AsNoTracking()
-            .Where(e => reasonIds.Contains(e.ReasonId))
-            .GroupBy(e => e.ReasonId)
-            .Select(g => new { g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
+        reasonIds.Count == 0
+            ? []
+            : await (from e in db.Endorsements.AsNoTracking()
+                     join r in db.Reasons.AsNoTracking() on e.ReasonId equals r.Id
+                     join p in db.Positions.AsNoTracking() on new { e.RecordId, e.UserId } equals new { p.RecordId, p.UserId }
+                     where reasonIds.Contains(e.ReasonId) && p.Side == r.Side
+                     group e by e.ReasonId into g
+                     select new { g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
+
+    /// <summary>
+    /// Every "Man svarbu" of the given arguments, counted or not: any mark is a reaction to the words (design 8.2, editing
+    /// until someone reacts), whether or not it counts.
+    /// </summary>
+    public static async Task<Dictionary<Guid, int>> ReactionCountsAsync(AppealsDb db, IReadOnlyCollection<Guid> reasonIds, CancellationToken ct) =>
+        reasonIds.Count == 0
+            ? []
+            : await db.Endorsements.AsNoTracking()
+                .Where(e => reasonIds.Contains(e.ReasonId))
+                .GroupBy(e => e.ReasonId)
+                .Select(g => new { g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
 
     public static ReasonInfo ToInfo(
         Reason r, IReadOnlyDictionary<Guid, string?> names, IReadOnlyDictionary<Guid, int> endorsements, IReadOnlyDictionary<Guid, PublicProfileFacts>? profiles = null) =>

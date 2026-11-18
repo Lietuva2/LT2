@@ -53,8 +53,8 @@ summary) are published only for groups of at least the runtime setting `Digest:P
 
 ## 6.5 Data protection
 
-- **Explicit consent** before the first position, with the consent text versioned and stored. Withdrawing deletes the
-  positions.
+- **Explicit consent** before the first position or the first "Man svarbu" (owner, 2026-11-18: a mark is about a political
+  question; 8.2), with the consent text versioned and stored. Withdrawing deletes the positions and the marks.
 - **Minimisation.** No personal code, address or document number (as the concept promises). No phone number is
   collected at the start; if phone verification is added, only a keyed hash is kept. No per-person history of changed
   positions.

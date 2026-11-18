@@ -7,8 +7,9 @@
 
 @* A member's side column in a row of the front page's timeline (design 8.7, "Taking a side in the row"), for a bill whose
    record is open. Under the bill's numbers a coming bill offers "Prašau balsuoti" with "už" and "prieš": one press saves
-   the side with the same request and rules as the bill's page; the pressed button shows the member's side, the other one
-   changes it, "Atsiimti" withdraws it, and with a side the row links to "Argumentai ir pozicijos". The first side ever asks
+   the side with the same request and rules as the bill's page; the pressed button shows the member's side and, pressed
+   again, takes it back (owner, 2026-11-18: no "Atsiimti"); the other one changes it; with a side the row says so and links
+   to "Argumentai ir pozicijos". The first side ever asks
    for the positions consent across the row's whole width (PositionConsentForm, the bill page's form); nothing is saved
    before it. A first side also follows the bill (design 8.11.2, on the server); "Sekate" then shows in the row's mark and
    the panel, which read the shared answer again (MyAgendaState.Changed). After the member's own action the row shows the
@@ -39,8 +40,9 @@
                 {
                     var chosen = _mine?.Side == side;
                     <button type="button" class="btn btn--@side cta" id="home-@side-@Place" aria-pressed="@(chosen ? "true" : "false")"
-                            aria-label="@L.Format("Agenda.Ask." + side, Number)" disabled="@(Locked || _answer is null)"
-                            @onclick="() => ChooseAsync(side)">@if (chosen)
+                            aria-label="@L.Format("Agenda.Ask." + side, Number)" title="@(chosen ? L["Side.PressAgain"].Value : null)"
+                            aria-describedby="@(chosen ? $"home-again-{Place}" : null)" disabled="@(Locked || _answer is null)"
+                            @onclick="e => ChooseAsync(side, e)">@if (chosen)
                         {
                             <span class="sides__check" aria-hidden="true">✓</span>
                         }@L[side == "for" ? "Agenda.For" : "Agenda.Against"]</button>
@@ -49,9 +51,9 @@
         </div>
         @if (_mine?.Side is not null)
         {
+            @* Owner, 2026-11-18: no "Atsiimti": the pressed button takes the side back; this line says so. *@
             <p class="small tl-ask__after">
-                <button type="button" class="linkish" id="home-withdraw-@Place" aria-label="@L.Format("Agenda.Withdraw", Number)" disabled="@Locked"
-                        @onclick="ClearAsync">@L["Side.Withdraw"]</button>
+                <span id="home-again-@Place">@L["Side.PressAgain"]</span>
                 <a href="@BillPath" id="home-action-@Place">@L["Agenda.Action.Side"]</a>
             </p>
         }
@@ -121,21 +123,34 @@
         StateHasChanged();
     });
 
-    private Task ChooseAsync(string side) => RunAsync(async () =>
+    /// <summary>
+    /// A press on a side's button (design 8.7, owner 2026-11-18): the side one has is taken back, the other taken or changed.
+    /// Disabled while a request runs; the second click of a double click does nothing (<see cref="SidePresses"/>).
+    /// </summary>
+    private Task ChooseAsync(string side, MouseEventArgs press)
     {
-        if (_mine?.Side == side)
+        if (Busy || SidePresses.Ignored(press.Detail))
         {
-            return;
+            return Task.CompletedTask;
         }
 
-        if (_answer is { HasPositionConsent: false })
+        return RunAsync(async () =>
         {
-            _consentFor = side;
-            return;
-        }
+            if (_mine?.Side == side)
+            {
+                await WithdrawAsync(side);
+                return;
+            }
 
-        await TakeAsync(side);
-    });
+            if (_answer is { HasPositionConsent: false })
+            {
+                _consentFor = side;
+                return;
+            }
+
+            await TakeAsync(side);
+        });
+    }
 
     private Task ConsentAndTakeAsync(string side) => RunAsync(async () =>
     {
@@ -177,9 +192,10 @@
         }
     }
 
-    private Task ClearAsync() => RunAsync(async () =>
+    /// <summary>Takes the side back, naming it: nothing changes on the server when the member no longer has it.</summary>
+    private async Task WithdrawAsync(string side)
     {
-        var result = await Appeals.ClearPositionAsync(Number);
+        var result = await Appeals.ClearPositionAsync(Number, new PositionRequest { Side = side });
         if (!result.IsSuccess)
         {
             Show(result.Problem);
@@ -187,7 +203,7 @@
         }
 
         await AfterChangeAsync();
-    });
+    }
 
     /// <summary>The bill's live numbers from its public answer, and the member's own answer read again for every island.</summary>
     private async Task AfterChangeAsync()

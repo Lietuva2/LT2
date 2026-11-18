@@ -105,7 +105,7 @@ public sealed class AppealRuleTests
     {
         AppealRules.CheckNewReason(Sides.For, 5, limit: 2).ShouldBe("reason.limit");
         AppealRules.Left(5, 2).ShouldBe(0, "nothing negative, nothing taken away");
-        AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.For, 7, limit: 3).ShouldBe("endorsement.limit");
+        AppealRules.CheckEndorsement(ownReason: false, hasPositionConsent: true, 7, limit: 3).ShouldBe("endorsement.limit");
     }
 
     [Fact]
@@ -139,47 +139,62 @@ public sealed class AppealRuleTests
         AppealRules.CheckNewReason(Sides.Against, 2, limit: 2).ShouldBe("reason.limit");
     }
 
+    /// <summary>Owner, 2026-11-18: either side, with or without a side of one's own; the giver's side is no input of the check.</summary>
     [Fact]
-    public void Man_svarbu_still_needs_the_persons_own_side_even_though_arguments_do_not()
+    public void Man_svarbu_may_be_given_on_either_side_with_or_without_a_side_of_ones_own()
     {
-        AppealRules.CheckEndorsement(ownReason: false, null, Sides.For, 0, limit: 0).ShouldBe("position.required");
-        AppealRules.CheckEndorsement(ownReason: false, Sides.Against, Sides.For, 0, limit: 0).ShouldBe("endorsement.other-side");
+        AppealRules.CheckEndorsement(ownReason: false, hasPositionConsent: true, 0, limit: 0).ShouldBeNull();
     }
 
+    /// <summary>Design 6.5, owner 2026-11-18: a mark is about a political question, so it needs the positions consent as a side does.</summary>
     [Fact]
-    public void Man_svarbu_is_only_for_arguments_of_ones_own_side()
+    public void Man_svarbu_needs_the_positions_consent()
     {
-        AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.For, 0, limit: 0).ShouldBeNull();
-        AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.Against, 0, limit: 0).ShouldBe("endorsement.other-side");
-        AppealRules.CheckEndorsement(ownReason: false, null, Sides.Against, 0, limit: 0).ShouldBe("position.required");
+        AppealRules.CheckEndorsement(ownReason: false, hasPositionConsent: false, 0, limit: 0).ShouldBe("consent.required");
+        AppealRules.CheckEndorsement(ownReason: false, hasPositionConsent: false, 5, limit: 3).ShouldBe("consent.required", "before the limit");
     }
 
     /// <summary>Owner, 2026-11-17: the marks choose the arguments sent to MPs, so an author never marks their own, whatever else holds.</summary>
     [Fact]
     public void Man_svarbu_is_never_on_ones_own_argument()
     {
-        AppealRules.CheckEndorsement(ownReason: true, Sides.For, Sides.For, 0, limit: 0).ShouldBe("endorsement.own-reason");
-        AppealRules.CheckEndorsement(ownReason: true, Sides.For, Sides.For, 5, limit: 3).ShouldBe("endorsement.own-reason", "before the limit");
-        AppealRules.CheckEndorsement(ownReason: true, null, Sides.For, 0, limit: 0).ShouldBe("position.required", "a side first, as for any mark");
-        AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.For, 0, limit: 0).ShouldBeNull("someone else's argument of one's own side");
+        AppealRules.CheckEndorsement(ownReason: true, hasPositionConsent: true, 0, limit: 0).ShouldBe("endorsement.own-reason");
+        AppealRules.CheckEndorsement(ownReason: true, hasPositionConsent: true, 5, limit: 3).ShouldBe("endorsement.own-reason", "before the limit");
+        AppealRules.CheckEndorsement(ownReason: true, hasPositionConsent: false, 0, limit: 0).ShouldBe("endorsement.own-reason", "never, so no consent is asked for it");
+        AppealRules.CheckEndorsement(ownReason: false, hasPositionConsent: true, 0, limit: 0).ShouldBeNull("someone else's argument");
     }
 
+    /// <summary>Owner, 2026-11-18: the limit counts every mark of the person on the bill, counted or not.</summary>
     [Fact]
     public void There_is_no_limit_on_man_svarbu_marks_when_the_setting_is_0_and_the_set_limit_otherwise()
     {
-        AppealRules.CheckEndorsement(ownReason: false, Sides.Against, Sides.Against, 40, limit: 0).ShouldBeNull();
+        AppealRules.CheckEndorsement(ownReason: false, hasPositionConsent: true, 40, limit: 0).ShouldBeNull();
         SettingKeys.AppealsEndorsementsPerPerson.Default.ShouldBe(0);
-        AppealRules.CheckEndorsement(ownReason: false, Sides.Against, Sides.Against, 2, limit: 3).ShouldBeNull();
-        AppealRules.CheckEndorsement(ownReason: false, Sides.Against, Sides.Against, 3, limit: 3).ShouldBe("endorsement.limit");
-    }
-    [Fact]
-    public void Changing_sides_drops_the_man_svarbu_marks_of_the_old_side()
-    {
-        AppealRules.ChangingSideDropsEndorsementsOfTheOldSide(Sides.For, Sides.Against).ShouldBeTrue();
-        AppealRules.ChangingSideDropsEndorsementsOfTheOldSide(Sides.For, Sides.For).ShouldBeFalse();
-        AppealRules.ChangingSideDropsEndorsementsOfTheOldSide(null, Sides.For).ShouldBeFalse();
+        AppealRules.CheckEndorsement(ownReason: false, hasPositionConsent: true, 2, limit: 3).ShouldBeNull();
+        AppealRules.CheckEndorsement(ownReason: false, hasPositionConsent: true, 3, limit: 3).ShouldBe("endorsement.limit");
     }
 
+    /// <summary>Owner, 2026-11-18: a mark counts only while its giver asks for the argument's side; it is never deleted for that.</summary>
+    [Fact]
+    public void A_mark_counts_only_while_its_giver_is_on_the_arguments_side()
+    {
+        AppealRules.MarkCounts(Sides.For, Sides.For).ShouldBeTrue();
+        AppealRules.MarkCounts(Sides.Against, Sides.Against).ShouldBeTrue();
+        AppealRules.MarkCounts(Sides.Against, Sides.For).ShouldBeFalse("the other side's argument");
+        AppealRules.MarkCounts(Sides.For, Sides.Against).ShouldBeFalse("the other side's argument");
+        AppealRules.MarkCounts(null, Sides.For).ShouldBeFalse("no side: it counts once the side is taken");
+    }
+
+    /// <summary>Design 8.7, owner 2026-11-18: pressing the pressed side again takes it back, but only the side named.</summary>
+    [Fact]
+    public void Withdrawing_a_side_one_no_longer_has_changes_nothing()
+    {
+        AppealRules.WithdrawalApplies(Sides.For, Sides.For).ShouldBeTrue();
+        AppealRules.WithdrawalApplies(Sides.Against, Sides.For).ShouldBeFalse("changed meanwhile, in another tab");
+        AppealRules.WithdrawalApplies(null, Sides.For).ShouldBeFalse("already withdrawn: a late second press");
+        AppealRules.WithdrawalApplies(Sides.Against, null).ShouldBeTrue("no side named: whatever side there is");
+        AppealRules.WithdrawalApplies(null, null).ShouldBeFalse();
+    }
     [Fact]
     public void The_neutral_description_is_required_and_short()
     {

@@ -329,37 +329,163 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
             .ShouldBe(1, "only the initiator's side is stored");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-18: "Man svarbu" on either side, with or without a side of one's own, counted only while the giver asks
+    /// for the argument's side. Taking, changing and withdrawing a side delete no mark; they only start or stop counting, in
+    /// the figure and the order. The person's own answer lists the marks that do not count; nobody else's answer tells.
+    /// </summary>
     [Fact]
-    public async Task Man_svarbu_still_needs_ones_own_side_and_changing_side_keeps_ones_arguments()
+    public async Task Man_svarbu_is_given_on_either_side_and_counts_only_while_the_giver_asks_for_the_arguments_side()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
-        var (member, _) = await Factory.MemberAsync("Mindaugas R.");
+        var (writer, _) = await Factory.MemberAsync("Rūta Mockutė");
+        using var _w = writer;
+        (await writer.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+        var page = await writer.RecordAsync(AppealSteps.ThirdBill);
+        var forReason = page.Reasons.Single(r => r.Side == "for").Id;
+        var againstReason = page.Reasons.Single(r => r.Side == "against").Id;
+        var (member, email) = await Factory.MemberAsync("Mindaugas R.");
         using var _m = member;
-        (await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM.")).StatusCode.ShouldBe(HttpStatusCode.Created);
-        var forReason = (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single(r => r.Side == "for").Id;
-        var againstReason = (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single(r => r.Side == "against").Id;
+        int Marks(BillRecordResponse record, Guid id) => record.Reasons.Single(r => r.Id == id).Endorsements;
 
-        using (var noSide = await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(forReason)))
-        {
-            await noSide.ShouldBeProblemAsync(HttpStatusCode.Conflict, "position.required");
-        }
-
-        // Asks to vote against, though the argument they wrote is for: allowed; the mark stays on their own side.
-        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        using (var otherSide = await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(forReason)))
-        {
-            await otherSide.ShouldBeProblemAsync(HttpStatusCode.Conflict, "endorsement.other-side");
-        }
-
+        // No side: both marks are kept, neither counts, and the person's own answer says so.
+        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(forReason))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(againstReason))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var record = await member.RecordAsync(AppealSteps.ThirdBill);
+        (Marks(record, forReason), Marks(record, againstReason)).ShouldBe((0, 0));
         var mine = await member.MineAsync(AppealSteps.ThirdBill);
-        mine.Endorsed.ShouldBeEmpty("changing side drops the marks");
-        mine.MyReasons.Select(r => r.Side).ShouldBe(["for"], "and never the person's arguments");
+        mine.Endorsed.ShouldBe([forReason, againstReason], ignoreOrder: true);
+        mine.Uncounted.ShouldBe([forReason, againstReason], ignoreOrder: true);
+
+        // "už": the mark on the "for" argument counts.
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        record = await member.RecordAsync(AppealSteps.ThirdBill);
+        (Marks(record, forReason), Marks(record, againstReason)).ShouldBe((1, 0));
+        (await member.MineAsync(AppealSteps.ThirdBill)).Uncounted.ShouldBe([againstReason]);
+
+        // "prieš": both marks kept, the counts move.
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        record = await member.RecordAsync(AppealSteps.ThirdBill);
+        (Marks(record, forReason), Marks(record, againstReason)).ShouldBe((0, 1));
+        mine = await member.MineAsync(AppealSteps.ThirdBill);
+        mine.Endorsed.Count.ShouldBe(2, "changing side deletes no mark");
+        mine.Uncounted.ShouldBe([forReason]);
+
+        // A withdrawal naming a side the person no longer has changes nothing (a late second press, another tab).
+        using (var stale = await member.SendAsync(HttpMethod.Delete, AppealRoutes.PositionOf(AppealSteps.ThirdBill), new PositionRequest { Side = "for" }))
+        {
+            stale.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        (await member.MineAsync(AppealSteps.ThirdBill)).Side.ShouldBe("against");
+
+        // Pressing "prieš" again takes the side back: the marks stay, and count nowhere.
+        using (var withdrawn = await member.SendAsync(HttpMethod.Delete, AppealRoutes.PositionOf(AppealSteps.ThirdBill), new PositionRequest { Side = "against" }))
+        {
+            withdrawn.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        record = await member.RecordAsync(AppealSteps.ThirdBill);
+        (Marks(record, forReason), Marks(record, againstReason)).ShouldBe((0, 0));
+        record.Counts.ShouldBe(new SideCountsResponse(0, 0, 1, 0));
+        mine = await member.MineAsync(AppealSteps.ThirdBill);
+        mine.Side.ShouldBeNull();
+        mine.Endorsed.Count.ShouldBe(2);
+        mine.Uncounted.Count.ShouldBe(2);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.endorsement WHERE user_id = @u", ("u", await Database.UserIdAsync(email)))).ShouldBe(2);
+
+        // Withdrawing again (nothing left to withdraw) is no error; an invalid side is.
+        (await member.SendAsync(HttpMethod.Delete, AppealRoutes.PositionOf(AppealSteps.ThirdBill), new PositionRequest { Side = "against" })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using (var invalid = await member.SendAsync(HttpMethod.Delete, AppealRoutes.PositionOf(AppealSteps.ThirdBill), new PositionRequest { Side = "abstain" }))
+        {
+            await invalid.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "side.invalid");
+        }
+
+        // Another person's answer never carries these marks.
+        var writersOwn = await writer.MineAsync(AppealSteps.ThirdBill);
+        writersOwn.Endorsed.ShouldBeEmpty();
+        writersOwn.Uncounted.ShouldBeEmpty();
+        writersOwn.MyReasons.Single().Endorsements.ShouldBe(0, "the author's own figure counts only counted marks too");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-18: the order of the arguments follows the counted marks only, so marks from people who ask for the other
+    /// side (or for nothing) cannot lift an argument; any mark, counted or not, is a reaction that ends editing (design 8.2).
+    /// </summary>
+    [Fact]
+    public async Task Only_counted_marks_order_the_arguments_and_any_mark_ends_editing()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
+        var (writer, _) = await Factory.MemberAsync();
+        using var _w = writer;
+        (await writer.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Kapitalas išvažiuos į kaimynines šalis.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+        var reasons = (await writer.RecordAsync(AppealSteps.ThirdBill)).Reasons;
+        var lifted = reasons.Single(r => r.Text == "Kapitalas išvažiuos į kaimynines šalis.").Id;
+        var initiators = reasons.Single(r => r.Text == AppealSteps.AgainstReason).Id;
+        (await writer.MineAsync(AppealSteps.ThirdBill)).Editable.ShouldBe([lifted]);
+
+        // Two people asking for "už" and one with no side mark the writer's argument: none of it counts.
+        var others = new List<TestBrowser>();
+        foreach (var side in new string?[] { "for", "for", null })
+        {
+            var (other, _) = await Factory.MemberAsync();
+            others.Add(other);
+            if (side is not null)
+            {
+                (await other.TakeSideAsync(AppealSteps.ThirdBill, side)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            }
+
+            (await other.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(lifted))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        // One person asking for "prieš" marks the initiator's argument: it counts, and leads.
+        var (against, _) = await Factory.MemberAsync();
+        others.Add(against);
+        (await against.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await against.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(initiators))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var page = await writer.RecordAsync(AppealSteps.ThirdBill);
+        page.Reasons.Where(r => r.Side == "against").Select(r => (r.Id, r.Endorsements)).ShouldBe([(initiators, 1), (lifted, 0)]);
+
+        (await writer.MineAsync(AppealSteps.ThirdBill)).Editable.ShouldBeEmpty("uncounted marks are reactions too");
+        using (var edit = await writer.SendAsync(HttpMethod.Put, AppealRoutes.ReasonOf(lifted), new ReasonRequest { Side = "against", Text = "Kapitalas išvažiuos." }))
+        {
+            await edit.ShouldBeProblemAsync(HttpStatusCode.Conflict, "reason.reacted");
+        }
+
+        foreach (var other in others)
+        {
+            other.Dispose();
+        }
+    }
+
+    /// <summary>Design 6.5, owner 2026-11-18: a mark needs the positions consent, as a side does; nothing is stored without it.</summary>
+    [Fact]
+    public async Task Man_svarbu_needs_the_positions_consent()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
+        var (member, email) = await Factory.MemberAsync(consent: false);
+        using var _m = member;
+        var reasonId = (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+
+        using (var refused = await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId)))
+        {
+            await refused.ShouldBeProblemAsync(HttpStatusCode.Conflict, "consent.required");
+        }
+
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.endorsement WHERE user_id = @u", ("u", await Database.UserIdAsync(email)))).ShouldBe(0);
+        (await member.MineAsync(AppealSteps.ThirdBill)).HasPositionConsent.ShouldBeFalse();
+
+        (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, new PositionConsentRequest { TextVersion = PositionConsent.TextVersion })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await member.MineAsync(AppealSteps.ThirdBill)).Endorsed.ShouldBe([reasonId]);
+    }
     [Fact]
     public async Task A_similar_existing_argument_is_offered_before_a_new_one()
     {
@@ -382,7 +508,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task Man_svarbu_is_for_ones_own_side_within_a_limit_when_one_is_set_and_goes_when_the_side_changes()
+    public async Task Man_svarbu_is_given_within_a_limit_when_one_is_set_counting_every_mark_and_a_changed_side_keeps_them()
     {
         // The limit is off by default (design 8.2); this test switches it on at 3 and back off.
         var administrator = await StaffMembers.SharedAsync(Factory, Database, "administrator");
@@ -418,10 +544,8 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         var reasons = (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons;
         reasons.Count.ShouldBe(4);
 
-        using (var otherSide = await supporterOfFor.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasons[0].Id)))
-        {
-            await otherSide.ShouldBeProblemAsync(HttpStatusCode.Conflict, "endorsement.other-side");
-        }
+        // Owner, 2026-11-18: the other side's argument may be marked; the mark does not count while they ask for "už".
+        (await supporterOfFor.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasons[0].Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         foreach (var reason in reasons.Take(3))
         {
@@ -442,9 +566,15 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         (await member.SendAsync(HttpMethod.Delete, AppealRoutes.EndorsementOf(reasons[0].Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.MineAsync(AppealSteps.ThirdBill)).Endorsed.Count.ShouldBe(2);
 
+        // Changing side keeps the marks; none counts now (all on "prieš" arguments), and they still count towards the limit.
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await member.MineAsync(AppealSteps.ThirdBill)).Endorsed.ShouldBeEmpty();
+        (await member.MineAsync(AppealSteps.ThirdBill)).Endorsed.Count.ShouldBe(2);
         (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons.Sum(r => r.Endorsements).ShouldBe(0);
+        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasons[3].Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using (var overLimit = await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasons[0].Id)))
+        {
+            await overLimit.ShouldBeProblemAsync(HttpStatusCode.Conflict, "endorsement.limit");
+        }
 
         foreach (var browser in writers.Append(supporterOfFor).Append(member))
         {

@@ -45,9 +45,9 @@ internal sealed class TakingSides(IAppealsModule appeals, IFollows follows, Fron
         return Result.Ok();
     }
 
-    public async Task<Result<Unit>> ClearAsync(string number, Guid userId, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> ClearAsync(string number, Guid userId, string? side, CancellationToken cancellationToken)
     {
-        var cleared = await appeals.ClearPositionAsync(number, userId, cancellationToken);
+        var cleared = await appeals.ClearPositionAsync(number, userId, side, cancellationToken);
         if (cleared.IsSuccess)
         {
             frontPage.MarkStale();

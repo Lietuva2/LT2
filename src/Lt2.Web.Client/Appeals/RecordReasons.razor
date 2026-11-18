@@ -6,11 +6,13 @@
 @implements IDisposable
 @inject ICommentsApi CommentsApi
 @inject IAppealsApi Appeals
+@inject IMeApi MeApi
 @inject MyBillState State
 @inject MyAccountState Account
 @inject NavigationManager Navigation
 
-@* The arguments of both sides (design 8.1, 8.2, design/ui/kreipimasis.html "Kodėl"): "Man svarbu" on one's own side, a
+@* The arguments of both sides (design 8.1, 8.2, design/ui/kreipimasis.html "Kodėl"): "Man svarbu" on either side's
+   argument, counted only on one's own side (owner, 2026-11-18; one's own uncounted marks carry a short note), a
    report button on every argument, and writing a new one for either side (the person's own side preselected, if any),
    offered a similar existing one first. Prerendered on the server, so the arguments are readable without JavaScript;
    nothing in an argument's markup depends on its author's side. A moderator or an administrator in a staff-passkey session
@@ -77,8 +79,9 @@
                                 {
                                     var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
                                     <button class="mark act__item num" type="button" id="mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")"
+                                            aria-describedby="@(UncountedNote(reason) is not null ? $"mark-note-{reason.Id}" : null)"
                                             disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)" @ref="_marks[reason.Id]"
-                                            @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></button>
+                                            @onclick="() => ToggleEndorsementAsync(reason, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></button>
                                 }
                                 else
                                 {
@@ -121,6 +124,15 @@
                                         <VisitorReport Contact="@Contact" />
                                     }
                                 </MoreMenu>
+                                @if (_consentForMark == reason.Id)
+                                {
+                                    @* Design 6.5 (owner, 2026-11-18): a first "Man svarbu" without the positions consent asks for it in
+                                       place, with the side buttons' form; nothing is saved before it is given. *@
+                                    <div class="act__panel" id="mark-consent-@reason.Id">
+                                        <PositionConsentForm Side="@reason.Side" ForMark="true" Locked="Locked" IdPrefix="@($"mark-{reason.Id}-")"
+                                                             OnConfirm="() => ConsentAndEndorseAsync(reason)" OnCancel="() => _consentForMark = null" />
+                                    </div>
+                                }
                                 @if (_reporting == reason.Id)
                                 {
                                     <div class="act__panel"><ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" /></div>
@@ -172,6 +184,11 @@
                                     </div>
                                 }
                             </div>
+                            @if (UncountedNote(reason) is { } note)
+                            {
+                                @* Owner, 2026-11-18: the person's own mark that does not count now, from their never-cached answer. *@
+                                <p class="small mark-note" id="mark-note-@reason.Id">@note</p>
+                            }
                         </div>
                     }
                     @foreach (var hidden in OwnHidden(side))
@@ -220,8 +237,9 @@
 
         @if (_signedIn && !_mpAccount && Mine is { } mine)
         {
-            // Counters only while a limit is set (design 8.2: none by default, so usually nothing but the side note).
-            var marks = mine.Side is null ? L["Reasons.NeedSide"].Value : mine.EndorsementsLeft is { } e ? L.Format("Reasons.EndorsementsLeft", Display.Number(e)) : null;
+            // Counters only while a limit is set (design 8.2: none by default, so usually nothing). Marking needs no side (owner,
+            // 2026-11-18), so there is no side note.
+            var marks = mine.EndorsementsLeft is { } e ? L.Format("Reasons.EndorsementsLeft", Display.Number(e)) : null;
             var reasons = mine.ReasonsLeft switch { null => null, > 0 and var r => L.Format("Reasons.Left", Display.Number(r)), _ => L["Reasons.NoneLeft"].Value };
             @if (marks is not null || reasons is not null)
             {
@@ -278,13 +296,20 @@
                         @foreach (var reason in similar)
                         {
                             var endorsed = Mine.Endorsed.Contains(reason.Id);
-                            <div class="said" @key="reason.Id">
+                            @* Owner, 2026-11-18: the line directly above every bubble is its author's name (the bubble's tail points at
+                               it); "Man svarbu" stays under the bubble, in the action row, as for the arguments above. *@
+                            <div class="said" id="similar-@reason.Id" @key="reason.Id">
+                                <div class="said__by"><b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
                                 <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"similar-more-{reason.Id}")" />
-                                <div class="said__by">
-                                    <b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
-                                    <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")" disabled="@(Locked || !MayEndorse(reason, endorsed))"
-                                            @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</button>
+                                <div class="act">
+                                    <button class="mark act__item num" type="button" id="similar-mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")" disabled="@(Locked || !MayEndorse(reason, endorsed))"
+                                            title="@EndorseHint(reason, endorsed)" @onclick="() => ToggleEndorsementAsync(reason, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></button>
                                 </div>
+                                @if (_consentForMark == reason.Id)
+                                {
+                                    <PositionConsentForm Side="@reason.Side" ForMark="true" Locked="Locked" IdPrefix="@($"similar-mark-{reason.Id}-")"
+                                                         OnConfirm="() => ConsentAndEndorseAsync(reason)" OnCancel="() => _consentForMark = null" />
+                                }
                             </div>
                         }
                     </div>
@@ -722,24 +747,73 @@
     }
 
     /// <summary>
-    /// "Man svarbu" on someone else's argument of one's own side, within the limit (design 8.2); never on one's own (owner,
-    /// 2026-11-17), known from the never-cached "mine" answer, so the served HTML stays the same for everyone.
+    /// "Man svarbu" on someone else's argument of either side, with or without a side of one's own (owner, 2026-11-18), within
+    /// the limit (design 8.2); never on one's own (owner, 2026-11-17), known from the never-cached "mine" answer. Without the
+    /// positions consent the press asks for it in place (<see cref="ToggleEndorsementAsync"/>).
     /// </summary>
     private bool MayEndorse(ReasonResponse reason, bool endorsed) =>
-        Record?.Status == "open" && Mine is { } mine && (endorsed || (!IsMine(reason) && mine.Side == reason.Side && mine.EndorsementsLeft is null or > 0));
+        Record?.Status == "open" && Mine is { } mine && (endorsed || (!IsMine(reason) && mine.EndorsementsLeft is null or > 0));
 
     private string? EndorseHint(ReasonResponse reason, bool endorsed) =>
         MayEndorse(reason, endorsed) ? null
             : IsMine(reason) ? L["Reasons.OwnReason"].Value
-            : Mine?.Side is null ? L["Reasons.NeedSide"].Value
-            : Mine.Side != reason.Side ? L["Reasons.OwnSideOnly"].Value
+            : Record?.Status != "open" || Mine is null ? null
             : L["Reasons.NoEndorsementsLeft"].Value;
 
-    private Task ToggleEndorsementAsync(Guid reasonId, bool endorsed) => RunAsync(async () =>
+    /// <summary>
+    /// The short note beside the person's own mark that does not count now (owner, 2026-11-18): without a side, it will count
+    /// once they ask for the argument's side; with the other side, it does not count while they ask for theirs. Null for a
+    /// counted mark, no mark, and anyone but the person (the never-cached answer only).
+    /// </summary>
+    private string? UncountedNote(ReasonResponse reason) =>
+        Mine is { } mine && !_mpAccount && mine.Endorsed.Contains(reason.Id) && mine.Uncounted.Contains(reason.Id)
+            ? mine.Side is { } side ? L["Reasons.Uncounted.Other." + side].Value : L["Reasons.Uncounted.NoSide." + reason.Side].Value
+            : null;
+
+    /// <summary>The argument whose "Man svarbu" asks for the positions consent below its row (design 6.5, owner 2026-11-18).</summary>
+    private Guid? _consentForMark;
+
+    private Task ToggleEndorsementAsync(ReasonResponse reason, bool endorsed) => RunAsync(async () =>
+    {
+        if (!endorsed && Mine is { HasPositionConsent: false })
+        {
+            // A mark is about a political question, as a side is (owner, 2026-11-18): the consent first, in place.
+            _consentForMark = reason.Id;
+            _reporting = null;
+            return;
+        }
+
+        await EndorseAsync(reason.Id, endorsed);
+    });
+
+    /// <summary>"Sutinku ir pažymėti": the consent, then the mark; the other islands (the side buttons) learn the consent was given.</summary>
+    private Task ConsentAndEndorseAsync(ReasonResponse reason) => RunAsync(async () =>
+    {
+        var consent = await MeApi.GivePositionConsentAsync(new PositionConsentRequest { TextVersion = PositionConsentText.Version });
+        if (!Succeeded(consent))
+        {
+            return;
+        }
+
+        _consentForMark = null;
+        await EndorseAsync(reason.Id, endorsed: false);
+        State.Announce(Number, this);
+    });
+
+    private async Task EndorseAsync(Guid reasonId, bool endorsed)
     {
         // The button is disabled while the action runs, which takes the focus from it: it gets it back once it is enabled.
         _refocus = reasonId;
-        if (!Succeeded(endorsed ? await Appeals.RemoveEndorsementAsync(reasonId) : await Appeals.EndorseAsync(reasonId)))
+        var result = endorsed ? await Appeals.RemoveEndorsementAsync(reasonId) : await Appeals.EndorseAsync(reasonId);
+        if (result.Problem?.Code == "consent.required")
+        {
+            // The consent was withdrawn since the page was read: ask for it again, in place.
+            _consentForMark = reasonId;
+            await ReloadAsync();
+            return;
+        }
+
+        if (!Succeeded(result))
         {
             return;
         }
@@ -749,7 +823,7 @@
         {
             _similar = _similar.Select(s => Record.Reasons.FirstOrDefault(r => r.Id == s.Id) ?? s).ToList();
         }
-    });
+    }
 
     private Task SubmitAsync() => RunAsync(async () =>
     {

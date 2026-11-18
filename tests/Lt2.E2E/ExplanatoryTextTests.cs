@@ -175,10 +175,11 @@ public sealed class ExplanatoryTextTests : E2ETest
             }
         }
 
-        // The demonstration bill's numbers are what other tests count on: the side goes again.
+        // The demonstration bill's numbers are what other tests count on: the side goes again, by pressing it again (owner,
+        // 2026-11-18: no "Atsiimti").
         await page.SetViewportSizeAsync(1280, 900);
         await page.GotoAsync($"{Base}/seimas/XVP-0412");
-        var withdraw = page.Locator("#my-side button");
+        var withdraw = page.Locator("#side-for[aria-pressed=true]");
         await Assertions.Expect(withdraw).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await withdraw.ClickAsync();
         await Assertions.Expect(page.Locator("#my-side")).ToHaveCountAsync(0, new() { Timeout = 30_000 });

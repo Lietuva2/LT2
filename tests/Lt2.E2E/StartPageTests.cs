@@ -200,10 +200,12 @@ public sealed partial class StartPageTests : E2ETest
             (await MySideAsync(page, number)).ShouldBe("against");
             await Assertions.Expect(row.Locator(".mine .choice--against")).ToBeVisibleAsync();
 
-            // "Atsiimti" withdraws it; the follow stays.
-            await page.Locator($"#home-withdraw-{place}").ClickAsync();
-            await Assertions.Expect(againstButton).ToHaveAttributeAsync("aria-pressed", "false", new() { Timeout = E2ESteps.Slow });
+            // Pressing the pressed button again takes the side back (owner, 2026-11-18: no "Atsiimti"); the follow stays.
+            await Assertions.Expect(page.Locator($"#home-again-{place}")).ToHaveTextAsync("Paspaudę dar kartą, atsiimsite.");
             await Assertions.Expect(page.Locator($"#home-withdraw-{place}")).ToHaveCountAsync(0);
+            await againstButton.ClickAsync();
+            await Assertions.Expect(againstButton).ToHaveAttributeAsync("aria-pressed", "false", new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator($"#home-again-{place}")).ToHaveCountAsync(0);
             (await MySideAsync(page, number)).ShouldBeNull();
             await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate");
             await E2ESteps.NoSidewaysScrollAsync(page, "/ after taking a side in a row");
@@ -309,7 +311,7 @@ public sealed partial class StartPageTests : E2ETest
             (await plain.Locator("main").InnerTextAsync()).ShouldNotContain("Jūs prašote balsuoti");
             await Assertions.Expect(plain.Locator($"#home-for-{place}")).ToBeDisabledAsync();
             await Assertions.Expect(plain.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "false");
-            await Assertions.Expect(plain.Locator($"#home-withdraw-{place}")).ToHaveCountAsync(0);
+            await Assertions.Expect(plain.Locator($"#home-again-{place}")).ToHaveCountAsync(0);
         }
         finally
         {

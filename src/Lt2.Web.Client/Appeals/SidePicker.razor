@@ -1,5 +1,6 @@
 @using Lt2.Api.Contracts.Appeals
 @inherits InteractiveBase<AppealUi>
+@implements IDisposable
 @inject IAppealsApi Appeals
 @inject IMeApi MeApi
 @inject NavigationManager Navigation
@@ -29,12 +30,15 @@
     }
     else
     {
+        @* Owner, 2026-11-18: the pressed button takes the side back when pressed again (no "Atsiimti"); the other one changes
+           it. aria-pressed says the state, and the line under the buttons, which the pressed one is described by, says how. *@
         <div class="pair sides">
             @foreach (var side in AppealLimits.Sides)
             {
                 var chosen = Mine?.Side == side;
                 <button type="button" class="btn btn--@side btn--wide" id="side-@side" aria-pressed="@(chosen ? "true" : "false")"
-                        disabled="@(Locked || Mine is null)" @onclick="() => ChooseAsync(side)">@if (chosen)
+                        aria-describedby="@(chosen ? "my-side" : null)" title="@(chosen ? L["Side.PressAgain"].Value : null)"
+                        disabled="@(Locked || Mine is null)" @onclick="e => ChooseAsync(side, e)">@if (chosen)
                 {
                     <span class="sides__check" aria-hidden="true">✓</span>
                 }@L["Side." + side]</button>
@@ -42,11 +46,7 @@
         </div>
         @if (Mine?.Side is { } mySide)
         {
-            <p class="small" id="my-side">
-                @L["Side.Yours." + mySide]
-                <button type="button" class="linkish" disabled="@Locked" @onclick="ClearAsync">@L["Side.Withdraw"]</button>
-            </p>
-
+            <p class="small" id="my-side">@L["Side.Yours." + mySide] @L["Side.PressAgain"]</p>
         }
         else
         {
@@ -77,18 +77,68 @@
         }
 
         _mpAccount = _signedIn && await Account.IsMpAccountAsync(RendererInfo.IsInteractive);
+        if (_signedIn && RendererInfo.IsInteractive)
+        {
+            State.Changed += OnChanged;
+        }
     }
 
-    private Task ChooseAsync(string side) => RunAsync(async () =>
+    public void Dispose() => State.Changed -= OnChanged;
+
+    /// <summary>
+    /// Another island acted (owner, 2026-11-18: a first "Man svarbu" may give the positions consent): the person's own answer
+    /// is read again, so a side pressed next does not ask for a consent already given.
+    /// </summary>
+    private void OnChanged(BillChange change)
     {
-        if (Mine is { HasPositionConsent: false })
+        if (!change.Concerns(Number, this) || change.ByModerator)
         {
-            _consentFor = side;
             return;
         }
 
-        await TakeAsync(side);
-    });
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                Mine = await State.MineAsync(Number) ?? Mine;
+                StateHasChanged();
+            }
+            catch (HttpRequestException)
+            {
+                // The answer shown stays; the next press reads again through the server's answer.
+            }
+        });
+    }
+
+    /// <summary>
+    /// A press on a side's button (owner, 2026-11-18): on the side one has, it takes the side back; on the other, it takes or
+    /// changes it. The buttons are disabled while a request runs, and the second click of a double click
+    /// (<see cref="SidePresses.Ignored"/>) does nothing, so a side just taken is not taken back by the same gesture.
+    /// </summary>
+    private Task ChooseAsync(string side, MouseEventArgs press)
+    {
+        if (Busy || SidePresses.Ignored(press.Detail))
+        {
+            return Task.CompletedTask;
+        }
+
+        return RunAsync(async () =>
+        {
+            if (Mine?.Side == side)
+            {
+                await WithdrawAsync(side);
+                return;
+            }
+
+            if (Mine is { HasPositionConsent: false })
+            {
+                _consentFor = side;
+                return;
+            }
+
+            await TakeAsync(side);
+        });
+    }
 
     private Task ConsentAndTakeAsync(string side) => RunAsync(async () =>
     {
@@ -127,9 +177,13 @@
         await ChangedAsync();
     }
 
-    private Task ClearAsync() => RunAsync(async () =>
+    /// <summary>
+    /// Takes the side back, naming it: the server changes nothing when the person no longer has it (another tab changed it,
+    /// a request arriving late). The person's "Man svarbu" marks stay and stop counting.
+    /// </summary>
+    private async Task WithdrawAsync(string side)
     {
-        var result = await Appeals.ClearPositionAsync(Number);
+        var result = await Appeals.ClearPositionAsync(Number, new PositionRequest { Side = side });
         if (!result.IsSuccess)
         {
             Show(result.Problem);
@@ -137,7 +191,7 @@
         }
 
         await ChangedAsync();
-    });
+    }
 
     /// <summary>
     /// Without reloading the page (owner, 2026-11-17): the other islands read their part again, the counts and the threshold

@@ -9,6 +9,7 @@ using Lt2.Web.Client;
 using Lt2.Web.Client.Agenda;
 using Lt2.Web.Client.Appeals;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 
@@ -18,7 +19,8 @@ namespace Lt2.UnitTests.Components;
 /// Design 8.7: the front page's member islands. "Jūsų projektai" lists the member's own bills of the agenda, each with its
 /// date, their own side or "Dar nenurodėte, ko prašote", the last vote and the share link when they took a side; the marks
 /// under the titles carry "Sekate" and their side. A coming bill's side column ("Taking a side in the row") offers "už" and
-/// "prieš": one press saves the side, the pressed button shows it, "Atsiimti" withdraws it, the first side asks for the
+/// "prieš": one press saves the side, the pressed button shows it and, pressed again, takes it back (owner, 2026-11-18: no
+/// "Atsiimti"), the first side asks for the
 /// positions consent in the row, and after the member's own action the row shows the bill's live numbers while the other
 /// islands follow without a reload. Nothing shows or can be pressed before the member's own answer has loaded, and all the
 /// islands share one request.
@@ -110,7 +112,7 @@ public sealed class MyAgendaTests : BunitContext
         side.Find("#home-nobody-2026-11-19-XVP-0412").TextContent.ShouldBe(Text("Agenda.Nobody"), "as for anyone");
         side.FindAll(".tl-ask button").Select(b => b.HasAttribute("disabled")).ShouldBe([true, true]);
         side.FindAll(".tl-ask button").Select(b => b.GetAttribute("aria-pressed")).ShouldBe(["false", "false"], "nobody's side");
-        side.FindAll("#home-withdraw-2026-11-19-XVP-0412").ShouldBeEmpty();
+        side.FindAll("#home-again-2026-11-19-XVP-0412").ShouldBeEmpty();
         _bills.Calls.ShouldBeEmpty();
         _me.Calls.ShouldBeEmpty();
         _appeals.Calls.ShouldBeEmpty();
@@ -239,7 +241,11 @@ public sealed class MyAgendaTests : BunitContext
         sidedSide.FindAll("#home-against-2026-11-19-XVP-0412 .sides__check").ShouldBeEmpty();
         sidedSide.Find(".tl-ask__sides").ClassList.ShouldContain("sides", customMessage: "styled as the bill page's sides");
         sidedSide.FindAll(".tl-ask button").ShouldAllBe(b => !b.HasAttribute("disabled"));
-        sidedSide.Find("#home-withdraw-2026-11-19-XVP-0412").GetAttribute("aria-label").ShouldBe("Atsiimti, ko prašote dėl projekto XVP-0412");
+        sidedSide.FindAll("#home-withdraw-2026-11-19-XVP-0412").ShouldBeEmpty("no \"Atsiimti\" (owner, 2026-11-18)");
+        sidedSide.Find("#home-again-2026-11-19-XVP-0412").TextContent.ShouldBe("Paspaudę dar kartą, atsiimsite.");
+        sidedSide.Find("#home-for-2026-11-19-XVP-0412").GetAttribute("aria-describedby").ShouldBe("home-again-2026-11-19-XVP-0412");
+        sidedSide.Find("#home-for-2026-11-19-XVP-0412").GetAttribute("title").ShouldBe("Paspaudę dar kartą, atsiimsite.");
+        sidedSide.Find("#home-against-2026-11-19-XVP-0412").HasAttribute("aria-describedby").ShouldBeFalse();
         sidedSide.Find("#home-action-2026-11-19-XVP-0412").GetAttribute("href").ShouldBe("/seimas/XVP-0412");
         sidedSide.Find("#home-action-2026-11-19-XVP-0412").TextContent.ShouldBe(Text("Agenda.Action.Side"));
         followedMark.Markup.ShouldContain(Text("Mine.NoSide"));
@@ -317,7 +323,7 @@ public sealed class MyAgendaTests : BunitContext
     }
 
     [Fact]
-    public void The_other_button_changes_the_side_and_Atsiimti_withdraws_it()
+    public void The_other_button_changes_the_side_and_the_pressed_one_takes_it_back()
     {
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
         _bills.OnEach("GetAsync",
@@ -329,18 +335,20 @@ public sealed class MyAgendaTests : BunitContext
         _appeals.Calls.ShouldBe(["GetRecordAsync"], "the page's copy says nobody, the member has a side: the live numbers once");
         _appeals.Calls.Clear();
 
-        side.Find("#home-for-2026-11-19-XVP-0412").Click();
-        _appeals.Calls.ShouldBeEmpty("pressing the member's own side again changes nothing");
+        // The second click of a double click on the pressed side does nothing (owner, 2026-11-18).
+        side.Find("#home-for-2026-11-19-XVP-0412").Click(new MouseEventArgs { Detail = 2 });
+        _appeals.Calls.ShouldBeEmpty("a double click's second press takes nothing back");
 
         side.Find("#home-against-2026-11-19-XVP-0412").Click();
         side.WaitForAssertion(() => side.Find("#home-against-2026-11-19-XVP-0412").GetAttribute("aria-pressed").ShouldBe("true"));
         side.Find("#home-for-2026-11-19-XVP-0412").GetAttribute("aria-pressed").ShouldBe("false");
         side.Find("[role=status]").TextContent.Trim().ShouldBeEmpty("already followed: nothing new to say");
 
-        side.Find("#home-withdraw-2026-11-19-XVP-0412").Click();
+        side.Find("#home-against-2026-11-19-XVP-0412").Click();
         _appeals.Calls.ShouldBe(["TakePositionAsync", "GetRecordAsync", "ClearPositionAsync", "GetRecordAsync"]);
+        _appeals.Arguments.Select(a => a.ElementAtOrDefault(1)).OfType<PositionRequest>().Last().Side.ShouldBe("against", "the side being taken back is named: the server changes nothing if it is no longer the member's");
         side.WaitForAssertion(() => side.FindAll(".tl-ask button").Select(b => b.GetAttribute("aria-pressed")).ShouldBe(["false", "false"]));
-        side.FindAll("#home-withdraw-2026-11-19-XVP-0412").ShouldBeEmpty();
+        side.FindAll("#home-again-2026-11-19-XVP-0412").ShouldBeEmpty();
         side.Find("#home-nobody-2026-11-19-XVP-0412").ShouldNotBeNull("the live answer: nobody now");
     }
 

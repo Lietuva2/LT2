@@ -103,28 +103,34 @@ internal static class AppealRules
         CheckSide(reasonSide) ?? (MayAdd(reasonsCounted, limit) ? null : "reason.limit");
 
     /// <summary>
-    /// "Man svarbu" only on someone else's argument (owner, 2026-11-17: the marks choose the arguments sent to MPs, so an
-    /// author does not vote for their own), of the person's own side, within the setting's limit, if one is set.
+    /// "Man svarbu" on an argument of either side, with or without a side of one's own (owner, 2026-11-18), but only on
+    /// someone else's argument (owner, 2026-11-17: the marks choose the arguments sent to MPs, so an author does not vote for
+    /// their own), only with the positions consent (design 6.5: a mark is about a political question, as a side is), and
+    /// within the setting's limit, if one is set, which counts every mark of the person on the bill, counted or not
+    /// (<see cref="MarkCounts"/>). The giver's side is not an input: it decides only whether the mark counts.
     /// </summary>
-    public static string? CheckEndorsement(bool ownReason, string? endorsersSide, string reasonSide, int endorsementsAlreadyOnBill, int limit)
+    public static string? CheckEndorsement(bool ownReason, bool hasPositionConsent, int endorsementsAlreadyOnBill, int limit)
     {
-        if (endorsersSide is null)
-        {
-            return "position.required";
-        }
-
-        if (endorsersSide != reasonSide)
-        {
-            return "endorsement.other-side";
-        }
-
         if (ownReason)
         {
             return "endorsement.own-reason";
         }
 
+        if (!hasPositionConsent)
+        {
+            return "consent.required";
+        }
+
         return MayAdd(endorsementsAlreadyOnBill, limit) ? null : "endorsement.limit";
     }
+
+    /// <summary>
+    /// A "Man svarbu" counts only while its giver's current side on the bill is the argument's side (owner, 2026-11-18): a
+    /// mark given without a side, or on the other side's argument, is kept but counts nowhere (the figure beside the
+    /// argument, the order of the arguments, the summaries). Read from the current position when the marks are counted,
+    /// never stored, so taking, changing or withdrawing a side only starts or stops a mark counting and deletes none.
+    /// </summary>
+    public static bool MarkCounts(string? giversSide, string reasonSide) => giversSide is not null && giversSide == reasonSide;
 
     /// <summary>
     /// Editing an argument (design 8.2, owner 2026-11-17): only a shown or waiting one (a hidden or merged one is not found, as
@@ -151,11 +157,12 @@ internal static class AppealRules
     public static string StatusAfterEdit(string status, bool flagged) => flagged ? ReasonStatuses.Pending : status;
 
     /// <summary>
-    /// Changing sides keeps one position per person per bill: the row is overwritten, and the "Man svarbu" marks on the
-    /// old side's arguments go, since they are allowed only on one's own side. The person's own arguments stay.
+    /// Withdrawing a side (design 8.7, owner 2026-11-18: pressing the pressed button again) withdraws only the side named,
+    /// when the request names one: a withdrawal of a side the person no longer has (a second press arriving late, another
+    /// tab that changed it) changes nothing. Without a side named, whatever side the person has goes.
     /// </summary>
-    public static bool ChangingSideDropsEndorsementsOfTheOldSide(string? oldSide, string newSide) =>
-        oldSide is not null && oldSide != newSide;
+    public static bool WithdrawalApplies(string? currentSide, string? namedSide) =>
+        currentSide is not null && (namedSide is null || namedSide == currentSide);
 }
 
 /// <summary>
@@ -273,7 +280,7 @@ internal static class RuleErrors
 {
     public static Error Of(string code) => code switch
     {
-        "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit" or "endorsement.own-reason"
+        "consent.required" or "reason.limit" or "endorsement.limit" or "endorsement.own-reason"
             or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" or "reason.reacted" => Error.Conflict(code),
         "reason.not-found" => Error.NotFound(code),
         "reason.edit-author-only" or "report.own" => Error.Forbidden(code),

@@ -18,7 +18,8 @@ public sealed class MyBillState(IAppealsApi appeals, IModerationApi moderation)
     private Task<MyRestrictionResponse?>? restriction;
 
     /// <summary>
-    /// Something on the bill changed by the caller's own action (a side taken, changed or withdrawn; a moderator's action):
+    /// Something on the bill changed by the caller's own action (a side taken, changed or withdrawn; the positions consent given
+    /// with a first "Man svarbu"; a moderator's action):
     /// the bill's number and the island that acted, which reads its own part itself.
     /// </summary>
     public event Action<BillChange>? Changed;

@@ -265,14 +265,48 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   links keep their own limits. A long text shows its beginning and "Rodyti daugiau", opened "Rodyti mažiau" under the
   rest (`TextExcerpt`, one file in SharedKernel compiled also into Lt2.Web.Client; `Components/LongText`): an argument
   about 300 characters, a statement or a response about 1 500; the moderators' queue keeps texts whole.
-- "Man svarbu" endorses a reason on your own side, never one you wrote (owner, 2026-11-17: `AppealRules.CheckEndorsement`,
-  `endorsement.own-reason`; the island disables it on one's own argument from the never-cached answer; a merge drops a mark
-  that would land on its giver's own argument). A mark moves nothing on the page: `RecordReasons` keeps the shown order
+- "Man svarbu" endorses a reason of either side, with or without a side of one's own, never one you wrote, and needs the
+  positions consent (owner, 2026-11-18; 2026-11-17 for one's own: `AppealRules.CheckEndorsement`, `endorsement.own-reason`,
+  `consent.required`; the island disables it on one's own argument from the never-cached answer and asks for the consent in
+  place, `PositionConsentForm ForMark`, before a first mark; a merge drops a mark that would land on its giver's own
+  argument). **A mark counts only while its giver's current side is the argument's side** (`AppealRules.MarkCounts`):
+  `AppealReads.EndorsementCountsAsync` joins `endorsement` to `reason` and `position` on read, so the figure, the order on
+  the bill's page, `MineAsync`'s own arguments, the similar arguments, the moderators' merge candidates and the summaries'
+  pool (`DigestSource.ReasonPoolAsync`, hence `ChoiceRules` and the snapshot) all use counted marks; nothing is stored, so
+  taking, changing or withdrawing a side (`TakePositionAsync`, `ClearPositionAsync`) deletes no mark. Editing until someone
+  reacts counts every mark (`AppealReads.ReactionCountsAsync`, `EditReasonAsync`), and so does the limit. The caller's own
+  uncounted marks are `MyBillRecordResponse.Uncounted`; `RecordReasons` shows them pressed with a note under the row
+  (`Reasons.Uncounted.NoSide.{side}` / `.Other.{side}`, `#mark-note-{id}`, the button's `aria-describedby`). Withdrawing
+  the consent (`PositionErasure`) still deletes marks. How often marks do not count (owner, 2026-11-18), counts only, no
+  person; run as the owner role (`endorsement` and `position` are withheld from `lt2_readonly`); the last row (no bill) is
+  the total:
+
+  ```sql
+  SELECT b.bill_number,
+         count(*)                                                    AS marks,
+         count(*) FILTER (WHERE p.side = r.side)                     AS counted,
+         count(*) FILTER (WHERE p.side IS NOT NULL AND p.side <> r.side) AS other_side,
+         count(*) FILTER (WHERE p.side IS NULL)                      AS no_side
+  FROM appeals.endorsement e
+  JOIN appeals.reason r ON r.id = e.reason_id
+  JOIN appeals.bill_record b ON b.id = e.record_id
+  LEFT JOIN appeals.position p ON p.record_id = e.record_id AND p.user_id = e.user_id
+  GROUP BY ROLLUP (b.bill_number)
+  ORDER BY b.bill_number NULLS LAST;
+  ```
+- **Sides by pressing (design 8.7, owner 2026-11-18).** `SidePicker` and `MyAgendaSide`: the pressed button, pressed again,
+  sends `DELETE /bills/{n}/record/position` with `{ side }` (`IAppealsApi.ClearPositionAsync(number, PositionRequest?)`;
+  the module's `ClearPositionAsync` withdraws only that side, `AppealRules.WithdrawalApplies`, so a late or stale press is a
+  no-op; no body withdraws whatever side there is). No "Atsiimti" for sides (`Side.Withdraw`, `Agenda.Withdraw` removed);
+  `Side.PressAgain` under the buttons (`#my-side`, `#home-again-{place}`) describes the pressed one and is its title.
+  Disabled while a request runs (`Busy`); `SidePresses.Ignored` drops a double click's second press (`MouseEventArgs.Detail`).
+- A "Man svarbu" moves nothing on the page: `RecordReasons` keeps the shown order
   after the person's own action (`StableOrder`, the order by marks returns on the next read) and gives the pressed button
   the focus back without scrolling. It is a toggle whose button stays neutral, only the heart (`Icon` `heart`, `.icon__fill`)
   filling in the brand's green while marked (owner, 2026-11-17); a visitor's is a `LandingPath.SignInLink` back to the bill
   of the same look. One hint beside the arguments' heading, "Kas yra „Man svarbu“?" (`Reasons.EndorseWhat`, owner
-  2026-11-17), says when it can be marked (a side first, one's own side, not one's own argument), "Plačiau" to
+  2026-11-17), says when it can be marked (either side, not one's own argument, counted only on the side one asks for; owner,
+  2026-11-18), "Plačiau" to
   `/metodika#argumentai`; the same served markup for everyone, gone for the MP's own account once the island runs.
 - **The bill's page (design 8.12.1, owner 2026-11-17).** The header: "Projektai / Įstatymo projektas XVP-0412" (no label
   line), the title, one `.follow-line` (the stage tags, "Planuojama …", then `FollowButton`). Beside the side column: what
@@ -326,7 +360,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   notice's edges, the turning logo centred to their right from 54rem (across the invented-data notice too, which on this
   page is the head's first row, not the layout's), beside the headline on a phone. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
   2026-11-15): a visitor's are `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
-  (`MyAgendaSide`, disabled before it starts) that takes, changes ("Atsiimti" withdraws) the side with the bill page's
+  (`MyAgendaSide`, disabled before it starts) that takes, changes (the pressed button, pressed again, withdraws) the side with the bill page's
   request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
   shows the bill's live numbers from `GET /bills/{n}/record`; the other islands follow through `MyAgendaState.Changed`.
   The figures are one component (`Lt2.Web.Client/Agenda/RecordFigures`, with `SplitBar` in `Lt2.Web.Client/Components`),

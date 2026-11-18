@@ -42,7 +42,11 @@ public interface IAppealsApi
 
     Task<ApiResult> TakePositionAsync(string number, PositionRequest request, CancellationToken cancellationToken = default);
 
-    Task<ApiResult> ClearPositionAsync(string number, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Withdraws the caller's side (design 8.7: pressing the pressed button again). With <paramref name="request"/> only the
+    /// side it names goes: a withdrawal of a side the caller no longer has changes nothing. "Man svarbu" marks stay.
+    /// </summary>
+    Task<ApiResult> ClearPositionAsync(string number, PositionRequest? request = null, CancellationToken cancellationToken = default);
 
     Task<ApiResult<IReadOnlyList<ReasonResponse>>> FindSimilarAsync(string number, ReasonRequest request, CancellationToken cancellationToken = default);
 
