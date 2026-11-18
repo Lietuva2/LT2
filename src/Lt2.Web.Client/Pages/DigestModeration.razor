@@ -101,7 +101,7 @@ else
                             @foreach (var reason in reasons)
                             {
                                 <div class="said" id="@(reason.Id is { } rid ? "digmod-reason-" + rid : null)">
-                                    <p class="bubble bubble--people voice">@reason.Text</p>
+                                    <p class="bubble bubble--people bubble--nameless voice">@reason.Text</p>
                                     <div class="said__by small num">
                                         @L.Format("DigMod.Endorsed", Display.Number(reason.Endorsements))
                                         @if (reason.Replacement)

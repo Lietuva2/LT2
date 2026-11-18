@@ -6,8 +6,22 @@
    wrote it. Published: the stance, the text, the dates ("Keista" with its date) and, after the adoption vote, the MP's
    ballot beside it as a second fact ("Atsakė: … Balsavo: …"), never compared. Withdrawn: "Atsakymas atsiimtas" with the date.
    Hidden: "Atsakymas paslėptas moderatorių" and the moderator's statement. Earlier versions behind "Ankstesnės versijos", each with
-   what it changed (owner, 2026-11-18). *@
+   what it changed (owner, 2026-11-18).
+   The line right above the bubble is always the name, where the bubble's tail points (owner, 2026-11-18; design 8.16.3):
+   on the profile the bill heads the item, then the stance as a small line above the name, then the name ("Nauja" beside
+   it), the bubble, and under it the faction, the mark and the dates. *@
 <article class="said said--mp" aria-label="@Label">
+    @if (Bill is { } bill)
+    {
+        <p class="row statement__bill">
+            <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Number</a>
+            <a class="statement__name" href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Title</a>
+        </p>
+    }
+    @if (Response.Status is not ("hidden" or "withdrawn"))
+    {
+        <p class="said__side"><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span></p>
+    }
     <p class="row statement__who">
         @if (Mp is { } mp)
         {
@@ -19,14 +33,11 @@
             {
                 <b class="statement__name">@mp.FirstName @mp.LastName</b>
             }
-            <span class="small">@(mp.Faction ?? F.T["Vote.NoFaction"])</span>
         }
-        @if (Bill is { } bill)
+        else if (AuthorName is { } name)
         {
-            <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Number</a>
-            <a class="statement__name" href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Title</a>
+            <b class="statement__name">@name</b>
         }
-        <span class="tag">@F.T["Responses.Mark"]</span>
         @Mark
     </p>
     @switch (Response.Status)
@@ -42,7 +53,6 @@
             <p class="row"><span class="tag">@F.T["Responses.Withdrawn"]</span> <span class="small num">@Display.Day(Response.WithdrawnAt ?? Response.PublishedAt)</span></p>
             break;
         default:
-            <p><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span></p>
             @* Design 8.5.6 (owner, 2026-11-16): a response longer than about 1 500 characters shows its beginning and "Rodyti
                daugiau" (no script); the moderators' queue shows it whole (ResponseModerationView). *@
             <Lt2.Web.Client.Components.LongText Text="@(Response.Text ?? "")" BubbleClass="bubble bubble--mp voice"
@@ -50,6 +60,11 @@
             break;
     }
     <div class="said__by statement__meta">
+        @if (Mp is { } who)
+        {
+            <span>@(who.Faction ?? F.T["Vote.NoFaction"])</span>
+        }
+        <span class="tag">@F.T["Responses.Mark"]</span>
         @if (Response.Status != "hidden")
         {
             <span class="small num"><span class="nowrap">@F.T.Format("Responses.Published", Display.Day(Response.PublishedAt))</span>@if (Response.EditedAt is { } edited) {<text> · </text><span class="nowrap">@F.T.Format("Responses.Edited", Display.Day(edited))</span>}</span>
@@ -112,6 +127,9 @@
 
     /// <summary>On the profile: the bill answered.</summary>
     [Parameter] public Lt2.Api.Contracts.Appeals.BillRefResponse? Bill { get; set; }
+
+    /// <summary>On the profile: the MP's name, shown (not linked) right above the bubble, where its tail points.</summary>
+    [Parameter] public string? AuthorName { get; set; }
 
     /// <summary>On the bill's page: "Nauja" beside a response the reader has not seen (design 8.11.8), an island.</summary>
     [Parameter] public RenderFragment? Mark { get; set; }

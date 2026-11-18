@@ -55,6 +55,15 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             part.ShouldContain("Seimo narys arba jo biuras");
             part.ShouldContain("Balsuos už");
             part.ShouldContain(First);
+            // Design 8.16.3 (owner, 2026-11-18): the stance above the name, the name right above the bubble (its tail points at
+            // it), the faction, the mark and the dates under the bubble.
+            var article = part[part.IndexOf("<article class=\"said said--mp\"", StringComparison.Ordinal)..];
+            article = article[..article.IndexOf("</article>", StringComparison.Ordinal)];
+            var places = new[] { "class=\"said__side\"", "class=\"row statement__who\"", "class=\"bubble bubble--mp", "Seimo narys arba jo biuras" }
+                .Select(s => article.IndexOf(s, StringComparison.Ordinal)).ToList();
+            places.ShouldAllBe(i => i >= 0);
+            places.ShouldBeInOrder(SortDirection.Ascending);
+            article[places[1]..places[2]].ShouldNotContain("class=\"tag", customMessage: "nothing but the name between the name line and the bubble");
 
             // Changed: the earlier text stays public, with its dates; saving the same again adds nothing.
             await mp.Browser.RespondOkAsync(Bill, "against", Second);

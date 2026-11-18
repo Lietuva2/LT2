@@ -270,6 +270,13 @@ lt2-logo-spin {
 .said__by { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-1); color: var(--ink-2); padding-left: var(--sp-5); }
 .said--mp .said__by { justify-content: flex-end; padding: 0 var(--sp-5) 0 0; }
 .said__by b { color: var(--ink); }
+/* The tail points at the author's name, so the line right above a bubble is always the name (owner, 2026-11-18): a side
+   or stance stands above the name as a small line (.said__side), the marks and dates under the bubble, and an MP's name
+   line stands on the left like the others. A bubble with no name above it (a summary's copy of an argument, one's own
+   hidden text) has no tail. */
+.said__side { font-size: var(--fs-1); padding-left: var(--sp-5); margin-bottom: calc(-1 * var(--sp-1)); }
+.said--mp .said__by:has(+ .bubble) { justify-content: flex-start; padding: 0 0 0 var(--sp-5); }
+.bubble--nameless::before { content: none; }
 
 /* ---------- Buttons ---------- */
 

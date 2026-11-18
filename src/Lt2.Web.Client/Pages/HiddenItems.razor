@@ -81,8 +81,8 @@ else
                     <span class="choice choice--@reason.Side">@L["Reasons." + reason.Side]</span>
                 </div>
                 <div class="said">
-                    <TypedText Text="@reason.Text" Class="bubble bubble--people voice" />
                     <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
+                    <TypedText Text="@reason.Text" Class="bubble bubble--people voice" />
                 </div>
                 <p class="small num">@ModerationWords.Hidden(L, reason.HiddenAt, reason.HiddenBy)</p>
                 @if (reason.Statement is { } statement)

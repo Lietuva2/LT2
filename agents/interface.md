@@ -54,11 +54,14 @@ Read before changing a page, a component or an island. The rules behind it are d
   link green) and `--against` (its matching red; brighter in the dark theme, `#217740` / `#b4433f`, at least 3:1 on its
   sheet and ground), with `--on-vote` (white) for a word on them; a shape in a side's colour gets no light edge round
   it (owner, 2026-11-18: brighter dark colours instead), and the side button not chosen only its own 2px outline in the
-  side's colour. The threshold's fill is `--progress`; a mark of the current place (menu, drop-down, tabs) is `--link`. Every token is set for both themes in `design/ui/lt2.css` and copied
-  to `lt2.css`; text keeps 4.5:1 and a control or a bar 3:1 in both. Buttons are straight (no cut); the cut corner is
-  only `.sheet--cut` and `.portrait`. A `.bubble` is a straight box with radius `--cut-s` and a tail pointing up to the
-  name above it. Figures in a row (`.pair--keep`, `.totals`, `.analytics-figures`) are a subgrid of five lines
-  at most, top-aligned: a figure with more lines needs the span raised.
+  side's colour. The threshold's fill is `--progress`; a mark of the current place (menu, drop-down, tabs) is `--link`.
+  Every token is set for both themes in `design/ui/lt2.css` and copied to `lt2.css`; text keeps 4.5:1 and a control or
+  a bar 3:1 in both. Buttons are straight (no cut); the cut corner is only `.sheet--cut` and `.portrait`. A `.bubble` is
+  a straight box with radius `--cut-s` and a tail pointing up to the name above it: the element right before a bubble
+  is always the author's name line (only `NewMark` beside the name), a stance goes above the name (`.said__side`), marks,
+  an MP's faction and dates under the bubble; a bubble with no name above it takes `bubble--nameless` (no tail).
+  Figures in a row (`.pair--keep`, `.totals`, `.analytics-figures`) are a subgrid of five lines at most, top-aligned: a
+  figure with more lines needs the span raised.
 - **A new public, server-rendered page puts `<LinkPreview Title="…" Description="…" />` beside its `<PageTitle>`** (design
   8.22.5: the title without " · Lietuva 2.0", one or two sentences, never counts or a member's own text; `Path` when the page's
   own address differs from the requested path). A page behind sign-in, a staff page or a token page puts none; such a path

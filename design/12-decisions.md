@@ -499,3 +499,8 @@ Each is built as written; "no" names what changes.
   round every shape under 3:1; the owner chose the brighter colours instead the same day.) The threshold's progress is
   the same `#3a8e54` in both themes; the dark menu keeps its own link green, since the light one is under 3:1 on the
   dark ground.
+- A bubble's tail always points at its author's name: the line right above every bubble is the name. A stance stands
+  above the name as a small line; the marks ("Seimo narys arba jo biuras", "Patvirtinta", "Organizacija"), an MP's
+  faction and the dates go under the bubble (the designer's choice between "beside the name when it fits" and "under
+  the bubble": under, so nothing wraps onto the line above the bubble on a phone). A bubble with no name above it has
+  no tail. Awaiting the owner's look.
