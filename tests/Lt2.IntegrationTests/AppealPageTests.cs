@@ -504,6 +504,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         // Owner, 2026-11-18: the next one shows what it changed against it, and the whole text one click away.
         html.ShouldContain("<del><span class=\"visually-hidden\">pašalinta: </span>30</del><ins><span class=\"visually-hidden\">pridėta: </span>32</ins> %");
         html.ShouldContain("<summary class=\"linkish small\">Rodyti visą tekstą</summary>");
+        html.IndexOf("pašalinta: </span>30</del>", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf(first, StringComparison.Ordinal), "newest first");
         html.ShouldContain(AppealSteps.Description);
         html.ShouldNotContain("Bandymas.", Case.Sensitive, "nor the statement");
         (await PageAsync(stranger, "/seimas/XVP-0533")).Html.ShouldContain("href=\"/seimas/XVP-0533/istorija\"");

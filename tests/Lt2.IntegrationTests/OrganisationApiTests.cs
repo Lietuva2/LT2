@@ -150,12 +150,18 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         queued.Changed.ShouldBeTrue();
 
         // Another host removes the confirmation by domain.
-        using (var moved = await member.SendAsync(HttpMethod.Put, OrganisationRoutes.Of(created.Slug), new OrganisationRequest { Name = newName, Website = "https://" + OrganisationSteps.NewHost() }))
+        var movedHost = OrganisationSteps.NewHost();
+        using (var moved = await member.SendAsync(HttpMethod.Put, OrganisationRoutes.Of(created.Slug), new OrganisationRequest { Name = newName, Website = "https://" + movedHost }))
         {
             moved.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         }
 
         (await visitor.ProfileAsync(created.Slug)).Label.ShouldBe(new OrganisationLabelResponse(null, null));
+        // Owner, 2026-11-18: the profile's history lists the changes newest first, each as "A → B".
+        var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/o/" + created.Slug));
+        var newest = page.IndexOf("→ https://" + movedHost, StringComparison.Ordinal);
+        newest.ShouldBeGreaterThan(0);
+        newest.ShouldBeLessThan(page.IndexOf(oldName + " → " + newName, StringComparison.Ordinal));
 
         // Somebody who is not a representative cannot change it.
         var (other, _) = await Factory.MemberAsync();
@@ -401,6 +407,8 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         profilePage.ShouldContain("<ins><span class=\"visually-hidden\">pridėta: </span>prieš</ins>");
         profilePage.ShouldContain("<p><del><span class=\"visually-hidden\">pašalinta: </span>Antra pastraipa.</del></p>");
         profilePage.ShouldContain("Rodyti visą tekstą");
+        profilePage.IndexOf("id=\"version-current-", StringComparison.Ordinal)
+            .ShouldBeLessThan(profilePage.IndexOf("<p>Prašome balsuoti už.</p>", StringComparison.Ordinal), "newest first; the oldest whole");
 
         // One statement per organisation per bill; remarks carry no goal.
         using (var goal = await member.PutStatementAsync(AppealSteps.SecondBill, created.Slug, "remarks", "Pastabos.", goal: 10))

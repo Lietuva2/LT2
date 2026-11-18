@@ -6,7 +6,7 @@ What the owner decided is in [12-decisions.md](12-decisions.md). Do not decide a
 
 Each is built as written; "no" names what changes. The Lithuanian texts are proposals for a native read.
 
-1. The text in force joins its history with its own changes ("dabartinė versija", for a response "dabartinė versija,
+1. The text in force opens its history with its own changes ("dabartinė versija", for a response "dabartinė versija,
    parašyta {data}", for the letter "Dabartinė versija, išsiųsta {data}"), so the last edit shows; the summary still reads
    "Ankstesnės versijos (n)". If no: only the earlier versions, and the last edit is seen by comparing by eye.
 2. Texts are compared within their layout, line by line first: one line for one line, or lines sharing two fifths of
@@ -14,7 +14,7 @@ Each is built as written; "no" names what changes. The Lithuanian texts are prop
    text, which can mark half a list item against another.
 3. A space between two changes joins them ("mažina tarifą" → "didina mokestį" is one removal and one insertion, not
    word against word).
-4. The description history keeps its order (oldest first) and puts "aprašymo nebuvo" or "aprašymas pašalintas" beside
+4. The description history (newest first, as every history: owner, 2026-11-18) puts "aprašymo nebuvo" or "aprašymas pašalintas" beside
    the date; "Buvo" and "Tapo" are gone. A removal shows the removed text struck through, with no "Rodyti visą tekstą".
 5. A version whose text is unchanged (only the side, goal or subject changed) is shown whole, with no marks and no
    "Rodyti visą tekstą". If no: a line such as "Tekstas nepakeistas".

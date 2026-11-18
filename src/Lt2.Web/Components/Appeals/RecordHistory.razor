@@ -38,10 +38,11 @@
         }
         else
         {
-            @* Owner, 2026-11-18: each edit shows what it changed against the text before it (TextChanges), the whole text one
-               click away; the first, or one after a removal, shows its text whole, and a removal its text struck through. *@
+            @* Owner, 2026-11-18: newest first (the answer lists the edits oldest first); each edit shows what it changed against
+               the text before it (TextChanges), the whole text one click away; the first, or one after a removal, shows its text
+               whole, and a removal its text struck through. *@
             <ol class="rows">
-                @foreach (var edit in edits)
+                @foreach (var edit in edits.Reverse())
                 {
                     <li>
                         <div class="rows__main">
