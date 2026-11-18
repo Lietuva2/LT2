@@ -1,5 +1,6 @@
 @page "/darbotvarke"
 @using Lt2.Api.Contracts.Agenda
+@using Lt2.Web.Client.Agenda
 @inject IAgendaApi Api
 @inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject IStringLocalizer<PageText> T
@@ -8,7 +9,8 @@
 
 @* The agenda (design 8.11.1): public, server-rendered, readable without JavaScript. What the Seimas plans to consider, by
    day, earliest first, from the lrs.lt agenda (10–12 days ahead, changes often: "Planuojama …", never a countdown), and
-   the stage votes of the last seven days. Each bill shows both sides, or says nobody took part yet (design 8.12.5). *@
+   the stage votes of the last seven days. Each bill shows both sides, or says nobody took part yet (design 8.12.5). Read
+   from the front page's copy, kept a minute (FrontPageAgenda through IAgendaApi). *@
 <PageTitle>@T["Agenda.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@T["Agenda.Title"]" Description="@T["Preview.Agenda"]" />
 
@@ -42,16 +44,42 @@
     }
     else
     {
+        @* Owner, 2026-11-18: one block per sitting day with its date, weekday and count; the first ten rows of a day in the
+           agenda's order (AgendaRules), the rest under "Rodyti visus" (no script: the rows are on the page), and the bills the
+           open data does not know yet folded into one line at the end. *@
         @foreach (var day in _agenda.Days)
         {
-            <section class="stack stack--tight" aria-labelledby="h-day-@Display.Day(day.Date)">
-                <h3 id="h-day-@Display.Day(day.Date)">@T.Format("Agenda.Day", F.Date(day.Date))</h3>
-                <ul class="rows">
-                    @foreach (var item in day.Items)
+            var view = AgendaRules.Day(day.Items, i => i.Title is not null, AgendaRules.PagePerDay);
+            var id = PlannedDayId(day.Date);
+            <section class="tl-day" aria-label="@($"{T["Agenda.Planned"]} {F.DayMonth(day.Date)}")" id="@id">
+                <TimelineDate Label="@T["Agenda.Planned"]" Day="day.Date" Count="@AgendaWords.Bills(T, view.Count)" />
+                <div class="tl-rows">
+                    @if (view.Shown.Count > 0)
                     {
-                        <AgendaItemRow Item="item" Day="day.Date" />
+                        <ul class="tl-items">
+                            @foreach (var item in view.Shown)
+                            {
+                                <TimelineItem Item="item" Day="day.Date" Asks="false" />
+                            }
+                        </ul>
                     }
-                </ul>
+                    @if (view.Rest.Count > 0)
+                    {
+                        <details class="more tl-more" id="@($"{id}-visi")">
+                            <summary class="linkish small">@T.Format("Agenda.ShowAll", Display.Number(view.Known))</summary>
+                            <ul class="tl-items">
+                                @foreach (var item in view.Rest)
+                                {
+                                    <TimelineItem Item="item" Day="day.Date" Asks="false" />
+                                }
+                            </ul>
+                        </details>
+                    }
+                    @if (view.Unknown.Count > 0)
+                    {
+                        <UnknownBills Items="view.Unknown" Day="day.Date" Id="@($"{id}-nezinomi")" />
+                    }
+                </div>
             </section>
         }
     }
@@ -65,47 +93,38 @@
     }
     else
     {
-        <ul class="rows">
-            @foreach (var v in _agenda.RecentVotes)
-            {
-                <li id="recent-@v.VoteId">
-                    <div class="rows__main">
-                        <span class="row">
-                            <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Number</a>
-                            @if (v.Stage is { } stage)
-                            {
-                                <span class="tag">@F.Stage(stage)</span>
-                            }
-                            <span class="small num">@Display.Day(v.HeldAt)</span>
-                        </span>
-                        <a href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Title</a>
-                        <span class="small">
-                            @if (v.IsConsensus)
-                            {
-                                <a href="/seimas/balsavimai/@v.VoteId">@F.T["Consensus.Tag"]</a>
-                            }
-                            else
-                            {
-                                <a class="num" href="/seimas/balsavimai/@v.VoteId">@T.Format("Agenda.Result", Display.Number(v.Totals.For), Display.Number(v.Totals.Against), Display.Number(v.Totals.Abstain))</a>
-                            }
-                        </span>
-                        @if (v.OfficialNote is { } note)
+        @* By day, newest first, each in the agenda's order: ten, then the rest under "Rodyti visus" (owner, 2026-11-18). *@
+        @foreach (var day in _agenda.RecentVotes.GroupBy(v => Display.DayOf(v.HeldAt)))
+        {
+            var view = AgendaRules.Day(day.ToList(), _ => true, AgendaRules.PagePerDay);
+            var id = VotedDayId(day.Key);
+            <section class="tl-day tl-past" aria-label="@($"{T["Agenda.Voted"]} {F.DayMonth(day.Key)}")" id="@id">
+                <TimelineDate Label="@T["Agenda.Voted"]" Day="day.Key" Count="@AgendaWords.Votes(T, view.Count)" />
+                <div class="tl-rows">
+                    <ul class="tl-items">
+                        @foreach (var v in view.Shown)
                         {
-                            <span class="note note--quiet small">@note</span>
+                            <VotedItem Vote="v" />
                         }
-                    </div>
-                    <div class="rows__side">
-                        @if (v.Record is { } record)
-                        {
-                            <AgendaRecord Record="record" Number="@v.Number" />
-                        }
-                    </div>
-                </li>
-            }
-        </ul>
+                    </ul>
+                    @if (view.Rest.Count > 0)
+                    {
+                        <details class="more tl-more" id="@($"{id}-visi")">
+                            <summary class="linkish small">@T.Format("Agenda.ShowAll", Display.Number(view.Known))</summary>
+                            <ul class="tl-items">
+                                @foreach (var v in view.Rest)
+                                {
+                                    <VotedItem Vote="v" />
+                                }
+                            </ul>
+                        </details>
+                    }
+                </div>
+            </section>
+        }
     }
     @* Design 8.18: the long form of this list, also when the last seven days had no vote. *@
-    <p id="agenda-votes-older"><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path">@T["Agenda.Older"]</a></p>
+    <p class="tl-older" id="agenda-votes-older"><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path">@T["Agenda.Older"]</a></p>
 </section>
 
 @* Design 8.15: "riba" repeats in the rows, so what it is is said once, beside the list's note (a hint). *@
@@ -116,6 +135,14 @@
 <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 
 @code {
+    /// <summary>A planned day's block, where the front page's "Visi N projektai" lands (design 8.7).</summary>
+    public static string PlannedDayId(DateOnly day) => "diena-" + Display.Day(day);
+
+    /// <summary>A voting day's block.</summary>
+    public static string VotedDayId(DateOnly day) => "balsuota-" + Display.Day(day);
+
+    /// <summary>The address of a planned day on this page.</summary>
+    public static string PlannedDayPath(DateOnly day) => "/darbotvarke#" + PlannedDayId(day);
 
     private AgendaResponse? _agenda;
 

@@ -4,6 +4,7 @@ using Lt2.Api.Contracts.Organisations;
 using Lt2.Appeals;
 using Lt2.Parliament;
 using Lt2.SharedKernel;
+using Lt2.Web.Client.Agenda;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Lt2.Web.Services;
@@ -31,25 +32,32 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
         var shown = await organisations.ShownOnBillsAsync(plannedNumbers, ct);
         var read = await parliament.AgendaReadAsync(ct);
 
+        // Design 8.11.1 (owner, 2026-11-18): within a day, by activity, then stage, then number; bills the open data does not
+        // know yet last (AgendaRules). The days earliest first; the votes' days newest first.
+        int ActivityOf(string number) => states.GetValueOrDefault(number) is { Status: not "rejected" } s ? AgendaRules.Activity(s.Counts.Total, s.Arguments) : 0;
         var days = planned
             .GroupBy(p => p.Date)
             .OrderBy(g => g.Key)
             .Select(g => new AgendaDayResponse(
                 g.Key,
-                g.OrderBy(p => p.BillNumber, StringComparer.Ordinal)
-                    .Select(p =>
-                    {
-                        var state = states.GetValueOrDefault(p.BillNumber);
-                        return new AgendaItemResponse(
-                            p.BillNumber, facts.GetValueOrDefault(p.BillNumber)?.Title, p.Stage, p.SetByModerator, p.SourceUrl, Record(state),
-                            Organisations(state, shown.GetValueOrDefault(p.BillNumber)));
-                    })
+                AgendaRules.WithinDay(
+                        g.Select(p =>
+                        {
+                            var state = states.GetValueOrDefault(p.BillNumber);
+                            return new AgendaItemResponse(
+                                p.BillNumber, facts.GetValueOrDefault(p.BillNumber)?.Title, p.Stage, p.SetByModerator, p.SourceUrl, Record(state),
+                                Organisations(state, shown.GetValueOrDefault(p.BillNumber)));
+                        }),
+                        i => i.Title is not null, i => ActivityOf(i.Number), i => i.Stage, i => i.Number)
                     .ToList()))
             .ToList();
         var votes = recent
             .Select(v => new AgendaVoteResponse(
                 v.Vote.Id, v.Vote.Bill!.Number, v.Vote.Bill.Title, v.Vote.Stage, v.Vote.HeldAt, v.Vote.IsConsensus, ParliamentReads.Totals(v), v.OfficialNote,
                 Record(states.GetValueOrDefault(v.Vote.Bill.Number))))
+            .GroupBy(v => VilniusTime.DateOf(v.HeldAt))
+            .OrderByDescending(g => g.Key)
+            .SelectMany(g => AgendaRules.WithinDay(g, _ => true, v => ActivityOf(v.Number), v => v.Stage, v => v.Number))
             .ToList();
         return new AgendaResponse(days, votes, read.ReadAt, read.SourceUrl);
     }
@@ -74,7 +82,8 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
 /// withdrawn marks the copy out of date (<see cref="FrontPageFreshness"/>), and the next request reads the agenda again,
 /// but never within <see cref="FrontPageFreshness.MinimumAge"/> of the copy being made. It is built only by
 /// <see cref="AgendaReads"/>, which takes no caller, and holds only <see cref="AgendaResponse"/>, which has no field about
-/// anyone; nothing of a member's own can enter it. The agenda page, the bill's page and the API stay live.
+/// anyone; nothing of a member's own can enter it. The agenda page reads the same copy (owner, 2026-11-18: with a real
+/// week it is as long a read as the front page's); the bill's page and <c>GET /api/v1/agenda</c> stay live.
 /// </summary>
 internal sealed class FrontPageAgenda(AgendaReads reads, IMemoryCache cache, FrontPageFreshness freshness)
 {
@@ -142,9 +151,12 @@ internal sealed class FrontPageFreshness(TimeProvider clock)
     }
 }
 
-/// <summary>Server-side <see cref="IAgendaApi"/> for the server-rendered agenda and front pages.</summary>
-internal sealed class ServerAgendaApi(AgendaReads reads) : IAgendaApi
+/// <summary>
+/// Server-side <see cref="IAgendaApi"/> for the server-rendered agenda page: the front page's copy, kept a minute
+/// (<see cref="FrontPageAgenda"/>).
+/// </summary>
+internal sealed class ServerAgendaApi(FrontPageAgenda agenda) : IAgendaApi
 {
     public async Task<ApiResult<AgendaResponse>> GetAgendaAsync(CancellationToken cancellationToken = default) =>
-        ApiResult<AgendaResponse>.Ok(await reads.ReadAsync(cancellationToken));
+        ApiResult<AgendaResponse>.Ok(await agenda.ReadAsync(cancellationToken));
 }

@@ -3,6 +3,7 @@ using Bunit;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Agenda;
 using Lt2.Api.Contracts.Appeals;
+using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Me;
 using Lt2.Web.Client;
 using Lt2.Web.Client.Agenda;
@@ -30,17 +31,24 @@ public sealed class MyAgendaTests : BunitContext
 
     private static readonly IReadOnlyList<string> Numbers = [Followed, Sided, Other];
 
-    private static readonly MyAgendaBill[] Bills =
-    [
-        new(Followed, "Vietinių rinkliavų įstatymo pataisa", "lapkričio 17 d.", "svarstymas, lapkričio 13 d.: už 69 · prieš 31 · susilaikė 18"),
-        new(Sided, "Gyventojų pajamų mokesčio įstatymo pataisa", "lapkričio 19 d.", null),
-        new(Other, "Atliekų tvarkymo įstatymo pataisa", "lapkričio 19 d.", null),
-    ];
+    /// <summary>A followed bill on the agenda that the page's rows do not show (owner, 2026-11-18: a few rows a day).</summary>
+    private const string Beyond = "XVP-0700";
+
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    private static readonly DateTimeOffset TwoDaysAgo = DateTimeOffset.UtcNow.AddDays(-2);
+
+    private static FollowedBillResponse Bill(string number, int? plannedIn = null, DateTimeOffset? voted = null) => new(
+        number, "Pataisa " + number, plannedIn is { } days ? new PlannedDateResponse(Today.AddDays(days), "consideration", null, false) : null,
+        voted is { } at ? new FollowedVoteResponse(77, "consideration", at, false, 69, 31, 18) : null);
+
+    private static ApiResult<MyFollowsResponse> Follows(params FollowedBillResponse[] bills) => ApiResult<MyFollowsResponse>.Ok(new MyFollowsResponse(bills, [], []));
 
     /// <summary>The page's copy of a bill's numbers: nobody yet (up to a minute old).</summary>
     private static readonly AgendaRecordResponse NobodyYet = new(null, "open", new SideCountsResponse(0, 0, 0, 0), new ThresholdResponse(1000, "default", null, 0, false, false));
 
     private readonly ApiFake _bills;
+    private readonly ApiFake _follows;
     private readonly ApiFake _me;
     private readonly ApiFake _appeals;
 
@@ -51,6 +59,9 @@ public sealed class MyAgendaTests : BunitContext
         Services.AddLt2ClientComponents();
         var bills = DispatchProxy.Create<IMyBillsApi, ApiFake>();
         _bills = (ApiFake)(object)bills;
+        var follows = DispatchProxy.Create<IFollowsApi, ApiFake>();
+        _follows = (ApiFake)(object)follows;
+        Services.AddSingleton(follows);
         var me = DispatchProxy.Create<IMeApi, ApiFake>();
         _me = (ApiFake)(object)me;
         var appeals = DispatchProxy.Create<IAppealsApi, ApiFake>();
@@ -62,6 +73,7 @@ public sealed class MyAgendaTests : BunitContext
         AddAuthorization().SetAuthorized("member@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;
         _bills.On("GetAsync", Answer(consent: true, new MyBillResponse(Followed, null, true), new MyBillResponse(Sided, "for", true)));
+        _follows.On("GetMineAsync", Follows(Bill(Followed, plannedIn: 1, voted: TwoDaysAgo), Bill(Sided, plannedIn: 3)));
         _me.On("GetInvitationAsync", ApiResult<MyInvitationResponse>.Ok(new MyInvitationResponse("ABCD-EFGH", "/prisijungti#kodas=ABCD-EFGH", 0, true, null)));
         _me.On("GivePositionConsentAsync", ApiResult.Ok());
         _appeals.On("TakePositionAsync", ApiResult.Ok());
@@ -88,11 +100,12 @@ public sealed class MyAgendaTests : BunitContext
     {
         SetRendererInfo(new RendererInfo("Server", isInteractive: false));
 
-        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Bills, Bills).Add(c => c.Numbers, Numbers));
+        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Numbers, Numbers));
         var mark = Mark(Sided, "2026-11-19-XVP-0412");
         var side = Side(Sided, "2026-11-19-XVP-0412");
 
         panel.Markup.Trim().ShouldBeEmpty();
+        _follows.Calls.ShouldBeEmpty();
         mark.Markup.Trim().ShouldBeEmpty();
         side.Find("#home-nobody-2026-11-19-XVP-0412").TextContent.ShouldBe(Text("Agenda.Nobody"), "as for anyone");
         side.FindAll(".tl-ask button").Select(b => b.HasAttribute("disabled")).ShouldBe([true, true]);
@@ -135,18 +148,58 @@ public sealed class MyAgendaTests : BunitContext
     {
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
 
-        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Bills, Bills).Add(c => c.Numbers, Numbers));
+        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Numbers, Numbers));
 
-        panel.FindAll("#my-agenda li").Select(li => li.Id).ShouldBe(["my-agenda-XVP-0533", "my-agenda-XVP-0412"], "the member's own, in the page's order");
+        panel.FindAll("#my-agenda li").Select(li => li.Id).ShouldBe(["my-agenda-XVP-0533", "my-agenda-XVP-0412"], "the member's own, by planned date");
         var followed = panel.Find("#my-agenda-XVP-0533");
         followed.TextContent.ShouldContain(Text("Mine.NoSideAction"));
-        followed.TextContent.ShouldContain("svarstymas, lapkričio 13 d.: už 69 · prieš 31 · susilaikė 18");
+        followed.TextContent.ShouldContain($"{Display.Day(Today.AddDays(1))}");
+        followed.TextContent.ShouldContain($"{Display.Day(TwoDaysAgo)}: už 69, prieš 31, susilaikė 18");
         followed.QuerySelectorAll("button").ShouldBeEmpty("no share link without a side");
         var sided = panel.Find("#my-agenda-XVP-0412");
         sided.QuerySelector(".choice--for")!.TextContent.ShouldBe(Text("Mine.Side.for"));
         sided.QuerySelector("#my-agenda-share-XVP-0412").ShouldNotBeNull("the share link once they took a side");
-        _bills.Calls.ShouldBe(["GetAsync"]);
+        _bills.Calls.ShouldBe(["GetAsync"], "every listed bill is among the rows shown: one request");
         ((MyBillsQuery)_bills.Arguments[0][0]!).Numbers.ShouldBe(Numbers);
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-18: the timeline shows a few rows a day, so "Jūsų projektai" finds the member's followed bills on the
+    /// agenda or voted on in the last week from their own follows, not from the rows shown; their sides come in a request of
+    /// their own, and a followed bill neither planned nor voted on this week stays out.
+    /// </summary>
+    [Fact]
+    public void The_panel_finds_followed_bills_of_the_agenda_beyond_the_rows_shown()
+    {
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _follows.On("GetMineAsync", Follows(
+            Bill(Beyond, plannedIn: 5), Bill("XVP-0800", voted: DateTimeOffset.UtcNow.AddDays(-30)), Bill(Followed, voted: TwoDaysAgo), Bill(Sided, plannedIn: 3)));
+        _bills.OnEach("GetAsync",
+            Answer(consent: true, new MyBillResponse(Followed, null, true), new MyBillResponse(Sided, "for", true)),
+            Answer(consent: true, new MyBillResponse(Beyond, "against", true)));
+
+        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Numbers, Numbers));
+
+        panel.WaitForAssertion(() => panel.FindAll("#my-agenda li").Select(li => li.Id)
+            .ShouldBe(["my-agenda-XVP-0412", "my-agenda-XVP-0700", "my-agenda-XVP-0533"], "planned by date, then voted"));
+        panel.Find("#my-agenda-XVP-0700 .choice--against").TextContent.ShouldBe(Text("Mine.Side.against"));
+        _bills.Calls.ShouldBe(["GetAsync", "GetAsync"]);
+        ((MyBillsQuery)_bills.Arguments[1][0]!).Numbers.ShouldBe([Beyond], "only the bills the rows did not ask about");
+    }
+
+    [Fact]
+    public void The_panels_scope_is_the_agenda_and_the_last_week_and_its_requests_keep_within_the_limit()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var listed = MyAgendaState.OnTheAgenda(
+            [Bill("XVP-0003", voted: now.AddDays(-1)), Bill("XVP-0002", plannedIn: 4), Bill("XVP-0009", voted: now.AddDays(-8)), Bill("XVP-0001", plannedIn: 2, voted: now.AddDays(-20))],
+            now);
+        listed.Select(b => b.Number).ShouldBe(["XVP-0001", "XVP-0002", "XVP-0003"]);
+
+        var many = Enumerable.Range(1, MyBillsQuery.MaxNumbers * 2 + 1).Select(i => $"XVP-{i:0000}").ToList();
+        var requests = MyAgendaState.Requests(many).ToList();
+        requests.Select(r => r.Count).ShouldBe([MyBillsQuery.MaxNumbers, MyBillsQuery.MaxNumbers, 1]);
+        requests.SelectMany(r => r).ShouldBe(many);
     }
 
     /// <summary>
@@ -158,8 +211,9 @@ public sealed class MyAgendaTests : BunitContext
     {
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
         _bills.On("GetAsync", Answer(consent: true, new MyBillResponse(Followed, null, true), new MyBillResponse(Sided, "for", false)));
+        _follows.On("GetMineAsync", Follows(Bill(Followed, plannedIn: 1)));
 
-        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Bills, Bills).Add(c => c.Numbers, Numbers));
+        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Numbers, Numbers));
 
         panel.FindAll("#my-agenda li").Select(li => li.Id).ShouldBe(["my-agenda-XVP-0533"]);
         var mark = Mark(Sided, "2026-11-19-XVP-0412");
@@ -241,7 +295,8 @@ public sealed class MyAgendaTests : BunitContext
         _bills.OnEach("GetAsync",
             Answer(consent: true, new MyBillResponse(Sided, "for", true)),
             Answer(consent: true, new MyBillResponse(Sided, "for", true), new MyBillResponse(Other, "for", true)));
-        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Bills, Bills).Add(c => c.Numbers, Numbers));
+        _follows.OnEach("GetMineAsync", Follows(Bill(Sided, plannedIn: 1)), Follows(Bill(Sided, plannedIn: 1), Bill(Other, plannedIn: 2)));
+        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Numbers, Numbers));
         var mark = Mark(Other, "2026-11-19-XVP-0618");
         var side = Side(Other, "2026-11-19-XVP-0618");
         side.Find("#home-nobody-2026-11-19-XVP-0618").ShouldNotBeNull("the page's copy before the press");

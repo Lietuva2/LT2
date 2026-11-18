@@ -1,13 +1,13 @@
+using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Me;
 
 namespace Lt2.Web.Client.Agenda;
 
 /// <summary>
-/// One public bill of the front page's agenda as the member's panel shows it (design 8.7): number, title, the planned date
-/// and the last week's vote, already worded by the server. Public, the same for every member; the member's own side and
-/// follow are not in it.
+/// One row of "Jūsų projektai" (design 8.7): a bill the member follows that is on the agenda or was voted on in the last
+/// week, with the member's own side (null: none), all from the member's own answers.
 /// </summary>
-public sealed record MyAgendaBill(string Number, string Title, string? Planned, string? LastVote);
+public sealed record MyAgendaRow(FollowedBillResponse Bill, string? Side);
 
 /// <summary>
 /// The member's own answer for the front page: their rows by bill number, and whether they have given the positions
@@ -19,15 +19,20 @@ public sealed record MyAgendaAnswer(IReadOnlyDictionary<string, MyBillResponse> 
 /// <summary>
 /// The member's own answers for the front page (design 8.7), asked once in the browser and shared by its islands (the panel
 /// "Jūsų projektai", the marks under the titles and the side columns of the timeline's rows): one <c>/me/bills</c> request
-/// for all the bills shown, and the invitation answer for the share link. Never asked while the server prerenders, so
-/// nothing of it is in the page's HTML. A failed answer is not kept, so the next island asks again. After a member's own
-/// action in a row the answer is read again (<see cref="RefreshAsync"/>) and <see cref="Changed"/> tells every island.
+/// for all the bills shown (never more than <see cref="MyBillsQuery.MaxNumbers"/>), the member's follows for the panel, and
+/// the invitation answer for the share link. Never asked while the server prerenders, so nothing of it is in the page's
+/// HTML. A failed answer is not kept, so the next island asks again. After a member's own action in a row the answers are
+/// read again (<see cref="RefreshAsync"/>) and <see cref="Changed"/> tells every island.
 /// </summary>
-public sealed class MyAgendaState(IMyBillsApi bills, IMeApi me)
+public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, IMeApi me, TimeProvider clock)
 {
+    /// <summary>"Voted on in the last week": the agenda's recent votes reach this far back (design 8.11.1).</summary>
+    public const int RecentDays = 7;
+
     private IReadOnlyList<string> _numbers = [];
     private string? _key;
     private Task<MyAgendaAnswer?>? _mine;
+    private Task<IReadOnlyList<MyAgendaRow>?>? _panel;
     private Task<MyInvitationResponse?>? _invitation;
 
     /// <summary>The member's own answer changed (a side taken, changed or withdrawn): read it again.</summary>
@@ -61,6 +66,8 @@ public sealed class MyAgendaState(IMyBillsApi bills, IMeApi me)
 
         try
         {
+            // Taking a side may also have followed the bill (design 8.11.2): the panel reads the follows again.
+            _panel = null;
             if (await FetchAsync(_numbers) is { } fresh)
             {
                 _mine = Task.FromResult<MyAgendaAnswer?>(fresh);
@@ -70,6 +77,86 @@ public sealed class MyAgendaState(IMyBillsApi bills, IMeApi me)
         {
             Changed?.Invoke();
         }
+    }
+
+    /// <summary>
+    /// "Jūsų projektai" (design 8.7, owner 2026-11-17: followed only): the bills the member follows that are on the agenda
+    /// (a planned date from today on) or were voted on in the last week, whichever days and rows the page shows; planned ones
+    /// first by date, then by their last vote, newest first. Their own side comes from the page's shared answer for a bill
+    /// the page shows, and from <c>/me/bills</c> for the others, a request per <see cref="MyBillsQuery.MaxNumbers"/> bills.
+    /// Null when an answer failed.
+    /// </summary>
+    public Task<IReadOnlyList<MyAgendaRow>?> PanelAsync(IReadOnlyList<string> shown)
+    {
+        if (_panel is null || _panel.IsFaulted || (_panel.IsCompletedSuccessfully && _panel.Result is null))
+        {
+            _panel = PanelFetchAsync(shown);
+        }
+
+        return _panel;
+    }
+
+    /// <summary>The followed bills the panel lists, in its order (a pure rule of the panel's scope, design 8.7).</summary>
+    public static IReadOnlyList<FollowedBillResponse> OnTheAgenda(IEnumerable<FollowedBillResponse> followed, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(followed);
+        var since = now.AddDays(-RecentDays);
+        var list = followed.Where(b => b.Planned is not null || b.LastStageResult?.HeldAt >= since).ToList();
+        return list.Where(b => b.Planned is not null).OrderBy(b => b.Planned!.Date).ThenBy(b => b.Number, StringComparer.Ordinal)
+            .Concat(list.Where(b => b.Planned is null).OrderByDescending(b => b.LastStageResult!.HeldAt).ThenBy(b => b.Number, StringComparer.Ordinal))
+            .ToList();
+    }
+
+    /// <summary>Bill numbers in requests of at most <see cref="MyBillsQuery.MaxNumbers"/>, none empty.</summary>
+    public static IEnumerable<IReadOnlyList<string>> Requests(IReadOnlyList<string> numbers)
+    {
+        ArgumentNullException.ThrowIfNull(numbers);
+        for (var i = 0; i < numbers.Count; i += MyBillsQuery.MaxNumbers)
+        {
+            yield return numbers.Skip(i).Take(MyBillsQuery.MaxNumbers).ToList();
+        }
+    }
+
+    private async Task<IReadOnlyList<MyAgendaRow>?> PanelFetchAsync(IReadOnlyList<string> shownNumbers)
+    {
+        if ((await follows.GetMineAsync()).Value is not { } mine)
+        {
+            return null;
+        }
+
+        var listed = OnTheAgenda(mine.Bills, clock.GetUtcNow());
+        if (listed.Count == 0)
+        {
+            return [];
+        }
+
+        var shown = await MineAsync(shownNumbers);
+        if (shown is null)
+        {
+            return null;
+        }
+
+        var sides = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (number, own) in shown.Bills)
+        {
+            sides[number] = own.Side;
+        }
+
+        var asked = new HashSet<string>(shownNumbers.Take(MyBillsQuery.MaxNumbers), StringComparer.OrdinalIgnoreCase);
+        foreach (var part in Requests(listed.Select(b => b.Number).Where(n => !asked.Contains(n)).ToList()))
+        {
+            if ((await bills.GetAsync(new MyBillsQuery { Numbers = part })).Value is not { } answer)
+            {
+                return null;
+            }
+
+            foreach (var own in answer.Bills)
+            {
+                sides[own.Number] = own.Side;
+            }
+        }
+
+        return listed.Select(b => new MyAgendaRow(b, sides.GetValueOrDefault(b.Number))).ToList();
     }
 
     /// <summary>Notes the consent as given, or as missing when the server refused a side without it.</summary>
@@ -99,6 +186,7 @@ public sealed class MyAgendaState(IMyBillsApi bills, IMeApi me)
             return new MyAgendaAnswer(new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase), false);
         }
 
+        // The page asks about at most the rows it shows (design 8.7: twenty), always within the API's limit.
         var answer = await bills.GetAsync(new MyBillsQuery { Numbers = numbers.Take(MyBillsQuery.MaxNumbers).ToList() });
         return answer.Value is { } value
             ? new MyAgendaAnswer(value.Bills.ToDictionary(b => b.Number, StringComparer.OrdinalIgnoreCase), value.HasPositionConsent, value.MpAccount)

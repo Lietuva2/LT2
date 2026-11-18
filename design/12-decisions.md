@@ -414,3 +414,18 @@ Each is built as written; "no" names what changes.
   letter) lists the newest first and shows each version against the one before it, word by word, the oldest whole; inserted words in `<ins>`,
   removed in `<del>`, neutral marks with hidden "pridėta:" and "pašalinta:"; the text before each change whole under "Rodyti tekstą prieš pakeitimą" (it was the text after it, "Rodyti visą tekstą", until the owner saw it).
   An organisation's names and websites stay "A → B", also newest first. One pure function (`TextDiff`), no new library, its work capped.
+
+**Decided by the owner on 2026-11-18: the lists' lengths with a real-sized parliament (8.7, 8.11.1, 8.12.5, 8.18, 8.3)**
+
+- Resolves "Found with the stand-in's real-sized parliament", 2 (the front page's "Balsuota" length). The front page shows
+  the next two sitting days and the last two voting days, five rows of each, with "Visi N projektų →" to the day on the
+  agenda page and "Dar N balsavimų →" to the day on the history of votes; at most twenty rows.
+- A day's rows go by activity (participants plus published arguments), then stage (priėmimas, svarstymas, pateikimas; a
+  combined stage as its furthest), then number; bills the open data does not know yet last, folded into one line.
+  Followers never rank anything; a member's followed bills are not moved up in the server's page ("Jūsų projektai" is
+  their place, and finds them on the whole agenda).
+- The agenda page: every day a block with its count, ten rows, then "Rodyti visus N" opening the rest without script;
+  the recently voted list by day the same way. It reads the front page's minute-old copy.
+- `/projektai` and an MP's votes grow in place by the address (`?rodyti=`), as the history of votes does; the arguments'
+  "show all" works without script (`?argumentai=visi`); every moderators' list says "Rodoma 100 iš N" when cut.
+- The numbers (2 days, 5 a day, 10 a day, 20 a page and so on) are the design's, not settings.

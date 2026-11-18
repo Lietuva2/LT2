@@ -79,6 +79,22 @@
   <data name="Agenda.Planned" xml:space="preserve"><value>Planuojama</value></data>
   <data name="Agenda.Voted" xml:space="preserve"><value>Balsuota</value></data>
   <data name="Agenda.Older" xml:space="preserve"><value>Ankstesni balsavimai →</value></data>
+  <data name="Agenda.Bills.One" xml:space="preserve"><value>{0} projektas</value></data>
+  <data name="Agenda.Bills.Few" xml:space="preserve"><value>{0} projektai</value></data>
+  <data name="Agenda.Bills.Many" xml:space="preserve"><value>{0} projektų</value></data>
+  <data name="Agenda.Votes.One" xml:space="preserve"><value>{0} balsavimas</value></data>
+  <data name="Agenda.Votes.Few" xml:space="preserve"><value>{0} balsavimai</value></data>
+  <data name="Agenda.Votes.Many" xml:space="preserve"><value>{0} balsavimų</value></data>
+  <data name="Agenda.ShowAll" xml:space="preserve"><value>Rodyti visus {0}</value></data>
+  <data name="Agenda.Unknown.One" xml:space="preserve"><value>Dar {0} projektas, kurio atviruosiuose Seimo duomenyse dar nėra</value></data>
+  <data name="Agenda.Unknown.Few" xml:space="preserve"><value>Dar {0} projektai, kurių atviruosiuose Seimo duomenyse dar nėra</value></data>
+  <data name="Agenda.Unknown.Many" xml:space="preserve"><value>Dar {0} projektų, kurių atviruosiuose Seimo duomenyse dar nėra</value></data>
+  <data name="Home.DayAll.One" xml:space="preserve"><value>Visi {0} projektas →</value></data>
+  <data name="Home.DayAll.Few" xml:space="preserve"><value>Visi {0} projektai →</value></data>
+  <data name="Home.DayAll.Many" xml:space="preserve"><value>Visi {0} projektų →</value></data>
+  <data name="Home.VotesMore.One" xml:space="preserve"><value>Dar {0} balsavimas →</value></data>
+  <data name="Home.VotesMore.Few" xml:space="preserve"><value>Dar {0} balsavimai →</value></data>
+  <data name="Home.VotesMore.Many" xml:space="preserve"><value>Dar {0} balsavimų →</value></data>
   <data name="Notice.DigestReview" xml:space="preserve"><value>Suvestinė Seimo nariams išeis {0}: {1}, {2}.</value></data>
   <data name="Notice.DigestReview.Bills" xml:space="preserve"><value>{0} projektas|{0} projektai|{0} projektų</value></data>
   <data name="Notice.DigestReview.Reasons" xml:space="preserve"><value>{0} argumentas|{0} argumentai|{0} argumentų</value></data>

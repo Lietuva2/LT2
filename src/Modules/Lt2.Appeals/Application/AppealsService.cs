@@ -30,6 +30,9 @@ internal sealed class AppealsService(
 {
     private const int PageSize = 20;
 
+    /// <summary>The most bills one list answer holds (owner, 2026-11-18: <c>/projektai</c> grows in place up to this many).</summary>
+    private const int MaxPageSize = 200;
+
     /// <summary>"Planuojami artimiausiu metu" (design 8.12.5): a planned date within this many days from today.</summary>
     private const int SoonDays = 14;
 
@@ -40,11 +43,12 @@ internal sealed class AppealsService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var threshold = await reads.ThresholdSettingsAsync(cancellationToken);
         var offset = int.TryParse(query.Cursor, NumberStyles.None, CultureInfo.InvariantCulture, out var o) ? o : 0;
+        var size = Math.Clamp(query.Limit ?? PageSize, 1, MaxPageSize);
 
         if (query.Closed)
         {
             // The closed tab (design 8.12.5): records the Seimas finished, newest first, with their frozen counts.
-            var (closedPage, total) = await ClosedPageAsync(db, query.Search, offset, cancellationToken);
+            var (closedPage, total) = await ClosedPageAsync(db, query.Search, offset, size, cancellationToken);
             var closedFacts = await reads.BillsAsync(closedPage.Select(a => a.BillNumber).ToList(), cancellationToken);
             var shownCounts = await reads.ShownCountsAsync(db, closedPage, cancellationToken);
             var closedArguments = await ArgumentCountsAsync(db, closedPage.Select(a => a.Id).ToList(), cancellationToken);
@@ -58,7 +62,9 @@ internal sealed class AppealsService(
         }
 
         // Active bills (design 8.12.1): in the catalogue and not finished; a bill whose record is hidden or closed is not
-        // offered here.
+        // offered here. Composed in memory, not paged in the database: the bills, their titles and planned dates are the
+        // Parliament module's and the sides and arguments this module's, and no module reads another's tables (AGENTS.md).
+        // A few hundred active bills cost five reads; only the asked part is mapped and sent (owner, 2026-11-18).
         var active = (await bills.ActiveAsync(cancellationToken)).Where(b => BillListRules.Matches(query.Search, b.Number, b.Title)).ToList();
         var numbers = active.Select(b => b.Number).ToList();
         var recordsOnBills = await db.BillRecords.AsNoTracking().Records()
@@ -82,7 +88,7 @@ internal sealed class AppealsService(
             });
         var ordered = BillListRules.Order(
             candidates, BillSorts.Of(query.Sort), i => i.Counts.Total, i => i.Arguments, i => i.Planned?.Date, i => i.Bill.Number, i => i.LastActivityAt);
-        var page = ordered.Skip(Math.Min(offset, ordered.Count)).Take(PageSize).ToList();
+        var page = ordered.Skip(Math.Min(offset, ordered.Count)).Take(size).ToList();
         return new BillListPage(page, ordered.Count, Next(offset, page.Count, ordered.Count));
     }
 
@@ -90,18 +96,18 @@ internal sealed class AppealsService(
     /// One page of the closed tab, newest closing first, and how many there are. Paged in the database; a search, which
     /// matches the titles the Parliament module holds, first narrows the closed bills' numbers.
     /// </summary>
-    private async Task<(List<BillRecord> Page, int Total)> ClosedPageAsync(AppealsDb db, string? search, int offset, CancellationToken ct)
+    private async Task<(List<BillRecord> Page, int Total)> ClosedPageAsync(AppealsDb db, string? search, int offset, int size, CancellationToken ct)
     {
         var closed = db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Closed);
         if (string.IsNullOrWhiteSpace(search))
         {
-            return (await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Skip(offset).Take(PageSize).ToListAsync(ct), await closed.CountAsync(ct));
+            return (await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Skip(offset).Take(size).ToListAsync(ct), await closed.CountAsync(ct));
         }
 
         var numbers = await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Select(a => a.BillNumber).ToListAsync(ct);
         var titles = await reads.BillsAsync(numbers, ct);
         var matching = numbers.Where(n => BillListRules.Matches(search, n, titles.GetValueOrDefault(n)?.Title ?? "")).ToList();
-        var pageNumbers = matching.Skip(offset).Take(PageSize).ToList();
+        var pageNumbers = matching.Skip(offset).Take(size).ToList();
         var page = await closed.Where(a => pageNumbers.Contains(a.BillNumber)).OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).ToListAsync(ct);
         return (page, matching.Count);
     }
@@ -1002,7 +1008,9 @@ internal sealed class AppealsService(
         var recordsOnBills = await db.BillRecords.AsNoTracking().Records()
             .Where(a => numbers.Contains(a.BillNumber))
             .ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, cancellationToken);
-        var shownCounts = await reads.ShownCountsAsync(db, recordsOnBills.Values.Where(a => a.Status != BillRecordStatuses.Rejected).ToList(), cancellationToken);
+        var shownRecords = recordsOnBills.Values.Where(a => a.Status != BillRecordStatuses.Rejected).ToList();
+        var shownCounts = await reads.ShownCountsAsync(db, shownRecords, cancellationToken);
+        var arguments = await ArgumentCountsAsync(db, shownRecords.Select(a => a.Id).ToList(), cancellationToken);
         var threshold = await reads.ThresholdSettingsAsync(cancellationToken);
         return numbers.Where(known.ContainsKey).ToDictionary(
             n => n,
@@ -1015,7 +1023,7 @@ internal sealed class AppealsService(
 
                 // A hidden record shows no numbers (design 8.12.3).
                 var shown = shownCounts.GetValueOrDefault(record.Id) ?? SideCounts.None;
-                return new BillRecordState(n, record.Id, record.Status, shown, AppealReads.Threshold(record, shown, threshold));
+                return new BillRecordState(n, record.Id, record.Status, shown, AppealReads.Threshold(record, shown, threshold), arguments.GetValueOrDefault(record.Id));
             },
             StringComparer.Ordinal);
     }

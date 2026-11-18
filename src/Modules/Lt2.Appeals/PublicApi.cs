@@ -82,7 +82,8 @@ public sealed record BillRecordInfo(
 /// </summary>
 /// <param name="RecordId">The record; null while the bill has none.</param>
 /// <param name="Status"><c>open</c>, <c>closed</c>, or <c>rejected</c>.</param>
-public sealed record BillRecordState(string BillNumber, Guid? RecordId, string Status, SideCounts Counts, ThresholdInfo Threshold);
+/// <param name="Arguments">The record's published arguments, for the agenda's order by activity (design 8.11.1); 0 for a hidden record.</param>
+public sealed record BillRecordState(string BillNumber, Guid? RecordId, string Status, SideCounts Counts, ThresholdInfo Threshold, int Arguments = 0);
 
 /// <summary>
 /// The surge note (design 6.6): in the last <paramref name="WindowHours"/> hours, <paramref name="SharePercent"/> % of the
@@ -102,9 +103,10 @@ public sealed record BillListPage(IReadOnlyList<BillListItem> Items, int Total, 
 
 /// <summary>
 /// What <c>/projektai</c> asks for (design 8.12.5): active bills (or, with <paramref name="Closed"/>, closed records), a
-/// search by number or title, only those planned soon, the order (<see cref="BillSorts"/>; activity by default) and the page.
+/// search by number or title, only those planned soon, the order (<see cref="BillSorts"/>; activity by default) and the page:
+/// <paramref name="Limit"/> bills (20 when none; 1 to 200) from <paramref name="Cursor"/> on.
 /// </summary>
-public sealed record BillListQuery(string? Search = null, bool PlannedOnly = false, bool Closed = false, string? Cursor = null, string? Sort = null);
+public sealed record BillListQuery(string? Search = null, bool PlannedOnly = false, bool Closed = false, string? Cursor = null, string? Sort = null, int? Limit = null);
 
 /// <summary>The orders of <c>/projektai</c> (design 8.12.5, decided 2026-11-14; <see cref="Latest"/> owner, 2026-11-17).</summary>
 public static class BillSorts
@@ -226,8 +228,16 @@ public sealed record QueueReason(
     public int Comments { get; init; }
 }
 
-/// <summary>The moderators' queue (design 8.12.3): bills' records that need a look, and arguments.</summary>
-public sealed record ModerationItems(IReadOnlyList<QueueRecord> Records, IReadOnlyList<QueueReason> Reasons);
+/// <summary>
+/// The moderators' queue (design 8.12.3): bills' records that need a look, and arguments; at most a hundred of each, and how
+/// many there are in all (owner, 2026-11-18: "Rodoma 100 iš N").
+/// </summary>
+public sealed record ModerationItems(IReadOnlyList<QueueRecord> Records, IReadOnlyList<QueueReason> Reasons)
+{
+    public int RecordsTotal { get; init; }
+
+    public int ReasonsTotal { get; init; }
+}
 
 /// <summary>
 /// A moderator writes or corrects a bill's description (design 8.12.3, 8.13); <c>FromDraft</c>: it started from an AI draft.
