@@ -182,9 +182,12 @@ class Numbers:
     def __init__(self, rng: random.Random):
         self.rng = rng
         self.used: set[int] = set()
+        # The first upcoming day takes none of the last term's numbers: XIVP- sorts before XVP-, and the front page shows
+        # the first eight planned bills by number, the demonstration bills first.
+        self.last_term = True
 
     def take(self, count: int, new: bool) -> list[str]:
-        if not new and self.rng.random() < 0.03:
+        if not new and self.last_term and self.rng.random() < 0.03:
             return [f"XIVP-{self.rng.randint(3100, 3999):04d}" for _ in range(count)]
         low, high = (1700, 2089) if new else (900, 1699)
         for _ in range(10_000):
@@ -284,6 +287,7 @@ def plan() -> tuple[World, list[list[Row]], list[list[Row]]]:
         target = _target(rng)
         bias = {s: v * rng.uniform(0.6, 1.5) for s, v in STAGE_MIX.items()}
         rows: list[Row] = []
+        w.numbers.last_term = d != 0
         if d == 0:
             # The demonstration bills first (the front page shows the first eight planned bills, by number).
             rows += [Row(special["XVP-0412"], ADOPT), Row(special["XVP-0533"], ADOPT), Row(special["XVP-0618"], ADOPT), Row(special["XVP-0777"], PRESENT)]

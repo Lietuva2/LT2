@@ -6,14 +6,14 @@
      answer whatever their date because the import reads a closed session's sittings only once. --><SeimoInformacija>
   <SeimoSesija sesijos_id="99000102" pavadinimas="Rudens sesija" data_nuo="2026-09-10" data_iki="">
     <SeimoPosėdis posėdžio_id="99001101" numeris="241" tipas="Rytinis" pradžia="2026-09-15 10:00" pabaiga="2026-09-15 13:15"/>
-    <SeimoPosėdis posėdžio_id="99001340" numeris="261" tipas="Rytinis" pradžia="{{past:4}} 10:00" pabaiga="{{past:4}} 12:27"/>
-    <SeimoPosėdis posėdžio_id="99001341" numeris="262" tipas="Vakarinis" pradžia="{{past:4}} 14:00" pabaiga="{{past:4}} 15:28"/>
-    <SeimoPosėdis posėdžio_id="99001330" numeris="263" tipas="Rytinis" pradžia="{{past:3}} 10:00" pabaiga="{{past:3}} 12:03"/>
-    <SeimoPosėdis posėdžio_id="99001331" numeris="264" tipas="Vakarinis" pradžia="{{past:3}} 14:00" pabaiga="{{past:3}} 16:12"/>
-    <SeimoPosėdis posėdžio_id="99001320" numeris="265" tipas="Rytinis" pradžia="{{past:2}} 10:00" pabaiga="{{past:2}} 15:21"/>
-    <SeimoPosėdis posėdžio_id="99001321" numeris="266" tipas="Vakarinis" pradžia="{{past:2}} 14:00" pabaiga="{{past:2}} 18:56"/>
-    <SeimoPosėdis posėdžio_id="99001102" numeris="267" tipas="Rytinis" pradžia="{{past:1}} 10:00" pabaiga="{{past:1}} 14:45"/>
-    <SeimoPosėdis posėdžio_id="99001311" numeris="268" tipas="Vakarinis" pradžia="{{past:1}} 14:00" pabaiga="{{past:1}} 16:52"/>
+    <SeimoPosėdis posėdžio_id="99001340" numeris="261" tipas="Rytinis" pradžia="{{past:4}} 10:00" pabaiga="{{past:4}} 13:31"/>
+    <SeimoPosėdis posėdžio_id="99001341" numeris="262" tipas="Vakarinis" pradžia="{{past:4}} 14:00" pabaiga="{{past:4}} 14:48"/>
+    <SeimoPosėdis posėdžio_id="99001330" numeris="263" tipas="Rytinis" pradžia="{{past:3}} 10:00" pabaiga="{{past:3}} 13:11"/>
+    <SeimoPosėdis posėdžio_id="99001331" numeris="264" tipas="Vakarinis" pradžia="{{past:3}} 14:00" pabaiga="{{past:3}} 16:14"/>
+    <SeimoPosėdis posėdžio_id="99001320" numeris="265" tipas="Rytinis" pradžia="{{past:2}} 10:00" pabaiga="{{past:2}} 14:47"/>
+    <SeimoPosėdis posėdžio_id="99001321" numeris="266" tipas="Vakarinis" pradžia="{{past:2}} 14:00" pabaiga="{{past:2}} 16:43"/>
+    <SeimoPosėdis posėdžio_id="99001102" numeris="267" tipas="Rytinis" pradžia="{{past:1}} 10:00" pabaiga="{{past:1}} 12:53"/>
+    <SeimoPosėdis posėdžio_id="99001311" numeris="268" tipas="Vakarinis" pradžia="{{past:1}} 14:00" pabaiga="{{past:1}} 16:36"/>
     <SeimoPosėdis posėdžio_id="99001201" numeris="204" tipas="Rytinis" pradžia="2026-03-24 10:00" pabaiga="2026-03-24 12:47"/>
     <SeimoPosėdis posėdžio_id="99001202" numeris="207" tipas="Vakarinis" pradžia="2026-04-02 14:00" pabaiga="2026-04-02 16:31"/>
     <SeimoPosėdis posėdžio_id="99001203" numeris="215" tipas="Rytinis" pradžia="2026-04-23 10:00" pabaiga="2026-04-23 12:34"/>

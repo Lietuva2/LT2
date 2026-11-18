@@ -7,61 +7,109 @@
       <Balsavimas balsavimo_id="99103001" balsavimo_laikas="{{past:4}} 10:01:08" aprašas="Dėl posėdžio darbotvarkės" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134002">
-      <Balsavimas balsavimo_id="99103002" balsavimo_laikas="{{past:4}} 11:20:18" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103002" balsavimo_laikas="{{past:4}} 11:34:54" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134003">
-      <Balsavimas balsavimo_id="99103003" balsavimo_laikas="{{past:4}} 11:21:01" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103003" balsavimo_laikas="{{past:4}} 11:35:56" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134004">
-      <Balsavimas balsavimo_id="99103004" balsavimo_laikas="{{past:4}} 11:22:12" aprašas="Pritarti Seimo nario pasiūlymui" balsavimo_tipas="Atviras"/>
-    </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134004">
-      <Balsavimas balsavimo_id="99103005" balsavimo_laikas="{{past:4}} 11:23:03" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103004" balsavimo_laikas="{{past:4}} 11:36:39" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134005">
-      <Balsavimas balsavimo_id="99103006" balsavimo_laikas="{{past:4}} 11:23:43" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103005" balsavimo_laikas="{{past:4}} 11:37:50" aprašas="Pritarti Seimo nario pasiūlymui" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134005">
+      <Balsavimas balsavimo_id="99103006" balsavimo_laikas="{{past:4}} 11:38:41" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134006">
-      <Balsavimas balsavimo_id="99103007" balsavimo_laikas="{{past:4}} 11:24:49" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103007" balsavimo_laikas="{{past:4}} 11:39:21" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134007">
-      <Balsavimas balsavimo_id="99103008" balsavimo_laikas="{{past:4}} 11:26:03" aprašas="Pritarti Seimo nario pasiūlymui" balsavimo_tipas="Atviras"/>
-    </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134007">
-      <Balsavimas balsavimo_id="99103009" balsavimo_laikas="{{past:4}} 11:26:58" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+      <Balsavimas balsavimo_id="99103008" balsavimo_laikas="{{past:4}} 11:40:27" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134008">
-      <Balsavimas balsavimo_id="99103010" balsavimo_laikas="{{past:4}} 11:28:03" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103009" balsavimo_laikas="{{past:4}} 11:41:09" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134009">
-      <Balsavimas balsavimo_id="99103011" balsavimo_laikas="{{past:4}} 11:29:03" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103010" balsavimo_laikas="{{past:4}} 11:42:04" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134010">
-      <Balsavimas balsavimo_id="99103012" balsavimo_laikas="{{past:4}} 11:30:21" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103011" balsavimo_laikas="{{past:4}} 11:43:18" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134011">
-      <Balsavimas balsavimo_id="99103013" balsavimo_laikas="{{past:4}} 12:04:05" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103012" balsavimo_laikas="{{past:4}} 11:44:46" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134012">
-      <Balsavimas balsavimo_id="99103014" balsavimo_laikas="{{past:4}} 12:05:13" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+      <Balsavimas balsavimo_id="99103013" balsavimo_laikas="{{past:4}} 11:46:13" aprašas="Pritarti Seimo nario pasiūlymui" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134012">
+      <Balsavimas balsavimo_id="99103014" balsavimo_laikas="{{past:4}} 11:47:31" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134013">
-      <Balsavimas balsavimo_id="99103015" balsavimo_laikas="{{past:4}} 12:06:15" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+      <Balsavimas balsavimo_id="99103015" balsavimo_laikas="{{past:4}} 11:49:02" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134014">
-      <Balsavimas balsavimo_id="99103016" balsavimo_laikas="{{past:4}} 12:06:55" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+      <Balsavimas balsavimo_id="99103016" balsavimo_laikas="{{past:4}} 11:50:13" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134015">
-      <Balsavimas balsavimo_id="99103017" balsavimo_laikas="{{past:4}} 12:08:09" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+      <Balsavimas balsavimo_id="99103017" balsavimo_laikas="{{past:4}} 11:51:42" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134016">
-      <Balsavimas balsavimo_id="99103018" balsavimo_laikas="{{past:4}} 12:09:43" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+      <Balsavimas balsavimo_id="99103018" balsavimo_laikas="{{past:4}} 12:56:10" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134017">
-      <Balsavimas balsavimo_id="99103019" balsavimo_laikas="{{past:4}} 12:10:43" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103019" balsavimo_laikas="{{past:4}} 12:57:30" aprašas="Priimti" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134018">
-      <Balsavimas balsavimo_id="99103020" balsavimo_laikas="{{past:4}} 12:11:48" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99103020" balsavimo_laikas="{{past:4}} 12:58:18" aprašas="Priimti" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134019">
+      <Balsavimas balsavimo_id="99103021" balsavimo_laikas="{{past:4}} 12:59:45" aprašas="Pritarti Seimo nario pasiūlymui" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134019">
+      <Balsavimas balsavimo_id="99103022" balsavimo_laikas="{{past:4}} 13:00:54" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134020">
+      <Balsavimas balsavimo_id="99103023" balsavimo_laikas="{{past:4}} 13:01:37" aprašas="Pritarti po svarstymo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134021">
+      <Balsavimas balsavimo_id="99103024" balsavimo_laikas="{{past:4}} 13:02:53" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134022">
+      <Balsavimas balsavimo_id="99103025" balsavimo_laikas="{{past:4}} 13:03:49" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134023">
+      <Balsavimas balsavimo_id="99103026" balsavimo_laikas="{{past:4}} 13:04:54" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134024">
+      <Balsavimas balsavimo_id="99103027" balsavimo_laikas="{{past:4}} 13:06:28" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134025">
+      <Balsavimas balsavimo_id="99103028" balsavimo_laikas="{{past:4}} 13:07:21" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134026">
+      <Balsavimas balsavimo_id="99103029" balsavimo_laikas="{{past:4}} 13:08:07" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134027">
+      <Balsavimas balsavimo_id="99103030" balsavimo_laikas="{{past:4}} 13:09:00" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134028">
+      <Balsavimas balsavimo_id="99103031" balsavimo_laikas="{{past:4}} 13:09:45" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134029">
+      <Balsavimas balsavimo_id="99103032" balsavimo_laikas="{{past:4}} 13:11:10" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134030">
+      <Balsavimas balsavimo_id="99103033" balsavimo_laikas="{{past:4}} 13:12:31" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134031">
+      <Balsavimas balsavimo_id="99103034" balsavimo_laikas="{{past:4}} 13:13:53" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134032">
+      <Balsavimas balsavimo_id="99103035" balsavimo_laikas="{{past:4}} 13:14:52" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134033">
+      <Balsavimas balsavimo_id="99103036" balsavimo_laikas="{{past:4}} 13:15:42" aprašas="Pritarti po pateikimo" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
   </SeimoPosėdis>
 </SeimoInformacija>
