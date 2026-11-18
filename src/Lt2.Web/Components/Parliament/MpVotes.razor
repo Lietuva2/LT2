@@ -38,10 +38,9 @@
                     </div>
                 </section>
             }
-            @if (MpVotePaging.More(_shown, votes.NextCursor is not null) is { } more)
-            {
-                <p><a class="btn btn--plain" href="@(Address(Cursor, more) + "#" + MpVotePaging.Row(_shown + 1))" id="mp-votes-more">@F.T["Ballots.More"]</a></p>
-            }
+            @* The shared "show more" (owner, 2026-11-19); the votes come by a cursor without a total, so no "Rodoma N iš M". *@
+            <Lt2.Web.Client.Components.ShowMore Id="mp-votes-more" Shown="votes.Items.Count"
+                Href="@(MpVotePaging.More(_shown, votes.NextCursor is not null) is { } more ? Address(Cursor, more) + "#" + MpVotePaging.Row(_shown + 1) : null)" />
         }
     </div>
 

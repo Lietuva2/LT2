@@ -145,17 +145,13 @@
                     @(" · ")<Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@T["Threshold.What"]" Answer="@(T["Threshold.Meaning"] + " " + T.Format("Threshold.NowList", Display.Number(threshold)))" More="/metodika#riba" />
                 }</p>
             @* Owner, 2026-11-18: the list grows in place by the address, landing on the first bill added (as 8.18). *@
-            <div class="row">
-                <p class="small num" role="status" id="shown">@F.T.Format("Ballots.Shown", Display.Number(_offset + Math.Min(_shown, page.Items.Count)), Display.Number(page.Total))</p>
-                @if (BillListPaging.More(_shown, _offset, page.Total) is { } more && page.Items.Count > _shown)
-                {
-                    <a class="btn btn--plain" href="@(Link(From, Sort, Planned, more) + "#bill-" + page.Items[_shown].Bill.Number)" id="more">@T["List.More"]</a>
-                }
+            <Lt2.Web.Client.Components.ShowMore Id="more" StatusId="shown" Shown="_offset + Math.Min(_shown, page.Items.Count)" Total="page.Total"
+                Href="@(BillListPaging.More(_shown, _offset, page.Total) is { } more && page.Items.Count > _shown ? Link(From, Sort, Planned, more) + "#bill-" + page.Items[_shown].Bill.Number : null)">
                 @if (BillListPaging.Further(_shown, _offset, page.Total) is { } further)
                 {
                     <a class="btn btn--plain" href="@Link(further.ToString(System.Globalization.CultureInfo.InvariantCulture), Sort, Planned)" id="further">@T["List.Further"]</a>
                 }
-            </div>
+            </Lt2.Web.Client.Components.ShowMore>
         }
     </div>
 }

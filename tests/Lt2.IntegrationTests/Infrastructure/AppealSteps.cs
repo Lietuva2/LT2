@@ -66,6 +66,28 @@ public static class AppealSteps
     public static Task<HttpResponseMessage> TakeSideAsync(this TestBrowser browser, string number, string side) =>
         browser.SendAsync(HttpMethod.Put, AppealRoutes.PositionOf(number), new PositionRequest { Side = side });
 
+    /// <summary>
+    /// Every published argument of the bill, "už" then "prieš", each side in the page's order (owner, 2026-11-19: the bill's answer
+    /// carries each side's first two only; the rest comes a page at a time).
+    /// </summary>
+    public static async Task<List<ReasonResponse>> AllReasonsAsync(this TestBrowser browser, string number)
+    {
+        var all = new List<ReasonResponse>();
+        foreach (var side in new[] { "for", "against" })
+        {
+            string? cursor = null;
+            do
+            {
+                var page = await browser.GetJsonAsync<ReasonPageResponse>(AppealRoutes.ReasonPageOf(number, side, cursor, ReasonLimits.Max));
+                all.AddRange(page.Items);
+                cursor = page.NextCursor;
+            }
+            while (cursor is not null);
+        }
+
+        return all;
+    }
+
     public static Task<HttpResponseMessage> WriteReasonAsync(this TestBrowser browser, string number, string side, string text) =>
         browser.PostAsync(AppealRoutes.ReasonsOf(number), new ReasonRequest { Side = side, Text = text });
 

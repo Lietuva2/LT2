@@ -263,14 +263,10 @@
                     </div>
                     <p class="small" id="compare-plot-note">@T.Format("Compare.PlotNote", Display.Number(d.SmallSample))</p>
                 }
-                <div class="row">
-                    <p class="small num" role="status" id="compare-shown">@F.T.Format("Ballots.Shown", Display.Number(shown.Count), Display.Number(d.BillsFound))</p>
-                    @if (AnalyticsList.More(_state, d.BillsFound, next?.Number, next is not null && InPlot(next)) is { } more)
-                    {
-                        @* Lands on the first bill added when the plot has it, so the reader goes on where they stopped (as the history of votes, 8.18). *@
-                        <a class="btn btn--plain" href="@more" id="compare-more">@F.T["Ballots.More"]</a>
-                    }
-                </div>
+                @* The shared "show more" (owner, 2026-11-19): lands on the first bill added when the plot has it, so the reader goes on
+                   where they stopped (as the history of votes, 8.18); enhanced navigation swaps the page in without a reload. *@
+                <Lt2.Web.Client.Components.ShowMore Id="compare-more" StatusId="compare-shown" Shown="shown.Count" Total="d.BillsFound"
+                    Href="@AnalyticsList.More(_state, d.BillsFound, next?.Number, next is not null && InPlot(next))" />
                 @* The same bills as the plot, every one of them, with the exact numbers; open at once when the plot has none. *@
                 <details class="more stack stack--tight" id="compare-table" open="@(dots.Count == 0)">
                     <summary class="linkish small">@T["Compare.Table"]</summary>

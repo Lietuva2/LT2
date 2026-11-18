@@ -43,7 +43,7 @@ that starts with it. Read the files a change touches, not the whole design.
 | [08.13-description.md](08.13-description.md) | The description ("Apie ką projektas") and the AI summary job |
 | [08.14-organisations.md](08.14-organisations.md) | Organisations: registration, confirmation, representatives, statements |
 | [08.15-explanatory-text.md](08.15-explanatory-text.md) | Explanatory text on screens; hints and disclosures |
-| [08.16-surfaces.md](08.16-surfaces.md) | Surfaces (sheet and ground), the action row, joined buttons, one green for the sides and the bubbles |
+| [08.16-surfaces.md](08.16-surfaces.md) | Surfaces (sheet and ground), the action row, joined buttons, one green for the sides and the bubbles, one "show more" under every long list |
 | [08.17-ballots.md](08.17-ballots.md) | The list of MPs' ballots on a vote |
 | [08.18-vote-history.md](08.18-vote-history.md) | The history of the Seimas's votes |
 | [08.19-sending.md](08.19-sending.md) | Sending the summaries: reviewed a day ahead, the email and office copies, MP's link, introduction letter, suppression |

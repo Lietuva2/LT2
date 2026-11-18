@@ -19,7 +19,6 @@
 <data name="List.Sort" xml:space="preserve"><value>Rikiuoti:</value></data>
 <data name="List.Empty" xml:space="preserve"><value>Tokių projektų nerasta.</value></data>
   <data name="List.Counts" xml:space="preserve"><value>už {0} ({1}) · prieš {2} ({3})</value></data>
-<data name="List.More" xml:space="preserve"><value>Rodyti daugiau</value></data>
   <data name="List.Further" xml:space="preserve"><value>Tolesni projektai →</value></data>
 <data name="Closed.Frozen" xml:space="preserve"><value>Seimas balsavo galutinai; skaičiai užfiksuoti {0} ir nebesikeičia.</value></data>
 <data name="Closed.Heading" xml:space="preserve"><value>Seimo sprendimas</value></data>

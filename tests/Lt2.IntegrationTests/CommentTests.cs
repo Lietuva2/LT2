@@ -26,7 +26,7 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
     /// <summary>A vote on <see cref="Bill"/> to copy an adoption vote from (as <c>MpResponseTests</c>).</summary>
     private const long BillVote = 99100102;
 
-    private static readonly string[] ThreadFields = ["billNumber", "billOpen", "cards", "count", "items", "kind", "open", "targetId"];
+    private static readonly string[] ThreadFields = ["billNumber", "billOpen", "cards", "count", "items", "kind", "nextCursor", "open", "targetId"];
     private static readonly string[] CommentFields = ["agreedBy", "author", "createdAt", "id", "text"];
     private static readonly string[] AuthorFields = ["label", "mp", "name", "organisationSlug", "profileId", "voice"];
 

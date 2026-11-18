@@ -642,18 +642,22 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     }
 
     /// <summary>
-    /// Shows every argument when the list shows only the first ones per side ("Visi argumentai: N"), once the island runs: until
-    /// then the words are a link to the page with every argument (owner, 2026-11-18), afterwards the island's button.
+    /// Shows every argument of both sides (owner, 2026-11-19: two a side, then "Rodyti daugiau argumentų" under each side adds
+    /// ten): once the island runs, each side's link reads the next page in place, without a reload, until none is left.
     /// </summary>
     private static async Task ShowAllReasonsAsync(IPage page)
     {
-        if (await page.Locator("#reasons-all").CountAsync() > 0)
+        foreach (var side in new[] { "for", "against" })
         {
-            var all = page.Locator("#reasons button#reasons-all");
-            await Assertions.Expect(all).ToBeEnabledAsync(new() { Timeout = 60_000 });
-            await Assertions.Expect(all).ToHaveTextAsync(new Regex("^\\s*Visi argumentai"));
-            await all.ClickAsync();
-            await Assertions.Expect(page.Locator("#reasons button#reasons-all")).ToHaveTextAsync(new Regex("Rodyti mažiau"));
+            var more = page.Locator($"#reasons-for a#reasons-more-{side}, #reasons-against a#reasons-more-{side}");
+            while (await more.CountAsync() > 0)
+            {
+                // The island's link: taken from enhanced navigation once the island runs.
+                await Assertions.Expect(more).ToHaveAttributeAsync("data-enhance-nav", "false", new() { Timeout = 60_000 });
+                var shown = await page.Locator($"#reasons-{side} .said").CountAsync();
+                await more.ClickAsync();
+                await Assertions.Expect(page.Locator($"#reasons-{side} .said")).Not.ToHaveCountAsync(shown, new() { Timeout = E2ESteps.Slow });
+            }
         }
     }
 

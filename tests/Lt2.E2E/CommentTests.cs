@@ -63,6 +63,44 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
         }
     }
 
+    /// <summary>
+    /// Owner, 2026-11-19 ("Rodyti daugiau" doesn't work on phone nor desktop): with more than ten comments, once the island runs,
+    /// "Rodyti daugiau komentarų" reads the next ten in place on a phone: no navigation, no reload, the focus on the first one
+    /// added. Until then the running island let enhanced navigation fetch the grown page and kept its own ten.
+    /// </summary>
+    [Fact]
+    public async Task Rodyti_daugiau_komentaru_reads_the_next_ten_in_place_on_a_phone()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var writer = await PasskeyBrowser.StartAsync("native", 390, 844);
+        var page = writer.Page;
+        await PasskeyTests.RegisterAsync(page, "Daug Komentuojanti Narė");
+        var reason = await FirstReasonAsync(page);
+        for (var i = 1; i <= 11; i++)
+        {
+            var (status, body) = await E2ESteps.ApiAsync(page, "POST", $"/api/v1/comments/reason/{reason}", new { text = $"Puslapiavimo komentaras nr. {i} (E2E)." });
+            status.ShouldBe(201, body);
+        }
+
+        await page.GotoAsync($"{Base}/seimas/{Bill}");
+        await page.Locator($"#aptarimas-summary-{reason:N}").ClickAsync();
+        var more = page.Locator($"a#comments-more-{reason:N}");
+        await Assertions.Expect(more).ToHaveAttributeAsync("data-enhance-nav", "false", new() { Timeout = E2ESteps.Slow });
+        var items = page.Locator($"#comments-{reason:N} > li");
+        await Assertions.Expect(items).ToHaveCountAsync(10);
+        var address = page.Url;
+        await page.EvaluateAsync("() => window.__notReloaded = true");
+
+        await more.ClickAsync();
+
+        await Assertions.Expect(items).Not.ToHaveCountAsync(10, new() { Timeout = E2ESteps.Slow });
+        (await items.CountAsync()).ShouldBeGreaterThan(10);
+        page.Url.ShouldBe(address, "read in place, the address unchanged");
+        (await page.EvaluateAsync<bool>("() => window.__notReloaded === true")).ShouldBeTrue("no reload");
+        (await page.EvaluateAsync<string>("() => document.activeElement.id")).ShouldBe(await items.Nth(10).GetAttributeAsync("id"), "the focus on the first one added");
+        await E2ESteps.ShootBothAsync(page, Shots, "comments-more-phone", page.Locator($"#aptarimas-panel-{reason:N}"));
+    }
+
     [Fact]
     public async Task A_representative_comments_under_its_statement_as_the_organisation_and_a_member_as_a_person()
     {

@@ -699,6 +699,10 @@ fieldset.stack--tight > legend { margin-block-end: var(--sp-3); }
 .more.stack--tight > :not(summary) + :not(summary) { margin-top: var(--sp-3); }
 .report-visitor > summary { display: inline; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
+/* "Rodyti daugiau" under a long list (owner, 2026-11-19, ShowMore.razor): one line under the list, "Rodoma N iš M" and the
+   link (a plain button's look); while an island reads the next page, the waiting cursor on it. */
+.show-more[aria-busy="true"] .show-more__link { cursor: progress; }
+
 /* A long member's text (design 8.2, owner 2026-11-16, LongText.razor): the beginning, "…" and "Rodyti daugiau" under it.
    Opened, the "…" steps aside, the rest follows the beginning, and the summary stays (focusable, its expanded state
    announced) but reads "Rodyti mažiau" and is drawn after the rest: the <details> is a flex column (.stack), and

@@ -22,13 +22,9 @@
         </ol>
         @if (view.Items.Count > MpResponseLimits.First)
         {
-            <div class="row">
-                <p class="small num" role="status" id="answers-shown">@F.T.Format("Responses.Shown", Display.Number(_shown), Display.Number(view.Items.Count))</p>
-                @if (ResponsePaging.More(_shown, view.Items.Count) is { } more)
-                {
-                    <a class="btn btn--plain" id="answers-more" href="@ResponsePaging.Address("/p/" + Slug, more, ResponsePaging.ItemId(_shown + 1))">@F.T["Responses.More"]</a>
-                }
-            </div>
+            @* The shared "show more" (owner, 2026-11-19). *@
+            <Lt2.Web.Client.Components.ShowMore Id="answers-more" StatusId="answers-shown" Shown="_shown" Total="view.Items.Count" Text="@F.T["Responses.More"]"
+                Href="@(ResponsePaging.More(_shown, view.Items.Count) is { } more ? ResponsePaging.Address("/p/" + Slug, more, ResponsePaging.ItemId(_shown + 1)) : null)" />
         }
     </section>
 }

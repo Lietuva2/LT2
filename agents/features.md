@@ -215,7 +215,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 - Where it shows (8.5.6): the bill's page part `BillResponses` (its own sheet, the first of the texts at the page's full width
   before the organisations and the arguments, and only when an MP answered (owner, 2026-11-17); server-rendered and the
   same for everyone; the counts line; "už", "prieš", "neapsisprendė", by last name, then withdrawn and hidden ones) and the
-  profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau" by `?atsakymai=` landing
+  profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau atsakymų" (`<ShowMore>`) by `?atsakymai=` landing
   on `#atsakymas-{n}` (`ResponsePaging`). Each item is `MpResponseItem` with the one mark "Seimo narys arba jo biuras". The
   linked account's form is the island `MyMpResponse`, filled in the browser only (on an open bill nobody answered yet it
   stands alone with `Section`, bringing the part's sheet and heading for a linked account); reports are `ReportResponse` islands.
@@ -304,8 +304,22 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   Disabled while a request runs (`Busy`); `SidePresses.Ignored` drops a double click's second press (`MouseEventArgs.Detail`).
   The pair (`.sides`) carries `aria-busy` while disabled for waiting (`Locked`; `MyAgendaSide.Waiting` also until its first
   read ends), which keeps the buttons in full colour (lt2.css "Waiting", owner 2026-11-18).
+- **The arguments a page at a time (design 8.12.1, owner 2026-11-19).** `GET /bills/{n}/record` carries each side's first
+  two (`ReasonLimits.First`) and `ReasonTotals`; `GET /bills/{n}/record/reasons?side=&cursor=&limit=` (`GetReasonsEndpoint`,
+  `IAppealsModule.ReasonsAsync`, ordered in SQL by the counted marks, then `CreatedAt`, then id; `ReasonLimits.Max` 100)
+  the rest; `GET /reasons/{id}` (`GetReasonEndpoint`, `ReasonAsync`; one 404 `reason.not-found`) one published argument.
+  `RecordReasons` keeps each side as a column (`Columns`, a `ReasonPageResponse` per side, persisted from the prerender;
+  `ReasonPaging`, unit-tested): the address asks how many (`?argumentai-uz=` / `?argumentai-pries=`, `ReasonLimits.Parameter`,
+  read on the server, and in the browser up to it should enhanced navigation have grown it before the island started);
+  "Rodyti daugiau argumentų" under each column is `<ShowMore>` (`#reasons-more-{side}`, status `#reasons-more-{side}-shown`),
+  the island's `MoreAsync` reads ten more in place and focuses the first added; the name line carries
+  `#argumentai-uz-{n}` where the link lands without script. The linked argument (`?argumentas=`), one a comment link or
+  `?komentarai=` names, and the one just published are pinned first in their side (`ReasonPaging.Pin`), read alone when
+  their pages would not bring them; "Rodyti tik naujus" reads the new ones the pages lack (`NewTexts.Reasons`) and adds them
+  last. The server renders the discussions of every argument it shows; one a later page brought reads its own on opening.
 - A "Man svarbu" moves nothing on the page: `RecordReasons` keeps the shown order
-  after the person's own action (`StableOrder`, the order by marks returns on the next read) and gives the pressed button
+  after the person's own action (`ReasonPaging.Refresh`: each column read again through as many as it had read, the
+  order by marks returns on the next read) and gives the pressed button
   the focus back without scrolling. It is a toggle whose button stays neutral, only the heart (`Icon` `heart`, `.icon__fill`)
   filling in the brand's green while marked (owner, 2026-11-17); a visitor's is a `LandingPath.SignInLink` back to the bill
   of the same look. One hint beside the arguments' heading, "Kas yra „Man svarbu“?" (`Reasons.EndorseWhat`, owner
@@ -418,8 +432,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `limit` (`BillListLimits`, 20, 1–200). The list is composed in memory (`AppealsService.ListAsync`): the bills are the
   Parliament module's, the activity the Appeals module's. An MP's votes (`/p/{slug}/balsavimai`, `MpVotePaging`) are by day,
   50 then +50 by `?rodyti=` (rows `#balsavimas-{n}`), at most 300, then `?nuo=`; `GET /mps/{slug}/votes` takes `limit`
-  (`MpVoteLimits`). The arguments' "Visi argumentai" is a link to `?argumentai=visi#reasons` until the island runs
-  (`RecordReasons.AllParameter`), which renders every argument and its comments. Every moderators' list keeps its hundred
+  (`MpVoteLimits`). Every "show more" is `<ShowMore>` (design 8.16.4, below). Every moderators' list keeps its hundred
   and carries its total (`ModerationQueueResponse.RecordsTotal` etc.); `<QueueCut>` says "Rodoma 100 iš N".
 - Following a bill, an MP, an organisation or a member is private: who follows is shown to nobody (the followed party and
   staff included), never combined with sides or invitations (the person's own `/me/bills` gives them both), in the export,
@@ -677,10 +690,14 @@ A link to a comment or an argument (design 8.23.6, the designer's proposal of 20
 (`ToComment`, `ToReason`; one file in SharedKernel compiled also into the contracts): `?komentaras={id}#komentaras-{id}` or
 `?argumentas={id}#reason-{id}`. `BillPage` resolves the comment once (`GET /comments/{id}/place`, public, one 404
 `comment.not-found` for hidden and unknown) and hands `Linked` to `RecordReasons`, `OrganisationPositions` and
-`BillResponses` as a parameter (so an island starts in the same state): the target is shown even behind "show all" or the
-responses' paging, its "Aptarimas" open through the linked one rounded up to the next ten (`BillTextLinks.ShownThrough`,
+`BillResponses` as a parameter (so an island starts in the same state): the target is shown even beyond its side's first
+page (first in its side's column) or the responses' paging, its "Aptarimas" open through the linked one rounded up to the next ten (`BillTextLinks.ShownThrough`,
 `CommentPaging.Asked(…, linked)`), the comment marked `comment--linked` (an argument `said--linked`); anything not shown
-changes nothing.
+changes nothing. The thread's API pages by `limit` and `cursor` (`CommentRules.Limit`, the first page at least ten; the answer's
+`NextCursor`); "Rodyti daugiau komentarų" is `<ShowMore>` (`#comments-more-{target}`, `#comments-shown-{target}`): by the
+address (`?komentarai=`, `CommentPaging`) without script and before the island runs, and once it runs `CommentThread.MoreAsync`
+reads the next ten in place and focuses the first added (owner, 2026-11-19: the running island had let enhanced navigation
+fetch the page and kept its own list, so nothing changed).
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
 A report button is on every bill's description and reason, never on one's own text (owner, 2026-11-17: argument, comment in

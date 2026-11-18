@@ -589,7 +589,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         (await supporterOfFor.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var (member, _) = await Factory.MemberAsync();
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        var reasons = (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons;
+        var reasons = await member.AllReasonsAsync(AppealSteps.ThirdBill);
         reasons.Count.ShouldBe(4);
 
         // Owner, 2026-11-18: the other side's argument may be marked; the mark does not count while they ask for "už".
@@ -609,7 +609,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         var mine = await member.MineAsync(AppealSteps.ThirdBill);
         mine.Endorsed.Count.ShouldBe(3);
         mine.EndorsementsLeft.ShouldBe(0);
-        (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons.Where(r => reasons.Take(3).Any(x => x.Id == r.Id)).ShouldAllBe(r => r.Endorsements == 1);
+        (await member.AllReasonsAsync(AppealSteps.ThirdBill)).Where(r => reasons.Take(3).Any(x => x.Id == r.Id)).ShouldAllBe(r => r.Endorsements == 1);
 
         (await member.SendAsync(HttpMethod.Delete, AppealRoutes.EndorsementOf(reasons[0].Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.MineAsync(AppealSteps.ThirdBill)).Endorsed.Count.ShouldBe(2);
@@ -617,7 +617,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         // Changing side keeps the marks; none counts now (all on "prieš" arguments), and they still count towards the limit.
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.MineAsync(AppealSteps.ThirdBill)).Endorsed.Count.ShouldBe(2);
-        (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons.Sum(r => r.Endorsements).ShouldBe(0);
+        (await member.AllReasonsAsync(AppealSteps.ThirdBill)).Sum(r => r.Endorsements).ShouldBe(0);
         (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasons[3].Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         using (var overLimit = await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasons[0].Id)))
         {

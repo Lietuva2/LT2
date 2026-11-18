@@ -17,12 +17,12 @@
     {
         @if (OnMore.HasDelegate && RendererInfo.IsInteractive)
         {
-            <a class="btn btn--plain show-more__link" id="@Id" href="@href" data-enhance-nav="false" aria-controls="@Controls"
+            <a class="btn btn--plain show-more__link" href="@href" id="@Id" data-enhance-nav="false" aria-controls="@Controls"
                @onclick="MoreAsync" @onclick:preventDefault="true">@(Text ?? T["Text.ShowMore"])</a>
         }
         else
         {
-            <a class="btn btn--plain show-more__link" id="@Id" href="@href">@(Text ?? T["Text.ShowMore"])</a>
+            <a class="btn btn--plain show-more__link" href="@href" id="@Id">@(Text ?? T["Text.ShowMore"])</a>
         }
     }
     @ChildContent
