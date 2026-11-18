@@ -19,6 +19,7 @@ using Lt2.Web.Components;
 using Lt2.Web.Components.Layout;
 using Lt2.Web.Components.Members;
 using Lt2.Web.Endpoints;
+using Lt2.Web.Jobs;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -56,6 +57,9 @@ internal static class WebHost
         services.AddUsageModule();
         services.AddUsageCounting();
         RequireKeyEncryptionOutsideDevelopment(builder);
+
+        // Design 3, 6.3: the administrators' Hangfire dashboard over the worker's storage; no Hangfire server runs here.
+        services.AddLt2JobsDashboard();
 
         // Security plumbing (design 6.4).
         services.AddLt2Security(configuration);
@@ -141,8 +145,11 @@ internal static class WebHost
         app.UseWhen(context => !IsApi(context), pages => pages.UseExceptionHandler("/klaida", createScopeForErrors: true));
         app.UseWhen(IsApi, api => api.UseStatusCodePages(ProblemStatusPages.WriteAsync));
 
-        // An address no page answers gets the site's own "not found" page, with the layout and its notices.
-        app.UseWhen(context => !IsApi(context), pages => pages.UseStatusCodePagesWithReExecute("/nerasta", createScopeForStatusCodePages: true));
+        // An address no page answers gets the site's own "not found" page, with the layout and its notices. Not the Hangfire
+        // dashboard: its script reads its own answers (a refused form is a bare 403, not a page).
+        app.UseWhen(
+            context => !IsApi(context) && !JobsDashboard.IsDashboard(context.Request.Path),
+            pages => pages.UseStatusCodePagesWithReExecute("/nerasta", createScopeForStatusCodePages: true));
 
         // Routing after the status-code pages, so the re-executed "/nerasta" request is routed to its page.
         app.UseRouting();
@@ -189,6 +196,7 @@ internal static class WebHost
         app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
         app.MapOpenApi("/openapi/{documentName}.json");
         app.MapLt2Api();
+        app.MapLt2JobsDashboard();
         MapOldAppealAddresses(app);
         app.MapRazorComponents<App>()
             .AddInteractiveWebAssemblyRenderMode()

@@ -18,6 +18,25 @@ internal static class SecurityHeaders
         "form-action 'self'; " +
         "frame-ancestors 'none'";
 
+    /// <summary>
+    /// The administrators' Hangfire dashboard (<see cref="Jobs.JobsDashboard"/>, design 6.3) and nothing else: the policy above
+    /// with one relaxation, <c>style-src-attr 'unsafe-inline'</c>, because the dashboard's own markup colours a job's state
+    /// with a <c>style</c> attribute; and without <c>'wasm-unsafe-eval'</c>, which it does not need. No inline script and no
+    /// <c>&lt;style&gt;</c> element is allowed, and its scripts, styles and fonts are its own, served from this host.
+    /// </summary>
+    public const string JobsDashboardContentSecurityPolicy =
+        "default-src 'self'; " +
+        "script-src 'self'; " +
+        "style-src 'self'; " +
+        "style-src-attr 'unsafe-inline'; " +
+        "img-src 'self' data:; " +
+        "font-src 'self'; " +
+        "connect-src 'self'; " +
+        "object-src 'none'; " +
+        "base-uri 'self'; " +
+        "form-action 'self'; " +
+        "frame-ancestors 'none'";
+
     public const string PermissionsPolicy =
         "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), " +
         "interest-cohort=(), browsing-topics=()";
@@ -28,7 +47,9 @@ internal static class SecurityHeaders
             context.Response.OnStarting(() =>
             {
                 var headers = context.Response.Headers;
-                headers.ContentSecurityPolicy = ContentSecurityPolicy;
+                // The dashboard runs under its own path base (Hangfire's pipeline moves its prefix there).
+                var dashboard = Jobs.JobsDashboard.IsDashboard(context.Request.PathBase.Add(context.Request.Path));
+                headers.ContentSecurityPolicy = dashboard ? JobsDashboardContentSecurityPolicy : ContentSecurityPolicy;
                 headers["Permissions-Policy"] = PermissionsPolicy;
                 headers["Referrer-Policy"] = "no-referrer";
                 headers.XContentTypeOptions = "nosniff";
@@ -63,6 +84,14 @@ internal static class SecurityHeaders
                 {
                     headers["X-Robots-Tag"] = "noindex, nofollow";
                     headers.CacheControl = "no-store";
+                }
+
+                // The administrators' Hangfire dashboard (design 6.3): nothing of it is kept, its scripts and polls included,
+                // and it is never indexed.
+                if (dashboard)
+                {
+                    headers.CacheControl = "no-store";
+                    headers["X-Robots-Tag"] = "noindex, nofollow";
                 }
 
                 // Design 8.22.5: the pages of one's own account, staff, signing in and the pages a one-time link opens are no

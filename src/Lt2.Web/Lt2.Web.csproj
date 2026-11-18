@@ -7,10 +7,13 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="Hangfire.PostgreSql" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lt2.Api.Contracts\Lt2.Api.Contracts.csproj" />
     <ProjectReference Include="..\Lt2.Hosting\Lt2.Hosting.csproj" />
+    <ProjectReference Include="..\Lt2.Jobs\Lt2.Jobs.csproj" />
     <ProjectReference Include="..\Lt2.SharedKernel\Lt2.SharedKernel.csproj" />
     <ProjectReference Include="..\Lt2.Web.Client\Lt2.Web.Client.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Identity\Lt2.Identity.csproj" />

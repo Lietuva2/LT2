@@ -69,6 +69,14 @@ public sealed class DatabaseFixture : IAsyncLifetime
         var configuration = MigratorConfiguration();
         await MigrationRunner.RunAsync(configuration, ["--seed-invitation", TestData.Invitation + ":1000"], CancellationToken.None);
 
+        // The worker's Hangfire installs its tables at start-up, as lt2_worker, after the first deploy's migrator: the
+        // administrators' dashboard in the web host reads and writes them as lt2_app (DatabaseRoles.GrantHangfireToAppAsync).
+        await using (var worker = new NpgsqlConnection(WorkerConnectionString))
+        {
+            await worker.OpenAsync();
+            Hangfire.PostgreSql.PostgreSqlObjectsInstaller.Install(worker, DatabaseRoles.HangfireSchema);
+        }
+
         // Running the migrator twice must change nothing (it runs on every deploy).
         await MigrationRunner.RunAsync(configuration, ["--seed-invitation", TestData.Invitation + ":1000"], CancellationToken.None);
 

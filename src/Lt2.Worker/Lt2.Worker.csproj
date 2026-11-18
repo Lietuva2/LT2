@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lt2.Hosting\Lt2.Hosting.csproj" />
+    <ProjectReference Include="..\Lt2.Jobs\Lt2.Jobs.csproj" />
     <ProjectReference Include="..\Lt2.SharedKernel\Lt2.SharedKernel.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Notifications\Lt2.Notifications.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Identity\Lt2.Identity.csproj" />

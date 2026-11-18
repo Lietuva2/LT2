@@ -7,7 +7,7 @@ Local secret files for `deploy/compose.yaml`, one value per file. Created by
 |---|---|---|
 | `postgres_password` | postgres, migrator | Superuser password; used only by the migrator to create roles. |
 | `db_migrator_password` | migrator | `lt2_migrator`: owns the schemas, runs migrations. |
-| `db_app_password` | migrator, web | `lt2_app`: data access only. |
+| `db_app_password` | migrator, web | `lt2_app`: data access only, and the worker's `hangfire` tables for the administrators' dashboard. |
 | `db_worker_password` | migrator, worker | `lt2_worker`: data access plus the `hangfire` schema. |
 | `db_readonly_password` | migrator | `lt2_readonly`: analysis, no access to `identity`. |
 | `data_protection_key` | web | Base64 of 32 bytes; wraps the data-protection keys stored in PostgreSQL. |

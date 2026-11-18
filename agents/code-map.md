@@ -13,7 +13,12 @@ src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per f
                            the menu, AccountMenu with js/lt2-account.js, the footer, LinkPreview and LinkPreviewText (Open
                            Graph tags, design 8.22.5, image wwwroot/img/link-preview.png); js/lt2-invitation.js takes a
                            link's #kodas= on any page, 8.11.5) and the terms and privacy pages
-                           (Components/Pages/Terms, Privacy, LegalText.resx)
+                           (Components/Pages/Terms, Privacy, LegalText.resx); Jobs/JobsDashboard.cs: the Hangfire dashboard
+                           "Foniniai darbai" at /administravimas/darbai (design 3, 6.3; agents/security.md), over the worker's
+                           storage through the web host's own pool, no Hangfire server
+src/Lt2.Jobs               the Hangfire job classes (import, agenda watcher, aggregates, summaries, follows, AI summaries,
+                           clean-ups): the worker runs them, the web host only loads their types so the dashboard can
+                           enqueue a recurring job; each takes a CancellationToken alone
 src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
                            (Observability.AddLt2Observability), with SecretPaths replacing an MP link's or a member's stop
                            link's token in every log line and trace; no module references it
@@ -64,7 +69,7 @@ src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageR
                            UsageCounter in the web host's memory, written every minute; the host feeds it from
                            Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin; its day bars are
                            DayBars, own CSS size, a label per column on hover and focus, no chart library)
-src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
+src/Lt2.Worker             Hangfire server (RecurringJobs registers the jobs of Lt2.Jobs): outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            (every 15 minutes: prepared Digest:ReviewHours before their time, moderators emailed, then
                            gone at their time: a dry run or sent by Digest:Sending), the follow emails (every 15 minutes, in each member's rhythm: at once, the morning from Follows:ResponsesAt, or Monday), the AI summaries
@@ -73,7 +78,8 @@ src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament
                            messages after 30 days); the dispatcher sends sign-in and confirmation codes first, a batch
                            over one SMTP connection per stream (MP mail on its own: Email:Mp), and stores only an error's
                            type and status code (design 6.8); a 5xx refusal of an MP email suppresses the address
-src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
+src/Lt2.Migrator           creates the database roles, applies migrations and grants (with the superuser's connection,
+                           lt2_app on the worker's Hangfire tables for the dashboard: DatabaseRoles.GrantHangfireToAppAsync); also seeds invitations, grants
                            the first staff role, empties invented parliament data, switches on registration with an MP's
                            official address without an invitation (--official-addresses-without-invitation; only where
                            Demo:Allowed, the local stack and the trial) and (only where Demo:Allowed) fills the

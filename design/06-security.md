@@ -20,7 +20,7 @@ Policy-based, with resource handlers where ownership matters.
 | Member (confirmed email; invited during the trial) | Open an appeal, take a side, write and endorse reasons, report content; comment under arguments, statements and responses and mark a comment "Sutinku" (8.23, proposed). |
 | Verified MP / office member (`politician_link`) | Publish and edit that MP's response; manage that MP's email preferences; comment as the MP under that MP's own response, in a passkey session (8.23.2, proposed). |
 | Moderator | Review appeals and reasons, merge, hide (reported comments too, 8.23.8, proposed), correct planned dates, hold a send, approve an urgent send, restrict an account from writing and lift that. |
-| Administrator | Roles, politician verification, configuration, import and digest dashboards; every moderator action, restricting an account from writing and lifting that included. Cannot read individual positions through any screen. |
+| Administrator | Roles, politician verification, configuration, import and digest dashboards (built 2026-11-18 as the Hangfire dashboard, "Foniniai darbai", `/administravimas/darbai`: the recurring jobs, their runs and failures, "Trigger now"); every moderator action, restricting an account from writing and lifting that included. Cannot read individual positions through any screen. |
 
 No screen and no API returns another person's position. Group numbers (the supporters of the MP's party on a side, in a
 summary) are published only for groups of at least the runtime setting `Digest:PartyGroupMinimum` (8.4; **owner,
@@ -31,7 +31,16 @@ summary) are published only for groups of at least the runtime setting `Digest:P
 - TLS only, HSTS with preload, HTTP/3.
 - Content Security Policy: `default-src 'self'`; `script-src 'self' 'wasm-unsafe-eval'` (required by WebAssembly), no
   inline scripts; `frame-ancestors 'none'` everywhere except future embed endpoints; `Referrer-Policy`,
-  `Permissions-Policy`, `X-Content-Type-Options`.
+  `Permissions-Policy`, `X-Content-Type-Options`. **[Built 2026-11-18]** One exception, under `/administravimas/darbai`
+  only (the Hangfire dashboard, 6.3): `style-src-attr 'unsafe-inline'`, because its own markup colours a job's state
+  with a `style` attribute, and `script-src 'self'` without `'wasm-unsafe-eval'`. Still no inline script and no
+  `<style>` element; its scripts, styles and fonts are served from our host.
+- The Hangfire dashboard **[built 2026-11-18]** answers only an administrator in a staff-passkey session (the endpoint
+  requires the policy, and Hangfire's own authorization filter evaluates it again); everyone else is sent to sign in or
+  away, never shown it. Its forms (trigger, retry, delete) pass the `Origin` check and ASP.NET Core antiforgery with the
+  token Hangfire puts in the page, and each is audited as `jobs.dashboard-action` without details (its poll of the counters
+  is a read and is not). Its pages are `no-store` and `noindex`. Jobs take only a cancellation token as an argument, so
+  Hangfire stores no person's data with them; a failed run shows the exception's type, message and stack.
 - Every state-changing API call needs the antiforgery token header and passes an `Origin` check; CORS is off.
 - Rate limits at two layers: Caddy per IP, and ASP.NET Core policies per account and per IP for code requests, registration,
   writing reasons and reports, and (proposed, 8.23.4) writing comments under their own policy.

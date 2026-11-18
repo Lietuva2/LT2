@@ -11,6 +11,7 @@ COPY global.json Directory.Build.props Directory.Packages.props .editorconfig LT
 # The project files first, so the restore is a layer of its own that a change to the code does not repeat.
 COPY src/Lt2.Api.Contracts/Lt2.Api.Contracts.csproj src/Lt2.Api.Contracts/
 COPY src/Lt2.Hosting/Lt2.Hosting.csproj src/Lt2.Hosting/
+COPY src/Lt2.Jobs/Lt2.Jobs.csproj src/Lt2.Jobs/
 COPY src/Lt2.SharedKernel/Lt2.SharedKernel.csproj src/Lt2.SharedKernel/
 COPY src/Lt2.Web/Lt2.Web.csproj src/Lt2.Web/
 COPY src/Lt2.Web.Client/Lt2.Web.Client.csproj src/Lt2.Web.Client/

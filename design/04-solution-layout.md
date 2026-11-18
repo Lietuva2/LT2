@@ -19,6 +19,7 @@ src/
     Lt2.Appeals/
     Lt2.Notifications/         + Digests/, Templates/, Transports/
     Lt2.Audit/
+  Lt2.Jobs/                    the Hangfire job classes: run by the worker, loaded by the web host's dashboard (3, 6.3)
   Lt2.Worker/                  Hangfire server: recurring jobs, outbox dispatcher
   Lt2.Migrator/                applies migrations for every module, creates roles and grants; run once per deploy
 tests/
