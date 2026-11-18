@@ -2,21 +2,6 @@
 
 What the owner decided is in [12-decisions.md](12-decisions.md). Do not decide an open item in code.
 
-**Which elements carry the cut corner (asked by the owner on 2026-11-18), awaiting the owner**
-
-The prototype cuts one corner of the page's main sheet (`.sheet--cut`), every filled button (`.btn`, a gradient
-background) and the portraits, "like the logo's bubbles" (`design/ui/README.md`). An outlined button (`.btn--plain`, the
-side not chosen) is straight only because its outline is an inset shadow, which cannot follow the cut: not a rule, an
-accident of how it is drawn. So the two side buttons change shape when one is chosen. Since 2026-11-18 an outlined
-button's hover fill is straight too, so fill and outline match (8.16.3). Choices:
-
-1. **Cut on filled buttons only** (as built now, written down as the rule): the cut marks the strong action; outlined
-   buttons are straight. The side buttons still change shape on choosing.
-2. **No cut on buttons** (the designer's recommendation): every button straight; the cut stays for the page's main sheet
-   and the portraits, where the logo's shape reads. One rule, no shape change on choosing, and the bubbles are straight
-   now too.
-3. **Cut on every button**, outlined ones drawn with the cut as well (a clipped outline): consistent, but more drawing
-   for a small mark on many controls.
 **Found with the stand-in's real-sized parliament (141 MPs, about 45 bills a sitting day), 2026-11-18, awaiting the owner**
 
 Nothing is built for these; the local stack and the trial show them as they are.

@@ -50,12 +50,15 @@ Read before changing a page, a component or an island. The rules behind it are d
   "Rodyti tekstą prieš pakeitimą" (`details.more`; the text after it is already on the page). The oldest version (`Old`
   null) and an unchanged text show whole, with no disclosure. The text in force opens its
   history with its own changes. Every history lists the newest first; a short value (a name, a website) stays "A → B".
-- **Colours and shapes (design 8.16.3, owner 2026-11-18).** A side is coloured only through `--for` (the links' green)
-  and `--against` (its matching red), with `--on-vote` for a word on them; the threshold's fill is `--progress`; a mark of
-  the current place (menu, drop-down, tabs) is `--link`. Every token is set for both themes in `design/ui/lt2.css` and
-  copied to `lt2.css`; text keeps 4.5:1 and a control or a bar 3:1 in both. A filled `.btn` has the cut corner; an
-  outlined one is straight, and its fill takes `background`, not the cut gradient, so fill and outline share one shape.
-  A `.bubble` is a straight box with radius `--cut-s` and a tail pointing up to the name above it.
+- **Colours and shapes (design 8.16.3, owner 2026-11-18).** A side is coloured only through `--for` (the light theme's
+  link green) and `--against` (its matching red), the same in both themes, with `--on-vote` (white) for a word on them;
+  a new shape in a side's colour also takes the 1px `--side-edge` (stroke, or `box-shadow: 0 0 0 1px`), which keeps it
+  at 3:1 on the dark grounds and is transparent in the light theme. The threshold's fill is `--progress`; a mark of the
+  current place (menu, drop-down, tabs) is `--link`. Every token is set for both themes in `design/ui/lt2.css` and copied
+  to `lt2.css`; text keeps 4.5:1 and a control or a bar 3:1 in both. Buttons are straight (no cut); the cut corner is
+  only `.sheet--cut` and `.portrait`. A `.bubble` is a straight box with radius `--cut-s` and a tail pointing up to the
+  name above it. Figures in a row (`.pair--keep`, `.totals`, `.analytics-figures`) are a subgrid of five lines
+  at most, top-aligned: a figure with more lines needs the span raised.
 - **A new public, server-rendered page puts `<LinkPreview Title="…" Description="…" />` beside its `<PageTitle>`** (design
   8.22.5: the title without " · Lietuva 2.0", one or two sentences, never counts or a member's own text; `Path` when the page's
   own address differs from the requested path). A page behind sign-in, a staff page or a token page puts none; such a path

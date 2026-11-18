@@ -27,7 +27,7 @@ else
             <article class="sheet stack" id="queue-organisation-@org.Id" aria-labelledby="qo-@org.Id">
                 <div class="row">
                     <span class="tag tag--ink">@L[org.Seen ? "OrgMod.Reported" : org.Changed ? "OrgMod.Changed" : "OrgMod.New"]</span>
-                    <OrgLabel Label="org.Label" />
+                    <OrgLabel Label="org.Label" Id="@($"queue-org-label-{org.Id}")" />
                     @if (org.Status == "blocked")
                     {
                         <span class="tag">@L["Org.State.blocked"]</span>

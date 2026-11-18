@@ -480,6 +480,7 @@
 <data name="Org.Label.none" xml:space="preserve"><value>Nepatvirtinta</value></data>
 <data name="Org.Label.domain" xml:space="preserve"><value>Patvirtinta per el. pašto adresą @{0}</value></data>
 <data name="Org.Label.moderator" xml:space="preserve"><value>Patvirtino moderatorius</value></data>
+<data name="Org.Label.Short" xml:space="preserve"><value>Patvirtinta</value></data>
 <data name="Org.Statement" xml:space="preserve"><value>Organizacijos pozicija</value></data>
 <data name="Org.Stance.for" xml:space="preserve"><value>Prašo balsuoti už</value></data>
 <data name="Org.Stance.against" xml:space="preserve"><value>Prašo balsuoti prieš</value></data>

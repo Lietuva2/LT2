@@ -487,3 +487,13 @@ Each is built as written; "no" names what changes.
   moderators and the agenda can change. Awaiting the owner's look and a native reader.
 - The bubbles are straight boxes with a small radius and a tail pointing up to the name; the menu's chosen item is
   underlined in the same green; an outlined side button's hover fill has its outline's shape.
+
+**Decided by the owner on 2026-11-18 (later the same day): straight buttons, one pair of side colours (8.16.3)**
+
+- The corner cut leaves every button, filled or outlined (the designer's recommendation of the open question "which
+  elements carry the cut corner"); it stays on the page's main sheet and the portraits. The front page's step numbers
+  lose it too.
+- The dark theme uses the light theme's side colours, `#1b6034` and `#85322f`, with white words, as the light theme
+  does; where a shape in a side's colour is under 3:1 against a dark ground or track it keeps its colour and gets a light
+  1px edge. The threshold's progress is the same `#3a8e54` in both themes; the dark menu keeps its own link green, since
+  the light one is under 3:1 on the dark ground.
