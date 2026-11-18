@@ -44,6 +44,13 @@ public sealed record DigestRunResponse(
 public sealed record RecordDigestResponse(Guid RunId, string Kind, DateOnly RunDate, DateOnly? SittingDate, string Status, int MpCount, DigestItemResponse Item);
 
 /// <summary>
+/// The next summary that would hold a bill's record (design 8.12.2, owner 2026-11-18): the Vilnius day it goes, a prepared
+/// summary's own or the one the rules give now; null when none is known (not eligible, held, or no sitting known yet). The
+/// bill's page says it in place of the threshold's ruler once the threshold is reached.
+/// </summary>
+public sealed record RecordNextDigestResponse(DateOnly? Day);
+
+/// <summary>
 /// An argument of a summary on the moderators' screen (design 8.19.2): <paramref name="Id"/> while the summary is prepared (for
 /// "Paslėpti"), null once gone; <paramref name="Replacement"/>: it came in for a hidden one ("Įtrauktas vietoj paslėpto").
 /// </summary>
@@ -155,6 +162,7 @@ public static class DigestRoutes
     public const string Rules = Digests + "/rules";
     public const string Digest = Digests + "/{date}";
     public const string OfRecord = ApiRoutes.Prefix + "/bills/{number}/record/digests";
+    public const string NextOfRecord = OfRecord + "/next";
     public const string Urgent = ApiRoutes.Prefix + "/moderation/records/{id:guid}/urgent";
 
     /// <summary><c>GET</c>, moderators: the summaries screen (design 8.19.2).</summary>
@@ -181,6 +189,8 @@ public static class DigestRoutes
     public static string DigestOn(DateOnly date) => Digests + "/" + date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 
     public static string OfRecordOn(string number) => AppealRoutes.RecordOf(number) + "/digests";
+
+    public static string NextOfRecordOn(string number) => OfRecordOn(number) + "/next";
 
     /// <summary>The query parameter that puts one bill's item first on a summary page (owner, 2026-11-17).</summary>
     public const string BillParameter = "projektas";
@@ -231,6 +241,9 @@ public interface IDigestsApi
 
     /// <summary>The summaries that held the published record on a bill, newest first (empty until the first).</summary>
     Task<ApiResult<IReadOnlyList<RecordDigestResponse>>> GetRecordDigestsAsync(string number, CancellationToken cancellationToken = default);
+
+    /// <summary>The day the next summary holding the bill's record goes, or none known; not found like the record itself.</summary>
+    Task<ApiResult<RecordNextDigestResponse>> GetRecordNextDigestAsync(string number, CancellationToken cancellationToken = default);
 
     /// <summary>The versions of the introduction letter sent, newest first; empty before the first (public).</summary>
     Task<ApiResult<IReadOnlyList<IntroductionLetterResponse>>> GetIntroductionAsync(CancellationToken cancellationToken = default);

@@ -2,14 +2,17 @@
  * LT2 interface styles: tokens first, then components.
  *
  * The idea: flat sheets of cut paper on a pale slate ground. Nothing has a shadow, a gradient or a rounded
- * card. One corner of a sheet is cut at an angle, like the bubbles of the logo. The logo's three colours each
- * belong to one speaker:
+ * card; the only rounded shapes are the speech bubbles of people's words. One corner of the page's main sheet, and of a
+ * portrait, is cut at an angle, like the bubbles of the logo; buttons are straight (owner, 2026-11-18). The logo's three
+ * colours each belong to one speaker:
  *   slate  = the Seimas record (official facts, imported data)
  *   leaf   = people (Lietuva 2.0 users: their numbers and their words)
  *   brand  = Lietuva 2.0 itself and the representatives' answers (actions, links, responses)
- * "For" is a soft moss green and "against" a dusty red, always with the word. Moss is a yellower green than the
- * brand and the action button, so "for" does not read as Lietuva 2.0 taking a side. (Blue and red were dropped:
- * beside white they recalled a flag.)
+ * "For" is the light theme's link green and "against" a red of the same lightness and strength, in both themes, with
+ * white words on them and always with the word (owner, 2026-11-18: one green across the site, the pair designed together;
+ * until then "for" was a yellower moss so it would not read as Lietuva 2.0 taking a side). On the dark grounds they are
+ * under 3:1, so there a shape in a side's colour carries a light 1px edge (--side-edge). Blue and red were dropped:
+ * beside white they recalled a flag.
  *
  * Type: Sofia Sans for the interface, its Extra Condensed width for headings and figures (Lithuanian words are
  * long; a condensed face keeps them on one line on a phone), Brygada 1918 for words people wrote themselves.
@@ -44,14 +47,18 @@
   --action-ink: #ffffff;
   --link: #1b6034;
 
-  /* Votes and sides */
-  --for: #5c7838;
-  --for-tint: #e7ebe1;
-  --against: #aa524c;
-  --against-tint: #f2e5e4;
+  /* Votes and sides. "For" is the light theme's link colour, the same in both themes; "against" has its lightness and
+     strength (OKLCH). The threshold's progress is the same green, lighter, at least 3:1 against its track in both themes.
+     --side-edge outlines a shape in a side's colour where the ground is too dark for it (none in the light theme). */
+  --for: #1b6034;
+  --for-tint: #daeede;
+  --against: #85322f;
+  --against-tint: #fce1de;
   --abstain: #8a948e;
   --absent: #cbd1cd;
   --on-vote: #ffffff;
+  --progress: #3a8e54;
+  --side-edge: transparent;
 
   /* Notes and errors */
   --note-bg: #fdeebf;
@@ -84,7 +91,7 @@
   --sp-8: 5rem;
 
   --cut: 1.375rem;      /* the corner cut of a sheet */
-  --cut-s: 0.5rem;      /* the corner cut of a button or a portrait */
+  --cut-s: 0.5rem;      /* the corner cut of a portrait; the bubbles' radius */
   --measure: 38rem;     /* longest line of running text */
   --page: 72rem;
 
@@ -100,8 +107,8 @@
     --leaf-tint: #21331a; --leaf-ink: #bfe89b;
     --brand-deep: #123d22; --brand-tint: #1b2e22;
     --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-    --for: #637d40; --for-tint: #242f1d; --against: #ae5e59; --against-tint: #382724;
-    --abstain: #7a857f; --absent: #38433d; --on-vote: #ffffff;
+    --for-tint: #23462d; --against-tint: #59302d; --side-edge: #8d9a93;
+    --abstain: #7a857f; --absent: #38433d;
     --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
     color-scheme: dark;
   }
@@ -114,8 +121,8 @@
   --leaf-tint: #21331a; --leaf-ink: #bfe89b;
   --brand-deep: #123d22; --brand-tint: #1b2e22;
   --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-  --for: #637d40; --for-tint: #242f1d; --against: #ae5e59; --against-tint: #382724;
-  --abstain: #7a857f; --absent: #38433d; --on-vote: #ffffff;
+  --for-tint: #23462d; --against-tint: #59302d; --side-edge: #8d9a93;
+  --abstain: #7a857f; --absent: #38433d;
   --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
   color-scheme: dark;
 }
@@ -192,7 +199,7 @@ a:hover { text-decoration-thickness: 3px; }
 .top__nav { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); font-weight: 600; }
 .top__nav a { color: var(--ink); text-decoration: none; padding-block: var(--sp-2); border-bottom: 4px solid transparent; }
 .top__nav a:hover { border-bottom-color: var(--slate); }
-.top__nav a[aria-current="page"] { border-bottom-color: var(--leaf); }
+.top__nav a[aria-current="page"] { border-bottom-color: var(--link); }
 
 .crumbs { display: flex; flex-wrap: wrap; gap: var(--sp-2); font-size: var(--fs-1); color: var(--ink-2); }
 .crumbs li + li::before { content: "/"; margin-right: var(--sp-2); color: var(--ink-3); }
@@ -241,21 +248,24 @@ lt2-logo-spin {
 
 /* ---------- Bubbles: who is speaking ---------- */
 
+/* A straight box with the button's cut size as its radius, and a small tail on its top edge that points up to the name
+   above it (owner, 2026-11-18: the name stands first, so the tail no longer points down; the skewed edges went). */
 .bubble {
   --b-bg: var(--slate-tint); --b-ink: var(--ink);
+  position: relative;
   background: var(--b-bg); color: var(--b-ink);
-  padding: var(--sp-4) var(--sp-5) calc(var(--sp-4) + 15px);
-  clip-path: polygon(0 3px, 100% 0, calc(100% - 4px) calc(100% - 15px), 3.5rem calc(100% - 15px),
-    1.5rem 100%, 1.875rem calc(100% - 15px), 5px calc(100% - 17px));
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--cut-s);
+}
+.bubble::before {
+  content: ""; position: absolute; inset-block-end: 100%; inset-inline-start: 1rem;
+  inline-size: 1.25rem; block-size: 0.5rem; background: var(--b-bg);
+  clip-path: polygon(0 100%, 0.25rem 0, 100% 100%);
 }
 .bubble > * { max-width: none; }
 .bubble--people { --b-bg: var(--leaf-tint); --b-ink: var(--ink); }
 .bubble--seimas { --b-bg: var(--slate-tint); }
-.bubble--mp {
-  --b-bg: var(--brand-deep); --b-ink: #ffffff;
-  clip-path: polygon(4px 0, 100% 4px, 100% calc(100% - 17px), calc(100% - 1.875rem) calc(100% - 15px),
-    calc(100% - 1.5rem) 100%, calc(100% - 3.5rem) calc(100% - 15px), 0 calc(100% - 15px));
-}
+.bubble--mp { --b-bg: var(--brand-deep); --b-ink: #ffffff; }
 .bubble--mp a { color: #ffffff; }
 .said { display: flex; flex-direction: column; gap: var(--sp-2); }
 .said__by { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-1); color: var(--ink-2); padding-left: var(--sp-5); }
@@ -270,7 +280,7 @@ lt2-logo-spin {
   border: 0; border-radius: 0; cursor: pointer; text-decoration: none;
   font: 700 var(--fs-2)/1.1 var(--font-text); color: var(--action-ink);
   --btn-bg: var(--action);
-  background: linear-gradient(225deg, transparent var(--cut-s), var(--btn-bg) calc(var(--cut-s) + 0.5px));
+  background: var(--btn-bg);
 }
 .btn:hover { --btn-bg: var(--action-hover); text-decoration: none; }
 .btn--for { --btn-bg: var(--for); color: var(--on-vote); }
@@ -341,6 +351,15 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 .figure--for .figure__num { color: var(--for); }
 .figure--against .figure__num { color: var(--against); }
 .figure--m .figure__num { font-size: clamp(2.5rem, 6vw, 3.5rem); }
+/* Figures side by side line up at the top (owner, 2026-11-18: on an MP's profile at 375 px they stood on their bottoms, so
+   a wrapped label pushed its neighbour down): the labels share a line across, the numbers the next, the lines under them
+   the next ones, each as tall as the tallest of the row (a subgrid of up to five lines); without subgrid, top-aligned. */
+:is(.pair--keep, .totals, .analytics-figures) { align-items: start; }
+@supports (grid-template-rows: subgrid) {
+  :is(.pair--keep, .totals, .analytics-figures) > .figure {
+    display: grid; grid-row: span 5; grid-template-rows: subgrid; row-gap: var(--sp-1); align-content: start;
+  }
+}
 
 .split { display: flex; height: 1rem; background: var(--absent); }
 .split > span { display: block; min-width: 2px; }
@@ -348,10 +367,13 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 .split__against { background: var(--against); }
 .split__abstain { background: var(--abstain); }
 .split--s { height: 0.5rem; }
+/* On the dark grounds the sides' colours are under 3:1: a light 1px edge (--side-edge, transparent in the light theme). */
+.split__for, .split__against, .choice--for::before, .choice--against::before { box-shadow: 0 0 0 1px var(--side-edge); }
+.figure--for .figure__num, .figure--against .figure__num { -webkit-text-stroke: 1px var(--side-edge); paint-order: stroke fill; }
 
 /* The threshold: a ruler with a tick every tenth. */
 .ruler { position: relative; height: 1.25rem; background: var(--slate-tint); }
-.ruler__fill { display: block; height: 100%; background: var(--leaf); }
+.ruler__fill { display: block; height: 100%; background: var(--progress); }
 .ruler::after {
   content: ""; position: absolute; inset: 0;
   background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), var(--sheet) calc(10% - 2px) 10%);
@@ -395,7 +417,7 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 }
 @media (max-width: 36rem) {
   .pair { grid-template-columns: minmax(0, 1fr); }
-  .pair--keep { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); align-items: end; }
+  .pair--keep { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); align-items: start; }
   .rows > li { grid-template-columns: minmax(0, 1fr); }
   .rows__side { align-items: flex-start; text-align: left; }
   .facts { grid-template-columns: minmax(0, 1fr); gap: 0; }

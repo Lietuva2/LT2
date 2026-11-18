@@ -186,6 +186,13 @@ public interface IDigests
     Task<IReadOnlyList<DigestRunInfo>> ForRecordAsync(Guid recordId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// The Vilnius day the next summary holding an open, eligible record goes (design 8.12.2, owner 2026-11-18): a prepared
+    /// summary's own day when one holds it (its bills are fixed), otherwise the day the rules give now
+    /// (<c>DigestRules.NextSendingDay</c>); null when no such summary is known or the record is held or not open.
+    /// </summary>
+    Task<DateOnly?> NextForRecordAsync(Guid recordId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// The moderators' summaries screen (design 8.19.2): the prepared summaries first, soonest first, each with its numbers now and
     /// its chosen arguments (an argument hidden since is replaced here and stays replaced), then the latest gone ones.
     /// </summary>

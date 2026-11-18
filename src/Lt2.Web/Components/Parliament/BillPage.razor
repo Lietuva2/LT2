@@ -158,7 +158,8 @@
 
                     <div class="stack stack--tight" id="threshold">
                         <h3 id="h-reach">@A["Threshold.Heading"]</h3>
-                        <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" @rendermode="InteractiveWebAssembly" />
+                        <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
+                                           LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == "sent")" @rendermode="InteractiveWebAssembly" />
                         @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
                            now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
                            moderator's statement (design 8.12). *@
@@ -310,6 +311,12 @@
     private VoteResponse? _closingVote;
     private IReadOnlyList<RecordDigestResponse> _digests = [];
 
+    /// <summary>The day the next summary holding the bill goes, read once its threshold is reached (design 8.12.2); none known: null.</summary>
+    private DateOnly? _nextDigest;
+
+    /// <summary>The newest summary that went with the bill (sent or a dry run; a declined one did not go).</summary>
+    private RecordDigestResponse? LastGone => _digests.Where(d => d.Status is "sent" or "dry-run").MaxBy(d => d.RunDate);
+
     /// <summary>Sending as it is now (design 8.19.1): the summaries part says nothing is sent only while that is so.</summary>
     private string _sending = "off";
 
@@ -355,6 +362,10 @@
         {
             _digests = (await Digests.GetRecordDigestsAsync(_bill.Number)).Value ?? [];
             _sending = (await Digests.GetRulesAsync()).Value?.Sending ?? "off";
+            if (_record is { Status: "open", Threshold.Reached: true })
+            {
+                _nextDigest = (await Digests.GetRecordNextDigestAsync(_bill.Number)).Value?.Day;
+            }
         }
 
         if (_record is { Status: "open" } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)

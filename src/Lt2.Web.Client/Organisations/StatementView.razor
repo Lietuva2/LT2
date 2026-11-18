@@ -18,7 +18,7 @@
             }
             @if (Label is not null)
             {
-                <OrgLabel Label="Label" />
+                <OrgLabel Label="Label" Id="@($"{IdPrefix}statement-{Statement.Id}-label")" />
             }
             @Mark
         </p>

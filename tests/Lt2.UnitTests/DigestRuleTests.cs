@@ -141,4 +141,79 @@ public sealed class DigestRuleTests
         var small = Candidate("SMALL", participants: 50);
         DigestRules.Order([small, later, big, soon]).Select(c => c.BillNumber).ShouldBe(["SOON", "LATER", "BIG", "SMALL"]);
     }
+
+    // Design 8.12.2 (owner, 2026-11-18): the day of the next summary that would hold a bill, said on its page once the
+    // threshold is reached. Monday is 2026-11-16; sittings are on Tuesdays and Thursdays.
+
+    private static readonly TimeOnly Noon = new(12, 0);
+
+    private static NextSummaryFacts Facts(
+        DateTimeOffset now, DateOnly[] sittings, DateOnly[]? weeklyMade = null, DateOnly[]? beforeVoteMade = null,
+        bool covered = false, int? last = null, bool weekly = true, bool beforeVote = true) =>
+        new(now, weekly ? Seven : null, beforeVote ? Noon : null, sittings.ToHashSet(), (weeklyMade ?? []).ToHashSet(),
+            (beforeVoteMade ?? []).ToHashSet(), covered, last, 0.10m);
+
+    private static PlannedDate Planned(DateOnly day, string? stage = "adoption") => new("XVP-0412", day, stage, null, false);
+
+    [Fact]
+    public void The_next_summary_of_a_bill_never_in_one_is_the_coming_weekly_summary_of_a_week_with_a_sitting()
+    {
+        var wednesday = Vilnius(Monday.AddDays(2), 10);
+        DigestRules.NextSendingDay(Candidate("XVP-0412"), Facts(wednesday, [Monday.AddDays(8), Monday.AddDays(10)]))
+            .ShouldBe(Monday.AddDays(7));
+        DigestRules.NextSendingDay(Candidate("XVP-0412"), Facts(wednesday, [Monday.AddDays(15)]))
+            .ShouldBe(Monday.AddDays(14), "a week without a sitting has no weekly summary");
+        DigestRules.NextSendingDay(Candidate("XVP-0412"), Facts(wednesday, []))
+            .ShouldBeNull("no sitting is known yet, so no day either");
+    }
+
+    [Fact]
+    public void A_weekly_summary_already_prepared_is_not_the_next_one_for_a_bill_it_does_not_hold()
+    {
+        var sundayAfterPreparing = Vilnius(Monday.AddDays(6), 8);
+        DigestRules.NextSendingDay(Candidate("XVP-0412"),
+                Facts(sundayAfterPreparing, [Monday.AddDays(8), Monday.AddDays(15)], weeklyMade: [Monday.AddDays(7)]))
+            .ShouldBe(Monday.AddDays(14));
+    }
+
+    [Fact]
+    public void A_bill_that_barely_changed_since_its_last_summary_waits_for_the_week_it_is_planned_in()
+    {
+        var wednesday = Vilnius(Monday.AddDays(2), 10);
+        var bill = Candidate("XVP-0412", planned: Planned(Monday.AddDays(17)), participants: 105);
+        DigestRules.NextSendingDay(bill, Facts(wednesday, [Monday.AddDays(8), Monday.AddDays(17)], last: 100))
+            .ShouldBe(Monday.AddDays(14), "the Monday of its sitting's week holds it");
+        DigestRules.NextSendingDay(Candidate("XVP-0412", participants: 105), Facts(wednesday, [Monday.AddDays(8)], last: 100))
+            .ShouldBeNull("not planned and not changed notably: no summary holds it");
+        DigestRules.NextSendingDay(Candidate("XVP-0412", participants: 111), Facts(wednesday, [Monday.AddDays(8)], last: 100))
+            .ShouldBe(Monday.AddDays(7), "changed by 10 % or more: the coming weekly summary");
+    }
+
+    [Fact]
+    public void The_before_vote_summary_comes_first_when_this_weeks_monday_summary_went_without_the_bill()
+    {
+        var tuesday = Vilnius(Monday.AddDays(1), 10);
+        var thursday = Monday.AddDays(3);
+        var bill = Candidate("XVP-0412", planned: Planned(thursday), participants: 105);
+        DigestRules.NextSendingDay(bill, Facts(tuesday, [thursday, Monday.AddDays(8)], weeklyMade: [Monday], last: 100))
+            .ShouldBe(Monday.AddDays(2), "12:00 on the working day before the sitting");
+        DigestRules.NextSendingDay(bill, Facts(tuesday, [thursday, Monday.AddDays(8)], weeklyMade: [Monday], covered: true, last: 100))
+            .ShouldBeNull("Monday's summary already held it for that sitting");
+        DigestRules.NextSendingDay(bill, Facts(tuesday, [thursday], weeklyMade: [Monday], beforeVoteMade: [thursday], last: 100))
+            .ShouldBeNull("that sitting's before-vote summary is made already");
+        DigestRules.NextSendingDay(Candidate("XVP-0412", planned: Planned(thursday, stage: null), participants: 105),
+                Facts(tuesday, [thursday], weeklyMade: [Monday], last: 100))
+            .ShouldBeNull("a stage that is not voted on has no before-vote summary");
+    }
+
+    [Fact]
+    public void A_bill_under_its_threshold_or_held_has_no_next_summary_and_a_time_switched_off_none_of_its_kind()
+    {
+        var wednesday = Vilnius(Monday.AddDays(2), 10);
+        DigestRules.NextSendingDay(Candidate("XVP-0412", reached: false), Facts(wednesday, [Monday.AddDays(8)])).ShouldBeNull();
+        DigestRules.NextSendingDay(Candidate("XVP-0412", held: true), Facts(wednesday, [Monday.AddDays(8)])).ShouldBeNull();
+        DigestRules.NextSendingDay(Candidate("XVP-0412"), Facts(wednesday, [Monday.AddDays(8)], weekly: false)).ShouldBeNull();
+        DigestRules.NextSendingDay(Candidate("XVP-0412", planned: Planned(Monday.AddDays(8))), Facts(wednesday, [Monday.AddDays(8)], weekly: false))
+            .ShouldBe(Monday.AddDays(7), "with no weekly summary, the before-vote one: the working day before Tuesday's sitting");
+    }
 }

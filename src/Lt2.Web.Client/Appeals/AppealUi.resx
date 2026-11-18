@@ -428,7 +428,6 @@
 <data name="Admin.Help.Registration:PendingAccountDays" xml:space="preserve"><value>Paskyra, kurios adresas nepatvirtintas arba registracija nebaigta, ištrinama po tiek dienų; tada tuo adresu galima registruotis iš naujo.</value></data>
 <data name="Admin.Unit.Registration:PendingAccountDays" xml:space="preserve"><value>dienos</value></data>
 <data name="Share.ToGo" xml:space="preserve"><value>Iki ribos trūksta {0} dalyvių</value></data>
-<data name="Share.Reached" xml:space="preserve"><value>Riba pasiekta</value></data>
 <data name="Share.Copy" xml:space="preserve"><value>Kopijuoti nuorodą</value></data>
 <data name="Share.Copied" xml:space="preserve"><value>Nukopijuota.</value></data>
 <data name="Share.NoLink" xml:space="preserve"><value>Jūsų kvietimo kodas šiuo metu neveikia, todėl nuoroda atveria projektą be jo. Daugiau – paskyros puslapyje.</value></data>
@@ -481,6 +480,7 @@
 <data name="Org.Label.none" xml:space="preserve"><value>Nepatvirtinta</value></data>
 <data name="Org.Label.domain" xml:space="preserve"><value>Patvirtinta per el. pašto adresą @{0}</value></data>
 <data name="Org.Label.moderator" xml:space="preserve"><value>Patvirtino moderatorius</value></data>
+<data name="Org.Label.Short" xml:space="preserve"><value>Patvirtinta</value></data>
 <data name="Org.Statement" xml:space="preserve"><value>Organizacijos pozicija</value></data>
 <data name="Org.Stance.for" xml:space="preserve"><value>Prašo balsuoti už</value></data>
 <data name="Org.Stance.against" xml:space="preserve"><value>Prašo balsuoti prieš</value></data>
@@ -750,7 +750,23 @@
   <data name="Agenda.Against" xml:space="preserve"><value>prieš</value></data>
   <data name="Agenda.NobodyClosed" xml:space="preserve"><value>Niekas nedalyvavo</value></data>
   <data name="Agenda.Reached" xml:space="preserve"><value>riba pasiekta</value></data>
-  <data name="Threshold.Progress" xml:space="preserve"><value>dalyvių · riba {0}</value></data>
+  <data name="Agenda.Participants.One" xml:space="preserve"><value>dalyvis</value></data>
+  <data name="Agenda.Participants.Few" xml:space="preserve"><value>dalyviai</value></data>
+  <data name="Agenda.Participants.Many" xml:space="preserve"><value>dalyvių</value></data>
+  <data name="Threshold.Progress.One" xml:space="preserve"><value>dalyvis · riba {0}</value></data>
+  <data name="Threshold.Progress.Few" xml:space="preserve"><value>dalyviai · riba {0}</value></data>
+  <data name="Threshold.Progress.Many" xml:space="preserve"><value>dalyvių · riba {0}</value></data>
+  <data name="Threshold.Reached.One" xml:space="preserve"><value>Riba pasiekta – balsuoti prašo {0} dalyvis.</value></data>
+  <data name="Threshold.Reached.Few" xml:space="preserve"><value>Riba pasiekta – balsuoti prašo {0} dalyviai.</value></data>
+  <data name="Threshold.Reached.Many" xml:space="preserve"><value>Riba pasiekta – balsuoti prašo {0} dalyvių.</value></data>
+  <data name="Threshold.ReachedClosed.One" xml:space="preserve"><value>Riba pasiekta – balsuoti prašė {0} dalyvis.</value></data>
+  <data name="Threshold.ReachedClosed.Few" xml:space="preserve"><value>Riba pasiekta – balsuoti prašė {0} dalyviai.</value></data>
+  <data name="Threshold.ReachedClosed.Many" xml:space="preserve"><value>Riba pasiekta – balsuoti prašė {0} dalyvių.</value></data>
+  <data name="Threshold.Next" xml:space="preserve"><value>Suvestinė Seimo nariams planuojama {0}.</value></data>
+  <data name="Threshold.NextTrial" xml:space="preserve"><value>Suvestinė planuojama {0}; kol vyksta bandymas, Seimo nariams ji nesiunčiama.</value></data>
+  <data name="Threshold.NextUnknown" xml:space="preserve"><value>Kitos suvestinės Seimo nariams data dar nežinoma.</value></data>
+  <data name="Threshold.LastSent" xml:space="preserve"><value>Suvestinė Seimo nariams išsiųsta {0}.</value></data>
+  <data name="Threshold.LastTrial" xml:space="preserve"><value>Bandomoji suvestinė sudaryta {0}; Seimo nariams ji nesiųsta.</value></data>
   <data name="Agenda.Ask" xml:space="preserve"><value>Prašau balsuoti</value></data>
   <data name="Agenda.Ask.for" xml:space="preserve"><value>Prašau balsuoti už projektą {0}</value></data>
   <data name="Agenda.Ask.against" xml:space="preserve"><value>Prašau balsuoti prieš projektą {0}</value></data>

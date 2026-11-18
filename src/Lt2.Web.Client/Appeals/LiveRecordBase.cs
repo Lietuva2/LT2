@@ -27,6 +27,9 @@ public abstract class LiveRecordBase : InteractiveBase<AppealUi>, IDisposable
         }
     }
 
+    /// <summary>What a part reads besides the bill's live answer once it has come, before it is shown again (none by default).</summary>
+    protected virtual Task OnLiveAsync(BillRecordResponse fresh) => Task.CompletedTask;
+
     /// <summary>New parameters are the server's copy, read with the page: newer than anything read before.</summary>
     protected override void OnParametersSet() => Live = null;
 
@@ -50,6 +53,7 @@ public abstract class LiveRecordBase : InteractiveBase<AppealUi>, IDisposable
                 if (await BillState.RecordAsync(Number) is { } fresh)
                 {
                     Live = fresh;
+                    await OnLiveAsync(fresh);
                     StateHasChanged();
                 }
             }

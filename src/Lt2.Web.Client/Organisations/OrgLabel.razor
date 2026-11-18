@@ -1,9 +1,27 @@
 @using Lt2.Api.Contracts.Organisations
 @inject IStringLocalizer<AppealUi> L
 
-@* The organisation's label (design 8.14.2): exactly what was confirmed, nothing more. *@
-<span class="tag @(Label.ConfirmedBy is null ? "" : "tag--brand")" data-org-label="@(Label.ConfirmedBy ?? "none")">@OrganisationWords.LabelText(L, Label)</span>
+@* The organisation's label (design 8.14.2): exactly what was confirmed, nothing more. A confirmed one reads "Patvirtinta" in
+   the chip and says how in a hint (owner, 2026-11-18: "Patvirtinta per el. pašto adresą @…" no longer fitted one line):
+   the site's own hint (design 8.15), the browser's popover, so a press, a tap or the keyboard opens it without JavaScript
+   too; "Patvirtinta per el. pašto adresą @domenas" or "Patvirtino moderatorius". Without an id (a place that gives none)
+   the chip carries the whole text as its title and for screen readers. "Nepatvirtinta" is short and stays as it is. *@
+@if (Label.ConfirmedBy is null)
+{
+    <span class="tag" data-org-label="none">@L["Org.Label.none"]</span>
+}
+else if (Id is { Length: > 0 } id)
+{
+    <span class="tag tag--brand org-label" data-org-label="@Label.ConfirmedBy"><Lt2.Web.Client.Components.Hint Id="@id" Text="@L["Org.Label.Short"].Value" Answer="@OrganisationWords.LabelText(L, Label)" /></span>
+}
+else
+{
+    <span class="tag tag--brand org-label" data-org-label="@Label.ConfirmedBy" title="@OrganisationWords.LabelText(L, Label)"><span aria-hidden="true">@L["Org.Label.Short"]</span><span class="visually-hidden">@OrganisationWords.LabelText(L, Label)</span></span>
+}
 
 @code {
     [Parameter, EditorRequired] public OrganisationLabelResponse Label { get; set; } = new(null, null);
+
+    /// <summary>The hint's trigger id, unique on the page (its panel is <c>{Id}-panel</c>); none: the title instead.</summary>
+    [Parameter] public string? Id { get; set; }
 }

@@ -409,8 +409,9 @@ public sealed class MyAgendaTests : BunitContext
     [Fact]
     public void A_line_of_numbers_breaks_only_between_its_parts()
     {
-        // Design 8.7, "The row lines up": a side's word, count and bracket stay together, so do the participants with the
-        // threshold, and "riba pasiekta"; the "·" ends a part, so no line starts with it.
+        // Design 8.7, "The row lines up": a side's word, count and bracket stay together, so do the participants, and "riba
+        // pasiekta"; the "·" ends a part, so no line starts with it. Reached, the line no longer names the threshold's number
+        // (design 8.12.2, owner 2026-11-18); under it, the participants keep the threshold beside them.
         var record = new AgendaRecordResponse(null, "open", new SideCountsResponse(6800, 6195, 4280, 3917), new ThresholdResponse(10000, "default", null, 11080, true, false));
         var figures = Render<RecordFigures>(p => p.Add(c => c.Record, record).Add(c => c.Id, "2026-11-19-XVP-0412"));
         var forPart = $"{Text("Agenda.For")} {Display.Number(6800)} ({Display.Number(6195)})";
@@ -418,11 +419,15 @@ public sealed class MyAgendaTests : BunitContext
 
         figures.FindAll("#home-counts-2026-11-19-XVP-0412 > .nowrap").Select(e => Flat(e.TextContent)).ShouldBe([Flat(forPart + " ·"), Flat(againstPart)]);
         var threshold = figures.FindAll(".nowrap").Skip(2).Select(e => Flat(e.TextContent)).ToList();
-        threshold.Count.ShouldBe(2, "the participants with the threshold, and \"riba pasiekta\"");
-        threshold[0].ShouldStartWith(Flat(Display.Number(11080) + " "));
-        threshold[0].ShouldEndWith(Flat(Display.Number(10000) + " ·"));
+        threshold.Count.ShouldBe(2, "the participants, and \"riba pasiekta\"");
+        threshold[0].ShouldBe(Flat(Display.Number(11080) + " " + Text("Agenda.Participants.Many") + " ·"));
         threshold[1].ShouldBe(Text("Agenda.Reached"));
         Flat(figures.Find("#home-counts-2026-11-19-XVP-0412").TextContent).ShouldBe(Flat(forPart + " · " + againstPart), "the same words as before, only kept together");
+
+        var under = Render<RecordFigures>(p => p.Add(c => c.Record, record with { Threshold = record.Threshold with { Participants = 9000, Reached = false } }));
+        var progress = under.FindAll(".nowrap").Skip(2).Select(e => Flat(e.TextContent)).ToList();
+        progress.ShouldHaveSingleItem().ShouldStartWith(Flat(Display.Number(9000) + " "));
+        progress[0].ShouldEndWith(Flat(Display.Number(10000)));
     }
 
     /// <summary>The text with every run of white space (the numbers' own spaces included) as one space.</summary>

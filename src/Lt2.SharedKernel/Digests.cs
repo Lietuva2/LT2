@@ -40,6 +40,9 @@ public interface IDigestSource
     /// <summary>Every open record with its numbers now; the summary rules decide which go in.</summary>
     Task<IReadOnlyList<DigestCandidate>> CandidatesAsync(CancellationToken cancellationToken);
 
+    /// <summary>One record as <see cref="CandidatesAsync"/> gives it; null when it is not open.</summary>
+    Task<DigestCandidate?> CandidateAsync(Guid recordId, CancellationToken cancellationToken);
+
     /// <summary>
     /// The arguments a summary may choose from on the given records (design 8.19.2, owner 2026-11-17): published now (so
     /// neither hidden, merged nor waiting) and first public no later than <paramref name="publishedBy"/>, the summary's

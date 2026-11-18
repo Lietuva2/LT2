@@ -33,7 +33,9 @@ Read before changing a page, a component or an island. The rules behind it are d
   that acted calls `MyBillState.Announce` (`byModerator` for a moderator's action) and the others read their part again
   (`Changed`); what is new to the reader (design 8.11.8) is `MyBillState.News`/`NewSince`, set once per page by `WhatsNew`,
   with "Rodyti tik naujus" as `OnlyNew`/`Keeps` and `NewsChanged` telling the islands; the counts, the threshold's progress and the share line are islands on `LiveRecordBase` (`SideFigures`,
-  `ThresholdProgress`, `ShareLine`) that take the bill's live answer; where the server's part of a page changes (a moderator's
+  `ThresholdProgress`, `ShareLine`) that take the bill's live answer (`OnLiveAsync` reads more after it: `ThresholdProgress`
+  swaps its ruler for the words of design 8.12.2 once the threshold is reached, with the next summary's day the page reads
+  from `…/record/digests/next` and asks again when the threshold is first reached on the page); where the server's part of a page changes (a moderator's
   action, an organisation's profile, an MP's response) the island calls `Navigation.Refresh()`, which reads the page again in
   place and gives the islands new parameters (`FollowButton` takes its count from them again). A full load
   (`forceLoad: true`) is only for a changed session (signing in or out, a passkey or staff session started in place by a
@@ -48,6 +50,15 @@ Read before changing a page, a component or an island. The rules behind it are d
   "Rodyti tekstą prieš pakeitimą" (`details.more`; the text after it is already on the page). The oldest version (`Old`
   null) and an unchanged text show whole, with no disclosure. The text in force opens its
   history with its own changes. Every history lists the newest first; a short value (a name, a website) stays "A → B".
+- **Colours and shapes (design 8.16.3, owner 2026-11-18).** A side is coloured only through `--for` (the light theme's
+  link green) and `--against` (its matching red), the same in both themes, with `--on-vote` (white) for a word on them;
+  a new shape in a side's colour also takes the 1px `--side-edge` (stroke, or `box-shadow: 0 0 0 1px`), which keeps it
+  at 3:1 on the dark grounds and is transparent in the light theme. The threshold's fill is `--progress`; a mark of the
+  current place (menu, drop-down, tabs) is `--link`. Every token is set for both themes in `design/ui/lt2.css` and copied
+  to `lt2.css`; text keeps 4.5:1 and a control or a bar 3:1 in both. Buttons are straight (no cut); the cut corner is
+  only `.sheet--cut` and `.portrait`. A `.bubble` is a straight box with radius `--cut-s` and a tail pointing up to the
+  name above it. Figures in a row (`.pair--keep`, `.totals`, `.analytics-figures`) are a subgrid of five lines
+  at most, top-aligned: a figure with more lines needs the span raised.
 - **A new public, server-rendered page puts `<LinkPreview Title="…" Description="…" />` beside its `<PageTitle>`** (design
   8.22.5: the title without " · Lietuva 2.0", one or two sentences, never counts or a member's own text; `Path` when the page's
   own address differs from the requested path). A page behind sign-in, a staff page or a token page puts none; such a path

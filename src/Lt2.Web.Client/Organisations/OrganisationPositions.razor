@@ -65,7 +65,7 @@
             @foreach (var org in mine)
             {
                 <div class="sheet sheet--quiet stack stack--tight" id="my-organisation-@org.Slug" aria-label="@org.Name" @key="org.Slug">
-                    <p class="row"><b>@L.Format("Org.Mine.Title", org.Name)</b> <OrgLabel Label="org.Label" /></p>
+                    <p class="row"><b>@L.Format("Org.Mine.Title", org.Name)</b> <OrgLabel Label="org.Label" Id="@($"my-organisation-label-{org.Slug}")" /></p>
                     <p class="fine">@L["Org.Mine.Private"]</p>
                     @if (org.Statement is { } own)
                     {

@@ -51,10 +51,19 @@ internal sealed class DigestSource(
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<DigestCandidate>> CandidatesAsync(CancellationToken cancellationToken)
+    public Task<IReadOnlyList<DigestCandidate>> CandidatesAsync(CancellationToken cancellationToken) =>
+        CandidatesOfAsync(null, cancellationToken);
+
+    public async Task<DigestCandidate?> CandidateAsync(Guid recordId, CancellationToken cancellationToken) =>
+        (await CandidatesOfAsync(recordId, cancellationToken)).SingleOrDefault();
+
+    /// <summary>Every open record, or only <paramref name="recordId"/> while it is open.</summary>
+    private async Task<IReadOnlyList<DigestCandidate>> CandidatesOfAsync(Guid? recordId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var appeals = await db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Open).ToListAsync(cancellationToken);
+        var appeals = await db.BillRecords.AsNoTracking()
+            .Where(a => a.Status == BillRecordStatuses.Open && (recordId == null || a.Id == recordId))
+            .ToListAsync(cancellationToken);
         if (appeals.Count == 0)
         {
             return [];
