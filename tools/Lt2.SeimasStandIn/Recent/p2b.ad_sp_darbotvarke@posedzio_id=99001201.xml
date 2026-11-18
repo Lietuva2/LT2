@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
-     Seimas response. Written by tools/demo_closed_bills.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
+     Seimas response. Written by tools/standin_overlay.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
   <SeimoPosėdis posėdžio_id="99001201" numeris="204" tipas="Rytinis" pradžia="2026-03-24 10:00" pabaiga="2026-03-24 12:47">
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012010" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="10:00"/>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012011" numeris="2" pavadinimas="Transporto lengvatų įstatymo pataisa" stadija="Priėmimas" laikas_nuo="10:42">
       <Dokumentas registracijos_numeris="XVP-0714" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0714"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012012" numeris="3" pavadinimas="Pridėtinės vertės mokesčio įstatymo pataisa" stadija="Priėmimas" laikas_nuo="11:14">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012012" numeris="3" pavadinimas="Pridėtinės vertės mokesčio įstatymo pataisa" stadija="Priėmimas" laikas_nuo="11:12">
       <Dokumentas registracijos_numeris="XVP-0706" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0706"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012013" numeris="4" pavadinimas="Mokslo ir studijų įstatymo pataisa" stadija="Priėmimas" laikas_nuo="11:42">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012013" numeris="4" pavadinimas="Mokslo ir studijų įstatymo pataisa" stadija="Priėmimas" laikas_nuo="11:37">
       <Dokumentas registracijos_numeris="XVP-0715" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0715"/>
     </DarbotvarkėsKlausimas>
   </SeimoPosėdis>

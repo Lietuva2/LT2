@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. {{past:N}} is the N-th Tuesday or Thursday before today (yyyy-MM-dd): the last four sitting days, with their
+     votes, shaped after the real Seimas's. Written by tools/standin_overlay.py (fixed seed); do not edit by hand (tools/standin_agenda.py). --><SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001331" numeris="264" tipas="Vakarinis" pradžia="{{past:3}} 14:00" pabaiga="{{past:3}} 16:12">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133101" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="14:00"/>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133102" numeris="2.1" pavadinimas="Geležinkelių transporto kodekso 49 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="14:02">
+      <Dokumentas registracijos_numeris="XVP-1669" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1669"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133103" numeris="2.2" pavadinimas="Saugaus eismo automobilių keliais įstatymo 35 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="14:02">
+      <Dokumentas registracijos_numeris="XVP-1670" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1670"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133104" numeris="2.3" pavadinimas="Transporto lengvatų įstatymo 52 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="14:02">
+      <Dokumentas registracijos_numeris="XVP-1671" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1671"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133105" numeris="2.4" pavadinimas="Kelių transporto kodekso 65 ir 68 straipsnių pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="14:02">
+      <Dokumentas registracijos_numeris="XVP-1672" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1672"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133106" numeris="6.1" pavadinimas="2027 metų valstybės biudžeto ir savivaldybių biudžetų finansinių rodiklių patvirtinimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="14:18">
+      <Dokumentas registracijos_numeris="XVP-1178" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1178"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133107" numeris="6.2" pavadinimas="Valstybinio socialinio draudimo fondo biudžeto 2027 metų rodiklių patvirtinimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="14:18">
+      <Dokumentas registracijos_numeris="XVP-1179" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1179"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133108" numeris="6.3" pavadinimas="Privalomojo sveikatos draudimo fondo biudžeto 2027 metų rodiklių patvirtinimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="14:18">
+      <Dokumentas registracijos_numeris="XVP-1180" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1180"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133109" numeris="9" pavadinimas="Valstybės informacinių išteklių valdymo įstatymo pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="14:32">
+      <Dokumentas registracijos_numeris="XVP-1525" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1525"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133110" numeris="10" pavadinimas="Valstybinio socialinio draudimo įstatymo 76 straipsnio pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="14:37">
+      <Dokumentas registracijos_numeris="XVP-1113" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1113"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133111" numeris="11" pavadinimas="Seimo nutarimo „Dėl Seimo laikinosios tyrimo komisijos sudarymo“ projektas" stadija="Pateikimas" laikas_nuo="14:42">
+      <Dokumentas registracijos_numeris="XVP-0978" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0978"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133112" numeris="12" pavadinimas="Administracinių nusižengimų kodekso pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="14:57">
+      <Dokumentas registracijos_numeris="XVP-1600" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1600"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133113" numeris="13" pavadinimas="Seimo nutarimo „Dėl Aplinkos apsaugos komiteto sudėties pakeitimo“ projektas" stadija="Svarstymas" laikas_nuo="15:12">
+      <Dokumentas registracijos_numeris="XVP-1564" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1564"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133114" numeris="14" pavadinimas="Seimo nutarimo „Dėl ilgalaikės demografijos politikos krypčių“ projektas" stadija="Pateikimas, svarstymas, priėmimas" laikas_nuo="15:17">
+      <Dokumentas registracijos_numeris="XVP-1823" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1823"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133115" numeris="15" pavadinimas="Seimo nutarimo „Dėl Lietuvos mokslo tarybos 2025 metų veiklos ataskaitos“ projektas" stadija="Pateikimas, svarstymas, priėmimas" laikas_nuo="15:22">
+      <Dokumentas registracijos_numeris="XVP-2032" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-2032"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133116" numeris="16" pavadinimas="Aplinkos teršimo mokesčio įstatymo pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="15:27">
+      <Dokumentas registracijos_numeris="XVP-1252" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1252"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133117" numeris="r-17" pavadinimas="Seimo nutarimo „Dėl Valstybinės energetikos strategijos įgyvendinimo“ projektas" stadija="Pateikimas, svarstymas, priėmimas" laikas_nuo="16:00">
+      <Dokumentas registracijos_numeris="XVP-1826" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1826"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99133118" numeris="r-18" pavadinimas="Seimo nutarimo „Dėl Valstybės ilgalaikės raidos strategijos įgyvendinimo“ projektas" stadija="Pateikimas, svarstymas, priėmimas" laikas_nuo="16:05">
+      <Dokumentas registracijos_numeris="XVP-1919" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1919"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>

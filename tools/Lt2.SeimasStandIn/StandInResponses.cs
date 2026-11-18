@@ -33,8 +33,8 @@ internal sealed class StandInResponses
     }
 
     /// <summary>
-    /// Answers whose text holds <c>{{day:N}}</c> (today plus N days, <c>yyyy-MM-dd</c>), rendered when asked: the local
-    /// overlay's recent sitting and vote (design 8.11.1, "recently voted"), so the local agenda always has one.
+    /// The local overlay's answers, rendered when asked: their <c>{{day:N}}</c> and <c>{{past:N}}</c> (<see cref="RenderDays"/>)
+    /// date the recent sitting days and votes relative to today (design 8.11.1, "recently voted").
     /// </summary>
     private readonly ConcurrentDictionary<string, string> _dated = new(StringComparer.Ordinal);
 
@@ -82,13 +82,37 @@ internal sealed class StandInResponses
         return loaded;
     }
 
-    /// <summary><c>{{day:N}}</c> becomes <paramref name="today"/> plus N days, <c>yyyy-MM-dd</c>.</summary>
+    /// <summary>
+    /// <c>{{day:N}}</c> becomes <paramref name="today"/> plus N days, and <c>{{past:N}}</c> the N-th Tuesday or Thursday
+    /// before <paramref name="today"/> (the overlay's recent sitting days), both <c>yyyy-MM-dd</c>.
+    /// </summary>
     public static string RenderDays(string template, DateOnly today) =>
         System.Text.RegularExpressions.Regex.Replace(
             template,
-            @"\{\{day:(-?\d+)\}\}",
-            m => today.AddDays(int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture))
-                .ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+            @"\{\{(day|past):(-?\d+)\}\}",
+            m =>
+            {
+                var n = int.Parse(m.Groups[2].Value, System.Globalization.CultureInfo.InvariantCulture);
+                var day = m.Groups[1].Value == "day" ? today.AddDays(n) : SittingDayBefore(today, n);
+                return day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            });
+
+    /// <summary>The <paramref name="n"/>-th Tuesday or Thursday before <paramref name="today"/> (1: the most recent).</summary>
+    public static DateOnly SittingDayBefore(DateOnly today, int n)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(n, 1);
+        var day = today;
+        while (n > 0)
+        {
+            day = day.AddDays(-1);
+            if (day.DayOfWeek is DayOfWeek.Tuesday or DayOfWeek.Thursday)
+            {
+                n--;
+            }
+        }
+
+        return day;
+    }
 
     /// <summary>
     /// The agenda page for <paramref name="today"/>: <c>{{sitting:N}}</c> becomes the N-th Tuesday or Thursday at least

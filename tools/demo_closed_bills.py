@@ -1,35 +1,28 @@
-"""Writes the stand-in's invented closed bills into tools/Lt2.SeimasStandIn/Recent (design 8.26.5).
+"""The stand-in's invented closed bills (design 8.26.5), written by tools/standin_overlay.py into tools/Lt2.SeimasStandIn/Recent.
 
 Local stack and trial only: Recent/ is the container's overlay, never loaded by tests. Thirty invented bills
 (XVP-0701..XVP-0731 without XVP-0707) get an adoption vote at a sitting on a Tuesday or Thursday between March and
-November 2026, with per-MP ballots for every MP of the invented parliament sitting that day; three are adopted by
-consensus (no ballots) and four rejected (the majority of those who voted not "for"). Fixed seed: running it again
-writes the same files. The migrator's --demo-appeal gives these bills invented positions and closes their records
-(src/Lt2.Migrator/DemoClosedBills.cs holds the same numbers).
+early November 2026, with per-MP ballots for every MP of the invented parliament sitting that day (tools/invented_seimas.py),
+groups voting along their lines; the totals are the ballots'. Three are adopted by consensus (no ballots) and four
+rejected (the majority of those who voted not "for"; XVP-0706 with more than half "prieš", the others without a majority).
+XVP-0707 is adopted at a sitting nine days before today. The migrator's --demo-appeal gives these bills invented
+positions and closes their records (src/Lt2.Migrator/DemoClosedBills.cs holds the same numbers).
 
 The sittings are listed in the overlay's answer for the autumn session (99000102), whatever their date: the import asks
 for a closed session's sittings only once, so a stack that imported the spring session before would never see sittings
-added to it, while the open session's list is read again on every run. Sessions are shown nowhere.
-
-    python tools/demo_closed_bills.py            # writes the files
-    python tools/demo_closed_bills.py --check    # exits 1 when the files differ from what it would write
+added to it, while the open session's list is read again on every run. Sessions are shown nowhere. The last of them is
+more than two weeks before 2026-11-18, so none shares a day with the recent sittings, which are dated relative to today
+(tools/standin_agenda.py).
 """
 
+from __future__ import annotations
+
 import datetime as dt
-import pathlib
 import random
-import sys
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
-RECENT = ROOT / "tools" / "Lt2.SeimasStandIn" / "Recent"
+import invented_seimas as seimas
 
-HEADER = (
-    '<?xml version="1.0" encoding="UTF-8"?>\n'
-    "<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded\n"
-    "     Seimas response. {note} -->"
-)
-GENERATED = "Written by tools/demo_closed_bills.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5)."
-RELATIVE = "{{day:N}} is today plus N days (yyyy-MM-dd), so the local agenda page has votes from the last week."
+GENERATED = "Written by tools/standin_overlay.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5)."
 
 # The invented closed bills: number, title. Titles name real kinds of law; the numbers and everything else are invented.
 BILLS = [
@@ -66,99 +59,55 @@ BILLS = [
 ]
 CONSENSUS = {"XVP-0705", "XVP-0720", "XVP-0729"}
 REJECTED = {"XVP-0706", "XVP-0718", "XVP-0722", "XVP-0726"}
+MORE_AGAINST = "XVP-0706"  # rejected with more "prieš" than "už": the statistics page shows "prieš" as the Seimas's majority
 
-# Sittings: date, number, morning or evening, how many of the bills were adopted at it.
+# Sittings: date, number, how many of the bills were adopted at it.
 SITTINGS = [
     ("2026-03-24", 204, 3), ("2026-04-02", 207, 2), ("2026-04-23", 215, 2), ("2026-05-07", 221, 3),
     ("2026-05-26", 229, 2), ("2026-06-11", 234, 2), ("2026-06-23", 238, 2), ("2026-09-24", 244, 3),
-    ("2026-10-06", 247, 2), ("2026-10-15", 250, 2), ("2026-10-27", 253, 3), ("2026-11-05", 255, 2),
-    ("2026-11-12", 260, 2),
+    ("2026-10-06", 247, 2), ("2026-10-15", 250, 2), ("2026-10-27", 253, 3), ("2026-10-29", 254, 2),
+    ("2026-11-03", 256, 2),
 ]
 
-# The invented parliament (tests/Lt2.Parliament.ImportTests/Seimas/Synthetic/README.md): who sits on a day, and with which label.
-MPS = [
-    (99000001, "Jonas", "Petraitis"), (99000002, "Marius", "Ąžuolaitis"), (99000003, "Eglė", "Beržinytė"),
-    (99000004, "Vytautas", "Klevinskas"), (99000005, "Ona", "Jonaitienė"), (99000006, "Laima", "Uosytė"),
-    (99000007, "Darius", "Liepaitis"), (99000008, "Asta", "Pušinskienė"), (99000009, "Kęstutis", "Gluosnis"),
-    (99000010, "Indrė", "Eglaitė"), (99000011, "Tadas", "Alksninis"), (99000012, "Gintarė", "Šermukšnytė"),
-    (99000013, "Aurelija", "Kadagytė"), (99000014, "Rasa", "Ievaitė"),
-]
-BASE_LABEL = {1: "RPF", 2: "RPF", 3: "RPF", 4: "RPF", 5: "PSF", 6: "PSF", 7: "PSF", 8: "PSF", 9: "RAF", 10: "RAF",
-              11: "RAF", 12: "RAF", 13: "RAF", 14: "RPF"}
-CHANGE = dt.date(2026, 4, 30)  # the last day of Liepaitis in PSF and Ievaitė in RPF
-
-
-def label(person: int, day: dt.date) -> str | None:
-    n = person - 99000000
-    if n == 11 and day > dt.date(2026, 4, 15):
-        return None
-    if n == 13 and day < dt.date(2026, 4, 21):
-        return None
-    if day > CHANGE and n == 7:
-        return "RAF"
-    if day > CHANGE and n == 14:
-        return "MG"
-    return BASE_LABEL[n]
-
-
-FOR, AGAINST, ABSTAIN = "Už", "Prieš", "Susilaikė"
-# How likely each faction's line is "for": adopted bills, rejected bills.
-LEAN_FOR = {"RPF": (0.85, 0.45), "RAF": (0.65, 0.3), "PSF": (0.4, 0.15)}
-
-
-def ballots(rng: random.Random, day: dt.date, rejected: bool) -> list[tuple[int, str, str, str, str]]:
-    lines = {}
-    for faction, (adopted_p, rejected_p) in LEAN_FOR.items():
-        if rng.random() < 0.08:
-            lines[faction] = None  # a free vote
-            continue
-        p = rejected_p if rejected else adopted_p
-        r = rng.random()
-        lines[faction] = FOR if r < p else (AGAINST if r < p + (1 - p) * 0.75 else ABSTAIN)
-    rows = []
-    for person, first, last in MPS:
-        lab = label(person, day)
-        if lab is None:
-            continue
-        r = rng.random()
-        if r < 0.06:
-            choice = ""
-        else:
-            line = lines.get(lab)
-            if line is None:
-                choice = rng.choices([FOR, AGAINST, ABSTAIN], [0.45, 0.35, 0.2])[0]
-            elif rng.random() < 0.87:
-                choice = line
-            else:
-                choice = rng.choice([c for c in (FOR, AGAINST, ABSTAIN) if c != line])
-        rows.append((person, first, last, lab, choice))
-    return rows
-
-
-def totals(rng: random.Random, rejected: bool) -> tuple[int, int, int]:
-    while True:
-        if rejected:
-            f, a, s = rng.randint(38, 60), rng.randint(36, 62), rng.randint(6, 22)
-        else:
-            f, a, s = rng.randint(62, 96), rng.randint(10, 46), rng.randint(3, 24)
-        if (f * 2 > f + a + s) != rejected and f + a + s <= 135:
-            return f, a, s
+# XVP-0707 (src/Lt2.Migrator/DemoAppeal.cs ClosedBill): adopted at an unscheduled sitting nine days before today, in the
+# evening after the day's sittings, so it never takes the place of a recent sitting day.
+CLOSED_0707 = ("XVP-0707", "Viešųjų pirkimų įstatymo pataisa")
+RELATIVE_0707 = ("{{day:N}} is today plus N days (yyyy-MM-dd), so the local stack has a bill whose adoption vote was nine days ago "
+                 "(design 8.26).\n     " + GENERATED)
 
 
 def accusative(title: str) -> str:
     return title[: -len("pataisa")] + "pataisą" if title.endswith("pataisa") else title
 
 
-def main() -> int:
+def _adoption(rng: random.Random, day: dt.date, bill: str) -> list:
+    """Per-MP rows for an adoption vote: adopted ("for" more than half of those who voted) unless the bill is rejected."""
+    rejected = bill in REJECTED
+    profile = "rejected-against" if bill == MORE_AGAINST else "rejected-split" if rejected else rng.choice(["majority", "majority", "consensual"])
+    for _ in range(200):
+        rows = seimas.ballots(rng, day, profile)
+        f, a, s = seimas.count(rows)
+        adopted = f * 2 > f + a + s
+        total = f + a + s
+        against = a * 2 > total  # "prieš" on the statistics page; otherwise a rejected bill has "nėra daugumos"
+        if adopted != rejected and against == (bill == MORE_AGAINST):
+            return rows
+    raise AssertionError(f"no ballots fit {bill}")
+
+
+def files() -> tuple[dict[str, str], list[str]]:
+    """The closed bills' files and their sittings' lines for the autumn session's list."""
     rng = random.Random(707)
     order = BILLS[:]
     rng.shuffle(order)
-    files: dict[str, str] = {}
+    out: dict[str, str] = {}
     sitting_rows = []
     queue = iter(order)
+    header = seimas.HEADER.format(note=GENERATED)
     for s, (date, number, count) in enumerate(SITTINGS, start=1):
         day = dt.date.fromisoformat(date)
         assert day.weekday() in (1, 3), f"{date} is not a Tuesday or Thursday"
+        assert day <= dt.date(2026, 11, 3), "before the recent sitting days (tools/standin_agenda.py)"
         sitting_id = 99001200 + s
         evening = rng.random() < 0.3
         start = dt.datetime.combine(day, dt.time(14 if evening else 10, 0))
@@ -189,49 +138,44 @@ def main() -> int:
                 f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_id}">\n'
                 f'      <Balsavimas balsavimo_id="{vote_id}" balsavimo_laikas="{held:%Y-%m-%d %H:%M:%S}" aprašas="Priimti {accusative(title)}" balsavimo_tipas="Atviras"/>\n'
                 "    </DarbotvarkėsKlausimas>")
-            rejected = bill in REJECTED
-            f, a, ab = totals(rng, rejected)
-            rows = "\n".join(
-                f'  <IndividualusBalsavimoRezultatas asmens_id="{p}" vardas="{fn}" pavardė="{ln}" frakcija="{lab}" kaip_balsavo="{c}"/>'
-                for p, fn, ln, lab, c in ballots(rng, day, rejected))
-            files[f"p2b.ad_sp_balsavimo_rezultatai@balsavimo_id={vote_id}.xml"] = (
-                HEADER.format(note=GENERATED) + "<SeimoInformacija>\n"
-                f'  <BendriBalsavimoRezultatai balsavimo_id="{vote_id}" balsavimo_laikas="{held:%Y-%m-%d %H:%M:%S}" viso="141" balsavo="{f + a + ab}" už="{f}" prieš="{a}" susilaikė="{ab}" komentaras=""/>\n'
-                f"{rows}\n</SeimoInformacija>\n")
-        files[f"p2b.ad_sp_darbotvarke@posedzio_id={sitting_id}.xml"] = (
-            HEADER.format(note=GENERATED) + "<SeimoInformacija>\n"
+            rows = _adoption(rng, day, bill)
+            out[f"p2b.ad_sp_balsavimo_rezultatai@balsavimo_id={vote_id}.xml"] = seimas.result_file(GENERATED, vote_id, f"{held:%Y-%m-%d %H:%M:%S}", rows)
+        out[f"p2b.ad_sp_darbotvarke@posedzio_id={sitting_id}.xml"] = (
+            header + "<SeimoInformacija>\n"
             f'  <SeimoPosėdis posėdžio_id="{sitting_id}" numeris="{number}" tipas="{kind}" {times}>\n'
             + "\n".join(items) + "\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
-        files[f"p2b.ad_sp_klausimo_svarstymo_eiga@posedzio_id={sitting_id}.xml"] = (
-            HEADER.format(note=GENERATED) + "<SeimoInformacija>\n"
+        out[f"p2b.ad_sp_klausimo_svarstymo_eiga@posedzio_id={sitting_id}.xml"] = (
+            header + "<SeimoInformacija>\n"
             f'  <SeimoPosėdis posėdžio_id="{sitting_id}">\n' + "\n".join(proceedings) + "\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
 
-    # The autumn session as the stand-in's base data and the overlay's relative sittings list it, then the invented ones.
-    files["p2b.ad_seimo_posedziai@sesijos_id=99000102.xml"] = (
-        HEADER.format(note=RELATIVE + "\n     The sittings 99001201-99001213 (all dates) are " + GENERATED[:-1] + "; they are listed in this open\n"
-                      "     session's answer because the import reads a closed session's sittings only once.")
-        + "<SeimoInformacija>\n"
-        '  <SeimoSesija sesijos_id="99000102" pavadinimas="Rudens sesija" data_nuo="2026-09-10" data_iki="">\n'
-        '    <SeimoPosėdis posėdžio_id="99001101" numeris="241" tipas="Rytinis" pradžia="2026-09-15 10:00" pabaiga="2026-09-15 13:15"/>\n'
-        '    <SeimoPosėdis posėdžio_id="99001103" numeris="258" tipas="Rytinis" pradžia="{{day:-9}} 10:00" pabaiga="{{day:-9}} 12:40"/>\n'
-        '    <SeimoPosėdis posėdžio_id="99001102" numeris="262" tipas="Rytinis" pradžia="{{day:-2}} 10:00" pabaiga="{{day:-2}} 13:05"/>\n'
-        + "\n".join(sitting_rows) + "\n  </SeimoSesija>\n</SeimoInformacija>\n")
-
-    check = "--check" in sys.argv[1:]
-    differs = []
-    for name, text in sorted(files.items()):
-        path = RECENT / name
-        if check:
-            if not path.exists() or path.read_text(encoding="utf-8") != text:
-                differs.append(name)
-        else:
-            path.write_text(text, encoding="utf-8", newline="\n")
-    if check:
-        print("\n".join(differs) if differs else "up to date")
-        return 1 if differs else 0
-    print(f"wrote {len(files)} files to {RECENT.relative_to(ROOT)}")
-    return 0
+    # XVP-0707, nine days ago: its per-MP rows keep the base fixture's 14 MPs' choices and the earlier totals.
+    bill, title = CLOSED_0707
+    header = seimas.HEADER.format(note=RELATIVE_0707)
+    times = 'pradžia="{{day:-9}} 17:00" pabaiga="{{day:-9}} 17:25"'
+    sitting_rows.append(f'    <SeimoPosėdis posėdžio_id="99001103" numeris="0" tipas="Nenumatytas" {times}/>')
+    out["p2b.ad_sp_darbotvarke@posedzio_id=99001103.xml"] = (
+        header + "<SeimoInformacija>\n"
+        f'  <SeimoPosėdis posėdžio_id="99001103" numeris="0" tipas="Nenumatytas" {times}>\n'
+        '    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010301" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="17:00"/>\n'
+        f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010302" numeris="2" pavadinimas="{title}" stadija="Priėmimas" laikas_nuo="17:05">\n'
+        f'      <Dokumentas registracijos_numeris="{bill}" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-{bill}"/>\n'
+        "    </DarbotvarkėsKlausimas>\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
+    held = "{{day:-9}} 17:14:05"
+    out["p2b.ad_sp_klausimo_svarstymo_eiga@posedzio_id=99001103.xml"] = (
+        header + "<SeimoInformacija>\n"
+        '  <SeimoPosėdis posėdžio_id="99001103">\n'
+        '    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010302">\n'
+        f'      <Balsavimas balsavimo_id="99100104" balsavimo_laikas="{held}" aprašas="Priimti {accusative(title)}" balsavimo_tipas="Atviras"/>\n'
+        "    </DarbotvarkėsKlausimas>\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
+    rows = seimas.ballots(random.Random(99100104), dt.date(2026, 11, 9), "majority", fixed=KEPT_0707, totals=(58, 41, 13))
+    out["p2b.ad_sp_balsavimo_rezultatai@balsavimo_id=99100104.xml"] = seimas.result_file(RELATIVE_0707, 99100104, held, rows)
+    return out, sitting_rows
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+# The base fixture's 14 MPs on XVP-0707's adoption, as the overlay had them before it had 141 MPs.
+KEPT_0707 = {
+    99000001: ("RPF", "Už"), 99000002: ("RPF", "Už"), 99000003: ("RPF", "Už"), 99000004: ("RPF", "Susilaikė"),
+    99000005: ("PSF", "Prieš"), 99000006: ("PSF", "Prieš"), 99000007: ("RAF", "Už"), 99000008: ("PSF", "Prieš"),
+    99000009: ("RAF", "Už"), 99000010: ("RAF", "Prieš"), 99000012: ("RAF", "Už"), 99000013: ("RAF", ""),
+    99000014: ("MG", "Už"),
+}
