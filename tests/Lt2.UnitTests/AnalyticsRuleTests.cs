@@ -357,7 +357,8 @@ public sealed class AnalyticsShareFormatTests
 
     [Fact]
     public void A_share_on_the_track_is_a_percentage_of_its_width() =>
-        Lt2.Web.Client.Analytics.AnalyticsFormat.Position(0.4321m).ShouldBe("43.2%");}
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Position(0.4321m).ShouldBe("43.2%");
+}
 
 /// <summary>Design 8.26.1 item 2 (owner, 2026-11-18): the list of closed bills, its filters and orders, rule by rule.</summary>
 public sealed class ComparedBillListRuleTests
