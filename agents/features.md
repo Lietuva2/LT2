@@ -302,6 +302,8 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   no-op; no body withdraws whatever side there is). No "Atsiimti" for sides (`Side.Withdraw`, `Agenda.Withdraw` removed);
   `Side.PressAgain` under the buttons (`#my-side`, `#home-again-{place}`) describes the pressed one and is its title.
   Disabled while a request runs (`Busy`); `SidePresses.Ignored` drops a double click's second press (`MouseEventArgs.Detail`).
+  The pair (`.sides`) carries `aria-busy` while disabled for waiting (`Locked`; `MyAgendaSide.Waiting` also until its first
+  read ends), which keeps the buttons in full colour (lt2.css "Waiting", owner 2026-11-18).
 - A "Man svarbu" moves nothing on the page: `RecordReasons` keeps the shown order
   after the person's own action (`StableOrder`, the order by marks returns on the next read) and gives the pressed button
   the focus back without scrolling. It is a toggle whose button stays neutral, only the heart (`Icon` `heart`, `.icon__fill`)
@@ -312,10 +314,11 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `/metodika#argumentai`; the same served markup for everyone, gone for the MP's own account once the island runs.
 - **The bill's page (design 8.12.1, owner 2026-11-17).** The header: "Projektai / Įstatymo projektas XVP-0412" (no label
   line), the title, one `.follow-line` (the stage tags, "Planuojama …", then `FollowButton`); header and body in a
-  `.stack--snug` (16px apart, owner 2026-11-18). Beside the side column: what it is about, the sides, a closed bill's
-  result; the side column: "Stadijos Seime" with `#planned-source` ("Iš kur ši data?", the agenda link) and
-  `DateFlagForm` under the stages, the
-  moderators' panels, the summaries. The e-seimas link stands once: in `#description-source` or under `#no-description`
+  `.stack--snug` (16px apart, owner 2026-11-18). Beside the side column: what it is about, the sides (with `#not-a-poll`
+  under `SidePicker`, above `#threshold`; owner, 2026-11-18), a closed bill's result; the side column: "Stadijos Seime"
+  with `#planned-source` ("Iš kur ši data?", the agenda link) and `DateFlagForm` under the stages, the
+  moderators' panels, the summaries. The side column is the page's last part (`HasAside`, `.bill-body`; only `SourceLine`
+  follows), placed beside the main column on a wide screen and after the votes on a phone (owner, 2026-11-18). The e-seimas link stands once: in `#description-source` or under `#no-description`
   while the page has a side column; only the full-width `StagesSheet(inAside: false)` (hidden record, finished bill nobody
   took part in) carries "Projektas e-seime" (owner, 2026-11-18). Then at the page's full width: `BillResponses`, `OrganisationPositions` (each only
   when there is something to show) and `RecordReasons` (always). An argument reads name, text, action row; "Aptarimas"

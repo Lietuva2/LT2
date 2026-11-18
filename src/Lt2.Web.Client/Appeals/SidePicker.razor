@@ -31,8 +31,10 @@
     else
     {
         @* Owner, 2026-11-18: the pressed button takes the side back when pressed again (no "Atsiimti"); the other one changes
-           it. aria-pressed says the state, and the line under the buttons, which the pressed one is described by, says how. *@
-        <div class="pair sides">
+           it. aria-pressed says the state, and the line under the buttons, which the pressed one is described by, says how.
+           Until the island has started, and while a press is sent, the pair is busy: the buttons stay disabled but keep their
+           colour (owner, 2026-11-18; lt2.css, "Waiting"). *@
+        <div class="pair sides" aria-busy="@(Locked ? "true" : null)">
             @foreach (var side in AppealLimits.Sides)
             {
                 var chosen = Mine?.Side == side;

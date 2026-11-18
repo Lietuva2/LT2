@@ -183,6 +183,19 @@ a:hover { text-decoration-thickness: 3px; }
   gap: var(--sp-6);
   align-items: start;
 }
+/* A bill's page with its side column (design 8.12.1, owner 2026-11-18): the side column (.bill-body__aside) is last in the
+   page's order, so on a narrow screen it follows everything else, the votes included; on a wide one it stands in the right
+   column beside the main column (.bill-body__main), as .cols places them, and every other part spans both columns below
+   the taller of the two, a loose stack's distance apart. */
+.bill-body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
+  gap: var(--sp-7) var(--sp-6);
+  align-items: start;
+}
+.bill-body > * { grid-column: 1 / -1; }
+.bill-body > .bill-body__main { grid-column: 1; grid-row: 1; }
+.bill-body > .bill-body__aside { grid-column: 2; grid-row: 1; }
 .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5); }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
 
@@ -293,7 +306,12 @@ lt2-logo-spin {
 .btn:hover { --btn-bg: var(--action-hover); text-decoration: none; }
 .btn--for { --btn-bg: var(--for); color: var(--on-vote); }
 .btn--against { --btn-bg: var(--against); color: var(--on-vote); }
-.btn--for:hover, .btn--against:hover { filter: brightness(0.9); }
+/* A side's button keeps its own colour on hover, a tenth darker; only the fill changes, so its white words stay white
+   (owner, 2026-11-18: a filter darkened the words too). A disabled one does not answer the pointer. */
+.btn--for:hover { --btn-bg: var(--for); }
+.btn--against:hover { --btn-bg: var(--against); }
+.btn--for:hover:not(:disabled) { --btn-bg: color-mix(in srgb, var(--for), #000 10%); }
+.btn--against:hover:not(:disabled) { --btn-bg: color-mix(in srgb, var(--against), #000 10%); }
 .btn--plain {
   background: none; color: var(--ink);
   box-shadow: inset 0 0 0 2px var(--ink);
@@ -430,6 +448,8 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 
 @media (max-width: 54rem) {
   .cols { grid-template-columns: minmax(0, 1fr); }
+  .bill-body { grid-template-columns: minmax(0, 1fr); }
+  .bill-body > .bill-body__main, .bill-body > .bill-body__aside { grid-column: 1; grid-row: auto; }
 }
 @media (max-width: 36rem) {
   .pair { grid-template-columns: minmax(0, 1fr); }

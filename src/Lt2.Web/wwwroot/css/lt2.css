@@ -187,6 +187,19 @@ h1[tabindex="-1"]:focus { outline: none; }
   gap: var(--sp-6);
   align-items: start;
 }
+/* A bill's page with its side column (design 8.12.1, owner 2026-11-18): the side column (.bill-body__aside) is last in the
+   page's order, so on a narrow screen it follows everything else, the votes included; on a wide one it stands in the right
+   column beside the main column (.bill-body__main), as .cols places them, and every other part spans both columns below
+   the taller of the two, a loose stack's distance apart. */
+.bill-body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
+  gap: var(--sp-7) var(--sp-6);
+  align-items: start;
+}
+.bill-body > * { grid-column: 1 / -1; }
+.bill-body > .bill-body__main { grid-column: 1; grid-row: 1; }
+.bill-body > .bill-body__aside { grid-column: 2; grid-row: 1; }
 .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5); }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
 
@@ -295,7 +308,12 @@ lt2-logo-spin {
 .btn:hover { --btn-bg: var(--action-hover); text-decoration: none; }
 .btn--for { --btn-bg: var(--for); color: var(--on-vote); }
 .btn--against { --btn-bg: var(--against); color: var(--on-vote); }
-.btn--for:hover, .btn--against:hover { filter: brightness(0.9); }
+/* A side's button keeps its own colour on hover, a tenth darker; only the fill changes, so its white words stay white
+   (owner, 2026-11-18: a filter darkened the words too). A disabled one does not answer the pointer. */
+.btn--for:hover { --btn-bg: var(--for); }
+.btn--against:hover { --btn-bg: var(--against); }
+.btn--for:hover:not(:disabled) { --btn-bg: color-mix(in srgb, var(--for), #000 10%); }
+.btn--against:hover:not(:disabled) { --btn-bg: color-mix(in srgb, var(--against), #000 10%); }
 .btn--plain {
   background: none; color: var(--ink);
   box-shadow: inset 0 0 0 2px var(--ink);
@@ -445,6 +463,8 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 
 @media (max-width: 54rem) {
   .cols { grid-template-columns: minmax(0, 1fr); }
+  .bill-body { grid-template-columns: minmax(0, 1fr); }
+  .bill-body > .bill-body__main, .bill-body > .bill-body__aside { grid-column: 1; grid-row: auto; }
 }
 @media (max-width: 36rem) {
   .pair { grid-template-columns: minmax(0, 1fr); }
@@ -486,11 +506,6 @@ body > .page { width: 100%; }
 }
 
 
-/* The side buttons ("už", "prieš") keep their own colour on hover, a little darker (the prototype's .btn:hover would
-   turn them the action's green). */
-.btn--for:hover { --btn-bg: var(--for); }
-.btn--against:hover { --btn-bg: var(--against); }
-
 /* The two sides on a bill's page and in a front-page row (.sides): with no side yet both are filled; once a side is
    taken the chosen one stays filled with a check mark before the word (aria-hidden; the state is aria-pressed) and
    the other is outlined in its colour on the sheet, still a button that changes the side. The outlined word is in ink.
@@ -502,6 +517,24 @@ body > .page { width: 100%; }
 .sides:has(.btn[aria-pressed="true"]) .btn--against[aria-pressed="false"] { box-shadow: inset 0 0 0 2px var(--against); }
 .sides:has(.btn[aria-pressed="true"]) .btn--for[aria-pressed="false"]:hover:not(:disabled) { --btn-bg: var(--for-tint); }
 .sides:has(.btn[aria-pressed="true"]) .btn--against[aria-pressed="false"]:hover:not(:disabled) { --btn-bg: var(--against-tint); }
+/* Waiting (owner, 2026-11-18): before the island has started, which on a phone can take seconds, and while a press is
+   sent, .sides carries aria-busy and its buttons are disabled as every island control is (agents/interface.md), but they
+   keep their full colour and words, not the dimmed disabled look: the pointer says "wait" and a slow dark sheen crosses
+   them (darker only, so the words never lose contrast; none with reduced motion). Without script they never start, so
+   there they keep the dimmed look beside the "needs JavaScript" note. */
+@media (scripting: enabled) {
+  .sides[aria-busy="true"] .btn:disabled { opacity: 1; cursor: progress; }
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .sides[aria-busy="true"] .btn { position: relative; overflow: hidden; }
+  .sides[aria-busy="true"] .btn::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 40%, rgb(0 0 0 / 0.16) 50%, transparent 60%) no-repeat;
+    background-size: 300% 100%;
+    animation: sides-wait 1.6s ease-in-out infinite;
+  }
+}
+@keyframes sides-wait { from { background-position: 100% 0; } to { background-position: 0 0; } }
 
 /* An action that reads as a link (resend the code, switch form). */
 .linkish {
