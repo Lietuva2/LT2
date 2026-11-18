@@ -11,18 +11,37 @@ public sealed record SeimasVoteNumbers(bool IsConsensus, int? For, int? Against,
 /// the two are compared and agree. <paramref name="Sample"/> is the members' positions counted (by the filter).
 /// </summary>
 /// <param name="SeimasShareFor">For ÷ (for + against + abstain); null for a consensus or a vote without numbers.</param>
-/// <param name="SeimasMajorityFor">The majority of those who voted chose "for"; a consensus counts as "for"; null without numbers.</param>
+/// <param name="SeimasMajority">
+/// The majority of those who voted (<see cref="SeimasMajorities"/>): <c>for</c> (a consensus too), <c>against</c> or
+/// <c>none</c>; null without numbers.
+/// </param>
 /// <param name="MembersShareFor">For ÷ (for + against), only from <see cref="AnalyticsRules.SmallSample"/> positions; null below.</param>
 /// <param name="MembersMajorityFor">The larger side is "for"; null on a tie or with no positions.</param>
 /// <param name="Compared">The bill enters "Majorities agreed": a sample of at least 20 and both majorities known.</param>
-/// <param name="Agreed">Both majorities chose the same; null when not compared.</param>
+/// <param name="Agreed">
+/// Both majorities chose the same; null when not compared. The Seimas's <c>against</c> and <c>none</c> both count as not
+/// "for": they agree with the members' majority "against".
+/// </param>
 /// <param name="Dot">The bill has a dot in the plot: compared and the Seimas's share known (not a consensus).</param>
 public sealed record BillComparison(
-    decimal? SeimasShareFor, bool? SeimasMajorityFor, int Sample, decimal? MembersShareFor, bool? MembersMajorityFor, bool Compared, bool? Agreed, bool Dot);
+    decimal? SeimasShareFor, string? SeimasMajority, int Sample, decimal? MembersShareFor, bool? MembersMajorityFor, bool Compared, bool? Agreed, bool Dot);
 
 /// <summary>How often a group of choices matched the caller's sides (design 8.26.4): matched of common, and free votes.</summary>
 /// <param name="Share">Matched ÷ common, only from <see cref="AnalyticsRules.SmallSample"/> common votes; null below.</param>
 public sealed record Agreement(int Matched, int Common, int Free, decimal? Share);
+
+/// <summary>The three values of the Seimas's majority of those who voted (design 8.26.2), as the API carries them.</summary>
+public static class SeimasMajorities
+{
+    /// <summary>The votes for are more than half of for, against and abstain; or a consensus.</summary>
+    public const string For = "for";
+
+    /// <summary>The votes against are more than half of for, against and abstain.</summary>
+    public const string Against = "against";
+
+    /// <summary>Neither side has more than half of those who voted.</summary>
+    public const string None = "none";
+}
 
 /// <summary>
 /// The counted rules of the analytics page (design 8.26), as pure functions. One sample size for every number on it, 20,
@@ -75,6 +94,39 @@ public static class AnalyticsRules
         return 2 * @for > @for + against + abstain;
     }
 
+    /// <summary>
+    /// The majority of those who voted chose "against": the votes against are more than half of for, against and abstain.
+    /// A consensus is not (it counts as "for"); a vote without numbers has none (null). As <see cref="SeimasMajorityFor"/>,
+    /// not the legal rule (design 8.26.2).
+    /// </summary>
+    public static bool? SeimasMajorityAgainst(SeimasVoteNumbers vote)
+    {
+        ArgumentNullException.ThrowIfNull(vote);
+        if (vote.IsConsensus)
+        {
+            return false;
+        }
+
+        if (vote.For is not { } @for || vote.Against is not { } against || vote.Abstain is not { } abstain || @for + against + abstain == 0)
+        {
+            return null;
+        }
+
+        return 2 * against > @for + against + abstain;
+    }
+
+    /// <summary>
+    /// The Seimas's majority of those who voted as one of <see cref="SeimasMajorities"/>: <c>for</c>, <c>against</c>, or
+    /// <c>none</c> when neither side has more than half (abstentions included); null for a vote without numbers.
+    /// </summary>
+    public static string? SeimasMajority(SeimasVoteNumbers vote) =>
+        SeimasMajorityFor(vote) switch
+        {
+            null => null,
+            true => SeimasMajorities.For,
+            false => SeimasMajorityAgainst(vote) == true ? SeimasMajorities.Against : SeimasMajorities.None,
+        };
+
     /// <summary>The members' majority: "for" when more chose for, not "for" when more chose against, none on a tie.</summary>
     public static bool? MembersMajorityFor(int @for, int against) => @for > against ? true : against > @for ? false : null;
 
@@ -82,13 +134,14 @@ public static class AnalyticsRules
     public static BillComparison Compare(SeimasVoteNumbers vote, int membersFor, int membersAgainst)
     {
         var seimasShare = SeimasShareFor(vote);
+        // "against" and "none" are both not "for": the comparison with the members' two sides reads only "for" or not.
         var seimasMajority = SeimasMajorityFor(vote);
         var sample = membersFor + membersAgainst;
         var membersMajority = MembersMajorityFor(membersFor, membersAgainst);
         var compared = IsEnough(sample) && seimasMajority is not null && membersMajority is not null;
         return new BillComparison(
             seimasShare,
-            seimasMajority,
+            SeimasMajority(vote),
             sample,
             ShareFromSample(membersFor, sample),
             membersMajority,

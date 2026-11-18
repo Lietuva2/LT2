@@ -22,7 +22,8 @@
   <data name="Figures.AgreedOf" xml:space="preserve"><value>sutapo {0} iš {1} palygintų projektų, dėl kurių Seimas balsavo galutinai</value></data>
   <data name="Figures.AgreedNone" xml:space="preserve"><value>Dar nėra projekto, dėl kurio Seimas balsavo galutinai ir kurį būtų galima palyginti.</value></data>
   <data name="Figures.Mps" xml:space="preserve"><value>Seimo nariai, perėmę profilį</value></data>
-  <data name="Figures.MpsOf" xml:space="preserve"><value>Dabartinių Seimo narių: {0}</value></data>
+  <data name="Figures.MpsOf.One" xml:space="preserve"><value>iš {0} Seimo nario</value></data>
+  <data name="Figures.MpsOf.Many" xml:space="preserve"><value>iš {0} Seimo narių</value></data>
   <data name="CountedAt" xml:space="preserve"><value>Suskaičiuota {0}; skaičiai atnaujinami kas valandą.</value></data>
   <data name="SmallSample" xml:space="preserve"><value>maža imtis</value></data>
   <data name="SmallSample.Answer" xml:space="preserve"><value>Kai skaičiuojama mažiau nei {0} pozicijų ar balsavimų, dalis procentais nerodoma – tik patys skaičiai.</value></data>
@@ -42,12 +43,13 @@
   <data name="Compare.Majority" xml:space="preserve"><value>Balsavusiųjų dauguma Seime</value></data>
   <data name="Compare.Consensus" xml:space="preserve"><value>pritarta bendru sutarimu</value></data>
   <data name="Compare.Counts" xml:space="preserve"><value>{0} už, {1} prieš</value></data>
-  <data name="Compare.MajorityFor" xml:space="preserve"><value>„už“</value></data>
-  <data name="Compare.MajorityNotFor" xml:space="preserve"><value>ne „už“</value></data>
+  <data name="Compare.MajorityFor" xml:space="preserve"><value>už</value></data>
+  <data name="Compare.MajorityAgainst" xml:space="preserve"><value>prieš</value></data>
+  <data name="Compare.MajorityNone" xml:space="preserve"><value>nėra daugumos</value></data>
   <data name="Compare.NoResult" xml:space="preserve"><value>rezultato nėra</value></data>
   <data name="Compare.Empty" xml:space="preserve"><value>Per šį laikotarpį Seimas galutinai nebalsavo nė dėl vieno projekto, dėl kurio naudotojai pasirinko poziciją.</value></data>
   <data name="Majority.Hint" xml:space="preserve"><value>Kas yra balsavusiųjų dauguma?</value></data>
-  <data name="Majority.Answer" xml:space="preserve"><value>Balsavusiųjų dauguma – kai „už“ balsavo daugiau nei pusė tų, kurie balsavo „už“, „prieš“ arba susilaikė. Tai nėra oficialus Seimo sprendimas: jis skaičiuojamas nuo posėdyje užsiregistravusių Seimo narių. Kai pritarta bendru sutarimu, laikoma, kad dauguma balsavo „už“. Naudotojų dauguma – didesnė iš dviejų pusių.</value></data>
+  <data name="Majority.Answer" xml:space="preserve"><value>„Už“ – kai už balsavo daugiau nei pusė tų, kurie balsavo „už“, „prieš“ arba susilaikė, arba kai pritarta bendru sutarimu; „prieš“ – kai prieš balsavo daugiau nei pusė jų; kitaip daugumos nėra. Lyginant su naudotojų dauguma (didesne iš dviejų pusių), „prieš“ ir „nėra daugumos“ reiškia, kad Seimas nepasirinko „už“. Tai nėra oficialus Seimo sprendimas: jis skaičiuojamas nuo posėdyje užsiregistravusių Seimo narių.</value></data>
   <data name="Unity.Title" xml:space="preserve"><value>Frakcijų vieningumas</value></data>
   <data name="Unity.Lead" xml:space="preserve"><value>Dalis balsavusių frakcijos narių, pasirinkusių frakcijos poziciją. Frakcijos išdėstytos pagal narių skaičių.</value></data>
   <data name="Unity.Hint" xml:space="preserve"><value>Kas yra frakcijos pozicija?</value></data>

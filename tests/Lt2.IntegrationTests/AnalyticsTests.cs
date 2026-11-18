@@ -52,7 +52,8 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             var row = answer.Bills.Single(b => b.Number == Bill);
             (row.VoteId, row.IsConsensus, row.MembersFor, row.MembersAgainst).ShouldBe((FinalVote, false, 1, 1));
             row.SeimasShareFor.ShouldBe((decimal)totals.For / (totals.For + totals.Against + totals.Abstain));
-            row.SeimasMajorityFor.ShouldBe(2 * totals.For > totals.For + totals.Against + totals.Abstain);
+            var voted = totals.For + totals.Against + totals.Abstain;
+            row.SeimasMajority.ShouldBe(2 * totals.For > voted ? SeimasMajorities.For : 2 * totals.Against > voted ? SeimasMajorities.Against : SeimasMajorities.None);
             (row.MembersShareFor, row.Compared, row.Agreed, row.Dot).ShouldBe((null, false, null, false), "two positions are a small sample");
 
             // The same answer for a visitor and a member: nothing about the caller.
@@ -77,6 +78,11 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             var tableRow = Regex.Match(html, $"<tr id=\"row-{Bill}\".*?</tr>", RegexOptions.Singleline).Value;
             tableRow.ShouldContain("1 už, 1 prieš");
             tableRow.ShouldContain("maža imtis");
+            var majority = row.SeimasMajority switch { SeimasMajorities.For => "už", SeimasMajorities.Against => "prieš", _ => "nėra daugumos" };
+            tableRow.ShouldContain($"<td>{majority}</td>", customMessage: "the Seimas's majority of those who voted, without quotes (owner, 2026-11-18)");
+            var sitting = answer.Figures.MpsSitting;
+            Regex.Match(html, "<div[^>]*id=\"figure-mps\".*?</div>", RegexOptions.Singleline).Value
+                .ShouldContain(LithuanianCounts.Pick(sitting, $"iš {sitting} Seimo nario", $"iš {sitting} Seimo narių", $"iš {sitting} Seimo narių"));
             html.ShouldContain("Tai nėra reprezentatyvi apklausa");
             html.ShouldContain("id=\"analytics-counted-at\"");
             html.ShouldContain("id=\"needs-script\"");
@@ -364,7 +370,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             await CloseAsync(consensus: true);
             using var visitor = NewBrowser();
             var row = (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics)).Bills.Single(b => b.Number == Bill);
-            (row.IsConsensus, row.SeimasShareFor, row.SeimasMajorityFor, row.Dot).ShouldBe((true, null, true, false));
+            (row.IsConsensus, row.SeimasShareFor, row.SeimasMajority, row.Dot).ShouldBe((true, null, SeimasMajorities.For, false));
             WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")).ShouldContain("pritarta bendru sutarimu");
 
             var mine = await member.GetJsonAsync<MyAgreementResponse>(AnalyticsRoutes.MyAgreement);

@@ -224,7 +224,7 @@ internal sealed class AnalyticsReads(
                 vote.Vote.HeldAt,
                 vote.Vote.IsConsensus,
                 compared.SeimasShareFor,
-                compared.SeimasMajorityFor,
+                compared.SeimasMajority,
                 membersFor,
                 membersAgainst,
                 compared.MembersShareFor,

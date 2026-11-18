@@ -59,6 +59,8 @@ public sealed record AnalyticsFiguresResponse(
 /// A closed bill of the period with at least one position (design 8.26.1–2), the latest closing vote first.
 /// <paramref name="MembersShareFor"/> only from 20 positions; <paramref name="Dot"/>: it stands in the plot;
 /// <paramref name="OfficialNote"/>: the Seimas's own note on the result (for example that per-MP votes do not match the totals).
+/// <paramref name="SeimasMajority"/>: the majority of those who voted, <c>for</c> (a consensus too) | <c>against</c> | <c>none</c>
+/// (neither has more than half of for, against and abstain); null for a vote without numbers.
 /// </summary>
 public sealed record BillComparisonResponse(
     string Number,
@@ -67,7 +69,7 @@ public sealed record BillComparisonResponse(
     DateTimeOffset VotedAt,
     bool IsConsensus,
     decimal? SeimasShareFor,
-    bool? SeimasMajorityFor,
+    string? SeimasMajority,
     int MembersFor,
     int MembersAgainst,
     decimal? MembersShareFor,
