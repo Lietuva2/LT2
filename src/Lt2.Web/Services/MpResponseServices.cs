@@ -170,7 +170,9 @@ internal sealed class MpResponseReads(
                 q.Id, AppealMapping.Map(q.Bill), Mp(q.SeimasPersonId), q.Status, q.Stance, q.Text, q.Flags, q.Reports.Select(AppealMapping.Map).ToList(),
                 q.PublishedAt, q.EditedAt, q.BillOpen)).ToList(),
             items.Hidden.Select(h => new HiddenMpResponseResponse(
-                h.Id, AppealMapping.Map(h.Bill), Mp(h.SeimasPersonId), h.Stance, h.Text, h.HiddenAt, h.HiddenBy, h.Statement, h.Restorable)).ToList());
+                h.Id, AppealMapping.Map(h.Bill), Mp(h.SeimasPersonId), h.Stance, h.Text, h.HiddenAt, h.HiddenBy, h.Statement, h.Restorable)).ToList(),
+            items.QueueTotal,
+            items.HiddenTotal);
     }
 
     /// <summary>

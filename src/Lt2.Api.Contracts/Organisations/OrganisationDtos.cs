@@ -284,7 +284,8 @@ public sealed record QueueStatementResponse(
     DateTimeOffset PublishedAt,
     bool BillFinished = false);
 
-public sealed record OrganisationModerationResponse(IReadOnlyList<QueueOrganisationResponse> Organisations, IReadOnlyList<QueueStatementResponse> Statements);
+public sealed record OrganisationModerationResponse(
+    IReadOnlyList<QueueOrganisationResponse> Organisations, IReadOnlyList<QueueStatementResponse> Statements, int OrganisationsTotal = 0, int StatementsTotal = 0);
 
 public sealed record HiddenOrganisationResponse(Guid Id, string Slug, string Name, DateTimeOffset? BlockedAt, string? BlockedBy, string? Statement);
 

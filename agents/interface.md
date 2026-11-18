@@ -60,6 +60,12 @@ Read before changing a page, a component or an island. The rules behind it are d
   and outside a sheet takes a `Panel` parameter and drops its own sheet inside one (`QueueReasonItem`,
   `StatementQueueItem`). Filters and sort links of a list sit on the ground directly above the list's sheet, on every
   list page.
+- **A list by day is the timeline's day blocks (owner, 2026-11-18):** `section.tl-day` (`tl-past` for votes) with
+  `<TimelineDate>` (label, the date in words, the weekday and the day's count) and the rows in `div.tl-rows`; on a narrow
+  screen the head is a band of its own. A long list grows by the address, never by script: "Rodyti daugiau" to `?rodyti=`
+  landing on the first row added (`VoteHistory`, `BillListPaging`, `MpVotePaging`), or a bounded rest under the browser's
+  `details` ("Rodyti visus N" on `/darbotvarke`). An island's "show all" button is a link to the long form until the
+  island runs (`RecordReasons`, `?argumentai=visi`).
 
 
 **Explanatory text (design 8.15, owner 2026-11-15).** A screen shows its title, at most one short paragraph that says

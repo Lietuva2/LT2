@@ -588,11 +588,17 @@ internal sealed class CommentsService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var reports = await db.Reports.AsNoTracking().Where(r => r.Status == "open" && r.TargetKind == Kind).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
         var reportedIds = reports.Select(r => r.TargetId).Distinct().ToList();
-        var reported = await db.Comments.AsNoTracking().Where(c => reportedIds.Contains(c.Id) && c.Status == CommentStatuses.Published)
-            .OrderBy(c => c.CreatedAt).Take(ListLimit).ToListAsync(cancellationToken);
-        var hidden = await db.Comments.AsNoTracking().Where(c => c.Status == CommentStatuses.Hidden)
-            .OrderByDescending(c => c.HiddenAt).Take(ListLimit).ToListAsync(cancellationToken);
-        return new CommentModerationItems(await QueueAsync(db, reported, reports, cancellationToken), await QueueAsync(db, hidden, reports, cancellationToken));
+        var dueReported = db.Comments.AsNoTracking().Where(c => reportedIds.Contains(c.Id) && c.Status == CommentStatuses.Published);
+        var reported = await dueReported.OrderBy(c => c.CreatedAt).Take(ListLimit).ToListAsync(cancellationToken);
+        var allHidden = db.Comments.AsNoTracking().Where(c => c.Status == CommentStatuses.Hidden);
+        var hidden = await allHidden.OrderByDescending(c => c.HiddenAt).Take(ListLimit).ToListAsync(cancellationToken);
+
+        // Owner, 2026-11-18: the lists still show the first hundred, and say so when there are more.
+        return new CommentModerationItems(await QueueAsync(db, reported, reports, cancellationToken), await QueueAsync(db, hidden, reports, cancellationToken))
+        {
+            ReportedTotal = reported.Count < ListLimit ? reported.Count : await dueReported.CountAsync(cancellationToken),
+            HiddenTotal = hidden.Count < ListLimit ? hidden.Count : await allHidden.CountAsync(cancellationToken),
+        };
     }
 
     public async Task<Result<IReadOnlyList<QueueComment>>> OnBillAsync(string billNumber, CancellationToken cancellationToken)

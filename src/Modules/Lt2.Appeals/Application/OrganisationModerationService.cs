@@ -31,11 +31,10 @@ internal sealed class OrganisationModerationService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var reports = await OpenReportsAsync(db, cancellationToken);
         var reported = reports.Select(r => r.TargetId).ToHashSet();
-        var organisations = (await db.Organisations.AsNoTracking().Where(o => o.Status != OrganisationStatuses.Closed).ToListAsync(cancellationToken))
+        var dueOrganisations = (await db.Organisations.AsNoTracking().Where(o => o.Status != OrganisationStatuses.Closed).ToListAsync(cancellationToken))
             .Where(o => (o.Status == OrganisationStatuses.Active && o.SeenAt == null) || reported.Contains(o.Id))
-            .OrderBy(o => o.ChangedAt)
-            .Take(QueueLimit)
             .ToList();
+        var organisations = dueOrganisations.OrderBy(o => o.ChangedAt).Take(QueueLimit).ToList();
         var ids = organisations.Select(o => o.Id).ToList();
         var history = (await db.Revisions.AsNoTracking()
                 .Where(r => r.EntityKind == "organisation" && ids.Contains(r.EntityId) && (r.Field == "name" || r.Field == "website"))
@@ -44,18 +43,22 @@ internal sealed class OrganisationModerationService(
             .GroupBy(r => r.EntityId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<ProfileChange>)g.Select(r => new ProfileChange(r.ChangedAt, r.Field, r.OldValue, r.NewValue)).ToList());
 
-        var statements = await (from s in db.OrganisationStatements.AsNoTracking()
-                                join o in db.Organisations.AsNoTracking() on s.OrganisationId equals o.Id
-                                where o.Status == OrganisationStatuses.Active
-                                    && ((s.Status == StatementStatuses.Pending && (s.SeenAt == null || reported.Contains(s.Id)))
-                                        || (s.Status == StatementStatuses.Published && (s.SeenAt == null || reported.Contains(s.Id))))
-                                orderby s.PublishedAt
-                                select s)
-            .Take(QueueLimit)
-            .ToListAsync(cancellationToken);
+        var dueStatements = from s in db.OrganisationStatements.AsNoTracking()
+                            join o in db.Organisations.AsNoTracking() on s.OrganisationId equals o.Id
+                            where o.Status == OrganisationStatuses.Active
+                                && ((s.Status == StatementStatuses.Pending && (s.SeenAt == null || reported.Contains(s.Id)))
+                                    || (s.Status == StatementStatuses.Published && (s.SeenAt == null || reported.Contains(s.Id))))
+                            select s;
+        var statements = await dueStatements.OrderBy(s => s.PublishedAt).Take(QueueLimit).ToListAsync(cancellationToken);
+
+        // Owner, 2026-11-18: the lists still show the first hundred, and say so when there are more.
         return new OrganisationModerationItems(
             organisations.Select(o => QueueItem(o, reports, history.GetValueOrDefault(o.Id) ?? [])).ToList(),
-            await QueueStatementsAsync(db, statements, reports, cancellationToken));
+            await QueueStatementsAsync(db, statements, reports, cancellationToken))
+        {
+            OrganisationsTotal = dueOrganisations.Count,
+            StatementsTotal = statements.Count < QueueLimit ? statements.Count : await dueStatements.CountAsync(cancellationToken),
+        };
     }
 
     public async Task<Result<IReadOnlyList<QueueStatement>>> OnBillAsync(string billNumber, CancellationToken cancellationToken)

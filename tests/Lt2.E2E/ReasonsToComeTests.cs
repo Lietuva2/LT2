@@ -35,6 +35,58 @@ public sealed partial class ReasonsToComeTests : E2ETest
         await Assertions.Expect(page.Locator("#not-a-poll")).ToBeVisibleAsync();
     }
 
+    /// <summary>
+    /// Owner, 2026-11-18: with a real-sized parliament the lists are cut, and every way to the rest works without script: a
+    /// day of the agenda opens its other rows in place, <c>/projektai</c> grows by the address landing on the first bill
+    /// added, and the bill's "Visi argumentai" is a link to the page with every argument.
+    /// </summary>
+    [Fact]
+    public async Task Without_javascript_a_long_day_opens_in_place_and_the_lists_grow_by_the_address()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
+        await using var context = await browser.NewContextAsync(new()
+        {
+            IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = false, ViewportSize = new ViewportSize { Width = 390, Height = 844 },
+        });
+        var page = await context.NewPageAsync();
+
+        // The stand-in's sitting days hold about forty bills each: ten show, "Rodyti visus" opens the rest in place.
+        await page.GotoAsync(Base + "/darbotvarke");
+        var more = page.Locator("#agenda-coming details.tl-more").First;
+        await Assertions.Expect(more).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
+        var day = page.Locator("#agenda-coming section.tl-day").Filter(new() { Has = more });
+        var visible = day.Locator("li.tl-item:visible");
+        (await visible.CountAsync()).ShouldBe(10, "ten rows of a long day");
+        await more.Locator("summary").ClickAsync();
+        (await visible.CountAsync()).ShouldBeGreaterThan(10, "the rest opens in place");
+        await E2ESteps.NoSidewaysScrollAsync(page, "/darbotvarke opened at 390");
+
+        // "/projektai": twenty, then "Rodyti daugiau" by the address, landing on the first bill added.
+        await page.GotoAsync(Base + "/projektai");
+        var rows = page.Locator("#appeals > li");
+        await Assertions.Expect(rows).ToHaveCountAsync(20, new() { Timeout = E2ESteps.Slow });
+        var added = (await page.Locator("#more").GetAttributeAsync("href"))!;
+        added.ShouldStartWith("/projektai?rodyti=40#bill-");
+        await page.Locator("#more").ClickAsync();
+        await page.WaitForURLAsync(new Regex("rodyti=40#bill-"), new() { Timeout = E2ESteps.Slow });
+        (await rows.CountAsync()).ShouldBeGreaterThan(20);
+        await Assertions.Expect(page.Locator("#" + added.Split('#')[1])).ToBeInViewportAsync();
+
+        // The bill's arguments: "Visi argumentai" leads to the page with every argument when a side has more than two.
+        await page.GotoAsync(Base + "/seimas/XVP-0412");
+        var all = page.Locator("a#reasons-all");
+        if (await all.CountAsync() > 0)
+        {
+            var shown = await page.Locator("#reasons .said").CountAsync();
+            await all.ClickAsync();
+            await page.WaitForURLAsync(new Regex("argumentai=visi"), new() { Timeout = E2ESteps.Slow });
+            (await page.Locator("#reasons .said").CountAsync()).ShouldBeGreaterThan(shown);
+            await Assertions.Expect(page.Locator("a#reasons-all")).ToContainTextAsync("Rodyti mažiau");
+        }
+    }
+
     [Fact]
     public async Task A_member_finds_every_bill_open_follows_it_and_nothing_offers_asking_for_an_appeal()
     {

@@ -197,9 +197,20 @@
             }
             @if (!OnlyNew && record.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > ShownOf(g.ToList())))
             {
-                <button class="linkish" type="button" disabled="@Locked" @onclick="() => _showAll = !_showAll">
-                    @(_showAll ? L["Reasons.Fewer"] : L.Format("Reasons.All", Display.Number(record.Reasons.Count)))
-                </button>
+                @if (RendererInfo.IsInteractive)
+                {
+                    <button class="linkish" type="button" id="reasons-all" disabled="@Locked" @onclick="() => _showAll = !_showAll">
+                        @(_showAll ? L["Reasons.Fewer"] : L.Format("Reasons.All", Display.Number(record.Reasons.Count)))
+                    </button>
+                }
+                else
+                {
+                    @* Owner, 2026-11-18: without script (and before the island starts) the same words are a link to the page with
+                       every argument (?argumentai=visi), rendered by the server; the island's button then works in place. *@
+                    <a class="linkish" id="reasons-all" href="@(_showAll ? PagePath : AllPath)#reasons">
+                        @(_showAll ? L["Reasons.Fewer"] : L.Format("Reasons.All", Display.Number(record.Reasons.Count)))
+                    </a>
+                }
             }
         </div>
         @if (_signedIn && record.Status == "open" && Restriction is { Restricted: true } restriction)
@@ -398,6 +409,18 @@
 
     private string PagePath => CommentPaging.PagePath(Number, ResponsesShown);
 
+    /// <summary>The address's word for every argument (owner, 2026-11-18): <c>?argumentai=visi</c>.</summary>
+    public const string AllParameter = "argumentai";
+
+    public const string AllValue = "visi";
+
+    /// <summary>"Visi argumentai" without script: the page with every argument of both sides, rendered by the server.</summary>
+    [SupplyParameterFromQuery(Name = AllParameter)] public string? AllShown { get; set; }
+
+    private bool AllAsked => AllShown == AllValue;
+
+    private string AllPath => PagePath + (PagePath.Contains('?', StringComparison.Ordinal) ? "&" : "?") + AllParameter + "=" + AllValue;
+
     /// <summary>The bill's page, where signing in from "Man svarbu" comes back to.</summary>
     private string BillPath => "/seimas/" + Uri.EscapeDataString(Number);
 
@@ -417,12 +440,12 @@
     {
         _signedIn = await IsSignedInAsync();
         Record ??= (await Appeals.GetRecordAsync(Number)).Value;
-        Threads ??= await ThreadsAsync();
 
         // "Rodyti daugiau komentarų" or a link to a comment under an argument the page shows only after "show all", or a link to
-        // such an argument: shown already (design 8.23.6, 8.12.1).
-        _showAll = Record?.Reasons is { } reasons
-            && reasons.Any(r => (AskedFor(r.Id) is not null || r.Id == LinkedReason) && !FirstShown(reasons).Contains(r.Id));
+        // such an argument: shown already (design 8.23.6, 8.12.1); and every argument when the address asks for all.
+        _showAll = AllAsked || (Record?.Reasons is { } reasons
+            && reasons.Any(r => (AskedFor(r.Id) is not null || r.Id == LinkedReason) && !FirstShown(reasons).Contains(r.Id)));
+        Threads ??= await ThreadsAsync();
         if (_signedIn)
         {
             Mine ??= await State.MineAsync(Number);
@@ -490,7 +513,8 @@
 
     /// <summary>
     /// The comments of the arguments the page shows before "show all" (two per side, design 8.12.1, 8.23.6), each the first ten
-    /// or as many as the address asks for. Others are read when their "Aptarimas" is first opened.
+    /// or as many as the address asks for; of every argument when the address asks for all (so "Aptarimas" opens without
+    /// script there too). Others are read when their "Aptarimas" is first opened.
     /// </summary>
     private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync()
     {
@@ -500,7 +524,7 @@
             return threads;
         }
 
-        foreach (var reason in record.Reasons.Where(r => FirstShown(record.Reasons).Contains(r.Id) || AskedFor(r.Id) is not null))
+        foreach (var reason in record.Reasons.Where(r => AllAsked || FirstShown(record.Reasons).Contains(r.Id) || AskedFor(r.Id) is not null))
         {
             if ((await CommentsApi.GetThreadAsync("reason", reason.Id, AskedFor(reason.Id))).Value is { } thread)
             {

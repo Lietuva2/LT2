@@ -72,8 +72,12 @@ public sealed record HiddenReasonResponse(
 /// <summary>The moderators' list of hidden records and reasons (design 8.3), newest hide first. Holds no position.</summary>
 public sealed record HiddenItemsResponse(IReadOnlyList<HiddenRecordResponse> Records, IReadOnlyList<HiddenReasonResponse> Reasons);
 
-/// <summary>The moderators' queue (design 8.12.3). Holds no position of anyone.</summary>
-public sealed record ModerationQueueResponse(IReadOnlyList<QueueRecordResponse> Records, IReadOnlyList<QueueReasonResponse> Reasons);
+/// <summary>
+/// The moderators' queue (design 8.12.3): at most a hundred records and a hundred arguments, oldest first, with how many
+/// wait in all (owner, 2026-11-18). Holds no position of anyone.
+/// </summary>
+public sealed record ModerationQueueResponse(
+    IReadOnlyList<QueueRecordResponse> Records, IReadOnlyList<QueueReasonResponse> Reasons, int RecordsTotal = 0, int ReasonsTotal = 0);
 
 /// <summary>Publishing an argument or keeping something as it is: the statement is optional.</summary>
 public sealed record ModerationRequest

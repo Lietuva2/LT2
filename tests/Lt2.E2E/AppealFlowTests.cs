@@ -642,16 +642,18 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     }
 
     /// <summary>
-    /// Shows every argument when the list shows only the first ones per side ("Visi argumentai: N"), once the island runs.
+    /// Shows every argument when the list shows only the first ones per side ("Visi argumentai: N"), once the island runs: until
+    /// then the words are a link to the page with every argument (owner, 2026-11-18), afterwards the island's button.
     /// </summary>
     private static async Task ShowAllReasonsAsync(IPage page)
     {
-        var all = page.Locator("#reasons button.linkish").Filter(new() { HasTextRegex = new Regex("^Visi argumentai") });
-        if (await all.CountAsync() > 0)
+        if (await page.Locator("#reasons-all").CountAsync() > 0)
         {
+            var all = page.Locator("#reasons button#reasons-all");
             await Assertions.Expect(all).ToBeEnabledAsync(new() { Timeout = 60_000 });
+            await Assertions.Expect(all).ToHaveTextAsync(new Regex("^\\s*Visi argumentai"));
             await all.ClickAsync();
-            await Assertions.Expect(page.Locator("#reasons button.linkish").Filter(new() { HasText = "Rodyti mažiau" })).ToBeVisibleAsync();
+            await Assertions.Expect(page.Locator("#reasons button#reasons-all")).ToHaveTextAsync(new Regex("Rodyti mažiau"));
         }
     }
 

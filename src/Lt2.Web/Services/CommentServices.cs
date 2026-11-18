@@ -86,7 +86,8 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
     {
         var items = await moderation.ItemsAsync(ct);
         var names = await MpNamesAsync(items.Reported.Concat(items.Hidden).SelectMany(q => new[] { q.Author.SeimasPersonId, q.Target.SeimasPersonId }), ct);
-        return new CommentModerationResponse(items.Reported.Select(q => Map(q, names)).ToList(), items.Hidden.Select(q => Map(q, names)).ToList());
+        return new CommentModerationResponse(
+            items.Reported.Select(q => Map(q, names)).ToList(), items.Hidden.Select(q => Map(q, names)).ToList(), items.ReportedTotal, items.HiddenTotal);
     }
 
     public async Task<Result<IReadOnlyList<QueueCommentResponse>>> OnBillAsync(string number, CancellationToken ct)

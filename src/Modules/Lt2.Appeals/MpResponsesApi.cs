@@ -62,7 +62,13 @@ public sealed record QueueResponse(
 public sealed record HiddenResponse(
     Guid Id, BillFacts Bill, long SeimasPersonId, string Stance, string Text, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
-public sealed record ResponseModerationItems(IReadOnlyList<QueueResponse> Queue, IReadOnlyList<HiddenResponse> Hidden);
+public sealed record ResponseModerationItems(IReadOnlyList<QueueResponse> Queue, IReadOnlyList<HiddenResponse> Hidden)
+{
+    /// <summary>How many responses wait in all; the list holds at most a hundred.</summary>
+    public int QueueTotal { get; init; }
+
+    public int HiddenTotal { get; init; }
+}
 
 /// <summary>
 /// MPs' responses on bills (design 8.5.5, 8.5.6). The caller (the host) has checked who may speak for which MP: a linked

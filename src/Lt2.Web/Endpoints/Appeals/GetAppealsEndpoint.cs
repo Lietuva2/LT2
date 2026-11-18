@@ -8,9 +8,10 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>GET /api/v1/appeals?q=&amp;planned=&amp;tab=&amp;sort=&amp;cursor=</c>: active bills with both sides' counts and their
+/// <c>GET /api/v1/appeals?q=&amp;planned=&amp;tab=&amp;sort=&amp;cursor=&amp;limit=</c>: active bills with both sides' counts and their
 /// arguments, by activity (the default), participants, arguments or planned date; a search by number or title, those
-/// planned soon, or the closed tab (design 8.12.5). Public and the same for everyone.
+/// planned soon, or the closed tab (design 8.12.5); <c>limit</c> of them (20 by default, at most 200: <see cref="BillListLimits"/>).
+/// Public and the same for everyone.
 /// </summary>
 internal static class GetAppealsEndpoint
 {
@@ -23,10 +24,11 @@ internal static class GetAppealsEndpoint
             .Produces(StatusCodes.Status304NotModified);
 
     private static async Task<IResult> HandleAsync(
-        HttpContext http, IAppealsModule appeals, ErrorMapper errors, string? q, bool? planned, string? tab, string? sort, string? cursor, CancellationToken cancellationToken) =>
+        HttpContext http, IAppealsModule appeals, ErrorMapper errors, string? q, bool? planned, string? tab, string? sort, string? cursor, string? limit, CancellationToken cancellationToken) =>
         PublicJson.From(
             http,
             errors,
-            Lt2.SharedKernel.Result<BillListResponse>.Success(AppealMapping.Map(await appeals.ListAsync(new BillListQuery(q, planned == true, tab == "closed", cursor, sort), cancellationToken))),
+            Lt2.SharedKernel.Result<BillListResponse>.Success(AppealMapping.Map(await appeals.ListAsync(
+                new BillListQuery(q, planned == true, tab == "closed", cursor, sort, BillListLimits.Of(limit)), cancellationToken))),
             maxAgeSeconds: 0);
 }

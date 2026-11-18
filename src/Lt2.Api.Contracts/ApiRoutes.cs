@@ -204,9 +204,10 @@ public static class AppealRoutes
     /// <summary>
     /// <c>GET /appeals</c> (design 8.12.5): <c>q</c> searches number and title, <c>planned=true</c> keeps those planned soon,
     /// <c>tab=closed</c> lists the closed ones, <c>sort</c> is <c>activity</c> (the default), <c>participants</c>,
-    /// <c>arguments</c>, <c>planned</c> or <c>latest</c> (the last activity first; owner, 2026-11-17).
+    /// <c>arguments</c>, <c>planned</c> or <c>latest</c> (the last activity first; owner, 2026-11-17); <c>limit</c> how many
+    /// (<see cref="Appeals.BillListLimits"/>), <c>cursor</c> where to start.
     /// </summary>
-    public static string AppealsList(string? search, bool planned, bool closed, string? cursor, string? sort = null)
+    public static string AppealsList(string? search, bool planned, bool closed, string? cursor, string? sort = null, int? limit = null)
     {
         var query = new List<string>();
         if (!string.IsNullOrEmpty(sort))
@@ -232,6 +233,11 @@ public static class AppealRoutes
         if (!string.IsNullOrEmpty(cursor))
         {
             query.Add("cursor=" + Uri.EscapeDataString(cursor));
+        }
+
+        if (limit is { } n)
+        {
+            query.Add("limit=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
         return query.Count == 0 ? Appeals : Appeals + "?" + string.Join("&", query);

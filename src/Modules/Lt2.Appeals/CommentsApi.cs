@@ -88,7 +88,13 @@ public sealed record QueueComment(
     Guid Id, BillFacts Bill, CommentAuthor Author, string Text, DateTimeOffset CreatedAt, string Status, IReadOnlyList<QueueReport> Reports,
     CommentContext Target, DateTimeOffset? HiddenAt, string? HiddenBy, string? HideStatement);
 
-public sealed record CommentModerationItems(IReadOnlyList<QueueComment> Reported, IReadOnlyList<QueueComment> Hidden);
+public sealed record CommentModerationItems(IReadOnlyList<QueueComment> Reported, IReadOnlyList<QueueComment> Hidden)
+{
+    /// <summary>How many reported comments wait in all; the list holds at most a hundred.</summary>
+    public int ReportedTotal { get; init; }
+
+    public int HiddenTotal { get; init; }
+}
 
 /// <summary>
 /// Comments (design 8.23): read in public, written, deleted and agreed with by members. Rules are checked here, where the data

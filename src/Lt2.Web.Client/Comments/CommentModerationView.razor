@@ -14,6 +14,7 @@
         {
             <p class="small">@(Hidden ? L["Hidden.None"] : L["Comments.Queue.None"])</p>
         }
+        <QueueCut Shown="list.Count" Total="@(Hidden ? items.HiddenTotal : items.ReportedTotal)" Id="@(Hidden ? "hidden-comments-cut" : "queue-comments-cut")" />
         @foreach (var item in list)
         {
             <CommentQueueItem @key="item.Id" Item="item" IdPrefix="@(Hidden ? "hidden-" : "queue-")" />

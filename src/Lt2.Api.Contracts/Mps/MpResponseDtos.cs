@@ -143,7 +143,8 @@ public sealed record QueueMpResponseResponse(
 public sealed record HiddenMpResponseResponse(
     Guid Id, BillRefResponse Bill, MpResponderResponse Mp, string Stance, string Text, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
-public sealed record MpResponseModerationResponse(IReadOnlyList<QueueMpResponseResponse> Queue, IReadOnlyList<HiddenMpResponseResponse> Hidden);
+public sealed record MpResponseModerationResponse(
+    IReadOnlyList<QueueMpResponseResponse> Queue, IReadOnlyList<HiddenMpResponseResponse> Hidden, int QueueTotal = 0, int HiddenTotal = 0);
 
 public sealed class MpResponseRequestValidator : AbstractValidator<MpResponseRequest>
 {

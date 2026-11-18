@@ -39,6 +39,7 @@ else
         {
             <p class="small">@L["Mod.Empty"]</p>
         }
+        <QueueCut Shown="Queue.Records.Count" Total="Queue.RecordsTotal" Id="queue-appeals-cut" />
         @foreach (var record in Queue.Records)
         {
             <article class="sheet stack" id="queue-appeal-@record.Id" aria-labelledby="qa-@record.Id" @key="record.Id">
@@ -100,6 +101,7 @@ else
         {
             <p class="small">@L["Mod.Empty"]</p>
         }
+        <QueueCut Shown="Queue.Reasons.Count" Total="Queue.ReasonsTotal" Id="queue-reasons-cut" />
         @foreach (var reason in Queue.Reasons)
         {
             <QueueReasonItem @key="reason.Id" Reason="reason" OnRestricted="RestrictedAsync" />

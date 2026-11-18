@@ -2,6 +2,23 @@ using Lt2.Api.Contracts.Admin;
 
 namespace Lt2.Api.Contracts.Appeals;
 
+/// <summary>
+/// <c>limit</c> of <c>GET /appeals</c> (design 8.12.5): how many bills one answer holds. A value the API would not take falls back
+/// to the default or the nearest one allowed, never to an error.
+/// </summary>
+public static class BillListLimits
+{
+    public const int Default = 20;
+
+    /// <summary>The most one answer holds: as many as <c>/projektai</c> shows on one page (owner, 2026-11-18).</summary>
+    public const int Max = 200;
+
+    public static int Of(string? limit) =>
+        int.TryParse(limit, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var n) && n >= 1
+            ? Math.Min(n, Max)
+            : Default;
+}
+
 /// <summary>Design 8.8, 8.12: bills as people take part on them, positions, arguments, endorsements and reports.</summary>
 public interface IAppealsApi
 {
@@ -10,9 +27,9 @@ public interface IAppealsApi
     /// <summary>
     /// <c>/projektai</c> (design 8.12.5): active bills in the order <paramref name="sort"/> (<c>activity</c> by default,
     /// <c>participants</c>, <c>arguments</c>, <c>planned</c>, <c>latest</c>); a search by number or title; only those planned soon; or, with
-    /// <paramref name="closed"/>, the closed ones.
+    /// <paramref name="closed"/>, the closed ones; <paramref name="limit"/> of them (<see cref="BillListLimits"/>) from <paramref name="cursor"/> on.
     /// </summary>
-    Task<ApiResult<BillListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, CancellationToken cancellationToken = default);
+    Task<ApiResult<BillListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, int? limit = null, CancellationToken cancellationToken = default);
 
     /// <summary>The bill as people take part on it; an active bill nobody took part in answers the empty open state.</summary>
     Task<ApiResult<BillRecordResponse>> GetRecordAsync(string number, CancellationToken cancellationToken = default);

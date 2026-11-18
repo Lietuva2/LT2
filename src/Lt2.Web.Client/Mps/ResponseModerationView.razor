@@ -18,6 +18,7 @@
             {
                 <p class="small">@L["Mod.Empty"]</p>
             }
+            <QueueCut Shown="items.Queue.Count" Total="items.QueueTotal" Id="queue-responses-cut" />
             @foreach (var r in items.Queue)
             {
                 <article class="sheet stack stack--tight" id="queue-response-@r.Id" aria-label="@L["RespMod.Item"]" @key="r.Id">
@@ -76,6 +77,7 @@
             {
                 <p class="small">@L["Hidden.None"]</p>
             }
+            <QueueCut Shown="items.Hidden.Count" Total="items.HiddenTotal" Id="hidden-responses-cut" />
             @foreach (var r in items.Hidden)
             {
                 <article class="sheet stack stack--tight" id="hidden-response-@r.Id" aria-label="@L["RespMod.Item"]" @key="r.Id">
