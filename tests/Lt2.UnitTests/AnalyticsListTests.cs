@@ -68,6 +68,18 @@ public sealed class AnalyticsListTests
         AnalyticsList.More(Read(rodyti: "30"), found: 25, next: null).ShouldBeNull("every bill found is shown");
         AnalyticsList.More(Read(rodyti: "300"), found: 400, next: "XVP-0999").ShouldBeNull("the list holds as many as it may");
         AnalyticsList.More(Read(rodyti: "290"), found: 400, next: "XVP-0999")!.ShouldStartWith("/statistika?rodyti=300#");
+        AnalyticsList.More(Read(q: "XVP"), found: 25, next: "XVP-0711", nextInPlot: false)
+            .ShouldBe("/statistika?q=XVP&rodyti=30#palyginimas", "a bill without a place in the plot: the part itself, the table stays closed");
+    }
+
+    [Fact]
+    public void Filtrai_counts_every_field_set_and_the_newest_first_is_none()
+    {
+        Read().Active.ShouldBe(0);
+        Read(metai: "2026", paskyros: "senesnes", rodyti: "30").Active.ShouldBe(0, "the period, the accounts and the length are not the list's filters");
+        Read(q: "pajamų", rikiuoti: "skirtumas").Active.ShouldBe(2);
+        Read(nuo: "vakar").Active.ShouldBe(1, "a day that is not a date is set too, so its field and error show");
+        Read(nuo: "2026-03-01", iki: "2026-10-31", q: "x", rezultatas: "sutapo", dauguma: "uz", rikiuoti: "pozicijos").Active.ShouldBe(6);
     }
 
     [Fact]

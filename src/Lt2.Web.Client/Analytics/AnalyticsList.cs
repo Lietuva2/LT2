@@ -36,8 +36,14 @@ public sealed record AnalyticsListState(
     public bool Reversed => FromDay is { } from && ToDay is { } to && to < from;
 
     /// <summary>Anything chosen in the list's form.</summary>
-    public bool Filtered =>
-        !string.IsNullOrWhiteSpace(From) || !string.IsNullOrWhiteSpace(To) || Query is not null || Result != "" || Majority != "" || Sort != "";
+    public bool Filtered => Active > 0;
+
+    /// <summary>
+    /// How many of the list's fields are set (a day typed, even one that is not a date; the search; the result; the majority;
+    /// an order other than the newest first): the count in "Filtrai (2)", whose form is open when it is not 0.
+    /// </summary>
+    public int Active =>
+        new[] { !string.IsNullOrWhiteSpace(From), !string.IsNullOrWhiteSpace(To), Query is not null, Result != "", Majority != "", Sort != "" }.Count(set => set);
 }
 
 /// <summary>
@@ -170,10 +176,12 @@ public static class AnalyticsList
     }
 
     /// <summary>
-    /// "Rodyti daugiau": the same list with <see cref="Step"/> more, landing on <paramref name="next"/>, the first bill added
-    /// (the API answers one more than shown); null when every bill found is shown or the list holds <see cref="Cap"/>.
+    /// "Rodyti daugiau": the same plot and table with <see cref="Step"/> more, landing on <paramref name="next"/>, the first bill
+    /// added (the API answers one more than shown), when it has a row in the plot (<paramref name="nextInPlot"/>); otherwise
+    /// on the part itself (<see cref="Anchor"/>), since the table is closed. Null when every bill found is shown or the list
+    /// holds <see cref="Cap"/>.
     /// </summary>
-    public static string? More(AnalyticsListState state, int found, string? next)
+    public static string? More(AnalyticsListState state, int found, string? next, bool nextInPlot = true)
     {
         ArgumentNullException.ThrowIfNull(state);
         if (next is null || state.Shown >= Cap || found <= state.Shown)
@@ -181,10 +189,10 @@ public static class AnalyticsList
             return null;
         }
 
-        return Address(state with { Shown = Math.Min(state.Shown + Step, Cap) }, Row(next));
+        return Address(state with { Shown = Math.Min(state.Shown + Step, Cap) }, nextInPlot ? Row(next) : Anchor);
     }
 
-    /// <summary>The id of a bill's row, where "Rodyti daugiau" lands.</summary>
+    /// <summary>The id of a bill's row in the plot, where "Rodyti daugiau" lands.</summary>
     public static string Row(string number) => "projektas-" + number;
 
     private static string Word(IReadOnlyList<(string Slug, string ApiValue)> choices, string? word) =>

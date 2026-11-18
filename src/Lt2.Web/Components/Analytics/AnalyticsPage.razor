@@ -13,11 +13,12 @@
 
 @* Design 8.26: the statistics page, "Statistika" in the main menu (owner, 2026-11-17; it was "Analitika", the fourth tab under
    "Projektai", at /seimas/analitika). Public, server-rendered, the same for everyone and readable without JavaScript. The
-   period and the accounts counted are one GET form on the ground (8.16) and apply to the whole page; the list of closed
-   bills has its own GET form on the ground above its sheet (owner, 2026-11-18: dates, search, result, the Seimas's
-   majority, the order), which changes only the list. Each bill is a row in HTML: its title, a track drawn as SVG with the
-   two shares and the line at 50 %, and the exact numbers written under it, so nothing needs hover. The list grows in place
-   by the address (?rodyti=). The numbers are a kept copy, at most an hour old (8.26.6), and the page says when they were
+   period and the accounts counted are one GET form on the ground (8.16) and apply to the whole page; the closed bills
+   have their own GET form on the ground above their sheet, closed in a details until one of its fields is set (owner,
+   2026-11-18 and 2026-11-19: dates, search, result, the Seimas's majority, the order), which changes only the plot and
+   the table. The plot is one SVG drawn here (owner, 2026-11-19: back from a list of rows, with the bills' titles), a
+   <title> per mark, and the table of the same bills one click away; both grow in place by the address (?rodyti=).
+   The numbers are a kept copy, at most an hour old (8.26.6), and the page says when they were
    counted. Nothing about the caller, apart from the island at the end, which a visitor sees as the sign-in link and a
    member's browser fills with the member's own comparison (8.26.4). *@
 <PageTitle>@T["Title"] · Lietuva 2.0</PageTitle>
@@ -111,74 +112,78 @@
         <p class="small" id="compare-lead">@T["Compare.Lead"]</p>
         @if (d.BillsClosed > 0)
         {
-            <form class="filters" method="get" action="@(AnalyticsList.Path + "#" + AnalyticsList.Anchor)" role="search" id="compare-filters">
-                @if (_state.Year is { } chosenYear)
-                {
-                    <input type="hidden" name="metai" value="@chosenYear.ToString(CultureInfo.InvariantCulture)" />
-                }
-                @if (_state.Older)
-                {
-                    <input type="hidden" name="paskyros" value="@AnalyticsList.OlderValue" />
-                }
-                <div class="filters__pair">
-                    @foreach (var (name, label, value, invalid) in DayFields)
+            @* Closed at first (owner, 2026-11-19); open while any of its fields is set, so the reader sees what applies. *@
+            <details class="more stack stack--tight" id="compare-filters-box" open="@_state.Filtered">
+                <summary class="linkish small" id="compare-filters-toggle">@(_state.Active == 0 ? T["Filter.Toggle"] : T.Format("Filter.ToggleCount", Display.Number(_state.Active)))</summary>
+                <form class="filters" method="get" action="@(AnalyticsList.Path + "#" + AnalyticsList.Anchor)" role="search" id="compare-filters">
+                    @if (_state.Year is { } chosenYear)
                     {
-                        var id = "compare-" + name;
-                        <div class="field @(invalid ? "field--error" : null)">
-                            <label for="@id">@T[label]</label>
-                            <p class="field__hint" id="@(id + "-hint")">@U.Format("Date.Hint", Display.DateExample)</p>
-                            <input class="input num" id="@id" name="@name" type="text" inputmode="numeric" autocomplete="off"
-                                   pattern="@Display.DatePattern" placeholder="@Display.DateExample" value="@value" aria-invalid="@(invalid ? "true" : null)"
-                                   aria-describedby="@(id + "-hint" + (invalid ? " " + id + "-error" : ""))" />
-                            @if (invalid)
+                        <input type="hidden" name="metai" value="@chosenYear.ToString(CultureInfo.InvariantCulture)" />
+                    }
+                    @if (_state.Older)
+                    {
+                        <input type="hidden" name="paskyros" value="@AnalyticsList.OlderValue" />
+                    }
+                    <div class="filters__pair">
+                        @foreach (var (name, label, value, invalid) in DayFields)
+                        {
+                            var id = "compare-" + name;
+                            <div class="field @(invalid ? "field--error" : null)">
+                                <label for="@id">@T[label]</label>
+                                <p class="field__hint" id="@(id + "-hint")">@U.Format("Date.Hint", Display.DateExample)</p>
+                                <input class="input num" id="@id" name="@name" type="text" inputmode="numeric" autocomplete="off"
+                                       pattern="@Display.DatePattern" placeholder="@Display.DateExample" value="@value" aria-invalid="@(invalid ? "true" : null)"
+                                       aria-describedby="@(id + "-hint" + (invalid ? " " + id + "-error" : ""))" />
+                                @if (invalid)
+                                {
+                                    <p class="field__error" id="@(id + "-error")">@U.Format("Date.Invalid", Display.DateExample)</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="field">
+                        <label for="compare-q">@A["List.Search"]</label>
+                        <input class="input" id="compare-q" name="q" type="search" value="@_state.Query" maxlength="@AnalyticsBillQuery.MaxSearchLength" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                        <label for="compare-rezultatas">@T["Filter.Result"]</label>
+                        <select class="input" id="compare-rezultatas" name="rezultatas">
+                            <option value="" selected="@(_state.Result == "")">@T["Filter.AllBills"]</option>
+                            @foreach (var (slug, _) in AnalyticsList.Results)
                             {
-                                <p class="field__error" id="@(id + "-error")">@U.Format("Date.Invalid", Display.DateExample)</p>
+                                <option value="@slug" selected="@(slug == _state.Result)">@T["Filter.Result." + slug]</option>
                             }
-                        </div>
-                    }
-                </div>
-                <div class="field">
-                    <label for="compare-q">@A["List.Search"]</label>
-                    <input class="input" id="compare-q" name="q" type="search" value="@_state.Query" maxlength="@AnalyticsBillQuery.MaxSearchLength" autocomplete="off" />
-                </div>
-                <div class="field">
-                    <label for="compare-rezultatas">@T["Filter.Result"]</label>
-                    <select class="input" id="compare-rezultatas" name="rezultatas">
-                        <option value="" selected="@(_state.Result == "")">@T["Filter.AllBills"]</option>
-                        @foreach (var (slug, _) in AnalyticsList.Results)
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="compare-dauguma">@T["Compare.Majority"]</label>
+                        <select class="input" id="compare-dauguma" name="dauguma">
+                            <option value="" selected="@(_state.Majority == "")">@T["Filter.AllBills"]</option>
+                            @foreach (var (slug, _) in AnalyticsList.Majorities)
+                            {
+                                <option value="@slug" selected="@(slug == _state.Majority)">@T["Filter.Majority." + slug]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="compare-rikiuoti">@T["Filter.Sort"]</label>
+                        <select class="input" id="compare-rikiuoti" name="rikiuoti">
+                            <option value="" selected="@(_state.Sort == "")">@T["Filter.Sort.Latest"]</option>
+                            @foreach (var (slug, _) in AnalyticsList.Sorts)
+                            {
+                                <option value="@slug" selected="@(slug == _state.Sort)">@T["Filter.Sort." + slug]</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="row">
+                        <button class="btn" type="submit">@T["Filter.Show"]</button>
+                        @if (_state.Filtered)
                         {
-                            <option value="@slug" selected="@(slug == _state.Result)">@T["Filter.Result." + slug]</option>
+                            <a href="@AnalyticsList.Cleared(_state, AnalyticsList.Anchor)" id="compare-clear">@F.T["Ballots.Clear"]</a>
                         }
-                    </select>
-                </div>
-                <div class="field">
-                    <label for="compare-dauguma">@T["Compare.Majority"]</label>
-                    <select class="input" id="compare-dauguma" name="dauguma">
-                        <option value="" selected="@(_state.Majority == "")">@T["Filter.AllBills"]</option>
-                        @foreach (var (slug, _) in AnalyticsList.Majorities)
-                        {
-                            <option value="@slug" selected="@(slug == _state.Majority)">@T["Filter.Majority." + slug]</option>
-                        }
-                    </select>
-                </div>
-                <div class="field">
-                    <label for="compare-rikiuoti">@T["Filter.Sort"]</label>
-                    <select class="input" id="compare-rikiuoti" name="rikiuoti">
-                        <option value="" selected="@(_state.Sort == "")">@T["Filter.Sort.Latest"]</option>
-                        @foreach (var (slug, _) in AnalyticsList.Sorts)
-                        {
-                            <option value="@slug" selected="@(slug == _state.Sort)">@T["Filter.Sort." + slug]</option>
-                        }
-                    </select>
-                </div>
-                <div class="row">
-                    <button class="btn" type="submit">@T["Filter.Show"]</button>
-                    @if (_state.Filtered)
-                    {
-                        <a href="@AnalyticsList.Cleared(_state, AnalyticsList.Anchor)" id="compare-clear">@F.T["Ballots.Clear"]</a>
-                    }
-                </div>
-            </form>
+                    </div>
+                </form>
+            </details>
             @if (_state.Reversed)
             {
                 <p class="note" id="compare-reversed">@T["Filter.Reversed"]</p>
@@ -196,82 +201,114 @@
             else
             {
                 var shown = d.Bills.Take(_state.Shown).ToList();
-                <p class="small row" id="compare-key">
-                    <span class="key key--seimas">@T["Compare.Seimas"]</span>
-                    <span class="key key--members">@T["Compare.Members"]</span>
-                    <span>@T["Compare.Half"]</span>
-                </p>
-                <div class="cmp-scale small num" aria-hidden="true"><span>0&nbsp;%</span><span>50&nbsp;%</span><span>100&nbsp;%</span></div>
-                <ol class="cmp-list" id="compare-rows">
-                    @foreach (var bill in shown)
-                    {
-                        <li class="cmp" id="@AnalyticsList.Row(bill.Number)" @key="bill.Number">
-                            <div class="cmp__head">
-                                <a href="/seimas/@Uri.EscapeDataString(bill.Number)"><b>@bill.Title</b></a>
-                                <span class="small num">@bill.Number · @Display.Day(bill.VotedAt)</span>
-                            </div>
-                            <div class="cmp__track-wrap">
-                                <svg class="cmp__track" aria-hidden="true" focusable="false">
-                                    <line class="cmp__axis" x1="0" x2="100%" y1="50%" y2="50%" />
-                                    <line class="cmp__half" x1="50%" x2="50%" y1="0" y2="100%" />
-                                    @if (bill.SeimasShareFor is { } seimasLine && bill.MembersShareFor is { } membersLine)
-                                    {
-                                        <line class="cmp__gap" x1="@AnalyticsFormat.Position(seimasLine)" x2="@AnalyticsFormat.Position(membersLine)" y1="50%" y2="50%" />
-                                    }
-                                    @if (bill.SeimasShareFor is { } seimas)
-                                    {
-                                        <rect class="cmp__seimas" x="@AnalyticsFormat.Position(seimas)" y="50%" width="11" height="11" transform="translate(-5.5 -5.5)" />
-                                    }
-                                    @if (bill.MembersShareFor is { } members)
-                                    {
-                                        <circle class="cmp__members" cx="@AnalyticsFormat.Position(members)" cy="50%" r="6" />
-                                    }
-                                </svg>
-                            </div>
-                            <p class="small num cmp__figures">
-                                <span class="key key--seimas"><a href="/seimas/balsavimai/@bill.VoteId">@SeimasLine(bill)</a></span>
-                                <span class="key key--members">
-                                    @if (AnalyticsFormat.Share(bill.MembersShareFor) is { } membersShare)
-                                    {
-                                        @T.Format("Row.Members", membersShare, Display.Number(bill.MembersFor + bill.MembersAgainst))
-                                    }
-                                    else
-                                    {
-                                        @T.Format("Row.MembersCounts", Display.Number(bill.MembersFor), Display.Number(bill.MembersAgainst))@(" ")<span class="tag">@T["SmallSample"]</span>
-                                    }
-                                </span>
-                                @if (AnalyticsFormat.Difference(bill.Difference) is { } points)
-                                {
-                                    <span id="@("difference-" + bill.Number)">@T.Format("Row.Difference", points)</span>
-                                }
-                            </p>
-                            <p class="small cmp__meta">
-                                @if (MajorityWord(bill) is { } majority)
-                                {
-                                    <span>@T.Format("Row.Majority", majority)</span>
-                                }
-                                @if (bill.Agreed is { } agreed)
-                                {
-                                    <span class="tag" id="@("result-" + bill.Number)">@T[agreed ? "Row.Agreed" : "Row.Differed"]</span>
-                                }
-                                @if (bill.OfficialNote is { } note)
-                                {
-                                    <span id="@($"note-{bill.Number}")">@note</span>
-                                }
-                            </p>
-                        </li>
-                    }
-                </ol>
+                var dots = shown.Where(InPlot).ToList();
+                var next = d.Bills.Count > shown.Count ? d.Bills[shown.Count] : null;
+                if (dots.Count == 0)
+                {
+                    <p id="compare-plot-none">@T.Format("Compare.PlotNone", Display.Number(d.SmallSample))</p>
+                }
+                else
+                {
+                    <p class="small row" id="compare-key">
+                        <span class="key key--seimas">@T["Compare.Seimas"]</span>
+                        <span class="key key--members">@T["Compare.Members"]</span>
+                        <span>@T["Compare.Half"]</span>
+                    </p>
+                    @* One plot drawn here (owner, 2026-11-19): per bill its number and title as a link on a line of their own, cut to
+                       fit (a shorter cut on a narrow screen, CSS picks one), and under it the two marks; places are per cent of the
+                       width, so the plot fits any screen without scrolling. Exact numbers: each mark's <title> and the table. *@
+                    <div class="dotplot-wrap">
+                        <svg class="dotplot" width="100%" height="@Px(PlotHeight(dots.Count))" role="group" aria-label="@T["Compare.Aria"]" id="compare-plot">
+                            @foreach (var tick in Ticks)
+                            {
+                                var x = tick.ToString(CultureInfo.InvariantCulture) + "%";
+                                <line class="@(tick == 50 ? "dotplot__half" : "dotplot__axis")" x1="@x" x2="@x" y1="@Px(PlotTop)" y2="@Px(PlotTop + RowHeight * dots.Count)" />
+                                @SvgText("dotplot__tick", x, Px(PlotTop + RowHeight * dots.Count + 16), tick == 0 ? "start" : tick == 100 ? "end" : "middle", tick.ToString(CultureInfo.InvariantCulture) + " %")
+                            }
+                            @for (var i = 0; i < dots.Count; i++)
+                            {
+                                var bill = dots[i];
+                                var top = PlotTop + RowHeight * i;
+                                var seimas = bill.SeimasShareFor!.Value;
+                                var members = bill.MembersShareFor!.Value;
+                                var full = bill.Number + " " + bill.Title;
+                                <g id="@AnalyticsList.Row(bill.Number)" @key="bill.Number">
+                                    <a href="/seimas/@Uri.EscapeDataString(bill.Number)" aria-label="@full">
+                                        <title>@full</title>
+                                        @Label("dotplot__label dotplot__label--short", top + LabelLine, bill, ShortLabel)
+                                        @Label("dotplot__label dotplot__label--long", top + LabelLine, bill, LongLabel)
+                                    </a>
+                                    <line class="dotplot__gap" x1="@AnalyticsFormat.Position(seimas)" x2="@AnalyticsFormat.Position(members)" y1="@Px(top + DotLine)" y2="@Px(top + DotLine)" />
+                                    <rect class="dotplot__seimas" x="@AnalyticsFormat.Position(seimas)" y="@Px(top + DotLine - 5.5m)" width="11" height="11" transform="translate(-5.5 0)"><title>@T.Format("Compare.DotSeimas", full, AnalyticsFormat.Share(seimas))</title></rect>
+                                    <circle class="dotplot__members" cx="@AnalyticsFormat.Position(members)" cy="@Px(top + DotLine)" r="6"><title>@T.Format("Compare.DotMembers", full, AnalyticsFormat.Share(members), Display.Number(bill.MembersFor + bill.MembersAgainst))</title></circle>
+                                </g>
+                            }
+                        </svg>
+                    </div>
+                    <p class="small" id="compare-plot-note">@T.Format("Compare.PlotNote", Display.Number(d.SmallSample))</p>
+                }
                 <div class="row">
                     <p class="small num" role="status" id="compare-shown">@F.T.Format("Ballots.Shown", Display.Number(shown.Count), Display.Number(d.BillsFound))</p>
-                    @* Design 8.15: what "balsavusiųjų dauguma" means, once beside the list. *@
-                    <p class="small"><Lt2.Web.Client.Components.Hint Id="hint-majority" Text="@T["Majority.Hint"]" Answer="@T["Majority.Answer"]" /></p>
-                    @if (AnalyticsList.More(_state, d.BillsFound, d.Bills.Count > shown.Count ? d.Bills[shown.Count].Number : null) is { } more)
+                    @if (AnalyticsList.More(_state, d.BillsFound, next?.Number, next is not null && InPlot(next)) is { } more)
                     {
-                        @* Lands on the first row added, so the reader goes on where they stopped (as the history of votes, 8.18). *@
+                        @* Lands on the first bill added when the plot has it, so the reader goes on where they stopped (as the history of votes, 8.18). *@
                         <a class="btn btn--plain" href="@more" id="compare-more">@F.T["Ballots.More"]</a>
                     }
                 </div>
+                @* The same bills as the plot, every one of them, with the exact numbers; open at once when the plot has none. *@
+                <details class="more stack stack--tight" id="compare-table" open="@(dots.Count == 0)">
+                    <summary class="linkish small">@T["Compare.Table"]</summary>
+                    <div class="table-wrap">
+                        <table class="table analytics-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">@T["Compare.Number"]</th>
+                                    <th scope="col">@T["Compare.Bill"]</th>
+                                    <th scope="col">@T["Compare.SeimasFor"]</th>
+                                    <th scope="col">@T["Compare.MembersFor"]</th>
+                                    <th scope="col">@T["Compare.Difference"]</th>
+                                    <th scope="col">@T["Compare.Majority"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var bill in shown)
+                                {
+                                    <tr id="@($"row-{bill.Number}")" @key="bill.Number">
+                                        <td class="num analytics-table__number">@bill.Number <span class="small">@Display.Day(bill.VotedAt)</span></td>
+                                        <td class="analytics-table__title"><a href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Title</a></td>
+                                        <td class="num" data-label="@T["Compare.SeimasFor"]">
+                                            <a href="/seimas/balsavimai/@bill.VoteId">@SeimasShare(bill)</a>
+                                            @if (bill.OfficialNote is { } note)
+                                            {
+                                                <span class="small" id="@($"note-{bill.Number}")">@note</span>
+                                            }
+                                        </td>
+                                        <td class="num analytics-table__figure" data-label="@T["Compare.MembersFor"]">
+                                            @if (AnalyticsFormat.Share(bill.MembersShareFor) is { } share)
+                                            {
+                                                @T.Format("Compare.MembersShare", share, Display.Number(bill.MembersFor + bill.MembersAgainst))
+                                            }
+                                            else
+                                            {
+                                                @T.Format("Compare.Counts", Display.Number(bill.MembersFor), Display.Number(bill.MembersAgainst))@(" ")<span class="tag">@T["SmallSample"]</span>
+                                            }
+                                        </td>
+                                        <td class="num analytics-table__figure" data-label="@T["Compare.Difference"]" id="@("difference-" + bill.Number)">@(AnalyticsFormat.Difference(bill.Difference) ?? "–")</td>
+                                        <td data-label="@T["Compare.Majority"]">
+                                            @(MajorityWord(bill) ?? T["Compare.NoResult"])
+                                            @if (bill.Agreed is { } agreed)
+                                            {
+                                                @(" ")<span class="tag" id="@("result-" + bill.Number)">@T[agreed ? "Compare.Agreed" : "Compare.Differed"]</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @* Design 8.15: what "balsavusiųjų dauguma" means, once beside the table. *@
+                    <p class="small"><Lt2.Web.Client.Components.Hint Id="hint-majority" Text="@T["Majority.Hint"]" Answer="@T["Majority.Answer"]" /></p>
+                </details>
             }
             <p class="small">@A["NotAPoll"]</p>
         </section>
@@ -421,13 +458,40 @@
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
     }
 
+    // The plot's rows (pixels down; across, per cent of the width): the label's baseline, then the marks' line under it.
+    private const decimal PlotTop = 4;
+    private const decimal RowHeight = 50;
+    private const decimal LabelLine = 16;
+    private const decimal DotLine = 34;
+    private static readonly int[] Ticks = [0, 25, 50, 75, 100];
+
+    /// <summary>The label's length on a narrow screen and on a wide one (lt2.css shows one of the two at 48rem).</summary>
+    private const int ShortLabel = 38;
+    private const int LongLabel = 90;
+
+    private static decimal PlotHeight(int rows) => PlotTop + RowHeight * rows + 22;
+
     private static string Px(decimal value) => value.ToString("0.#", CultureInfo.InvariantCulture);
 
-    /// <summary>The Seimas's part of a row: its share "for", "pritarta bendru sutarimu", or that the vote has no result.</summary>
-    private string SeimasLine(BillComparisonResponse bill) =>
-        bill.IsConsensus ? T["Row.Consensus"]
-        : AnalyticsFormat.Share(bill.SeimasShareFor) is { } share ? T.Format("Row.Seimas", share)
-        : T["Row.NoResult"];
+    /// <summary>A bill stands in the plot when both shares are shown: from 20 positions and a vote with numbers (no consensus).</summary>
+    private static bool InPlot(BillComparisonResponse bill) => bill.SeimasShareFor is not null && bill.MembersShareFor is not null;
+
+    /// <summary>An SVG <c>text</c> element (Razor reads a literal one inside a loop as its own tag); the content is encoded.</summary>
+    private static MarkupString SvgText(string cssClass, string x, string y, string anchor, string content) =>
+        new($"<text class=\"{cssClass}\" x=\"{x}\" y=\"{y}\" text-anchor=\"{anchor}\">{System.Net.WebUtility.HtmlEncode(content)}</text>");
+
+    /// <summary>A bill's label in the plot, its number in bold, cut to <paramref name="max"/> characters.</summary>
+    private static MarkupString Label(string cssClass, decimal y, BillComparisonResponse bill, int max)
+    {
+        var label = AnalyticsFormat.Label(bill.Number, bill.Title, max);
+        var number = System.Net.WebUtility.HtmlEncode(bill.Number);
+        var rest = System.Net.WebUtility.HtmlEncode(label[bill.Number.Length..]);
+        return new($"<text class=\"{cssClass}\" x=\"0\" y=\"{Px(y)}\"><tspan class=\"dotplot__num\">{number}</tspan>{rest}</text>");
+    }
+
+    /// <summary>The Seimas's share "for" in the table, "pritarta bendru sutarimu", or that the vote has no result.</summary>
+    private string SeimasShare(BillComparisonResponse bill) =>
+        bill.IsConsensus ? T["Compare.Consensus"] : AnalyticsFormat.Share(bill.SeimasShareFor) ?? T["Compare.NoResult"];
 
     /// <summary>The Seimas's majority of those who voted in the design's words (8.26.2), without quotes; null without numbers.</summary>
     private string? MajorityWord(BillComparisonResponse bill) => bill.SeimasMajority switch

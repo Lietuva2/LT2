@@ -71,19 +71,30 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             // Only accounts older than 30 days: both members are new, so the bill has no positions to compare.
             (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Of(null, true))).Bills.ShouldNotContain(b => b.Number == Bill);
 
-            // The page: "Statistika" in the menu, the bill's row with its title, its counts and "maža imtis", no share and no dot for the members.
+            // The page: "Statistika" in the menu; the bill's table row with its title beside the number, its counts and
+            // "maža imtis"; no place in the plot under twenty positions.
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
             html.ShouldContain("id=\"nav-statistics\" aria-current=\"page\"");
             html.ShouldNotContain("id=\"project-tabs\"", customMessage: "owner, 2026-11-17: a menu item of its own, no tab row");
-            var listRow = ListRow(html, Bill);
-            listRow.ShouldContain($"<a href=\"/seimas/{Bill}\"><b>{row.Title}</b></a>", customMessage: "every row names the bill and links to its page (owner, 2026-11-18)");
-            listRow.ShouldContain("class=\"cmp__seimas\"", customMessage: "the Seimas's share has its mark");
-            listRow.ShouldNotContain("class=\"cmp__members\"", customMessage: "no dot under twenty positions");
-            html.ShouldNotContain("id=\"compare-table\"", customMessage: "the rows carry what the table did (owner, 2026-11-18)");
-            listRow.ShouldContain("Naudotojų pozicijos: 1 už, 1 prieš");
+            var listRow = TableRow(html, Bill);
+            Regex.IsMatch(listRow, $@"<td class=""num analytics-table__number"">{Bill} <span").ShouldBeTrue("the number, then the title (owner, 2026-11-19)");
+            listRow.ShouldContain($"<a href=\"/seimas/{Bill}\">{row.Title}</a>", customMessage: "the title links to the bill's page (owner, 2026-11-19)");
+            html.ShouldNotContain($"id=\"{AnalyticsListRow(Bill)}\"", customMessage: "no row in the plot under twenty positions");
+            listRow.ShouldContain("1 už, 1 prieš");
             listRow.ShouldContain("maža imtis");
             var majority = row.SeimasMajority switch { SeimasMajorities.For => "už", SeimasMajorities.Against => "prieš", _ => "nėra daugumos" };
-            listRow.ShouldContain($"Balsavusiųjų dauguma Seime: {majority}</span>", customMessage: "the Seimas's majority of those who voted, without quotes (owner, 2026-11-18)");
+            Regex.IsMatch(listRow, $@"data-label=""Balsavusiųjų dauguma Seime"">\s*{majority}\s*</td>")
+                .ShouldBeTrue("the Seimas's majority of those who voted, without quotes (owner, 2026-11-18)");
+
+            // The filters are closed until one is set; with no bill in the plot, the table is open at once.
+            Regex.Match(html, "<details[^>]*id=\"compare-filters-box\"[^>]*>").Value.ShouldNotContain("open");
+            html.ShouldContain("id=\"compare-filters-toggle\">Filtrai</summary>");
+            var alone = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/statistika?q={Bill}"));
+            Regex.Match(alone, "<details[^>]*id=\"compare-filters-box\"[^>]*>").Value.ShouldContain("open");
+            alone.ShouldContain("id=\"compare-filters-toggle\">Filtrai (1)</summary>");
+            alone.ShouldContain("id=\"compare-plot-none\"");
+            alone.ShouldNotContain("id=\"compare-plot\"");
+            Regex.Match(alone, "<details[^>]*id=\"compare-table\"[^>]*>").Value.ShouldContain("open");
             var sitting = answer.Figures.MpsSitting;
             Regex.Match(html, "<div[^>]*id=\"figure-mps\".*?</div>", RegexOptions.Singleline).Value
                 .ShouldContain(LithuanianCounts.Pick(sitting, $"iš {sitting} Seimo nario", $"iš {sitting} Seimo narių", $"iš {sitting} Seimo narių"));
@@ -209,10 +220,15 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             var older = (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Of(null, true))).Bills.Single(b => b.Number == Bill);
             (older.MembersFor, older.MembersAgainst, older.Compared).ShouldBe((19, 5, true));
 
-            var listRow = ListRow(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")), Bill);
-            listRow.ShouldContain("class=\"cmp__members\"");
-            listRow.ShouldContain("Naudotojų pozicijų „už“ – 80\u00a0% (pozicijų:\u00a025)", customMessage: "the exact numbers are written, not only on hover");
-            listRow.ShouldContain($"id=\"difference-{Bill}\"");
+            var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
+            var plotRow = PlotRow(page, Bill);
+            plotRow.ShouldContain($"<a href=\"/seimas/{Bill}\" aria-label=\"{Bill} {row.Title}\">", customMessage: "the plot names the bill by its title and links to it (owner, 2026-11-19)");
+            plotRow.ShouldContain("class=\"dotplot__seimas\"");
+            plotRow.ShouldContain("class=\"dotplot__members\"");
+            plotRow.ShouldContain("Lietuva 2.0 naudotojų pozicijų „už“ – 80\u00a0% (pozicijų:\u00a025)");
+            var tableRow = TableRow(page, Bill);
+            tableRow.ShouldContain("80\u00a0% (pozicijų:\u00a025)", customMessage: "the exact numbers are in the table");
+            tableRow.ShouldContain($"id=\"difference-{Bill}\">{Lt2.Web.Client.Display.Percent(row.Difference)}</td>", customMessage: "the difference as a whole percent (owner, 2026-11-18)");
         }
         finally
         {
@@ -378,9 +394,9 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             using var visitor = NewBrowser();
             var row = (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics)).Bills.Single(b => b.Number == Bill);
             (row.IsConsensus, row.SeimasShareFor, row.SeimasMajority, row.Difference).ShouldBe((true, null, SeimasMajorities.For, null));
-            var listRow = ListRow(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")), Bill);
-            listRow.ShouldContain("Seime pritarta bendru sutarimu");
-            listRow.ShouldNotContain("class=\"cmp__seimas\"", customMessage: "a consensus has no share and no mark");
+            var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
+            TableRow(page, Bill).ShouldContain("pritarta bendru sutarimu");
+            page.ShouldNotContain($"id=\"{AnalyticsListRow(Bill)}\"", customMessage: "a consensus has no share and no place in the plot");
 
             var mine = await member.GetJsonAsync<MyAgreementResponse>(AnalyticsRoutes.MyAgreement);
             (mine.Bills, mine.Consensus, mine.Mps.Count, mine.Factions.Count).ShouldBe((1, 1, 0, 0));
@@ -494,14 +510,24 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             (malformed.BillsQuery.From, malformed.BillsQuery.Result, malformed.BillsQuery.Majority, malformed.BillsQuery.Sort, malformed.BillsQuery.Limit, malformed.BillsFound)
                 .ShouldBe((null, null, null, AnalyticsBillQuery.Latest, AnalyticsBillQuery.DefaultLimit, 12), "a value the API would not make is the default");
 
-            // The page: ten rows, then "Rodyti daugiau" to the same address with more, landing on the first row added.
+            // The page: ten bills in the plot and the same ten in the table, then "Rodyti daugiau" to the same address with
+            // more, landing on the first bill added in the plot.
             var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T"));
-            Regex.Count(page, "<li class=\"cmp\"").ShouldBe(10);
+            Regex.Count(page, "<g id=\"projektas-").ShouldBe(10);
+            Regex.Count(page, "<tr id=\"row-").ShouldBe(10);
+            Regex.Matches(page, "<g id=\"projektas-([^\"]+)\"").Select(m => m.Groups[1].Value)
+                .ShouldBe(Regex.Matches(page, "<tr id=\"row-([^\"]+)\"").Select(m => m.Groups[1].Value), "the plot and the table hold the same bills in the same order");
             Regex.IsMatch(page, @"id=""compare-shown"">Rodoma\s10\siš\s12<").ShouldBeTrue();
             page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=30#projektas-XVP-T011\" id=\"compare-more\"");
             var more = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rodyti=30"));
-            Regex.Count(more, "<li class=\"cmp\"").ShouldBe(12);
+            Regex.Count(more, "<g id=\"projektas-").ShouldBe(12);
+            Regex.Count(more, "<tr id=\"row-").ShouldBe(12);
             more.ShouldNotContain("id=\"compare-more\"");
+
+            // The plot follows the chosen order too: by the most positions, XVP-T012 (36) comes first.
+            var byPositions = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rikiuoti=pozicijos"));
+            Regex.Match(byPositions, "<g id=\"projektas-([^\"]+)\"").Groups[1].Value.ShouldBe("XVP-T012");
+            byPositions.ShouldContain("id=\"compare-filters-toggle\">Filtrai (2)</summary>");
 
             // The period's form keeps the list's filters; the list's form keeps the period; the figures are the same as without filters.
             var filtered = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/statistika?metai={votedOn.Year}&q=XVP-T&rikiuoti=skirtumas"));
@@ -531,9 +557,16 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
         }
     }
 
-    /// <summary>A bill's row in the list of closed bills on the page.</summary>
-    private static string ListRow(string html, string number) =>
-        Regex.Match(html, $"<li class=\"cmp\" id=\"projektas-{Regex.Escape(number)}\".*?</li>", RegexOptions.Singleline).Value;
+    /// <summary>The id of a bill's row in the plot.</summary>
+    private static string AnalyticsListRow(string number) => Lt2.Web.Client.Analytics.AnalyticsList.Row(number);
+
+    /// <summary>A bill's row in the plot of closed bills on the page.</summary>
+    private static string PlotRow(string html, string number) =>
+        Regex.Match(html, $"<g id=\"{Regex.Escape(AnalyticsListRow(number))}\".*?</g>", RegexOptions.Singleline).Value;
+
+    /// <summary>A bill's row in the table of closed bills on the page.</summary>
+    private static string TableRow(string html, string number) =>
+        Regex.Match(html, $"<tr id=\"row-{Regex.Escape(number)}\".*?</tr>", RegexOptions.Singleline).Value;
 
     /// <summary>The adoption-stage vote, as the import would store it, and the closing job: the record closes and its counts freeze.</summary>
     private async Task CloseAsync(bool consensus = false)

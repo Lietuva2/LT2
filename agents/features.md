@@ -520,11 +520,14 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 **Analytics (design 8.26, owner 2026-11-16).** "Statistika", `/statistika` (`MenuSections.Statistics`; owner 2026-11-17: in the main menu, no tab row) (`Components/Analytics/AnalyticsPage`), public and
 server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the four figures, the
 Seimas's share "for" beside the members' frozen counts on closed bills, faction unity (`FactionUnityRule` in Parliament).
-The closed bills are a list of rows with titles and a track each (owner, 2026-11-18), with their own GET form (`nuo`,
-`iki`, `q`, `rezultatas`, `dauguma`, `rikiuoti`, `rodyti`; `AnalyticsList` in `Lt2.Web.Client/Analytics` reads the
-address, the API reads `AnalyticsBillQuery`); `AnalyticsReads.Select` filters, orders and cuts the kept copy in memory;
-the figures and factions follow only `metai`/`paskyros`; no table. Tests: `AnalyticsTests` (integration, the list's
-filters over HTTP and on the page), `ComparedBillListRuleTests`, `AnalyticsListTests` (unit).
+The closed bills are one SVG dot plot (rows `g#projektas-{nr}`, the number and title as a link cut by
+`AnalyticsFormat.Label` to two lengths that CSS picks by width) and "Rodyti lentelę" (`#compare-table`, rows `row-{nr}`,
+title column) over the same bills (owner, 2026-11-19, back from the rows of 2026-11-18), with their own GET form in
+`details#compare-filters-box` ("Filtrai (n)", `AnalyticsListState.Active`; open while a field is set) (`nuo`, `iki`, `q`,
+`rezultatas`, `dauguma`, `rikiuoti`, `rodyti`; `AnalyticsList` in `Lt2.Web.Client/Analytics` reads the address, the API
+reads `AnalyticsBillQuery`); `AnalyticsReads.Select` filters, orders and cuts the kept copy in memory; the figures and
+factions follow only `metai`/`paskyros`. Tests: `AnalyticsTests` (integration, the filters over HTTP and on the page),
+`ComparedBillListRuleTests`, `AnalyticsListTests`, `AnalyticsShareFormatTests` (unit).
 "Kas Seime balsuoja taip, kaip prašote jūs" is the island `MyAgreement` from `GET /api/v1/me/analytics/agreement`: the caller's own sides
 against the MPs' ballots, the only place MPs are ordered by a number; the server-side API client refuses it, so no page
 holds it. Kept copies (owner, 2026-11-16) live only in memory (`AnalyticsCopies`): the public answer per filter and data
