@@ -16,7 +16,8 @@ namespace Lt2.Parliament.Import;
 /// Design 7.2. Walks the chain terms → MPs → sessions → sittings → agenda → proceedings → vote results. For each request:
 /// fetch, store the raw response (deduplicated by hash), then parse the stored body and upsert by Seimas identifiers,
 /// committing the data and "parsed" together. What was parsed and is old enough not to change is not asked again, so a
-/// run that broke off is resumed by the next one, and a second run over unchanged data changes nothing.
+/// run that broke off is resumed by the next one, and a second run over unchanged data changes nothing. An administrator's
+/// manual job forces parts of the walk (<see cref="ImportParts"/>): their requests are asked again however fresh.
 /// </summary>
 internal sealed class ParliamentImporter(
     ParliamentDb db,
@@ -39,7 +40,10 @@ internal sealed class ParliamentImporter(
     /// <summary>Where each request stands, read once per run and kept current as requests are applied.</summary>
     private Dictionary<string, FetchState> _states = new(StringComparer.Ordinal);
 
-    public async Task<bool> IsDueAsync(CancellationToken cancellationToken)
+    /// <summary>The parts this run forces (design 7.2: an administrator's manual job); none for the scheduled run.</summary>
+    private ImportParts _force;
+
+    public async Task<ImportDue> DueAsync(CancellationToken cancellationToken)
     {
         var lastSuccess = await db.ImportRuns.Where(r => r.Status == "succeeded").MaxAsync(r => (DateTimeOffset?)r.StartedAt, cancellationToken);
         var lastStart = await db.ImportRuns.MaxAsync(r => (DateTimeOffset?)r.StartedAt, cancellationToken);
@@ -48,17 +52,18 @@ internal sealed class ParliamentImporter(
         var todayStart = VilniusTime.StartOf(today);
         var tomorrowStart = VilniusTime.StartOf(today.AddDays(1));
         var sittingToday = await db.Sittings.AnyAsync(s => s.StartsAt >= todayStart && s.StartsAt < tomorrowStart, cancellationToken);
-        return ImportSchedule.IsDue(now, lastSuccess, lastStart, sittingToday);
+        return new ImportDue(ImportSchedule.IsDue(now, lastSuccess, lastStart, sittingToday), lastStart);
     }
 
-    public async Task<ImportOutcome> RunAsync(CancellationToken cancellationToken)
+    public async Task<ImportOutcome> RunAsync(ImportParts force, CancellationToken cancellationToken)
     {
+        _force = force;
         await db.Database.OpenConnectionAsync(cancellationToken);
         try
         {
             if (!await TryLockAsync(cancellationToken))
             {
-                logger.LogInformation("Parliament import skipped: another import is running");
+                logger.LogInformation("Parliament import skipped: another import is running (forced: {Forced})", ImportSchedule.Describe(force));
                 return new ImportOutcome(null, "skipped", 0, 0, false, null);
             }
 
@@ -86,7 +91,7 @@ internal sealed class ParliamentImporter(
             .ExecuteUpdateAsync(
                 s => s.SetProperty(r => r.Status, "failed").SetProperty(r => r.Error, "abandoned").SetProperty(r => r.FinishedAt, clock.GetUtcNow()),
                 cancellationToken);
-        _run = new ImportRun { Id = Ids.New(clock), StartedAt = clock.GetUtcNow(), Source = settings.BaseAddress?.ToString() ?? "" };
+        _run = new ImportRun { Id = Ids.New(clock), StartedAt = clock.GetUtcNow(), Source = ImportSchedule.RunSource(settings.BaseAddress?.ToString() ?? "", _force) };
         db.ImportRuns.Add(_run);
         await db.SaveChangesAsync(cancellationToken);
         db.ChangeTracker.Clear();
@@ -139,20 +144,21 @@ internal sealed class ParliamentImporter(
         var termId = settings.TermId;
         _states = await db.FetchStates.AsNoTracking().ToDictionaryAsync(s => s.Request, StringComparer.Ordinal, ct);
 
-        await ImportAsync(SeimasRequest.Terms(), s => now - s.FetchedAt >= Daily, ApplyTerms, ct);
+        // The order is the chain's, and a forced run keeps it: the MPs come before the votes whose ballots are matched to them.
+        await ImportAsync(SeimasRequest.Terms(), ImportParts.Members, s => now - s.FetchedAt >= Daily, ApplyTerms, ct);
         if (!await db.Terms.AnyAsync(t => t.Id == termId, ct))
         {
             throw new SeimasFormatException($"Term {termId} is not in the list of terms.");
         }
 
-        await ImportAsync(SeimasRequest.Members(termId), s => now - s.FetchedAt >= Daily, body => ApplyMembers(termId, body, ct), ct);
-        await ImportAsync(SeimasRequest.Sessions(termId), s => now - s.FetchedAt >= Daily, body => ApplySessions(termId, body, ct), ct);
+        await ImportAsync(SeimasRequest.Members(termId), ImportParts.Members, s => now - s.FetchedAt >= Daily, body => ApplyMembers(termId, body, ct), ct);
+        await ImportAsync(SeimasRequest.Sessions(termId), ImportParts.Members, s => now - s.FetchedAt >= Daily, body => ApplySessions(termId, body, ct), ct);
 
         var sessions = await db.Sessions.AsNoTracking().Where(s => s.TermId == termId).OrderBy(s => s.From).ToListAsync(ct);
         foreach (var session in sessions)
         {
             var open = session.To is null || session.To.Value.ToDateTime(TimeOnly.MaxValue) >= recent.UtcDateTime;
-            await ImportAsync(SeimasRequest.Sittings(session.Id), _ => open, body => ApplySittings(session.Id, body, ct), ct);
+            await ImportAsync(SeimasRequest.Sittings(session.Id), ImportParts.Sittings, _ => open, body => ApplySittings(session.Id, body, ct), ct);
         }
 
         var sessionIds = sessions.Select(s => s.Id).ToList();
@@ -160,8 +166,8 @@ internal sealed class ParliamentImporter(
         foreach (var sitting in sittings)
         {
             var changing = sitting.StartsAt >= recent;
-            await ImportAsync(SeimasRequest.Agenda(sitting.Id), _ => changing, body => ApplyAgenda(sitting.Id, body, ct), ct);
-            await ImportAsync(SeimasRequest.Proceedings(settings.ProceedingsParameter, sitting.Id), _ => changing, body => ApplyProceedings(sitting.Id, body, ct), ct);
+            await ImportAsync(SeimasRequest.Agenda(sitting.Id), ImportParts.Sittings, _ => changing, body => ApplyAgenda(sitting.Id, body, ct), ct);
+            await ImportAsync(SeimasRequest.Proceedings(settings.ProceedingsParameter, sitting.Id), ImportParts.Sittings, _ => changing, body => ApplyProceedings(sitting.Id, body, ct), ct);
 
             var votes = await (from v in db.Votes.AsNoTracking()
                                join i in db.AgendaItems on v.AgendaItemId equals i.Id
@@ -174,6 +180,7 @@ internal sealed class ParliamentImporter(
                 var fresh = vote.HeldAt >= recent;
                 await ImportAsync(
                     SeimasRequest.VoteResults(vote.Id),
+                    ImportParts.Votes,
                     s => fresh || (!vote.HasResult && ImportSchedule.IsMissingResultDue(now, vote.HeldAt, s.FetchedAt)),
                     body => ApplyVoteResult(termId, vote.Id, body, ct),
                     ct);
@@ -182,17 +189,18 @@ internal sealed class ParliamentImporter(
     }
 
     /// <summary>
-    /// One request: skipped when it was parsed and <paramref name="due"/> says it cannot have changed (a response parsed
-    /// by an older parser is then applied again from the stored body, without asking the service); otherwise fetched,
-    /// stored raw, and parsed from the stored body unless it is the body already applied by this parser.
+    /// One request: skipped when it was parsed, its <paramref name="part"/> is not forced and <paramref name="due"/> says it
+    /// cannot have changed (a response parsed by an older parser is then applied again from the stored body, without
+    /// asking the service); otherwise fetched, stored raw, and parsed from the stored body unless it is the body already
+    /// applied by this parser.
     /// </summary>
-    private async Task ImportAsync(SeimasRequest request, Func<FetchState, bool> due, Func<byte[], Task> apply, CancellationToken ct)
+    private async Task ImportAsync(SeimasRequest request, ImportParts part, Func<FetchState, bool> due, Func<byte[], Task> apply, CancellationToken ct)
     {
         var key = request.RelativeUri;
         var state = _states.GetValueOrDefault(key);
         var parsed = state is { ParsedAt: not null };
         var applied = parsed && state!.ParserVersion == ParserVersion;
-        if (parsed && !due(state!))
+        if (parsed && !ImportSchedule.IsForced(_force, part) && !due(state!))
         {
             if (!applied)
             {

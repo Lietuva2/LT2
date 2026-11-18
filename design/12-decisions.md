@@ -429,3 +429,13 @@ Each is built as written; "no" names what changes.
 - `/projektai` and an MP's votes grow in place by the address (`?rodyti=`), as the history of votes does; the arguments'
   "show all" works without script (`?argumentai=visi`); every moderators' list says "Rodoma 100 iš N" when cut.
 - The numbers (2 days, 5 a day, 10 a day, 20 a page and so on) are the design's, not settings.
+
+**Decided by the owner on 2026-11-18: the Seimas import by hand (7.2)**
+
+- The scheduled import stays exactly as it was: one recurring job, `parliament-import`, asked every 15 minutes and
+  importing when due, with its freshness rules per request.
+- Added beside it, four manual jobs an administrator starts with "Trigger now" on the jobs dashboard, never on a schedule:
+  `parliament-members`, `parliament-sittings`, `parliament-votes` and `parliament-everything` (all three, MPs before
+  votes). Each forces its part of the same walk, ignoring that part's freshness rules; nothing else about the import changes.
+- The scheduled job triggered when it is not due is not silent: a log line at information level and a parameter on the
+  job's dashboard page say so, with the last start.

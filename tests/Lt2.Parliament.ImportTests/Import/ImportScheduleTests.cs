@@ -14,4 +14,21 @@ public sealed class ImportScheduleTests
     [InlineData(90, 24 * 7, true)]
     public void A_missing_result_is_asked_for_daily_while_the_vote_is_recent_and_weekly_after_60_days(int voteAgeDays, int hoursSinceAsked, bool due) =>
         ImportSchedule.IsMissingResultDue(Now, Now.AddDays(-voteAgeDays), Now.AddHours(-hoursSinceAsked)).ShouldBe(due);
+
+    [Theory]
+    [InlineData(ImportParts.None, ImportParts.Members, false)]
+    [InlineData(ImportParts.Members, ImportParts.Members, true)]
+    [InlineData(ImportParts.Members, ImportParts.Votes, false)]
+    [InlineData(ImportParts.Sittings | ImportParts.Votes, ImportParts.Votes, true)]
+    [InlineData(ImportParts.All, ImportParts.Sittings, true)]
+    public void A_request_is_forced_only_when_its_part_is(ImportParts force, ImportParts part, bool forced) =>
+        ImportSchedule.IsForced(force, part).ShouldBe(forced);
+
+    [Theory]
+    [InlineData(ImportParts.None, "https://apps.lrs.lt/sip/")]
+    [InlineData(ImportParts.Votes, "https://apps.lrs.lt/sip/ forced: votes")]
+    [InlineData(ImportParts.Votes | ImportParts.Members, "https://apps.lrs.lt/sip/ forced: members, votes")]
+    [InlineData(ImportParts.All, "https://apps.lrs.lt/sip/ forced: members, sittings, votes")]
+    public void A_run_records_its_forced_parts_after_the_address_in_the_walks_order(ImportParts force, string source) =>
+        ImportSchedule.RunSource("https://apps.lrs.lt/sip/", force).ShouldBe(source);
 }

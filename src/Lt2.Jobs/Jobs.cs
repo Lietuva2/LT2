@@ -1,4 +1,6 @@
+using System.Globalization;
 using Hangfire;
+using Hangfire.Server;
 using Lt2.Appeals;
 using Lt2.Identity;
 using Lt2.Notifications;
@@ -9,8 +11,9 @@ using Microsoft.Extensions.Logging;
 namespace Lt2.Jobs;
 
 // The worker runs these jobs (its RecurringJobs registers them); the web host's dashboard only loads their types to trigger
-// one by hand. Every job takes the cancellation token alone as its argument (stored by Hangfire as null), so the stored job
-// and the dashboard hold no person's data; each job's log lines hold counts only.
+// one by hand. Every job's arguments are the cancellation token and, for the import's jobs, Hangfire's PerformContext (both
+// stored by Hangfire as null, and filled in when the job runs), so the stored job and the dashboard hold no person's data;
+// each job's log lines and parameters hold counts and times only.
 
 /// <summary>Daily housekeeping: deletes old sign-in codes and expired sessions.</summary>
 public sealed class IdentityPurgeJob(IIdentityMaintenance maintenance, ILogger<IdentityPurgeJob> logger)
@@ -43,22 +46,115 @@ public sealed class OutboxPurgeJob(INotificationsDispatcher dispatcher, IFollows
 /// the last good data and the next run resumes. No Hangfire lock: the import's own advisory lock makes a second run
 /// return "skipped" at once, whereas waiting for a Hangfire lock would hold one of the two workers for up to an hour
 /// while a long first import runs.
+/// <para>
+/// A run that does not import (not due, or another import running) says so (owner 2026-11-18): a log line at information
+/// level and the job parameter <see cref="SkippedParameter"/>, which the dashboard shows on the job's page, so "Trigger now"
+/// on this job is never silent. To import at once whatever the schedule, an administrator triggers one of
+/// <see cref="ParliamentImportPartsJob"/>'s jobs.
+/// </para>
 /// </summary>
 public sealed class ParliamentImportJob(IParliamentImport import, ILogger<ParliamentImportJob> logger)
 {
+    /// <summary>The job parameter that says why a run imported nothing.</summary>
+    public const string SkippedParameter = "Skipped";
+
+    [JobDisplayName("Seimas import (scheduled: runs only when due)")]
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
-    public async Task RunAsync(CancellationToken cancellationToken)
+    public async Task RunAsync(PerformContext? context, CancellationToken cancellationToken)
     {
-        if (!await import.IsDueAsync(cancellationToken))
+        var due = await import.DueAsync(cancellationToken);
+        if (!due.IsDue)
         {
+            var lastStart = ParliamentImportPartsJob.Vilnius(due.LastStart);
+            logger.LogInformation("Parliament import not due (last start {LastStart}); skipped", lastStart);
+            context?.SetJobParameter(SkippedParameter, $"Not due (last start {lastStart}). To import now, trigger parliament-members, parliament-sittings, parliament-votes or parliament-everything.");
             return;
         }
 
-        var outcome = await import.RunAsync(cancellationToken);
-        if (outcome.Status == "failed")
+        var outcome = await import.RunAsync(ImportParts.None, cancellationToken);
+        if (outcome.Status == "skipped")
+        {
+            context?.SetJobParameter(SkippedParameter, "Another Seimas import is running.");
+        }
+        else if (outcome.Status == "failed")
         {
             // Logged as an error for the alerting in design 9.4; not retried at once (the next period retries).
             logger.LogError("Parliament import failed: {Error}", outcome.Error);
+        }
+    }
+}
+
+/// <summary>
+/// Design 7.2 (owner 2026-11-18): the Seimas import's manual jobs. Registered as recurring jobs that never fire
+/// (<c>Cron.Never()</c>), so the dashboard lists them with "Trigger now" and nothing else starts them. Each forces its part
+/// of the walk (<see cref="ImportParts"/>), fetching its requests again however fresh, while the rest of the walk keeps its
+/// own rules; the scheduled <see cref="ParliamentImportJob"/> is unchanged. Votes match their ballots to the MPs already
+/// imported (a row matching none is skipped with a warning), so the MPs come first: <see cref="Everything"/> walks members,
+/// then sittings, then votes.
+/// <para>
+/// A run that cannot start because another import holds the lock, or that the Seimas service fails, fails the job (an
+/// error the dashboard lists under "Failed"); its outcome is the job parameter <see cref="OutcomeParameter"/> either way.
+/// </para>
+/// </summary>
+public sealed class ParliamentImportPartsJob(IParliamentImport import, ILogger<ParliamentImportPartsJob> logger)
+{
+    public const string Members = "parliament-members";
+    public const string Sittings = "parliament-sittings";
+    public const string Votes = "parliament-votes";
+    public const string Everything = "parliament-everything";
+
+    /// <summary>The job parameter with the run's outcome: its status, requests and changes.</summary>
+    public const string OutcomeParameter = "Outcome";
+
+    /// <summary>Registers the four jobs with a schedule that never fires: only "Trigger now" on the dashboard runs them.</summary>
+    public static void Register(IRecurringJobManager jobs, TimeZoneInfo timeZone)
+    {
+        ArgumentNullException.ThrowIfNull(jobs);
+        var options = new RecurringJobOptions { TimeZone = timeZone };
+        jobs.AddOrUpdate<ParliamentImportPartsJob>(Members, job => job.MembersAsync(null, CancellationToken.None), Cron.Never(), options);
+        jobs.AddOrUpdate<ParliamentImportPartsJob>(Sittings, job => job.SittingsAsync(null, CancellationToken.None), Cron.Never(), options);
+        jobs.AddOrUpdate<ParliamentImportPartsJob>(Votes, job => job.VotesAsync(null, CancellationToken.None), Cron.Never(), options);
+        jobs.AddOrUpdate<ParliamentImportPartsJob>(Everything, job => job.EverythingAsync(null, CancellationToken.None), Cron.Never(), options);
+    }
+
+    [JobDisplayName("Seimas import by hand: MPs (terms, MP list with memberships and contacts, sessions)")]
+    [AutomaticRetry(Attempts = 0)]
+    public Task MembersAsync(PerformContext? context, CancellationToken cancellationToken) => RunAsync(ImportParts.Members, context, cancellationToken);
+
+    [JobDisplayName("Seimas import by hand: sittings (every sitting list, agenda and proceedings)")]
+    [AutomaticRetry(Attempts = 0)]
+    public Task SittingsAsync(PerformContext? context, CancellationToken cancellationToken) => RunAsync(ImportParts.Sittings, context, cancellationToken);
+
+    [JobDisplayName("Seimas import by hand: votes (every per-MP result; run after the MPs are imported)")]
+    [AutomaticRetry(Attempts = 0)]
+    public Task VotesAsync(PerformContext? context, CancellationToken cancellationToken) => RunAsync(ImportParts.Votes, context, cancellationToken);
+
+    [JobDisplayName("Seimas import by hand: everything (MPs, then sittings, then votes)")]
+    [AutomaticRetry(Attempts = 0)]
+    public Task EverythingAsync(PerformContext? context, CancellationToken cancellationToken) => RunAsync(ImportParts.All, context, cancellationToken);
+
+    /// <summary>An instant as Vilnius time, <c>yyyy-MM-dd HH:mm</c>, or "never".</summary>
+    internal static string Vilnius(DateTimeOffset? instant) => instant is { } at
+        ? TimeZoneInfo.ConvertTime(at, Lt2.SharedKernel.VilniusTime.Zone).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
+        : "never";
+
+    private async Task RunAsync(ImportParts force, PerformContext? context, CancellationToken cancellationToken)
+    {
+        var outcome = await import.RunAsync(force, cancellationToken);
+        context?.SetJobParameter(OutcomeParameter, $"{outcome.Status}: {outcome.Requests} requests, {outcome.Changes} changes");
+        switch (outcome.Status)
+        {
+            case "skipped":
+                logger.LogWarning("Parliament import by hand ({Force}) did not run: another import is running", force);
+                throw new InvalidOperationException("Another Seimas import is running, so this one did not run. Trigger it again when that one has finished.");
+            case "failed":
+                // An error for the alerting in design 9.4, as the scheduled run's; what was fetched is kept.
+                logger.LogError("Parliament import by hand ({Force}) failed: {Error}", force, outcome.Error);
+                throw new InvalidOperationException($"The Seimas import failed ({outcome.Error}). What was fetched is kept; trigger it again later.");
+            default:
+                logger.LogInformation(
+                    "Parliament import by hand ({Force}) {Status}: {Requests} requests, {Changes} changes", force, outcome.Status, outcome.Requests, outcome.Changes);
+                break;
         }
     }
 }

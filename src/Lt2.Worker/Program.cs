@@ -35,13 +35,16 @@ builder.Services.AddIdentityDirectory();
 builder.Services.AddAiAssistant(configuration);
 builder.Services.AddAppealsModule();
 
+// A job runs as long as it needs: the sliding invisibility timeout keeps a long one (the first import, or a forced full
+// re-read by hand, design 7.2) from being fetched a second time by the other worker after the 30 minutes a fetched job
+// otherwise stays invisible.
 builder.Services.AddHangfire(hangfire => hangfire
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(
         options => options.UseNpgsqlConnection(HangfireConnectionString(connectionString, configuration)),
-        new PostgreSqlStorageOptions { SchemaName = "hangfire", PrepareSchemaIfNecessary = true }));
+        new PostgreSqlStorageOptions { SchemaName = "hangfire", PrepareSchemaIfNecessary = true, UseSlidingInvisibilityTimeout = true }));
 builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
 builder.Services.Configure<OutboxLoopOptions>(configuration.GetSection(OutboxLoopOptions.Section));
 builder.Services.AddHostedService<OutboxDispatchLoop>();

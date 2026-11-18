@@ -12,3 +12,11 @@ Read before touching the Parliament module's client or import. The design is [07
   often.
 - The service is slow at times and drops connections: retry, and never let an outage take the site down.
 - Confirm any field you have not seen in a live response before relying on it.
+- The import (`ParliamentImporter.WalkAsync`) walks the chain once per run; each request has its own freshness rule
+  (terms, MPs and sessions daily; open sessions' sittings every run; agendas, proceedings and results of sittings within
+  `Seimas:RefetchDays`; a missing result on `ImportSchedule.IsMissingResultDue`). `RunAsync(ImportParts force, …)`:
+  the scheduled job passes `None`; the manual jobs (`ParliamentImportPartsJob` in `Lt2.Jobs`, ids `parliament-members`,
+  `-sittings`, `-votes`, `-everything`, registered with `Cron.Never()`) force a part, which skips its rule
+  (`ImportSchedule.IsForced`) and nothing else. The forced parts are written after the address in `import_run.source`
+  (`ImportSchedule.RunSource`). The worker's Hangfire uses a sliding invisibility timeout, so a run over 30 minutes (the
+  first import, a forced full re-read) is not fetched a second time by the other worker.

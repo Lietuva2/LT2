@@ -205,16 +205,19 @@ internal sealed class ImportHarness : IAsyncDisposable
         return await scope.ServiceProvider.GetRequiredService<Lt2.SharedKernel.IPlannedAgenda>().BetweenAsync(from, to, CancellationToken.None);
     }
 
-    public async Task<ImportOutcome> RunAsync()
+    /// <summary>A run as the scheduled job starts it, or, with <paramref name="force"/>, as an administrator's manual job does.</summary>
+    public async Task<ImportOutcome> RunAsync(ImportParts force = ImportParts.None)
     {
         await using var scope = _services.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<IParliamentImport>().RunAsync(CancellationToken.None);
+        return await scope.ServiceProvider.GetRequiredService<IParliamentImport>().RunAsync(force, CancellationToken.None);
     }
 
-    public async Task<bool> IsDueAsync()
+    public async Task<bool> IsDueAsync() => (await DueAsync()).IsDue;
+
+    public async Task<ImportDue> DueAsync()
     {
         await using var scope = _services.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<IParliamentImport>().IsDueAsync(CancellationToken.None);
+        return await scope.ServiceProvider.GetRequiredService<IParliamentImport>().DueAsync(CancellationToken.None);
     }
 
     public async Task<bool> IsInventedAsync()

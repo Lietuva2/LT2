@@ -141,6 +141,17 @@ links to it. The history of votes (`/seimas/balsavimai`, design 8.18: `VoteHisto
 Vilnius day, 30 then 30 more up to 300, with no participants' numbers; its rows share `VotedItemMain` with the start
 page's "Balsuota".
 
+**The Seimas import's jobs (design 7.2; owner 2026-11-18).** The scheduled `parliament-import` (`ParliamentImportJob`,
+every 15 minutes, imports when `IParliamentImport.DueAsync` says so) is unchanged; when not due it logs "Parliament import
+not due (last start …); skipped" and sets the Hangfire job parameter `Skipped`, shown on the job's page of the dashboard.
+Four manual jobs, `ParliamentImportPartsJob` (`MembersAsync`, `SittingsAsync`, `VotesAsync`, `EverythingAsync`; ids
+`parliament-members`, `parliament-sittings`, `parliament-votes`, `parliament-everything`), are registered with
+`Cron.Never()` (listed with "Trigger now", never scheduled) and English `[JobDisplayName]`s, as the dashboard's own text is
+English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, and fails the job when the run was skipped
+(another import holds the lock) or failed. Their triggers are audited as `jobs.dashboard-action` like any other. Tests:
+`ImportTests.Forcing_*`, `Only_one_import_runs_at_a_time_a_forced_one_included`, `ImportScheduleTests`,
+`ParliamentImportJobTests`, `JobsDashboardTests.The_imports_manual_jobs_are_listed_never_scheduled_and_an_administrator_triggers_one_audited`.
+
 **MPs on the platform (design 8.5, built 2026-11-15: the link 8.5.1–8.5.4, then the response 8.5.5–8.5.7).**
 - The official address: an "El. p." contact of open data on `lrs.lt` (not a sub-domain), compared ignoring case, of an MP
   whose mandate has not ended; listed for two or more such MPs, it belongs to nobody (`OfficialAddresses` in Parliament,

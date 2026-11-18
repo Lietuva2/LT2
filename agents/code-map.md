@@ -18,7 +18,9 @@ src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per f
                            storage through the web host's own pool, no Hangfire server
 src/Lt2.Jobs               the Hangfire job classes (import, agenda watcher, aggregates, summaries, follows, AI summaries,
                            clean-ups): the worker runs them, the web host only loads their types so the dashboard can
-                           enqueue a recurring job; each takes a CancellationToken alone
+                           enqueue a recurring job; each takes a CancellationToken (the import's jobs also Hangfire's
+                           PerformContext, for their job parameters); ParliamentImportPartsJob: the import's four manual
+                           jobs (design 7.2), registered with Cron.Never()
 src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
                            (Observability.AddLt2Observability), with SecretPaths replacing an MP link's or a member's stop
                            link's token in every log line and trace; no module references it
@@ -69,7 +71,9 @@ src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageR
                            UsageCounter in the web host's memory, written every minute; the host feeds it from
                            Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin; its day bars are
                            DayBars, own CSS size, a label per column on hover and focus, no chart library)
-src/Lt2.Worker             Hangfire server (RecurringJobs registers the jobs of Lt2.Jobs): outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
+src/Lt2.Worker             Hangfire server (RecurringJobs registers the jobs of Lt2.Jobs; a sliding invisibility timeout, so a
+                           long job is not fetched twice): outbox dispatch loop, the parliament import (and its manual
+                           jobs, run only by "Trigger now"), the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            (every 15 minutes: prepared Digest:ReviewHours before their time, moderators emailed, then
                            gone at their time: a dry run or sent by Digest:Sending), the follow emails (every 15 minutes, in each member's rhythm: at once, the morning from Follows:ResponsesAt, or Monday), the AI summaries
