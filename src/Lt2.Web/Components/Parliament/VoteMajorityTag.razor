@@ -1,0 +1,38 @@
+@using Lt2.SharedKernel
+@inject Formats F
+
+@* How a vote went, beside its numbers (design 8.18, "The majority"; owner, 2026-11-18). The open data carries no official
+   outcome ("priimta", "pritarta") and the legal rule counts the MPs registered at the sitting, which is not stored, so the
+   chip says the majority of those who voted, as the analytics page does (8.26.2, AnalyticsRules.SeimasMajority): "Dauguma
+   už", "Dauguma prieš" or "Nėra daugumos"; a consensus is "Pritarta bendru sutarimu", the data's own words. A neutral chip:
+   the word says it, and a vote without a majority for has the outlined chip (dashed when there is no majority at all), so
+   they differ at a glance without colour. Nothing while the vote has no numbers. What it is, is one hint beside the list
+   (MajorityHint), never one per row. *@
+@if (IsConsensus)
+{
+    <span class="tag tag--outcome" data-majority="consensus">@F.T["Consensus.Tag"]</span>
+}
+else if (HasResult && AnalyticsRules.SeimasMajority(new SeimasVoteNumbers(false, For, Against, Abstain)) is { } majority)
+{
+    <span class="@Class(majority)" data-majority="@majority">@F.T["Majority." + majority]</span>
+}
+
+@code {
+    [Parameter] public bool IsConsensus { get; set; }
+
+    /// <summary>False until the per-MP results are read; the totals come with them.</summary>
+    [Parameter] public bool HasResult { get; set; } = true;
+
+    [Parameter] public int? For { get; set; }
+
+    [Parameter] public int? Against { get; set; }
+
+    [Parameter] public int? Abstain { get; set; }
+
+    private static string Class(string majority) => majority switch
+    {
+        SeimasMajorities.For => "tag tag--outcome",
+        SeimasMajorities.Against => "tag tag--outcome tag--outline",
+        _ => "tag tag--outcome tag--outline tag--dashed",
+    };
+}

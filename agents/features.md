@@ -341,13 +341,27 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `BillRecordState.Arguments`), then stage (adoption, consideration, presentation; the parser reads a combined stage as its
   furthest, `AgendaParser.StageOf`), then number, bills without a title last; the votes by Vilnius day, newest first, each
   day the same way. `AgendaRules.Day` cuts a day: the front page (`Home.razor`) shows `FrontDays` (2) planned and voted
-  days of `FrontPerDay` (5), "Visi N projektų →" to `AgendaPage.PlannedDayPath` (`/darbotvarke#diena-…`) and "Dar N
-  balsavimų →" to `/seimas/balsavimai?iki=…`; `/darbotvarke` shows `PagePerDay` (10) and the rest in `details.tl-more`
-  ("Rodyti visus N"), the unknown bills in `UnknownBills` (`details.tl-unknown`), rows `TimelineItem Asks="false"` and
-  `VotedItem`, heads `TimelineDate` (date in words, weekday, count via `AgendaWords`). The islands ask `/me/bills` about
-  the shown rows only (`AgendaRules.Asked`, never over `MyBillsQuery.MaxNumbers`); "Jūsų projektai" (`MyAgendaPanel`,
+  days of `FrontPerDay` (5) and `/darbotvarke` `PagePerDay` (10), and only those (owner, 2026-11-18: the hidden rows are
+  not in the HTML): "Rodyti likusius" (`#…-rodyti`) is a link from `AgendaPaging.RestOfPlanned` / `RestOfVoted` (pages
+  `AgendaPaging.Agenda`, `#diena-…`/`#balsuota-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`) to the same page
+  with the day whole (`?diena=`, `?balsuota=`, repeating for every day opened; `AgendaPaging.Read` drops malformed values),
+  landing on the second list `ul#…-likusieji` (on the front page a day whose known rows all show lands on `#…-nezinomi`);
+  enhanced navigation swaps it in with script. The front page keeps "Visa darbotvarkė" by its heading and "Ankstesni
+  balsavimai →". The unknown bills are `UnknownBills` (`details.tl-unknown`) at the end of a day shown whole (on the agenda
+  page also of a day whose known rows all show);
+  rows `TimelineItem Asks="false"` and `VotedItem`, heads `TimelineDate` (date in words, weekday, count via `AgendaWords`).
+  The agenda answer is still built and cached whole (the order needs every row's activity); only the rendering is cut.
+  The islands ask `/me/bills` about
+  the shown rows only (`AgendaRules.Asked`; `MyAgendaState` splits them into requests of `MyBillsQuery.MaxNumbers`); "Jūsų projektai" (`MyAgendaPanel`,
   `MyAgendaState.PanelAsync`) lists the followed bills of the whole agenda and last week from `GET /me/follows`
   (`OnTheAgenda`) and asks `/me/bills` about those not shown, 30 a request (`Requests`).
+  **How a vote went (design 8.18, "The majority"; the owner asked for "Priimta", open in 12-open).** `<VoteMajorityTag>`
+  (`Components/Parliament`) shows `AnalyticsRules.SeimasMajority` (the open data has no official outcome) as
+  `span.tag.tag--outcome` with `data-majority` (`for` filled, `against` `tag--outline`, `none` also `tag--dashed`;
+  `ParliamentText` `Majority.*`: "Dauguma už", "Dauguma prieš", "Nėra daugumos"), the consensus as "Pritarta bendru
+  sutarimu", nothing without numbers; used by `VotedItemMain` (front page, agenda, `/seimas/balsavimai`), `VoteResultSide`
+  (the bill's votes), the bill's closing vote and `VotePage`; `<MajorityHint>` ("Kas yra balsavusiųjų dauguma?") stands once
+  beside each such list.
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), planned date or the latest activity (owner, 2026-11-17: the page offers these
   three, `rikiuoti` = `aktyvumas`, `data`, `naujausia`; another value falls back to the default; the API's `sort` has

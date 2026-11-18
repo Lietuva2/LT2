@@ -16,12 +16,6 @@ internal static class AgendaWords
     /// <summary>"Dar 12 projektų, kurių atviruosiuose Seimo duomenyse dar nėra" (design 8.11.1).</summary>
     public static string Unknown(IStringLocalizer<PageText> t, int n) => Counted(t, "Agenda.Unknown", n);
 
-    /// <summary>"Visi 40 projektų →" under a day of the front page.</summary>
-    public static string AllOfDay(IStringLocalizer<PageText> t, int n) => Counted(t, "Home.DayAll", n);
-
-    /// <summary>"Dar 21 balsavimas →" under a voting day of the front page.</summary>
-    public static string MoreVotes(IStringLocalizer<PageText> t, int n) => Counted(t, "Home.VotesMore", n);
-
     private static string Counted(IStringLocalizer<PageText> t, string key, int n)
     {
         ArgumentNullException.ThrowIfNull(t);

@@ -89,6 +89,8 @@
         }
         <div class="row">
             <p class="small num" role="status" id="votes-shown">@F.T.Format("Ballots.Shown", Display.Number(_items.Count), Display.Number(_total))</p>
+            @* Design 8.15, 8.18 "The majority": what the rows' chip means, once beside the list. *@
+            <p class="small"><MajorityHint /></p>
             @if (VoteHistory.More(_state, _items.Count, _total) is { } more)
             {
                 @* Lands on the first row added, so the reader goes on where they stopped (as the ballot list, 8.17). *@

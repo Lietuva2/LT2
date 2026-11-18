@@ -3,7 +3,8 @@
 @inject Formats F
 
 @* The main column of a voted row of the timeline: the start page's "Balsuota" (design 8.7) and the history of votes (8.18).
-   The bill's number and stage, its title linking to the bill, the result (or the consensus mark) with the bar, and the
+   The bill's number and stage, its title linking to the bill, the majority of those who voted (VoteMajorityTag) and the result with the
+   bar (or the consensus mark), and the
    official note. The history also names a vote that is not a stage result and shows its wording; a vote without a bill
    has the agenda item's title in the bill's place. What only the start page has (the member's mark) is the child content. *@
 <div class="tl-item__main">
@@ -35,7 +36,7 @@
     }
     @if (IsConsensus)
     {
-        <span class="small">@F.T["Consensus.Tag"]</span>
+        <span class="row result-line"><VoteMajorityTag IsConsensus="true" /></span>
     }
     else if (!HasResult)
     {
@@ -43,7 +44,11 @@
     }
     else
     {
-        <span class="small num">@T.Format("Agenda.Result", Display.Number(Totals.For), Display.Number(Totals.Against), Display.Number(Totals.Abstain))</span>
+        @* Owner, 2026-11-18: how it went, as a chip before the numbers (design 8.18, "The majority"). *@
+        <span class="row result-line">
+            <VoteMajorityTag For="Totals.For" Against="Totals.Against" Abstain="Totals.Abstain" />
+            <span class="small num">@T.Format("Agenda.Result", Display.Number(Totals.For), Display.Number(Totals.Against), Display.Number(Totals.Abstain))</span>
+        </span>
         <SplitBar For="Totals.For" Against="Totals.Against" Abstain="Totals.Abstain" Small="true" />
     }
     @if (OfficialNote is not null)

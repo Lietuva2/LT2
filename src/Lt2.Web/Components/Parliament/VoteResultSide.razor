@@ -1,10 +1,11 @@
 @using Lt2.Api.Contracts.Parliament
 @inject Formats F
 
-@* The result of a vote in a list: totals with a bar, the consensus mark without numbers, and the official note. *@
+@* The result of a vote in a list: the majority of those who voted (design 8.18, "The majority"), totals with a bar, the consensus mark
+   without numbers, and the official note. *@
 @if (Vote.Vote.IsConsensus)
 {
-    <span class="tag">@F.T["Consensus.Tag"]</span>
+    <VoteMajorityTag IsConsensus="true" />
     <span class="small">@F.T["Consensus.NoVotes"]</span>
 }
 else if (!Vote.Vote.HasResult)
@@ -13,7 +14,10 @@ else if (!Vote.Vote.HasResult)
 }
 else
 {
-    <span class="num">@F.Counts(Vote.Totals.For ?? 0, Vote.Totals.Against ?? 0, Vote.Totals.Abstain ?? 0)</span>
+    <span class="row result-line">
+        <VoteMajorityTag For="Vote.Totals.For" Against="Vote.Totals.Against" Abstain="Vote.Totals.Abstain" />
+        <span class="num">@F.Counts(Vote.Totals.For ?? 0, Vote.Totals.Against ?? 0, Vote.Totals.Abstain ?? 0)</span>
+    </span>
     <SplitBar For="Vote.Totals.For" Against="Vote.Totals.Against" Abstain="Vote.Totals.Abstain" Small="true" />
     @if (Vote.OfficialNote is { } note)
     {

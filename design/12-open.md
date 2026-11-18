@@ -8,12 +8,39 @@ Nothing is built for these; the local stack and the trial show them as they are.
 
 1. About four in ten upcoming agenda rows are bills to be presented, which the open data does not know before their first
    sitting. Since 2026-11-18 (owner) they come last in their day, folded into one line "Dar N projektų, kurių
-   atviruosiuose Seimo duomenyse dar nėra" that opens to their numbers and the agenda source; the front page counts
-   them in the day without listing them (design 8.11.1). Still open: the lrs.lt page names each bill's title in its row;
+   atviruosiuose Seimo duomenyse dar nėra" that opens to their numbers and the agenda source (on the agenda page at the
+   end of a day shown whole, or of a day whose known bills all show); the front page counts
+   them in the day and lists them only in a day opened whole (design 8.11.1, 8.7). Still open: the lrs.lt page names each bill's title in its row;
    the watcher could keep it for such rows until the open data has the bill, and they would then rank as other bills.
    If no: as now.
 2. [Decided by the owner on 2026-11-18, 12-decisions: the front page shows two voting days of five votes each, with
    links to the rest.]
+
+**The outcome of a vote: asked by the owner on 2026-11-18 ("Priimta" / "Nepriimta" beside every vote), awaiting the owner**
+
+Built for now in the words of 8.26.2 (8.18, "The majority"): a chip "Dauguma už" / "Dauguma prieš" / "Nėra daugumos"
+(the majority of those who voted; a consensus "Pritarta bendru sutarimu") and one hint "Kas yra balsavusiųjų dauguma?"
+beside each list. The open data carries no official outcome: the vote results service gives the totals, those who voted
+and the official note (`ASSUMPTIONS.md` R1–R20), and the proceedings service the vote's wording (E7), which is the
+question ("Pritarti projektui po pateikimo"), not its result; only a consensus carries its result ("Pritarta bendru
+sutarimu", E9). No live response has been recorded yet (`Recorded/` holds only its README), so a field nobody has seen
+may still exist: the live contract run once the service reopens is the place to look. The owner's choice:
+
+1. **Keep the majority words** (as built). If yes: nothing changes.
+2. **Say "Priimta" / "Nepriimta" (adoption) and "Pritarta" / "Nepritarta" (other votes) read from the numbers**, by the
+   same rule, with the hint saying it is read from the numbers. What the numbers cannot tell, so such a word can be wrong:
+   - **Qualified majorities.** A constitutional law needs more than half of all MPs to adopt and three fifths to amend; an
+     amendment of the Constitution two thirds, in two votes; a law the President returned more than half of all MPs
+     (three fifths for a constitutional law); some resolutions their own. The data does not say which vote needs which.
+   - **Who takes part.** The Seimas counts the MPs registered for the vote; one who registered and did not vote counts
+     against. The totals are those who voted, and the registration is not imported.
+   - **The quorum.** A sitting decides only when more than half of the MPs take part; a vote with fewer is not checked.
+   8.26.2 would then say the same words or keep "balsavusiųjų dauguma" on the analytics page.
+3. **Use an official outcome** if the live run finds one (a result field, or a result text in the proceedings), with 1
+   until then.
+
+The words are proposals for a native read. Not shown either way: "Jūsų projektai" and the followers' "voted" email say
+the numbers only; an MP's votes show the MP's choice; the bill's stages say "už : prieš".
 
 **Proposed by the designer while building the version histories' changes (8.16.2), 2026-11-18, awaiting the owner**
 

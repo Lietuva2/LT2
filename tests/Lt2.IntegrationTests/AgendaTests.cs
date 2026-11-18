@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Lt2.Api.Contracts.Agenda;
 using Lt2.Api.Contracts.Parliament;
 using Lt2.IntegrationTests.Infrastructure;
+using Lt2.Web.Client.Agenda;
 using Lt2.Web.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,7 +56,8 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             html.ShouldContain("<h1>Seimo darbotvarkė</h1>");
             html.ShouldContain("Planuojama ");
             html.ShouldMatch("id=\"agenda-\\d{4}-\\d{2}-\\d{2}-" + AppealSteps.SecondBill + "\"");
-            html.ShouldContain("Dar niekas nenurodė, ko prašo");
+            html.ShouldContain(">Niekas nenurodė, ko prašo<");
+            html.ShouldNotContain("Dar niekas nenurodė");
             html.ShouldNotContain("Kreipimosi prašo");
             html.ShouldNotContain("/kreipimasis\"");
             html.ShouldContain("Tai nėra reprezentatyvi apklausa");
@@ -118,11 +120,79 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     }
 
     /// <summary>
-    /// Owner, 2026-11-18: the front page shows the next two sitting days, five rows of each, and links a longer day to its
-    /// block on the agenda page; the bills the open data does not know yet are counted, not listed.
+    /// Owner, 2026-11-18: the page holds only the rows it shows. A long day shows ten and "Rodyti likusius", a link to the
+    /// page with that day whole (<c>?diena=</c>) landing on the first row added; the bills the open data does not know yet
+    /// come with the rest. Without JavaScript: the server renders the day whole.
     /// </summary>
     [Fact]
-    public async Task The_front_page_shows_five_rows_of_a_day_and_links_the_whole_day_on_the_agenda()
+    public async Task A_long_day_shows_ten_rows_and_rodyti_likusius_fetches_the_rest_by_the_address()
+    {
+        var numbers = Enumerable.Range(1, 12).Select(i => $"XVP-L{i:000}").ToList();
+        const string Unknown = "XVP-L099";
+        var day = ReasonsToComeSteps.VilniusToday().AddDays(9);
+        await RemoveLongDayAsync(numbers, Unknown);
+        foreach (var number in numbers)
+        {
+            await Database.ExecuteAsync("INSERT INTO parliament.bill (id, number, title) VALUES (gen_random_uuid(), @n, @t)", ("n", number), ("t", "Ilgos dienos projektas " + number));
+            await Database.PlanAsync(number, day, "presentation");
+        }
+
+        await Database.PlanAsync(Unknown, day, "presentation");
+        try
+        {
+            ForgetAgenda();
+            using var visitor = NewBrowser();
+            var id = $"diena-{day:yyyy-MM-dd}";
+            var cut = DayBlock(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke")), id);
+            Regex.Count(cut, "<li class=\"tl-item\"").ShouldBe(AgendaRules.PagePerDay, "ten rows; the rest is not in the HTML");
+            cut.ShouldContain($"<a href=\"/darbotvarke?diena={day:yyyy-MM-dd}#{id}-likusieji\" id=\"{id}-rodyti\">Rodyti likusius</a>");
+            cut.ShouldNotContain(Unknown, customMessage: "the unknown bills come with the rest");
+            cut.ShouldNotContain("Rodyti visus");
+
+            var whole = DayBlock(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/darbotvarke?diena={day:yyyy-MM-dd}")), id);
+            foreach (var number in numbers)
+            {
+                whole.ShouldContain($"id=\"agenda-{day:yyyy-MM-dd}-{number}\"");
+            }
+
+            whole.ShouldContain($"<ul class=\"tl-items\" id=\"{id}-likusieji\">", customMessage: "where the link lands");
+            whole.IndexOf($"id=\"{id}-nezinomi\"", StringComparison.Ordinal).ShouldBeGreaterThan(whole.IndexOf($"id=\"{id}-likusieji\"", StringComparison.Ordinal), "the unknown bills last");
+            whole.ShouldNotContain("Rodyti likusius");
+
+            var malformed = DayBlock(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke?diena=rytoj")), id);
+            Regex.Count(malformed, "<li class=\"tl-item\"").ShouldBe(AgendaRules.PagePerDay, "a value the page would not make is the default");
+        }
+        finally
+        {
+            await RemoveLongDayAsync(numbers, Unknown);
+            ForgetAgenda();
+        }
+    }
+
+    private async Task RemoveLongDayAsync(List<string> numbers, string unknown)
+    {
+        foreach (var number in numbers.Append(unknown))
+        {
+            await Database.UnplanAsync(number);
+        }
+
+        await Database.ExecuteAsync("DELETE FROM parliament.bill WHERE number LIKE 'XVP-L%'");
+    }
+
+    /// <summary>One day's block of the agenda page.</summary>
+    private static string DayBlock(string html, string id)
+    {
+        var block = html[html.IndexOf($"id=\"{id}\"", StringComparison.Ordinal)..];
+        return block[..block.IndexOf("</section>", StringComparison.Ordinal)];
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-18: the front page shows the next two sitting days, five rows of each, and "Rodyti likusius" opens the
+    /// rest of a longer day in place by the address; the bills the open data does not know yet are counted, and listed only
+    /// in a day shown whole.
+    /// </summary>
+    [Fact]
+    public async Task The_front_page_shows_five_rows_of_a_day_and_rodyti_likusius_opens_the_rest_in_place()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
         var today = ReasonsToComeSteps.VilniusToday();
@@ -147,11 +217,22 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
                 block.ShouldNotContain(number, customMessage: "counted in the day, not listed on the front page");
             }
 
-            block.ShouldMatch($"<a href=\"/darbotvarke#diena-{today:yyyy-MM-dd}\" id=\"home-day-all-{today:yyyy-MM-dd}\">Visi \\d+ projekt(ai|ų|as) →</a>");
+            // Owner, 2026-11-18: "Rodyti likusius" opens the rest of the day in place on the front page, by the address.
+            block.ShouldMatch($"<a href=\"/\\?diena={today:yyyy-MM-dd}#home-day-{today:yyyy-MM-dd}-(likusieji|nezinomi)\" id=\"home-day-{today:yyyy-MM-dd}-rodyti\">Rodyti likusius</a>");
+            block.ShouldNotContain("Visi ");
             Regex.Count(html, "<section class=\"tl-day\"").ShouldBeLessThanOrEqualTo(2, "the next two sitting days");
+            html.ShouldContain("<a href=\"/darbotvarke\">", customMessage: "one link to the whole agenda, by the heading");
 
-            var agenda = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
-            agenda.ShouldContain($"id=\"diena-{today:yyyy-MM-dd}\"", customMessage: "where the link lands");
+            var whole = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/?diena={today:yyyy-MM-dd}"));
+            whole = whole[whole.IndexOf($"id=\"home-day-{today:yyyy-MM-dd}\"", StringComparison.Ordinal)..];
+            whole = whole[..whole.IndexOf("</section>", StringComparison.Ordinal)];
+            whole.ShouldContain($"id=\"home-day-{today:yyyy-MM-dd}-nezinomi\"", customMessage: "the whole day, with the bills the open data does not know yet");
+            foreach (var number in unknown)
+            {
+                whole.ShouldContain(number);
+            }
+
+            whole.ShouldNotContain("Rodyti likusius");
         }
         finally
         {
