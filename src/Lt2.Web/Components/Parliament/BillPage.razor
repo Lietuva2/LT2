@@ -388,7 +388,8 @@
     /// <summary>
     /// "Stadijos Seime" (design 8.12.1): each stage's result from the open data, or "dar nebalsuota"; the stage a planned
     /// date is for shows "Planuojama {date}" instead, and the date's source ("Iš kur ši data?") stands under the stages
-    /// (owner, 2026-11-18). One sheet: in the side column (a heading of the column's level) or, without one, full-width.
+    /// (owner, 2026-11-18). One sheet: in the side column (a heading of the column's level) or, without one, full-width;
+    /// only the full-width one carries the e-seimas link, the side column's page having it in "Apie ką projektas".
     /// </summary>
     private RenderFragment StagesSheet(BillResponse b, bool inAside) =>
         @<section class="sheet stack @(inAside ? "stack--tight" : "")" aria-labelledby="h-stages" id="stages">
@@ -447,8 +448,12 @@
                    participants only, and only while a date is shown. *@
                 <DateFlagForm Number="@b.Number" @rendermode="InteractiveWebAssembly" />
             }
-            @if (b.ESeimasUrl is { } documents)
+            @if (!inAside && b.ESeimasUrl is { } documents)
             {
+                @* Design 8.12.1 (owner, 2026-11-18): the bill's e-seimas address once on the page. With a side column the
+                   page has "Apie ką projektas", whose small line always carries it ("Projekto tekstas e. seime", or
+                   "Oficialus tekstas, iš kurio parengta" when that is the same address); without one (a hidden record, a
+                   finished bill nobody took part in) this sheet does. *@
                 <p class="fine"><a href="@documents" rel="external">@F.T["Bill.ESeimas"]</a></p>
             }
         </section>;

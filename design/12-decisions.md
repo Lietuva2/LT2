@@ -546,3 +546,10 @@ Each is built as written; "no" names what changes.
   and "Nebesekti" in the account's list of follows.
 - The header stands one step (16px, `--sp-4`) above the page's first part instead of the page's usual 56px, on a bill's
   page, an MP's profile and an organisation's page; the spacing above the follow row stays (not the tighter option B).
+
+**Decided by the owner on 2026-11-18: the bill's e-seimas link once on its page (8.12.1)**
+
+- "Stadijos Seime" no longer repeats the e-seimas address that "Apie ką projektas" already carries ("Projekto tekstas
+  e. seime", or "Oficialus tekstas, iš kurio parengta" when that is the same address). A page without "Apie ką projektas"
+  (a record hidden by the moderators, a finished bill nobody took part in) keeps "Projektas e-seime" under the stages, so
+  the link is never missing.
