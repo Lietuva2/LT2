@@ -46,7 +46,7 @@
                             }
                         </div>
                         <div class="rows__side">
-                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowBillAsync(b.Number)">@L["Follow.Unfollow"]</button>
+                            <button type="button" class="btn btn--plain btn--compact" disabled="@Locked" @onclick="() => UnfollowBillAsync(b.Number)">@L["Follow.Unfollow"]</button>
                         </div>
                     </li>
                 }
@@ -61,7 +61,7 @@
                     <li>
                         <div class="rows__main"><a href="/p/@m.Slug">@m.FirstName @m.LastName</a></div>
                         <div class="rows__side">
-                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowMpAsync(m.Slug)">@L["Follow.Unfollow"]</button>
+                            <button type="button" class="btn btn--plain btn--compact" disabled="@Locked" @onclick="() => UnfollowMpAsync(m.Slug)">@L["Follow.Unfollow"]</button>
                         </div>
                     </li>
                 }
@@ -79,7 +79,7 @@
                             <span class="small">@OrganisationWords.LabelText(L, o.Label)@(o.Status != "active" ? " · " + L["Org.State." + o.Status] : "")</span>
                         </div>
                         <div class="rows__side">
-                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowOrganisationAsync(o.Slug)">@L["Follow.Unfollow"]</button>
+                            <button type="button" class="btn btn--plain btn--compact" disabled="@Locked" @onclick="() => UnfollowOrganisationAsync(o.Slug)">@L["Follow.Unfollow"]</button>
                         </div>
                     </li>
                 }
@@ -95,7 +95,7 @@
                     <li @key="m.ProfileId">
                         <div class="rows__main"><a href="@ProfileRoutes.Page(m.ProfileId, m.DisplayName)">@m.DisplayName</a></div>
                         <div class="rows__side">
-                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowMemberAsync(m.ProfileId)">@L["Follow.Unfollow"]</button>
+                            <button type="button" class="btn btn--plain btn--compact" disabled="@Locked" @onclick="() => UnfollowMemberAsync(m.ProfileId)">@L["Follow.Unfollow"]</button>
                         </div>
                     </li>
                 }

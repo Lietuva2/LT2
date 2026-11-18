@@ -32,150 +32,160 @@
 
 <main class="page stack stack--loose">
 
-  <div class="stack">
-    <ol class="crumbs">
-      <li><a href="#">Kreipimaisi</a></li>
-      <li>XVP-0412</li>
-    </ol>
-    <p class="label">Kreipimasis į Seimo narius</p>
-    <h1>Gyventojų pajamų mokesčio įstatymo pataisa</h1>
-    <div class="row">
-      <span class="tag tag--ink num">XVP-0412</span>
-      <span class="tag">Priėmimas</span>
-      <span class="tag">Planuojama rugsėjo 24 d.</span>
-      <span class="small">Kreipimąsi atidarė Rūta Mockutė</span>
-    </div>
-  </div>
-
-  <div class="cols">
-    <div class="stack stack--loose">
-
-      <section class="sheet sheet--cut stack" aria-labelledby="h-sides">
-        <h2 id="h-sides" class="visually-hidden">Ko prašo Lietuva 2.0 naudotojai</h2>
-        <div class="pair pair--keep">
-          <div class="figure figure--for">
-            <span class="label">Prašo balsuoti už</span>
-            <span class="figure__num">6&nbsp;800</span>
-            <span class="small num">iš jų 6&nbsp;150 – paskyros senesnės nei 30 d.</span>
-          </div>
-          <div class="figure figure--against">
-            <span class="label">Prašo balsuoti prieš</span>
-            <span class="figure__num">4&nbsp;280</span>
-            <span class="small num">iš jų 3&nbsp;900 – paskyros senesnės nei 30 d.</span>
-          </div>
-        </div>
-        <div class="split" role="img" aria-label="61 % prašo balsuoti už, 39 % – prieš">
-          <span class="split__for" style="width:61.4%"></span>
-          <span class="split__against" style="width:38.6%"></span>
-        </div>
-        <div class="pair">
-          <button class="btn btn--for btn--wide" type="button" id="side-for">Prašau balsuoti už</button>
-          <button class="btn btn--against btn--wide" type="button" id="side-against">Prašau balsuoti prieš</button>
-        </div>
-        <p class="small">Jūsų pasirinkimas nėra viešas. Jį galite keisti, kol Seimas nebalsavo.</p>
-      </section>
-
-      <section class="stack" aria-labelledby="h-what">
-        <h2 id="h-what">Ką keičia projektas</h2>
-        <p class="lead">Įvedamas trečias pajamų mokesčio tarifas: metinėms pajamoms, viršijančioms 60 vidutinių darbo užmokesčių, būtų taikomas 32&nbsp;% tarifas vietoj 20&nbsp;%.</p>
-        <p>Dividendai ir pajamos iš akcijų pardavimo įskaičiuojamos į tą pačią ribą. Pataisa įsigaliotų 2027 m. sausio 1 d.</p>
-        <p class="fine">Aprašymą parašė iniciatorė, patvirtino moderatorius · <a href="#">Keitimų istorija</a> · <a href="#">Projekto tekstas e. seime</a></p>
-      </section>
-
-      <section class="stack" aria-labelledby="h-why">
-        <h2 id="h-why">Kodėl</h2>
-        <div class="pair pair--reasons">
-          <div class="stack">
-            <h3><span class="choice choice--for">Už</span></h3>
-            <div class="said">
-              <div class="said__by"><b class="said__name">Giedrė L.</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="true" id="r1">Man svarbu · 1&nbsp;920</button> <button class="linkish small" type="button">Pranešti</button></span></div>
-              <p class="bubble bubble--people voice">Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.</p>
-            </div>
-            <div class="said">
-              <div class="said__by"><b class="said__name">Mindaugas R.</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r2">Man svarbu · 1&nbsp;310</button> <button class="linkish small" type="button">Pranešti</button></span></div>
-              <p class="bubble bubble--people voice">Gynyba finansuojama nekeliant PVM.</p>
-            </div>
-          </div>
-          <div class="stack">
-            <h3><span class="choice choice--against">Prieš</span></h3>
-            <div class="said">
-              <div class="said__by"><b class="said__name">Rūta Mockutė</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r3">Man svarbu · 1&nbsp;480</button> <button class="linkish small" type="button">Pranešti</button> <button class="linkish small" type="button">Atsiimti</button></span></div>
-              <p class="bubble bubble--people voice">Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą.</p>
-            </div>
-            <div class="said">
-              <div class="said__by"><b class="said__name">Aistė Kazlaitė</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r4">Man svarbu · 970</button> <button class="linkish small" type="button">Pranešti</button></span></div>
-              <p class="bubble bubble--people voice">Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą.</p>
-            </div>
-          </div>
-        </div>
+  <!-- The header as chosen by the owner on 2026-11-18 (option A, design 8.12.1): the tags, then the compact follow button
+       with the number and its hint on one row; "Iš kur ši data?" lives under the stages. The header stands one step
+       (--sp-4) above the page's first part. -->
+  <div class="stack stack--snug">
+    <div class="stack">
+      <ol class="crumbs">
+        <li><a href="#">Projektai</a></li>
+        <li>Įstatymo projektas <span class="num">XVP-0412</span></li>
+      </ol>
+      <h1>Gyventojų pajamų mokesčio įstatymo pataisa</h1>
+      <div class="row">
+        <p class="row">
+          <span class="tag">Priėmimas</span>
+          <span class="tag">Planuojama rugsėjo 24 d.</span>
+        </p>
         <div class="row">
-          <button class="btn btn--plain" type="button" id="add-reason">Parašyti argumentą</button>
-          <a href="#">Visi 14 argumentų</a>
+          <button type="button" class="btn btn--plain btn--compact" aria-pressed="false">Sekti</button>
+          <span class="small">Sekėjai: 214</span>
+          <a class="small" href="#">Kas yra sekimas?</a>
         </div>
-        <form class="sheet stack" aria-labelledby="write-title" id="write-reason">
-          <h3 id="write-title">Jūsų argumentas</h3>
-          <p class="small">Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys. Prie argumento nerodoma, kurią pusę pasirinkote jūs.</p>
-          <!-- A two-part switch over real radio inputs: the chosen half in its side's colour; neither chosen when the
-               person has no side of their own. -->
-          <fieldset class="field stack stack--tight">
-            <legend>Argumentas</legend>
-            <div class="switch">
-              <label class="switch__half switch__half--for"><input class="switch__input" type="radio" name="reason-side" id="reason-side-for" value="for" checked><span>Už</span></label>
-              <label class="switch__half switch__half--against"><input class="switch__input" type="radio" name="reason-side" id="reason-side-against" value="against"><span>Prieš</span></label>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="stack stack--loose">
+
+        <section class="sheet sheet--cut stack" aria-labelledby="h-sides">
+          <h2 id="h-sides" class="visually-hidden">Ko prašo Lietuva 2.0 naudotojai</h2>
+          <div class="pair pair--keep">
+            <div class="figure figure--for">
+              <span class="label">Prašo balsuoti už</span>
+              <span class="figure__num">6&nbsp;800</span>
+              <span class="small num">iš jų 6&nbsp;150 – paskyros senesnės nei 30 d.</span>
             </div>
-          </fieldset>
-          <div class="field">
-            <label for="reason-text">Tekstas</label>
-            <textarea class="textarea" id="reason-text" maxlength="500" aria-describedby="reason-hint"></textarea>
-            <p class="field__hint num" id="reason-hint">Paprastas tekstas, 0 iš 500 ženklų. Argumentas bus viešas su jūsų vardu ir pasirinkta puse.</p>
+            <div class="figure figure--against">
+              <span class="label">Prašo balsuoti prieš</span>
+              <span class="figure__num">4&nbsp;280</span>
+              <span class="small num">iš jų 3&nbsp;900 – paskyros senesnės nei 30 d.</span>
+            </div>
+          </div>
+          <div class="split" role="img" aria-label="61 % prašo balsuoti už, 39 % – prieš">
+            <span class="split__for" style="width:61.4%"></span>
+            <span class="split__against" style="width:38.6%"></span>
+          </div>
+          <div class="pair">
+            <button class="btn btn--for btn--wide" type="button" id="side-for">Prašau balsuoti už</button>
+            <button class="btn btn--against btn--wide" type="button" id="side-against">Prašau balsuoti prieš</button>
+          </div>
+          <p class="small">Jūsų pasirinkimas nėra viešas. Jį galite keisti, kol Seimas nebalsavo.</p>
+        </section>
+
+        <section class="stack" aria-labelledby="h-what">
+          <h2 id="h-what">Ką keičia projektas</h2>
+          <p class="lead">Įvedamas trečias pajamų mokesčio tarifas: metinėms pajamoms, viršijančioms 60 vidutinių darbo užmokesčių, būtų taikomas 32&nbsp;% tarifas vietoj 20&nbsp;%.</p>
+          <p>Dividendai ir pajamos iš akcijų pardavimo įskaičiuojamos į tą pačią ribą. Pataisa įsigaliotų 2027 m. sausio 1 d.</p>
+          <p class="fine">Aprašymą parašė iniciatorė, patvirtino moderatorius · <a href="#">Keitimų istorija</a> · <a href="#">Projekto tekstas e. seime</a></p>
+        </section>
+
+        <section class="stack" aria-labelledby="h-why">
+          <h2 id="h-why">Kodėl</h2>
+          <div class="pair pair--reasons">
+            <div class="stack">
+              <h3><span class="choice choice--for">Už</span></h3>
+              <div class="said">
+                <div class="said__by"><b class="said__name">Giedrė L.</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="true" id="r1">Man svarbu · 1&nbsp;920</button> <button class="linkish small" type="button">Pranešti</button></span></div>
+                <p class="bubble bubble--people voice">Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.</p>
+              </div>
+              <div class="said">
+                <div class="said__by"><b class="said__name">Mindaugas R.</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r2">Man svarbu · 1&nbsp;310</button> <button class="linkish small" type="button">Pranešti</button></span></div>
+                <p class="bubble bubble--people voice">Gynyba finansuojama nekeliant PVM.</p>
+              </div>
+            </div>
+            <div class="stack">
+              <h3><span class="choice choice--against">Prieš</span></h3>
+              <div class="said">
+                <div class="said__by"><b class="said__name">Rūta Mockutė</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r3">Man svarbu · 1&nbsp;480</button> <button class="linkish small" type="button">Pranešti</button> <button class="linkish small" type="button">Atsiimti</button></span></div>
+                <p class="bubble bubble--people voice">Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą.</p>
+              </div>
+              <div class="said">
+                <div class="said__by"><b class="said__name">Aistė Kazlaitė</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r4">Man svarbu · 970</button> <button class="linkish small" type="button">Pranešti</button></span></div>
+                <p class="bubble bubble--people voice">Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą.</p>
+              </div>
+            </div>
           </div>
           <div class="row">
-            <button type="submit" class="btn">Paskelbti</button>
-            <button type="button" class="btn btn--plain">Atšaukti</button>
+            <button class="btn btn--plain" type="button" id="add-reason">Parašyti argumentą</button>
+            <a href="#">Visi 14 argumentų</a>
           </div>
-        </form>
-      </section>
+          <form class="sheet stack" aria-labelledby="write-title" id="write-reason">
+            <h3 id="write-title">Jūsų argumentas</h3>
+            <p class="small">Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys. Prie argumento nerodoma, kurią pusę pasirinkote jūs.</p>
+            <!-- A two-part switch over real radio inputs: the chosen half in its side's colour; neither chosen when the
+                 person has no side of their own. -->
+            <fieldset class="field stack stack--tight">
+              <legend>Argumentas</legend>
+              <div class="switch">
+                <label class="switch__half switch__half--for"><input class="switch__input" type="radio" name="reason-side" id="reason-side-for" value="for" checked><span>Už</span></label>
+                <label class="switch__half switch__half--against"><input class="switch__input" type="radio" name="reason-side" id="reason-side-against" value="against"><span>Prieš</span></label>
+              </div>
+            </fieldset>
+            <div class="field">
+              <label for="reason-text">Tekstas</label>
+              <textarea class="textarea" id="reason-text" maxlength="500" aria-describedby="reason-hint"></textarea>
+              <p class="field__hint num" id="reason-hint">Paprastas tekstas, 0 iš 500 ženklų. Argumentas bus viešas su jūsų vardu ir pasirinkta puse.</p>
+            </div>
+            <div class="row">
+              <button type="submit" class="btn">Paskelbti</button>
+              <button type="button" class="btn btn--plain">Atšaukti</button>
+            </div>
+          </form>
+        </section>
 
-      <section class="stack" aria-labelledby="h-answers">
-        <h2 id="h-answers">Seimo narių atsakymai</h2>
-        <div class="said said--mp">
-          <p class="said__side"><span class="choice choice--against">Balsuos prieš</span></p>
-          <div class="said__by"><b><a href="seimo-narys.html">Jonas Petraitis</a></b></div>
-          <p class="bubble bubble--mp voice">Pritariu didesniam didžiausias pajamas gaunančiųjų indėliui, bet įskaičiavus vienkartinius akcijų pardavimus šeimos verslai bus parduodami užsieniui. Siūliau pataisą, kuri juos išskirtų, tačiau komitetas jai nepritarė.</p>
-          <div class="said__by"><span>Reformų partijos frakcija</span><span class="tag">Seimo narys arba jo biuras</span><span>rugsėjo 2 d.</span></div>
-        </div>
-        <div class="said said--mp">
-          <p class="said__side"><span class="choice choice--for">Balsuos už</span></p>
-          <div class="said__by"><b><a href="#">Ona Jonaitienė</a></b></div>
-          <p class="bubble bubble--mp voice">Balsuosiu už. Papildomos pajamos reikalingos gynybai, o riba paliestų mažiau nei vieną procentą mokėtojų.</p>
-          <div class="said__by"><span>Pilietinės sąjungos frakcija</span><span class="tag">Seimo narys arba jo biuras</span><span>rugsėjo 5 d.</span></div>
-        </div>
-        <p class="fine">Atsakymus rašo patys Seimo nariai arba jų biurai.</p>
-      </section>
+        <section class="stack" aria-labelledby="h-answers">
+          <h2 id="h-answers">Seimo narių atsakymai</h2>
+          <div class="said said--mp">
+            <p class="said__side"><span class="choice choice--against">Balsuos prieš</span></p>
+            <div class="said__by"><b><a href="seimo-narys.html">Jonas Petraitis</a></b></div>
+            <p class="bubble bubble--mp voice">Pritariu didesniam didžiausias pajamas gaunančiųjų indėliui, bet įskaičiavus vienkartinius akcijų pardavimus šeimos verslai bus parduodami užsieniui. Siūliau pataisą, kuri juos išskirtų, tačiau komitetas jai nepritarė.</p>
+            <div class="said__by"><span>Reformų partijos frakcija</span><span class="tag">Seimo narys arba jo biuras</span><span>rugsėjo 2 d.</span></div>
+          </div>
+          <div class="said said--mp">
+            <p class="said__side"><span class="choice choice--for">Balsuos už</span></p>
+            <div class="said__by"><b><a href="#">Ona Jonaitienė</a></b></div>
+            <p class="bubble bubble--mp voice">Balsuosiu už. Papildomos pajamos reikalingos gynybai, o riba paliestų mažiau nei vieną procentą mokėtojų.</p>
+            <div class="said__by"><span>Pilietinės sąjungos frakcija</span><span class="tag">Seimo narys arba jo biuras</span><span>rugsėjo 5 d.</span></div>
+          </div>
+          <p class="fine">Atsakymus rašo patys Seimo nariai arba jų biurai.</p>
+        </section>
 
+      </div>
+
+      <aside class="stack">
+        <section class="sheet stack stack--tight" aria-labelledby="h-reach">
+          <h3 id="h-reach">Seimo nariai jau žino</h3>
+          <p class="num" id="threshold-reached"><b>Riba pasiekta – balsuoti prašo 11&nbsp;080 dalyvių.</b></p>
+          <p class="small num">2026-11-23 bus siunčiama suvestinė Seimo nariams.</p>
+          <p class="small">Ribą nustatė iniciatorė. Ją pasiekus, kreipimasis įtraukiamas į suvestines, kurias gauna visi 141 Seimo narys.</p>
+          <p><a href="suvestines.html">Suvestinė, išsiųsta rugsėjo 21 d.</a></p>
+        </section>
+
+        <section class="stack stack--tight" aria-labelledby="h-stages">
+          <h3 id="h-stages">Eiga Seime</h3>
+          <div class="stages">
+            <div class="stage"><span class="label">Pateikimas</span><b class="num">71 : 38</b><span class="small">Pritarta</span></div>
+            <div class="stage"><span class="label">Svarstymas</span><b class="num">74 : 44</b><span class="small">Pritarta</span></div>
+            <div class="stage stage--next"><span class="label">Priėmimas</span><b>Rugsėjo 24 d.</b><span class="small">Planuojama</span></div>
+          </div>
+          <p class="small"><a href="#">Iš kur ši data?</a> · <a href="#">Darbotvarkė lrs.lt</a></p>
+          <p class="fine">Šaltinis: Lietuvos Respublikos Seimo atvirieji duomenys, CC BY 4.0.</p>
+        </section>
+
+        <p class="note note--quiet">Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</p>
+      </aside>
     </div>
-
-    <aside class="stack">
-      <section class="sheet stack stack--tight" aria-labelledby="h-reach">
-        <h3 id="h-reach">Seimo nariai jau žino</h3>
-        <p class="num" id="threshold-reached"><b>Riba pasiekta – balsuoti prašo 11&nbsp;080 dalyvių.</b></p>
-        <p class="small num">2026-11-23 bus siunčiama suvestinė Seimo nariams.</p>
-        <p class="small">Ribą nustatė iniciatorė. Ją pasiekus, kreipimasis įtraukiamas į suvestines, kurias gauna visi 141 Seimo narys.</p>
-        <p><a href="suvestines.html">Suvestinė, išsiųsta rugsėjo 21 d.</a></p>
-      </section>
-
-      <section class="stack stack--tight" aria-labelledby="h-stages">
-        <h3 id="h-stages">Eiga Seime</h3>
-        <div class="stages">
-          <div class="stage"><span class="label">Pateikimas</span><b class="num">71 : 38</b><span class="small">Pritarta</span></div>
-          <div class="stage"><span class="label">Svarstymas</span><b class="num">74 : 44</b><span class="small">Pritarta</span></div>
-          <div class="stage stage--next"><span class="label">Priėmimas</span><b>Rugsėjo 24 d.</b><span class="small">Planuojama</span></div>
-        </div>
-        <p class="fine">Šaltinis: Lietuvos Respublikos Seimo atvirieji duomenys, CC BY 4.0.</p>
-      </section>
-
-      <p class="note note--quiet">Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</p>
-    </aside>
   </div>
 </main>
 

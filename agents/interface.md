@@ -56,7 +56,9 @@ Read before changing a page, a component or an island. The rules behind it are d
   it (owner, 2026-11-18: brighter dark colours instead), and the side button not chosen only its own 2px outline in the
   side's colour. The threshold's fill is `--progress`; a mark of the current place (menu, drop-down, tabs) is `--link`.
   Every token is set for both themes in `design/ui/lt2.css` and copied to `lt2.css`; text keeps 4.5:1 and a control or
-  a bar 3:1 in both. Buttons are straight (no cut); the cut corner is only `.sheet--cut` and `.portrait`. A `.bubble` is
+  a bar 3:1 in both. Buttons are straight (no cut); the cut corner is only `.sheet--cut` and `.portrait`. The follow
+  control is `.btn--compact` (drawn 24px tall, a 44px press target from its `::after`; only there). A followed thing's
+  page wraps its header and body in `.stack--snug` (header 16px above the first part, the body a `.stack--loose`). A `.bubble` is
   a straight box with radius `--cut-s` and a tail pointing up to the name above it: the element right before a bubble
   is always the author's name line (only `NewMark` beside the name), a stance goes above the name (`.said__side`), marks,
   an MP's faction and dates under the bubble; a bubble with no name above it takes `bubble--nameless` (no tail).

@@ -179,6 +179,8 @@ h1[tabindex="-1"]:focus { outline: none; }
 .stack { display: flex; flex-direction: column; gap: var(--sp-5); }
 .stack--tight { gap: var(--sp-3); }
 .stack--loose { gap: var(--sp-7); }
+/* A followed thing's page (owner, 2026-11-18, option A): its header one step above the page's first part. */
+.stack--snug { gap: var(--sp-4); }
 .cols {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
@@ -301,6 +303,17 @@ lt2-logo-spin {
 .btn--plain:hover { background: var(--ink); color: var(--sheet); }
 .btn--wide { width: 100%; }
 .btn[aria-pressed="true"] { box-shadow: inset 0 -5px 0 var(--ink); }
+/* The compact button (owner, 2026-11-18): about a link's height, for the follow control beside small text. The box drawn
+   is 24px tall, WCAG 2.5.8's minimum on its own; an invisible area 8px above and 12px below it makes the press target
+   44px tall without looking bigger, and stays inside the gaps round it (8px between wrapped lines, more below). Plain,
+   its outline is 1px, pressed or not (the word says the state, "Nebesekti"). */
+.btn--compact {
+  position: relative;
+  min-height: 1.5rem; padding: 0.15rem 0.6rem;
+  font-size: 0.875rem; line-height: 1.25;
+}
+.btn--compact::after { content: ""; position: absolute; inset: -0.5rem 0 -0.75rem; }
+.btn--plain.btn--compact, .btn--plain.btn--compact[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--ink); }
 
 .mark {
   display: inline-flex; align-items: center; gap: var(--sp-2);
@@ -1176,14 +1189,13 @@ a.said__name { color: inherit; font-weight: 700; }
 .rows > li.member-text { display: flex; flex-direction: column; gap: var(--sp-2); }
 
 /* "Sekti" / "Nebesekti" is an action, not a state to underline like a chosen tab (browser look, 2026-11-16): one rule for
-   every page that has it (a bill, an MP, an organisation, a member). Pressed, it keeps the plain button's outline, so in the
-   compact line (2026-11-17) "Nebesekti" still reads as a button. */
-.follow .btn[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ink); }
+   every place that has it (a bill, an MP, an organisation, a member, the account's list of follows). It is the compact
+   button (owner, 2026-11-18, option A: about a link's height beside the small text around it). Pressed, it keeps the
+   plain button's outline, so "Nebesekti" still reads as a button. */
 .followers { display: inline-flex; gap: var(--sp-2); align-items: baseline; }
 /* Owner, 2026-11-17: one compact line under a followed thing's title: its tags, "Sekti", "Sekėjai: n" and the hint. */
 .follow-line { gap: var(--sp-2) var(--sp-5); }
 .follow { gap: var(--sp-2) var(--sp-3); }
-.follow .btn { min-height: 2.75rem; padding: 0 var(--sp-4); font-size: var(--fs-1); }
 /* Design 8.23.6: "Aptarimas" lies on its target's sheet, below it and set in; the list is not a sheet, the writing box a quiet one. */
 .comments__list { list-style: none; padding: 0; margin: 0; }
 .comment { padding-left: var(--sp-3); border-left: 2px solid var(--rule); }

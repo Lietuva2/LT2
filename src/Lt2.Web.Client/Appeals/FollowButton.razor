@@ -7,7 +7,8 @@
 
 @* "Sekti" / "Nebesekti" a bill, an MP (design 8.11.2), an organisation (design 8.14.14, stage B) or a member with a public
    profile (design 8.25.5). Private: who follows what is shown to nobody. One compact line under the page's title (owner,
-   2026-11-17), the same on every page that has it: "Sekti", then the number of followers (FollowerLine, design 8.11.2) when
+   2026-11-17), the same on every page that has it: "Sekti" (the compact button, about a link's height, with a 44px tall
+   press target; owner, 2026-11-18), then the number of followers (FollowerLine, design 8.11.2) when
    the page gives it, moving with the person's own "Sekti" at once (browser look, 2026-11-16), then one hint, "Kas yra
    sekimas?", with what the emails are about for this kind, that nobody sees who follows and what the number is (design
    8.15: the sentence that stood beside the button). A visitor gets a link to sign in that comes back here instead; the
@@ -21,11 +22,11 @@
     }
     else if (!_signedIn)
     {
-        <a class="btn btn--plain" href="@SignInHref" id="follow-sign-in-@Kind">@L["Follow.Follow"]</a>
+        <a class="btn btn--plain btn--compact" href="@SignInHref" id="follow-sign-in-@Kind">@L["Follow.Follow"]</a>
     }
     else
     {
-        <button type="button" class="btn btn--plain" id="follow-toggle-@Kind" aria-pressed="@(Following == true ? "true" : "false")"
+        <button type="button" class="btn btn--plain btn--compact" id="follow-toggle-@Kind" aria-pressed="@(Following == true ? "true" : "false")"
                 disabled="@(Locked || Following is null)" @onclick="ToggleAsync">@L[Following == true ? "Follow.Unfollow" : "Follow.Follow"]</button>
     }
     @if (Followers is not null)

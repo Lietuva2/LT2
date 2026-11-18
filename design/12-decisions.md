@@ -520,3 +520,15 @@ Each is built as written; "no" names what changes.
   speaks of sides only, though it is now also asked before a first mark; rewording it needs a new text version (and the
   invented members' consents given again). Not changed here. The terms (`Terms.Summaries.1`: "argumentai, kuriuos
   daugiausia žmonių pažymėjo „Man svarbu“") likewise, being versioned.
+
+**Decided by the owner on 2026-11-18: the bill page's header, option A of the mock-ups (8.12.1, 8.11.2, 8.16.3, 8.4)**
+
+- "Iš kur ši data?" and the agenda link leave the header for "Stadijos Seime": one small line right under the stages and
+  their planned date, above "Data neteisinga?", wherever that sheet stands. The header keeps the stage and
+  "Planuojama …" tags.
+- The follow control is the compact button: about a link's height (0.875rem words, padding 0.15rem 0.6rem, a 1px
+  outline, drawn 24px tall), on the row with "Sekėjai: n" and "Kas yra sekimas?", with an invisible 44px tall press
+  target (the designer's sizes). One style wherever the control stands: a bill, an MP, an organisation, a member's page
+  and "Nebesekti" in the account's list of follows.
+- The header stands one step (16px, `--sp-4`) above the page's first part instead of the page's usual 56px, on a bill's
+  page, an MP's profile and an organisation's page; the spacing above the follow row stays (not the tighter option B).

@@ -45,7 +45,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
                 html.ShouldContain(">Priėmimas</span>");
                 System.Text.RegularExpressions.Regex.IsMatch(html, @"(?i)\b(liko|po)\s+\d+\s*(d\.|dien|val)").ShouldBeFalse("never a countdown");
 
-                // Design 8.4, 8.15 (owner, 2026-11-16): where the date comes from, beside it; the agenda page it is published
+                // Design 8.4, 8.15 (owner, 2026-11-16): where the date comes from, near it; the agenda page it is published
                 // on, never the bill's e-seimas document; the planned stage in "Stadijos Seime", the side column's first sheet.
                 var hint = AppealPageTests.HintOf(html, "planned-from");
                 hint.Trigger.ShouldBe("Iš kur ši data?");
@@ -57,6 +57,20 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
                 html.IndexOf("id=\"stages\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"digests\"", StringComparison.Ordinal));
                 System.Text.RegularExpressions.Regex.IsMatch(html, "id=\"stage-adoption\">\\s*<span class=\"label\">Priėmimas</span>\\s*<span class=\"small num\" id=\"stage-planned\">Planuojama ")
                     .ShouldBeTrue("the planned stage shows the date");
+
+                // Owner, 2026-11-18 (option A): the date's source left the header for "Stadijos Seime", right under the
+                // stages and their date; the header keeps the stage and "Planuojama …" tags. The header stands one step
+                // above the page's first part (.stack--snug).
+                var header = html[html.IndexOf("id=\"bill-planned\"", StringComparison.Ordinal)..];
+                header = header[..header.IndexOf("</p>", StringComparison.Ordinal)];
+                header.ShouldContain("id=\"planned\"");
+                header.ShouldNotContain("planned-from");
+                header.ShouldNotContain("planned-agenda");
+                var stages = html[html.IndexOf("id=\"stages\"", StringComparison.Ordinal)..html.IndexOf("id=\"digests\"", StringComparison.Ordinal)];
+                stages.IndexOf("</ol>", StringComparison.Ordinal).ShouldBeLessThan(stages.IndexOf("id=\"planned-source\"", StringComparison.Ordinal));
+                stages.IndexOf("id=\"planned-source\"", StringComparison.Ordinal).ShouldBeLessThan(stages.IndexOf("id=\"planned-from\"", StringComparison.Ordinal));
+                stages.ShouldContain("id=\"planned-agenda\"");
+                html.IndexOf("class=\"stack stack--snug\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"bill-planned\"", StringComparison.Ordinal));
             }
 
             // Under its threshold with the bill on the agenda: a moderator looks at it (design 8.3).

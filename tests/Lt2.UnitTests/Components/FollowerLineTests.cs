@@ -79,11 +79,34 @@ public sealed class FollowerLineTests : BunitContext
         var line = Render<FollowButton>(p => p.Add(c => c.Kind, kind).Add(c => c.Key, "raktas").Add(c => c.Followers, 4));
         var row = line.Find($"#follow-{kind}");
         row.Children.Select(e => e.Id is { Length: > 0 } id ? id : e.ClassName).Take(3).ShouldBe([$"follow-toggle-{kind}", "followers", "small"]);
+        line.Find($"#follow-toggle-{kind}").ClassName.ShouldBe("btn btn--plain btn--compact", "the compact button (owner, 2026-11-18)");
         line.Find($"#follow-what-{kind}").TextContent.ShouldBe("Kas yra sekimas?");
         line.Find($"#follow-what-{kind}-panel .hint__answer").TextContent.ShouldBe(
             what + " Kas ką seka, niekas kitas nemato. „Sekėjai“ – tiek Lietuva 2.0 narių paprašė šių laiškų; tai ne palaikymas ir ne reprezentatyvi apklausa.");
         line.Find($"#follow-what-{kind}-panel a").GetAttribute("href").ShouldBe("/metodika#sekimas");
         line.FindAll("#followers-hint").ShouldBeEmpty("one hint on the line");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-18 (the bill page's header, option A): a visitor's "Sekti", a link to sign in, is the same compact
+    /// button as a member's, on the same row as the number and the hint.
+    /// </summary>
+    [Fact]
+    public void A_visitors_sign_in_link_is_the_compact_button_on_the_same_row()
+    {
+        Services.AddLt2ClientComponents();
+        Services.AddSingleton(DispatchProxy.Create<IFollowsApi, ApiFake>());
+        Services.AddSingleton(DispatchProxy.Create<IProfilesApi, ApiFake>());
+        AddBillState();
+        AddAuthorization();
+
+        var line = Render<FollowButton>(p => p.Add(c => c.Kind, "bill").Add(c => c.Key, "XVP-0412").Add(c => c.Followers, 2));
+        var row = line.Find("#follow-bill");
+        row.Children.Select(e => e.Id is { Length: > 0 } id ? id : e.ClassName).Take(3).ShouldBe(["follow-sign-in-bill", "followers", "small"]);
+        var signIn = line.Find("#follow-sign-in-bill");
+        signIn.TagName.ShouldBe("A");
+        signIn.ClassName.ShouldBe("btn btn--plain btn--compact");
+        signIn.TextContent.ShouldBe("Sekti");
     }
 
     /// <summary>The bill page's shared state (a first side follows the bill, design 8.11.2), which the button listens to.</summary>
