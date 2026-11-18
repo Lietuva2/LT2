@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. Written by tools/demo_closed_bills.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001212" numeris="255" tipas="Rytinis" pradžia="2026-11-05 10:00" pabaiga="2026-11-05 12:45">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012120" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="10:00"/>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012121" numeris="2" pavadinimas="Energetikos įstatymo pataisa" stadija="Priėmimas" laikas_nuo="10:53">
+      <Dokumentas registracijos_numeris="XVP-0712" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0712"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012122" numeris="3" pavadinimas="Akcizų įstatymo pataisa" stadija="Priėmimas" laikas_nuo="11:32">
+      <Dokumentas registracijos_numeris="XVP-0722" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0722"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>

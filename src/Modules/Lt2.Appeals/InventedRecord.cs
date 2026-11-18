@@ -255,6 +255,103 @@ public static class InventedRecord
     }
 
     /// <summary>
+    /// Design 8.26.5, the migrator's <c>--demo-sides-for</c> only: gives one account a side on each of these bills whose record
+    /// is closed, dated before the record closed (at <c>Placed</c>, 0 to 1, of the time between its opening and an hour
+    /// before it closed), and adds it to the frozen counts as the closing job would have counted it (older than 30 days by
+    /// <paramref name="memberSince"/> at the closing). A bill where the account already has a side, or whose record is not
+    /// closed, is left as it is, so running it again changes nothing. Returns the sides given for and against.
+    /// </summary>
+    public static async Task<(int For, int Against)> GiveClosedSidesAsync(
+        string connectionString, Guid userId, DateTimeOffset memberSince, IReadOnlyList<(string Bill, string Side, double Placed)> sides, DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(sides);
+        if (sides.Any(s => !Sides.IsSide(s.Side) || s.Placed is < 0 or > 1))
+        {
+            throw new ArgumentException("Every side is for or against, placed between 0 and 1.", nameof(sides));
+        }
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        var (given, against) = (0, 0);
+        foreach (var (bill, side, placed) in sides)
+        {
+            Guid recordId;
+            DateTimeOffset opened, closed;
+            await using (var record = new NpgsqlCommand(
+                "SELECT id, coalesce(published_at, opened_at), closed_at FROM appeals.bill_record WHERE bill_number = @b AND status = 'closed' AND closed_at IS NOT NULL FOR UPDATE",
+                connection,
+                transaction))
+            {
+                record.Parameters.AddWithValue("b", bill);
+                await using var reader = await record.ExecuteReaderAsync(cancellationToken);
+                if (!await reader.ReadAsync(cancellationToken))
+                {
+                    continue;
+                }
+
+                recordId = reader.GetGuid(0);
+                opened = reader.GetFieldValue<DateTimeOffset>(1);
+                closed = reader.GetFieldValue<DateTimeOffset>(2);
+            }
+
+            var latest = closed.AddHours(-2);
+            var at = latest > opened ? opened + TimeSpan.FromTicks((long)((latest - opened).Ticks * placed)) : opened;
+            await using (var insert = new NpgsqlCommand(
+                """
+                INSERT INTO appeals.position (record_id, user_id, side, created_at, changed_at, member_since)
+                VALUES (@record, @user, @side, @at, @at, @since) ON CONFLICT DO NOTHING
+                """,
+                connection,
+                transaction))
+            {
+                insert.Parameters.AddWithValue("record", recordId);
+                insert.Parameters.AddWithValue("user", userId);
+                insert.Parameters.AddWithValue("side", side);
+                insert.Parameters.AddWithValue("at", at);
+                insert.Parameters.AddWithValue("since", memberSince);
+                if (await insert.ExecuteNonQueryAsync(cancellationToken) == 0)
+                {
+                    continue;
+                }
+            }
+
+            var older = memberSince < CountRules.EstablishedBefore(closed) ? 1 : 0;
+            await using (var counts = new NpgsqlCommand(
+                """
+                UPDATE appeals.bill_record SET changed_at = @now,
+                  closed_for = closed_for + @for, closed_for_older_than30days = closed_for_older_than30days + @for * @older,
+                  closed_against = closed_against + @against, closed_against_older_than30days = closed_against_older_than30days + @against * @older
+                WHERE id = @record
+                """,
+                connection,
+                transaction))
+            {
+                var isFor = side == Sides.For ? 1 : 0;
+                counts.Parameters.AddWithValue("now", now);
+                counts.Parameters.AddWithValue("for", isFor);
+                counts.Parameters.AddWithValue("against", 1 - isFor);
+                counts.Parameters.AddWithValue("older", older);
+                counts.Parameters.AddWithValue("record", recordId);
+                await counts.ExecuteNonQueryAsync(cancellationToken);
+            }
+
+            if (side == Sides.For)
+            {
+                given++;
+            }
+            else
+            {
+                against++;
+            }
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return (given, against);
+    }
+
+    /// <summary>
     /// Closes the bill's open demonstration record as the closing job would (design 8.1, 8.26.5): the counts are frozen from
     /// its positions (older than 30 days at <paramref name="at"/>) and the closing vote is kept. Returns whether it closed;
     /// an already closed record, or none, is left as it is.

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. Written by tools/demo_closed_bills.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001204">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012041">
+      <Balsavimas balsavimo_id="99100213" balsavimo_laikas="2026-05-07 11:17:17" aprašas="Priimti Atsinaujinančių išteklių energetikos įstatymo pataisą" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012042">
+      <Balsavimas balsavimo_id="99100208" balsavimo_laikas="2026-05-07 11:46:47" aprašas="Priimti Miškų įstatymo pataisą" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012043">
+      <Balsavimas balsavimo_id="99100205" balsavimo_laikas="2026-05-07 12:25:05" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>

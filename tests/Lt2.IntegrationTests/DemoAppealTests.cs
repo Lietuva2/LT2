@@ -1,6 +1,7 @@
 using Lt2.Api.Contracts.Appeals;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Migrator;
+using Lt2.SharedKernel;
 using Microsoft.Extensions.Configuration;
 
 namespace Lt2.IntegrationTests;
@@ -41,6 +42,43 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
 
         record.Reasons.SelectMany(r => r.EndorsedBy).GroupBy(u => u).Max(g => g.Count()).ShouldBeLessThanOrEqualTo(3);
         record.Reasons.GroupBy(r => r.AuthorUserId).Max(g => g.Count()).ShouldBeLessThanOrEqualTo(2);
+    }
+
+    [Fact]
+    public void The_invented_closed_bills_take_sides_only_from_accounts_registered_before_the_vote_with_the_majority_specified()
+    {
+        DemoClosedBills.Bills.Count.ShouldBe(30);
+        DemoClosedBills.Bills.Select(b => b.Number).ShouldBeUnique();
+        DemoClosedBills.Bills.ShouldAllBe(b => b.Number.StartsWith("XVP-07", StringComparison.Ordinal) && b.Number != DemoAppeal.ClosedBill);
+        DemoClosedBills.Bills.Count(b => b.Positions < AnalyticsRules.SmallSample).ShouldBeInRange(2, 5, "a few small samples show \"maža imtis\"");
+
+        var votedAt = new DateTimeOffset(2026, 6, 11, 8, 20, 0, TimeSpan.Zero);
+        var random = new Random(1);
+        var pool = Enumerable.Range(1, 6000)
+            .Select(n => KeyValuePair.Create(new Guid($"0193b000-0412-7000-8000-{n:D12}"), votedAt.AddDays(200 - random.Next(0, 420))))
+            .ToList();
+        foreach (var bill in DemoClosedBills.Bills)
+        {
+            foreach (var seimasFor in new[] { true, false })
+            {
+                var record = DemoClosedBills.Build(bill, votedAt, seimasFor, pool);
+                record.Positions.Count.ShouldBe(bill.Positions);
+                record.Positions.Select(p => p.UserId).ShouldBeUnique();
+                record.Positions.ShouldAllBe(p => p.TakenAt < votedAt.AddHours(-1) && p.TakenAt > p.MemberSince && p.TakenAt >= record.OpenedAt);
+                record.Positions.ShouldAllBe(p => pool.Any(a => a.Key == p.UserId && a.Value == p.MemberSince), "only accounts of the pool, with their own registration");
+                var forCount = record.Positions.Count(p => p.Side == "for");
+                var membersFor = AnalyticsRules.MembersMajorityFor(forCount, record.Positions.Count - forCount);
+                membersFor.ShouldNotBeNull("no tie");
+                if (AnalyticsRules.IsEnough(bill.Positions))
+                {
+                    (membersFor == seimasFor).ShouldBe(bill.AgreesWithSeimas, bill.Number);
+                }
+
+                var sideOf = record.Positions.ToDictionary(p => p.UserId, p => p.Side);
+                record.Reasons.ShouldAllBe(r => sideOf[r.AuthorUserId] == r.Side && r.EndorsedBy.All(u => sideOf[u] == r.Side && u != r.AuthorUserId));
+                DemoClosedBills.Build(bill, votedAt, seimasFor, pool).Positions.ShouldBe(record.Positions, "the same pool gives the same sides");
+            }
+        }
     }
 
     [Fact]
@@ -105,7 +143,9 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         var again = await DemoAppeal.RunAsync(Configuration(true), Database.MigratorConnectionString, TimeProvider.System, CancellationToken.None);
         // The closed demonstration bill (design 8.26.5) is only in the stand-in's local overlay, which tests never load.
         first.ClosedBill.ShouldBe("not imported yet");
-        again.ShouldBe(new DemoAppeal.Outcome("already there", 0, "already there", 0, ClosedBill: "not imported yet"));
+        again.ShouldBe(new DemoAppeal.Outcome(
+            "already there", 0, "already there", 0, ClosedBill: "not imported yet",
+            ClosedBills: "0 created and closed, 0 already there, 0 left as they are, 30 not imported yet; invented positions written: 0"));
 
         // Design 8.23.6: invented comments with "Sutinku" under an argument and a statement, once whatever the runs.
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.comment WHERE bill_number = @b", ("b", DemoAppeal.Bill))).ShouldBe(3);

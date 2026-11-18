@@ -112,6 +112,35 @@ public static class ParliamentMaintenance
         return await reader.ReadAsync(cancellationToken) ? (reader.GetInt64(0), reader.GetFieldValue<DateTimeOffset>(1)) : null;
     }
 
+    /// <summary>
+    /// The bill's adoption-stage vote with the Seimas's numbers (null numbers while its result is not read yet), or null
+    /// (local demonstration data only, design 8.26.5: the invented members' sides agree with it or not on purpose).
+    /// </summary>
+    public static async Task<(long VoteId, DateTimeOffset HeldAt, SeimasVoteNumbers Numbers)?> FinalVoteNumbersAsync(
+        string connectionString, string number, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT v.id, v.held_at, v.is_consensus, v.has_result, v."for", v.against, v.abstain
+            FROM parliament.vote v JOIN parliament.bill b ON b.id = v.bill_id
+            WHERE b.number = @n AND v.kind = 'StageResult' AND v.stage = 'Adoption'
+            ORDER BY v.held_at DESC LIMIT 1
+            """,
+            connection);
+        command.Parameters.AddWithValue("n", number);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        var read = reader.GetBoolean(3);
+        int? Count(int i) => read && !reader.IsDBNull(i) ? reader.GetInt32(i) : null;
+        return (reader.GetInt64(0), reader.GetFieldValue<DateTimeOffset>(1), new SeimasVoteNumbers(reader.GetBoolean(2), Count(4), Count(5), Count(6)));
+    }
+
     private static async Task<string?> BillColumnAsync(string connectionString, string sql, string number, CancellationToken cancellationToken)
     {
         await using var connection = new NpgsqlConnection(connectionString);

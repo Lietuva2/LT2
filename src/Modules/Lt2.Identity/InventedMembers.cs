@@ -132,6 +132,35 @@ public static class InventedMembers
     }
 
     /// <summary>
+    /// When each of <paramref name="ids"/> completed its registration, for those that are invented demonstration accounts
+    /// (an address on <see cref="Domain"/>), registered and with the consent to store positions in force; others are left
+    /// out. Design 8.26.5: the invented closed bills take their sides only from these accounts.
+    /// </summary>
+    public static async Task<IReadOnlyDictionary<Guid, DateTimeOffset>> SinceAsync(string connectionString, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var query = new NpgsqlCommand(
+            $"""
+            SELECT p.user_id, p.registered_at FROM identity.profile p
+            WHERE p.user_id = ANY(@ids) AND p.registered_at IS NOT NULL AND p.normalized_email LIKE @pattern AND {CurrentPositionConsent.ExistsSql}
+            """,
+            connection);
+        query.Parameters.AddWithValue("ids", ids.ToArray());
+        query.Parameters.AddWithValue("pattern", "%@" + Domain);
+        CurrentPositionConsent.AddParameters(query);
+        var since = new Dictionary<Guid, DateTimeOffset>();
+        await using var reader = await query.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            since[reader.GetGuid(0)] = reader.GetFieldValue<DateTimeOffset>(1);
+        }
+
+        return since;
+    }
+
+    /// <summary>
     /// Design 8.22.2: gives the terms of use in force to those of <paramref name="members"/> that exist as members and have not
     /// accepted them, dated like their other consents, so demonstration accounts made before the terms (or before a new
     /// version) stay consistent. Repeatable: running it again gives nothing twice. Returns how many accepted now.

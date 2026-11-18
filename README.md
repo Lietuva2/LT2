@@ -61,11 +61,27 @@ docker compose -f deploy/compose.yaml run --rm --no-deps migrator --reset-parlia
 ```
 
 The demonstration record on XVP-0412 (6 800 invented accounts asking to vote for, 4 280 against, the prototype's
-arguments) is written by the migrator on the local stack only: it refuses unless `LT2_DEMO_DATA=true` (set in
-`deploy/.env`) and the parliament data is the stand-in's. Running it again changes nothing.
+arguments) is written by the migrator on the local stack and the trial only: it refuses unless `LT2_DEMO_DATA=true` (set
+in `deploy/.env`) and the parliament data is the stand-in's. Running it again changes nothing.
 
 ```bash
 docker compose -f deploy/compose.yaml run --rm --no-deps migrator --demo-appeal
+```
+
+The same command gives the stand-in overlay's invented closed bills (XVP-0707 and thirty more, XVP-0701 to XVP-0731,
+design 8.26.5) invented positions from those invented accounts and closes their records, so `/statistika` has something
+to compare; a bill whose vote the worker has not imported yet is reported "not imported yet" and filled by a later run.
+The bills' votes come from `tools/Lt2.SeimasStandIn/Recent`, written by `python tools/demo_closed_bills.py` (fixed seed;
+`--check` says whether the files are current).
+
+To see "Kas Seime balsuoja taip, kaip prašote jūs" for your own account, give that one account random sides on those
+closed bills. It refuses unless `LT2_DEMO_DATA=true` and the parliament data is the stand-in's, refuses an address with no
+completed registration, an account without the consent to store positions and an MP's own account, touches no other
+account, and never logs the address (matched as sign-in matches it). `-` reads the address from standard input, so it
+stays out of the command line; running it again changes nothing:
+
+```bash
+printf '%s\n' 'vardas@pavyzdys.test' | docker compose -f deploy/compose.yaml run --rm -T --no-deps migrator --demo-sides-for -
 ```
 
 Planned dates come from the lrs.lt upcoming-agenda pages, not the open data. Locally the worker reads the stand-in's

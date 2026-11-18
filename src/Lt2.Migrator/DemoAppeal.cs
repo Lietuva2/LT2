@@ -43,7 +43,7 @@ public static class DemoAppeal
     /// What happened, for the console. <c>AiDescription</c>: <c>created</c>, <c>already there</c> or <c>left as it is</c>.
     /// <c>Organisations</c>: how many of the invented organisations on <see cref="Bill"/> were created (design 8.14.14).
     /// </summary>
-    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0, int TermsAccepted = 0, string ClosedBill = "left as it is");
+    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0, int TermsAccepted = 0, string ClosedBill = "left as it is", string ClosedBills = "");
 
     public static async Task<Outcome> RunAsync(IConfiguration configuration, string connectionString, TimeProvider clock, CancellationToken cancellationToken)
     {
@@ -100,6 +100,9 @@ public static class DemoAppeal
         var (closedBill, closedCreated, closedTerms) = await SeedClosedBillAsync(connectionString, cancellationToken);
         created += closedCreated;
         termsAccepted += closedTerms;
+
+        // Design 8.26.5: thirty more invented closed bills, sides only from the invented accounts made above.
+        var closedBills = await DemoClosedBills.SeedAsync(connectionString, cancellationToken);
         return new Outcome(
             outcome == InventedRecordOutcome.Created ? "created" : "already there",
             created,
@@ -111,7 +114,8 @@ public static class DemoAppeal
             },
             organisationsCreated,
             termsAccepted,
-            closedBill);
+            closedBill,
+            closedBills.ToString());
     }
 
     /// <summary>Two comments under the bill's first published argument and one under its first statement, with "Sutinku"; repeatable.</summary>
