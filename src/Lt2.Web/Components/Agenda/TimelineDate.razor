@@ -1,0 +1,18 @@
+@inject Formats F
+
+@* The head of one day of a timeline (design 8.7, 8.11.1; owner, 2026-11-18: days split visibly): what the day is
+   ("Planuojama", "Balsuota" or the year), the date in words, and the weekday with how many the day holds. Beside the rows
+   on a wide screen; on a narrow one a band of its own above them. *@
+<div class="tl-date"><span class="label">@Label</span><b>@F.DayMonth(Day)</b><span class="small">@F.Weekday(Day)@if (Count is not null)
+    {
+        @(" · ")<span class="num">@Count</span>
+    }</span></div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    [Parameter, EditorRequired] public DateOnly Day { get; set; }
+
+    /// <summary>"40 projektų", "26 balsavimai"; none where the day's count is not said.</summary>
+    [Parameter] public string? Count { get; set; }
+}

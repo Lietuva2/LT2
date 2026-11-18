@@ -51,8 +51,8 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
             ? since
             : null;
 
-    public async Task<Result<MpVotesResponse>> MpVotesAsync(string slug, string? cursor, CancellationToken ct) =>
-        await queries.MpVotesAsync(slug, cursor, 50, ct) is { } page ? new MpVotesResponse(page.Items.Select(Map).ToList(), page.NextCursor) : NotFound;
+    public async Task<Result<MpVotesResponse>> MpVotesAsync(string slug, string? cursor, int limit, CancellationToken ct) =>
+        await queries.MpVotesAsync(slug, cursor, limit, ct) is { } page ? new MpVotesResponse(page.Items.Select(Map).ToList(), page.NextCursor) : NotFound;
 
     public async Task<Result<IReadOnlyList<BodyListItem>>> BodiesAsync(string kind, CancellationToken ct) =>
         Result<IReadOnlyList<BodyListItem>>.Success((await queries.BodiesAsync(kind, ct)).Select(Map).ToList());
@@ -157,8 +157,8 @@ internal sealed class ServerParliamentApi(ParliamentReads reads, ErrorMapper err
     public async Task<ApiResult<MpProfileResponse>> GetMpAsync(string slug, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.MpAsync(slug, cancellationToken), x => x);
 
-    public async Task<ApiResult<MpVotesResponse>> GetMpVotesAsync(string slug, string? cursor = null, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await reads.MpVotesAsync(slug, cursor, cancellationToken), x => x);
+    public async Task<ApiResult<MpVotesResponse>> GetMpVotesAsync(string slug, string? cursor = null, int? limit = null, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.MpVotesAsync(slug, cursor, Math.Clamp(limit ?? MpVoteLimits.Default, 1, MpVoteLimits.Max), cancellationToken), x => x);
 
     public async Task<ApiResult<IReadOnlyList<BodyListItem>>> GetFactionsAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.BodiesAsync("faction", cancellationToken), x => x);

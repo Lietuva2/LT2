@@ -323,7 +323,20 @@ page's "Balsuota".
   start. The server keeps the front page's agenda in memory for 60 s (`FrontPageAgenda`; a test removes
   `FrontPageAgenda.CacheKey` instead of waiting). A side taken, changed or withdrawn marks the copy out of date
   (`FrontPageFreshness`, marked by `TakingSides` for every API client): the first request once the copy is 2 s old reads
-  the agenda again; other changes wait for the minute. The agenda page, the bill's page and the API stay live.
+  the agenda again; other changes wait for the minute. The agenda page reads the same copy (`ServerAgendaApi`); the bill's
+  page and `GET /api/v1/agenda` stay live.
+  **The lists' lengths (owner, 2026-11-18, real-sized parliament).** `AgendaReads` orders each day by
+  `Lt2.Web.Client/Agenda/AgendaRules` (pure, `AgendaRulesTests`): activity (participants + published arguments, from
+  `BillRecordState.Arguments`), then stage (adoption, consideration, presentation; the parser reads a combined stage as its
+  furthest, `AgendaParser.StageOf`), then number, bills without a title last; the votes by Vilnius day, newest first, each
+  day the same way. `AgendaRules.Day` cuts a day: the front page (`Home.razor`) shows `FrontDays` (2) planned and voted
+  days of `FrontPerDay` (5), "Visi N projektų →" to `AgendaPage.PlannedDayPath` (`/darbotvarke#diena-…`) and "Dar N
+  balsavimų →" to `/seimas/balsavimai?iki=…`; `/darbotvarke` shows `PagePerDay` (10) and the rest in `details.tl-more`
+  ("Rodyti visus N"), the unknown bills in `UnknownBills` (`details.tl-unknown`), rows `TimelineItem Asks="false"` and
+  `VotedItem`, heads `TimelineDate` (date in words, weekday, count via `AgendaWords`). The islands ask `/me/bills` about
+  the shown rows only (`AgendaRules.Asked`, never over `MyBillsQuery.MaxNumbers`); "Jūsų projektai" (`MyAgendaPanel`,
+  `MyAgendaState.PanelAsync`) lists the followed bills of the whole agenda and last week from `GET /me/follows`
+  (`OnTheAgenda`) and asks `/me/bills` about those not shown, 30 a request (`Requests`).
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), planned date or the latest activity (owner, 2026-11-17: the page offers these
   three, `rikiuoti` = `aktyvumas`, `data`, `naujausia`; another value falls back to the default; the API's `sort` has
@@ -332,7 +345,14 @@ page's "Balsuota".
   the latest-activity order "Paskutinė veikla {yyyy-MM-dd HH:mm}". The last activity is one time per bill,
   `appeals.bill_record.last_activity_at`, set by `RecordActivity` (Appeals) in the same transaction as a side taken, changed or
   withdrawn, an argument published, a comment written, an organisation's statement or an MP's response made public or
-  changed; never who acted.
+  changed; never who acted. The page shows 20 and grows in place by `?rodyti=` (`Lt2.Web.Client/Appeals/BillListPaging`:
+  +20, landing on `#bill-{next}`, which it knows by asking one more; at most 200, then "Tolesni projektai" `?nuo=`); the API's
+  `limit` (`BillListLimits`, 20, 1–200). The list is composed in memory (`AppealsService.ListAsync`): the bills are the
+  Parliament module's, the activity the Appeals module's. An MP's votes (`/p/{slug}/balsavimai`, `MpVotePaging`) are by day,
+  50 then +50 by `?rodyti=` (rows `#balsavimas-{n}`), at most 300, then `?nuo=`; `GET /mps/{slug}/votes` takes `limit`
+  (`MpVoteLimits`). The arguments' "Visi argumentai" is a link to `?argumentai=visi#reasons` until the island runs
+  (`RecordReasons.AllParameter`), which renders every argument and its comments. Every moderators' list keeps its hundred
+  and carries its total (`ModerationQueueResponse.RecordsTotal` etc.); `<QueueCut>` says "Rodoma 100 iš N".
 - Following a bill, an MP, an organisation or a member is private: who follows is shown to nobody (the followed party and
   staff included), never combined with sides or invitations (the person's own `/me/bills` gives them both), in the export,
   deleted with the account; there is no limit on how much a person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and

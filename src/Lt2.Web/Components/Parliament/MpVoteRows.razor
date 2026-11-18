@@ -3,9 +3,10 @@
 
 @* An MP's votes: the choice (or "approved by consensus", without numbers) and how the MP's faction voted. *@
 <ul class="rows">
-    @foreach (var v in Votes)
+    @for (var i = 0; i < Votes.Count; i++)
     {
-        <VoteRow Vote="v.Vote">
+        var v = Votes[i];
+        <VoteRow Vote="v.Vote" Id="@(First is { } first ? Lt2.Web.Client.Parliament.MpVotePaging.Row(first + i) : null)" ShowDate="ShowDate">
             @if (v.Vote.IsConsensus)
             {
                 <span class="tag">@F.T["Consensus.Tag"]</span>
@@ -29,4 +30,10 @@
 
 @code {
     [Parameter, EditorRequired] public IReadOnlyList<MpVoteResponse> Votes { get; set; } = [];
+
+    /// <summary>The place of the first row in the whole list, for the rows' ids (an MP's votes page); none: no ids.</summary>
+    [Parameter] public int? First { get; set; }
+
+    /// <summary>False under a day's head, which says the date.</summary>
+    [Parameter] public bool ShowDate { get; set; } = true;
 }

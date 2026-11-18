@@ -50,9 +50,15 @@ internal static partial class AgendaParser
     [GeneratedRegex(@"\b(?<n>[XVI]{1,5}P-\d{1,5})(?:\(\d+\))?", RegexOptions.CultureInvariant)]
     private static partial Regex BillPattern();
 
-    /// <summary>A3: the stage is named in the row: pateikimas, svarstymas or priėmimas, in any grammatical form.</summary>
-    [GeneratedRegex(@"(?i)\b(?<s>pateikim|svarstym|priėmim)\w*", RegexOptions.CultureInvariant)]
+    /// <summary>
+    /// A3: the stage is named in the row: pateikimas, svarstymas or priėmimas, in any grammatical form; several in one
+    /// cell, separated by commas ("Pateikimas, svarstymas, priėmimas"), are one combined stage.
+    /// </summary>
+    [GeneratedRegex(@"(?i)\b(?:pateikim|svarstym|priėmim)\w*(?:\s*,\s*(?:pateikim|svarstym|priėmim)\w*)*", RegexOptions.CultureInvariant)]
     private static partial Regex StagePattern();
+
+    [GeneratedRegex(@"(?i)\b(?:pateikim|svarstym|priėmim)\w*", RegexOptions.CultureInvariant)]
+    private static partial Regex StageWord();
 
     /// <summary>A4: rows are table rows or list items; a header outside them still starts a sitting.</summary>
     [GeneratedRegex(@"(?i)<(?:tr|li|h[1-6])\b", RegexOptions.CultureInvariant)]
@@ -130,9 +136,13 @@ internal static partial class AgendaParser
         return new DateOnly(year, month, day);
     }
 
-    /// <summary>The stage word found in the row, read by the same rule as the open data's stages (<see cref="VoteRules.Stage"/>).</summary>
+    /// <summary>
+    /// The stage found first in the row, each word read by the same rule as the open data's stages (<see cref="VoteRules.Stage"/>);
+    /// a combined stage ("Pateikimas, svarstymas, priėmimas") is its furthest one, since the day may end in it (design 8.11.1,
+    /// owner 2026-11-18: the order within a day ranks a bill by how far it may go that day).
+    /// </summary>
     internal static string? StageOf(string text) => StagePattern().Match(text) is { Success: true } m
-        ? Codes.Of(VoteRules.Stage(m.Value))
+        ? Codes.Of(StageWord().Matches(m.Value).Select(w => VoteRules.Stage(w.Value)).Max())
         : null;
 
     /// <summary>The genitive month name, for pages and the stand-in.</summary>

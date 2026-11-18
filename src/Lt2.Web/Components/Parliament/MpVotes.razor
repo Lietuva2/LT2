@@ -1,6 +1,8 @@
 @page "/p/{Slug}/balsavimai"
 @using Lt2.Api.Contracts.Parliament
 @using Lt2.Api.Contracts.Meta
+@using Lt2.Web.Client.Parliament
+@using Lt2.Web.Components.Agenda
 @inject IParliamentApi Api
 @inject IMetaApi Meta
 @inject Formats F
@@ -18,6 +20,8 @@
         <h1>@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}")</h1>
     </div>
 
+    @* Owner, 2026-11-18: by day, as the history of votes (design 8.18): the first fifty, then "Rodyti daugiau" in place by the
+       address, landing on the first vote added; once the page holds 300, "Ankstesni balsavimai" goes on from there. *@
     <div class="sheet stack" id="mp-votes">
         @if (votes.Items.Count == 0)
         {
@@ -25,15 +29,27 @@
         }
         else
         {
-            <MpVoteRows Votes="votes.Items" />
+            @foreach (var day in MpVotePaging.Days(votes.Items))
+            {
+                <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="diena-@Display.Day(day.Day)">
+                    <TimelineDate Label="@F.T.Format("Votes.Year", day.Day.Year)" Day="day.Day" />
+                    <div class="tl-rows">
+                        <MpVoteRows Votes="day.Rows.Select(r => r.Vote).ToList()" First="day.Rows[0].Number" ShowDate="false" />
+                    </div>
+                </section>
+            }
+            @if (MpVotePaging.More(_shown, votes.NextCursor is not null) is { } more)
+            {
+                <p><a class="btn btn--plain" href="@(Address(Cursor, more) + "#" + MpVotePaging.Row(_shown + 1))" id="mp-votes-more">@F.T["Ballots.More"]</a></p>
+            }
         }
     </div>
 
     <p class="row">
         <a href="/p/@p.Mp.Slug">@F.T["Mp.Votes.Back"]</a>
-        @if (votes.NextCursor is { } next)
+        @if (MpVotePaging.Older(_shown, votes.NextCursor) is { } next)
         {
-            <a href="/p/@p.Mp.Slug/balsavimai?nuo=@next">@F.T["Mp.Votes.Older"]</a>
+            <a href="@Address(next, null)" id="mp-votes-older">@F.T["Mp.Votes.Older"]</a>
         }
     </p>
     <SourceLine UpdatedAt="@_updatedAt" />
@@ -43,15 +59,37 @@
     private MpProfileResponse? _mp;
     private MpVotesResponse? _votes;
     private DateTimeOffset? _updatedAt;
+    private int _shown = MpVotePaging.First;
 
     [Parameter] public string Slug { get; set; } = "";
 
     [SupplyParameterFromQuery(Name = "nuo")] public string? Cursor { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    [SupplyParameterFromQuery(Name = "rodyti")] public string? Show { get; set; }
+
+    /// <summary>This page's address from <paramref name="cursor"/> with <paramref name="shown"/> votes (defaults left out).</summary>
+    private string Address(string? cursor, int? shown)
     {
+        var parts = new List<string>();
+        if (!string.IsNullOrEmpty(cursor))
+        {
+            parts.Add("nuo=" + Uri.EscapeDataString(cursor));
+        }
+
+        if (shown is { } n && n != MpVotePaging.First)
+        {
+            parts.Add("rodyti=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        var path = "/p/" + Uri.EscapeDataString(Slug) + "/balsavimai";
+        return parts.Count == 0 ? path : path + "?" + string.Join("&", parts);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _shown = MpVotePaging.Shown(Show);
         _mp = (await Api.GetMpAsync(Slug)).Value;
-        _votes = (await Api.GetMpVotesAsync(Slug, Cursor)).Value;
+        _votes = (await Api.GetMpVotesAsync(Slug, Cursor, _shown)).Value;
         if (_mp is null || _votes is null)
         {
             Navigation.NotFound();

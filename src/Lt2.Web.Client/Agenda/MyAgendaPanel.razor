@@ -4,11 +4,12 @@
 
 @* "Jūsų projektai" at the top of the front page for a member (design 8.7, from variant C): the bills on the agenda or voted
    in the last week that the member follows (owner, 2026-11-17: "followed only"; a side alone puts no bill here, it shows in
-   the bill's own row), each with its planned date, their own side or "Dar
-   nenurodėte, ko prašote", the last vote's result, and the share link when they have taken a side. The public facts come
-   from the page (the same for every member); the member's own come from their own answers, asked only in the browser, so
-   nothing shows until they have loaded and nothing of them is in the page's HTML. When the member takes, changes or
-   withdraws a side in a row of the timeline, the panel follows without a reload (MyAgendaState.Changed). *@
+   the bill's own row), whichever of them the timeline shows (owner, 2026-11-18: the timeline shows a few rows a day), each
+   with its planned date, their own side or "Dar nenurodėte, ko prašote", the last vote's result, and the share link when
+   they have taken a side. Everything comes from the member's own answers (their follows, with each bill's planned date and
+   last vote, and their sides), asked only in the browser, so nothing shows until they have loaded and nothing of them is
+   in the page's HTML. When the member takes, changes or withdraws a side in a row of the timeline, the panel follows
+   without a reload (MyAgendaState.Changed). *@
 @if (_rows is { } rows)
 {
     <section class="sheet stack stack--tight my-agenda" aria-labelledby="h-my-agenda" id="my-agenda">
@@ -20,19 +21,19 @@
         else
         {
             <ul class="my-agenda__list">
-                @foreach (var (bill, mine) in rows)
+                @foreach (var (bill, ownSide) in rows)
                 {
                     <li id="my-agenda-@bill.Number" @key="bill.Number">
                         <span class="row">
                             <a class="tag tag--ink num" href="@BillPath(bill.Number)">@bill.Number</a>
                             @if (bill.Planned is { } planned)
                             {
-                                <span class="tag">@L.Format("Mine.Planned", planned)</span>
+                                <span class="tag num">@L.Format("Mine.Planned", Display.Day(planned.Date))</span>
                             }
                         </span>
                         <a class="my-agenda__title" href="@BillPath(bill.Number)">@bill.Title</a>
                         <span class="small">
-                            @if (mine.Side is { } side)
+                            @if (ownSide is { } side)
                             {
                                 @L["Mine.Side"]@(" ")<span class="choice choice--@side">@L["Mine.Side." + side]</span>
                             }
@@ -41,16 +42,17 @@
                                 <a href="@BillPath(bill.Number)">@L["Mine.NoSideAction"]</a>
                             }
                         </span>
-                        @if (bill.LastVote is { } vote)
+                        @if (bill.LastStageResult is { } vote && vote.HeldAt >= Since)
                         {
-                            <span class="small num">@L.Format("Mine.LastVote", vote)</span>
+                            @* The last week's vote, as the account's list of followed bills says it (design 8.11.2). *@
+                            <span class="small num">@L.Format("Follows.Voted", Display.Day(vote.HeldAt)) @(vote.IsConsensus ? L["Follows.Consensus"] : L.Format("Follows.Result", Display.Number(vote.For), Display.Number(vote.Against), Display.Number(vote.Abstain)))</span>
                         }
-                        @if (mine.New is { } news)
+                        @if (bill.New is { } news)
                         {
                             @* Design 8.11.8: what was written on a followed bill since the member last opened its page. *@
                             <a class="small num" href="@BillPath(bill.Number)" id="my-agenda-new-@bill.Number">@NewsLine.Of(L, news)</a>
                         }
-                        @if (mine.Side is not null && _shareCode is { } shareCode)
+                        @if (ownSide is not null && _shareCode is { } shareCode)
                         {
                             <div class="stack stack--tight">
                                 <span class="small">@L["Mine.Share"]</span>
@@ -74,15 +76,17 @@ else if (Message is not null)
 }
 
 @code {
-    private List<(MyAgendaBill Bill, MyBillResponse Mine)>? _rows;
+    private IReadOnlyList<MyAgendaRow>? _rows;
     /// <summary>The member's invitation code while it lets a registration through (design 8.11.5: the share link is the bill's address with it after the "#").</summary>
     private string? _shareCode;
 
-    /// <summary>The public bills of the page's agenda and the last week's votes, in the order the panel lists them.</summary>
-    [Parameter, EditorRequired] public IReadOnlyList<MyAgendaBill> Bills { get; set; } = [];
+    /// <summary>When the panel was read: a vote since then less the agenda's week is "the last week's".</summary>
+    private DateTimeOffset Since { get; set; }
 
     /// <summary>Every bill the page shows (the timeline's marks ask with the same list, so the page asks once).</summary>
     [Parameter, EditorRequired] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    [Inject] private TimeProvider Clock { get; set; } = default!;
 
     private static string BillPath(string number) => "/seimas/" + Uri.EscapeDataString(number);
 
@@ -102,16 +106,16 @@ else if (Message is not null)
 
     private async Task ReadAsync()
     {
-        if (await State.MineAsync(Numbers) is not { } answer)
+        if (await State.PanelAsync(Numbers) is not { } rows)
         {
             Message = L["Error.Generic"];
             return;
         }
 
         Message = null;
-        var mine = answer.Bills;
-        _rows = Bills.Where(b => mine.TryGetValue(b.Number, out var own) && own.Following).Select(b => (b, mine[b.Number])).ToList();
-        if (_shareCode is null && _rows.Any(r => r.Mine.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
+        Since = Clock.GetUtcNow().AddDays(-MyAgendaState.RecentDays);
+        _rows = rows;
+        if (_shareCode is null && rows.Any(r => r.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
         {
             _shareCode = invitation.Code;
         }

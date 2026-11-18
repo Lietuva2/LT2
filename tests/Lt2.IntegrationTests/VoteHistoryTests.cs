@@ -351,7 +351,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         home.ShouldContain("<p class=\"tl-older\" id=\"home-votes-older\"><a href=\"/seimas/balsavimai\">Ankstesni balsavimai →</a></p>");
         var agenda = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
         agenda.ShouldContain("id=\"agenda-no-recent\"");
-        agenda.ShouldContain("<p id=\"agenda-votes-older\"><a href=\"/seimas/balsavimai\">Ankstesni balsavimai →</a></p>");
+        agenda.ShouldContain("<p class=\"tl-older\" id=\"agenda-votes-older\"><a href=\"/seimas/balsavimai\">Ankstesni balsavimai →</a></p>");
     }
 
     [Fact]

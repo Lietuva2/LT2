@@ -151,7 +151,8 @@ public sealed record QueueCommentResponse(
     Guid Id, BillRefResponse Bill, CommentAuthorResponse Author, string Text, DateTimeOffset CreatedAt, string Status, IReadOnlyList<QueueReportResponse> Reports,
     CommentContextResponse Target, DateTimeOffset? HiddenAt, string? HiddenBy, string? HideStatement);
 
-public sealed record CommentModerationResponse(IReadOnlyList<QueueCommentResponse> Reported, IReadOnlyList<QueueCommentResponse> Hidden);
+public sealed record CommentModerationResponse(
+    IReadOnlyList<QueueCommentResponse> Reported, IReadOnlyList<QueueCommentResponse> Hidden, int ReportedTotal = 0, int HiddenTotal = 0);
 
 public sealed class CommentRequestValidator : AbstractValidator<CommentRequest>
 {

@@ -113,8 +113,11 @@ public sealed class ParliamentPageTests : E2ETest
         // A link from the list to a profile and on to a vote, all without scripts.
         await page.GetByRole(AriaRole.Link, new() { Name = "Ona Jonaitienė" }).ClickAsync();
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Ona Jonaitienė");
-        await page.Locator("a[href='/seimas/balsavimai/99100002']").ClickAsync();
+        // Her latest votes are whatever the invented Seimas held last; any of them leads to a vote page.
+        await page.Locator("main a[href^='/seimas/balsavimai/9']").First.ClickAsync();
+        await AtAsync(page, @"/seimas/balsavimai/\d+$");
         await Assertions.Expect(page.Locator("svg.seatmap rect.seat")).ToHaveCountAsync(141);
+        await page.GotoAsync(SignUpTests.BaseUrl + "/seimas/balsavimai/99100002");
 
         // Design 8.17: the ballots' search and faction are a plain GET form and the ballot a plain link, all landing on the list.
         var ballotSearch = page.Locator("#ballot-search");

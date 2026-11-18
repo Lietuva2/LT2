@@ -169,7 +169,13 @@ public sealed record QueueStatement(
     DateTimeOffset PublishedAt,
     bool BillFinished = false);
 
-public sealed record OrganisationModerationItems(IReadOnlyList<QueueOrganisation> Organisations, IReadOnlyList<QueueStatement> Statements);
+public sealed record OrganisationModerationItems(IReadOnlyList<QueueOrganisation> Organisations, IReadOnlyList<QueueStatement> Statements)
+{
+    /// <summary>How many organisations wait in all; the list holds at most a hundred.</summary>
+    public int OrganisationsTotal { get; init; }
+
+    public int StatementsTotal { get; init; }
+}
 
 /// <summary>A blocked organisation on the moderators' list of hidden items; "Atkurti" lifts the block.</summary>
 public sealed record HiddenOrganisation(Guid Id, string Slug, string Name, DateTimeOffset? BlockedAt, string? BlockedBy, string? Statement);

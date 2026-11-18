@@ -162,7 +162,7 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
         }
 
         var (person, mandate, term) = context.Value;
-        return await VotesOfAsync(db, person, mandate, term.Id, Offset(cursor), Math.Clamp(limit, 1, 100), cancellationToken);
+        return await VotesOfAsync(db, person, mandate, term.Id, Offset(cursor), Math.Clamp(limit, 1, 300), cancellationToken);
     }
 
     public async Task<IReadOnlyList<BodySummary>> BodiesAsync(string kind, CancellationToken cancellationToken)

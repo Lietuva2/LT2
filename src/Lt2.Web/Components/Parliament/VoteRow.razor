@@ -2,7 +2,7 @@
 @inject Formats F
 
 @* One vote in a list: what it was about, bill, stage and date; the side column is the caller's. *@
-<li>
+<li id="@Id">
     <div class="rows__main">
         <a href="/seimas/balsavimai/@Vote.Id">@(Vote.Bill?.Title ?? Vote.Wording)</a>
         <span class="small num">@string.Join(" · ", Facts())</span>
@@ -17,6 +17,12 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
+    /// <summary>The row's id, where a link lands; none when not given.</summary>
+    [Parameter] public string? Id { get; set; }
+
+    /// <summary>False under a day's head, which says the date (an MP's votes by day).</summary>
+    [Parameter] public bool ShowDate { get; set; } = true;
+
     private IEnumerable<string> Facts()
     {
         if (Vote.Bill is { } bill)
@@ -30,6 +36,9 @@
             yield return F.Kind(Vote.Kind).ToLowerInvariant();
         }
 
-        yield return F.Date(Vote.HeldAt);
+        if (ShowDate)
+        {
+            yield return F.Date(Vote.HeldAt);
+        }
     }
 }

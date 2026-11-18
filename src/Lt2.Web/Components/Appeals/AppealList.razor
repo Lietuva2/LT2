@@ -1,5 +1,6 @@
 @page "/projektai"
 @using Lt2.Api.Contracts.Appeals
+@using Lt2.Web.Client.Appeals
 @inject IStringLocalizer<Lt2.Web.Components.PageText> P
 @inject IAppealsApi Appeals
 @inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
@@ -9,8 +10,8 @@
 @* The bills people can take part on (design 8.12.5, GET /appeals), server-rendered and readable without JavaScript: every
    active bill, by activity (participants plus published arguments) unless sorted by planned date or by the latest activity
    (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form; the order, the filter "Planuojami per 14 dienų" (a link that applies at
-   once, keeping the search), the closed tab and paging are plain links. Each row shows its participants and arguments, and
-   the sides' numbers beside its bar. *@
+   once, keeping the search), the closed tab and "Rodyti daugiau" are plain links. Each row shows its participants and
+   arguments, and the sides' numbers beside its bar. *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@T["List.Title"]" Description="@P["Preview.Projects"]" />
 
@@ -97,7 +98,7 @@
         else
         {
             <ul class="rows" id="appeals">
-                @foreach (var item in page.Items)
+                @foreach (var item in page.Items.Take(_shown))
                 {
                     <li id="bill-@item.Bill.Number" @key="item.Bill.Number">
                         <div class="rows__main">
@@ -143,10 +144,18 @@
                 {
                     @(" · ")<Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@T["Threshold.What"]" Answer="@(T["Threshold.Meaning"] + " " + T.Format("Threshold.NowList", Display.Number(threshold)))" More="/metodika#riba" />
                 }</p>
-            @if (page.NextCursor is { } next)
-            {
-                <p><a href="@Link(next, Sort, Planned)" id="more">@T["List.More"]</a></p>
-            }
+            @* Owner, 2026-11-18: the list grows in place by the address, landing on the first bill added (as 8.18). *@
+            <div class="row">
+                <p class="small num" role="status" id="shown">@F.T.Format("Ballots.Shown", Display.Number(_offset + Math.Min(_shown, page.Items.Count)), Display.Number(page.Total))</p>
+                @if (BillListPaging.More(_shown, _offset, page.Total) is { } more && page.Items.Count > _shown)
+                {
+                    <a class="btn btn--plain" href="@(Link(From, Sort, Planned, more) + "#bill-" + page.Items[_shown].Bill.Number)" id="more">@T["List.More"]</a>
+                }
+                @if (BillListPaging.Further(_shown, _offset, page.Total) is { } further)
+                {
+                    <a class="btn btn--plain" href="@Link(further.ToString(System.Globalization.CultureInfo.InvariantCulture), Sort, Planned)" id="further">@T["List.Further"]</a>
+                }
+            </div>
         }
     </div>
 }
@@ -165,6 +174,12 @@
     [SupplyParameterFromQuery(Name = "nuo")] public string? From { get; set; }
 
     [SupplyParameterFromQuery(Name = "rikiuoti")] public string? SortParameter { get; set; }
+
+    /// <summary>How many bills the page shows (owner, 2026-11-18: "Rodyti daugiau" grows the list in place).</summary>
+    [SupplyParameterFromQuery(Name = "rodyti")] public string? Show { get; set; }
+
+    private int _shown = BillListPaging.First;
+    private int _offset;
 
     /// <summary>
     /// The orders on the page (design 8.12.5; owner, 2026-11-17: activity, planned date and the latest activity), in Lithuanian
@@ -190,12 +205,14 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort])).Value;
+        _shown = BillListPaging.Shown(Show);
+        _offset = BillListPaging.Offset(From);
+        _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort], BillListPaging.Asked(_shown))).Value;
         _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
     }
 
-    /// <summary>The same search and tab, with the given page (none = the first), order and filter.</summary>
-    private string Link(string? next, string sort, bool planned)
+    /// <summary>The same search and tab, with the given page (none = the first), order, filter and length (none = the first 20).</summary>
+    private string Link(string? next, string sort, bool planned, int? shown = null)
     {
         var query = new List<string>();
         if (!Closed && sort != "aktyvumas")
@@ -221,6 +238,11 @@
         if (next is not null)
         {
             query.Add("nuo=" + Uri.EscapeDataString(next));
+        }
+
+        if (shown is { } n && n != BillListPaging.First)
+        {
+            query.Add("rodyti=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
         return query.Count == 0 ? "/projektai" : "/projektai?" + string.Join("&", query);

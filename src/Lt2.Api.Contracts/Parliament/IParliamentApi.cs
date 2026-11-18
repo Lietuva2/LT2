@@ -1,5 +1,17 @@
 namespace Lt2.Api.Contracts.Parliament;
 
+/// <summary><c>limit</c> of <c>GET /mps/{slug}/votes</c>: 50 by default, at most as many as the history of votes takes (design 8.18).</summary>
+public static class MpVoteLimits
+{
+    public const int Default = 50;
+
+    public const int Max = VoteListQuery.MaxLimit;
+
+    /// <summary>A whole number from 1 up, at most <see cref="Max"/>; <see cref="Default"/> for anything else.</summary>
+    public static int Of(string? limit) =>
+        int.TryParse(limit, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var n) && n >= 1 ? Math.Min(n, Max) : Default;
+}
+
 /// <summary>Design 7.4: the public parliament API (all GET, no account needed, cached with ETags).</summary>
 public interface IParliamentApi
 {
@@ -10,7 +22,8 @@ public interface IParliamentApi
 
     Task<ApiResult<MpProfileResponse>> GetMpAsync(string slug, CancellationToken cancellationToken = default);
 
-    Task<ApiResult<MpVotesResponse>> GetMpVotesAsync(string slug, string? cursor = null, CancellationToken cancellationToken = default);
+    /// <summary>The MP's votes, newest first: <paramref name="limit"/> of them (<see cref="MpVoteLimits"/>) from <paramref name="cursor"/> on.</summary>
+    Task<ApiResult<MpVotesResponse>> GetMpVotesAsync(string slug, string? cursor = null, int? limit = null, CancellationToken cancellationToken = default);
 
     Task<ApiResult<IReadOnlyList<BodyListItem>>> GetFactionsAsync(CancellationToken cancellationToken = default);
 

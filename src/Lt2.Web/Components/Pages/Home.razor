@@ -1,6 +1,9 @@
 @page "/"
 @using Lt2.Api.Contracts.Agenda
+@using Lt2.Web.Client.Agenda
 @using Lt2.Web.Client.Appeals
+@using Lt2.Web.Client.Parliament
+@using Lt2.Web.Components.Agenda
 @inject IStringLocalizer<PageText> T
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject IStringLocalizer<AppealUi> U
@@ -25,7 +28,7 @@
             <h1 id="home-title" class="home-h1-s">@T["Home.Welcome"]</h1>
             <Lt2.Web.Client.Components.NeedsScript />
         </div>
-        <MyAgendaPanel Bills="_panel" Numbers="_numbers" @rendermode="InteractiveWebAssembly" />
+        <MyAgendaPanel Numbers="_numbers" @rendermode="InteractiveWebAssembly" />
     </Authorized>
     <NotAuthorized>
         @* Owner, 2026-11-17: the headline is what the site does (the header already names it), and under it the trial note
@@ -92,14 +95,16 @@
 }
 
 @code {
-    /// <summary>At most eight coming planned items in all, kept in their days (design 8.11.1, 8.7).</summary>
-    private const int ComingShown = 8;
-
     private AgendaResponse? _agenda;
-    private List<AgendaDayResponse> _coming = [];
-    private List<IGrouping<DateOnly, AgendaVoteResponse>> _voted = [];
-    private List<MyAgendaBill> _panel = [];
-    private List<string> _numbers = [];
+
+    /// <summary>The next sitting days the page shows, each cut to its first rows (design 8.7, owner 2026-11-18).</summary>
+    private List<(DateOnly Day, AgendaDayView<AgendaItemResponse> View)> _coming = [];
+
+    /// <summary>The last voting days the page shows, each cut to its first rows.</summary>
+    private List<(DateOnly Day, AgendaDayView<AgendaVoteResponse> View)> _voted = [];
+
+    /// <summary>The bills of the rows shown, for the members' islands to ask about in one request (at most twenty).</summary>
+    private IReadOnlyList<string> _numbers = [];
 
     /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint under the timeline.</summary>
     private int? _threshold;
@@ -119,101 +124,62 @@
         var rules = (await Digests.GetRulesAsync()).Value;
         _threshold = rules?.ThresholdDefault;
         _sending = rules?.Sending ?? "off";
-        var left = ComingShown;
-        foreach (var day in _agenda.Days)
-        {
-            if (left <= 0)
-            {
-                break;
-            }
-
-            var items = day.Items.Take(left).ToList();
-            left -= items.Count;
-            _coming.Add(day with { Items = items });
-        }
-
-        _voted = _agenda.RecentVotes.GroupBy(v => Display.DayOf(v.HeldAt)).OrderByDescending(g => g.Key).ToList();
-
-        // The member's panel lists, of these public bills, those that are theirs; the islands learn which in the browser.
-        var lastVotes = _agenda.RecentVotes.GroupBy(v => v.Number, StringComparer.Ordinal)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(v => v.HeldAt).First(), StringComparer.Ordinal);
-        foreach (var (day, item) in _coming.SelectMany(d => d.Items.Select(i => (d.Date, i))))
-        {
-            if (item.Title is { } title && _panel.All(p => p.Number != item.Number))
-            {
-                _panel.Add(new MyAgendaBill(item.Number, title, F.DayMonth(day), LastVote(lastVotes.GetValueOrDefault(item.Number))));
-            }
-        }
-
-        foreach (var vote in _agenda.RecentVotes.OrderByDescending(v => v.HeldAt))
-        {
-            if (_panel.All(p => p.Number != vote.Number))
-            {
-                _panel.Add(new MyAgendaBill(vote.Number, vote.Title, null, LastVote(vote)));
-            }
-        }
-
-        _numbers = _panel.Select(p => p.Number).Take(Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers).ToList();
+        // Owner, 2026-11-18: the next two sitting days and the last two voting days, five rows of each in the agenda's order
+        // (AgendaRules); the rest of a day is one link away. A bill the open data does not know yet is counted in its day, not shown.
+        _coming = _agenda.Days.Take(AgendaRules.FrontDays)
+            .Select(d => (d.Date, AgendaRules.Day(d.Items, i => i.Title is not null, AgendaRules.FrontPerDay)))
+            .ToList();
+        _voted = _agenda.RecentVotes.GroupBy(v => Display.DayOf(v.HeldAt)).OrderByDescending(g => g.Key).Take(AgendaRules.FrontDays)
+            .Select(g => (g.Key, AgendaRules.Day(g.ToList(), _ => true, AgendaRules.FrontPerDay)))
+            .ToList();
+        _numbers = AgendaRules.Asked(_coming.SelectMany(d => d.View.Shown.Select(i => i.Number)).Concat(_voted.SelectMany(d => d.View.Shown.Select(v => v.Number))));
     }
-
-    /// <summary>"svarstymas, lapkričio 13 d.: už 69 · prieš 31 · susilaikė 18", or the consensus mark.</summary>
-    private string? LastVote(AgendaVoteResponse? vote) => vote is null
-        ? null
-        : F.Stage(vote.Stage).ToLowerInvariant() + ", " + F.DayMonth(Display.DayOf(vote.HeldAt)) + ": "
-            + (vote.IsConsensus ? F.T["Consensus.Tag"].Value : T.Format("Agenda.Result", Display.Number(vote.Totals.For), Display.Number(vote.Totals.Against), Display.Number(vote.Totals.Abstain)));
 
     private RenderFragment Timeline(bool member) => __builder =>
     {
-        foreach (var day in _coming)
+        foreach (var (day, view) in _coming)
         {
-            <section class="tl-day" aria-label="@($"{T["Agenda.Planned"]} {F.DayMonth(day.Date)}")" id="home-day-@Display.Day(day.Date)">
-                <div class="tl-date"><span class="label">@T["Agenda.Planned"]</span><b>@F.DayMonth(day.Date)</b><span class="small">@F.Weekday(day.Date)</span></div>
-                <ul class="tl-items">
-                    @foreach (var item in day.Items)
+            <section class="tl-day" aria-label="@($"{T["Agenda.Planned"]} {F.DayMonth(day)}")" id="home-day-@Display.Day(day)">
+                <TimelineDate Label="@T["Agenda.Planned"]" Day="day" Count="@AgendaWords.Bills(T, view.Count)" />
+                <div class="tl-rows">
+                    @if (view.Shown.Count > 0)
                     {
-                        <TimelineItem Item="item" Day="day.Date" Member="member" Numbers="_numbers" />
+                        <ul class="tl-items">
+                            @foreach (var item in view.Shown)
+                            {
+                                <TimelineItem Item="item" Day="day" Member="member" Numbers="_numbers" />
+                            }
+                        </ul>
                     }
-                </ul>
+                    @if (view.Count > view.Shown.Count)
+                    {
+                        <p class="tl-all"><a href="@Lt2.Web.Components.Agenda.AgendaPage.PlannedDayPath(day)" id="home-day-all-@Display.Day(day)">@AgendaWords.AllOfDay(T, view.Count)</a></p>
+                    }
+                </div>
             </section>
         }
 
-        foreach (var day in _voted)
+        foreach (var (day, view) in _voted)
         {
-            <section class="tl-day tl-past" aria-label="@($"{T["Agenda.Voted"]} {F.DayMonth(day.Key)}")" id="home-voted-@Display.Day(day.Key)">
-                <div class="tl-date"><span class="label">@T["Agenda.Voted"]</span><b>@F.DayMonth(day.Key)</b><span class="small">@F.Weekday(day.Key)</span></div>
-                <ul class="tl-items">
-                    @foreach (var v in day)
+            <section class="tl-day tl-past" aria-label="@($"{T["Agenda.Voted"]} {F.DayMonth(day)}")" id="home-voted-@Display.Day(day)">
+                <TimelineDate Label="@T["Agenda.Voted"]" Day="day" Count="@AgendaWords.Votes(T, view.Count)" />
+                <div class="tl-rows">
+                    <ul class="tl-items">
+                        @foreach (var v in view.Shown)
+                        {
+                            <VotedItem Vote="v" Member="member" Numbers="_numbers" />
+                        }
+                    </ul>
+                    @if (view.Rest.Count > 0)
                     {
-                        <li class="tl-item" id="recent-@v.VoteId">
-                            <VotedItemMain Number="@v.Number" Title="@v.Title" Stage="@v.Stage" IsConsensus="v.IsConsensus" Totals="v.Totals" OfficialNote="@v.OfficialNote">
-                                @if (member)
-                                {
-                                    <MyAgendaMark Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" @rendermode="InteractiveWebAssembly" />
-                                }
-                            </VotedItemMain>
-                            @if (member && v.Record is { Status: "open", Counts: { For: 0, Against: 0 } } nobodyYet)
-                            {
-                                @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's
-                                   agenda is up to a minute old); the votes' rows offer no sides (design 8.7). *@
-                                <MyAgendaSide Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" Record="nobodyYet" VoteId="v.VoteId" @rendermode="InteractiveWebAssembly" />
-                            }
-                            else
-                            {
-                                <div class="tl-item__side">
-                                    @if (v.Record is { Status: not "rejected" } record)
-                                    {
-                                        <RecordFigures Record="record" Id="@($"voted-{v.VoteId}")" />
-                                    }
-                                    <a class="btn btn--plain cta" href="/seimas/balsavimai/@v.VoteId">@U["Agenda.Action.Votes"]</a>
-                                </div>
-                            }
-                        </li>
+                        @* The rest of the day on the history of votes (design 8.18), from that day on. *@
+                        <p class="tl-all"><a href="@VoteHistory.Address(VoteHistory.Read(null, null, Display.Day(day), null), "diena-" + Display.Day(day))" id="home-voted-more-@Display.Day(day)">@AgendaWords.MoreVotes(T, view.Rest.Count)</a></p>
                     }
-                </ul>
+                </div>
             </section>
         }
 
         // Design 8.18: the long form of "Balsuota", under the last voted day, also when the last seven days had none.
-        <p class="tl-older" id="home-votes-older"><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path">@T["Agenda.Older"]</a></p>
+        <p class="tl-older" id="home-votes-older"><a href="@VoteHistory.Path">@T["Agenda.Older"]</a></p>
     };
 }

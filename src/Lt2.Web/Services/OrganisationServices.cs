@@ -62,7 +62,9 @@ internal static class OrganisationMapping
             o.Id, o.Slug, o.Name, o.Description, o.Website, o.LegalCode, o.DeclaredLobbyist, Map(o.Label), o.Status, o.Seen, o.Changed, o.Flags,
             o.Reports.Select(AppealMapping.Map).ToList(), o.History.Select(h => new ProfileChangeResponse(h.At, h.Field, h.OldValue, h.NewValue)).ToList(),
             o.ConfirmationNote, o.DomainBarred, o.RegisteredAt)).ToList(),
-        q.Statements.Select(Map).ToList());
+        q.Statements.Select(Map).ToList(),
+        q.OrganisationsTotal,
+        q.StatementsTotal);
 
     public static HiddenOrganisationsResponse Map(HiddenOrganisationItems h) => new(
         h.Organisations.Select(o => new HiddenOrganisationResponse(o.Id, o.Slug, o.Name, o.BlockedAt, o.BlockedBy, o.Statement)).ToList(),

@@ -921,6 +921,16 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* "Ankstesni balsavimai" under the last voted day (design 8.18): in the column of the rows, beside no date. */
 .tl-older { margin: 0; padding-inline-start: calc(9rem + var(--sp-5)); }
 
+/* A day's column (owner, 2026-11-18): its first rows, then "Rodyti visus" with the rest (the browser's own <details>, no
+   script), the bills the open data does not know yet folded into one line, and on the front page the link to the whole
+   day. Each under the rows, at the rows' left edge. */
+.tl-rows { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
+.tl-all { margin: 0; }
+.tl-more > summary, .tl-unknown > summary { padding-block: var(--sp-1); }
+.tl-more[open] > summary { margin-block-end: var(--sp-2); }
+.tl-unknown__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.tl-unknown__list > li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
+
 /* The organisations on a bill: names with their stance, never counted (design 8.7, "The row lines up"). The label on a
    line of its own, then one organisation per line: the stances one column, the names another, so every name starts at
    the same place; a long name wraps in its own column, with "Nepatvirtinta" after it. */
@@ -952,7 +962,14 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 54rem) {
   .home-head { grid-template-columns: 6.5rem minmax(0, 1fr); }
   .tl-day { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
-  .tl-date { position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
+  /* Owner, 2026-11-18: on a narrow screen a day's head is a band of its own above its rows, so forty rows of one day are
+     not read as the next day's. */
+  .tl-date {
+    position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-2);
+    padding: var(--sp-2) var(--sp-3); background: var(--sheet-2); border-inline-start: 4px solid var(--brand);
+  }
+  .tl-past .tl-date { border-inline-start-color: var(--ink-3); }
+  .tl-day + .tl-day { margin-block-start: var(--sp-4); }
   .tl-date b { font-size: var(--fs-4); }
   .tl-older { padding-inline-start: 0; }
   .tl-item { grid-template-columns: minmax(0, 1fr); }

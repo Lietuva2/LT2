@@ -1,0 +1,39 @@
+@using Lt2.Api.Contracts.Agenda
+@inject IStringLocalizer<PageText> T
+@inject Formats F
+
+@* The bills of one sitting day that the open data does not know yet (design 8.11.1; owner, 2026-11-18): last in their day,
+   folded into one line that opens without script, each with its number, the stage the agenda names and a link to the
+   agenda source. They have no title and no page here, so nobody takes part on them yet. *@
+<details class="more stack stack--tight tl-unknown" id="@Id">
+    <summary class="linkish small">@AgendaWords.Unknown(T, Items.Count)</summary>
+    <ul class="tl-unknown__list">
+        @foreach (var item in Items)
+        {
+            <li id="agenda-@Display.Day(Day)-@item.Number">
+                <span class="tag tag--ink num">@item.Number</span>
+                @if (item.Stage is { } stage)
+                {
+                    <span class="tag">@F.Stage(stage)</span>
+                }
+                @if (item.SetByModerator)
+                {
+                    <span class="tag">@T["Agenda.ByModerator"]</span>
+                }
+                @if (item.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
+                {
+                    <a class="small" href="@source" rel="external">@T["Agenda.ToSource"]</a>
+                }
+            </li>
+        }
+    </ul>
+</details>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<AgendaItemResponse> Items { get; set; } = [];
+
+    /// <summary>The sitting day, part of each row's id (a bill may be planned on more than one day).</summary>
+    [Parameter, EditorRequired] public DateOnly Day { get; set; }
+
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+}

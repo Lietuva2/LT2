@@ -57,7 +57,9 @@ internal static class AppealMapping
             a.Id, Map(a.Bill), a.Description, a.DescriptionSource, a.Threshold, a.Reports.Select(Map).ToList(), Map(a.Surge), Map(a.Planned),
             a.DateFlags.Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt, f.Date)).ToList(),
             a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl, a.Status)).ToList(),
-        q.Reasons.Select(Map).ToList());
+        q.Reasons.Select(Map).ToList(),
+        q.RecordsTotal,
+        q.ReasonsTotal);
 
     public static HiddenItemsResponse Map(HiddenItems h) => new(
         h.Records.Select(a => new HiddenRecordResponse(a.Id, Map(a.Bill), a.Description, a.HiddenAt, a.HiddenBy, a.Statement, a.RestoresAs)).ToList(),
@@ -105,8 +107,8 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, TakingSides sides
     public async Task<ApiResult<AppealRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default) =>
         ApiResult<AppealRulesResponse>.Ok(AppealMapping.Map(await appeals.RulesAsync(cancellationToken)));
 
-    public async Task<ApiResult<BillListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, CancellationToken cancellationToken = default) =>
-        ApiResult<BillListResponse>.Ok(AppealMapping.Map(await appeals.ListAsync(new BillListQuery(search, planned, closed, cursor, sort), cancellationToken)));
+    public async Task<ApiResult<BillListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, int? limit = null, CancellationToken cancellationToken = default) =>
+        ApiResult<BillListResponse>.Ok(AppealMapping.Map(await appeals.ListAsync(new BillListQuery(search, planned, closed, cursor, sort, BillListLimits.Of(limit?.ToString(System.Globalization.CultureInfo.InvariantCulture))), cancellationToken)));
 
     public async Task<ApiResult<BillRecordResponse>> GetRecordAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await appeals.GetAsync(number, cancellationToken), AppealMapping.Map);

@@ -103,8 +103,8 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
     public Task<ApiResult<AppealRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<AppealRulesResponse>(HttpMethod.Get, AppealRoutes.Rules, null, cancellationToken);
 
-    public Task<ApiResult<BillListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, CancellationToken cancellationToken = default) =>
-        http.SendAsync<BillListResponse>(HttpMethod.Get, AppealRoutes.AppealsList(search, planned, closed, cursor, sort), null, cancellationToken);
+    public Task<ApiResult<BillListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, int? limit = null, CancellationToken cancellationToken = default) =>
+        http.SendAsync<BillListResponse>(HttpMethod.Get, AppealRoutes.AppealsList(search, planned, closed, cursor, sort, limit), null, cancellationToken);
 
     public Task<ApiResult<BillRecordResponse>> GetRecordAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<BillRecordResponse>(HttpMethod.Get, AppealRoutes.RecordOf(number), null, cancellationToken);

@@ -1,0 +1,16 @@
+@inject IStringLocalizer<AppealUi> L
+
+@* A moderators' list shows at most a hundred items (owner, 2026-11-18): "Rodoma 100 iš 240" when there are more, so a cut
+   list is never read as the whole. Nothing when everything is shown. *@
+@if (Total > Shown)
+{
+    <p class="note note--quiet num" id="@Id">@L.Format("Mod.Shown", Display.Number(Shown), Display.Number(Total))</p>
+}
+
+@code {
+    [Parameter, EditorRequired] public int Shown { get; set; }
+
+    [Parameter, EditorRequired] public int Total { get; set; }
+
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+}

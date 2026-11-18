@@ -7,7 +7,8 @@
 @inject IStringLocalizer<AppealUi> U
 @inject Formats F
 
-@* One planned bill in the front page's timeline (design 8.7): number, stage and title; both sides with the counts for
+@* One planned bill in the front page's timeline (design 8.7) and the agenda page's (8.11.1, without "Prašau balsuoti":
+   Asks): number, stage and title; both sides with the counts for
    accounts older than 30 days, the bar and the threshold, or "Dar niekas nenurodė, ko prašo"; the organisations with a
    public statement on it as names with their stance (an unconfirmed one keeps "Nepatvirtinta"; the full label is on the
    bill's page and the profile), ordered as on the bill's page and never counted; and, on a bill whose record is open,
@@ -88,6 +89,11 @@
                 {
                     <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
                 }
+                else if (!Asks)
+                {
+                    @* The agenda page (design 8.11.1): the same for everyone, with no island, so the side is taken on the bill's page. *@
+                    <a class="small" href="@BillPath">@T[record.Counts.For + record.Counts.Against == 0 ? "Agenda.TakePart" : "Agenda.ToAppeal"]</a>
+                }
                 else
                 {
                     @* A visitor: the sides lead to signing in and back to the bill's page (design 6.9), where the side is taken. *@
@@ -117,6 +123,12 @@
 
     /// <summary>Every bill the page shows, for the members' islands to ask about in one request.</summary>
     [Parameter] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    /// <summary>
+    /// The front page's "Prašau balsuoti" in the row (design 8.7); false on the agenda page (8.11.1), whose rows link to the
+    /// bill's page instead and carry no island.
+    /// </summary>
+    [Parameter] public bool Asks { get; set; } = true;
 
     private string BillPath => "/seimas/" + Uri.EscapeDataString(Item.Number);
 

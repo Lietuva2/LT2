@@ -253,13 +253,16 @@ internal sealed class MpResponsesService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var reports = await db.Reports.AsNoTracking().Where(r => r.Status == "open" && r.TargetKind == Kind).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
         var reported = reports.Select(r => r.TargetId).Distinct().ToList();
-        var queued = (await db.MpResponses.AsNoTracking()
-                .Where(r => (r.Status == ResponseStatuses.Published || r.Status == ResponseStatuses.Withdrawn)
-                    && ((r.SeenAt == null && r.ScreeningFlags.Length > 0) || reported.Contains(r.Id)))
-                .OrderBy(r => r.EditedAt ?? r.PublishedAt)
-                .Take(QueueLimit)
-                .ToListAsync(cancellationToken));
-        var hidden = await db.MpResponses.AsNoTracking().Where(r => r.Status == ResponseStatuses.Hidden).OrderByDescending(r => r.HiddenAt).Take(QueueLimit).ToListAsync(cancellationToken);
+        var due = db.MpResponses.AsNoTracking()
+            .Where(r => (r.Status == ResponseStatuses.Published || r.Status == ResponseStatuses.Withdrawn)
+                && ((r.SeenAt == null && r.ScreeningFlags.Length > 0) || reported.Contains(r.Id)));
+        var queued = await due.OrderBy(r => r.EditedAt ?? r.PublishedAt).Take(QueueLimit).ToListAsync(cancellationToken);
+        var allHidden = db.MpResponses.AsNoTracking().Where(r => r.Status == ResponseStatuses.Hidden);
+        var hidden = await allHidden.OrderByDescending(r => r.HiddenAt).Take(QueueLimit).ToListAsync(cancellationToken);
+
+        // Owner, 2026-11-18: the lists still show the first hundred, and say so when there are more.
+        var queuedTotal = queued.Count < QueueLimit ? queued.Count : await due.CountAsync(cancellationToken);
+        var hiddenTotal = hidden.Count < QueueLimit ? hidden.Count : await allHidden.CountAsync(cancellationToken);
         var hiddenIds = hidden.Select(r => r.Id).ToList();
         var hides = (await db.ModerationActions.AsNoTracking().Where(m => m.TargetKind == Kind && hiddenIds.Contains(m.TargetId) && m.Action == "hide").ToListAsync(cancellationToken))
             .GroupBy(m => m.TargetId)
@@ -278,7 +281,11 @@ internal sealed class MpResponsesService(
                 return new HiddenResponse(
                     r.Id, Facts(r.BillNumber), r.SeimasPersonId, r.Stance, r.Text, r.HiddenAt, hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), r.HideStatement,
                     ResponseRules.MayRestore(r.Status, billsOf.GetValueOrDefault(r.BillNumber)?.Open == true));
-            }).ToList());
+            }).ToList())
+        {
+            QueueTotal = queuedTotal,
+            HiddenTotal = hiddenTotal,
+        };
     }
 
     public Task<Result<Unit>> KeepAsync(Guid responseId, string? note, StaffActor moderator, CancellationToken cancellationToken) =>

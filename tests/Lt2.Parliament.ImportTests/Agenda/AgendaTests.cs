@@ -46,6 +46,14 @@ public sealed class AgendaParserTests
     [InlineData("Informacija", null)]
     public void The_stage_is_read_from_the_row_in_any_form(string text, string? stage) => AgendaParser.StageOf(text).ShouldBe(stage);
 
+    [Theory]
+    [InlineData("XVP-2039 Seimo nutarimo projektas Pateikimas, svarstymas, priėmimas", "adoption")]
+    [InlineData("XVP-1405 Įstatymo projektas Svarstymas, priėmimas", "adoption")]
+    [InlineData("XVP-1406 Įstatymo projektas Pateikimas, svarstymas", "consideration")]
+    [InlineData("XVP-1407 Dėl priėmimo į pilietybę tvarkos Pateikimas", "adoption")]
+    public void A_combined_stage_is_its_furthest_and_the_first_stage_named_still_counts(string text, string stage) =>
+        AgendaParser.StageOf(text).ShouldBe(stage);
+
     [Fact]
     public void A_page_without_a_single_sitting_date_is_refused_as_a_changed_layout()
     {

@@ -21,6 +21,7 @@ else
         {
             <p class="small">@L["Mod.Empty"]</p>
         }
+        <QueueCut Shown="Queue.Organisations.Count" Total="Queue.OrganisationsTotal" Id="queue-organisations-cut" />
         @foreach (var org in Queue.Organisations)
         {
             <article class="sheet stack" id="queue-organisation-@org.Id" aria-labelledby="qo-@org.Id">
@@ -77,6 +78,7 @@ else
         {
             <p class="small">@L["Mod.Empty"]</p>
         }
+        <QueueCut Shown="Queue.Statements.Count" Total="Queue.StatementsTotal" Id="queue-statements-cut" />
         @foreach (var s in Queue.Statements)
         {
             <StatementQueueItem Item="s" />

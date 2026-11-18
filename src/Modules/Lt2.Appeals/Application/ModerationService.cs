@@ -51,23 +51,23 @@ internal sealed class ModerationService(
             .Where(a => RecordRules.UnderThresholdOnAgenda(counts[a.Id].Total, planned.ContainsKey(a.BillNumber), thresholds[a.Id].Reached))
             .Select(a => a.Id)
             .ToHashSet();
-        var listed = records
+        var due = records
             .Where(a => reportedIds.Contains(a.Id) || surges.ContainsKey(a.Id) || openFlags.Any(f => f.RecordId == a.Id)
                 || underThresholdOnAgenda.Contains(a.Id) || a.Sending == "held")
-            .OrderBy(a => a.ChangedAt)
-            .Take(QueueLimit)
             .ToList();
+        var listed = due.OrderBy(a => a.ChangedAt).Take(QueueLimit).ToList();
 
         // Arguments of open records that wait, are reported or not yet seen; of closed records only reported ones (6.9).
-        var reasons = await db.Reasons.AsNoTracking()
+        var dueReasons = db.Reasons.AsNoTracking()
             .Where(r => (db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Open)
                     && (r.Status == ReasonStatuses.Pending
                         || (r.Status == ReasonStatuses.Published && (r.SeenAt == null || reportedIds.Contains(r.Id)))))
                 || (db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Closed)
-                    && r.Status == ReasonStatuses.Published && reportedIds.Contains(r.Id)))
-            .OrderBy(r => r.CreatedAt)
-            .Take(QueueLimit)
-            .ToListAsync(cancellationToken);
+                    && r.Status == ReasonStatuses.Published && reportedIds.Contains(r.Id)));
+        var reasons = await dueReasons.OrderBy(r => r.CreatedAt).Take(QueueLimit).ToListAsync(cancellationToken);
+
+        // Owner, 2026-11-18: the queue still shows the first hundred of each, and says so when there are more.
+        var reasonsTotal = reasons.Count < QueueLimit ? reasons.Count : await dueReasons.CountAsync(cancellationToken);
         var billFacts = await reads.BillsAsync(listed.Select(a => a.BillNumber).Distinct().ToList(), cancellationToken);
         BillFacts Bill(string number) => billFacts.GetValueOrDefault(number) ?? new BillFacts(number, number);
         IReadOnlyList<QueueReport> ReportsOn(Guid id) => openReports.Where(r => r.TargetId == id).Select(r => new QueueReport(r.Id, r.Ground, r.Text, r.CreatedAt)).ToList();
@@ -88,7 +88,11 @@ internal sealed class ModerationService(
             a.Description.Length == 0 ? null : a.DescriptionUrl,
             a.Status)).ToList();
 
-        return new ModerationItems(queueRecords, await QueueReasonsAsync(db, reasons, openReports, cancellationToken));
+        return new ModerationItems(queueRecords, await QueueReasonsAsync(db, reasons, openReports, cancellationToken))
+        {
+            RecordsTotal = due.Count,
+            ReasonsTotal = reasonsTotal,
+        };
     }
 
     /// <summary>

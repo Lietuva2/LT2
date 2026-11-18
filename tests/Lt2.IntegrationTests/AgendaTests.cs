@@ -4,6 +4,9 @@ using System.Text.RegularExpressions;
 using Lt2.Api.Contracts.Agenda;
 using Lt2.Api.Contracts.Parliament;
 using Lt2.IntegrationTests.Infrastructure;
+using Lt2.Web.Services;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.IntegrationTests;
 
@@ -47,6 +50,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             third.Record.Threshold.Participants.ShouldBe(1);
 
             // The page, without JavaScript: planned dates in words, never a countdown, and the not-a-poll notice.
+            ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
             html.ShouldContain("<h1>Seimo darbotvarkė</h1>");
             html.ShouldContain("Planuojama ");
@@ -61,6 +65,103 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
         {
             await Database.UnplanAsync(AppealSteps.SecondBill);
             await Database.UnplanAsync(AppealSteps.ThirdBill);
+        }
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-18: the agenda has no order within a day, so a day's bills go by activity (participants plus published
+    /// arguments), then stage, then number, and the bills the open data does not know yet come last, folded into one line on
+    /// the page that opens without script; each day's head says how many it holds.
+    /// </summary>
+    [Fact]
+    public async Task Within_a_day_bills_go_by_activity_then_stage_and_bills_the_open_data_does_not_know_come_last_folded()
+    {
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "for");
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        const string Unknown = "XVP-9871";
+        var day = ReasonsToComeSteps.VilniusToday().AddDays(8);
+        await Database.PlanAsync(Unknown, day, "adoption");
+        await Database.PlanAsync(AppealSteps.SecondBill, day, "adoption");
+        await Database.PlanAsync(AppealSteps.ThirdBill, day, "presentation");
+        try
+        {
+            using var visitor = NewBrowser();
+            var agenda = await visitor.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda);
+            var numbers = agenda.Days.Single(d => d.Date == day).Items.Select(i => i.Number).ToList();
+            numbers.IndexOf(AppealSteps.ThirdBill).ShouldBeLessThan(numbers.IndexOf(AppealSteps.SecondBill), "one participant before none, whatever the stage");
+            numbers.IndexOf(AppealSteps.SecondBill).ShouldBeLessThan(numbers.IndexOf(Unknown), "a bill the open data does not know comes last");
+
+            ForgetAgenda();
+            var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
+            var id = $"diena-{day:yyyy-MM-dd}";
+            var block = html[html.IndexOf($"id=\"{id}\"", StringComparison.Ordinal)..];
+            block = block[..block.IndexOf("</section>", StringComparison.Ordinal)];
+            block.ShouldContain("projektai</span>", customMessage: "the day's head counts its bills");
+            block.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.ThirdBill}\"", StringComparison.Ordinal)
+                .ShouldBeLessThan(block.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.SecondBill}\"", StringComparison.Ordinal));
+            var folded = block[block.IndexOf($"id=\"{id}-nezinomi\"", StringComparison.Ordinal)..];
+            folded.ShouldContain("<summary class=\"linkish small\">Dar 1 projektas, kurio atviruosiuose Seimo duomenyse dar nėra</summary>");
+            folded.ShouldContain($"id=\"agenda-{day:yyyy-MM-dd}-{Unknown}\"");
+            block.IndexOf($"id=\"{id}-nezinomi\"", StringComparison.Ordinal).ShouldBeGreaterThan(block.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.SecondBill}\"", StringComparison.Ordinal));
+            html.ShouldNotContain("Prašau balsuoti", customMessage: "the agenda page's rows link to the bill; no island");
+        }
+        finally
+        {
+            await Database.UnplanAsync(Unknown);
+            await Database.UnplanAsync(AppealSteps.SecondBill);
+            await Database.UnplanAsync(AppealSteps.ThirdBill);
+            ForgetAgenda();
+        }
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-18: the front page shows the next two sitting days, five rows of each, and links a longer day to its
+    /// block on the agenda page; the bills the open data does not know yet are counted, not listed.
+    /// </summary>
+    [Fact]
+    public async Task The_front_page_shows_five_rows_of_a_day_and_links_the_whole_day_on_the_agenda()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var today = ReasonsToComeSteps.VilniusToday();
+        var unknown = Enumerable.Range(1, 5).Select(i => $"XVP-98{i:00}").ToList();
+        await Database.PlanAsync(AppealSteps.SecondBill, today);
+        foreach (var number in unknown)
+        {
+            await Database.PlanAsync(number, today);
+        }
+
+        try
+        {
+            ForgetAgenda();
+            using var visitor = NewBrowser();
+            var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/"));
+            var block = html[html.IndexOf($"id=\"home-day-{today:yyyy-MM-dd}\"", StringComparison.Ordinal)..];
+            block = block[..block.IndexOf("</section>", StringComparison.Ordinal)];
+            block.ShouldContain($"id=\"agenda-{today:yyyy-MM-dd}-{AppealSteps.SecondBill}\"");
+            Regex.Count(block, "<li class=\"tl-item\"").ShouldBeLessThanOrEqualTo(5);
+            foreach (var number in unknown)
+            {
+                block.ShouldNotContain(number, customMessage: "counted in the day, not listed on the front page");
+            }
+
+            block.ShouldMatch($"<a href=\"/darbotvarke#diena-{today:yyyy-MM-dd}\" id=\"home-day-all-{today:yyyy-MM-dd}\">Visi \\d+ projekt(ai|ų|as) →</a>");
+            Regex.Count(html, "<section class=\"tl-day\"").ShouldBeLessThanOrEqualTo(2, "the next two sitting days");
+
+            var agenda = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
+            agenda.ShouldContain($"id=\"diena-{today:yyyy-MM-dd}\"", customMessage: "where the link lands");
+        }
+        finally
+        {
+            await Database.UnplanAsync(AppealSteps.SecondBill);
+            foreach (var number in unknown)
+            {
+                await Database.UnplanAsync(number);
+            }
+
+            ForgetAgenda();
         }
     }
 
@@ -84,6 +185,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             var item = agenda.Days.Single(d => d.Date == today.AddDays(4)).Items.Single(i => i.Number == AppealSteps.SecondBill);
             item.Stage.ShouldBe("adoption");
 
+            ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
             html.ShouldContain($"id=\"agenda-{today.AddDays(4):yyyy-MM-dd}-{AppealSteps.SecondBill}\"");
         }
@@ -107,6 +209,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             vote.Totals.For.ShouldBe(74);
             agenda.RecentVotes.ShouldAllBe(v => v.HeldAt >= DateTimeOffset.UtcNow.AddDays(-7));
 
+            ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
             html.ShouldContain("id=\"recent-" + ReasonsToComeSteps.TaxConsiderationVote + "\"");
             html.ShouldContain("href=\"/seimas/balsavimai/" + ReasonsToComeSteps.TaxConsiderationVote + "\"");
@@ -188,6 +291,9 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
         nav.IndexOf("id=\"nav-projects\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/darbotvarke\"", StringComparison.Ordinal));
         nav.IndexOf("href=\"/darbotvarke\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/seimo-nariai\"", StringComparison.Ordinal));
     }
+
+    /// <summary>The agenda page reads the front page's copy, kept a minute (owner, 2026-11-18): read afresh.</summary>
+    private void ForgetAgenda() => Factory.Services.GetRequiredService<IMemoryCache>().Remove(FrontPageAgenda.CacheKey);
 
     [GeneratedRegex(@"(?i)\b(liko|po)\s+\d+\s*(d\.|dien|val)")]
     private static partial Regex Countdown();
