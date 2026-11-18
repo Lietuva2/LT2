@@ -76,10 +76,12 @@ docker compose -f deploy/compose.yaml up --build      # full stack: https://lt2.
 If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose command. End-to-end tests run only with
 `LT2_E2E_BASE_URL` set (`tools/run_tests.py e2e` sets it; `README.md` lists the variables).
 
-**The end-to-end suite runs only before a merge into master (owner, 2026-11-16)**: once on the branch about to be merged
-(or on all parallel branches together at the end), never while building or to check one's own step. During work: build,
-unit, architecture and integration tests, and a look at the changed page (screenshot or Browser pane). One E2E class may
-be rerun alone to check the fix of a failure the pre-merge run found.
+**The end-to-end suite is not a merge gate (owner, 2026-11-18).** A change is checked by build, unit, architecture and
+integration tests and a live look at the changed page on a running stack (Browser pane or screenshot), before merging
+too. Run only the E2E classes that cover what changed, and only when it touches sign-in, codes, passkeys or sessions; how
+an island starts (what a page does before WebAssembly is ready); or email flows through Mailpit. The full suite runs
+before launch, or when the owner asks. An E2E test that keeps failing without finding a product fault (pixel layout
+measurements, timing) is deleted, not patched again.
 
 ## Code rules
 
