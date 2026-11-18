@@ -24,7 +24,9 @@ namespace Lt2.Migrator;
 /// <item>optional commands: <c>--seed-invitation CODE[:USES]</c>, <c>--grant-role ROLE EMAIL</c> (prints the one-time
 /// activation code on the console, never to a log sink), <c>--reset-parliament</c> (empties the parliament schema,
 /// refusing unless every import so far came from the Seimas stand-in), <c>--local-code-limits</c> (local stack only: the code limits per address raised to the settings' highest values, refusing unless <c>Demo:Allowed</c> is set), <c>--official-addresses-without-invitation</c> (a stack whose MPs are invented, refusing unless <c>Demo:Allowed</c> is set: design 8.5.1's setting switched on), <c>--demo-appeal</c> (local demonstration data:
-/// invented participants on XVP-0412, refusing unless <c>Demo:Allowed</c> is set and the parliament data is invented).</item>
+/// invented participants on XVP-0412 and the invented closed bills, refusing unless <c>Demo:Allowed</c> is set and the
+/// parliament data is invented), <c>--demo-sides-for ADDRESS|-</c> (one existing account's random sides on the invented
+/// closed bills, under the same refusals and only with that account's positions consent; the address is never logged).</item>
 /// </list>
 /// </summary>
 public static class MigrationRunner
@@ -161,8 +163,15 @@ public static class MigrationRunner
                 case "--demo-appeal":
                     var demo = await DemoAppeal.RunAsync(configuration, connectionString, TimeProvider.System, cancellationToken);
                     Log.Information(
-                        "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}; invented accounts that accepted the terms of use now: {Terms}; closed demonstration bill {ClosedBill}: {Closed}",
-                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations, demo.TermsAccepted, DemoAppeal.ClosedBill, demo.ClosedBill);
+                        "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}; invented accounts that accepted the terms of use now: {Terms}; closed demonstration bill {ClosedBill}: {Closed}; invented closed bills: {ClosedBills}",
+                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations, demo.TermsAccepted, DemoAppeal.ClosedBill, demo.ClosedBill, demo.ClosedBills);
+                    break;
+                case "--demo-sides-for" when i + 1 < args.Count:
+                    // The address is never logged: only what was given (design 8.26.5).
+                    var sides = await DemoSides.RunAsync(configuration, connectionString, args[++i], TimeProvider.System, cancellationToken);
+                    Log.Information(
+                        "Demonstration sides for the named account: {For} for, {Against} against, given now on the invented closed bills",
+                        sides.For, sides.Against);
                     break;
                 case "--local-code-limits":
                     var raised = await LocalCodeLimits.RunAsync(configuration, connectionString, cancellationToken);
@@ -173,7 +182,10 @@ public static class MigrationRunner
                     Log.Information("Registration with an MP's official address without an invitation: on ({Changed} settings changed)", switched);
                     break;
                 default:
-                    throw new ArgumentException($"Unknown or incomplete argument '{args[i]}'.", nameof(args));
+                    // An address passed by mistake is not echoed (design 6.8: no addresses in logs).
+                    throw new ArgumentException(
+                        args[i].Contains('@', StringComparison.Ordinal) ? "Unknown argument (an address; not shown)." : $"Unknown or incomplete argument '{args[i]}'.",
+                        nameof(args));
             }
         }
     }

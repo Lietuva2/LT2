@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. Written by tools/demo_closed_bills.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001203">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012031">
+      <Balsavimas balsavimo_id="99100220" balsavimo_laikas="2026-04-23 10:58:05" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012032">
+      <Balsavimas balsavimo_id="99100210" balsavimo_laikas="2026-04-23 11:35:41" aprašas="Priimti Socialinių paslaugų įstatymo pataisą" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>

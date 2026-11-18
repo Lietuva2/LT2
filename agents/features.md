@@ -439,6 +439,12 @@ version, served as it is while one background refresh runs once it is an hour ol
 12 idle hours, sign-out, account deletion or consent withdrawal (`Forget`). Every rule is
 `AnalyticsRules` (SharedKernel); one sample of 20 (`AnalyticsRules.SmallSample`, not a setting) below which no share is
 shown, only counts and "maža imtis"; the Seimas's majority is that of those who voted, a consensus counting as "for".
+Demonstration data (design 8.26.5, owner 2026-11-18; only where `Demo:Allowed`, never in tests): thirty invented closed
+bills XVP-0701..0731 besides XVP-0707, their votes in the stand-in overlay (`tools/demo_closed_bills.py`), their positions
+from `--demo-appeal`'s own invented accounts (`DemoClosedBills`, `InventedMembers.SinceAsync`: the fixed identifiers, on
+`pavyzdys.test`, with the consent); `--demo-sides-for ADDRESS|-` (`DemoSides`) gives one named account with the consent
+random sides on them and adds them to the frozen counts (`InventedRecord.GiveClosedSidesAsync`), the address never logged.
+Integration: `DemoAppealTests`, `DemoSidesTests`.
 **Organisations (design 8.14, stage A of 8.14.14; built 2026-11-14).**
 - A voice on a bill, not control. A signed-in member registers an organisation (`/organizacijos/nauja`; at most
   `Organisations:PerAccount`, 3, not counting closed ones), shown at once with nobody approving it, and is its first

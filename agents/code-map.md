@@ -76,10 +76,12 @@ src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
                            the first staff role, empties invented parliament data, switches on registration with an MP's
                            official address without an invitation (--official-addresses-without-invitation; only where
-                           Demo:Allowed, the local stack and the trial) and (local stack only) fills the
+                           Demo:Allowed, the local stack and the trial) and (only where Demo:Allowed) fills the
                            demonstration record on XVP-0412, three invented organisations with statements on it, and an
-                           invented AI summary on XVP-0533 and a closed invented bill XVP-0707 with invented positions
-                           (design 8.26.5) (--demo-appeal);
+                           invented AI summary on XVP-0533, a closed invented bill XVP-0707 and thirty more
+                           (DemoClosedBills.cs) with invented positions (design 8.26.5) (--demo-appeal); gives one named
+                           existing account with the positions consent random sides on those closed bills, the address
+                           never logged (--demo-sides-for ADDRESS|-, DemoSides.cs);
                            run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
@@ -101,8 +103,10 @@ tools/split_design.py       splits a pre-split copy of the old design/system-des
                             branch made before 2026-11-17)
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
                            invented answers; never shipped. Recent/ (container only, never in tests) adds a sitting and
-                           a stage vote dated two days before today, so the local agenda has recent votes, and an adoption
-                           vote nine days before today on XVP-0707, for the analytics page
+                           a stage vote dated two days before today, so the local agenda has recent votes, an adoption
+                           vote nine days before today on XVP-0707, and the adoption votes of thirty invented bills
+                           (2026-03-24 to 2026-11-12, all listed under the open autumn session), for the analytics page
+tools/demo_closed_bills.py  writes those thirty bills' overlay files (fixed seed; --check compares)
 ```
 
 ## Shared conventions
