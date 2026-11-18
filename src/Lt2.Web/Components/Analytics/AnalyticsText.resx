@@ -54,7 +54,7 @@
   <data name="Row.Seimas" xml:space="preserve"><value>Seime už – {0}</value></data>
   <data name="Row.Consensus" xml:space="preserve"><value>Seime pritarta bendru sutarimu</value></data>
   <data name="Row.NoResult" xml:space="preserve"><value>Seimo balsavimo rezultato nėra</value></data>
-  <data name="Row.Members" xml:space="preserve"><value>Naudotojų pozicijų „už“ – {0} (pozicijų: {1})</value></data>
+  <data name="Row.Members" xml:space="preserve"><value>Naudotojų pozicijų „už“ – {0} (pozicijų: {1})</value></data>
   <data name="Row.MembersCounts" xml:space="preserve"><value>Naudotojų pozicijos: {0} už, {1} prieš</value></data>
   <data name="Row.Difference" xml:space="preserve"><value>Skirtumas – {0}</value></data>
   <data name="Row.Majority" xml:space="preserve"><value>Balsavusiųjų dauguma Seime: {0}</value></data>

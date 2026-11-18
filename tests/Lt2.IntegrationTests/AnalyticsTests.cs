@@ -211,7 +211,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
 
             var listRow = ListRow(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")), Bill);
             listRow.ShouldContain("class=\"cmp__members\"");
-            listRow.ShouldContain("Naudotojų pozicijų „už“ – 80\u00a0% (pozicijų: 25)", customMessage: "the exact numbers are written, not only on hover");
+            listRow.ShouldContain("Naudotojų pozicijų „už“ – 80\u00a0% (pozicijų:\u00a025)", customMessage: "the exact numbers are written, not only on hover");
             listRow.ShouldContain($"id=\"difference-{Bill}\"");
         }
         finally
