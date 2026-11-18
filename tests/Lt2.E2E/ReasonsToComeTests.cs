@@ -54,9 +54,9 @@ public sealed partial class ReasonsToComeTests : E2ETest
 
         // The stand-in's sitting days hold about forty bills each: ten show, "Rodyti visus" opens the rest in place.
         await page.GotoAsync(Base + "/darbotvarke");
-        var more = page.Locator("#agenda-coming details.tl-more").First;
-        await Assertions.Expect(more).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
-        var day = page.Locator("#agenda-coming section.tl-day").Filter(new() { Has = more });
+        var day = page.Locator("#agenda-coming section.tl-day:has(details.tl-more)").First;
+        await Assertions.Expect(day).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
+        var more = day.Locator("details.tl-more");
         var visible = day.Locator("li.tl-item:visible");
         (await visible.CountAsync()).ShouldBe(10, "ten rows of a long day");
         await more.Locator("summary").ClickAsync();

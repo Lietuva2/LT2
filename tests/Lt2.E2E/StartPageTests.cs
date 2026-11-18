@@ -185,7 +185,11 @@ public sealed partial class StartPageTests : E2ETest
             var live = await LiveForAsync(page, number);
             await page.ReloadAsync();
             await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
-            await Assertions.Expect(page.Locator($"#home-counts-{place}")).ToContainTextAsync(live.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            // The number as the page writes it, with its thousands separator (the demonstration bill, first by activity since
+            // 2026-11-18, has thousands): compared without the spaces.
+            await Assertions.Expect(page.Locator($"#home-counts-{place}")).ToBeVisibleAsync();
+            Regex.Replace(await page.Locator($"#home-counts-{place}").InnerTextAsync(), @"[\s\u00A0\u202F]", "")
+                .ShouldStartWith("už" + live.ToString(System.Globalization.CultureInfo.InvariantCulture) + "(", Case.Sensitive);
             (await ServerCountAsync(page, place, number)).ShouldBe(live, "the server's page after a side, without waiting for the minute");
 
             // The other button changes it, with one press: no consent again.
