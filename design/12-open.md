@@ -42,7 +42,9 @@ may still exist: the live contract run once the service reopens is the place to 
 The words are proposals for a native read. Not shown either way: "Jūsų projektai" and the followers' "voted" email say
 the numbers only; an MP's votes show the MP's choice; the bill's stages say "už : prieš".
 
-**Found while rewording the positions consent (6.5, 12-decisions 2026-11-18), awaiting the owner**
+**Found while rewording the positions consent (6.5, 12-decisions 2026-11-18). The owner (2026-11-18): left until the
+launch, then built before it — it matters from the first change of the consent text after the launch (withdrawal must
+stay as easy as giving), not on the trial. Recommended: the first option below.**
 
 A consent given to an older text of the positions consent (2026-11-13) is not the consent in force (`CurrentPositionConsent`).
 The design says the text is versioned but not what a person on an older text has meanwhile. As built: their sides and marks
