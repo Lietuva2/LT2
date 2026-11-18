@@ -192,4 +192,41 @@ public static class InventedMembers
         insert.Parameters.AddWithValue("given", NpgsqlDbType.Array | NpgsqlDbType.TimestampTz, members.Select(m => m.MemberSince).ToArray());
         return await insert.ExecuteNonQueryAsync(cancellationToken);
     }
+
+    /// <summary>
+    /// Design 6.5: gives the positions consent text in force (<see cref="PositionConsent.TextVersion"/>) to those of
+    /// <paramref name="members"/> that hold the consent only to an older text, not withdrawn, dated like their other consents,
+    /// so demonstration accounts made before a new wording keep counting as consenting (their sides stay in the invented closed
+    /// bills, <see cref="SinceAsync"/>). As a person giving it again does, the older row stays; an account that withdrew its
+    /// consent, or never gave it, is left as it is. Repeatable: running it again gives nothing twice. Returns how many gave it now.
+    /// </summary>
+    public static async Task<int> GivePositionConsentAsync(string connectionString, IReadOnlyList<InventedMember> members, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(members);
+        if (members.Any(m => !m.Email.EndsWith("@" + Domain, StringComparison.Ordinal)))
+        {
+            throw new ArgumentException($"Invented members must have addresses on {Domain}.", nameof(members));
+        }
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var insert = new NpgsqlCommand(
+            """
+            INSERT INTO identity.consent (id, user_id, kind, text_version, given_at)
+            SELECT x.id, x.user_id, @kind, @version, x.given_at
+            FROM unnest(@ids, @users, @given) AS x(id, user_id, given_at)
+            WHERE EXISTS (SELECT 1 FROM identity.profile p WHERE p.user_id = x.user_id AND p.registered_at IS NOT NULL)
+              AND EXISTS (SELECT 1 FROM identity.consent c
+                          WHERE c.user_id = x.user_id AND c.kind = @kind AND c.text_version < @version AND c.withdrawn_at IS NULL)
+              AND NOT EXISTS (SELECT 1 FROM identity.consent c
+                              WHERE c.user_id = x.user_id AND c.kind = @kind AND c.text_version >= @version AND c.withdrawn_at IS NULL)
+            """,
+            connection);
+        insert.Parameters.AddWithValue("kind", PositionConsent.Kind);
+        insert.Parameters.AddWithValue("version", PositionConsent.TextVersion);
+        insert.Parameters.AddWithValue("ids", members.Select(m => Guid.CreateVersion7(m.MemberSince)).ToArray());
+        insert.Parameters.AddWithValue("users", members.Select(m => m.Id).ToArray());
+        insert.Parameters.AddWithValue("given", NpgsqlDbType.Array | NpgsqlDbType.TimestampTz, members.Select(m => m.MemberSince).ToArray());
+        return await insert.ExecuteNonQueryAsync(cancellationToken);
+    }
 }

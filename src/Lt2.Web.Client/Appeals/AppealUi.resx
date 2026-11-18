@@ -16,10 +16,10 @@
 <data name="Side.Yours.against" xml:space="preserve"><value>Jūs prašote balsuoti prieš. Tai matote tik jūs.</value></data>
 <data name="Side.MpAccount" xml:space="preserve"><value>Seimo nario paskyra pozicijos neužima.</value></data>
   <data name="Side.MpAccount.Respond" xml:space="preserve"><value>Seimo nario atsakymas</value></data>
-<data name="Consent.Title" xml:space="preserve"><value>Prieš išsaugant jūsų poziciją</value></data>
-<data name="Consent.Text" xml:space="preserve"><value>Tai, ar prašote balsuoti už, ar prieš, yra jūsų politinė nuomonė – ypatingai saugomi asmens duomenys. Ją išsaugosime tik gavę jūsų aiškų sutikimą. Jūsų pozicijos niekam nerodome: viešai skelbiami tik bendri skaičiai. Sutikimą galite bet kada atšaukti savo paskyroje – tada visos jūsų pozicijos bus ištrintos.</value></data>
-<data name="Consent.PrivacyLink" xml:space="preserve"><value>Kaip saugome pozicijas – privatumo pranešime</value></data>
-<data name="Consent.Check" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano pozicijas dėl įstatymų projektų taip, kaip aprašyta.</value></data>
+<data name="Consent.Title" xml:space="preserve"><value>Prieš išsaugant jūsų pasirinkimą</value></data>
+<data name="Consent.Text" xml:space="preserve"><value>Tai, ar prašote balsuoti už, ar prieš, ir kuriuos argumentus pažymite „Man svarbu“, yra jūsų politinė nuomonė – ypatingai saugomi asmens duomenys. Šiuos duomenis išsaugosime tik gavę jūsų aiškų sutikimą. Jūsų pozicijos ir žymų niekam nerodome: viešai skelbiami tik bendri skaičiai. Sutikimą galite bet kada atšaukti savo paskyroje – tada visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos.</value></data>
+<data name="Consent.PrivacyLink" xml:space="preserve"><value>Kaip saugome pozicijas ir žymas – privatumo pranešime</value></data>
+<data name="Consent.Check" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano pozicijas dėl įstatymų projektų ir „Man svarbu“ žymas taip, kaip aprašyta.</value></data>
 <data name="Consent.Submit.for" xml:space="preserve"><value>Sutinku ir prašau balsuoti už</value></data>
 <data name="Consent.Submit.against" xml:space="preserve"><value>Sutinku ir prašau balsuoti prieš</value></data>
 <data name="Reasons.Title" xml:space="preserve"><value>Kodėl</value></data>

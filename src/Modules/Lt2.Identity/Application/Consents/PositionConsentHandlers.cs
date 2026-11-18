@@ -10,8 +10,9 @@ using Npgsql;
 namespace Lt2.Identity.Application.Consents;
 
 /// <summary>
-/// The explicit consent before a first position (design 6.5): given against a versioned text and stored; withdrawing it
-/// deletes the person's positions in the same transaction (through <see cref="IPositionErasure"/>, owned by Appeals).
+/// The explicit consent before a first position or a first "Man svarbu" (design 6.5): given against a versioned text and
+/// stored; withdrawing it (every version given) deletes the person's positions and marks in the same transaction (through
+/// <see cref="IPositionErasure"/>, owned by Appeals).
 /// </summary>
 internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure erasure, TimeProvider clock)
 {

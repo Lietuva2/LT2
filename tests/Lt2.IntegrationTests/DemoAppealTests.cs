@@ -1,4 +1,5 @@
 using Lt2.Api.Contracts.Appeals;
+using Lt2.Identity;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Migrator;
 using Lt2.SharedKernel;
@@ -78,6 +79,41 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
                 record.Reasons.ShouldAllBe(r => sideOf[r.AuthorUserId] == r.Side && r.EndorsedBy.All(u => sideOf[u] == r.Side && u != r.AuthorUserId));
                 DemoClosedBills.Build(bill, votedAt, seimasFor, pool).Positions.ShouldBe(record.Positions, "the same pool gives the same sides");
             }
+        }
+    }
+
+    /// <summary>
+    /// Design 6.5 (owner, 2026-11-18: the positions consent's text covers "Man svarbu" too, a new version): invented accounts
+    /// made before it give the text in force when the command runs again, so the demonstration's sides and marks rest on the
+    /// consent in force and the closed bills still find them; one that withdrew the consent stays without it.
+    /// </summary>
+    [Fact]
+    public async Task Invented_members_on_an_older_positions_consent_give_the_text_in_force_once()
+    {
+        var since = DateTimeOffset.UtcNow.AddDays(-90);
+        var members = Enumerable.Range(0, 3).Select(_ => new InventedMember(Guid.NewGuid(), $"sutikimas.{Guid.NewGuid():N}@pavyzdys.test", null, since)).ToList();
+        var ids = members.Select(m => m.Id).ToArray();
+        try
+        {
+            (await InventedMembers.CreateAsync(Database.MigratorConnectionString, members, CancellationToken.None)).ShouldBe(3);
+            (await InventedMembers.SinceAsync(Database.MigratorConnectionString, ids, CancellationToken.None)).Count.ShouldBe(3, "made with the text in force");
+            (await InventedMembers.GivePositionConsentAsync(Database.MigratorConnectionString, members, CancellationToken.None)).ShouldBe(0, "nothing to give");
+
+            // An older local database: every consent on the earlier wording, and one of them withdrawn.
+            await Database.ExecuteAsync("UPDATE identity.consent SET text_version = '2026-11-13' WHERE kind = 'positions' AND user_id = ANY(@u)", ("u", ids));
+            await Database.ExecuteAsync("UPDATE identity.consent SET withdrawn_at = now() WHERE kind = 'positions' AND user_id = @u", ("u", ids[2]));
+            (await InventedMembers.SinceAsync(Database.MigratorConnectionString, ids, CancellationToken.None)).ShouldBeEmpty("an older text is not the consent in force");
+
+            (await InventedMembers.GivePositionConsentAsync(Database.MigratorConnectionString, members, CancellationToken.None)).ShouldBe(2);
+            (await InventedMembers.GivePositionConsentAsync(Database.MigratorConnectionString, members, CancellationToken.None)).ShouldBe(0, "repeatable");
+            (await InventedMembers.SinceAsync(Database.MigratorConnectionString, ids, CancellationToken.None)).Keys.ShouldBe([ids[0], ids[1]], ignoreOrder: true);
+            (await Database.ScalarAsync<long>(
+                "SELECT count(*) FROM identity.consent WHERE kind = 'positions' AND text_version = @v AND withdrawn_at IS NULL AND user_id = ANY(@u)",
+                ("v", PositionConsent.TextVersion), ("u", ids))).ShouldBe(2);
+        }
+        finally
+        {
+            await Database.ExecuteAsync("DELETE FROM identity.\"user\" WHERE id = ANY(@u)", ("u", ids));
         }
     }
 

@@ -140,7 +140,7 @@ public sealed partial class StartPageTests : E2ETest
             await forButton.ClickAsync();
             var consent = page.Locator($"#home-consent-{place}");
             await Assertions.Expect(consent).ToBeVisibleAsync();
-            await Assertions.Expect(consent).ToContainTextAsync("Prieš išsaugant jūsų poziciją");
+            await Assertions.Expect(consent).ToContainTextAsync("Prieš išsaugant jūsų pasirinkimą");
             (await MySideAsync(page, number)).ShouldBeNull("nothing saved before the consent");
             var consentBox = await consent.BoundingBoxAsync();
             var rowBox = await row.BoundingBoxAsync();
@@ -233,7 +233,7 @@ public sealed partial class StartPageTests : E2ETest
         var place = (await first.GetAttributeAsync("id"))!["agenda-".Length..];
         var other = page.Locator(AskRows).Nth(1);
         var otherPlace = (await other.GetAttributeAsync("id"))!["agenda-".Length..];
-        (await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-13" })).Status.ShouldBeOneOf(204, 200);
+        (await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-18" })).Status.ShouldBeOneOf(204, 200);
         (await E2ESteps.ApiAsync(page, "PUT", $"/api/v1/bills/{number}/record/position", new { side = "for" })).Status.ShouldBe(204);
         try
         {
@@ -336,7 +336,7 @@ public sealed partial class StartPageTests : E2ETest
         var row = first.Page.Locator(AskRows).First;
         await Assertions.Expect(row).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         var number = (await row.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
-        (await E2ESteps.ApiAsync(first.Page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-13" })).Status.ShouldBeOneOf(204, 200);
+        (await E2ESteps.ApiAsync(first.Page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-18" })).Status.ShouldBeOneOf(204, 200);
         (await E2ESteps.ApiAsync(first.Page, "PUT", $"/api/v1/bills/{number}/record/position", new { side = "for" })).Status.ShouldBe(204);
         try
         {

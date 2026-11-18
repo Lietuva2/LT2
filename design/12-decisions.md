@@ -516,7 +516,21 @@ Each is built as written; "no" names what changes.
 - Pressing the side one has takes it back; "Atsiimti" for sides is removed from the bill's page and the front page's rows
   ("Atsiimti" stays for one's own argument and for "Sutinku"). Disabled while a request runs; a double click's second press
   does nothing; the withdrawal names its side and changes nothing when the person no longer has it.
-- Open for the owner: the positions consent form (`Consent.Text`, `Consent.Check`, versioned `PositionConsent.TextVersion`)
-  speaks of sides only, though it is now also asked before a first mark; rewording it needs a new text version (and the
-  invented members' consents given again). Not changed here. The terms (`Terms.Summaries.1`: "argumentai, kuriuos
-  daugiausia žmonių pažymėjo „Man svarbu“") likewise, being versioned.
+- The positions consent form spoke of sides only, though it is now also asked before a first mark; the owner decided the
+  same day (below) to reword it. The terms (`Terms.Summaries.1`: "argumentai, kuriuos daugiausia žmonių pažymėjo „Man
+  svarbu“") are slightly off too (only counted marks choose); changing them is a new terms version, not made (8.22.2: the
+  version stays until the launch unless the owner says otherwise).
+
+**Decided by the owner on 2026-11-18: the positions consent covers "Man svarbu" marks too (6.5, 8.2)**
+
+- The consent texts name both the person's side on bills and which arguments they mark "Man svarbu": the form
+  (`AppealUi` `Consent.Title`, `Consent.Text`, `Consent.PrivacyLink`, `Consent.Check`; the `Consent.Submit.*` buttons name
+  their own action and stay), the account page (`UiText` `PositionConsent.*`), the privacy notice (`LegalText`
+  `Privacy.Data.Fact4`, `Privacy.Data.Fact6.*` (now "Sekimai" only), `Privacy.Basis.1`, `Privacy.Positions`, `.1`, `.2`,
+  `Privacy.Rights.Fact3.Value`) and the methodology (`AppealText` `Method.Privacy.1`, `Method.Reasons.2`). Drafts for the
+  native reader and the lawyer's one reading.
+- A new text version, `PositionConsent.TextVersion` 2026-11-18 (the client's `PositionConsentText.Version` the same). A
+  consent to 2026-11-13 is no longer the consent in force; the person is asked again before a new side or mark, and nothing
+  of theirs is deleted (6.5, as built). `--demo-appeal` gives the invented accounts made earlier the text in force
+  (`InventedMembers.GivePositionConsentAsync`), except one that withdrew it; a real account is never given a consent by a
+  script, so `--demo-sides-for` refuses an account on the older text until its owner consents again.
