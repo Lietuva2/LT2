@@ -2,14 +2,14 @@
  * LT2 interface styles: tokens first, then components.
  *
  * The idea: flat sheets of cut paper on a pale slate ground. Nothing has a shadow, a gradient or a rounded
- * card. One corner of a sheet is cut at an angle, like the bubbles of the logo. The logo's three colours each
- * belong to one speaker:
+ * card; the only rounded shapes are the speech bubbles of people's words. One corner of a sheet is cut at an angle,
+ * like the bubbles of the logo. The logo's three colours each belong to one speaker:
  *   slate  = the Seimas record (official facts, imported data)
  *   leaf   = people (Lietuva 2.0 users: their numbers and their words)
  *   brand  = Lietuva 2.0 itself and the representatives' answers (actions, links, responses)
- * "For" is a soft moss green and "against" a dusty red, always with the word. Moss is a yellower green than the
- * brand and the action button, so "for" does not read as Lietuva 2.0 taking a side. (Blue and red were dropped:
- * beside white they recalled a flag.)
+ * "For" is the links' green and "against" a red of the same lightness and strength, always with the word (owner,
+ * 2026-11-18: one green across the site, the pair designed together; until then "for" was a yellower moss so it would
+ * not read as Lietuva 2.0 taking a side). Blue and red were dropped: beside white they recalled a flag.
  *
  * Type: Sofia Sans for the interface, its Extra Condensed width for headings and figures (Lithuanian words are
  * long; a condensed face keeps them on one line on a phone), Brygada 1918 for words people wrote themselves.
@@ -44,14 +44,16 @@
   --action-ink: #ffffff;
   --link: #1b6034;
 
-  /* Votes and sides */
-  --for: #5c7838;
-  --for-tint: #e7ebe1;
-  --against: #aa524c;
-  --against-tint: #f2e5e4;
+  /* Votes and sides. "For" is the link colour in both themes; "against" has its lightness and strength (OKLCH). The
+     threshold's progress is the same green, lighter, at least 3:1 against its track. */
+  --for: var(--link);
+  --for-tint: #daeede;
+  --against: #85322f;
+  --against-tint: #fce1de;
   --abstain: #8a948e;
   --absent: #cbd1cd;
   --on-vote: #ffffff;
+  --progress: #3a8e54;
 
   /* Notes and errors */
   --note-bg: #fdeebf;
@@ -100,8 +102,8 @@
     --leaf-tint: #21331a; --leaf-ink: #bfe89b;
     --brand-deep: #123d22; --brand-tint: #1b2e22;
     --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-    --for: #637d40; --for-tint: #242f1d; --against: #ae5e59; --against-tint: #382724;
-    --abstain: #7a857f; --absent: #38433d; --on-vote: #ffffff;
+    --for-tint: #193521; --against: #fb9f9e; --against-tint: #442321;
+    --abstain: #7a857f; --absent: #38433d; --on-vote: #0e1411; --progress: #97e3a9;
     --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
     color-scheme: dark;
   }
@@ -114,8 +116,8 @@
   --leaf-tint: #21331a; --leaf-ink: #bfe89b;
   --brand-deep: #123d22; --brand-tint: #1b2e22;
   --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-  --for: #637d40; --for-tint: #242f1d; --against: #ae5e59; --against-tint: #382724;
-  --abstain: #7a857f; --absent: #38433d; --on-vote: #ffffff;
+  --for-tint: #193521; --against: #fb9f9e; --against-tint: #442321;
+  --abstain: #7a857f; --absent: #38433d; --on-vote: #0e1411; --progress: #97e3a9;
   --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
   color-scheme: dark;
 }
@@ -192,7 +194,7 @@ a:hover { text-decoration-thickness: 3px; }
 .top__nav { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); font-weight: 600; }
 .top__nav a { color: var(--ink); text-decoration: none; padding-block: var(--sp-2); border-bottom: 4px solid transparent; }
 .top__nav a:hover { border-bottom-color: var(--slate); }
-.top__nav a[aria-current="page"] { border-bottom-color: var(--leaf); }
+.top__nav a[aria-current="page"] { border-bottom-color: var(--link); }
 
 .crumbs { display: flex; flex-wrap: wrap; gap: var(--sp-2); font-size: var(--fs-1); color: var(--ink-2); }
 .crumbs li + li::before { content: "/"; margin-right: var(--sp-2); color: var(--ink-3); }
@@ -241,21 +243,24 @@ lt2-logo-spin {
 
 /* ---------- Bubbles: who is speaking ---------- */
 
+/* A straight box with the button's cut size as its radius, and a small tail on its top edge that points up to the name
+   above it (owner, 2026-11-18: the name stands first, so the tail no longer points down; the skewed edges went). */
 .bubble {
   --b-bg: var(--slate-tint); --b-ink: var(--ink);
+  position: relative;
   background: var(--b-bg); color: var(--b-ink);
-  padding: var(--sp-4) var(--sp-5) calc(var(--sp-4) + 15px);
-  clip-path: polygon(0 3px, 100% 0, calc(100% - 4px) calc(100% - 15px), 3.5rem calc(100% - 15px),
-    1.5rem 100%, 1.875rem calc(100% - 15px), 5px calc(100% - 17px));
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--cut-s);
+}
+.bubble::before {
+  content: ""; position: absolute; inset-block-end: 100%; inset-inline-start: 1rem;
+  inline-size: 1.25rem; block-size: 0.5rem; background: var(--b-bg);
+  clip-path: polygon(0 100%, 0.25rem 0, 100% 100%);
 }
 .bubble > * { max-width: none; }
 .bubble--people { --b-bg: var(--leaf-tint); --b-ink: var(--ink); }
 .bubble--seimas { --b-bg: var(--slate-tint); }
-.bubble--mp {
-  --b-bg: var(--brand-deep); --b-ink: #ffffff;
-  clip-path: polygon(4px 0, 100% 4px, 100% calc(100% - 17px), calc(100% - 1.875rem) calc(100% - 15px),
-    calc(100% - 1.5rem) 100%, calc(100% - 3.5rem) calc(100% - 15px), 0 calc(100% - 15px));
-}
+.bubble--mp { --b-bg: var(--brand-deep); --b-ink: #ffffff; }
 .bubble--mp a { color: #ffffff; }
 .said { display: flex; flex-direction: column; gap: var(--sp-2); }
 .said__by { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-1); color: var(--ink-2); padding-left: var(--sp-5); }
@@ -351,7 +356,7 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 
 /* The threshold: a ruler with a tick every tenth. */
 .ruler { position: relative; height: 1.25rem; background: var(--slate-tint); }
-.ruler__fill { display: block; height: 100%; background: var(--leaf); }
+.ruler__fill { display: block; height: 100%; background: var(--progress); }
 .ruler::after {
   content: ""; position: absolute; inset: 0;
   background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 2px), var(--sheet) calc(10% - 2px) 10%);

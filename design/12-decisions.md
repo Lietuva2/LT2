@@ -475,3 +475,15 @@ Each is built as written; "no" names what changes.
   the accounts counted, never the list's filters; the list's filters sit in a second form above the list, the period's
   form at the top; "Rodyti lentelę" is removed, because every row carries what its table row did; the filters work over
   the kept copy in memory, so they add no copies and no counting.
+**Asked by the owner on 2026-11-18: one green, the sides' pair, the threshold reached, straight bubbles (8.12.2, 8.16.3)**
+
+- The "už" side is the links' green and "prieš" a red of the same lightness and strength, wherever a side is a colour
+  (buttons, switches, figures, bars, the seat map, the squares). This replaces the moss of the prototype, chosen so that
+  "for" would not read as Lietuva 2.0 taking a side.
+- The threshold's bar is the same green, lighter; once the threshold is reached the bar gives way to words: "Riba
+  pasiekta – balsuoti prašo n dalyvių." and the next summary's planned day, or the last one's, or that it is not known
+  yet. The owner's draft said "yyyy-MM-dd bus siunčiama suvestinė Seimo nariams"; built as "Suvestinė Seimo nariams
+  planuojama yyyy-MM-dd." (with the trial's "nesiunčiama" while sending is off), because the day is a plan the
+  moderators and the agenda can change. Awaiting the owner's look and a native reader.
+- The bubbles are straight boxes with a small radius and a tail pointing up to the name; the menu's chosen item is
+  underlined in the same green; an outlined side button's hover fill has its outline's shape.

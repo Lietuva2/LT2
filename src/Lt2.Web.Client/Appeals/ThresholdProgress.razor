@@ -1,18 +1,72 @@
 @using System.Globalization
 @using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Digests
 @inherits LiveRecordBase
+@inject IDigestsApi Digests
 
 @* How far the bill is from its threshold (design 8.12.1): the ruler and "n dalyvių · riba N". The server's numbers at first;
-   after a side is taken, changed or withdrawn on the page, the bill's live numbers, without reloading the page. *@
-<div class="ruler" role="img" aria-label="@L.Format("Threshold.Aria", Display.Number(Shown.Participants), Display.Number(Shown.Value))">
-    <svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true"><rect class="ruler__bar" x="0" y="0" height="10" width="@RulerWidth(Shown)" /></svg>
-</div>
-<p class="num"><b>@Display.Number(Shown.Participants)</b> @L.Format("Threshold.Progress", Display.Number(Shown.Value))</p>
+   after a side is taken, changed or withdrawn on the page, the bill's live numbers, without reloading the page.
+   Once the threshold is reached (design 8.12.2, owner 2026-11-18) the ruler gives way to the words: "Riba pasiekta – balsuoti
+   prašo n dalyvių." and under it what is true of the summaries: the day the next one holding the bill is planned (with the
+   trial's "nesiunčiama" while sending is off), else the day the last one went, else that the next one's day is not known
+   yet; on a closed record the past tense and the last summary only. A threshold first reached on the page asks the next
+   day then. *@
+@if (Shown.Reached)
+{
+    <p class="num" id="threshold-reached"><b>@L.Format((Closed ? "Threshold.ReachedClosed." : "Threshold.Reached.") + NumberForms.Of(Shown.Participants), Display.Number(Shown.Participants))</b></p>
+    @if (SummaryLine is { } line)
+    {
+        <p class="small num" id="threshold-summary">@line</p>
+    }
+}
+else
+{
+    <div class="ruler" role="img" aria-label="@L.Format("Threshold.Aria", Display.Number(Shown.Participants), Display.Number(Shown.Value))">
+        <svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true"><rect class="ruler__bar" x="0" y="0" height="10" width="@RulerWidth(Shown)" /></svg>
+    </div>
+    <p class="num"><b>@Display.Number(Shown.Participants)</b> @L.Format("Threshold.Progress." + NumberForms.Of(Shown.Participants), Display.Number(Shown.Value))</p>
+}
 
 @code {
     [Parameter, EditorRequired] public ThresholdResponse Threshold { get; set; } = default!;
 
+    /// <summary>The record's status: <c>open</c> or <c>closed</c> (numbers frozen after the final vote).</summary>
+    [Parameter] public string Status { get; set; } = "open";
+
+    /// <summary>The Vilnius day the next summary holding the bill goes (<c>GET …/record/digests/next</c>); none known: null.</summary>
+    [Parameter] public DateOnly? NextDay { get; set; }
+
+    /// <summary>Sending is off (design 8.19.1): summaries are made, but MPs are not sent them.</summary>
+    [Parameter] public bool Trial { get; set; }
+
+    /// <summary>The day the last summary that held the bill went, sent or as a dry run; none: null.</summary>
+    [Parameter] public DateOnly? LastDay { get; set; }
+
+    /// <summary>The last summary was really sent to MPs (otherwise it was a dry run).</summary>
+    [Parameter] public bool LastSent { get; set; }
+
+    private DateOnly? _liveNext;
+
+    private bool Closed => Status == "closed";
+
     private ThresholdResponse Shown => Live?.Threshold ?? Threshold;
+
+    private DateOnly? Next => _liveNext ?? NextDay;
+
+    private string? SummaryLine =>
+        !Closed && Next is { } next ? L.Format(Trial ? "Threshold.NextTrial" : "Threshold.Next", Display.Day(next))
+        : LastDay is { } last ? L.Format(LastSent ? "Threshold.LastSent" : "Threshold.LastTrial", Display.Day(last))
+        : Closed ? null
+        : L["Threshold.NextUnknown"].Value;
+
+    /// <summary>A threshold reached on the page (the server's copy was under it) asks the day of the next summary then.</summary>
+    protected override async Task OnLiveAsync(BillRecordResponse fresh)
+    {
+        if (fresh.Threshold.Reached && !Threshold.Reached && NextDay is null && _liveNext is null && !Closed)
+        {
+            _liveNext = (await Digests.GetRecordNextDigestAsync(Number)).Value?.Day;
+        }
+    }
 
     private static string RulerWidth(ThresholdResponse t) =>
         (t.Value <= 0 ? 1000 : Math.Min(1000.0, 1000.0 * t.Participants / t.Value)).ToString("0.#", CultureInfo.InvariantCulture);

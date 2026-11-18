@@ -22,6 +22,7 @@ public sealed class SidePickerTests : BunitContext
     private readonly ApiFake _appeals;
     private readonly ApiFake _me;
     private readonly ApiFake _follows;
+    private readonly ApiFake _digests;
 
     public SidePickerTests()
     {
@@ -38,6 +39,9 @@ public sealed class SidePickerTests : BunitContext
         _follows = (ApiFake)(object)follows;
         Services.AddSingleton(follows);
         Services.AddSingleton(DispatchProxy.Create<IProfilesApi, ApiFake>());
+        var digests = DispatchProxy.Create<Lt2.Api.Contracts.Digests.IDigestsApi, ApiFake>();
+        _digests = (ApiFake)(object)digests;
+        Services.AddSingleton(digests);
         AddAuthorization().SetAuthorized("member@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -83,6 +87,68 @@ public sealed class SidePickerTests : BunitContext
         follow.WaitForAssertion(() => follow.Find("#follow-toggle-bill").GetAttribute("aria-pressed").ShouldBe("true"));
         follow.Find("#followers-count").TextContent.ShouldBe("Sekėjai: 3");
         Services.GetRequiredService<BunitNavigationManager>().History.ShouldBeEmpty("the page is not reloaded");
+    }
+
+    /// <summary>
+    /// Design 8.12.2 (owner, 2026-11-18): once the threshold is reached the ruler gives way to the words, with what is true of
+    /// the summaries: the next one's planned day (and, while sending is off, that it is not sent), the last one that went, or
+    /// that the next day is not known; a closed record speaks in the past tense.
+    /// </summary>
+    [Fact]
+    public void A_reached_threshold_shows_words_instead_of_the_ruler_with_the_next_summarys_day()
+    {
+        var reached = new ThresholdResponse(100, "default", null, 11080, true, false);
+        var day = new DateOnly(2026, 11, 23);
+
+        var planned = Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, reached).Add(c => c.NextDay, day));
+        planned.FindAll(".ruler").ShouldBeEmpty();
+        planned.Find("#threshold-reached").TextContent.ShouldBe("Riba pasiekta – balsuoti prašo 11 080 dalyvių.");
+        planned.Find("#threshold-summary").TextContent.ShouldBe("Suvestinė Seimo nariams planuojama 2026-11-23.");
+
+        var trial = Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, reached).Add(c => c.NextDay, day).Add(c => c.Trial, true));
+        trial.Find("#threshold-summary").TextContent.ShouldBe("Suvestinė planuojama 2026-11-23; kol vyksta bandymas, Seimo nariams ji nesiunčiama.");
+
+        var unknown = Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, reached with { Participants = 101 }));
+        unknown.Find("#threshold-reached").TextContent.ShouldBe("Riba pasiekta – balsuoti prašo 101 dalyvis.");
+        unknown.Find("#threshold-summary").TextContent.ShouldBe("Kitos suvestinės Seimo nariams data dar nežinoma.");
+
+        var went = Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, reached with { Participants = 102 })
+            .Add(c => c.LastDay, new DateOnly(2026, 11, 16)).Add(c => c.LastSent, true));
+        went.Find("#threshold-reached").TextContent.ShouldBe("Riba pasiekta – balsuoti prašo 102 dalyviai.");
+        went.Find("#threshold-summary").TextContent.ShouldBe("Suvestinė Seimo nariams išsiųsta 2026-11-16.");
+
+        var closed = Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, reached).Add(c => c.Status, "closed")
+            .Add(c => c.NextDay, day).Add(c => c.LastDay, new DateOnly(2026, 11, 16)));
+        closed.Find("#threshold-reached").TextContent.ShouldBe("Riba pasiekta – balsuoti prašė 11 080 dalyvių.");
+        closed.Find("#threshold-summary").TextContent.ShouldBe("Bandomoji suvestinė sudaryta 2026-11-16; Seimo nariams ji nesiųsta.");
+
+        var under = Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, Threshold(40)));
+        under.Find(".ruler").GetAttribute("aria-label").ShouldBe("40 dalyvių iš 100");
+        under.FindAll("#threshold-reached").ShouldBeEmpty();
+        _digests.Calls.ShouldBeEmpty("the day is the server's, given with the page");
+    }
+
+    /// <summary>A threshold first reached by a side taken on the page asks the day of the next summary then (design 8.12.2).</summary>
+    [Fact]
+    public void A_threshold_reached_on_the_page_asks_the_next_summarys_day()
+    {
+        _appeals.OnEach("GetMineAsync", Mine(null), Mine("for"));
+        _appeals.On("TakePositionAsync", ApiResult.Ok());
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(new BillRecordResponse(
+            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
+            new SideCountsResponse(100, 0, 0, 0), new ThresholdResponse(100, "default", null, 100, true, false), [])));
+        _follows.OnEach("GetMineAsync", Follows(), Follows(Bill));
+        _digests.On("GetRecordNextDigestAsync", ApiResult<Lt2.Api.Contracts.Digests.RecordNextDigestResponse>.Ok(new(new DateOnly(2026, 11, 23))));
+
+        var threshold = Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, Threshold(99)));
+        var picker = Render<SidePicker>(p => p.Add(c => c.Number, Bill));
+        threshold.FindAll(".ruler").Count.ShouldBe(1);
+
+        picker.Find("#side-for").Click();
+
+        threshold.WaitForAssertion(() => threshold.Find("#threshold-summary").TextContent.ShouldBe("Suvestinė Seimo nariams planuojama 2026-11-23."));
+        threshold.Find("#threshold-reached").TextContent.ShouldBe("Riba pasiekta – balsuoti prašo 100 dalyvių.");
+        threshold.FindAll(".ruler").ShouldBeEmpty();
     }
 
     [Fact]

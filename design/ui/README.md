@@ -28,13 +28,16 @@ from disk, except the turning logo, which needs HTTP.
 
 ## The idea in four lines
 
-- Flat sheets of cut paper on a pale slate ground. No shadows, gradients, rounded cards or pills.
-- One corner of the main sheet is cut at an angle, like the logo's bubbles. Buttons and portraits carry a small cut.
+- Flat sheets of cut paper on a pale slate ground. No shadows, gradients, rounded cards or pills; the speech bubbles' small
+  radius is the one rounded shape.
+- One corner of the main sheet is cut at an angle, like the logo's bubbles. Filled buttons and portraits carry a small
+  cut; outlined buttons are straight.
 - The logo's colours each belong to one speaker: **slate** is the Seimas record, **leaf** is people, **brand green** is
-  Lietuva 2.0 and the representatives' answers. Words a person wrote sit in a speech bubble, in the serif.
-- "For" is a soft moss green and "against" a dusty red, always with the word. Moss is a yellower green than the
-  brand, so "for" does not read as Lietuva 2.0 taking a side. Blue and red were dropped: beside white they
-  recalled a flag.
+  Lietuva 2.0 and the representatives' answers. Words a person wrote sit in a speech bubble, in the serif, under their
+  name: a straight box with a small radius and a tail pointing up to the name (owner, 2026-11-18; design 8.16.3).
+- "For" is the links' green and "against" a red of the same lightness and strength, always with the word (owner,
+  2026-11-18; until then a yellower moss, so "for" would not read as Lietuva 2.0 taking a side). Blue and red were
+  dropped: beside white they recalled a flag.
 
 ## Porting to Blazor
 

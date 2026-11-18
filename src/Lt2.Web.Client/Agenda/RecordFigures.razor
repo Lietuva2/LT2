@@ -22,9 +22,15 @@ else
         <span class="nowrap"><span class="choice choice--against">@L["Agenda.Against"]</span> @Display.Number(Record.Counts.Against) (@Display.Number(Record.Counts.AgainstOlderThan30Days))</span>
     </span>
     <SplitBar For="Record.Counts.For" Against="Record.Counts.Against" Abstain="0" Small="true" />
-    <span class="small num"><span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress", Display.Number(Record.Threshold.Value))@(Record.Threshold.Reached ? " ·" : "")</span>@if (Record.Threshold.Reached)
+    @* Once the threshold is reached the line no longer measures towards it (design 8.12.2, owner 2026-11-18: as the bill's page
+       drops its ruler): the participants and "riba pasiekta", without the threshold's number. *@
+    <span class="small num">@if (Record.Threshold.Reached)
         {
-            @(" ")<span class="nowrap">@L["Agenda.Reached"]</span>
+            <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L["Agenda.Participants." + NumberForms.Of(Record.Threshold.Participants)] ·</span>@(" ")<span class="nowrap">@L["Agenda.Reached"]</span>
+        }
+        else
+        {
+            <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress." + NumberForms.Of(Record.Threshold.Participants), Display.Number(Record.Threshold.Value))</span>
         }</span>
 }
 

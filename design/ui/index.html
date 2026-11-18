@@ -54,7 +54,7 @@
     <div class="stack">
       <p class="label">Interface style</p>
       <h1>Three bubbles, three speakers</h1>
-      <p class="lead">The logo is three speech bubbles cut from paper. The interface is built the same way: flat sheets with one corner cut, and each of the logo's colours always belongs to the same speaker.</p>
+      <p class="lead">The logo is three speech bubbles cut from paper. The interface is built the same way: flat sheets with one corner cut, words in speech bubbles under their speaker's name, and each of the logo's colours always belongs to the same speaker.</p>
     </div>
     <lt2-logo-spin period="16"></lt2-logo-spin>
   </div>
@@ -63,16 +63,16 @@
     <h2 id="g-voices">Who is speaking</h2>
     <div class="pair" style="grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))">
       <div class="said">
-        <p class="bubble bubble--seimas" lang="lt">Pateikimas: pritarta 71 : 38. Svarstymas: pritarta 74 : 44.</p>
         <div class="said__by"><b>Slate</b> the Seimas record: imported facts, set in the interface face</div>
+        <p class="bubble bubble--seimas" lang="lt">Pateikimas: pritarta 71 : 38. Svarstymas: pritarta 74 : 44.</p>
       </div>
       <div class="said">
-        <p class="bubble bubble--people voice" lang="lt">Gynyba finansuojama nekeliant PVM.</p>
         <div class="said__by"><b>Leaf</b> people: their numbers, and their words in the serif</div>
+        <p class="bubble bubble--people voice" lang="lt">Gynyba finansuojama nekeliant PVM.</p>
       </div>
       <div class="said said--mp">
-        <p class="bubble bubble--mp voice" lang="lt">Balsuosiu už. Papildomos pajamos reikalingos gynybai.</p>
         <div class="said__by"><b>Brand</b> Lietuva 2.0 and the representatives' answers</div>
+        <p class="bubble bubble--mp voice" lang="lt">Balsuosiu už. Papildomos pajamos reikalingos gynybai.</p>
       </div>
     </div>
   </section>
@@ -101,7 +101,7 @@
     <div>
 
       <div class="demo">
-        <div><h4>Buttons</h4><p class="small">One corner cut. Dark green acts for Lietuva 2.0; soft moss and dusty red are only ever the two sides.</p></div>
+        <div><h4>Buttons</h4><p class="small">A filled button has one corner cut; an outlined one is straight, its outline and fill one shape. Dark green acts for Lietuva 2.0; "for" is the links' green and "against" a red of the same lightness, only ever the two sides.</p></div>
         <div class="stack" lang="lt">
           <div class="row"><button class="btn" type="button">Atsiųsti kodą</button><button class="btn btn--plain" type="button">Parašyti argumentą</button></div>
           <div class="row"><button class="btn btn--for" type="button">Prašau balsuoti už</button><button class="btn btn--against" type="button" aria-pressed="true">Prašau balsuoti prieš</button></div>
@@ -121,7 +121,7 @@
       </div>
 
       <div class="demo">
-        <div><h4>Threshold</h4><p class="small">A ruler with a tick at every tenth. Leaf, because it counts people.</p></div>
+        <div><h4>Threshold</h4><p class="small">A ruler with a tick at every tenth, in a lighter shade of the links' green. Once the threshold is reached the ruler gives way to a sentence with the next summary's date (design 8.12.2).</p></div>
         <div class="stack stack--tight" lang="lt">
           <div class="ruler" role="img" aria-label="612 iš 1 000"><span class="ruler__fill" style="width:61.2%"></span></div>
           <p class="num"><b>612</b> iš 1&nbsp;000 dalyvių · ribą nustatė iniciatorė</p>
@@ -183,7 +183,7 @@
         <li>Keep surfaces flat. Separate things with fill and space, then with a thin rule.</li>
         <li>Cut one corner of the one sheet that matters most on a page. Two at most.</li>
         <li>Align left. Let long Lithuanian headings run in the condensed face instead of shrinking them.</li>
-        <li>Set anything a person wrote in the serif, inside a bubble, with their name under it.</li>
+        <li>Set anything a person wrote in the serif, inside a bubble, with their name above it; the bubble's tail points up to the name.</li>
         <li>Pair every vote colour with its word.</li>
         <li>Use the amber focus ring on every control.</li>
       </ul>
@@ -191,8 +191,8 @@
     <div class="stack">
       <h2>Don't</h2>
       <ul class="rules rules--no stack stack--tight">
-        <li>No shadows, gradients, glows, rounded cards or pills.</li>
-        <li>No brand green or leaf green for "for", and no error red for "against". The sides have their own two colours, and always the word.</li>
+        <li>No shadows, gradients, glows, rounded cards or pills. The speech bubbles' small radius is the one rounded shape.</li>
+        <li>No leaf green for "for" and no error red for "against": "for" is the links' green and "against" its matching red, and always the word.</li>
         <li>No icons as decoration and no emoji. A word does the job.</li>
         <li>No centred hero blocks and no rows of three equal feature cards.</li>
         <li>No countdowns to a vote: "Planuojama …" only.</li>
@@ -217,7 +217,7 @@
     ['--brand-deep', 'Answer bubbles'], ['--brand-tint', 'Lietuva 2.0 tags'],
     ['--action', 'Buttons'], ['--action-hover', 'Button hover'], ['--link', 'Links'],
     ['--for', 'Side: for'], ['--for-tint', 'For, quiet'], ['--against', 'Side: against'], ['--against-tint', 'Against, quiet'],
-    ['--abstain', 'Abstained'], ['--absent', 'Did not vote'],
+    ['--on-vote', 'Text on a side'], ['--progress', 'Threshold progress'], ['--abstain', 'Abstained'], ['--absent', 'Did not vote'],
     ['--note-bg', 'Notes that need a look'], ['--note-ink', 'Text on a note'], ['--error', 'Errors'], ['--focus', 'Focus ring']
   ];
   function hex(c) {

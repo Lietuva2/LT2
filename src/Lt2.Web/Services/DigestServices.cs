@@ -59,6 +59,29 @@ internal static class DigestMapping
             .ToList();
     }
 
+    /// <summary>
+    /// The day the next summary holding the bill's record on <paramref name="number"/> goes (design 8.12.2, owner 2026-11-18);
+    /// none for a bill without a record or a closed one; not found like the bill itself, and for a hidden record.
+    /// </summary>
+    public static async Task<Result<RecordNextDigestResponse>> NextForRecordAsync(
+        Lt2.Appeals.IAppealsModule appeals, IDigests digests, string number, CancellationToken ct)
+    {
+        var record = await appeals.GetAsync(number, ct);
+        if (!record.IsSuccess)
+        {
+            return record.Error!;
+        }
+
+        if (record.Value.Status is not ("open" or "closed"))
+        {
+            return Error.NotFound("record.not-found");
+        }
+
+        return record.Value is { Status: "open", Id: { } id }
+            ? new RecordNextDigestResponse(await digests.NextForRecordAsync(id, ct))
+            : new RecordNextDigestResponse(null);
+    }
+
     private static DigestItemResponse Map(DigestItemInfo i) => new(
         i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.For, i.ForOlderThan30Days, i.Against, i.AgainstOlderThan30Days,
         i.SurgeSharePercent, i.SurgeWindowHours,
@@ -127,6 +150,9 @@ internal sealed class ServerDigestsApi(
 
     public async Task<ApiResult<IReadOnlyList<RecordDigestResponse>>> GetRecordDigestsAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await DigestMapping.ForRecordAsync(appeals, digests, number, cancellationToken), list => (IReadOnlyList<RecordDigestResponse>)list);
+
+    public async Task<ApiResult<RecordNextDigestResponse>> GetRecordNextDigestAsync(string number, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await DigestMapping.NextForRecordAsync(appeals, digests, number, cancellationToken), next => next);
 
     private async Task<bool> IsModeratorAsync()
     {

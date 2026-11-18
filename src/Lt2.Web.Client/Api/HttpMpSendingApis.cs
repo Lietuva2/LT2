@@ -18,6 +18,9 @@ internal sealed class HttpDigestsApi(ApiHttp http) : IDigestsApi
     public Task<ApiResult<IReadOnlyList<RecordDigestResponse>>> GetRecordDigestsAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<RecordDigestResponse>>(HttpMethod.Get, DigestRoutes.OfRecordOn(number), null, cancellationToken);
 
+    public Task<ApiResult<RecordNextDigestResponse>> GetRecordNextDigestAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync<RecordNextDigestResponse>(HttpMethod.Get, DigestRoutes.NextOfRecordOn(number), null, cancellationToken);
+
     public Task<ApiResult<IReadOnlyList<IntroductionLetterResponse>>> GetIntroductionAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<IntroductionLetterResponse>>(HttpMethod.Get, DigestRoutes.Introduction, null, cancellationToken);
 

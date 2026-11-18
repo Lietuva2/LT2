@@ -35,6 +35,58 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         return await scope.ServiceProvider.GetRequiredService<IDigests>().RunDueAsync(now, CancellationToken.None);
     }
 
+    /// <summary>
+    /// Design 8.12.2 (owner, 2026-11-18): once the threshold is reached the bill's page says the day of the next summary that
+    /// would hold it: the rules' day while none is prepared, the prepared summary's own day once it is, none after it went
+    /// (the bill barely changed and that week's summary covered its sitting). The page says it in place of the ruler.
+    /// </summary>
+    [Fact]
+    public async Task The_next_summary_of_a_bill_over_its_threshold_is_the_rules_day_then_the_prepared_summarys_day()
+    {
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+
+        // A week no other test makes a summary in (the database is shared), within the three weeks the rules look ahead.
+        var monday = ReasonsToComeSteps.MondayInWeeks(3);
+        try
+        {
+            using var stranger = NewBrowser();
+            var path = DigestRoutes.NextOfRecordOn(AppealSteps.ThirdBill);
+            (await stranger.Client.GetAsync(DigestRoutes.NextOfRecordOn("XVP-9999"))).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+            (await stranger.GetJsonAsync<RecordNextDigestResponse>(path)).Day.ShouldBeNull("a bill without a record");
+
+            var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
+            using var _i = initiator;
+            await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 2);
+            await PlanAsync(AppealSteps.ThirdBill, monday.AddDays(3));
+            (await stranger.GetJsonAsync<RecordNextDigestResponse>(path)).Day.ShouldBeNull("under its threshold");
+
+            var (member, _) = await Factory.MemberAsync("Giedrė Slapta");
+            using var _m = member;
+            (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            var planned = (await stranger.GetJsonAsync<RecordNextDigestResponse>(path)).Day.ShouldNotBeNull("over its threshold, with a sitting known");
+            planned.DayOfWeek.ShouldBe(DayOfWeek.Monday, "never in a summary: the weekly summary of the first week with a sitting");
+            planned.ShouldBeLessThanOrEqualTo(monday);
+            var html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
+            html.ShouldContain("Riba pasiekta – balsuoti prašo 2 dalyviai.");
+            html.ShouldContain($"Suvestinė planuojama {planned:yyyy-MM-dd}; kol vyksta bandymas, Seimo nariams ji nesiunčiama.");
+            html.ShouldNotContain("class=\"ruler\"", customMessage: "the ruler gives way to the words");
+
+            (await RunDueAsync(At(monday.AddDays(-1), 7, 15))).ShouldContain(r => r.Status == "prepared");
+            (await stranger.GetJsonAsync<RecordNextDigestResponse>(path)).Day.ShouldBe(monday, "the prepared summary holds it: its own day");
+
+            (await RunDueAsync(At(monday, 7, 15))).ShouldContain(r => r.Status == "dry-run");
+            (await stranger.GetJsonAsync<RecordNextDigestResponse>(path)).Day.ShouldBeNull("the week's summary held it for its sitting; nothing changed since");
+            html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
+            html.ShouldContain($"Bandomoji suvestinė sudaryta {monday:yyyy-MM-dd}; Seimo nariams ji nesiųsta.");
+        }
+        finally
+        {
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
+            await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
+        }
+    }
+
     [Fact]
     public async Task The_weekly_summary_freezes_both_sides_and_published_arguments_publishes_them_and_sends_nothing()
     {
