@@ -122,7 +122,7 @@
                     {
                         <div class="stack stack--tight" id="profile-statement-@s.Statement.Id">
                             <h3><a href="/seimas/@Uri.EscapeDataString(s.Bill.Number)"><span class="num">@s.Bill.Number</span> · @s.Bill.Title</a></h3>
-                            <StatementView Statement="s.Statement" />
+                            <StatementView Statement="s.Statement" Name="@p.Name" />
                             @if (!s.BillOpen)
                             {
                                 <p class="fine">@L["Org.Profile.Frozen"]</p>

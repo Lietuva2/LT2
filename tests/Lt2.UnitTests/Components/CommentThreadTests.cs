@@ -125,6 +125,7 @@ public sealed class CommentThreadTests : BunitContext
         item.TextContent.ShouldContain("Paslėptas komentaras.");
         item.TextContent.ShouldContain("Paslėpė moderatorius: Asmens duomenys.");
         item.QuerySelectorAll("button").ShouldBeEmpty();
+        item.Children[0].ClassList.ShouldContain("bubble--nameless", "no name above one's own hidden comment, so no tail (design 8.16.3)");
     }
 
     private IRenderedComponent<CommentThread> RenderThread() =>
@@ -154,9 +155,20 @@ public sealed class CommentThreadTests : BunitContext
         thread.Find($"#{CommentLimits.ElementId(PersonComment)}-all-agreed + .agreed__all").TextContent.Split(", ").Length.ShouldBe(3, "the full list, all three");
         markup.ShouldNotContain("Visi sutinkantys");
         thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .tag").TextContent.ShouldBe("Organizacija");
-        thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .comment__label").TextContent.ShouldBe("Nepatvirtinta", "the organisation's label beside its name (design 8.23.2)");
+        thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .comment__label").TextContent.ShouldBe("Nepatvirtinta", "the organisation's label with its mark (design 8.23.2)");
         thread.Find($"#{CommentLimits.ElementId(MpComment)} a.comment__name").GetAttribute("href").ShouldBe("/p/jonas-petraitis");
         thread.Find($"#{CommentLimits.ElementId(MpComment)} .tag").TextContent.ShouldBe("Seimo narys arba jo biuras");
+        // Design 8.16.3 (owner, 2026-11-18): the name line right above the bubble, where its tail points; the voice's mark and the
+        // time under the bubble.
+        foreach (var li in thread.FindAll("li.comment"))
+        {
+            var parts = li.Children.Take(3).ToList();
+            parts[0].ClassList.ShouldContain("comment__who");
+            parts[0].QuerySelectorAll(".tag, .comment__label, .num").ShouldBeEmpty("only the name (and \"Nauja\") on the line the tail points at");
+            parts[1].ClassList.ShouldContain("bubble");
+            parts[2].ClassList.ShouldContain("comment__meta");
+        }
+        thread.Find($"#{CommentLimits.ElementId(MpComment)} .comment__meta .tag").TextContent.ShouldBe("Seimo narys arba jo biuras");
         thread.FindAll("button[id$='-agree'], button[id$='-delete']").ShouldBeEmpty("no member's controls for a visitor");
         thread.Find($"#comments-sign-in-{Target:N} a").GetAttribute("href").ShouldStartWith("/prisijungti#tikslas=");
         _comments.Calls.ShouldBeEmpty("nothing of the caller's is read while the server renders");

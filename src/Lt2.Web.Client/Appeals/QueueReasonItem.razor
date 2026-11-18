@@ -19,8 +19,8 @@
         }
     </div>
     <div class="said">
-        <TypedText Text="@Reason.Text" Class="bubble bubble--people voice" />
         <div class="said__by"><b>@(Reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
+        <TypedText Text="@Reason.Text" Class="bubble bubble--people voice" />
     </div>
     <Reports Items="Reason.Reports" />
     <ModerationActions Id="Reason.Id" Kind="reason" Status="@Reason.Status" RecordStatus="@Reason.RecordStatus" MergeCandidates="Reason.MergeCandidates" Comments="Reason.Comments" IdPrefix="@(Panel ? "panel-" : "")"

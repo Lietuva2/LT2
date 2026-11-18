@@ -35,10 +35,10 @@ from disk, except the turning logo, which needs HTTP.
 - The logo's colours each belong to one speaker: **slate** is the Seimas record, **leaf** is people, **brand green** is
   Lietuva 2.0 and the representatives' answers. Words a person wrote sit in a speech bubble, in the serif, under their
   name: a straight box with a small radius and a tail pointing up to the name (owner, 2026-11-18; design 8.16.3).
-- "For" is the light theme's link green and "against" a red of the same lightness and strength, the same in both themes
-  with white words, always with the word (owner, 2026-11-18; until then a yellower moss, so "for" would not read as
-  Lietuva 2.0 taking a side). On the dark grounds a shape in a side's colour has a light 1px edge. Blue and red were
-  dropped: beside white they recalled a flag.
+- "For" is the light theme's link green and "against" a red of the same lightness and strength, with white words in
+  both themes, always with the word (owner, 2026-11-18; until then a yellower moss, so "for" would not read as
+  Lietuva 2.0 taking a side). The dark theme has brighter versions of the two, at least 3:1 on its grounds, with no
+  edge. Blue and red were dropped: beside white they recalled a flag.
 
 ## Porting to Blazor
 

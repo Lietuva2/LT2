@@ -16,7 +16,7 @@
             {
                 var item = view.Items[i];
                 <li id="@ResponsePaging.ItemId(i + 1)">
-                    <MpResponseItem Response="item.Response" Bill="item.Bill" IdPrefix="@($"atsakymas-{i + 1}-")" />
+                    <MpResponseItem Response="item.Response" Bill="item.Bill" AuthorName="@Name" IdPrefix="@($"atsakymas-{i + 1}-")" />
                 </li>
             }
         </ol>
@@ -38,6 +38,9 @@
     private int _shown;
 
     [Parameter, EditorRequired] public string Slug { get; set; } = "";
+
+    /// <summary>The MP's name, right above each response's bubble (design 8.16.3: the tail points at the name).</summary>
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
 
     [SupplyParameterFromQuery(Name = MpResponseLimits.ShowParameter)] public string? Show { get; set; }
 

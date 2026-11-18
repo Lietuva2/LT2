@@ -42,12 +42,18 @@
                     var deletable = _signedIn && _mine?.Deletable.Contains(c.Id) == true && thread.BillOpen;
                     var editable = MayEdit(thread, c.Id);
                     <li class="comment stack stack--tight @(Marked == c.Id ? "comment--linked" : null)" id="@id" @key="c.Id">
+                        @* Design 8.16.3 (owner, 2026-11-18): the line right above the bubble is the name, where its tail points;
+                           the voice's mark ("Organizacija" with the label, "Seimo narys arba jo biuras") and the time stand under
+                           the bubble. *@
                         <p class="row comment__who" id="@CommentPaging.PositionAnchor(TargetId, position)">
                             @Name(c.Author)
-                            <span class="small num">@Display.DayTime(c.CreatedAt)</span>
                             <NewMark Number="@Number" Id="c.Id" />
                         </p>
                         <LongText Text="@c.Text" BubbleClass="bubble bubble--people voice comment__text" Links="true" Id="@($"{id}-more")" />
+                        <p class="row comment__meta">
+                            @Voice(c.Author)
+                            <span class="num">@Display.DayTime(c.CreatedAt)</span>
+                        </p>
                         @if (c.AgreedBy.Count > 0)
                         {
                             @* "Sutinka: A, B ir dar 5" (owner, 2026-11-17): "ir dar 5" opens the full list, oldest agreement first. *@
@@ -161,8 +167,9 @@
                 @foreach (var h in ownHidden)
                 {
                     <li class="comment comment--hidden stack stack--tight" id="hidden-@CommentLimits.ElementId(h.Id)" @key="h.Id">
-                        <p class="row comment__who"><span class="small num">@Display.DayTime(h.CreatedAt)</span></p>
-                        <LongText Text="@h.Text" BubbleClass="bubble bubble--people voice comment__text" Links="true" Id="@($"hidden-{CommentLimits.ElementId(h.Id)}-more")" />
+                        @* The reader's own: no name above it, so its bubble has no tail (design 8.16.3); the time under it. *@
+                        <LongText Text="@h.Text" BubbleClass="bubble bubble--people bubble--nameless voice comment__text" Links="true" Id="@($"hidden-{CommentLimits.ElementId(h.Id)}-more")" />
+                        <p class="row comment__meta"><span class="num">@Display.DayTime(h.CreatedAt)</span></p>
                         <p class="small hidden-why" id="hidden-@CommentLimits.ElementId(h.Id)-why">
                             @(h.Statement is { } why ? L.Format("Reasons.HiddenBy", why) : L["Reasons.Hidden"].Value)
                             @L["Comments.HiddenOnlyYou"]
@@ -425,12 +432,6 @@
                 {
                     <b class="comment__name">@a.Name</b>
                 }
-                <span class="tag">@L["Comments.Mark.Organisation"]</span>
-                @if (a.Label is { } label)
-                {
-                    @* Design 8.23.2: the organisation's label (8.14.3) beside its name. *@
-                    <span class="small comment__label">@Lt2.Web.Client.Organisations.OrganisationWords.LabelText(L, label)</span>
-                }
                 break;
             case "mp":
                 if (a.Mp is { Slug.Length: > 0 } mp)
@@ -441,7 +442,6 @@
                 {
                     <b class="comment__name">@(a.Mp is { } m ? $"{m.FirstName} {m.LastName}".Trim() : "")</b>
                 }
-                <span class="tag">@L["Comments.Mark.Mp"]</span>
                 break;
             default:
                 if (a.ProfileId is { } profileId)
@@ -454,6 +454,25 @@
                     <b class="comment__name">@PersonName(a.Name)</b>
                 }
 
+                break;
+        }
+    };
+
+    /// <summary>The voice's mark under the bubble: "Organizacija" with the organisation's label (design 8.23.2, 8.14.3), or
+    /// "Seimo narys arba jo biuras"; nothing for a member.</summary>
+    private RenderFragment Voice(CommentAuthorResponse a) => __builder =>
+    {
+        switch (a.Voice)
+        {
+            case "organisation":
+                <span class="tag">@L["Comments.Mark.Organisation"]</span>
+                @if (a.Label is { } label)
+                {
+                    <span class="comment__label">@Lt2.Web.Client.Organisations.OrganisationWords.LabelText(L, label)</span>
+                }
+                break;
+            case "mp":
+                <span class="tag">@L["Comments.Mark.Mp"]</span>
                 break;
         }
     };

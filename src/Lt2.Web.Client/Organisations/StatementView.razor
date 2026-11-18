@@ -3,8 +3,15 @@
 
 @* One organisation's statement (design 8.14.3): the organisation and its label, the stance, the text, the link with its host
    visible (never fetched by the server; nofollow, ugc), and with a goal "Siekiame {N} dalyvių · dabar {n}". All statements
-   look alike: same size, no highlighting (8.14.8). Never who wrote it. *@
+   look alike: same size, no highlighting (8.14.8). Never who wrote it.
+   The line right above the bubble is always the organisation's name, where the bubble's tail points (owner, 2026-11-18;
+   design 8.16.3): the stance stands above the name as a small line, the label ("Patvirtinta", with its hint) under the
+   bubble with the link, the goal and the dates. *@
 <article class="said statement" id="@(IdPrefix)statement-@Statement.Id" aria-label="@(Name ?? L["Org.Statement"])">
+    @if (ShowStance)
+    {
+        <p class="said__side"><span class="@OrganisationWords.StanceClass(Statement.Stance)">@L["Org.Stance." + Statement.Stance]</span></p>
+    }
     @if (Name is not null)
     {
         <p class="row statement__who">
@@ -16,16 +23,8 @@
             {
                 <b class="statement__name">@Name</b>
             }
-            @if (Label is not null)
-            {
-                <OrgLabel Label="Label" Id="@($"{IdPrefix}statement-{Statement.Id}-label")" />
-            }
             @Mark
         </p>
-    }
-    @if (ShowStance)
-    {
-        <p><span class="@OrganisationWords.StanceClass(Statement.Stance)">@L["Org.Stance." + Statement.Stance]</span></p>
     }
     @if (Whole)
     {
@@ -44,6 +43,10 @@
                   Shown="TextExcerpt.StatementShown" Margin="TextExcerpt.StatementMargin" Id="@($"{IdPrefix}statement-more-{Statement.Id}")" />
     }
     <div class="said__by statement__meta">
+        @if (Label is not null)
+        {
+            <OrgLabel Label="Label" Id="@($"{IdPrefix}statement-{Statement.Id}-label")" />
+        }
         @if (Statement.Link is { } link)
         {
             <span class="statement__link">@L["Org.Link"] <a href="@link" rel="@OrganisationWords.UserLinkRel" target="_blank">@(Statement.LinkHost ?? link)</a></span>
@@ -65,7 +68,7 @@
 @code {
     [Parameter, EditorRequired] public StatementResponse Statement { get; set; } = default!;
 
-    /// <summary>The organisation, on the bill's page; null on the organisation's own profile.</summary>
+    /// <summary>The organisation, shown right above the bubble; on its own profile without <see cref="Slug"/>, so not a link.</summary>
     [Parameter] public string? Name { get; set; }
 
     [Parameter] public string? Slug { get; set; }
