@@ -440,7 +440,7 @@ version, served as it is while one background refresh runs once it is an hour ol
 `AnalyticsRules` (SharedKernel); one sample of 20 (`AnalyticsRules.SmallSample`, not a setting) below which no share is
 shown, only counts and "maža imtis"; the Seimas's majority is that of those who voted, a consensus counting as "for".
 Demonstration data (design 8.26.5, owner 2026-11-18; only where `Demo:Allowed`, never in tests): thirty invented closed
-bills XVP-0701..0731 besides XVP-0707, their votes in the stand-in overlay (`tools/demo_closed_bills.py`), their positions
+bills XVP-0701..0731 besides XVP-0707, their votes in the stand-in overlay (`tools/demo_closed_bills.py`, run by `tools/standin_overlay.py`; ballots of the overlay's 141 MPs, totals counted from them, XVP-0706 rejected with more than half "prieš"), their positions
 from `--demo-appeal`'s own invented accounts (`DemoClosedBills`, `InventedMembers.SinceAsync`: the fixed identifiers, on
 `pavyzdys.test`, with the consent); `--demo-sides-for ADDRESS|-` (`DemoSides`) gives one named account with the consent
 random sides on them and adds them to the frozen counts (`InventedRecord.GiveClosedSidesAsync`), the address never logged.

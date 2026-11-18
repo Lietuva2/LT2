@@ -1,0 +1,718 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. Written by tools/standin_overlay.py (fixed seed); do not edit by hand: the invented parliament of
+     141 seats, the base fixture's 14 MPs first (tools/invented_seimas.py). --><SeimoInformacija>
+  <SeimoKadencija kadencijos_id="10" pavadinimas="2024–2028 m. kadencija" data_nuo="2024-11-14" data_iki="">
+    <SeimoNarys asmens_id="99000001" vardas="Jonas" pavardė="Petraitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.jonas.petraitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000002" vardas="Marius" pavardė="Ąžuolaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Ąžuolyno (Nr. 91)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos seniūnas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.marius.azuolaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000003" vardas="Eglė" pavardė="Beržinytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto pirmininkė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.egle.berzinyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000004" vardas="Vytautas" pavardė="Klevinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Klevų (Nr. 92)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.vytautas.klevinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000005" vardas="Ona" pavardė="Jonaitienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos seniūnė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ona.jonaitiene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000006" vardas="Laima" pavardė="Uosytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Uosių (Nr. 93)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto pirmininkė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.laima.uosyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000007" vardas="Darius" pavardė="Liepaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki="2026-04-30"/>
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2026-05-01" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.darius.liepaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000008" vardas="Asta" pavardė="Pušinskienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.asta.pusinskiene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000009" vardas="Kęstutis" pavardė="Gluosnis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Gluosnių (Nr. 94)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos seniūnas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.kestutis.gluosnis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000010" vardas="Indrė" pavardė="Eglaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.indre.eglaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000011" vardas="Tadas" pavardė="Alksninis" lytis="V" data_nuo="2024-11-14" data_iki="2026-04-15" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki="2026-04-15"/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki="2026-04-15"/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.tadas.alksninis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000012" vardas="Gintarė" pavardė="Šermukšnytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Šermukšnių (Nr. 95)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.gintare.sermuksnyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000013" vardas="Aurelija" pavardė="Kadagytė" lytis="M" data_nuo="2026-04-21" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narė" data_nuo="2026-04-21" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narė" data_nuo="2026-05-05" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.aurelija.kadagyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000014" vardas="Rasa" pavardė="Ievaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki="2026-04-30"/>
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narė" data_nuo="2026-05-01" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.rasa.ievaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000015" vardas="Arvydas" pavardė="Gailinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arvydas.gailinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000016" vardas="Diana" pavardė="Ramunėnaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200014" padalinio_pavadinimas="Europos reikalų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.diana.ramunenaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000017" vardas="Laurynas" pavardė="Riešutis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200014" padalinio_pavadinimas="Europos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.laurynas.riesutis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000018" vardas="Lukas" pavardė="Kalvėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Aguonų (Nr. 96)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.lukas.kalvenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000019" vardas="Neringa" pavardė="Obelinytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto pirmininko pavaduotoja" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.neringa.obelinyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000020" vardas="Saulius" pavardė="Drebulis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Pienių (Nr. 97)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.saulius.drebulis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000021" vardas="Kotryna" pavardė="Tetirvėnaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto pirmininko pavaduotoja" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.kotryna.tetirvenaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000022" vardas="Ričardas" pavardė="Smilgaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Beržyno (Nr. 98)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ricardas.smilgaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000023" vardas="Karolis" pavardė="Medelis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto pirmininkas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.karolis.medelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000024" vardas="Arūnas" pavardė="Laumėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arunas.laumenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000025" vardas="Birutė" pavardė="Paukštėnienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Kiškių (Nr. 99)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.birute.pauksteniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000026" vardas="Evelina" pavardė="Tujinienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos seniūno pavaduotoja" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.evelina.tujiniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000027" vardas="Artūras" pavardė="Šilėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Kadagyno (Nr. 100)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arturas.silenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000028" vardas="Juozas" pavardė="Žiedūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.juozas.ziedunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000029" vardas="Deividas" pavardė="Karšinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200012" padalinio_pavadinimas="Kultūros komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.deividas.karsinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000030" vardas="Arūnas" pavardė="Šeivis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Kalvų (Nr. 101)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arunas.seivis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000031" vardas="Mindaugas" pavardė="Drugelis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Pelėdų (Nr. 102)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.mindaugas.drugelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000032" vardas="Giedrius" pavardė="Kerpinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200014" padalinio_pavadinimas="Europos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.giedrius.kerpinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000033" vardas="Gintaras" pavardė="Genaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Ievyno (Nr. 103)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200013" padalinio_pavadinimas="Audito komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.gintaras.genaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000034" vardas="Paulius" pavardė="Gandrūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Šilų (Nr. 104)" kadencijų_skaičius="5">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.paulius.gandrunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000035" vardas="Edita" pavardė="Lydekinienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200012" padalinio_pavadinimas="Kultūros komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.edita.lydekiniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000036" vardas="Ričardas" pavardė="Pelkinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Samanų (Nr. 105)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200013" padalinio_pavadinimas="Audito komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ricardas.pelkinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000037" vardas="Tomas" pavardė="Slėninis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Genių (Nr. 106)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.tomas.sleninis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000038" vardas="Edvardas" pavardė="Uogėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Uogynų (Nr. 107)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200015" padalinio_pavadinimas="Žmogaus teisių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.edvardas.uogenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000039" vardas="Simona" pavardė="Ereliūnaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Miežių (Nr. 108)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.simona.ereliunaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000040" vardas="Robertas" pavardė="Viksvaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Strazdų (Nr. 109)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos seniūnas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.robertas.viksvaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000041" vardas="Renata" pavardė="Ešerinienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="5">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto pirmininkė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.renata.eseriniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000042" vardas="Gabija" pavardė="Lazdūnaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Ramunių (Nr. 110)" kadencijų_skaičius="7">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos seniūnė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.gabija.lazdunaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000043" vardas="Diana" pavardė="Briedėnienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Akmenų (Nr. 111)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos seniūno pavaduotoja" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.diana.briedeniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000044" vardas="Raimondas" pavardė="Vakarinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Smėlynų (Nr. 112)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.raimondas.vakarinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000045" vardas="Martynas" pavardė="Usninis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto pirmininkas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.martynas.usninis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000046" vardas="Jolanta" pavardė="Žirninytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Kregždžių (Nr. 113)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.jolanta.zirninyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000047" vardas="Vidmantas" pavardė="Stirnaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Briedžių (Nr. 114)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.vidmantas.stirnaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000048" vardas="Petras" pavardė="Skirpstinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.petras.skirpstinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000049" vardas="Remigijus" pavardė="Lūšinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.remigijus.lusinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000050" vardas="Justinas" pavardė="Raselis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Kmynų (Nr. 115)" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.justinas.raselis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000051" vardas="Aušra" pavardė="Vyturienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos seniūno pavaduotoja" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ausra.vyturiene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000052" vardas="Egidijus" pavardė="Žvirblinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.egidijus.zvirblinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000053" vardas="Sandra" pavardė="Ajerinienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.sandra.ajeriniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000054" vardas="Tomas" pavardė="Kriaušinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200012" padalinio_pavadinimas="Kultūros komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.tomas.kriausinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000055" vardas="Povilas" pavardė="Starkis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Ūdrų (Nr. 116)" kadencijų_skaičius="5">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200014" padalinio_pavadinimas="Europos reikalų komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.povilas.starkis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000056" vardas="Deividas" pavardė="Švendrys" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos seniūno pavaduotojas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.deividas.svendrys@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000057" vardas="Andrius" pavardė="Rasūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Kėkštų (Nr. 117)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.andrius.rasunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000058" vardas="Arvydas" pavardė="Šalpūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Linų (Nr. 118)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arvydas.salpunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000059" vardas="Edvardas" pavardė="Samanis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Ežių (Nr. 119)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.edvardas.samanis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000060" vardas="Mindaugas" pavardė="Pelėdinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Versmių (Nr. 120)" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.mindaugas.peledinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000061" vardas="Vidmantas" pavardė="Sedulinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200012" padalinio_pavadinimas="Kultūros komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.vidmantas.sedulinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000062" vardas="Virgilijus" pavardė="Šakelis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200014" padalinio_pavadinimas="Europos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.virgilijus.sakelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000063" vardas="Saulius" pavardė="Avietinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Alksnyno (Nr. 121)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.saulius.avietinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000064" vardas="Virgilijus" pavardė="Žaibūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.virgilijus.zaibunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000065" vardas="Valdas" pavardė="Skroblėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Lelijų (Nr. 122)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.valdas.skroblenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000066" vardas="Edita" pavardė="Rugelienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto pirmininkė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.edita.rugeliene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000067" vardas="Živilė" pavardė="Rūtinytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Kerpių (Nr. 123)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.zivile.rutinyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000068" vardas="Andrius" pavardė="Eželis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Gandrų (Nr. 124)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200013" padalinio_pavadinimas="Audito komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.andrius.ezelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000069" vardas="Virgilijus" pavardė="Asiūkinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Lapių (Nr. 125)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.virgilijus.asiukinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000070" vardas="Simona" pavardė="Ežerinskaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Klevyno (Nr. 126)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.simona.ezerinskaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000071" vardas="Edvardas" pavardė="Vingrūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.edvardas.vingrunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000072" vardas="Aurimas" pavardė="Lapūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.aurimas.lapunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000073" vardas="Arūnas" pavardė="Grybelis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arunas.grybelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000074" vardas="Lukas" pavardė="Žiedelis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto pirmininkas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.lukas.ziedelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000075" vardas="Edita" pavardė="Rytelytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Rugių (Nr. 127)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.edita.rytelyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000076" vardas="Kazimieras" pavardė="Miškūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="6">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200012" padalinio_pavadinimas="Kultūros komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.kazimieras.miskunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000077" vardas="Povilas" pavardė="Kamienis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos seniūnas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto pirmininkas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.povilas.kamienis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000078" vardas="Rokas" pavardė="Driežinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Pievų (Nr. 128)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.rokas.driezinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000079" vardas="Raimondas" pavardė="Vijoklinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.raimondas.vijoklinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000080" vardas="Stasys" pavardė="Kloninis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Skroblų (Nr. 129)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos seniūno pavaduotojas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.stasys.kloninis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000081" vardas="Stasys" pavardė="Kėninis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Bruknių (Nr. 130)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.stasys.keninis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000082" vardas="Sandra" pavardė="Pievelytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Spanguolynų (Nr. 131)" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.sandra.pievelyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000083" vardas="Saulius" pavardė="Kurapkis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Bijūnų (Nr. 132)" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.saulius.kurapkis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000084" vardas="Raimondas" pavardė="Kėkštas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.raimondas.kekstas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000085" vardas="Vaida" pavardė="Paparčinienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.vaida.paparciniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000086" vardas="Petras" pavardė="Kmynas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200014" padalinio_pavadinimas="Europos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.petras.kmynas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000087" vardas="Diana" pavardė="Kanapinienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Bebrų (Nr. 133)" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.diana.kanapiniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000088" vardas="Robertas" pavardė="Vėžinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Zylių (Nr. 134)" kadencijų_skaičius="7">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.robertas.vezinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000089" vardas="Ramūnas" pavardė="Versmėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ramunas.versmenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000090" vardas="Vidmantas" pavardė="Upelinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Girių (Nr. 135)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.vidmantas.upelinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000091" vardas="Aurimas" pavardė="Slyvinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.aurimas.slyvinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000092" vardas="Danguolė" pavardė="Karklinytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Čiobrelių (Nr. 136)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200015" padalinio_pavadinimas="Žmogaus teisių komitetas" pareigos="Komiteto pirmininkė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.danguole.karklinyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000093" vardas="Deividas" pavardė="Debesinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.deividas.debesinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000094" vardas="Ingrida" pavardė="Aguonytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ingrida.aguonyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000095" vardas="Mindaugas" pavardė="Volungis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.mindaugas.volungis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000096" vardas="Raimondas" pavardė="Smėlinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos seniūno pavaduotojas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200012" padalinio_pavadinimas="Kultūros komitetas" pareigos="Komiteto pirmininkas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.raimondas.smelinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000097" vardas="Mantas" pavardė="Šaltinėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Viržyno (Nr. 137)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.mantas.saltinenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000098" vardas="Artūras" pavardė="Žolinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arturas.zolinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000099" vardas="Giedrius" pavardė="Guobaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="7">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.giedrius.guobaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000100" vardas="Julius" pavardė="Vyšninis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Upelių (Nr. 138)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200012" padalinio_pavadinimas="Kultūros komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.julius.vysninis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000101" vardas="Egidijus" pavardė="Grikinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Žibuoklių (Nr. 139)" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200015" padalinio_pavadinimas="Žmogaus teisių komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.egidijus.grikinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000102" vardas="Ramūnas" pavardė="Vapsvinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Stirnų (Nr. 140)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ramunas.vapsvinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000103" vardas="Austėja" pavardė="Avižėnienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Guobų (Nr. 141)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.austeja.avizeniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000104" vardas="Povilas" pavardė="Akmenaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200014" padalinio_pavadinimas="Europos reikalų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.povilas.akmenaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000105" vardas="Raimondas" pavardė="Kregždinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Slėnių (Nr. 142)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.raimondas.kregzdinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000106" vardas="Vidmantas" pavardė="Žilvitinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Pušyno (Nr. 143)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.vidmantas.zilvitinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000107" vardas="Dovydas" pavardė="Šilinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.dovydas.silinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000108" vardas="Simonas" pavardė="Kukmedinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.simonas.kukmedinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000109" vardas="Algirdas" pavardė="Lapelis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Ežerėlių (Nr. 144)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.algirdas.lapelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000110" vardas="Simonas" pavardė="Nendrinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Vėjų (Nr. 145)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200013" padalinio_pavadinimas="Audito komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.simonas.nendrinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000111" vardas="Simonas" pavardė="Ūdraitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos seniūno pavaduotojas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200001" padalinio_pavadinimas="Biudžeto ir finansų komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.simonas.udraitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000112" vardas="Giedrė" pavardė="Apyninienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200006" padalinio_pavadinimas="Užsienio reikalų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.giedre.apyniniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000113" vardas="Aistė" pavardė="Sakalinskienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto pirmininko pavaduotoja" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.aiste.sakalinskiene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000114" vardas="Audrius" pavardė="Pupūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Ąžuolų (Nr. 146)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200015" padalinio_pavadinimas="Žmogaus teisių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.audrius.pupunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000115" vardas="Dovydas" pavardė="Linelis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Avižų (Nr. 147)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.dovydas.linelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000116" vardas="Ramūnas" pavardė="Dygūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ramunas.dygunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000117" vardas="Ignas" pavardė="Bijūnaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Liepyno (Nr. 148)" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200015" padalinio_pavadinimas="Žmogaus teisių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ignas.bijunaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000118" vardas="Artūras" pavardė="Bruknėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arturas.bruknenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000119" vardas="Monika" pavardė="Kiškelienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Smilgyno (Nr. 149)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.monika.kiskeliene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000120" vardas="Mindaugas" pavardė="Viržinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="5">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.mindaugas.virzinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000121" vardas="Laurynas" pavardė="Gegutis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.laurynas.gegutis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000122" vardas="Ingrida" pavardė="Čiobrelytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Gulbių (Nr. 150)" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ingrida.ciobrelyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000123" vardas="Skaistė" pavardė="Zylėnaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200015" padalinio_pavadinimas="Žmogaus teisių komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.skaiste.zylenaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000124" vardas="Artūras" pavardė="Dobilaitis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Šaltinių (Nr. 151)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200013" padalinio_pavadinimas="Audito komitetas" pareigos="Komiteto pirmininkas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.arturas.dobilaitis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000125" vardas="Andrius" pavardė="Varnėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Varpų (Nr. 152)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos seniūno pavaduotojas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.andrius.varnenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000126" vardas="Agnė" pavardė="Bebrinskaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Bendruomenių sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Dobilų (Nr. 153)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100006" padalinio_pavadinimas="Bendruomenių sąjungos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200014" padalinio_pavadinimas="Europos reikalų komitetas" pareigos="Komiteto pirmininkė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.agne.bebrinskaite@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000127" vardas="Jolanta" pavardė="Žvaigždinienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Nendryno (Nr. 154)" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.jolanta.zvaigzdiniene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000128" vardas="Benediktas" pavardė="Gulbėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Lūšių (Nr. 155)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200015" padalinio_pavadinimas="Žmogaus teisių komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.benediktas.gulbenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000129" vardas="Ingrida" pavardė="Vėjelytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Eglyno (Nr. 156)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.ingrida.vejelyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000130" vardas="Robertas" pavardė="Bitėnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Rasų (Nr. 157)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200004" padalinio_pavadinimas="Teisės ir teisėtvarkos komitetas" pareigos="Komiteto pirmininkas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.robertas.bitenas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000131" vardas="Vilma" pavardė="Girinskienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Vyturių (Nr. 158)" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos seniūno pavaduotoja" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.vilma.girinskiene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000132" vardas="Jolanta" pavardė="Strazdinytė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="3">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200011" padalinio_pavadinimas="Valstybės valdymo ir savivaldybių komitetas" pareigos="Komiteto pirmininkė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.jolanta.strazdinyte@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000133" vardas="Linas" pavardė="Maumedinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Pilietinė sąjunga" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100002" padalinio_pavadinimas="Pilietinės sąjungos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200013" padalinio_pavadinimas="Audito komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.linas.maumedinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000134" vardas="Tomas" pavardė="Blendinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Regionų aljansas" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100003" padalinio_pavadinimas="Regionų aljanso frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200005" padalinio_pavadinimas="Nacionalinio saugumo ir gynybos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.tomas.blendinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000135" vardas="Robertas" pavardė="Kamanis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Grikių (Nr. 159)" kadencijų_skaičius="5">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės seniūnas" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200013" padalinio_pavadinimas="Audito komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.robertas.kamanis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000136" vardas="Kazimieras" pavardė="Šarkelis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Gervių (Nr. 160)" kadencijų_skaičius="5">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200010" padalinio_pavadinimas="Aplinkos apsaugos komitetas" pareigos="Komiteto pirmininkas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.kazimieras.sarkelis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000137" vardas="Benediktas" pavardė="Gervinskas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100004" padalinio_pavadinimas="Atviros visuomenės partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200009" padalinio_pavadinimas="Kaimo reikalų komitetas" pareigos="Komiteto pirmininko pavaduotojas" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.benediktas.gervinskas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000138" vardas="Deividas" pavardė="Šilkinis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.deividas.silkinis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000139" vardas="Birutė" pavardė="Upėtakienė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="2">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200007" padalinio_pavadinimas="Sveikatos reikalų komitetas" pareigos="Komiteto narė" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.birute.upetakiene@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000140" vardas="Eimantas" pavardė="Kaštonis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Atviros visuomenės partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200008" padalinio_pavadinimas="Švietimo ir mokslo komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.eimantas.kastonis@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000141" vardas="Nerijus" pavardė="Varliūnas" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100005" padalinio_pavadinimas="Darnos sąjūdžio frakcija" pareigos="Frakcijos narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200013" padalinio_pavadinimas="Audito komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.nerijus.varliunas@lrs.lt"/>
+    </SeimoNarys>
+    <SeimoNarys asmens_id="99000142" vardas="Eimantas" pavardė="Mėlynis" lytis="V" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Darnos sąjūdis" išrinkimo_būdas="Vienmandatėje apygardoje" apygarda="Rugiagėlių (Nr. 161)" kadencijų_skaičius="4">
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narys" data_nuo="2024-11-14" data_iki=""/>
+      <Pareigos padalinio_id="99200003" padalinio_pavadinimas="Ekonomikos komitetas" pareigos="Komiteto narys" data_nuo="2024-11-21" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.eimantas.melynis@lrs.lt"/>
+    </SeimoNarys>
+  </SeimoKadencija>
+</SeimoInformacija>

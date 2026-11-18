@@ -57,6 +57,16 @@ public sealed class StandInTests
     }
 
     [Fact]
+    public void Dated_answers_name_days_relative_to_today_and_past_sitting_days_are_tuesdays_and_thursdays()
+    {
+        var wednesday = new DateOnly(2026, 11, 18);
+        StandInResponses.RenderDays("{{day:-9}} {{past:1}} {{past:2}} {{past:4}}", wednesday).ShouldBe("2026-11-09 2026-11-17 2026-11-12 2026-11-05");
+
+        // On a sitting day itself, that day is not yet past.
+        StandInResponses.RenderDays("{{past:1}}", new DateOnly(2026, 11, 19)).ShouldBe("2026-11-17");
+    }
+
+    [Fact]
     public void Every_canned_response_says_it_is_synthetic_in_its_first_comment()
     {
         foreach (var file in Directory.EnumerateFiles(StandInFixture.SyntheticDirectory, "*.xml"))

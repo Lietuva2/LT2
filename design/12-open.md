@@ -2,6 +2,19 @@
 
 What the owner decided is in [12-decisions.md](12-decisions.md). Do not decide an open item in code.
 
+**Found with the stand-in's real-sized parliament (141 MPs, about 45 bills a sitting day), 2026-11-18, awaiting the owner**
+
+Nothing is built for these; the local stack and the trial show them as they are.
+
+1. About four in ten upcoming agenda rows are bills to be presented, which the open data does not know before their first
+   sitting: the agenda page and the front page show them with "Projekto atviruosiuose Seimo duomenyse dar nėra." and no
+   title (design 8.11.1). The lrs.lt page names each bill's title in its row; the watcher could keep it for such rows
+   until the open data has the bill. If no: as now.
+2. The front page's "Balsuota" lists every stage vote of the last seven days: with a real week (two sitting days, 100–130
+   stage votes) that is one very long page (about 150 KB of HTML). It could show the newest few (as "Planuojama" shows
+   eight) with the link to the history. If no: as now. The agenda page's "Dėl ko Seimas balsavo per pastarąsias 7
+   dienas" has the same length, which fits a page meant for the whole list.
+
 **Proposed by the designer while building the version histories' changes (8.16.2), 2026-11-18, awaiting the owner**
 
 Each is built as written; "no" names what changes. The Lithuanian texts are proposals for a native read.

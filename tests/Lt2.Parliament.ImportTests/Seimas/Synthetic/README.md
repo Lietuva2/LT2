@@ -72,3 +72,12 @@ position and its votes are neither counted nor free [decided 2026-11-12].
 | Rasa Ievaitė | 7 | 7 | 3 / 3 (the four mixed-group votes have no figure) | 0 |
 
 `tests/Lt2.Parliament.ImportTests/Import/ImportTests.cs` checks these numbers after a full import.
+
+## The local stack's larger parliament (not here)
+
+The stand-in container also loads its overlay, `tools/Lt2.SeimasStandIn/Recent`, over these files; tests never do. There
+the parliament has the real Seimas's shape: these 14 MPs unchanged and 128 more (141 seated), in seven invented groups of
+the real sizes (Reformų partijos frakcija 52, Pilietinės sąjungos 28, Regionų aljanso 17, Atviros visuomenės partijos 13,
+Darnos sąjūdžio 11, Bendruomenių sąjungos 9, the mixed group 11), the votes above again with the ballots of all 141 (these
+14 rows and the totals unchanged; the factions' positions and the statistics above hold for these files only), and the recent and upcoming sitting days.
+`python tools/standin_overlay.py` writes it (fixed seeds); edit the generators, not the files.

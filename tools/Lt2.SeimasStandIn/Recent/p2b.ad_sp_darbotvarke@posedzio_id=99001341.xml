@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. {{past:N}} is the N-th Tuesday or Thursday before today (yyyy-MM-dd): the last four sitting days, with their
+     votes, shaped after the real Seimas's. Written by tools/standin_overlay.py (fixed seed); do not edit by hand (tools/standin_agenda.py). --><SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001341" numeris="262" tipas="Vakarinis" pradžia="{{past:4}} 14:00" pabaiga="{{past:4}} 14:48">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134101" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="14:00"/>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134102" numeris="2" pavadinimas="Korupcijos prevencijos įstatymo 10 straipsnio pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="14:02">
+      <Dokumentas registracijos_numeris="XVP-1566" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1566"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134103" numeris="3" pavadinimas="Seimo nutarimo „Dėl Konkurencijos tarybos 2025 metų veiklos ataskaitos“ projektas" stadija="Svarstymas" laikas_nuo="14:17">
+      <Dokumentas registracijos_numeris="XVP-1209" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1209"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134104" numeris="4" pavadinimas="Laukinės gyvūnijos įstatymo 3, 33 ir 59 straipsnių pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="14:22">
+      <Dokumentas registracijos_numeris="XVP-0926" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0926"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134105" numeris="r-5" pavadinimas="Seimo nutarimo „Dėl Vaiko teisių apsaugos kontrolieriaus įstaigos 2025 metų veiklos ataskaitos“ projektas" stadija="Pateikimas, svarstymas, priėmimas" laikas_nuo="14:27">
+      <Dokumentas registracijos_numeris="XVP-1874" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1874"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134106" numeris="r-6" pavadinimas="Seimo nutarimo „Dėl Žurnalistų etikos inspektoriaus tarnybos 2025 metų veiklos ataskaitos“ projektas" stadija="Pateikimas, svarstymas, priėmimas" laikas_nuo="14:32">
+      <Dokumentas registracijos_numeris="XVP-1761" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1761"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99134107" numeris="r-7" pavadinimas="Seimo nutarimo „Dėl Europos reikalų komiteto sudėties pakeitimo“ projektas" stadija="Pateikimas, svarstymas, priėmimas" laikas_nuo="14:37">
+      <Dokumentas registracijos_numeris="XVP-1943" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1943"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>

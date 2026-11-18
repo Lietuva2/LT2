@@ -5,7 +5,7 @@ using Lt2.SeimasStandIn;
 var builder = WebApplication.CreateSlimBuilder(args);
 builder.Logging.SetMinimumLevel(LogLevel.Warning);
 var directory = builder.Configuration["StandIn:ResponsesPath"] ?? Path.Combine(AppContext.BaseDirectory, "Responses");
-// Local only: Recent/ holds a sitting and a stage vote dated relative to today, so the local agenda has recent votes.
+// Local only: Recent/ (tools/standin_overlay.py) holds the 141-seat invented parliament and sitting days dated relative to today.
 var responses = StandInResponses.Load(directory, builder.Configuration["StandIn:RecentPath"] ?? Path.Combine(AppContext.BaseDirectory, "Recent"));
 
 var app = builder.Build();

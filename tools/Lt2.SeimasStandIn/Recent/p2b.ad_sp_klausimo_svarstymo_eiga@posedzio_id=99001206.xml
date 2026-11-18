@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
-     Seimas response. Written by tools/demo_closed_bills.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
+     Seimas response. Written by tools/standin_overlay.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
   <SeimoPosėdis posėdžio_id="99001206">
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012061">
-      <Balsavimas balsavimo_id="99100229" balsavimo_laikas="2026-06-11 11:04:31" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
+      <Balsavimas balsavimo_id="99100229" balsavimo_laikas="2026-06-11 10:53:18" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>
     </DarbotvarkėsKlausimas>
     <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012062">
-      <Balsavimas balsavimo_id="99100224" balsavimo_laikas="2026-06-11 11:43:30" aprašas="Priimti Išmokų vaikams įstatymo pataisą" balsavimo_tipas="Atviras"/>
+      <Balsavimas balsavimo_id="99100224" balsavimo_laikas="2026-06-11 11:44:22" aprašas="Priimti Išmokų vaikams įstatymo pataisą" balsavimo_tipas="Atviras"/>
     </DarbotvarkėsKlausimas>
   </SeimoPosėdis>
 </SeimoInformacija>
