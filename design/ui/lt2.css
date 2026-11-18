@@ -8,11 +8,11 @@
  *   slate  = the Seimas record (official facts, imported data)
  *   leaf   = people (Lietuva 2.0 users: their numbers and their words)
  *   brand  = Lietuva 2.0 itself and the representatives' answers (actions, links, responses)
- * "For" is the light theme's link green and "against" a red of the same lightness and strength, in both themes, with
- * white words on them and always with the word (owner, 2026-11-18: one green across the site, the pair designed together;
- * until then "for" was a yellower moss so it would not read as Lietuva 2.0 taking a side). On the dark grounds they are
- * under 3:1, so there a shape in a side's colour carries a light 1px edge (--side-edge). Blue and red were dropped:
- * beside white they recalled a flag.
+ * "For" is the light theme's link green and "against" a red of the same lightness and strength, with white words on them
+ * and always with the word (owner, 2026-11-18: one green across the site, the pair designed together; until then "for"
+ * was a yellower moss so it would not read as Lietuva 2.0 taking a side). The dark theme uses brighter versions of the
+ * two, at least 3:1 against its sheet and ground, with no edge round them. Blue and red were dropped: beside white they
+ * recalled a flag.
  *
  * Type: Sofia Sans for the interface, its Extra Condensed width for headings and figures (Lithuanian words are
  * long; a condensed face keeps them on one line on a phone), Brygada 1918 for words people wrote themselves.
@@ -47,9 +47,9 @@
   --action-ink: #ffffff;
   --link: #1b6034;
 
-  /* Votes and sides. "For" is the light theme's link colour, the same in both themes; "against" has its lightness and
-     strength (OKLCH). The threshold's progress is the same green, lighter, at least 3:1 against its track in both themes.
-     --side-edge outlines a shape in a side's colour where the ground is too dark for it (none in the light theme). */
+  /* Votes and sides. "For" is the light theme's link colour; "against" has its lightness and strength (OKLCH). The dark
+     theme has brighter versions of both, at least 3:1 against its sheet and ground, white words on them in both themes.
+     The threshold's progress is the same green, lighter, at least 3:1 against its track in both themes. */
   --for: #1b6034;
   --for-tint: #daeede;
   --against: #85322f;
@@ -58,7 +58,6 @@
   --absent: #cbd1cd;
   --on-vote: #ffffff;
   --progress: #3a8e54;
-  --side-edge: transparent;
 
   /* Notes and errors */
   --note-bg: #fdeebf;
@@ -107,7 +106,7 @@
     --leaf-tint: #21331a; --leaf-ink: #bfe89b;
     --brand-deep: #123d22; --brand-tint: #1b2e22;
     --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-    --for-tint: #23462d; --against-tint: #59302d; --side-edge: #8d9a93;
+    --for: #217740; --for-tint: #23462d; --against: #b4433f; --against-tint: #59302d;
     --abstain: #7a857f; --absent: #38433d;
     --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
     color-scheme: dark;
@@ -121,7 +120,7 @@
   --leaf-tint: #21331a; --leaf-ink: #bfe89b;
   --brand-deep: #123d22; --brand-tint: #1b2e22;
   --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-  --for-tint: #23462d; --against-tint: #59302d; --side-edge: #8d9a93;
+  --for: #217740; --for-tint: #23462d; --against: #b4433f; --against-tint: #59302d;
   --abstain: #7a857f; --absent: #38433d;
   --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
   color-scheme: dark;
@@ -367,9 +366,6 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 .split__against { background: var(--against); }
 .split__abstain { background: var(--abstain); }
 .split--s { height: 0.5rem; }
-/* On the dark grounds the sides' colours are under 3:1: a light 1px edge (--side-edge, transparent in the light theme). */
-.split__for, .split__against, .choice--for::before, .choice--against::before { box-shadow: 0 0 0 1px var(--side-edge); }
-.figure--for .figure__num, .figure--against .figure__num { -webkit-text-stroke: 1px var(--side-edge); paint-order: stroke fill; }
 
 /* The threshold: a ruler with a tick every tenth. */
 .ruler { position: relative; height: 1.25rem; background: var(--slate-tint); }

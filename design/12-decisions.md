@@ -493,7 +493,9 @@ Each is built as written; "no" names what changes.
 - The corner cut leaves every button, filled or outlined (the designer's recommendation of the open question "which
   elements carry the cut corner"); it stays on the page's main sheet and the portraits. The front page's step numbers
   lose it too.
-- The dark theme uses the light theme's side colours, `#1b6034` and `#85322f`, with white words, as the light theme
-  does; where a shape in a side's colour is under 3:1 against a dark ground or track it keeps its colour and gets a light
-  1px edge. The threshold's progress is the same `#3a8e54` in both themes; the dark menu keeps its own link green, since
-  the light one is under 3:1 on the dark ground.
+- The dark theme uses brighter versions of the light theme's side colours, `#217740` and `#b4433f`, with white words, as
+  the light theme does: they meet 3:1 against the dark sheet and ground, so no shape in a side's colour has an edge. (The
+  first build of this decision kept the light pair, `#1b6034` and `#85322f`, in the dark theme with a light 1px edge
+  round every shape under 3:1; the owner chose the brighter colours instead the same day.) The threshold's progress is
+  the same `#3a8e54` in both themes; the dark menu keeps its own link green, since the light one is under 3:1 on the
+  dark ground.

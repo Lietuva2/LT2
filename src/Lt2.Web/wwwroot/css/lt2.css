@@ -8,11 +8,11 @@
  *   slate  = the Seimas record (official facts, imported data)
  *   leaf   = people (Lietuva 2.0 users: their numbers and their words)
  *   brand  = Lietuva 2.0 itself and the representatives' answers (actions, links, responses)
- * "For" is the light theme's link green and "against" a red of the same lightness and strength, in both themes, with
- * white words on them and always with the word (owner, 2026-11-18: one green across the site, the pair designed together;
- * until then "for" was a yellower moss so it would not read as Lietuva 2.0 taking a side). On the dark grounds they are
- * under 3:1, so there a shape in a side's colour carries a light 1px edge (--side-edge). Blue and red were dropped:
- * beside white they recalled a flag.
+ * "For" is the light theme's link green and "against" a red of the same lightness and strength, with white words on them
+ * and always with the word (owner, 2026-11-18: one green across the site, the pair designed together; until then "for"
+ * was a yellower moss so it would not read as Lietuva 2.0 taking a side). The dark theme uses brighter versions of the
+ * two, at least 3:1 against its sheet and ground, with no edge round them. Blue and red were dropped: beside white they
+ * recalled a flag.
  *
  * Type: Sofia Sans for the interface, its Extra Condensed width for headings and figures (Lithuanian words are
  * long; a condensed face keeps them on one line on a phone), Brygada 1918 for words people wrote themselves.
@@ -47,9 +47,9 @@
   --action-ink: #ffffff;
   --link: #1b6034;
 
-  /* Votes and sides. "For" is the light theme's link colour, the same in both themes; "against" has its lightness and
-     strength (OKLCH). The threshold's progress is the same green, lighter, at least 3:1 against its track in both themes.
-     --side-edge outlines a shape in a side's colour where the ground is too dark for it (none in the light theme). */
+  /* Votes and sides. "For" is the light theme's link colour; "against" has its lightness and strength (OKLCH). The dark
+     theme has brighter versions of both, at least 3:1 against its sheet and ground, white words on them in both themes.
+     The threshold's progress is the same green, lighter, at least 3:1 against its track in both themes. */
   --for: #1b6034;
   --for-tint: #daeede;
   --against: #85322f;
@@ -58,7 +58,6 @@
   --absent: #cbd1cd;
   --on-vote: #ffffff;
   --progress: #3a8e54;
-  --side-edge: transparent;
 
   /* Notes and errors */
   --note-bg: #fdeebf;
@@ -107,7 +106,7 @@
     --leaf-tint: #21331a; --leaf-ink: #bfe89b;
     --brand-deep: #123d22; --brand-tint: #1b2e22;
     --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-    --for-tint: #23462d; --against-tint: #59302d; --side-edge: #8d9a93;
+    --for: #217740; --for-tint: #23462d; --against: #b4433f; --against-tint: #59302d;
     --abstain: #7a857f; --absent: #38433d;
     --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
     color-scheme: dark;
@@ -121,7 +120,7 @@
   --leaf-tint: #21331a; --leaf-ink: #bfe89b;
   --brand-deep: #123d22; --brand-tint: #1b2e22;
   --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-  --for-tint: #23462d; --against-tint: #59302d; --side-edge: #8d9a93;
+  --for: #217740; --for-tint: #23462d; --against: #b4433f; --against-tint: #59302d;
   --abstain: #7a857f; --absent: #38433d;
   --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
   color-scheme: dark;
@@ -477,13 +476,12 @@ body > .page { width: 100%; }
 /* The two sides on a bill's page and in a front-page row (.sides): with no side yet both are filled; once a side is
    taken the chosen one stays filled with a check mark before the word (aria-hidden; the state is aria-pressed) and
    the other is outlined in its colour on the sheet, still a button that changes the side. The outlined word is in ink.
-   Every button is straight (owner, 2026-11-18), so the fill (the tint on hover) and the inset outline share one shape. On
-   the dark sheet the side's 2px outline is under 3:1, so a light 1px edge (--side-edge) goes round it. */
+   Every button is straight (owner, 2026-11-18), so the fill (the tint on hover) and the inset outline share one shape. */
 .sides .btn[aria-pressed="true"] { box-shadow: none; }
 .sides__check { font-weight: 800; }
 .sides:has(.btn[aria-pressed="true"]) .btn[aria-pressed="false"] { --btn-bg: var(--sheet); background: var(--btn-bg); color: var(--ink); filter: none; }
-.sides:has(.btn[aria-pressed="true"]) .btn--for[aria-pressed="false"] { box-shadow: inset 0 0 0 2px var(--for), 0 0 0 1px var(--side-edge); }
-.sides:has(.btn[aria-pressed="true"]) .btn--against[aria-pressed="false"] { box-shadow: inset 0 0 0 2px var(--against), 0 0 0 1px var(--side-edge); }
+.sides:has(.btn[aria-pressed="true"]) .btn--for[aria-pressed="false"] { box-shadow: inset 0 0 0 2px var(--for); }
+.sides:has(.btn[aria-pressed="true"]) .btn--against[aria-pressed="false"] { box-shadow: inset 0 0 0 2px var(--against); }
 .sides:has(.btn[aria-pressed="true"]) .btn--for[aria-pressed="false"]:hover:not(:disabled) { --btn-bg: var(--for-tint); }
 .sides:has(.btn[aria-pressed="true"]) .btn--against[aria-pressed="false"]:hover:not(:disabled) { --btn-bg: var(--against-tint); }
 
@@ -531,15 +529,6 @@ body > .page { width: 100%; }
 .splitbar__against { fill: var(--against); }
 .splitbar__abstain { fill: var(--abstain); }
 .seatmap { display: block; width: 100%; max-width: 40rem; height: auto; }
-
-/* The sides' colours are the light theme's in both themes (owner, 2026-11-18); on the dark grounds and the dark track they
-   are under 3:1, so every shape in a side's colour carries a light 1px edge there (--side-edge; transparent in the light
-   theme): the bars' parts, the seats, the squares beside "už" and "prieš", and the big figures' strokes. The bar's edges
-   may reach half a pixel past its box. */
-.splitbar { overflow: visible; }
-.splitbar__for, .splitbar__against, .seat--for, .seat--against { stroke: var(--side-edge); stroke-width: 1px; vector-effect: non-scaling-stroke; }
-.choice--for::before, .choice--against::before { box-shadow: 0 0 0 1px var(--side-edge); }
-.figure--for .figure__num, .figure--against .figure__num { -webkit-text-stroke: 1px var(--side-edge); paint-order: stroke fill; }
 
 /* Analytics (design 8.26): the four figures, the dot plot, the faction and agreement bars. SVG drawn on the server or in
    the island, coloured here (the content security policy allows no inline styles). */

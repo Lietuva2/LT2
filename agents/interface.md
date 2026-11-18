@@ -51,10 +51,10 @@ Read before changing a page, a component or an island. The rules behind it are d
   null) and an unchanged text show whole, with no disclosure. The text in force opens its
   history with its own changes. Every history lists the newest first; a short value (a name, a website) stays "A → B".
 - **Colours and shapes (design 8.16.3, owner 2026-11-18).** A side is coloured only through `--for` (the light theme's
-  link green) and `--against` (its matching red), the same in both themes, with `--on-vote` (white) for a word on them;
-  a new shape in a side's colour also takes the 1px `--side-edge` (stroke, or `box-shadow: 0 0 0 1px`), which keeps it
-  at 3:1 on the dark grounds and is transparent in the light theme. The threshold's fill is `--progress`; a mark of the
-  current place (menu, drop-down, tabs) is `--link`. Every token is set for both themes in `design/ui/lt2.css` and copied
+  link green) and `--against` (its matching red; brighter in the dark theme, `#217740` / `#b4433f`, at least 3:1 on its
+  sheet and ground), with `--on-vote` (white) for a word on them; a shape in a side's colour gets no light edge round
+  it (owner, 2026-11-18: brighter dark colours instead), and the side button not chosen only its own 2px outline in the
+  side's colour. The threshold's fill is `--progress`; a mark of the current place (menu, drop-down, tabs) is `--link`. Every token is set for both themes in `design/ui/lt2.css` and copied
   to `lt2.css`; text keeps 4.5:1 and a control or a bar 3:1 in both. Buttons are straight (no cut); the cut corner is
   only `.sheet--cut` and `.portrait`. A `.bubble` is a straight box with radius `--cut-s` and a tail pointing up to the
   name above it. Figures in a row (`.pair--keep`, `.totals`, `.analytics-figures`) are a subgrid of five lines
