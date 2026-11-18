@@ -5,7 +5,14 @@ Read before changing a page, a component or an island. The rules behind it are d
 - **Island controls stay disabled until the island is interactive** (`InteractiveBase<TText>.Locked`, or `!RendererInfo.IsInteractive`),
   fields included, and the page carries `<NeedsScript />`; a button that only shows a popover ("⋯", a hint's trigger) works
   without script and stays enabled. `tests/Lt2.E2E/IslandsBeforeStartTests.cs` walks the pages with the
-  WebAssembly runtime blocked; add a new island page there.
+  WebAssembly runtime blocked; add a new island page there. A disabled control is dimmed (opacity 0.6), except the side
+  buttons (`.sides`, design 8.12.1, owner 2026-11-18): their pair carries `aria-busy` while `Locked` (and, in a front page
+  row, until the member's answer is read), which keeps them in full colour with the "wait" cursor and a sheen (lt2.css,
+  "Waiting"); dimmed only without script.
+- **A bill's page is one grid** (`.bill-body`, design 8.12.1, owner 2026-11-18): `.bill-body__main` and the side column
+  `aside.bill-body__aside` share the first row on a wide screen, every other part spans both columns; the side column is
+  last in the markup (only `SourceLine` follows), so a phone shows it after the votes without CSS `order`. A new part of
+  the page goes between the main column and the votes, never after the side column.
 - **One way to do each thing in the interface.** An interactive component inherits `InteractiveBase<TText>`
   (`Lt2.Web.Client/Components`; `TText` is its resource marker): `RunAsync` for every action (one at a time, failures
   become the message), `Succeeded`/`Show` for an answer, `Valid` for the shared validator, `IsSignedInAsync`, and

@@ -28,10 +28,12 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         }
 
         // A person's side is a "pozicija", never "balsavimas" (the Seimas's own votes are linked, and may be; on the bill's
-        // page they are listed in the stages, in the side column since 2026-11-16, and in the votes at the bottom).
+        // page they are listed in the stages, in the side column since 2026-11-16, and in the votes; the side column follows
+        // the votes since 2026-11-18, so the rest of it is read too).
         var people = Regex.Replace(MainOf(html), "<section[^>]*aria-labelledby=\"h-stages\".*?</section>", "", RegexOptions.Singleline);
         var seimas = people.IndexOf("aria-labelledby=\"h-votes\"", StringComparison.Ordinal);
-        people = seimas < 0 ? people : people[..seimas];
+        var aside = people.IndexOf("<aside", StringComparison.Ordinal);
+        people = seimas < 0 ? people : people[..seimas] + (aside > seimas ? people[aside..] : "");
         Regex.IsMatch(Regex.Replace(people, "<a [^>]*>[^<]*</a>|href=\"[^\"]*\"", ""), "balsavim", RegexOptions.IgnoreCase).ShouldBeFalse();
     }
 
@@ -150,7 +152,24 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         Regex.IsMatch(html, "<a class=\"mark act__item num\" id=\"mark-[0-9a-f-]+\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">").ShouldBeTrue("a visitor's \"Man svarbu\" signs in and comes back");
         html.ShouldNotContain("id=\"atsakymai\"", Case.Sensitive, "nobody answered: no part");
         html.ShouldNotContain("id=\"organisations\"", Case.Sensitive, "no statement: no section");
-        html.IndexOf("</aside>", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"reasons\"", StringComparison.Ordinal), "the arguments follow the side column");
+        // Owner, 2026-11-18: the side column is the page's last part, after the arguments and the votes (on a phone it comes
+        // after them; .bill-body puts it beside the main column on a wide screen); only the data source line follows it. The
+        // note that the numbers are no poll stands in "Ko prašo", under the counts and the side buttons, above the threshold.
+        var reasons = html.IndexOf("id=\"reasons\"", StringComparison.Ordinal);
+        var votes = html.IndexOf("aria-labelledby=\"h-votes\"", StringComparison.Ordinal);
+        var aside = html.IndexOf("<aside class=\"stack bill-body__aside\">", StringComparison.Ordinal);
+        html.ShouldContain("<div class=\"bill-body\">");
+        html.IndexOf("class=\"stack stack--loose bill-body__main\"", StringComparison.Ordinal).ShouldBeLessThan(reasons, "the main column comes first");
+        reasons.ShouldBeLessThan(votes, "the votes follow the arguments");
+        votes.ShouldBeLessThan(aside, "the side column follows the votes");
+        aside.ShouldBeLessThan(html.IndexOf("id=\"stages\"", StringComparison.Ordinal));
+        html.IndexOf("id=\"stages\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"digests\"", StringComparison.Ordinal));
+        html.IndexOf("</aside>", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("Lietuvos Respublikos Seimo atvirieji duomenys", StringComparison.Ordinal), "the data source line closes the page");
+        Regex.Count(html, "id=\"not-a-poll\"").ShouldBe(1);
+        var sides = html[html.IndexOf("id=\"sides\"", StringComparison.Ordinal)..html.IndexOf("id=\"threshold\"", StringComparison.Ordinal)];
+        sides.ShouldContain("id=\"side-picker\"");
+        sides.IndexOf("id=\"side-picker\"", StringComparison.Ordinal).ShouldBeLessThan(sides.IndexOf("id=\"not-a-poll\"", StringComparison.Ordinal), "under the side buttons, above the threshold");
+        sides.ShouldContain("<p class=\"note note--quiet\" id=\"not-a-poll\">Tai nėra reprezentatyvi apklausa");
     }
 
     [Fact]

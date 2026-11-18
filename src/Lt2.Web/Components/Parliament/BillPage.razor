@@ -23,11 +23,12 @@
 @* The bill and the record are one page (design 8.12.1), server-rendered and readable without JavaScript. The header: the
    way back ("Projektai / Įstatymo projektas XVP-0412"), the title and one line with the stage tags, "Planuojama …", "Sekti"
    and "Sekėjai: n". Beside the side column: what the bill is about (8.13) with its label; both sides with the counts for
-   accounts older than 30 days, the threshold and the share line; the Seimas result of a closed bill. The side column: the
-   stages ("Iš kur ši data?" and a participant's "Data neteisinga?" under them), the summaries that held the bill (8.7). Then at the page's full
-   width (owner, 2026-11-17): MPs' responses and organisations' statements, each only when there is one, then the
-   arguments; then the Seimas votes. Every active bill is open at once: before anyone has taken part the same controls
-   show zero counts and one line saying so. A finished bill nobody took part in shows the bill only; one whose record a
+   accounts older than 30 days, "not a poll" and the threshold and the share line; the Seimas result of a closed bill. The
+   side column: the stages ("Iš kur ši data?" and a participant's "Data neteisinga?" under them), the summaries that held the
+   bill (8.7). Then at the page's full width (owner, 2026-11-17): MPs' responses and organisations' statements, each only
+   when there is one, then the arguments; then the Seimas votes. The side column is last in the page's order (owner,
+   2026-11-18): on a phone it follows the votes, on a wide screen it stands beside the main column. Every active bill is
+   open at once: before anyone has taken part the same controls show zero counts and one line saying so. A finished bill nobody took part in shows the bill only; one whose record a
    moderator hid says that taking part is closed, with the statement. Taking a side, the arguments and the moderators'
    panel are WebAssembly islands. Nothing here tells who took part first. *@
 @if (_bill is { } b)
@@ -70,7 +71,10 @@
             </div>
         </div>
 
-        <div class="stack stack--loose">
+        @* Owner, 2026-11-18: the side column is the page's last part (only the data source line follows it), so on a phone it
+           comes after the votes; on a wide screen .bill-body places it back in the right column beside the main column, and
+           every other part spans both columns below them (design 8.12.1). *@
+        <div class="@(HasAside ? "bill-body" : "stack stack--loose")">
             @if (_record is { Status: "rejected" } hidden)
             {
                 @* Design 8.12.3: taking part is closed by the moderators; sides and arguments are kept unseen. *@
@@ -85,168 +89,127 @@
             }
             else if (_record is { } a)
             {
-                <div class="cols">
-                    <div class="stack stack--loose">
-                        <section class="sheet stack" aria-labelledby="h-what" id="about">
-                            <h2 id="h-what">@A["What.Heading"]</h2>
-                            @if (a.Description.Length > 0)
-                            {
-                                @* Design 8.2, "A text's layout": paragraphs and lists. *@
-                                <Lt2.Web.Client.Components.TypedText Text="@a.Description" />
-                                @* Design 8.13: always beside it the label, the day it was made, the official text it was made from
-                                   when known, its history, and "Pranešti apie klaidą". *@
-                                <p class="fine" id="description-source">
-                                    @if (a.DescriptionSource is "ai-draft" or "ai")
-                                    {
-                                        <span class="tag" id="ai-label">@A["What.Source." + a.DescriptionSource]</span>
-                                    }
-                                    else if (a.DescriptionSource == "initiator")
-                                    {
-                                        @A.Format("What.Source.initiator", a.DescriptionAuthor ?? A["Anonymous"])
-                                    }
-                                    else
-                                    {
-                                        @A["What.Source.moderator"]
-                                    }
-                                    @if (a.DescriptionAt is { } madeAt)
-                                    {
-                                        @(" · ")<span id="description-made">@A.Format("What.MadeOn", F.Date(madeAt))</span>
-                                    }
-                                    @if (a.DescriptionUrl is { } from)
-                                    {
-                                        @(" · ")<a href="@from" rel="external" id="description-from">@A["What.MadeFrom"]</a>
-                                    }
-                                    @(" · ")<a href="/seimas/@Uri.EscapeDataString(b.Number)/istorija">@A["History.Link"]</a>
-                                    @if (b.ESeimasUrl is { } link && link != a.DescriptionUrl)
-                                    {
-                                        @(" · ")<a href="@link" rel="external">@A["What.ESeimas"]</a>
-                                    }
-                                </p>
-                                @if (a.Id is { } describedRecord)
-                                {
-                                    <ReportDescription RecordId="describedRecord" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
-                                }
-                            }
-                            else
-                            {
-                                <p id="no-description">@A["What.None"]</p>
-                                @if (b.ESeimasUrl is { } link)
-                                {
-                                    <p class="fine"><a href="@link" rel="external">@A["What.ESeimas"]</a></p>
-                                }
-                            }
-                        </section>
-
-                        <section class="sheet sheet--cut stack" aria-labelledby="h-sides" id="sides">
-                            <h2 id="h-sides">@A["Sides.Heading"]</h2>
-                            @* The counts, the surge note and the threshold's progress are islands: a side taken on the page shows in
-                               them at once, without reloading the page (owner, 2026-11-17). A closed record's note, worded here,
-                               stands between the counts and the surge note. *@
-                            <SideFigures Number="@b.Number" Status="@a.Status" Counts="a.Counts" Surge="a.Surge"
-                                         Frozen="@(a.Status == "closed" && a.ClosedAt is { } closedAt ? A.Format("Closed.Frozen", F.Date(closedAt)) : null)"
-                                         @rendermode="InteractiveWebAssembly" />
-                            @if (a.Status == "open")
-                            {
-                                <SidePicker Number="@b.Number" @rendermode="InteractiveWebAssembly" />
-                            }
-
-                            <div class="stack stack--tight" id="threshold">
-                                <h3 id="h-reach">@A["Threshold.Heading"]</h3>
-                                <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
-                                                   LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == "sent")" @rendermode="InteractiveWebAssembly" />
-                                @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
-                                   now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
-                                   moderator's statement (design 8.12). *@
-                                <p class="small"><Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" /></p>
-                                @if (a.Threshold.SetBy == "moderator")
-                                {
-                                    <p class="small" id="threshold-set-by">@A["Threshold.SetBy.moderator"]</p>
-                                }
-                                @if (a.Threshold.Note is { } thresholdNote)
-                                {
-                                    <p class="small" id="threshold-note">@A.Format("Threshold.Note", thresholdNote)</p>
-                                }
-                                @if (a.Status == "open")
-                                {
-                                    <ShareLine Number="@b.Number" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="InteractiveWebAssembly" />
-                                }
-                            </div>
-                        </section>
-
-                        @if (_closingVote is { } vote)
+                <div class="stack stack--loose bill-body__main">
+                    <section class="sheet stack" aria-labelledby="h-what" id="about">
+                        <h2 id="h-what">@A["What.Heading"]</h2>
+                        @if (a.Description.Length > 0)
                         {
-                            <section class="sheet stack" aria-labelledby="h-result" id="seimas-result">
-                                <h2 id="h-result">@A["Closed.Heading"]</h2>
-                                <p class="small">@F.Stage(vote.Summary.Vote.Stage) · @F.Date(vote.Summary.Vote.HeldAt) · <a href="/seimas/balsavimai/@vote.Summary.Vote.Id">@A["Closed.VotePage"]</a></p>
-                                @if (vote.Summary.Vote.IsConsensus)
+                            @* Design 8.2, "A text's layout": paragraphs and lists. *@
+                            <Lt2.Web.Client.Components.TypedText Text="@a.Description" />
+                            @* Design 8.13: always beside it the label, the day it was made, the official text it was made from
+                               when known, its history, and "Pranešti apie klaidą". *@
+                            <p class="fine" id="description-source">
+                                @if (a.DescriptionSource is "ai-draft" or "ai")
                                 {
-                                    <p><VoteMajorityTag IsConsensus="true" /></p>
+                                    <span class="tag" id="ai-label">@A["What.Source." + a.DescriptionSource]</span>
+                                }
+                                else if (a.DescriptionSource == "initiator")
+                                {
+                                    @A.Format("What.Source.initiator", a.DescriptionAuthor ?? A["Anonymous"])
                                 }
                                 else
                                 {
-                                    @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
-                                    <p class="row result-line"><VoteMajorityTag HasResult="vote.Summary.Vote.HasResult" For="vote.Summary.Totals.For" Against="vote.Summary.Totals.Against" Abstain="vote.Summary.Totals.Abstain" /><MajorityHint Id="hint-closing-majority" /></p>
-                                    <div class="totals">
-                                        <div class="figure figure--for figure--m"><span class="label">@F.Choice("for")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.For)</span></div>
-                                        <div class="figure figure--against figure--m"><span class="label">@F.Choice("against")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Against)</span></div>
-                                        <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Abstain)</span></div>
-                                    </div>
-                                    @if (vote.Summary.OfficialNote is { } officialNote)
-                                    {
-                                        <p class="note note--quiet">@officialNote</p>
-                                    }
-                                    <SeatMap Ballots="vote.Ballots" />
-                                    @if (vote.Ballots.Count > 0)
-                                    {
-                                        @* Design 8.17: the list of each MP's ballot lives only on the vote's page. *@
-                                        <p class="small"><a href="/seimas/balsavimai/@vote.Summary.Vote.Id#balsai" id="each-mp">@A["Closed.EachMp"]</a></p>
-                                    }
+                                    @A["What.Source.moderator"]
                                 }
-                            </section>
-                        }
-                    </div>
-
-                    <aside class="stack">
-                        @* Design 8.12.1 (owner, 2026-11-16): the stages are the side column's first sheet, the same for everyone, with a
-                           participant's "Data neteisinga?" under them (owner, 2026-11-17); the moderators' panels follow, then the
-                           summaries. *@
-                        @StagesSheet(b, inAside: true)
-
-                        @if (_moderator)
-                        {
-                            <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
-                            <StatementModerationPanel Number="@b.Number" @rendermode="InteractiveWebAssembly" />
-                        }
-
-                        <section class="sheet stack stack--tight" aria-labelledby="h-digests" id="digests">
-                            <h3 id="h-digests">@A["Digests.OnAppeal.Heading"]</h3>
-                            @if (_digests.Count == 0)
+                                @if (a.DescriptionAt is { } madeAt)
+                                {
+                                    @(" · ")<span id="description-made">@A.Format("What.MadeOn", F.Date(madeAt))</span>
+                                }
+                                @if (a.DescriptionUrl is { } from)
+                                {
+                                    @(" · ")<a href="@from" rel="external" id="description-from">@A["What.MadeFrom"]</a>
+                                }
+                                @(" · ")<a href="/seimas/@Uri.EscapeDataString(b.Number)/istorija">@A["History.Link"]</a>
+                                @if (b.ESeimasUrl is { } link && link != a.DescriptionUrl)
+                                {
+                                    @(" · ")<a href="@link" rel="external">@A["What.ESeimas"]</a>
+                                }
+                            </p>
+                            @if (a.Id is { } describedRecord)
                             {
-                                <p class="small" id="no-digests">@A["Digests.OnAppeal.None"]</p>
+                                <ReportDescription RecordId="describedRecord" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                            }
+                        }
+                        else
+                        {
+                            <p id="no-description">@A["What.None"]</p>
+                            @if (b.ESeimasUrl is { } link)
+                            {
+                                <p class="fine"><a href="@link" rel="external">@A["What.ESeimas"]</a></p>
+                            }
+                        }
+                    </section>
+
+                    <section class="sheet sheet--cut stack" aria-labelledby="h-sides" id="sides">
+                        <h2 id="h-sides">@A["Sides.Heading"]</h2>
+                        @* The counts, the surge note and the threshold's progress are islands: a side taken on the page shows in
+                           them at once, without reloading the page (owner, 2026-11-17). A closed record's note, worded here,
+                           stands between the counts and the surge note. *@
+                        <SideFigures Number="@b.Number" Status="@a.Status" Counts="a.Counts" Surge="a.Surge"
+                                     Frozen="@(a.Status == "closed" && a.ClosedAt is { } closedAt ? A.Format("Closed.Frozen", F.Date(closedAt)) : null)"
+                                     @rendermode="InteractiveWebAssembly" />
+                        @if (a.Status == "open")
+                        {
+                            <SidePicker Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                        }
+                        @* Owner, 2026-11-18: "not a representative poll" right under the counts and the side buttons, in the
+                           same sheet on every width (it stood at the side column's end, which on a phone is the page's end). *@
+                        <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
+
+                        <div class="stack stack--tight" id="threshold">
+                            <h3 id="h-reach">@A["Threshold.Heading"]</h3>
+                            <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
+                                               LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == "sent")" @rendermode="InteractiveWebAssembly" />
+                            @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
+                               now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
+                               moderator's statement (design 8.12). *@
+                            <p class="small"><Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" /></p>
+                            @if (a.Threshold.SetBy == "moderator")
+                            {
+                                <p class="small" id="threshold-set-by">@A["Threshold.SetBy.moderator"]</p>
+                            }
+                            @if (a.Threshold.Note is { } thresholdNote)
+                            {
+                                <p class="small" id="threshold-note">@A.Format("Threshold.Note", thresholdNote)</p>
+                            }
+                            @if (a.Status == "open")
+                            {
+                                <ShareLine Number="@b.Number" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="InteractiveWebAssembly" />
+                            }
+                        </div>
+                    </section>
+
+                    @if (_closingVote is { } vote)
+                    {
+                        <section class="sheet stack" aria-labelledby="h-result" id="seimas-result">
+                            <h2 id="h-result">@A["Closed.Heading"]</h2>
+                            <p class="small">@F.Stage(vote.Summary.Vote.Stage) · @F.Date(vote.Summary.Vote.HeldAt) · <a href="/seimas/balsavimai/@vote.Summary.Vote.Id">@A["Closed.VotePage"]</a></p>
+                            @if (vote.Summary.Vote.IsConsensus)
+                            {
+                                <p><VoteMajorityTag IsConsensus="true" /></p>
                             }
                             else
                             {
-                                <ul class="rows">
-                                    @foreach (var d in _digests)
-                                    {
-                                        <li>
-                                            <div class="rows__main">
-                                                <span><a href="@DigestRoutes.PageAt(d.RunDate, d.RunId, d.Item.BillNumber)" class="num">@Display.Day(d.RunDate)</a> · <span class="small">@A["Digests.Kind." + d.Kind]</span> · <span class="small" id="digest-status-@d.RunId">@A["Digests.Short." + d.Status]</span></span>
-                                                <span class="small num">
-                                                    <span class="choice choice--for">@A["Digests.Side.for"]</span> @Display.Number(d.Item.For) (@Display.Number(d.Item.ForOlderThan30Days))
-                                                    · <span class="choice choice--against">@A["Digests.Side.against"]</span> @Display.Number(d.Item.Against) (@Display.Number(d.Item.AgainstOlderThan30Days))
-                                                </span>
-                                            </div>
-                                        </li>
-                                    }
-                                </ul>
-                                <p class="fine">@A["Digests.OnAppeal.Frozen"]</p>
+                                @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
+                                <p class="row result-line"><VoteMajorityTag HasResult="vote.Summary.Vote.HasResult" For="vote.Summary.Totals.For" Against="vote.Summary.Totals.Against" Abstain="vote.Summary.Totals.Abstain" /><MajorityHint Id="hint-closing-majority" /></p>
+                                <div class="totals">
+                                    <div class="figure figure--for figure--m"><span class="label">@F.Choice("for")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.For)</span></div>
+                                    <div class="figure figure--against figure--m"><span class="label">@F.Choice("against")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Against)</span></div>
+                                    <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Abstain)</span></div>
+                                </div>
+                                @if (vote.Summary.OfficialNote is { } officialNote)
+                                {
+                                    <p class="note note--quiet">@officialNote</p>
+                                }
+                                <SeatMap Ballots="vote.Ballots" />
+                                @if (vote.Ballots.Count > 0)
+                                {
+                                    @* Design 8.17: the list of each MP's ballot lives only on the vote's page. *@
+                                    <p class="small"><a href="/seimas/balsavimai/@vote.Summary.Vote.Id#balsai" id="each-mp">@A["Closed.EachMp"]</a></p>
+                                }
                             }
-                            <p class="fine">@(_sending == "off" ? A["Digests.DryRun"] + " " : "")<a href="/suvestines">@A["Digests.OnAppeal.All"]</a></p>
                         </section>
-
-                        <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
-                    </aside>
+                    }
                 </div>
 
                 @* Owner, 2026-11-17: the texts run at the page's full width below the top part, so each side's column has room and an
@@ -293,6 +256,51 @@
                 }
             </section>
 
+            @if (HasAside)
+            {
+                <aside class="stack bill-body__aside">
+                    @* Design 8.12.1 (owner, 2026-11-16): the stages are the side column's first sheet, the same for everyone, with a
+                       participant's "Data neteisinga?" under them (owner, 2026-11-17); the moderators' panels follow, then the
+                       summaries. Last in the page's order (owner, 2026-11-18): on a phone it follows the votes. *@
+                    @StagesSheet(b, inAside: true)
+
+                    @if (_moderator)
+                    {
+                        <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
+                        <StatementModerationPanel Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                    }
+
+                    <section class="sheet stack stack--tight" aria-labelledby="h-digests" id="digests">
+                        <h3 id="h-digests">@A["Digests.OnAppeal.Heading"]</h3>
+                        @if (_digests.Count == 0)
+                        {
+                            <p class="small" id="no-digests">@A["Digests.OnAppeal.None"]</p>
+                        }
+                        else
+                        {
+                            <ul class="rows">
+                                @foreach (var d in _digests)
+                                {
+                                    <li>
+                                        <div class="rows__main">
+                                            <span><a href="@DigestRoutes.PageAt(d.RunDate, d.RunId, d.Item.BillNumber)" class="num">@Display.Day(d.RunDate)</a> · <span class="small">@A["Digests.Kind." + d.Kind]</span> · <span class="small" id="digest-status-@d.RunId">@A["Digests.Short." + d.Status]</span></span>
+                                            <span class="small num">
+                                                <span class="choice choice--for">@A["Digests.Side.for"]</span> @Display.Number(d.Item.For) (@Display.Number(d.Item.ForOlderThan30Days))
+                                                · <span class="choice choice--against">@A["Digests.Side.against"]</span> @Display.Number(d.Item.Against) (@Display.Number(d.Item.AgainstOlderThan30Days))
+                                            </span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                            <p class="fine">@A["Digests.OnAppeal.Frozen"]</p>
+                        }
+                        <p class="fine">@(_sending == "off" ? A["Digests.DryRun"] + " " : "")<a href="/suvestines">@A["Digests.OnAppeal.All"]</a></p>
+                    </section>
+                </aside>
+            }
+
+            @* The data source line closes the page on every width; with a side column it follows it, since the stages are
+               Seimas data too. *@
             <SourceLine UpdatedAt="@_updatedAt" />
         </div>
     </div>
@@ -318,6 +326,12 @@
 
     /// <summary>A moderator or an administrator in a staff-passkey session: the arguments then carry the queue's actions.</summary>
     private bool _moderator;
+
+    /// <summary>
+    /// The page has the side column (design 8.12.1): a record that is shown, open or closed. A finished bill nobody took part
+    /// in and a record the moderators hid have none; their stages stand full-width above the votes.
+    /// </summary>
+    private bool HasAside => _record is not null and not { Status: "rejected" };
 
     [Parameter] public string Number { get; set; } = "";
 

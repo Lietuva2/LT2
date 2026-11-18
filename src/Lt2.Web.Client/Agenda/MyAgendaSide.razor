@@ -35,7 +35,7 @@
     {
         <div class="tl-ask">
             <span class="small">@L["Agenda.Ask"]</span>
-            <div class="tl-ask__sides sides">
+            <div class="tl-ask__sides sides" aria-busy="@(Waiting ? "true" : null)">
                 @foreach (var side in AppealLimits.Sides)
                 {
                     var chosen = _mine?.Side == side;
@@ -90,6 +90,16 @@
 
     private AgendaRecordResponse Shown => _live ?? Record;
 
+    /// <summary>The member's answer is being read: from the server's render until the island's first read ends.</summary>
+    private bool _reading = true;
+
+    /// <summary>
+    /// Before the island has started and read the member's answer, and while a press is sent, the buttons are disabled but
+    /// keep their colour (owner, 2026-11-18; lt2.css, "Waiting"). An answer that could not be read leaves them disabled
+    /// and dimmed, not waiting.
+    /// </summary>
+    private bool Waiting => Locked || (_answer is null && _reading);
+
     private string BillPath => "/seimas/" + Uri.EscapeDataString(Number);
 
     protected override async Task OnInitializedAsync()
@@ -98,7 +108,14 @@
         if (RendererInfo.IsInteractive && await IsSignedInAsync())
         {
             State.Changed += OnChanged;
-            await ReadAsync();
+            try
+            {
+                await ReadAsync();
+            }
+            finally
+            {
+                _reading = false;
+            }
 
             // The page's copy is up to a minute old: when it says nobody took part but the member's own answer has a side,
             // the bill's live numbers are read once (the same answer as after an action). No request in any other case.

@@ -553,3 +553,23 @@ Each is built as written; "no" names what changes.
   e. seime", or "Oficialus tekstas, iš kurio parengta" when that is the same address). A page without "Apie ką projektas"
   (a record hidden by the moderators, a finished bill nobody took part in) keeps "Projektas e-seime" under the stages, so
   the link is never missing.
+
+**Decided by the owner on 2026-11-18: the bill page's side column last on a phone; "not a poll" in "Ko prašo" (8.12.1)**
+
+- On a narrow screen the side column ("Stadijos Seime", the moderators' panels, the summaries) comes after everything
+  else, the votes included; only the data source line follows it. A phone had it right after "Ko prašo", before the
+  responses, the statements and the arguments. The moderators' panels move with it (accepted).
+- It is last in the page's markup too, so the reading and focus order is the order seen on a phone; a wide screen places
+  it back in the right column beside the main column, as before, with the other parts across both columns below.
+- "Tai nėra reprezentatyvi apklausa …" leaves the side column's end for "Ko prašo", right under the counts and the side
+  buttons, above the threshold, on every width.
+
+**Decided on 2026-11-18 (the owner: "Prašau balsuoti už" looked dimmed): the side buttons while waiting (8.12.1, 8.7)**
+
+- The dimmed look was the disabled state every island control has before WebAssembly starts (opacity 0.6: white words
+  at 2.9:1 on the light theme's "už", 3.6:1 in the dark theme), which on a phone lasts seconds; the same flashed during
+  every press. The side buttons on a bill's page and in a front page row keep that guard (disabled, so nothing can be
+  pressed before the island runs) but no longer look greyed out: full colour and words, `aria-busy` on the pair, the
+  pointer's "wait" cursor, and a slow dark sheen across them (none with reduced motion). Without script, where they
+  never start, the dimmed look stays beside the "needs JavaScript" note.
+- On hover a side's button darkens its fill only; the filter that darkened its white words too is gone.
