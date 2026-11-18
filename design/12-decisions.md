@@ -419,13 +419,15 @@ Each is built as written; "no" names what changes.
 
 - Resolves "Found with the stand-in's real-sized parliament", 2 (the front page's "Balsuota" length). The front page shows
   the next two sitting days and the last two voting days, five rows of each, with "Visi N projektų →" to the day on the
-  agenda page and "Dar N balsavimų →" to the day on the history of votes; at most twenty rows.
+  agenda page and "Dar N balsavimų →" to the day on the history of votes; at most twenty rows. [Both links replaced the
+  same day by "Rodyti likusius" in place, below.]
 - A day's rows go by activity (participants plus published arguments), then stage (priėmimas, svarstymas, pateikimas; a
   combined stage as its furthest), then number; bills the open data does not know yet last, folded into one line.
   Followers never rank anything; a member's followed bills are not moved up in the server's page ("Jūsų projektai" is
   their place, and finds them on the whole agenda).
 - The agenda page: every day a block with its count, ten rows, then "Rodyti visus N" opening the rest without script;
-  the recently voted list by day the same way. It reads the front page's minute-old copy.
+  the recently voted list by day the same way. It reads the front page's minute-old copy. [Superseded the same day, see
+  "the rest of a day on request" below: the hidden rows are no longer in the page.]
 - `/projektai` and an MP's votes grow in place by the address (`?rodyti=`), as the history of votes does; the arguments'
   "show all" works without script (`?argumentai=visi`); every moderators' list says "Rodoma 100 iš N" when cut.
 - The numbers (2 days, 5 a day, 10 a day, 20 a page and so on) are the design's, not settings.
@@ -439,3 +441,19 @@ Each is built as written; "no" names what changes.
   votes). Each forces its part of the same walk, ignoring that part's freshness rules; nothing else about the import changes.
 - The scheduled job triggered when it is not due is not silent: a log line at information level and a parameter on the
   job's dashboard page say so, with the last start.
+
+**Decided by the owner on 2026-11-18: the rest of a day on request, and how a vote went (8.7, 8.11.1, 8.18)**
+
+- The agenda page holds only what it shows: ten rows a day, then "Rodyti likusius" (no number), a link to the same page
+  with that day whole (`?diena=` a planned day, `?balsuota=` a voted one), landing on the first row added; the bills the
+  open data does not know yet come with the rest, as the day's last line. Without script the server renders the day
+  whole; with script the site's enhanced navigation fetches the page and swaps it in, without a reload. The day head
+  keeps its count ("40 projektų"); "Rodyti visus N" is gone.
+- The front page the same way: five rows a day, "Rodyti likusius" opens the rest of a planned or a voted day in place
+  (`/?diena=`, `/?balsuota=`); "Visi N projektų →" and "Dar N balsavimų →" are gone. One link to the whole agenda stays
+  by the heading ("Visa darbotvarkė"), and "Ankstesni balsavimai →" to the history of votes under the last voted day.
+- Every voted row says how the vote went, in a neutral chip beside the numbers. Asked as "Priimta" / "Nepriimta"; the
+  open data has no official outcome and 8.26.2 says "balsavusiųjų dauguma", never "priimta", so it is built as the
+  majority of those who voted ("Dauguma už", "Dauguma prieš", "Nėra daugumos"; a consensus "Pritarta bendru sutarimu")
+  with one hint beside the list, until the owner decides (12-open, "The outcome of a vote").
+- "Dar niekas nenurodė, ko prašo" reads "Niekas nenurodė, ko prašo".

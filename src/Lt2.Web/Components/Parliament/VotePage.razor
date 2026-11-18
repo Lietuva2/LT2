@@ -35,7 +35,7 @@
         <h2 id="h-result" class="visually-hidden">@F.T["Vote.Result"]</h2>
         @if (vote.IsConsensus)
         {
-            <p><span class="tag">@F.T["Consensus.Tag"]</span></p>
+            <p><VoteMajorityTag IsConsensus="true" /></p>
             <p>@F.T["Vote.ConsensusText"]</p>
         }
         else if (!vote.HasResult)
@@ -44,6 +44,8 @@
         }
         else
         {
+            @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
+            <p class="row result-line" id="vote-majority"><VoteMajorityTag For="totals.For" Against="totals.Against" Abstain="totals.Abstain" /><MajorityHint /></p>
             <div class="totals">
                 <div class="figure figure--m figure--for"><span class="label">@F.Choice("for")</span><span class="figure__num">@Display.Number(totals.For)</span></div>
                 <div class="figure figure--m figure--against"><span class="label">@F.Choice("against")</span><span class="figure__num">@Display.Number(totals.Against)</span></div>

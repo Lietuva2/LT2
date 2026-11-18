@@ -63,8 +63,11 @@ Read before changing a page, a component or an island. The rules behind it are d
 - **A list by day is the timeline's day blocks (owner, 2026-11-18):** `section.tl-day` (`tl-past` for votes) with
   `<TimelineDate>` (label, the date in words, the weekday and the day's count) and the rows in `div.tl-rows`; on a narrow
   screen the head is a band of its own. A long list grows by the address, never by script: "Rodyti daugiau" to `?rodyti=`
-  landing on the first row added (`VoteHistory`, `BillListPaging`, `MpVotePaging`), or a bounded rest under the browser's
-  `details` ("Rodyti visus N" on `/darbotvarke`). An island's "show all" button is a link to the long form until the
+  landing on the first row added (`VoteHistory`, `BillListPaging`, `MpVotePaging`), or the rest of one day by the address
+  ("Rodyti likusius" on `/darbotvarke` and `/`, `AgendaPaging`: `?diena=`, landing on the day's second list); never hidden
+  rows in the page. With script the site's enhanced navigation (blazor.web.js) fetches such a link and swaps the page in
+  without a reload; nothing else is needed. A vote's majority beside its numbers is `<VoteMajorityTag>`, with one
+  `<MajorityHint>` beside the list. An island's "show all" button is a link to the long form until the
   island runs (`RecordReasons`, `?argumentai=visi`).
 
 

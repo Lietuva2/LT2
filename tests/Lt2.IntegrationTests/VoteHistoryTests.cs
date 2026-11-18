@@ -320,6 +320,33 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         row.ShouldNotContain("riba");
     }
 
+    /// <summary>
+    /// Design 8.18, "The majority" (owner, 2026-11-18): the open data carries no official outcome, so each row says the
+    /// majority of those who voted (8.26.2): "Dauguma už" (more than half of for, against and abstain for it), "Dauguma prieš",
+    /// or "Nėra daugumos"; never "priimta". What it is is one hint beside the list. The vote's page and the bill's list of
+    /// votes say the same.
+    /// </summary>
+    [Fact]
+    public async Task Each_row_says_the_majority_of_those_who_voted_and_one_hint_says_what_it_is()
+    {
+        const long Adoption = 99300000 + 109 * 3 + 2;
+        const long Consideration = 99300000 + 109 * 3 + 1;
+        const long Presentation = 99300000 + 109 * 3;
+        await Database.ExecuteAsync("UPDATE parliament.vote SET \"for\" = 40, against = 60, abstain = 5, voted = 105 WHERE id = @v", ("v", Consideration));
+        await Database.ExecuteAsync("UPDATE parliament.vote SET \"for\" = 50, against = 40, abstain = 10, voted = 100 WHERE id = @v", ("v", Presentation));
+        var page = await OkAsync("/seimas/balsavimai?kas=visi&iki=" + Until);
+        var list = List(page);
+
+        RowOf(list, Adoption).ShouldContain("<span class=\"tag tag--outcome\" data-majority=\"for\">Dauguma už</span>");
+        RowOf(list, Consideration).ShouldContain("<span class=\"tag tag--outcome tag--outline\" data-majority=\"against\">Dauguma prieš</span>");
+        RowOf(list, Presentation).ShouldContain("<span class=\"tag tag--outcome tag--outline tag--dashed\" data-majority=\"none\">Nėra daugumos</span>", customMessage: "exactly half for is no majority");
+        list.ShouldNotContain("Priimta");
+        Regex.Count(page, "Kas yra balsavusiųjų dauguma\\?").ShouldBe(1, "one hint beside the list, none per row");
+
+        (await OkAsync($"/seimas/balsavimai/{Consideration}")).ShouldContain("data-majority=\"against\">Dauguma prieš</span>", customMessage: "the vote's page");
+        (await OkAsync($"/seimas/{Bill}")).ShouldContain("data-majority=\"none\">Nėra daugumos</span>", customMessage: "the bill's list of votes");
+    }
+
     [Fact]
     public async Task The_page_is_the_same_for_a_visitor_and_a_member_who_took_a_side()
     {

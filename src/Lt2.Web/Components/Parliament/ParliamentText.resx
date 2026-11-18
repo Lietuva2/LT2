@@ -41,6 +41,11 @@
   <data name="VoteKind.procedural" xml:space="preserve"><value>Procedūrinis balsavimas</value></data>
   <data name="VoteKind.other" xml:space="preserve"><value>Kitas balsavimas</value></data>
   <data name="Consensus.Tag" xml:space="preserve"><value>Pritarta bendru sutarimu</value></data>
+  <data name="Majority.for" xml:space="preserve"><value>Dauguma už</value></data>
+  <data name="Majority.against" xml:space="preserve"><value>Dauguma prieš</value></data>
+  <data name="Majority.none" xml:space="preserve"><value>Nėra daugumos</value></data>
+  <data name="Majority.Hint" xml:space="preserve"><value>Kas yra balsavusiųjų dauguma?</value></data>
+  <data name="Majority.Answer" xml:space="preserve"><value>„Dauguma už“ – kai už balsavo daugiau nei pusė tų, kurie balsavo „už“, „prieš“ arba susilaikė; „Dauguma prieš“ – kai prieš balsavo daugiau nei pusė jų; kitaip daugumos nėra. Tai nėra oficialus Seimo sprendimas: jis skaičiuojamas nuo posėdyje užsiregistravusių Seimo narių, o kai kuriems sprendimams reikia didesnės daugumos.</value></data>
   <data name="Consensus.NoVotes" xml:space="preserve"><value>Atskirų Seimo narių balsų nėra</value></data>
   <data name="NoResult" xml:space="preserve"><value>Rezultatų dar nėra</value></data>
   <data name="Faction.Position" xml:space="preserve"><value>Frakcija ({0}): {1}</value></data>

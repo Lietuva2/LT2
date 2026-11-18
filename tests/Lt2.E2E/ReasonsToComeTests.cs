@@ -37,11 +37,11 @@ public sealed partial class ReasonsToComeTests : E2ETest
 
     /// <summary>
     /// Owner, 2026-11-18: with a real-sized parliament the lists are cut, and every way to the rest works without script: a
-    /// day of the agenda opens its other rows in place, <c>/projektai</c> grows by the address landing on the first bill
+    /// day of the agenda fetches its other rows by the address (<c>?diena=</c>), <c>/projektai</c> grows by the address landing on the first bill
     /// added, and the bill's "Visi argumentai" is a link to the page with every argument.
     /// </summary>
     [Fact]
-    public async Task Without_javascript_a_long_day_opens_in_place_and_the_lists_grow_by_the_address()
+    public async Task Without_javascript_a_long_day_and_the_lists_grow_by_the_address()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         using var playwright = await Playwright.CreateAsync();
@@ -52,15 +52,22 @@ public sealed partial class ReasonsToComeTests : E2ETest
         });
         var page = await context.NewPageAsync();
 
-        // The stand-in's sitting days hold about forty bills each: ten show, "Rodyti visus" opens the rest in place.
+        // The stand-in's sitting days hold about forty bills each: ten show, and "Rodyti likusius" fetches the rest of the
+        // day by the address (owner, 2026-11-18: the hidden rows are not in the page), landing on the first row added.
         await page.GotoAsync(Base + "/darbotvarke");
-        var day = page.Locator("#agenda-coming section.tl-day:has(details.tl-more)").First;
-        await Assertions.Expect(day).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
-        var more = day.Locator("details.tl-more");
-        var visible = day.Locator("li.tl-item:visible");
-        (await visible.CountAsync()).ShouldBe(10, "ten rows of a long day");
-        await more.Locator("summary").ClickAsync();
-        (await visible.CountAsync()).ShouldBeGreaterThan(10, "the rest opens in place");
+        var rest = page.Locator("#agenda-coming section.tl-day a[id$='-rodyti']").First;
+        await Assertions.Expect(rest).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(rest).ToHaveTextAsync("Rodyti likusius");
+        var href = (await rest.GetAttributeAsync("href"))!;
+        href.ShouldMatch(@"^/darbotvarke\?diena=(\d{4}-\d{2}-\d{2})#diena-\1-likusieji$");
+        var dayId = href.Split('#')[1].Replace("-likusieji", "", StringComparison.Ordinal);
+        var dayRows = page.Locator($"#{dayId} li.tl-item");
+        (await dayRows.CountAsync()).ShouldBe(10, "ten rows of a long day, and no more in the page");
+        await rest.ClickAsync();
+        await page.WaitForURLAsync(new Regex("diena=.*#diena-.*-likusieji"), new() { Timeout = E2ESteps.Slow });
+        (await dayRows.CountAsync()).ShouldBeGreaterThan(10, "the day whole");
+        await Assertions.Expect(page.Locator($"#{dayId}-likusieji")).ToBeInViewportAsync();
+        await Assertions.Expect(page.Locator($"#{dayId} a[id$='-rodyti']")).ToHaveCountAsync(0);
         await E2ESteps.NoSidewaysScrollAsync(page, "/darbotvarke opened at 390");
 
         // "/projektai": twenty, then "Rodyti daugiau" by the address, landing on the first bill added.

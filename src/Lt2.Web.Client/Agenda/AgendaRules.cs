@@ -2,7 +2,7 @@ namespace Lt2.Web.Client.Agenda;
 
 /// <summary>
 /// One sitting or voting day of a list as a page shows it (design 8.7, 8.11.1): the rows shown at once, the rest of the
-/// day's known rows (behind "Rodyti visus", or not on the page), the bills the open data does not know yet (folded into
+/// day's known rows (fetched by "Rodyti likusius", AgendaPaging), the bills the open data does not know yet (folded into
 /// one line), and how many the day holds in all.
 /// </summary>
 public sealed record AgendaDayView<T>(IReadOnlyList<T> Shown, IReadOnlyList<T> Rest, IReadOnlyList<T> Unknown)
@@ -31,7 +31,7 @@ public static class AgendaRules
     /// <summary>The front page shows this many rows of each day.</summary>
     public const int FrontPerDay = 5;
 
-    /// <summary>The agenda page shows this many rows of each day before "Rodyti visus".</summary>
+    /// <summary>The agenda page shows this many rows of each day before "Rodyti likusius".</summary>
     public const int PagePerDay = 10;
 
     /// <summary>Activity: participants on both sides together plus published arguments (design 8.12.5).</summary>
@@ -60,15 +60,16 @@ public static class AgendaRules
     }
 
     /// <summary>
-    /// The bills of the front page's rows, each once, that its members' islands ask about in one <c>/me/bills</c> request:
-    /// never more than that request takes (<see cref="Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers"/>; the page shows at
-    /// most <see cref="FrontDays"/> × <see cref="FrontPerDay"/> × 2 rows). "Jūsų projektai" asks about the member's other
-    /// followed bills itself.
+    /// The bills of the front page's rows, each once, that its members' islands ask about: every row shown, in the order
+    /// shown. The page shows <see cref="FrontDays"/> × <see cref="FrontPerDay"/> × 2 rows, one request; a day opened whole
+    /// ("Rodyti likusius", owner 2026-11-18) adds its rows, asked in requests of
+    /// <see cref="Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers"/> (<see cref="MyAgendaState.Requests"/>). "Jūsų projektai"
+    /// asks about the member's other followed bills itself.
     /// </summary>
     public static IReadOnlyList<string> Asked(IEnumerable<string> numbers)
     {
         ArgumentNullException.ThrowIfNull(numbers);
-        return numbers.Distinct(StringComparer.OrdinalIgnoreCase).Take(Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers).ToList();
+        return numbers.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     /// <summary>

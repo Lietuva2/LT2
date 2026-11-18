@@ -31,7 +31,7 @@ else
 @code {
     [Parameter, EditorRequired] public AgendaRecordResponse Record { get; set; } = default!;
 
-    /// <summary>Leaves out "Dar niekas nenurodė, ko prašo": the member's own answer says they have a side on the bill.</summary>
+    /// <summary>Leaves out "Niekas nenurodė, ko prašo": the member's own answer says they have a side on the bill.</summary>
     [Parameter] public bool HideNobody { get; set; }
 
     /// <summary>The row's place (see MyAgendaSide), for the ids of the line "nobody yet" and the counts; none when not given.</summary>

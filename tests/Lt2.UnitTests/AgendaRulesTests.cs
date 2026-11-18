@@ -80,13 +80,16 @@ public sealed class AgendaRulesTests
     }
 
     [Fact]
-    public void The_front_pages_islands_ask_about_each_shown_bill_once_and_never_more_than_one_request_takes()
+    public void The_front_pages_islands_ask_about_each_shown_bill_once_in_requests_the_api_takes()
     {
         AgendaRules.Asked(["XVP-0001", "xvp-0001", "XVP-0002"]).ShouldBe(["XVP-0001", "XVP-0002"]);
 
-        // Two planned and two voting days of five rows each: within the request's limit with room to spare.
+        // Two planned and two voting days of five rows each: one request, with room to spare.
         (2 * AgendaRules.FrontDays * AgendaRules.FrontPerDay).ShouldBeLessThanOrEqualTo(MyBillsQuery.MaxNumbers);
-        var many = Enumerable.Range(1, MyBillsQuery.MaxNumbers + 10).Select(i => $"XVP-{i:0000}");
-        AgendaRules.Asked(many).Count.ShouldBe(MyBillsQuery.MaxNumbers);
+
+        // A day opened whole ("Rodyti likusius") adds its rows: every one is asked about, a request per thirty.
+        var many = AgendaRules.Asked(Enumerable.Range(1, MyBillsQuery.MaxNumbers + 10).Select(i => $"XVP-{i:0000}"));
+        many.Count.ShouldBe(MyBillsQuery.MaxNumbers + 10);
+        MyAgendaState.Requests(many).Select(r => r.Count).ShouldBe([MyBillsQuery.MaxNumbers, 10]);
     }
 }

@@ -18,8 +18,8 @@ public sealed record MyAgendaAnswer(IReadOnlyDictionary<string, MyBillResponse> 
 
 /// <summary>
 /// The member's own answers for the front page (design 8.7), asked once in the browser and shared by its islands (the panel
-/// "Jūsų projektai", the marks under the titles and the side columns of the timeline's rows): one <c>/me/bills</c> request
-/// for all the bills shown (never more than <see cref="MyBillsQuery.MaxNumbers"/>), the member's follows for the panel, and
+/// "Jūsų projektai", the marks under the titles and the side columns of the timeline's rows): <c>/me/bills</c> for all the
+/// bills shown (one request; one per <see cref="MyBillsQuery.MaxNumbers"/> with a day opened whole), the member's follows for the panel, and
 /// the invitation answer for the share link. Never asked while the server prerenders, so nothing of it is in the page's
 /// HTML. A failed answer is not kept, so the next island asks again. After a member's own action in a row the answers are
 /// read again (<see cref="RefreshAsync"/>) and <see cref="Changed"/> tells every island.
@@ -142,7 +142,7 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, IMeApi
             sides[number] = own.Side;
         }
 
-        var asked = new HashSet<string>(shownNumbers.Take(MyBillsQuery.MaxNumbers), StringComparer.OrdinalIgnoreCase);
+        var asked = new HashSet<string>(shownNumbers, StringComparer.OrdinalIgnoreCase);
         foreach (var part in Requests(listed.Select(b => b.Number).Where(n => !asked.Contains(n)).ToList()))
         {
             if ((await bills.GetAsync(new MyBillsQuery { Numbers = part })).Value is not { } answer)
@@ -186,11 +186,25 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, IMeApi
             return new MyAgendaAnswer(new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase), false);
         }
 
-        // The page asks about at most the rows it shows (design 8.7: twenty), always within the API's limit.
-        var answer = await bills.GetAsync(new MyBillsQuery { Numbers = numbers.Take(MyBillsQuery.MaxNumbers).ToList() });
-        return answer.Value is { } value
-            ? new MyAgendaAnswer(value.Bills.ToDictionary(b => b.Number, StringComparer.OrdinalIgnoreCase), value.HasPositionConsent, value.MpAccount)
-            : null;
+        // The page asks about the rows it shows (design 8.7: twenty, more with a day opened whole), within the API's limit a
+        // request.
+        var all = new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase);
+        MyBillsResponse? first = null;
+        foreach (var part in Requests(numbers))
+        {
+            if ((await bills.GetAsync(new MyBillsQuery { Numbers = part })).Value is not { } value)
+            {
+                return null;
+            }
+
+            first ??= value;
+            foreach (var bill in value.Bills)
+            {
+                all[bill.Number] = bill;
+            }
+        }
+
+        return new MyAgendaAnswer(all, first!.HasPositionConsent, first.MpAccount);
     }
 
     private async Task<MyInvitationResponse?> InvitationFetchAsync() => (await me.GetInvitationAsync()).Value;

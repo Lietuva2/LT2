@@ -185,10 +185,12 @@
                         <p class="small">@F.Stage(vote.Summary.Vote.Stage) · @F.Date(vote.Summary.Vote.HeldAt) · <a href="/seimas/balsavimai/@vote.Summary.Vote.Id">@A["Closed.VotePage"]</a></p>
                         @if (vote.Summary.Vote.IsConsensus)
                         {
-                            <p>@F.T["Consensus.Tag"]</p>
+                            <p><VoteMajorityTag IsConsensus="true" /></p>
                         }
                         else
                         {
+                            @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
+                            <p class="row result-line"><VoteMajorityTag HasResult="vote.Summary.Vote.HasResult" For="vote.Summary.Totals.For" Against="vote.Summary.Totals.Against" Abstain="vote.Summary.Totals.Abstain" /><MajorityHint Id="hint-closing-majority" /></p>
                             <div class="totals">
                                 <div class="figure figure--for figure--m"><span class="label">@F.Choice("for")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.For)</span></div>
                                 <div class="figure figure--against figure--m"><span class="label">@F.Choice("against")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Against)</span></div>
@@ -291,6 +293,8 @@
                     </VoteRow>
                 }
             </ul>
+            @* Design 8.18, "The majority": what the rows' chip means, once beside the list. *@
+            <p class="small"><MajorityHint Id="hint-votes-majority" /></p>
         }
     </section>
 

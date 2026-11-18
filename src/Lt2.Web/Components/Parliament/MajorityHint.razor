@@ -1,0 +1,10 @@
+@inject Formats F
+
+@* What the vote rows' majority chip means (design 8.15, 8.18 "The majority"): one hint beside a list of votes, near its
+   note line, never one per row. *@
+<Lt2.Web.Client.Components.Hint Id="@Id" Text="@F.T["Majority.Hint"]" Answer="@F.T["Majority.Answer"]" />
+
+@code {
+    /// <summary>Unique on the page.</summary>
+    [Parameter] public string Id { get; set; } = "hint-vote-majority";
+}
