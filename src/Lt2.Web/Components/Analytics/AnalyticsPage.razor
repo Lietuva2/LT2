@@ -86,7 +86,7 @@
             <div class="figure figure--m" id="figure-mps">
                 <span class="label">@T["Figures.Mps"]</span>
                 <span class="figure__num">@Display.Number(figures.MpsTakenOver)</span>
-                <span class="small num">@T.Format("Figures.MpsOf", Display.Number(figures.MpsSitting))</span>
+                <span class="small num">@MpsOf(figures.MpsSitting)</span>
             </div>
         </div>
         <p class="small" id="analytics-not-a-poll">
@@ -303,10 +303,15 @@
     private string SeimasShare(BillComparisonResponse bill) =>
         bill.IsConsensus ? T["Compare.Consensus"] : AnalyticsFormat.Share(bill.SeimasShareFor) ?? T["Compare.NoResult"];
 
-    private string Majority(BillComparisonResponse bill) => bill.SeimasMajorityFor switch
+    private string Majority(BillComparisonResponse bill) => bill.SeimasMajority switch
     {
-        true => T["Compare.MajorityFor"],
-        false => T["Compare.MajorityNotFor"],
-        null => T["Compare.NoResult"],
+        Lt2.SharedKernel.SeimasMajorities.For => T["Compare.MajorityFor"],
+        Lt2.SharedKernel.SeimasMajorities.Against => T["Compare.MajorityAgainst"],
+        Lt2.SharedKernel.SeimasMajorities.None => T["Compare.MajorityNone"],
+        _ => T["Compare.NoResult"],
     };
+
+    /// <summary>"iš 141 Seimo nario", "iš 13 Seimo narių": the genitive after "iš" is singular after 1, 21, 31 … (not 11).</summary>
+    private string MpsOf(int sitting) =>
+        T.Format(Lt2.SharedKernel.LithuanianCounts.Pick(sitting, "Figures.MpsOf.One", "Figures.MpsOf.Many", "Figures.MpsOf.Many"), Display.Number(sitting));
 }

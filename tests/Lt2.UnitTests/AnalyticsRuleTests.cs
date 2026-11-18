@@ -40,8 +40,58 @@ public sealed class BillComparisonRuleTests
     }
 
     [Fact]
-    public void A_vote_without_numbers_has_no_majority() =>
-        AnalyticsRules.SeimasMajorityFor(new SeimasVoteNumbers(false, null, null, null)).ShouldBeNull();
+    public void A_vote_without_numbers_has_no_majority()
+    {
+        var none = new SeimasVoteNumbers(false, null, null, null);
+        AnalyticsRules.SeimasMajorityFor(none).ShouldBeNull();
+        AnalyticsRules.SeimasMajorityAgainst(none).ShouldBeNull();
+        AnalyticsRules.SeimasMajority(none).ShouldBeNull();
+    }
+
+    [Fact]
+    public void The_seimas_majority_is_against_when_votes_against_are_more_than_half_of_those_who_voted()
+    {
+        AnalyticsRules.SeimasMajorityAgainst(Vote(30, 51, 20)).ShouldBe(true);
+        AnalyticsRules.SeimasMajority(Vote(30, 51, 20)).ShouldBe(SeimasMajorities.Against);
+    }
+
+    [Fact]
+    public void Abstentions_count_against_a_majority_against() =>
+        AnalyticsRules.SeimasMajorityAgainst(Vote(10, 50, 40)).ShouldBe(false);
+
+    [Fact]
+    public void Exactly_half_against_is_no_majority_against() =>
+        AnalyticsRules.SeimasMajorityAgainst(Vote(50, 50, 0)).ShouldBe(false);
+
+    [Fact]
+    public void A_vote_by_consensus_is_never_a_majority_against()
+    {
+        var consensus = new SeimasVoteNumbers(true, null, null, null);
+        AnalyticsRules.SeimasMajorityAgainst(consensus).ShouldBe(false);
+        AnalyticsRules.SeimasMajority(consensus).ShouldBe(SeimasMajorities.For);
+    }
+
+    [Fact]
+    public void The_seimas_majority_is_for_against_or_none_when_neither_side_has_more_than_half()
+    {
+        AnalyticsRules.SeimasMajority(Vote(51, 30, 20)).ShouldBe(SeimasMajorities.For);
+        AnalyticsRules.SeimasMajority(Vote(30, 51, 20)).ShouldBe(SeimasMajorities.Against);
+        AnalyticsRules.SeimasMajority(Vote(50, 50, 0)).ShouldBe(SeimasMajorities.None);
+        AnalyticsRules.SeimasMajority(Vote(40, 40, 30)).ShouldBe(SeimasMajorities.None);
+    }
+
+    [Fact]
+    public void No_majority_in_the_seimas_counts_as_not_for_and_agrees_with_members_against()
+    {
+        var comparison = AnalyticsRules.Compare(Vote(40, 40, 30), membersFor: 5, membersAgainst: 15);
+        comparison.SeimasMajority.ShouldBe(SeimasMajorities.None);
+        comparison.Agreed.ShouldBe(true);
+        AnalyticsRules.Compare(Vote(40, 40, 30), membersFor: 15, membersAgainst: 5).Agreed.ShouldBe(false);
+    }
+
+    [Fact]
+    public void A_majority_against_in_the_seimas_agrees_with_members_against() =>
+        AnalyticsRules.Compare(Vote(30, 70, 10), membersFor: 5, membersAgainst: 15).Agreed.ShouldBe(true);
 
     [Fact]
     public void The_members_majority_is_the_larger_side_and_a_tie_has_none()
