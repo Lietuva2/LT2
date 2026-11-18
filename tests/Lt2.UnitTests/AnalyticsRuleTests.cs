@@ -348,11 +348,11 @@ public sealed class AnalyticsShareFormatTests
         Lt2.Web.Client.Analytics.AnalyticsFormat.Share(null).ShouldBeNull();
 
     [Fact]
-    public void A_difference_is_written_in_percentage_points_with_one_decimal()
+    public void A_difference_is_written_as_a_whole_percent_like_the_shares()
     {
-        Lt2.Web.Client.Analytics.AnalyticsFormat.Points(0.148m).ShouldBe("14,8\u00a0p.\u00a0p.");
-        Lt2.Web.Client.Analytics.AnalyticsFormat.Points(0m).ShouldBe("0,0\u00a0p.\u00a0p.");
-        Lt2.Web.Client.Analytics.AnalyticsFormat.Points(null).ShouldBeNull();
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Difference(0.148m).ShouldBe("15\u00a0%");
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Difference(0m).ShouldBe("0\u00a0%");
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Difference(null).ShouldBeNull();
     }
 
     [Fact]

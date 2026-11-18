@@ -240,7 +240,7 @@
                                         @T.Format("Row.MembersCounts", Display.Number(bill.MembersFor), Display.Number(bill.MembersAgainst))@(" ")<span class="tag">@T["SmallSample"]</span>
                                     }
                                 </span>
-                                @if (AnalyticsFormat.Points(bill.Difference) is { } points)
+                                @if (AnalyticsFormat.Difference(bill.Difference) is { } points)
                                 {
                                     <span id="@("difference-" + bill.Number)">@T.Format("Row.Difference", points)</span>
                                 }
