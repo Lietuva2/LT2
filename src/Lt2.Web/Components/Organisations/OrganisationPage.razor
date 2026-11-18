@@ -131,13 +131,16 @@
                             {
                                 <details class="more stack stack--tight" id="versions-@s.Statement.Id">
                                     <summary class="linkish small">@L.Format("Org.Profile.Versions", Display.Number(s.Earlier.Count))</summary>
+                                    @* Owner, 2026-11-18: oldest first, each version with what it changed against the one before it
+                                       (TextChanges), the oldest whole; the statement in force closes the list with its changes. *@
                                     <ol class="rows">
-                                        @foreach (var v in s.Earlier)
+                                        @for (var i = 0; i < s.Earlier.Count; i++)
                                         {
+                                            var v = s.Earlier[i];
                                             <li>
                                                 <div class="rows__main">
                                                     <span class="small num">@L.Format("Org.Profile.ReplacedOn", Display.DayTime(v.ReplacedAt)) · @L["Org.Stance." + v.Stance]@(v.Goal is { } g ? " · " + L.Format(OrganisationWords.GoalKey(g) + "Only", Display.Number(g)) : "")</span>
-                                                    <span class="voice small">@v.Text</span>
+                                                    <Lt2.Web.Client.Components.TextChanges Old="@(i > 0 ? s.Earlier[i - 1].Text : null)" New="@v.Text" Class="voice small typed" />
                                                     @if (v.Link is { } vl)
                                                     {
                                                         <span class="small statement__link">@L["Org.Link"] @vl</span>
@@ -145,6 +148,12 @@
                                                 </div>
                                             </li>
                                         }
+                                        <li id="version-current-@s.Statement.Id">
+                                            <div class="rows__main">
+                                                <span class="small num">@L["Org.Profile.CurrentVersion"] · @L["Org.Stance." + s.Statement.Stance]@(s.Statement.Goal is { } cg ? " · " + L.Format(OrganisationWords.GoalKey(cg) + "Only", Display.Number(cg)) : "")</span>
+                                                <Lt2.Web.Client.Components.TextChanges Old="@s.Earlier[^1].Text" New="@s.Statement.Text" Class="voice small typed" />
+                                            </div>
+                                        </li>
                                     </ol>
                                 </details>
                             }
@@ -157,6 +166,7 @@
             {
                 <section class="sheet stack stack--tight" aria-labelledby="h-history" id="history">
                     <h2 id="h-history">@L["Org.Profile.History"]</h2>
+                    @* Owner, 2026-11-18: a name or a website is short, so a change reads "A → B", not compared word by word. *@
                     <ul class="rows">
                         @foreach (var change in p.History)
                         {

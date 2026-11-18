@@ -192,7 +192,8 @@ page's "Balsuota".
   names, factions and whether the mandate has ended, Appeals (`MpResponsesService`) stores it. Writing needs the MP's account
   or an office member in a passkey session, an MP whose mandate has not ended, an open bill (until the adoption vote, as a
   side) and no writing restriction; a response a moderator hid is the moderators' to restore (`response.hidden`). Public at
-  once; every change keeps the replaced text as a public version (`revision`, kind `response`, without a person); a withdrawn
+  once; every change keeps the replaced text as a public version (`revision`, kind `response`, without a person), shown
+  with what it changed (`TextChanges`, design 8.16.2, as are the description's, the statements' and the letter's); a withdrawn
   one stays as "Atsakymas atsiimtas" with its versions; written again it is the same row. After the adoption vote the MP's
   ballot at it is given beside it ("Atsakė: … Balsavo: …", `nebalsavo`, consensus said so); nothing adds answers and ballots
   up anywhere. Never counted: no count, threshold, list, statistic or summary changes (`MpResponseTests`).

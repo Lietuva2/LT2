@@ -395,6 +395,12 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         onProfile.Statement.Stance.ShouldBe("against");
         onProfile.Statement.EditedAt.ShouldNotBeNull();
         onProfile.Earlier.ShouldHaveSingleItem().Text.ShouldBe("Prašome balsuoti už.\nAntra pastraipa.");
+        // Owner, 2026-11-18: the profile shows what changed, the statement in force against the version before it.
+        var profilePage = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/o/" + created.Slug));
+        profilePage.ShouldContain($"id=\"version-current-{onProfile.Statement.Id}\"");
+        profilePage.ShouldContain("<ins><span class=\"visually-hidden\">pridėta: </span>prieš</ins>");
+        profilePage.ShouldContain("<p><del><span class=\"visually-hidden\">pašalinta: </span>Antra pastraipa.</del></p>");
+        profilePage.ShouldContain("Rodyti visą tekstą");
 
         // One statement per organisation per bill; remarks carry no goal.
         using (var goal = await member.PutStatementAsync(AppealSteps.SecondBill, created.Slug, "remarks", "Pastabos.", goal: 10))

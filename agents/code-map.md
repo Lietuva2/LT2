@@ -24,7 +24,7 @@ src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementation
                            ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
                            js/lt2-menus.js), Appeals/ModerationMenu with ModerationChoice, and ActionHeading (a moderator's
                            main action and "Kiti veiksmai", design 8.3), BrowserKeys (the storage keys, design 8.22.1),
-                           TypedText (a typed text's paragraphs and lists, design 8.2) and LongText (a long member's text with "Rodyti daugiau", laid out before it is cut), TextLayoutHint (the list hint under a writing box), the joined-button choice (CSS `.switch`
+                           TypedText (a typed text's paragraphs and lists, design 8.2) and LongText (a long member's text with "Rodyti daugiau", laid out before it is cut), TextChanges (one version in a public version history: what changed against the one before it, design 8.16.2), TextLayoutHint (the list hint under a writing box), the joined-button choice (CSS `.switch`
                            over real radios, `.switch__half--for|against|neutral|plain`, `.switch-field` + `.switch--stack`
                            for three options: a bill's sides and a statement's stance only; other choices stay radios and
                            consents plain checkboxes, design 8.16), PasskeyStep ("Patvirtinti prieigos raktu" in
@@ -36,7 +36,7 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and
                            Europe/Vilnius zone and its days), the signed-in account (ClaimsPrincipal.UserId()), the
                            staff actor (StaffActor) and staff statements (StaffStatements), the outbound allowlist
                            (Http/: hosts from Outbound:AllowedHosts plus AddOutboundHost; redirects followed only within
-                           it), TextExcerpt and TextLayout (also compiled into Lt2.Web.Client), BillTextLinks (every link to a comment or an
+                           it), TextExcerpt, TextLayout and TextDiff (also compiled into Lt2.Web.Client), BillTextLinks (every link to a comment or an
                            argument, also compiled into Lt2.Api.Contracts); no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,

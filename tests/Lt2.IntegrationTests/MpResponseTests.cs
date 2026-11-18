@@ -69,6 +69,10 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             part.ShouldContain("Ankstesnės versijos (1)");
             part.ShouldContain(First);
             part.ShouldContain(Second);
+            // Owner, 2026-11-18: the versions show what changed, the response in force against the one before it.
+            part.ShouldContain("dabartinė versija, parašyta");
+            part.ShouldContain("<ins><span class=\"visually-hidden\">pridėta: </span>prieš</ins>");
+            part.ShouldContain("<del><span class=\"visually-hidden\">pašalinta: </span>už</del>");
 
             // Withdrawn: it stays, as "Atsakymas atsiimtas" with the date and its versions; it is no longer counted as an answer.
             using (var withdrawn = await mp.Browser.WithdrawResponseAsync(Bill))

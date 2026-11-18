@@ -38,14 +38,15 @@
         }
         else
         {
+            @* Owner, 2026-11-18: each edit shows what it changed against the text before it (TextChanges), the whole text one
+               click away; the first, or one after a removal, shows its text whole, and a removal its text struck through. *@
             <ol class="rows">
                 @foreach (var edit in edits)
                 {
                     <li>
                         <div class="rows__main">
-                            <span class="small num">@Display.DayTime(edit.ChangedAt)</span>
-                            <span class="label">@T["History.Before"]</span><span>@(edit.OldText ?? T["History.NoneBefore"])</span>
-                            <span class="label">@T["History.After"]</span><span>@(edit.NewText ?? T["History.Removed"])</span>
+                            <span class="small num">@Display.DayTime(edit.ChangedAt)@(edit.OldText is null ? " · " + T["History.NoneBefore"] : edit.NewText is null ? " · " + T["History.Removed"] : "")</span>
+                            <Lt2.Web.Client.Components.TextChanges Old="@edit.OldText" New="@edit.NewText" />
                         </div>
                     </li>
                 }

@@ -58,8 +58,6 @@
 <data name="History.Now" xml:space="preserve"><value>Dabartinis aprašymas</value></data>
 <data name="History.Edits" xml:space="preserve"><value>Keitimai</value></data>
 <data name="History.None" xml:space="preserve"><value>Aprašymas nekeistas.</value></data>
-<data name="History.Before" xml:space="preserve"><value>Buvo</value></data>
-<data name="History.After" xml:space="preserve"><value>Tapo</value></data>
 <data name="Method.Digests" xml:space="preserve"><value>Kas patektų į suvestines Seimo nariams</value></data>
 <data name="Method.Digests.Lead" xml:space="preserve"><value>Šios taisyklės nusprendžia, apie kuriuos projektus Seimo nariai sužinotų. Skaičiai – dabartinės reikšmės: daugumą jų gali keisti administratorius, ir kiekvienas pakeitimas įrašomas, o paskyrų amžius ir argumentų skaičius kiekvienai pusei nustatyti programoje.</value></data>
 <data name="Method.Digests.Threshold" xml:space="preserve"><value>Riba</value></data>
@@ -222,6 +220,7 @@
   <data name="Intro.None" xml:space="preserve"><value>Pristatymo laiškas Seimo nariams dar neišsiųstas.</value></data>
   <data name="Intro.Sent" xml:space="preserve"><value>Išsiųsta {0}</value></data>
   <data name="Intro.Earlier" xml:space="preserve"><value>Ankstesnės versijos</value></data>
+  <data name="Intro.Current" xml:space="preserve"><value>Dabartinė versija, išsiųsta {0}</value></data>
   <data name="MpMail.Title" xml:space="preserve"><value>Suvestinių nustatymai</value></data>
   <data name="MpMail.Lead" xml:space="preserve"><value>Seimo narys: {0}. Čia pasirenkate, kaip dažnai gauti Lietuva 2.0 suvestines.</value></data>
   <data name="MpMail.Unknown" xml:space="preserve"><value>Ši nuoroda neveikia. Naudokite nuorodą iš naujausio Lietuva 2.0 laiško.</value></data>
