@@ -33,4 +33,15 @@ public static class AnalyticsFormat
 
         return Math.Round(percent, decimals, MidpointRounding.AwayFromZero).ToString("0." + new string('0', decimals), Lithuanian) + " %";
     }
+
+    /// <summary>
+    /// A difference of two shares in percentage points with one decimal ("14,8 p. p."), so it reads right beside two shares
+    /// shown as whole percents; null when there is none.
+    /// </summary>
+    public static string? Points(decimal? difference) =>
+        difference is { } d ? Math.Round(d * 100, 1, MidpointRounding.AwayFromZero).ToString("0.0", Lithuanian) + " p. p." : null;
+
+    /// <summary>A share as a place on a track, in per cent of its width, for an SVG attribute ("43.2%").</summary>
+    public static string Position(decimal share) =>
+        Math.Round(share * 100, 1, MidpointRounding.AwayFromZero).ToString("0.#", CultureInfo.InvariantCulture) + "%";
 }

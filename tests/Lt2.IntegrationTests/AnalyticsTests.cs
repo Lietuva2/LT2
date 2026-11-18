@@ -54,7 +54,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             row.SeimasShareFor.ShouldBe((decimal)totals.For / (totals.For + totals.Against + totals.Abstain));
             var voted = totals.For + totals.Against + totals.Abstain;
             row.SeimasMajority.ShouldBe(2 * totals.For > voted ? SeimasMajorities.For : 2 * totals.Against > voted ? SeimasMajorities.Against : SeimasMajorities.None);
-            (row.MembersShareFor, row.Compared, row.Agreed, row.Dot).ShouldBe((null, false, null, false), "two positions are a small sample");
+            (row.MembersShareFor, row.Compared, row.Agreed, row.Difference).ShouldBe((null, false, null, null), "two positions are a small sample");
 
             // The same answer for a visitor and a member: nothing about the caller.
             (await member.Client.GetStringAsync(AnalyticsRoutes.Analytics)).ShouldBe(await visitor.Client.GetStringAsync(AnalyticsRoutes.Analytics));
@@ -71,22 +71,25 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             // Only accounts older than 30 days: both members are new, so the bill has no positions to compare.
             (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Of(null, true))).Bills.ShouldNotContain(b => b.Number == Bill);
 
-            // The page: "Statistika" in the menu, the row in the table with its counts and "maža imtis", no share for the members.
+            // The page: "Statistika" in the menu, the bill's row with its title, its counts and "maža imtis", no share and no dot for the members.
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
             html.ShouldContain("id=\"nav-statistics\" aria-current=\"page\"");
             html.ShouldNotContain("id=\"project-tabs\"", customMessage: "owner, 2026-11-17: a menu item of its own, no tab row");
-            var tableRow = Regex.Match(html, $"<tr id=\"row-{Bill}\".*?</tr>", RegexOptions.Singleline).Value;
-            tableRow.ShouldContain("1 už, 1 prieš");
-            tableRow.ShouldContain("maža imtis");
+            var listRow = ListRow(html, Bill);
+            listRow.ShouldContain($"<a href=\"/seimas/{Bill}\"><b>{row.Title}</b></a>", customMessage: "every row names the bill and links to its page (owner, 2026-11-18)");
+            listRow.ShouldContain("class=\"cmp__seimas\"", customMessage: "the Seimas's share has its mark");
+            listRow.ShouldNotContain("class=\"cmp__members\"", customMessage: "no dot under twenty positions");
+            html.ShouldNotContain("id=\"compare-table\"", customMessage: "the rows carry what the table did (owner, 2026-11-18)");
+            listRow.ShouldContain("Naudotojų pozicijos: 1 už, 1 prieš");
+            listRow.ShouldContain("maža imtis");
             var majority = row.SeimasMajority switch { SeimasMajorities.For => "už", SeimasMajorities.Against => "prieš", _ => "nėra daugumos" };
-            tableRow.ShouldContain($"<td>{majority}</td>", customMessage: "the Seimas's majority of those who voted, without quotes (owner, 2026-11-18)");
+            listRow.ShouldContain($"Balsavusiųjų dauguma Seime: {majority}</span>", customMessage: "the Seimas's majority of those who voted, without quotes (owner, 2026-11-18)");
             var sitting = answer.Figures.MpsSitting;
             Regex.Match(html, "<div[^>]*id=\"figure-mps\".*?</div>", RegexOptions.Singleline).Value
                 .ShouldContain(LithuanianCounts.Pick(sitting, $"iš {sitting} Seimo nario", $"iš {sitting} Seimo narių", $"iš {sitting} Seimo narių"));
             html.ShouldContain("Tai nėra reprezentatyvi apklausa");
             html.ShouldContain("id=\"analytics-counted-at\"");
             html.ShouldContain("id=\"needs-script\"");
-            html.ShouldNotContain($"id=\"dot-{Bill}\"", customMessage: "no dot under twenty positions");
 
             // A record the moderators hid is left out (design 8.12.3: its page shows no taking part).
             var record = await moderator.Browser.RecordAsync(Bill);
@@ -197,7 +200,8 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             var answer = await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics);
             var row = answer.Bills.Single(b => b.Number == Bill);
             (row.MembersFor, row.MembersAgainst).ShouldBe((20, 5));
-            (row.MembersShareFor, row.Compared, row.Dot).ShouldBe((0.8m, true, true));
+            (row.MembersShareFor, row.Compared).ShouldBe((0.8m, true));
+            row.Difference.ShouldBe(Math.Abs(row.SeimasShareFor!.Value - 0.8m), "the difference of the two shares \"for\"");
             row.Agreed.ShouldBe(seimasFor);
             answer.Figures.Compared.ShouldBeGreaterThanOrEqualTo(1);
 
@@ -205,7 +209,10 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             var older = (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Of(null, true))).Bills.Single(b => b.Number == Bill);
             (older.MembersFor, older.MembersAgainst, older.Compared).ShouldBe((19, 5, true));
 
-            (await visitor.Client.GetStringAsync("/statistika")).ShouldContain($"id=\"dot-{Bill}\"");
+            var listRow = ListRow(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")), Bill);
+            listRow.ShouldContain("class=\"cmp__members\"");
+            listRow.ShouldContain("Naudotojų pozicijų „už“ – 80\u00a0% (pozicijų: 25)", customMessage: "the exact numbers are written, not only on hover");
+            listRow.ShouldContain($"id=\"difference-{Bill}\"");
         }
         finally
         {
@@ -370,8 +377,10 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             await CloseAsync(consensus: true);
             using var visitor = NewBrowser();
             var row = (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics)).Bills.Single(b => b.Number == Bill);
-            (row.IsConsensus, row.SeimasShareFor, row.SeimasMajority, row.Dot).ShouldBe((true, null, SeimasMajorities.For, false));
-            WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")).ShouldContain("pritarta bendru sutarimu");
+            (row.IsConsensus, row.SeimasShareFor, row.SeimasMajority, row.Difference).ShouldBe((true, null, SeimasMajorities.For, null));
+            var listRow = ListRow(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")), Bill);
+            listRow.ShouldContain("Seime pritarta bendru sutarimu");
+            listRow.ShouldNotContain("class=\"cmp__seimas\"", customMessage: "a consensus has no share and no mark");
 
             var mine = await member.GetJsonAsync<MyAgreementResponse>(AnalyticsRoutes.MyAgreement);
             (mine.Bills, mine.Consensus, mine.Mps.Count, mine.Factions.Count).ShouldBe((1, 1, 0, 0));
@@ -407,6 +416,124 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             await member.DeleteAccountAsync();
         }
     }
+
+    [Fact]
+    public async Task The_list_of_closed_bills_is_filtered_ordered_and_grown_by_the_address_and_the_figures_do_not_follow_its_filters()
+    {
+        using var moderator = await ModeratorAsync();
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        await Database.PrepareBillAsync(member, moderator.Browser, Bill, "for");
+        try
+        {
+            await CloseAsync();
+
+            // Twelve more closed records closed by the same vote (records stand for bills): n for 2n and against 24 - n, so
+            // 25 to 36 positions each, the members' majority "against" up to n = 7, a tie at n = 8, "for" from n = 9.
+            await Database.ExecuteAsync(
+                """
+                INSERT INTO appeals.bill_record (id, bill_number, description, status, opened_at, published_at, closed_at, changed_at, sending,
+                                                 threshold_set_by, closing_vote_id, closed_for, closed_for_older_than30days, closed_against, closed_against_older_than30days)
+                SELECT gen_random_uuid(), 'XVP-T' || lpad(n::text, 3, '0'), '', 'closed', now(), now(), now(), now(), 'automatic', 'default', @vote, 2 * n, 0, 24 - n, 0
+                FROM generate_series(1, 12) AS n
+                """,
+                ("vote", FinalVote));
+            FreshCopies();
+            var totals = await VoteTotalsAsync(FinalVote);
+            var voted = totals.For + totals.Against + totals.Abstain;
+            var seimasFor = 2 * totals.For > voted;
+            var seimasMajority = seimasFor ? SeimasMajorities.For : 2 * totals.Against > voted ? SeimasMajorities.Against : SeimasMajorities.None;
+            var votedOn = VilniusTime.DateOf(new DateTimeOffset(await Database.ScalarAsync<DateTime>("SELECT held_at FROM parliament.vote WHERE id = @v", ("v", FinalVote)), TimeSpan.Zero));
+            using var visitor = NewBrowser();
+            Task<AnalyticsResponse> ListAsync(AnalyticsBillQuery query) => visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Of(null, false, query));
+
+            // By default the newest closing vote first, the first ten; the answer says how many it found and how many there are.
+            var whole = await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics);
+            (whole.BillsQuery.Sort, whole.BillsQuery.Limit, whole.Bills.Count).ShouldBe((AnalyticsBillQuery.Latest, 10, Math.Min(10, whole.BillsFound)));
+            whole.BillsFound.ShouldBe(whole.BillsClosed);
+            whole.BillsClosed.ShouldBeGreaterThanOrEqualTo(13);
+            whole.Bills.Select(b => b.VotedAt).ShouldBeInOrder(SortDirection.Descending);
+
+            // The search, every word in the number or the title, ignoring case; a limit; the list's numbers.
+            var found = await ListAsync(new AnalyticsBillQuery(Search: "xvp-t", Limit: 5));
+            (found.BillsFound, found.Bills.Count, found.BillsClosed).ShouldBe((12, 5, whole.BillsClosed));
+            found.Bills.Select(b => b.Number).ShouldBe(["XVP-T001", "XVP-T002", "XVP-T003", "XVP-T004", "XVP-T005"], "one closing vote: then by number");
+            (await ListAsync(new AnalyticsBillQuery(Search: "XVP-T007"))).Bills.Single().Number.ShouldBe("XVP-T007");
+
+            // The figures and the factions follow the period and the accounts counted, not the list's filters.
+            found.Figures.ShouldBe(whole.Figures);
+            found.Factions.Select(f => f.Slug).ShouldBe(whole.Factions.Select(f => f.Slug));
+
+            // The orders: the most positions first; the largest difference of the two shares "for" first.
+            (await ListAsync(new AnalyticsBillQuery(Search: "XVP-T", Sort: AnalyticsBillQuery.Positions, Limit: 12))).Bills.Select(b => b.Number)
+                .ShouldBe(Enumerable.Range(1, 12).Reverse().Select(n => $"XVP-T{n:000}"));
+            var byDifference = (await ListAsync(new AnalyticsBillQuery(Search: "XVP-T", Sort: AnalyticsBillQuery.Difference, Limit: 12))).Bills;
+            byDifference.ShouldAllBe(b => b.Difference != null);
+            byDifference.Select(b => b.Difference!.Value).ShouldBeInOrder(SortDirection.Descending);
+
+            // The result: only compared bills have one; the tie at n = 8 has neither.
+            var agreed = await ListAsync(new AnalyticsBillQuery(Search: "XVP-T", Result: AnalyticsBillQuery.Agreed, Limit: 12));
+            var differed = await ListAsync(new AnalyticsBillQuery(Search: "XVP-T", Result: AnalyticsBillQuery.Differed, Limit: 12));
+            agreed.Bills.ShouldAllBe(b => b.Agreed == true);
+            differed.Bills.ShouldAllBe(b => b.Agreed == false);
+            (agreed.BillsFound, differed.BillsFound).ShouldBe(seimasFor ? (4, 7) : (7, 4));
+            agreed.Bills.Concat(differed.Bills).ShouldNotContain(b => b.Number == "XVP-T008");
+
+            // The Seimas's majority of those who voted.
+            (await ListAsync(new AnalyticsBillQuery(Search: "XVP-T", Majority: seimasMajority))).BillsFound.ShouldBe(12);
+            (await ListAsync(new AnalyticsBillQuery(Search: "XVP-T", Majority: seimasMajority == SeimasMajorities.For ? SeimasMajorities.None : SeimasMajorities.For))).BillsFound.ShouldBe(0);
+
+            // The days of the closing vote, both included; a range that ends before it starts is not used; a malformed day is none.
+            (await ListAsync(new AnalyticsBillQuery(From: votedOn, To: votedOn, Search: "XVP-T"))).BillsFound.ShouldBe(12);
+            (await ListAsync(new AnalyticsBillQuery(From: votedOn.AddDays(1), Search: "XVP-T"))).BillsFound.ShouldBe(0);
+            (await ListAsync(new AnalyticsBillQuery(To: votedOn.AddDays(-1), Search: "XVP-T"))).BillsFound.ShouldBe(0);
+            var reversed = await visitor.GetJsonAsync<AnalyticsResponse>(
+                AnalyticsRoutes.Analytics + $"?from={votedOn.AddDays(1):yyyy-MM-dd}&to={votedOn:yyyy-MM-dd}&q=XVP-T");
+            (reversed.BillsQuery.From, reversed.BillsQuery.To, reversed.BillsFound).ShouldBe((null, null, 12));
+            var malformed = await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics + "?from=2026-13-01&q=XVP-T&result=x&majority=y&sort=z&limit=0");
+            (malformed.BillsQuery.From, malformed.BillsQuery.Result, malformed.BillsQuery.Majority, malformed.BillsQuery.Sort, malformed.BillsQuery.Limit, malformed.BillsFound)
+                .ShouldBe((null, null, null, AnalyticsBillQuery.Latest, AnalyticsBillQuery.DefaultLimit, 12), "a value the API would not make is the default");
+
+            // The page: ten rows, then "Rodyti daugiau" to the same address with more, landing on the first row added.
+            var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T"));
+            Regex.Count(page, "<li class=\"cmp\"").ShouldBe(10);
+            Regex.IsMatch(page, @"id=""compare-shown"">Rodoma\s10\siš\s12<").ShouldBeTrue();
+            page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=30#projektas-XVP-T011\" id=\"compare-more\"");
+            var more = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rodyti=30"));
+            Regex.Count(more, "<li class=\"cmp\"").ShouldBe(12);
+            more.ShouldNotContain("id=\"compare-more\"");
+
+            // The period's form keeps the list's filters; the list's form keeps the period; the figures are the same as without filters.
+            var filtered = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/statistika?metai={votedOn.Year}&q=XVP-T&rikiuoti=skirtumas"));
+            Regex.Match(filtered, "<form[^>]*id=\"analytics-filters\".*?</form>", RegexOptions.Singleline).Value.ShouldContain("<input type=\"hidden\" name=\"rikiuoti\" value=\"skirtumas\"");
+            Regex.Match(filtered, "<form[^>]*id=\"compare-filters\".*?</form>", RegexOptions.Singleline).Value.ShouldContain($"<input type=\"hidden\" name=\"metai\" value=\"{votedOn.Year}\"");
+            var plain = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/statistika?metai={votedOn.Year}"));
+            Regex.Match(filtered, "<section[^>]*id=\"analytics-figures\".*?</section>", RegexOptions.Singleline).Value
+                .ShouldBe(Regex.Match(plain, "<section[^>]*id=\"analytics-figures\".*?</section>", RegexOptions.Singleline).Value);
+
+            // A malformed day is ignored and its field says so; days the wrong way round are ignored and the page says so.
+            var badDay = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?nuo=2026-13-01&q=XVP-T"));
+            badDay.ShouldContain("id=\"compare-nuo-error\"");
+            badDay.ShouldContain("value=\"2026-13-01\"", customMessage: "the field keeps what was typed");
+            Regex.IsMatch(badDay, @"id=""compare-shown"">Rodoma\s10\siš\s12<").ShouldBeTrue();
+            (await visitor.Client.GetStringAsync($"/statistika?nuo={votedOn.AddDays(1):yyyy-MM-dd}&iki={votedOn:yyyy-MM-dd}")).ShouldContain("id=\"compare-reversed\"");
+            var none = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=nera-tokio-projekto"));
+            none.ShouldContain("id=\"compare-none\"");
+            none.ShouldContain("id=\"compare-clear\"");
+        }
+        finally
+        {
+            await Database.ExecuteAsync("DELETE FROM appeals.bill_record WHERE bill_number LIKE @b", ("b", ExtraBills));
+            await Database.FreeBillAsync(Bill);
+            await RemoveFinalVoteAsync();
+            await member.DeleteAccountAsync();
+            FreshCopies();
+        }
+    }
+
+    /// <summary>A bill's row in the list of closed bills on the page.</summary>
+    private static string ListRow(string html, string number) =>
+        Regex.Match(html, $"<li class=\"cmp\" id=\"projektas-{Regex.Escape(number)}\".*?</li>", RegexOptions.Singleline).Value;
 
     /// <summary>The adoption-stage vote, as the import would store it, and the closing job: the record closes and its counts freeze.</summary>
     private async Task CloseAsync(bool consensus = false)

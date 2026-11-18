@@ -152,9 +152,6 @@ internal sealed class AnalyticsCopies(IServiceScopeFactory scopes, TimeProvider 
 internal sealed class AnalyticsReads(
     IParliamentQueries parliament, IAppealsModule appeals, IMpDirectory mps, IPoliticians politicians, AnalyticsCopies copies, TimeProvider clock)
 {
-    /// <summary>How many compared bills the plot shows: the latest by their closing vote (design 8.26.1).</summary>
-    public const int PlotSize = 10;
-
     /// <summary>What a kept copy was made from: the closed records and the last finished import (design 8.26.6).</summary>
     public async Task<string> DataVersionAsync(CancellationToken ct)
     {
@@ -163,14 +160,58 @@ internal sealed class AnalyticsReads(
         return closed + "|" + (imported?.UtcTicks.ToString(CultureInfo.InvariantCulture) ?? "-");
     }
 
-    public async Task<AnalyticsResponse> ReadAsync(int? year, bool olderAccounts, CancellationToken ct)
+    /// <summary>
+    /// The answer for a period, the accounts counted and the list's query. The kept copy is per period and accounts only and
+    /// holds every closed bill of the period; the list's filters, order and length are applied to it in memory on each
+    /// request (<see cref="Select"/>), so they make no copy of their own and never count anything again: a term holds at
+    /// most a few hundred closed bills (design 8.26.6).
+    /// </summary>
+    public async Task<AnalyticsResponse> ReadAsync(int? year, bool olderAccounts, AnalyticsBillQuery bills, CancellationToken ct)
     {
         var version = await DataVersionAsync(ct);
         var key = string.Create(CultureInfo.InvariantCulture, $"{year?.ToString(CultureInfo.InvariantCulture) ?? "term"}|{olderAccounts}|{version}");
-        return await copies.PublicAsync(key, services => services.GetRequiredService<AnalyticsReads>().BuildAsync(year, olderAccounts, CancellationToken.None));
+        var whole = await copies.PublicAsync(key, services => services.GetRequiredService<AnalyticsReads>().BuildAsync(year, olderAccounts, CancellationToken.None));
+        return Select(whole, bills);
     }
 
-    /// <summary>Counts everything afresh (no kept copy): what a refresh of <see cref="AnalyticsCopies"/> runs.</summary>
+    /// <summary>
+    /// The list's part of the answer (design 8.26.1 item 2): of every closed bill of the period in <paramref name="whole"/>,
+    /// those the filters match, in the query's order, the first <see cref="AnalyticsBillQuery.Limit"/> of them. The figures
+    /// and the factions are left as they are: they follow the period and the accounts counted, not the list's filters.
+    /// </summary>
+    public static AnalyticsResponse Select(AnalyticsResponse whole, AnalyticsBillQuery query)
+    {
+        ArgumentNullException.ThrowIfNull(whole);
+        ArgumentNullException.ThrowIfNull(query);
+        bool? agreed = query.Result switch
+        {
+            AnalyticsBillQuery.Agreed => true,
+            AnalyticsBillQuery.Differed => false,
+            _ => null,
+        };
+        var order = query.Sort switch
+        {
+            AnalyticsBillQuery.Difference => ComparedBillOrder.Difference,
+            AnalyticsBillQuery.Positions => ComparedBillOrder.Positions,
+            _ => ComparedBillOrder.Latest,
+        };
+        var found = whole.Bills
+            .Where(b => AnalyticsRules.InDays(VilniusTime.DateOf(b.VotedAt), query.From, query.To)
+                        && AnalyticsRules.MatchesSearch(query.Search, b.Number, b.Title)
+                        && AnalyticsRules.MatchesResult(agreed, b.Agreed)
+                        && AnalyticsRules.MatchesMajority(query.Majority, b.SeimasMajority))
+            .ToList();
+        var ordered = AnalyticsRules.OrderBills(found, order, b => new ComparedBillKey(b.VotedAt, b.Number, b.Difference, b.MembersFor + b.MembersAgainst));
+        return whole with
+        {
+            BillsQuery = query,
+            BillsClosed = whole.Bills.Count,
+            BillsFound = found.Count,
+            Bills = ordered.Take(query.Limit).ToList(),
+        };
+    }
+
+    /// <summary>Counts everything afresh (no kept copy): what a refresh of <see cref="AnalyticsCopies"/> runs. It holds every closed bill of the period, newest first.</summary>
     public async Task<AnalyticsResponse> BuildAsync(int? year, bool olderAccounts, CancellationToken ct)
     {
         var countedAt = clock.GetUtcNow();
@@ -181,7 +222,7 @@ internal sealed class AnalyticsReads(
         {
             return new AnalyticsResponse(
                 "", [], null, olderAccounts, AnalyticsRules.SmallSample, countedAt,
-                new AnalyticsFiguresResponse(0, 0, 0, 0, 0, null, takenOver, sitting.Count), [], []);
+                new AnalyticsFiguresResponse(0, 0, 0, 0, 0, null, takenOver, sitting.Count), new AnalyticsBillQuery(), 0, 0, [], []);
         }
 
         var today = VilniusTime.Today(clock);
@@ -199,7 +240,6 @@ internal sealed class AnalyticsReads(
         var closed = await appeals.ClosedRecordsAsync(ct);
         var votes = await parliament.VotesAsync(closed.Select(c => c.ClosingVoteId).ToList(), ct);
         var bills = new List<BillComparisonResponse>();
-        var dots = 0;
         foreach (var record in closed
                      .Where(c => votes.ContainsKey(c.ClosingVoteId))
                      .Select(c => (Record: c, Vote: votes[c.ClosingVoteId]))
@@ -215,8 +255,6 @@ internal sealed class AnalyticsReads(
             var vote = record.Vote;
             var compared = AnalyticsRules.Compare(
                 new SeimasVoteNumbers(vote.Vote.IsConsensus, vote.Totals.For, vote.Totals.Against, vote.Totals.Abstain), membersFor, membersAgainst);
-            var dot = compared.Dot && dots < PlotSize;
-            dots += dot ? 1 : 0;
             bills.Add(new BillComparisonResponse(
                 record.Record.BillNumber,
                 vote.Vote.Bill?.Title ?? record.Record.BillNumber,
@@ -230,7 +268,7 @@ internal sealed class AnalyticsReads(
                 compared.MembersShareFor,
                 compared.Compared,
                 compared.Agreed,
-                dot,
+                AnalyticsRules.Difference(compared.SeimasShareFor, compared.MembersShareFor),
                 string.IsNullOrWhiteSpace(vote.OfficialNote) ? null : vote.OfficialNote));
         }
 
@@ -258,6 +296,9 @@ internal sealed class AnalyticsReads(
             countedAt,
             new AnalyticsFiguresResponse(
                 takenPart, discussed.Count, positions, agreed, comparedCount, AnalyticsRules.ShareFromSample(agreed, comparedCount), takenOver, sitting.Count),
+            new AnalyticsBillQuery(Limit: AnalyticsBillQuery.MaxLimit),
+            bills.Count,
+            bills.Count,
             bills,
             factions);
     }
@@ -323,8 +364,8 @@ internal sealed class MyAgreementReads(IAppealsModule appeals, IParliamentQuerie
 /// <summary>Server-side <see cref="IAnalyticsApi"/> for the server-rendered page: the public analytics only.</summary>
 internal sealed class ServerAnalyticsApi(AnalyticsReads reads) : IAnalyticsApi
 {
-    public async Task<ApiResult<AnalyticsResponse>> GetAsync(int? year, bool olderAccounts, CancellationToken cancellationToken = default) =>
-        ApiResult<AnalyticsResponse>.Ok(await reads.ReadAsync(year, olderAccounts, cancellationToken));
+    public async Task<ApiResult<AnalyticsResponse>> GetAsync(int? year, bool olderAccounts, AnalyticsBillQuery? bills = null, CancellationToken cancellationToken = default) =>
+        ApiResult<AnalyticsResponse>.Ok(await reads.ReadAsync(year, olderAccounts, bills ?? new AnalyticsBillQuery(), cancellationToken));
 
     /// <summary>
     /// Refused on the server, always (design 8.26.4): the comparison is built only for the browser that asks for it, so no

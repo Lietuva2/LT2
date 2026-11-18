@@ -20,7 +20,7 @@ public sealed class AnalyticsCopiesTests
 
     private static AnalyticsResponse Answer(int n) =>
         new(n.ToString(System.Globalization.CultureInfo.InvariantCulture), [], null, false, 20, DateTimeOffset.UnixEpoch,
-            new AnalyticsFiguresResponse(0, 0, 0, 0, 0, null, 0, 0), [], []);
+            new AnalyticsFiguresResponse(0, 0, 0, 0, 0, null, 0, 0), new AnalyticsBillQuery(), 0, 0, [], []);
 
     private static AnalyticsCopies Copies(Clock clock) =>
         new(new ServiceCollection().BuildServiceProvider().GetRequiredService<IServiceScopeFactory>(), clock, NullLogger<AnalyticsCopies>.Instance);
