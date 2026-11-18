@@ -16,9 +16,9 @@ Nothing is built for these; the local stack and the trial show them as they are.
 2. [Decided by the owner on 2026-11-18, 12-decisions: the front page shows two voting days of five votes each, with
    links to the rest.]
 
-**The outcome of a vote: asked by the owner on 2026-11-18 ("Priimta" / "Nepriimta" beside every vote), awaiting the owner**
+**The outcome of a vote: [Decided by the owner on 2026-11-18, 12-decisions: keep the majority words (choice 1).]**
 
-Built for now in the words of 8.26.2 (8.18, "The majority"): a chip "Dauguma už" / "Dauguma prieš" / "Nėra daugumos"
+The background, kept for the live contract run: built in the words of 8.26.2 (8.18, "The majority"): a chip "Dauguma už" / "Dauguma prieš" / "Nėra daugumos"
 (the majority of those who voted; a consensus "Pritarta bendru sutarimu") and one hint "Kas yra balsavusiųjų dauguma?"
 beside each list. The open data carries no official outcome: the vote results service gives the totals, those who voted
 and the official note (`ASSUMPTIONS.md` R1–R20), and the proceedings service the vote's wording (E7), which is the
