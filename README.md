@@ -71,8 +71,10 @@ docker compose -f deploy/compose.yaml run --rm --no-deps migrator --demo-appeal
 The same command gives the stand-in overlay's invented closed bills (XVP-0707 and thirty more, XVP-0701 to XVP-0731,
 design 8.26.5) invented positions from those invented accounts and closes their records, so `/statistika` has something
 to compare; a bill whose vote the worker has not imported yet is reported "not imported yet" and filled by a later run.
-The bills' votes come from `tools/Lt2.SeimasStandIn/Recent`, written by `python tools/demo_closed_bills.py` (fixed seed;
-`--check` says whether the files are current).
+The bills' votes come from `tools/Lt2.SeimasStandIn/Recent`, the stand-in's local overlay, written by
+`python tools/standin_overlay.py` (fixed seed; `--check` says whether the files are current). The overlay also gives the
+local stack and the trial a parliament of the real Seimas's shape: 141 invented MPs in seven invented groups of the real
+sizes, the last four and the next four sitting days with about as many bills as real ones, and their votes.
 
 To see "Kas Seime balsuoja taip, kaip prašote jūs" for your own account, give that one account random sides on those
 closed bills. It refuses unless `LT2_DEMO_DATA=true` and the parliament data is the stand-in's, refuses an address with no

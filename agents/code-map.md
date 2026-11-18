@@ -108,11 +108,14 @@ tools/run_tests.py          runs a test project in a chosen order (or each class
 tools/split_design.py       splits a pre-split copy of the old design/system-design.md into the section files (for a
                             branch made before 2026-11-17)
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
-                           invented answers; never shipped. Recent/ (container only, never in tests) adds a sitting and
-                           a stage vote dated two days before today, so the local agenda has recent votes, an adoption
-                           vote nine days before today on XVP-0707, and the adoption votes of thirty invented bills
-                           (2026-03-24 to 2026-11-12, all listed under the open autumn session), for the analytics page
-tools/demo_closed_bills.py  writes those thirty bills' overlay files (fixed seed; --check compares)
+                           invented answers; never shipped. Recent/ (container only, never in tests) is its overlay: 141
+                           invented MPs in seven groups of the real sizes (the base fixture's 14 kept), the base votes
+                           with all 141 ballots, the last four sitting days ({{past:N}}) with ~45 bills a day and their
+                           votes, the next four on the agenda page ({{sitting:N}}), an adoption vote nine days before
+                           today on XVP-0707, and the adoption votes of thirty invented bills (2026-03-24 to 2026-11-03)
+                           for the analytics page; all sittings listed under the open autumn session
+tools/standin_overlay.py    writes every file of Recent/ (fixed seeds; --check compares and names stray files), from
+                           invented_seimas.py (the MPs, group-line ballots), demo_closed_bills.py, standin_agenda.py
 ```
 
 ## Shared conventions

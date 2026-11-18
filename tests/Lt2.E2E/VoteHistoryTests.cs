@@ -38,7 +38,7 @@ public sealed partial class VoteHistoryTests : E2ETest
         var vote = await first.Locator("a.cta").GetAttributeAsync("href");
         var bill = await first.Locator("a.tl-item__title").GetAttributeAsync("href");
         vote.ShouldNotBeNull().ShouldMatch("^/seimas/balsavimai/\\d+$");
-        bill.ShouldNotBeNull().ShouldMatch("^/seimas/XVP-\\d+$");
+        bill.ShouldNotBeNull().ShouldMatch("^/seimas/[XVI]+P-\\d+$");
         var title = (await first.Locator("a.tl-item__title").InnerTextAsync()).Trim();
 
         await first.Locator("a.cta").ClickAsync();
@@ -68,26 +68,34 @@ public sealed partial class VoteHistoryTests : E2ETest
 
         await page.GotoAsync(Base + "/seimas/balsavimai");
         await E2ESteps.NoSidewaysScrollAsync(page);
+        // The first page of the stage results, out of all of them (the local stand-in has a few hundred).
         var stageResults = await rows.CountAsync();
         stageResults.ShouldBeGreaterThan(0);
-        await Assertions.Expect(page.Locator("#votes-shown")).ToHaveTextAsync($"Rodoma {stageResults} iš {stageResults}");
+        await Assertions.Expect(page.Locator("#votes-shown")).ToHaveTextAsync(new Regex($"^Rodoma {stageResults} iš \\d+$"));
+        var stageTotal = await ShownTotalAsync(page);
         (await rows.Locator(".tag:not(.tag--ink)").AllInnerTextsAsync()).ShouldNotContain("Dėl pasiūlymo", "the default is the stage results");
 
         // "Visi balsavimai": the amendment and the procedural votes join, with their kind.
         await form.GetByLabel("Kurie balsavimai").SelectOptionAsync(new SelectOptionValue { Label = "Visi balsavimai" });
         await form.GetByRole(AriaRole.Button, new() { Name = "Rodyti" }).ClickAsync();
         await page.WaitForURLAsync("**/seimas/balsavimai?*kas=visi*");
-        (await rows.CountAsync()).ShouldBeGreaterThan(stageResults);
+        (await ShownTotalAsync(page)).ShouldBeGreaterThan(stageTotal);
+        await E2ESteps.NoSidewaysScrollAsync(page);
+
+        // Their kinds, on a first page that reaches the spring session (the newest page may hold stage results only).
+        await form.GetByLabel("Iki").FillAsync("2026-05-19");
+        await form.GetByRole(AriaRole.Button, new() { Name = "Rodyti" }).ClickAsync();
+        await page.WaitForURLAsync("**/seimas/balsavimai?*iki=2026-05-19*");
         var kinds = await rows.Locator(".tag:not(.tag--ink)").AllInnerTextsAsync();
         kinds.ShouldContain("Dėl pasiūlymo");
         kinds.ShouldContain("Procedūrinis balsavimas");
-        await E2ESteps.NoSidewaysScrollAsync(page);
+        await form.GetByLabel("Iki").FillAsync(string.Empty);
 
         // The search without diacritics, back on the stage results.
         await form.GetByLabel("Kurie balsavimai").SelectOptionAsync(new SelectOptionValue { Label = "Projektų etapų balsavimai" });
-        await form.GetByLabel("Projekto numeris arba pavadinimas").FillAsync("gyventoju pajamu");
+        await form.GetByLabel("Projekto numeris arba pavadinimas").FillAsync("gyventoju pajamu mokescio istatymo pataisa");
         await form.GetByRole(AriaRole.Button, new() { Name = "Rodyti" }).ClickAsync();
-        await page.WaitForURLAsync("**/seimas/balsavimai?q=gyventoju+pajamu*");
+        await page.WaitForURLAsync("**/seimas/balsavimai?q=gyventoju+pajamu+mokescio+istatymo+pataisa*");
         (await rows.CountAsync()).ShouldBeGreaterThan(0);
         (await rows.Locator("a.tag--ink").AllInnerTextsAsync()).ShouldAllBe(n => n == "XVP-0412");
 
@@ -106,5 +114,12 @@ public sealed partial class VoteHistoryTests : E2ETest
         await page.Locator("#votes-clear").ClickAsync();
         await page.WaitForURLAsync(new Regex("/seimas/balsavimai$"));
         (await rows.CountAsync()).ShouldBe(stageResults);
+    }
+
+    /// <summary>The N of "Rodoma n iš N": how many votes the filter found in all.</summary>
+    private static async Task<int> ShownTotalAsync(IPage page)
+    {
+        var text = await page.Locator("#votes-shown").InnerTextAsync();
+        return int.Parse(Regex.Match(text, @"iš (\d+)").Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
     }
 }
