@@ -501,9 +501,12 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var (status, html) = await PageAsync(stranger, "/seimas/XVP-0533/istorija");
         status.ShouldBe(HttpStatusCode.OK);
         html.ShouldContain(first, Case.Sensitive, "the first version whole");
-        // Owner, 2026-11-18: the next one shows what it changed against it, and the whole text one click away.
+        // Owner, 2026-11-18: the next one shows what it changed against it.
         html.ShouldContain("<del><span class=\"visually-hidden\">pašalinta: </span>30</del><ins><span class=\"visually-hidden\">pridėta: </span>32</ins> %");
-        html.ShouldContain("<summary class=\"linkish small\">Rodyti visą tekstą</summary>");
+        // The text before the change, whole, one click away (owner, 2026-11-18): the original stays reachable in full even
+        // when it was never stored as a version of its own.
+        Regex.IsMatch(html, "<summary class=\"linkish small\">Rodyti tekstą prieš pakeitimą</summary>\\s*<p class=\"typed\">" + Regex.Escape(first) + "</p>\\s*</details>")
+            .ShouldBeTrue("the text before the change, whole");
         html.IndexOf("pašalinta: </span>30</del>", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf(first, StringComparison.Ordinal), "newest first");
         html.ShouldContain(AppealSteps.Description);
         html.ShouldNotContain("Bandymas.", Case.Sensitive, "nor the statement");

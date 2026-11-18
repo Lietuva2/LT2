@@ -406,7 +406,8 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         profilePage.ShouldContain($"id=\"version-current-{onProfile.Statement.Id}\"");
         profilePage.ShouldContain("<ins><span class=\"visually-hidden\">pridėta: </span>prieš</ins>");
         profilePage.ShouldContain("<p><del><span class=\"visually-hidden\">pašalinta: </span>Antra pastraipa.</del></p>");
-        profilePage.ShouldContain("Rodyti visą tekstą");
+        System.Text.RegularExpressions.Regex.IsMatch(profilePage, "Rodyti tekstą prieš pakeitimą</summary>\\s*<div class=\"voice small typed\">\\s*<p>Prašome balsuoti už.</p>\\s*<p>Antra pastraipa.</p>\\s*</div>")
+            .ShouldBeTrue("the text before the change, whole");
         profilePage.IndexOf("id=\"version-current-", StringComparison.Ordinal)
             .ShouldBeLessThan(profilePage.IndexOf("<p>Prašome balsuoti už.</p>", StringComparison.Ordinal), "newest first; the oldest whole");
 

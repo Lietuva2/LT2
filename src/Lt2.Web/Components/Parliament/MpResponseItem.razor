@@ -70,8 +70,10 @@
     {
         <details class="more stack stack--tight">
             <summary class="linkish small">@F.T.Format("Responses.Earlier", Display.Number(Response.Earlier.Count))</summary>
-            @* Owner, 2026-11-18: newest first, each version with what it changed against the one before it (TextChanges), the
-               oldest whole; a published response's own text opens the list with its changes, so the last edit shows too. *@
+            @* Owner, 2026-11-18: newest first, each version with what it changed against the one before it (TextChanges) and the
+               text before the change one click away, the oldest whole; a published response's own text opens the list with its
+               changes, so the last edit shows too, and a withdrawn one's withdrawal does, its text struck through, so the text
+               withdrawn is there whole too. *@
             <ul class="stack stack--tight">
                 @if (Response.Status == "published")
                 {
@@ -79,6 +81,13 @@
                         <p class="row small"><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span>
                             <span class="num">@F.T.Format("Responses.VersionCurrent", Display.Day(Response.EditedAt ?? Response.PublishedAt))</span></p>
                         <Lt2.Web.Client.Components.TextChanges Old="@Response.Earlier[0].Text" New="@Response.Text" Class="voice typed" />
+                    </li>
+                }
+                else if (Response.Status == "withdrawn")
+                {
+                    <li class="stack stack--tight" id="@(IdPrefix)response-withdrawal">
+                        <p class="row small"><span class="num">@F.T.Format("Responses.Withdrawal", Display.Day(Response.WithdrawnAt ?? Response.Earlier[0].ReplacedAt))</span></p>
+                        <Lt2.Web.Client.Components.TextChanges Old="@Response.Earlier[0].Text" New="@null" Class="voice typed" />
                     </li>
                 }
                 @for (var i = 0; i < Response.Earlier.Count; i++)
