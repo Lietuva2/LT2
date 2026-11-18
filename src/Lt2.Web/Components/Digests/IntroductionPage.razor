@@ -37,12 +37,19 @@
         {
             <details class="more stack stack--tight" id="intro-earlier">
                 <summary class="linkish small">@T["Intro.Earlier"]</summary>
-                @foreach (var letter in letters.Skip(1))
+                @* Owner, 2026-11-18: newest first, each version with what its text changed against the one before it
+                   (TextChanges), the oldest whole; the letter in force opens the list with its changes. *@
+                <div class="sheet--quiet stack stack--tight" id="intro-changes-@current.Version">
+                    <p class="small num">@T.Format("Intro.Current", current.SentAt is { } currentAt ? Display.Day(currentAt) : "")</p>
+                    <Lt2.Web.Client.Components.TextChanges Old="@letters[1].Text" New="@current.Text" />
+                </div>
+                @for (var i = 1; i < letters.Count; i++)
                 {
+                    var letter = letters[i];
                     <div class="sheet--quiet stack stack--tight" id="intro-version-@letter.Version">
                         <p class="small num">@T.Format("Intro.Sent", letter.SentAt is { } sentAt ? Display.Day(sentAt) : "")</p>
                         <h3>@letter.Subject</h3>
-                        <Lt2.Web.Client.Components.TypedText Text="@letter.Text" />
+                        <Lt2.Web.Client.Components.TextChanges Old="@(i + 1 < letters.Count ? letters[i + 1].Text : null)" New="@letter.Text" />
                         <p><b>@letter.SignerName</b><br />@letter.SignerRole</p>
                     </div>
                 }

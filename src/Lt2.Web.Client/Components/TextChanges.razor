@@ -1,0 +1,95 @@
+@inject IStringLocalizer<UiText> T
+
+@* One version in a public version history (owner, 2026-11-18): what changed against the version before it, from TextDiff.
+   The newer version's paragraphs and lists keep their layout (design 8.2, "A text's layout"): an item compared word by word
+   shows its inserted words in <ins> and its removed ones in <del>, each opening with visually hidden "pridėta:" or
+   "pašalinta:" for screen readers; an item removed whole stands where it was, struck through. The marks are neutral (lt2.css,
+   .text-changes), never the red and green of a warning. Under it "Rodyti visą tekstą", the browser's own details.more
+   (design 8.15), holds the version whole. The oldest version (no Old) and a version whose text did not change are shown
+   whole, with nothing marked. Server-rendered, no script; every piece is text, encoded on output. *@
+@if (string.IsNullOrEmpty(Old) || Old == New)
+{
+    <TypedText Text="@(New ?? "")" Class="@Class" />
+}
+else
+{
+    <div class="text-changes @Class">@Content</div>
+    @if (!string.IsNullOrEmpty(New))
+    {
+        <details class="more stack stack--tight text-changes__whole">
+            <summary class="linkish small">@T["Text.Whole"]</summary>
+            <TypedText Text="@New" Class="@Class" />
+        </details>
+    }
+}
+
+@code {
+    /// <summary>The version before, as stored; null or empty for the oldest version, which is shown whole.</summary>
+    [Parameter] public string? Old { get; set; }
+
+    /// <summary>This version, as stored; null or empty when it removed the text (everything shows as removed).</summary>
+    [Parameter] public string? New { get; set; }
+
+    /// <summary>The wrapper's classes, as for <see cref="TypedText"/> (for example <c>typed</c>).</summary>
+    [Parameter] public string? Class { get; set; } = "typed";
+
+    private IReadOnlyList<ChangedItem> _items = [];
+
+    protected override void OnParametersSet() =>
+        _items = string.IsNullOrEmpty(Old) || Old == New ? [] : TextDiff.Of(Old, New);
+
+    private RenderFragment Content => __builder =>
+    {
+        for (var i = 0; i < _items.Count;)
+        {
+            var item = _items[i];
+            if (item.Kind == TextBlockKind.Paragraph)
+            {
+                __builder.OpenElement(0, "p");
+                __builder.AddContent(1, Pieces(item.Pieces));
+                __builder.CloseElement();
+                i++;
+                continue;
+            }
+
+            // Consecutive items of one kind of list are one list, removed ones included where they stood.
+            var numbered = item.Kind == TextBlockKind.Numbered;
+            __builder.OpenElement(10, numbered ? "ol" : "ul");
+            __builder.AddAttribute(11, "class", numbered ? "typed-list typed-list--numbered" : "typed-list");
+            for (; i < _items.Count && _items[i].Kind == item.Kind; i++)
+            {
+                __builder.OpenElement(12, "li");
+                if (numbered && _items[i].Number is { } number)
+                {
+                    __builder.AddAttribute(13, "value", number);
+                }
+
+                __builder.AddContent(14, Pieces(_items[i].Pieces));
+                __builder.CloseElement();
+            }
+
+            __builder.CloseElement();
+        }
+    };
+
+    private RenderFragment Pieces(IReadOnlyList<TextPiece> pieces) => __builder =>
+    {
+        foreach (var piece in pieces)
+        {
+            if (piece.Change == TextChange.Same)
+            {
+                __builder.AddContent(20, piece.Text);
+                continue;
+            }
+
+            var inserted = piece.Change == TextChange.Inserted;
+            __builder.OpenElement(21, inserted ? "ins" : "del");
+            __builder.OpenElement(22, "span");
+            __builder.AddAttribute(23, "class", "visually-hidden");
+            __builder.AddContent(24, T[inserted ? "Text.Inserted" : "Text.Removed"].Value + " ");
+            __builder.CloseElement();
+            __builder.AddContent(25, piece.Text);
+            __builder.CloseElement();
+        }
+    };
+}

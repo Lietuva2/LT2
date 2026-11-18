@@ -40,6 +40,13 @@ Read before changing a page, a component or an island. The rules behind it are d
   `<PasskeyStep>` without `Confirmed`, a take-over, the terms, deleting the account). A list whose items
   hold state or re-sort is keyed (`@key`), and an element id is unique on the page (a component shown twice takes an
   `IdPrefix`).
+- **A version history shows what changed (design 8.16.2, owner 2026-11-18).** Each version of a text is
+  `<TextChanges Old="the version before" New="this one" Class="…" />` (`Lt2.Web.Client/Components`; on server pages
+  `<Lt2.Web.Client.Components.TextChanges …/>`): `TextDiff` (SharedKernel, also compiled into the client) compares the two
+  laid-out texts line by line and word by word; the component renders `<ins>`/`<del>` (neutral, `.text-changes` in
+  `lt2.css`) with hidden "pridėta:"/"pašalinta:", keeps paragraphs and lists, and puts the whole text under "Rodyti visą
+  tekstą" (`details.more`). The oldest version (`Old` null) and an unchanged text show whole. The text in force opens its
+  history with its own changes. Every history lists the newest first; a short value (a name, a website) stays "A → B".
 - **A new public, server-rendered page puts `<LinkPreview Title="…" Description="…" />` beside its `<PageTitle>`** (design
   8.22.5: the title without " · Lietuva 2.0", one or two sentences, never counts or a member's own text; `Path` when the page's
   own address differs from the requested path). A page behind sign-in, a staff page or a token page puts none; such a path

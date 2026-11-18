@@ -408,3 +408,9 @@ Each is built as written; "no" names what changes.
 9. The visit's write shares the limit of a page's own answers (`own-read`) rather than `Participation`, so reading pages
    never uses up the allowance for taking sides.
 
+**Decided by the owner on 2026-11-18: the version histories show what changed (8.16.2)**
+
+- Every public version history (a bill's description, an organisation's statements, an MP's responses, the introduction
+  letter) lists the newest first and shows each version against the one before it, word by word, the oldest whole; inserted words in `<ins>`,
+  removed in `<del>`, neutral marks with hidden "pridėta:" and "pašalinta:"; the whole text under "Rodyti visą tekstą".
+  An organisation's names and websites stay "A → B", also newest first. One pure function (`TextDiff`), no new library, its work capped.

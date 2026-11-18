@@ -486,7 +486,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
         var moderator = (await ModeratorAsync()).Browser;
-        foreach (var text in new[] { "Pirmasis, nepakankamai tikslus aprašymas.", AppealSteps.Description })
+        var first = AppealSteps.Description.Replace("32 %", "30 %", StringComparison.Ordinal);
+        foreach (var text in new[] { first, AppealSteps.Description })
         {
             (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill), new ModeratorDescriptionRequest { Description = text, Statement = "Bandymas." }))
                 .StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -494,12 +495,17 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
 
         using var stranger = NewBrowser();
         var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill));
-        history.Last().OldText.ShouldBe("Pirmasis, nepakankamai tikslus aprašymas.");
+        history.Last().OldText.ShouldBe(first);
         history.Last().NewText.ShouldBe(AppealSteps.Description);
 
         var (status, html) = await PageAsync(stranger, "/seimas/XVP-0533/istorija");
         status.ShouldBe(HttpStatusCode.OK);
-        html.ShouldContain("Pirmasis, nepakankamai tikslus aprašymas.");
+        html.ShouldContain(first, Case.Sensitive, "the first version whole");
+        // Owner, 2026-11-18: the next one shows what it changed against it, and the whole text one click away.
+        html.ShouldContain("<del><span class=\"visually-hidden\">pašalinta: </span>30</del><ins><span class=\"visually-hidden\">pridėta: </span>32</ins> %");
+        html.ShouldContain("<summary class=\"linkish small\">Rodyti visą tekstą</summary>");
+        html.IndexOf("pašalinta: </span>30</del>", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf(first, StringComparison.Ordinal), "newest first");
+        html.ShouldContain(AppealSteps.Description);
         html.ShouldNotContain("Bandymas.", Case.Sensitive, "nor the statement");
         (await PageAsync(stranger, "/seimas/XVP-0533")).Html.ShouldContain("href=\"/seimas/XVP-0533/istorija\"");
     }

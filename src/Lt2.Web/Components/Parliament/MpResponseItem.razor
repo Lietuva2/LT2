@@ -5,7 +5,8 @@
    (linking to the profile) and faction, on the profile the bill; always the one mark "Seimo narys arba jo biuras", never who
    wrote it. Published: the stance, the text, the dates ("Keista" with its date) and, after the adoption vote, the MP's
    ballot beside it as a second fact ("Atsakė: … Balsavo: …"), never compared. Withdrawn: "Atsakymas atsiimtas" with the date.
-   Hidden: "Atsakymas paslėptas moderatorių" and the moderator's statement. Earlier versions behind "Ankstesnės versijos". *@
+   Hidden: "Atsakymas paslėptas moderatorių" and the moderator's statement. Earlier versions behind "Ankstesnės versijos", each with
+   what it changed (owner, 2026-11-18). *@
 <article class="said said--mp" aria-label="@Label">
     <p class="row statement__who">
         @if (Mp is { } mp)
@@ -69,13 +70,24 @@
     {
         <details class="more stack stack--tight">
             <summary class="linkish small">@F.T.Format("Responses.Earlier", Display.Number(Response.Earlier.Count))</summary>
+            @* Owner, 2026-11-18: newest first, each version with what it changed against the one before it (TextChanges), the
+               oldest whole; a published response's own text opens the list with its changes, so the last edit shows too. *@
             <ul class="stack stack--tight">
-                @foreach (var v in Response.Earlier)
+                @if (Response.Status == "published")
                 {
+                    <li class="stack stack--tight" id="@(IdPrefix)response-current">
+                        <p class="row small"><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span>
+                            <span class="num">@F.T.Format("Responses.VersionCurrent", Display.Day(Response.EditedAt ?? Response.PublishedAt))</span></p>
+                        <Lt2.Web.Client.Components.TextChanges Old="@Response.Earlier[0].Text" New="@Response.Text" Class="voice typed" />
+                    </li>
+                }
+                @for (var i = 0; i < Response.Earlier.Count; i++)
+                {
+                    var v = Response.Earlier[i];
                     <li class="stack stack--tight">
                         <p class="row small"><span class="@StanceClass(v.Stance)">@F.T["Responses.Stance." + v.Stance]</span>
                             <span class="num">@(v.Withdrawn ? F.T.Format("Responses.VersionWithdrawn", Display.Day(v.WrittenAt), Display.Day(v.ReplacedAt)) : F.T.Format("Responses.VersionDates", Display.Day(v.WrittenAt), Display.Day(v.ReplacedAt)))</span></p>
-                        <Lt2.Web.Client.Components.TypedText Text="@v.Text" Class="voice typed" />
+                        <Lt2.Web.Client.Components.TextChanges Old="@(i + 1 < Response.Earlier.Count ? Response.Earlier[i + 1].Text : null)" New="@v.Text" Class="voice typed" />
                     </li>
                 }
             </ul>

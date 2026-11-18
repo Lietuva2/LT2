@@ -622,6 +622,16 @@ fieldset.stack--tight > legend { margin-block-end: var(--sp-3); }
 .bubble > :is(p, .typed-list) + :is(p, .typed-list), .long-text__more > .typed-list { margin-block: var(--sp-2) 0; }
 .bubble > .typed-list:first-child { margin-top: 0; }
 .typed > * + * { margin-top: var(--sp-2); }
+/* What changed between two versions (TextChanges, owner 2026-11-18): neutral marks, never the red and green of a warning.
+   Inserted words are underlined on a light slate ground, removed ones struck through in the muted ink; the hidden
+   "pridėta:" and "pašalinta:" say the same to screen readers. */
+.text-changes ins {
+  color: inherit; background: var(--slate-tint);
+  text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px;
+}
+.text-changes del { color: var(--ink-3); text-decoration: line-through; text-decoration-thickness: 1.5px; }
+/* A word replaced in place ("30" by "32") keeps a hair of space between the two, so they do not read as one. */
+.text-changes del + ins { margin-inline-start: 0.2em; }
 
 /* A hint (design 8.15): the short answer without leaving the page. The trigger is a button with a dotted underline, so it
    does not read as a link that leaves the page. The panel is the browser's popover: without script it stands in the

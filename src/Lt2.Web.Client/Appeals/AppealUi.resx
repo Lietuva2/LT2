@@ -628,6 +628,7 @@
 <data name="Org.Profile.Frozen" xml:space="preserve"><value>Seimas dėl projekto jau balsavo: pozicija nebekeičiama.</value></data>
 <data name="Org.Profile.Versions" xml:space="preserve"><value>Ankstesnės versijos ({0})</value></data>
 <data name="Org.Profile.ReplacedOn" xml:space="preserve"><value>pakeista {0}</value></data>
+<data name="Org.Profile.CurrentVersion" xml:space="preserve"><value>dabartinė versija</value></data>
 <data name="Org.Profile.History" xml:space="preserve"><value>Pavadinimo ir svetainės istorija</value></data>
 <data name="Org.History.name" xml:space="preserve"><value>Pavadinimas</value></data>
 <data name="Org.History.website" xml:space="preserve"><value>Svetainė</value></data>

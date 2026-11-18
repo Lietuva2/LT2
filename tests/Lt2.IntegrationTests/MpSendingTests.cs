@@ -389,6 +389,9 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
             page.ShouldContain("Lietuva 2.0 – antra versija");
             page.ShouldContain("Rūta Mockutė");
             page.ShouldContain("Ankstesnės versijos");
+            // Owner, 2026-11-18: the letter in force opens the versions with what its text changed; here only the subject did.
+            page.ShouldContain("Dabartinė versija, išsiųsta");
+            page.ShouldNotContain("<ins>");
             (await stranger.GetJsonAsync<List<IntroductionLetterResponse>>(DigestRoutes.Introduction)).Count.ShouldBe(2);
             moderator.ShouldNotBeNull();
         }
