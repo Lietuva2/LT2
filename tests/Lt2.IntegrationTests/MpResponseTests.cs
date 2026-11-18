@@ -89,7 +89,9 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             part = await PartAsync(visitor, "/seimas/" + Bill);
             part.ShouldContain("Atsakymas atsiimtas");
             part.ShouldContain("Ankstesnės versijos (2)");
-            part.ShouldContain(Second);
+            // Owner, 2026-11-18: the withdrawal opens the versions, the text withdrawn struck through and whole before it.
+            part.ShouldContain("response-withdrawal");
+            part.ShouldContain("<p class=\"voice typed\">" + Second + "</p>");
             await (await mp.Browser.WithdrawResponseAsync(Bill)).ShouldBeProblemAsync(HttpStatusCode.NotFound, "response.not-found");
 
             // Written again: the same response, and its history continues without a duplicate.

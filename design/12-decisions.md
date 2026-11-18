@@ -412,5 +412,5 @@ Each is built as written; "no" names what changes.
 
 - Every public version history (a bill's description, an organisation's statements, an MP's responses, the introduction
   letter) lists the newest first and shows each version against the one before it, word by word, the oldest whole; inserted words in `<ins>`,
-  removed in `<del>`, neutral marks with hidden "pridėta:" and "pašalinta:"; the whole text under "Rodyti visą tekstą".
+  removed in `<del>`, neutral marks with hidden "pridėta:" and "pašalinta:"; the text before each change whole under "Rodyti tekstą prieš pakeitimą" (it was the text after it, "Rodyti visą tekstą", until the owner saw it).
   An organisation's names and websites stay "A → B", also newest first. One pure function (`TextDiff`), no new library, its work capped.

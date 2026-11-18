@@ -4,9 +4,11 @@
    The newer version's paragraphs and lists keep their layout (design 8.2, "A text's layout"): an item compared word by word
    shows its inserted words in <ins> and its removed ones in <del>, each opening with visually hidden "pridėta:" or
    "pašalinta:" for screen readers; an item removed whole stands where it was, struck through. The marks are neutral (lt2.css,
-   .text-changes), never the red and green of a warning. Under it "Rodyti visą tekstą", the browser's own details.more
-   (design 8.15), holds the version whole. The oldest version (no Old) and a version whose text did not change are shown
-   whole, with nothing marked. Server-rendered, no script; every piece is text, encoded on output. *@
+   .text-changes), never the red and green of a warning. Under it "Rodyti tekstą prieš pakeitimą", the browser's own
+   details.more (design 8.15), holds the text before the change whole (owner, 2026-11-18): the text after it is already on
+   the page, as the text in force or as the "before" of the next newer change, and so the oldest text stays reachable even
+   when it was never stored as a version of its own. The oldest version (no Old) and a version whose text did not change are
+   shown whole, with nothing marked and no disclosure. Server-rendered, no script; every piece is text, encoded on output. *@
 @if (string.IsNullOrEmpty(Old) || Old == New)
 {
     <TypedText Text="@(New ?? "")" Class="@Class" />
@@ -14,13 +16,10 @@
 else
 {
     <div class="text-changes @Class">@Content</div>
-    @if (!string.IsNullOrEmpty(New))
-    {
-        <details class="more stack stack--tight text-changes__whole">
-            <summary class="linkish small">@T["Text.Whole"]</summary>
-            <TypedText Text="@New" Class="@Class" />
-        </details>
-    }
+    <details class="more stack stack--tight text-changes__before">
+        <summary class="linkish small">@T["Text.Before"]</summary>
+        <TypedText Text="@Old" Class="@Class" />
+    </details>
 }
 
 @code {

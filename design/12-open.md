@@ -15,9 +15,9 @@ Each is built as written; "no" names what changes. The Lithuanian texts are prop
 3. A space between two changes joins them ("mažina tarifą" → "didina mokestį" is one removal and one insertion, not
    word against word).
 4. The description history (newest first, as every history: owner, 2026-11-18) puts "aprašymo nebuvo" or "aprašymas pašalintas" beside
-   the date; "Buvo" and "Tapo" are gone. A removal shows the removed text struck through, with no "Rodyti visą tekstą".
+   the date; "Buvo" and "Tapo" are gone. A removal shows the removed text struck through, and whole under "Rodyti tekstą prieš pakeitimą".
 5. A version whose text is unchanged (only the side, goal or subject changed) is shown whole, with no marks and no
-   "Rodyti visą tekstą". If no: a line such as "Tekstas nepakeistas".
+   "Rodyti tekstą prieš pakeitimą". If no: a line such as "Tekstas nepakeistas".
 6. The cap: about two million comparison steps per pair of versions; past it the changed part (between what is equal at
    the start and the end) is shown replaced whole.
 

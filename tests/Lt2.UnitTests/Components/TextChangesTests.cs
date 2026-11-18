@@ -8,7 +8,7 @@ namespace Lt2.UnitTests.Components;
 /// <summary>
 /// The version histories show what changed (owner, 2026-11-18): one version against the one before it, inserted words in
 /// <c>&lt;ins&gt;</c> and removed ones in <c>&lt;del&gt;</c> with hidden words for screen readers, the paragraphs and lists kept,
-/// and the whole text behind "Rodyti visą tekstą" (the browser's own <c>details.more</c>, design 8.15). Server-rendered.
+/// and the whole text before the change behind "Rodyti tekstą prieš pakeitimą" (the browser's own <c>details.more</c>, design 8.15;
 /// </summary>
 public sealed class TextChangesTests : BunitContext
 {
@@ -33,13 +33,13 @@ public sealed class TextChangesTests : BunitContext
     }
 
     [Fact]
-    public void The_whole_text_is_behind_Rodyti_visą_tekstą_closed()
+    public void The_whole_text_before_the_change_is_behind_Rodyti_tekstą_prieš_pakeitimą_closed()
     {
         var changes = Render<TextChanges>(p => p.Add(c => c.Old, "Pirma.\nAntra.").Add(c => c.New, "Pirma.\nAntra, pakeista.").Add(c => c.Class, "voice typed"));
-        var whole = changes.Find("details.more.stack.stack--tight.text-changes__whole");
+        var whole = changes.Find("details.more.stack.stack--tight.text-changes__before");
         whole.HasAttribute("open").ShouldBeFalse();
-        whole.QuerySelector("summary.linkish.small")!.TextContent.ShouldBe("Rodyti visą tekstą");
-        whole.QuerySelectorAll("div.voice.typed > p").Select(e => e.TextContent).ShouldBe(["Pirma.", "Antra, pakeista."]);
+        whole.QuerySelector("summary.linkish.small")!.TextContent.ShouldBe("Rodyti tekstą prieš pakeitimą");
+        whole.QuerySelectorAll("div.voice.typed > p").Select(e => e.TextContent).ShouldBe(["Pirma.", "Antra."], "the text before the change, not the one after it");
         whole.QuerySelectorAll("ins, del").ShouldBeEmpty();
     }
 
@@ -60,11 +60,11 @@ public sealed class TextChangesTests : BunitContext
     }
 
     [Fact]
-    public void A_removed_text_is_struck_through_whole_without_the_whole_text()
+    public void A_removed_text_is_struck_through_and_whole_before_the_change()
     {
         var changes = Render<TextChanges>(p => p.Add(c => c.Old, "Buvęs aprašymas.").Add(c => c.New, null));
         changes.Find("div.text-changes > p > del").TextContent.ShouldBe("pašalinta: Buvęs aprašymas.");
-        changes.FindAll("ins, details").ShouldBeEmpty();
+        changes.FindAll("ins").ShouldBeEmpty();
     }
 
     [Fact]
@@ -88,6 +88,6 @@ public sealed class TextChangesTests : BunitContext
         var changes = Render<TextChanges>(p => p.Add(c => c.Old, "Tekstas <b>senas</b>.").Add(c => c.New, "Tekstas <i>naujas</i>."));
         changes.FindAll("b, i").ShouldBeEmpty();
         changes.Find("div.text-changes").TextContent.ShouldContain("</");
-        changes.Find("details p").TextContent.ShouldBe("Tekstas <i>naujas</i>.");
+        changes.Find("details p").TextContent.ShouldBe("Tekstas <b>senas</b>.");
     }
 }
