@@ -296,12 +296,14 @@
                         @foreach (var reason in similar)
                         {
                             var endorsed = Mine.Endorsed.Contains(reason.Id);
-                            <div class="said" @key="reason.Id">
+                            @* Owner, 2026-11-18: the line directly above every bubble is its author's name (the bubble's tail points at
+                               it); "Man svarbu" stays under the bubble, in the action row, as for the arguments above. *@
+                            <div class="said" id="similar-@reason.Id" @key="reason.Id">
+                                <div class="said__by"><b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
                                 <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"similar-more-{reason.Id}")" />
-                                <div class="said__by">
-                                    <b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
-                                    <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")" disabled="@(Locked || !MayEndorse(reason, endorsed))"
-                                            title="@EndorseHint(reason, endorsed)" @onclick="() => ToggleEndorsementAsync(reason, endorsed)">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</button>
+                                <div class="act">
+                                    <button class="mark act__item num" type="button" id="similar-mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")" disabled="@(Locked || !MayEndorse(reason, endorsed))"
+                                            title="@EndorseHint(reason, endorsed)" @onclick="() => ToggleEndorsementAsync(reason, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></button>
                                 </div>
                                 @if (_consentForMark == reason.Id)
                                 {

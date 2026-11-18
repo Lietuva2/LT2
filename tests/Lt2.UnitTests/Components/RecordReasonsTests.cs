@@ -438,6 +438,28 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.FindAll($"#mark-consent-{First}").ShouldBeEmpty("closed once given");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-18: the line directly above every bubble is its author's name, in the writing box's similar arguments too;
+    /// "Man svarbu" stays under the bubble, in the action row.
+    /// </summary>
+    [Fact]
+    public void A_similar_arguments_name_stands_above_its_bubble_and_man_svarbu_below()
+    {
+        _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
+        _appeals.On("FindSimilarAsync", ApiResult<IReadOnlyList<ReasonResponse>>.Ok([Reason(Second, 2)]));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+        reasons.Find("#add-reason").Click();
+        reasons.Find("#reason-text").Input("Mokesčiai turi būti paprastesni.");
+        reasons.Find("#write-reason").Submit();
+
+        var parts = reasons.Find($"#similar-{Second}").Children.Select(c => c.ClassName ?? "").ToList();
+        parts[0].ShouldContain("said__by");
+        reasons.Find($"#similar-{Second} > .said__by").TextContent.ShouldBe("Rūta Mockutė");
+        parts[1].ShouldNotContain("said__by", Case.Sensitive, "the bubble right under the name");
+        parts[2].ShouldBe("act");
+        reasons.Find($"#similar-{Second} > .act #similar-mark-{Second}").TextContent.ShouldBe("Man svarbu · 2");
+    }
+
     /// <summary>Opens the writing box, writes an argument for "už" and publishes it; the record is then read as <paramref name="after"/>.</summary>
     private IRenderedComponent<RecordReasons> WriteAnArgument(ReasonCreatedResponse created, BillRecordResponse after)
     {
