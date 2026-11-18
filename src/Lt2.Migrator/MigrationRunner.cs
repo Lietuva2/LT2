@@ -21,6 +21,8 @@ namespace Lt2.Migrator;
 /// <c>lt2_migrator</c>;</item>
 /// <item>as <c>lt2_migrator</c> (<c>ConnectionStrings:Lt2</c>): create the schemas, apply every module's migrations,
 /// grant access;</item>
+/// <item>with <c>ConnectionStrings:Admin</c> (optional): let <c>lt2_app</c> read and write the worker's Hangfire tables (the
+/// administrators' dashboard);</item>
 /// <item>optional commands: <c>--seed-invitation CODE[:USES]</c>, <c>--grant-role ROLE EMAIL</c> (prints the one-time
 /// activation code on the console, never to a log sink), <c>--reset-parliament</c> (empties the parliament schema,
 /// refusing unless every import so far came from the Seimas stand-in), <c>--local-code-limits</c> (local stack only: the code limits per address raised to the settings' highest values, refusing unless <c>Demo:Allowed</c> is set), <c>--official-addresses-without-invitation</c> (a stack whose MPs are invented, refusing unless <c>Demo:Allowed</c> is set: design 8.5.1's setting switched on), <c>--demo-appeal</c> (local demonstration data:
@@ -113,6 +115,14 @@ public static class MigrationRunner
         await using (var migrator = await OpenWithRetryAsync(connectionString, cancellationToken))
         {
             await DatabaseRoles.GrantAsync(migrator, cancellationToken);
+        }
+
+        // The worker owns the Hangfire tables, so only the administrator can let the web host's dashboard read and write them.
+        // Without the administrator's connection the grants of the last run stay (default privileges cover tables made since).
+        if (!string.IsNullOrEmpty(configuration.GetConnectionString("Admin")))
+        {
+            await using var admin = await OpenWithRetryAsync(ConnectionStrings.Build(configuration, "Admin", "Database:AdminPassword"), cancellationToken);
+            await DatabaseRoles.GrantHangfireToAppAsync(admin, cancellationToken);
         }
 
         Log.Information("Migrations applied and grants in place");

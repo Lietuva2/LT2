@@ -47,7 +47,7 @@ public sealed class ModuleBoundaryTests
     public void A_module_does_not_depend_on_the_hosts_or_the_api_contracts(Module module)
     {
         var result = Types.InAssembly(module.Assembly)
-            .ShouldNot().HaveDependencyOnAny("Lt2.Web", "Lt2.Web.Client", "Lt2.Worker", "Lt2.Migrator", "Lt2.Api.Contracts")
+            .ShouldNot().HaveDependencyOnAny("Lt2.Web", "Lt2.Web.Client", "Lt2.Worker", "Lt2.Jobs", "Lt2.Migrator", "Lt2.Api.Contracts")
             .GetResult();
         result.IsSuccessful.ShouldBeTrue(Describe(result));
     }

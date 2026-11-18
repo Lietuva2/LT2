@@ -45,6 +45,7 @@
       show(details, "settings", administrator);
       show(details, "invitations", administrator);
       show(details, "usage", administrator);
+      show(details, "jobs", administrator);
       show(details, "mp", me.mp !== null && me.mp !== undefined);
 
       // Design 6.2, 8.21: a staff account whose session cannot act as staff (signed in by code, or with another passkey) is

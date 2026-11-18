@@ -128,6 +128,7 @@ robots. `page`: views per Vilnius day and route. `referrer`: visitors per Vilniu
 name no person. Only `lt2_app` reads and writes the schema.
 
 Database roles: `lt2_migrator` owns the schemas and runs migrations; `lt2_app` has data access only; `lt2_worker` the same
-plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `identity` or `appeals.position`. [changed
+plus the Hangfire schema [built 2026-11-18: whose tables `lt2_app` also reads and writes, never creates, for the
+administrators' dashboard (3, 6.3); the migrator grants that with the superuser's connection, since the worker owns them]; `lt2_readonly` for ad-hoc analysis has no access to `identity` or `appeals.position`. [changed
 while building (8.14.14): nor to the five organisation tables, which hold an account beside an organisation.]
 

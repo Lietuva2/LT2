@@ -7,7 +7,8 @@ namespace Lt2.Migrator;
 /// <list type="bullet">
 /// <item><c>lt2_migrator</c> owns the schemas and runs migrations;</item>
 /// <item><c>lt2_app</c> has data access only, and may only insert into <c>audit.event</c>;</item>
-/// <item><c>lt2_worker</c> the same, plus its own <c>hangfire</c> schema;</item>
+/// <item><c>lt2_worker</c> the same, plus its own <c>hangfire</c> schema, whose tables <c>lt2_app</c> reads and writes too, for
+/// the administrators' dashboard (design 3, 6.3; <see cref="GrantHangfireToAppAsync"/>);</item>
 /// <item><c>lt2_readonly</c> reads for analysis exactly the tables on <see cref="ReadableTables"/> (design 6.9), nothing else.</item>
 /// </list>
 /// </summary>
@@ -152,6 +153,30 @@ public static class DatabaseRoles
                 END IF;
             END $$;
             GRANT USAGE, CREATE ON SCHEMA {HangfireSchema} TO {Worker};
+            """,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Run with a superuser after the schemas exist: <c>lt2_app</c> reads and writes the tables of the <c>hangfire</c> schema
+    /// (the web host's Hangfire dashboard, design 3 and 6.3: it lists the worker's jobs and enqueues one an administrator
+    /// triggers), now and when the worker's Hangfire creates more. Only a superuser can grant on them: <c>lt2_worker</c> creates
+    /// and owns them. Neither <c>CREATE</c> in the schema (the worker alone installs and upgrades it) nor anything for
+    /// <c>lt2_readonly</c>, which has no <c>USAGE</c> on it (<see cref="GrantAsync"/>). Idempotent.
+    /// </summary>
+    public static async Task GrantHangfireToAppAsync(NpgsqlConnection admin, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(admin);
+        await ExecuteAsync(
+            admin,
+            $"""
+            GRANT USAGE ON SCHEMA {HangfireSchema} TO {App};
+            GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA {HangfireSchema} TO {App};
+            GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA {HangfireSchema} TO {App};
+            ALTER DEFAULT PRIVILEGES FOR ROLE {Worker} IN SCHEMA {HangfireSchema}
+                GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {App};
+            ALTER DEFAULT PRIVILEGES FOR ROLE {Worker} IN SCHEMA {HangfireSchema}
+                GRANT USAGE, SELECT ON SEQUENCES TO {App};
             """,
             cancellationToken);
     }

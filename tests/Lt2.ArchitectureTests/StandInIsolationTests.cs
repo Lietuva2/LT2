@@ -36,7 +36,7 @@ public sealed class StandInIsolationTests
     [Fact]
     public void The_web_worker_and_migrator_do_not_load_the_stand_in_assembly()
     {
-        foreach (var host in new[] { typeof(Lt2.Web.Components.App).Assembly, typeof(Lt2.Worker.IdentityPurgeJob).Assembly, typeof(Lt2.Migrator.DatabaseRoles).Assembly })
+        foreach (var host in new[] { typeof(Lt2.Web.Components.App).Assembly, Assembly.Load("Lt2.Worker"), typeof(Lt2.Jobs.IdentityPurgeJob).Assembly, typeof(Lt2.Migrator.DatabaseRoles).Assembly })
         {
             ReferencedClosure(host).ShouldNotContain(StandInProject, host.GetName().Name);
         }

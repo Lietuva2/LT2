@@ -88,5 +88,20 @@ code review.
   Caddyfile's filter), and their pages are `noindex` and `no-store` (`SecurityHeaders`). The account, staff, sign-in, MP
   and one-time-link pages are `noindex, nofollow` too (`SecurityHeaders.IsPrivatePage`, design 8.22.5) and carry no link
   preview.
+- **The Hangfire dashboard (design 3, 6.3; owner 2026-11-18)**, `/administravimas/darbai` ("Foniniai darbai" in the account
+  item, for administrators), `Lt2.Web/Jobs/JobsDashboard.cs`. Only `Policies.Administrator` (a staff-passkey session): the
+  endpoint requires it and `AdministratorDashboardFilter` (Hangfire's `IDashboardAsyncAuthorizationFilter`) evaluates it again;
+  Hangfire's default local-requests filter is removed, not kept beside it, and `IsReadOnlyFunc` is false only for a request
+  that passed the filter. A visitor is sent to sign in, anyone else away; the dashboard is excluded from the "nerasta" status
+  pages, so a refused form is a bare 403. Every POST passes the Origin check and `IAntiforgery.IsRequestValidAsync` in the
+  filter (Hangfire then checks the token once more; it puts the token in the page's `csrf-token` meta, under our header name)
+  and, except the counters' poll (`/stats`), is audited as `jobs.dashboard-action` with the actor, role and IP hash and no
+  details. CSP there only: `style-src-attr 'unsafe-inline'` (state colours in `style` attributes) and `script-src 'self'`
+  (`SecurityHeaders.JobsDashboardContentSecurityPolicy`; the `<style>` its Chart.js injects stays blocked, the graphs draw without it); every response under it `no-store` and `noindex`. The storage is the
+  worker's `hangfire` schema through the web host's `NpgsqlDataSource` (no second pool, `PrepareSchemaIfNecessary` off, the
+  connection string not shown); `lt2_app` has DML there and no `CREATE`, `lt2_readonly` nothing. Jobs take only a
+  `CancellationToken` (stored as null), log counts only, and throw messages with kinds and codes, never an address; Npgsql
+  redacts error detail and EF Core logs no sensitive data, so a failed run's stored exception holds no address or token. Emails
+  (where addresses and SMTP errors are) are sent by the outbox loop, not by Hangfire.
 - Forwarding headers count only from the proxy named in `ReverseProxy:Address`. A page answered to a signed-in session is
   `no-store`.

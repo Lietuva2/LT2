@@ -15,6 +15,8 @@
             <li data-account-link="settings" hidden><a href="/administravimas/nustatymai">@T["Nav.Settings"]</a></li>
             <li data-account-link="invitations" hidden><a href="/administravimas/kvietimai">@T["Nav.Invitations"]</a></li>
             <li data-account-link="usage" hidden><a href="@Lt2.Api.Contracts.Admin.UsageRoutes.Page">@T["Nav.Usage"]</a></li>
+            @* Design 3, 6.3: the Hangfire dashboard, not a Blazor page: a full page load, never enhanced navigation. *@
+            <li data-account-link="jobs" hidden><a href="@Lt2.Web.Jobs.JobsDashboard.Path" data-enhance-nav="false">@T["Nav.Jobs"]</a></li>
             @* Design 6.2, 8.21: in place of the staff links when a staff account's session is not a staff session; the script
                adds the page to come back to. *@
             <li data-account-link="staff-key" hidden><a href="@Lt2.Api.Contracts.Me.StaffSessionPage.Path" id="nav-staff-key">@T["Nav.StaffKey"]</a></li>

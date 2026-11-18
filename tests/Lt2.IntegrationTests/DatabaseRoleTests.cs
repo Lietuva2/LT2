@@ -69,6 +69,50 @@ public sealed class DatabaseRoleTests(DatabaseFixture database)
         (await counts.ExecuteScalarAsync()).ShouldNotBeNull();
     }
 
+    [Fact]
+    public async Task The_application_reads_and_writes_the_workers_hangfire_tables_for_the_dashboard_and_the_read_only_role_sees_none()
+    {
+        // Design 3, 6.3: the web host's dashboard lists the worker's jobs and enqueues one an administrator triggers. The worker
+        // made these tables (the fixture installed them as lt2_worker between the migrator's two runs).
+        var tables = await TablesInAsync(DatabaseRoles.HangfireSchema);
+        tables.ShouldContain("hangfire.job");
+        foreach (var table in tables)
+        {
+            (await database.ScalarAsync<string>("SELECT tableowner::text FROM pg_tables WHERE format('%I.%I', schemaname, tablename) = @t", ("t", table)))
+                .ShouldBe(DatabaseRoles.Worker, table);
+            foreach (var privilege in new[] { "SELECT", "INSERT", "UPDATE", "DELETE" })
+            {
+                (await database.ScalarAsync<bool>("SELECT has_table_privilege(@r, @t, @p)", ("r", DatabaseRoles.App), ("t", table), ("p", privilege)))
+                    .ShouldBeTrue($"{DatabaseRoles.App} {privilege} on {table}");
+            }
+        }
+
+        await using (var app = await OpenAsync(DatabaseRoles.App))
+        await using (var read = new NpgsqlCommand("SELECT count(*) FROM hangfire.job", app))
+        {
+            (await read.ExecuteScalarAsync()).ShouldNotBeNull();
+        }
+
+        // A table the worker's Hangfire adds later (an upgrade) is the application's too, by the default privileges.
+        await using (var worker = await OpenAsync(DatabaseRoles.Worker))
+        {
+            await ExecuteAsync(worker, "CREATE TABLE hangfire.extra_test (id bigserial PRIMARY KEY)");
+        }
+
+        try
+        {
+            await using var app = await OpenAsync(DatabaseRoles.App);
+            await ExecuteAsync(app, "INSERT INTO hangfire.extra_test DEFAULT VALUES");
+            await using var readonlyRole = await OpenAsync(DatabaseRoles.Readonly);
+            await ShouldBeRefusedAsync(readonlyRole, "SELECT count(*) FROM hangfire.job", "hangfire.job");
+        }
+        finally
+        {
+            await using var worker = await OpenAsync(DatabaseRoles.Worker);
+            await ExecuteAsync(worker, "DROP TABLE hangfire.extra_test");
+        }
+    }
+
     [Theory]
     [InlineData("identity")]
     [InlineData("notify")]

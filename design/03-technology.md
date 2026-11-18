@@ -11,7 +11,7 @@
 | Validation | **FluentValidation**, validators in the shared contracts project | Same rules run in the browser and on the server. |
 | Mapping | Hand-written or **Mapperly** (source generator) | AutoMapper is now commercial. |
 | Sign-in | **ASP.NET Core Identity** on EF Core: email one-time code, passkeys, no passwords | See 6.2. |
-| Background jobs | **Hangfire** with PostgreSQL storage for scheduled and retried jobs; own **transactional outbox** table for emails and events | The Hangfire dashboard (admin-only) shows failed imports and digests. |
+| Background jobs | **Hangfire** with PostgreSQL storage for scheduled and retried jobs; own **transactional outbox** table for emails and events | The Hangfire dashboard (admin-only) shows failed imports and digests. **[Built 2026-11-18, owner: mainly to run the parliament import and the other recurring jobs by hand and to see failed runs.]** "Foniniai darbai", `/administravimas/darbai` in the web host, over the worker's Hangfire storage (no Hangfire server in the web host; the job classes are in `Lt2.Jobs` so the web host can enqueue them). Administrator in a staff-passkey session only (6.3). |
 | HTTP to Seimas | `HttpClientFactory` + `Microsoft.Extensions.Http.Resilience` (retry, timeout, circuit breaker) | The service is slow at times and drops connections (`design-notes.md`). |
 | Caching | ASP.NET Core output caching and `HybridCache` in memory | No Redis until there is a second web instance. |
 | Time | `TimeProvider`, UTC in the database (`timestamptz`), `Europe/Vilnius` for schedules and display | |
