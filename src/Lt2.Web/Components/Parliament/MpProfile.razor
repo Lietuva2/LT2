@@ -15,186 +15,189 @@
     <LinkPreview Title="@($"{p.Mp.FirstName} {p.Mp.LastName}")" Path="@($"/p/{p.Mp.Slug}")"
                  Description="@(p.Mp.Faction is { } previewFaction ? P.Format("Preview.Mp.Faction", Label(p.Mp), previewFaction.Name) : P.Format("Preview.Mp", Label(p.Mp)))" />
 
-    <div class="stack">
-        <ol class="crumbs">
-            <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>
-            @if (p.Mp.Faction is { } crumb)
+    @* Owner, 2026-11-18: the header one step (--sp-4) above the record, as on a bill's page (.stack--snug, design 8.12.1). *@
+    <div class="stack stack--snug">
+        <div class="stack">
+            <ol class="crumbs">
+                <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>
+                @if (p.Mp.Faction is { } crumb)
+                {
+                    <li><a href="/frakcijos/@crumb.Slug">@crumb.Name</a></li>
+                }
+            </ol>
+            <div class="row row--end">
+                <span class="portrait" aria-hidden="true">@Initials(p.Mp)</span>
+                <div class="stack stack--tight">
+                    <p class="label">@Label(p.Mp)</p>
+                    <h1>@p.Mp.FirstName @p.Mp.LastName</h1>
+                </div>
+            </div>
+            @if (p.ManagedSince is { } since)
             {
-                <li><a href="/frakcijos/@crumb.Slug">@crumb.Name</a></li>
+                @* Design 8.5.2: the one public trace of a take-over; a profile nobody took over says nothing about joining. *@
+                <p class="small" id="managed-by">@F.T["Mp.ManagedBy"] <span class="num">@F.T.Format("Mp.ManagedSince", Display.Day(since))</span></p>
             }
-        </ol>
-        <div class="row row--end">
-            <span class="portrait" aria-hidden="true">@Initials(p.Mp)</span>
-            <div class="stack stack--tight">
-                <p class="label">@Label(p.Mp)</p>
-                <h1>@p.Mp.FirstName @p.Mp.LastName</h1>
+            <Lt2.Web.Client.Components.NeedsScript />
+            @* Owner, 2026-11-17: one compact line under the name, as on a bill's page: the MP's tags, then "Sekti" (design 8.11.2:
+               how they vote on the bills one follows comes in the "voted" email; private) and how many follow, kept current by
+               the button. *@
+            <div class="row follow-line">
+                <p class="row">
+                    @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee" or "group"))
+                    {
+                        @if (m.Body.Kind == "group")
+                        {
+                            <span class="tag">@m.Body.Name</span>
+                        }
+                        else
+                        {
+                            <a class="tag @(m.Body.Kind == "faction" ? "tag--ink" : "")" href="/@(m.Body.Kind == "faction" ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
+                        }
+                    }
+                </p>
+                <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
             </div>
         </div>
-        @if (p.ManagedSince is { } since)
-        {
-            @* Design 8.5.2: the one public trace of a take-over; a profile nobody took over says nothing about joining. *@
-            <p class="small" id="managed-by">@F.T["Mp.ManagedBy"] <span class="num">@F.T.Format("Mp.ManagedSince", Display.Day(since))</span></p>
-        }
-        <Lt2.Web.Client.Components.NeedsScript />
-        @* Owner, 2026-11-17: one compact line under the name, as on a bill's page: the MP's tags, then "Sekti" (design 8.11.2:
-           how they vote on the bills one follows comes in the "voted" email; private) and how many follow, kept current by
-           the button. *@
-        <div class="row follow-line">
-            <p class="row">
-                @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee" or "group"))
-                {
-                    @if (m.Body.Kind == "group")
+
+        <div class="cols">
+            <div class="stack stack--loose">
+                <section class="sheet sheet--cut stack" aria-labelledby="h-record">
+                    <h2 id="h-record" class="visually-hidden">@F.T["Mp.Record"]</h2>
+                    <div class="pair pair--keep">
+                        <div class="figure figure--m" id="participation">
+                            <span class="label">@F.T["Stat.Participation"]</span>
+                            @if (Display.Percent(p.Statistics?.Participation) is { } share)
+                            {
+                                <span class="figure__num">@share</span>
+                                <span class="small num">@F.T.Format("Stat.ParticipationCount", Display.Number(p.Statistics!.VotesTakenPart), Display.Number(p.Statistics.VotesHeld))</span>
+                            }
+                            else
+                            {
+                                <span class="figure__none">@F.T["NoData"]</span>
+                                <span class="small">@F.T["Stat.None"]</span>
+                            }
+                        </div>
+                        <div class="figure figure--m" id="with-faction">
+                            <span class="label">@F.T["Stat.WithFaction"]</span>
+                            @if (Display.Percent(p.Statistics?.WithFaction) is { } withShare)
+                            {
+                                <span class="figure__num">@withShare</span>
+                                <span class="small num">@F.T.Format("Stat.WithFactionCount", Display.Number(p.Statistics!.VotedWithFaction), Display.Number(p.Statistics.VotesWithFactionPosition))</span>
+                            }
+                            else
+                            {
+                                <span class="figure__none">@F.T["NoData"]</span>
+                                <span class="small">@(p.Statistics is { VotesHeld: > 0 } ? F.T["Stat.NoPosition"] : F.T["Stat.None"])</span>
+                            }
+                            @if (p.Statistics is { } s && (s.VotesWithFactionPosition > 0 || s.FreeVotes > 0))
+                            {
+                                <span class="small num">@F.T.Format("Stat.Free", Display.Number(s.FreeVotes))</span>
+                            }
+                            @if (_factionPeriods.Count > 0)
+                            {
+                                <span class="small num" id="faction-period">@PeriodLine()</span>
+                            }
+                        </div>
+                    </div>
+                    <SourceLine UpdatedAt="@_updatedAt" />
+                </section>
+
+                <section class="sheet stack" aria-labelledby="h-votes">
+                    <h2 id="h-votes">@F.T["Mp.RecentVotes"]</h2>
+                    @if (p.RecentVotes.Count == 0)
                     {
-                        <span class="tag">@m.Body.Name</span>
+                        <p>@F.T["Mp.NoVotes"]</p>
                     }
                     else
                     {
-                        <a class="tag @(m.Body.Kind == "faction" ? "tag--ink" : "")" href="/@(m.Body.Kind == "faction" ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
+                        <MpVoteRows Votes="p.RecentVotes" />
+                        <p><a href="/p/@p.Mp.Slug/balsavimai">@F.T["Mp.AllVotes"]</a></p>
                     }
-                }
-            </p>
-            <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
-        </div>
-    </div>
+                </section>
 
-    <div class="cols">
-        <div class="stack stack--loose">
-            <section class="sheet sheet--cut stack" aria-labelledby="h-record">
-                <h2 id="h-record" class="visually-hidden">@F.T["Mp.Record"]</h2>
-                <div class="pair pair--keep">
-                    <div class="figure figure--m" id="participation">
-                        <span class="label">@F.T["Stat.Participation"]</span>
-                        @if (Display.Percent(p.Statistics?.Participation) is { } share)
-                        {
-                            <span class="figure__num">@share</span>
-                            <span class="small num">@F.T.Format("Stat.ParticipationCount", Display.Number(p.Statistics!.VotesTakenPart), Display.Number(p.Statistics.VotesHeld))</span>
-                        }
-                        else
-                        {
-                            <span class="figure__none">@F.T["NoData"]</span>
-                            <span class="small">@F.T["Stat.None"]</span>
-                        }
-                    </div>
-                    <div class="figure figure--m" id="with-faction">
-                        <span class="label">@F.T["Stat.WithFaction"]</span>
-                        @if (Display.Percent(p.Statistics?.WithFaction) is { } withShare)
-                        {
-                            <span class="figure__num">@withShare</span>
-                            <span class="small num">@F.T.Format("Stat.WithFactionCount", Display.Number(p.Statistics!.VotedWithFaction), Display.Number(p.Statistics.VotesWithFactionPosition))</span>
-                        }
-                        else
-                        {
-                            <span class="figure__none">@F.T["NoData"]</span>
-                            <span class="small">@(p.Statistics is { VotesHeld: > 0 } ? F.T["Stat.NoPosition"] : F.T["Stat.None"])</span>
-                        }
-                        @if (p.Statistics is { } s && (s.VotesWithFactionPosition > 0 || s.FreeVotes > 0))
-                        {
-                            <span class="small num">@F.T.Format("Stat.Free", Display.Number(s.FreeVotes))</span>
-                        }
-                        @if (_factionPeriods.Count > 0)
-                        {
-                            <span class="small num" id="faction-period">@PeriodLine()</span>
-                        }
-                    </div>
-                </div>
-                <SourceLine UpdatedAt="@_updatedAt" />
-            </section>
+                @* Design 8.5.6: the MP's responses, after the votes; no part at all when there are none. *@
+                <MpAnswers Slug="@p.Mp.Slug" Name="@($"{p.Mp.FirstName} {p.Mp.LastName}")" />
+            </div>
 
-            <section class="sheet stack" aria-labelledby="h-votes">
-                <h2 id="h-votes">@F.T["Mp.RecentVotes"]</h2>
-                @if (p.RecentVotes.Count == 0)
-                {
-                    <p>@F.T["Mp.NoVotes"]</p>
-                }
-                else
-                {
-                    <MpVoteRows Votes="p.RecentVotes" />
-                    <p><a href="/p/@p.Mp.Slug/balsavimai">@F.T["Mp.AllVotes"]</a></p>
-                }
-            </section>
-
-            @* Design 8.5.6: the MP's responses, after the votes; no part at all when there are none. *@
-            <MpAnswers Slug="@p.Mp.Slug" Name="@($"{p.Mp.FirstName} {p.Mp.LastName}")" />
-        </div>
-
-        <aside class="stack">
-            <section class="sheet stack stack--tight" aria-labelledby="h-mandate">
-                <h3 id="h-mandate">@F.T["Mp.Mandate"]</h3>
-                <dl class="facts">
-                    @if (p.Mandate.ElectedHow is { } how)
-                    {
-                        <dt>@F.T["Mp.ElectedHow"]</dt><dd>@how</dd>
-                    }
-                    @if (p.Mandate.Constituency is { } constituency)
-                    {
-                        <dt>@F.T["Mp.Constituency"]</dt><dd>@constituency</dd>
-                    }
-                    @if (p.Mandate.NominatingParty is { } party)
-                    {
-                        <dt>@F.T["Mp.Party"]</dt><dd>@party</dd>
-                    }
-                    @if (p.Mandate.TermsServed is { } terms)
-                    {
-                        <dt>@F.T["Mp.Terms"]</dt><dd class="num">@terms</dd>
-                    }
-                    <dt>@F.T["Mp.From"]</dt><dd class="num">@F.Date(p.Mandate.From)</dd>
-                    @if (p.Mandate.To is { } to)
-                    {
-                        <dt>@F.T["Mp.To"]</dt><dd class="num">@F.Date(to)</dd>
-                    }
-                </dl>
-            </section>
-
-            @if (p.Memberships.Any(m => m.Current))
-            {
-                <section class="sheet stack stack--tight" aria-labelledby="h-roles">
-                    <h3 id="h-roles">@F.T["Mp.Roles"]</h3>
+            <aside class="stack">
+                <section class="sheet stack stack--tight" aria-labelledby="h-mandate">
+                    <h3 id="h-mandate">@F.T["Mp.Mandate"]</h3>
                     <dl class="facts">
-                        @foreach (var m in p.Memberships.Where(m => m.Current))
+                        @if (p.Mandate.ElectedHow is { } how)
                         {
-                            <dt><BodyName Body="m.Body" /></dt><dd>@m.Role</dd>
+                            <dt>@F.T["Mp.ElectedHow"]</dt><dd>@how</dd>
+                        }
+                        @if (p.Mandate.Constituency is { } constituency)
+                        {
+                            <dt>@F.T["Mp.Constituency"]</dt><dd>@constituency</dd>
+                        }
+                        @if (p.Mandate.NominatingParty is { } party)
+                        {
+                            <dt>@F.T["Mp.Party"]</dt><dd>@party</dd>
+                        }
+                        @if (p.Mandate.TermsServed is { } terms)
+                        {
+                            <dt>@F.T["Mp.Terms"]</dt><dd class="num">@terms</dd>
+                        }
+                        <dt>@F.T["Mp.From"]</dt><dd class="num">@F.Date(p.Mandate.From)</dd>
+                        @if (p.Mandate.To is { } to)
+                        {
+                            <dt>@F.T["Mp.To"]</dt><dd class="num">@F.Date(to)</dd>
                         }
                     </dl>
                 </section>
-            }
 
-            @if (p.Memberships.Any(m => !m.Current))
-            {
-                <section class="sheet stack stack--tight" aria-labelledby="h-former-roles">
-                    <h3 id="h-former-roles">@F.T["Mp.FormerRoles"]</h3>
-                    <dl class="facts">
-                        @foreach (var m in p.Memberships.Where(m => !m.Current))
-                        {
-                            <dt><BodyName Body="m.Body" /></dt>
-                            <dd>@m.Role, <span class="num">@F.T.Format("Dates.Range", F.Date(m.From), m.To is { } end ? F.Date(end) : "")</span></dd>
-                        }
-                    </dl>
-                </section>
-            }
+                @if (p.Memberships.Any(m => m.Current))
+                {
+                    <section class="sheet stack stack--tight" aria-labelledby="h-roles">
+                        <h3 id="h-roles">@F.T["Mp.Roles"]</h3>
+                        <dl class="facts">
+                            @foreach (var m in p.Memberships.Where(m => m.Current))
+                            {
+                                <dt><BodyName Body="m.Body" /></dt><dd>@m.Role</dd>
+                            }
+                        </dl>
+                    </section>
+                }
 
-            @if (p.Contacts.Count > 0)
-            {
-                <section class="sheet stack stack--tight" aria-labelledby="h-contacts">
-                    <h3 id="h-contacts">@F.T["Mp.Contacts"]</h3>
-                    <ul class="stack stack--tight">
-                        @foreach (var c in p.Contacts)
-                        {
-                            <li>
-                                @if (c.Kind == "El. p.")
-                                {
-                                    @F.T["Mp.Email"]<text>: </text><a href="mailto:@c.Value">@c.Value</a>
-                                }
-                                else
-                                {
-                                    @c.Kind<text>: </text>@c.Value
-                                }
-                            </li>
-                        }
-                    </ul>
-                </section>
-            }
+                @if (p.Memberships.Any(m => !m.Current))
+                {
+                    <section class="sheet stack stack--tight" aria-labelledby="h-former-roles">
+                        <h3 id="h-former-roles">@F.T["Mp.FormerRoles"]</h3>
+                        <dl class="facts">
+                            @foreach (var m in p.Memberships.Where(m => !m.Current))
+                            {
+                                <dt><BodyName Body="m.Body" /></dt>
+                                <dd>@m.Role, <span class="num">@F.T.Format("Dates.Range", F.Date(m.From), m.To is { } end ? F.Date(end) : "")</span></dd>
+                            }
+                        </dl>
+                    </section>
+                }
 
-        </aside>
+                @if (p.Contacts.Count > 0)
+                {
+                    <section class="sheet stack stack--tight" aria-labelledby="h-contacts">
+                        <h3 id="h-contacts">@F.T["Mp.Contacts"]</h3>
+                        <ul class="stack stack--tight">
+                            @foreach (var c in p.Contacts)
+                            {
+                                <li>
+                                    @if (c.Kind == "El. p.")
+                                    {
+                                        @F.T["Mp.Email"]<text>: </text><a href="mailto:@c.Value">@c.Value</a>
+                                    }
+                                    else
+                                    {
+                                        @c.Kind<text>: </text>@c.Value
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    </section>
+                }
+
+            </aside>
+        </div>
     </div>
 }
 

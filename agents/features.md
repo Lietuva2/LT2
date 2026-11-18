@@ -311,8 +311,10 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   2026-11-18), "Plačiau" to
   `/metodika#argumentai`; the same served markup for everyone, gone for the MP's own account once the island runs.
 - **The bill's page (design 8.12.1, owner 2026-11-17).** The header: "Projektai / Įstatymo projektas XVP-0412" (no label
-  line), the title, one `.follow-line` (the stage tags, "Planuojama …", then `FollowButton`). Beside the side column: what
-  it is about, the sides, a closed bill's result; the side column: "Stadijos Seime" with `DateFlagForm` under the stages, the
+  line), the title, one `.follow-line` (the stage tags, "Planuojama …", then `FollowButton`); header and body in a
+  `.stack--snug` (16px apart, owner 2026-11-18). Beside the side column: what it is about, the sides, a closed bill's
+  result; the side column: "Stadijos Seime" with `#planned-source` ("Iš kur ši data?", the agenda link) and
+  `DateFlagForm` under the stages, the
   moderators' panels, the summaries. Then at the page's full width: `BillResponses`, `OrganisationPositions` (each only
   when there is something to show) and `RecordReasons` (always). An argument reads name, text, action row; "Aptarimas"
   opens in its side's column (no stacking of the sides); a chosen action of "⋯" opens under the row, above an open
@@ -426,7 +428,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   Notifications): a number only. The last three points are the designer's proposals awaiting the owner.
 - **One compact follow line (owner, 2026-11-17)** under the title of a bill, an MP, an organisation and a member: the page's
   tags in a `.follow-line` row, then `FollowButton`: "Sekti" (a visitor's a sign-in link back), "Sekėjai: n", and one hint
-  "Kas yra sekimas?" (`Follow.Hint`) whose answer is the kind's `Follow.What.*` (a visitor's `Follow.SignIn.*`) and
+  "Kas yra sekimas?" (`Follow.Hint`); the button and the account list's "Nebesekti" are `.btn--compact` (owner, 2026-11-18) whose answer is the kind's `Follow.What.*` (a visitor's `Follow.SignIn.*`) and
   `Follow.Private` (nobody sees who follows; what the number is), "Plačiau" to `/metodika#sekimas`. `FollowerLine` keeps its
   own "Kas yra sekėjai?" only where it stands without the button (`WithHint`: a closed organisation, the member's own page).
 - "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`), in the person's rhythm (design 8.24): one part per
