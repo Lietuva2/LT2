@@ -460,3 +460,18 @@ Each is built as written; "no" names what changes.
   If the live contract run once the service reopens finds an official outcome (a result field, or a result text in the
   proceedings), that is a new question for the owner.
 - "Dar niekas nenurodė, ko prašo" reads "Niekas nenurodė, ko prašo".
+
+**Decided by the owner on 2026-11-18: the list of closed bills on `/statistika` (8.26.1 item 2, 8.26.2, 8.26.6)**
+
+- The comparison of sides lists every closed bill of the period with a side, one row each with its title linking to the
+  bill, a thin track with the Seimas's and the members' shares and the line at 50 %, and the exact numbers written under
+  it (no hover needed). The consensus case and the sample of 20 stay as they were.
+- Filters for that list: days of the closing vote ("nuo", "iki", typed `yyyy-MM-dd`, a malformed one ignored with a note),
+  the search by title or number, the result (majorities agreed or differed), the Seimas's majority (už, prieš, nėra
+  daugumos), and the order (newest closing vote, largest difference, most positions). No stage filter: the comparison
+  uses only the closing vote. The accounts filter stays and combines.
+- Ten rows, then "Rodyti daugiau" by the address (`?rodyti=`), as the other long lists.
+- Built as proposed, awaiting the owner's look (2026-11-18): the four figures and faction unity follow only the period and
+  the accounts counted, never the list's filters; the list's filters sit in a second form above the list, the period's
+  form at the top; "Rodyti lentelę" is removed, because every row carries what its table row did; the filters work over
+  the kept copy in memory, so they add no copies and no counting.

@@ -22,13 +22,30 @@ public sealed record SeimasVoteNumbers(bool IsConsensus, int? For, int? Against,
 /// Both majorities chose the same; null when not compared. The Seimas's <c>against</c> and <c>none</c> both count as not
 /// "for": they agree with the members' majority "against".
 /// </param>
-/// <param name="Dot">The bill has a dot in the plot: compared and the Seimas's share known (not a consensus).</param>
 public sealed record BillComparison(
-    decimal? SeimasShareFor, string? SeimasMajority, int Sample, decimal? MembersShareFor, bool? MembersMajorityFor, bool Compared, bool? Agreed, bool Dot);
+    decimal? SeimasShareFor, string? SeimasMajority, int Sample, decimal? MembersShareFor, bool? MembersMajorityFor, bool Compared, bool? Agreed);
 
 /// <summary>How often a group of choices matched the caller's sides (design 8.26.4): matched of common, and free votes.</summary>
 /// <param name="Share">Matched ÷ common, only from <see cref="AnalyticsRules.SmallSample"/> common votes; null below.</param>
 public sealed record Agreement(int Matched, int Common, int Free, decimal? Share);
+
+/// <summary>The orders of the list of closed bills on the statistics page (design 8.26.1 item 2, owner 2026-11-18).</summary>
+public enum ComparedBillOrder
+{
+    /// <summary>The newest closing vote first (the default).</summary>
+    Latest,
+
+    /// <summary>The largest difference between the Seimas's share "for" and the members' share "for" first.</summary>
+    Difference,
+
+    /// <summary>The most members' positions (as the accounts filter counts them) first.</summary>
+    Positions,
+}
+
+/// <summary>What the list of closed bills is ordered by: one bill's closing vote, number, difference and positions.</summary>
+/// <param name="Difference">The difference of the two shares "for" (<see cref="AnalyticsRules.Difference"/>), null when either is not shown.</param>
+/// <param name="Positions">The members' positions counted by the accounts filter.</param>
+public sealed record ComparedBillKey(DateTimeOffset VotedAt, string Number, decimal? Difference, int Positions);
 
 /// <summary>The three values of the Seimas's majority of those who voted (design 8.26.2), as the API carries them.</summary>
 public static class SeimasMajorities
@@ -146,8 +163,7 @@ public static class AnalyticsRules
             ShareFromSample(membersFor, sample),
             membersMajority,
             compared,
-            compared ? seimasMajority == membersMajority : null,
-            compared && seimasShare is not null);
+            compared ? seimasMajority == membersMajority : null);
     }
 
     /// <summary>
@@ -196,6 +212,66 @@ public static class AnalyticsRules
             .OrderByDescending(r => agreement(r).Share).ThenBy(name, byName)
             .Concat(listed.Where(r => agreement(r).Share is null).OrderBy(name, byName))
             .ToList();
+    }
+
+    /// <summary>
+    /// The difference ("skirtumas") between the Seimas's share "for" and the members' share "for", as a share (0–1, never
+    /// negative); null when either share is not shown (a consensus, a vote without numbers, fewer than 20 positions).
+    /// </summary>
+    public static decimal? Difference(decimal? seimasShareFor, decimal? membersShareFor) =>
+        seimasShareFor is { } seimas && membersShareFor is { } members ? Math.Abs(seimas - members) : null;
+
+    /// <summary>
+    /// The list's search (design 8.26.1 item 2), as the bill list's (8.12.5): every word of the query, ignoring case, in the
+    /// number or the title. A blank query matches every bill.
+    /// </summary>
+    public static bool MatchesSearch(string? query, string number, string title)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return true;
+        }
+
+        var haystack = number + " " + title;
+        return query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .All(word => Lithuanian.IndexOf(haystack, word, CompareOptions.IgnoreCase) >= 0);
+    }
+
+    /// <summary>
+    /// The list's result filter: <paramref name="agreedWanted"/> true keeps the compared bills where the two majorities chose
+    /// the same, false those where they differed, null every bill. A bill that is not compared (<paramref name="agreed"/>
+    /// null: under 20 positions, a tie, a vote without numbers) has neither result.
+    /// </summary>
+    public static bool MatchesResult(bool? agreedWanted, bool? agreed) => agreedWanted is not { } wanted || agreed == wanted;
+
+    /// <summary>
+    /// The list's filter by the Seimas's majority of those who voted (<see cref="SeimasMajorities"/>): only bills with that
+    /// majority; null keeps every bill. A vote without numbers has no majority and matches none of the three.
+    /// </summary>
+    public static bool MatchesMajority(string? wanted, string? seimasMajority) =>
+        wanted is null || string.Equals(wanted, seimasMajority, StringComparison.Ordinal);
+
+    /// <summary>The list's days (Vilnius): a closing vote on <paramref name="day"/> is in from <paramref name="from"/> to <paramref name="to"/>, both included; either may be open.</summary>
+    public static bool InDays(DateOnly day, DateOnly? from, DateOnly? to) => (from is null || day >= from) && (to is null || day <= to);
+
+    /// <summary>
+    /// The list's order (design 8.26.1 item 2, owner 2026-11-18). <see cref="ComparedBillOrder.Latest"/>: the newest closing
+    /// vote first. <see cref="ComparedBillOrder.Difference"/>: the bills with a difference by it, largest first, then those
+    /// without one (nothing to measure is not "no difference"). <see cref="ComparedBillOrder.Positions"/>: the most positions
+    /// first. Ties go to the newest closing vote, then the number, so the order never depends on the input's.
+    /// </summary>
+    public static IReadOnlyList<T> OrderBills<T>(IEnumerable<T> bills, ComparedBillOrder order, Func<T, ComparedBillKey> key)
+    {
+        ArgumentNullException.ThrowIfNull(bills);
+        ArgumentNullException.ThrowIfNull(key);
+        var keyed = bills.Select(b => (Bill: b, Key: key(b)));
+        var first = order switch
+        {
+            ComparedBillOrder.Difference => keyed.OrderBy(x => x.Key.Difference is null).ThenByDescending(x => x.Key.Difference ?? 0),
+            ComparedBillOrder.Positions => keyed.OrderByDescending(x => x.Key.Positions),
+            _ => keyed.OrderByDescending(x => x.Key.VotedAt),
+        };
+        return first.ThenByDescending(x => x.Key.VotedAt).ThenBy(x => x.Key.Number, StringComparer.Ordinal).Select(x => x.Bill).ToList();
     }
 
     /// <summary>The Vilnius days a period covers: a calendar year of the term cut to the term, or the whole term up to today.</summary>

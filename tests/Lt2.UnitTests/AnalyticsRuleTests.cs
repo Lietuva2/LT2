@@ -110,7 +110,6 @@ public sealed class BillComparisonRuleTests
         comparison.Compared.ShouldBeFalse();
         comparison.MembersShareFor.ShouldBeNull();
         comparison.Agreed.ShouldBeNull();
-        comparison.Dot.ShouldBeFalse();
     }
 
     [Fact]
@@ -121,7 +120,7 @@ public sealed class BillComparisonRuleTests
         comparison.Compared.ShouldBeTrue();
         comparison.MembersShareFor.ShouldBe(0.75m);
         comparison.Agreed.ShouldBe(true);
-        comparison.Dot.ShouldBeTrue();
+        comparison.SeimasShareFor.ShouldBe(80m / 120);
     }
 
     [Fact]
@@ -133,13 +132,13 @@ public sealed class BillComparisonRuleTests
         AnalyticsRules.Compare(Vote(80, 30, 10), membersFor: 10, membersAgainst: 10).Compared.ShouldBeFalse();
 
     [Fact]
-    public void A_bill_adopted_by_consensus_is_compared_but_has_no_dot()
+    public void A_bill_adopted_by_consensus_is_compared_but_has_no_seimas_share()
     {
         var comparison = AnalyticsRules.Compare(new SeimasVoteNumbers(true, null, null, null), membersFor: 20, membersAgainst: 4);
 
         comparison.Compared.ShouldBeTrue();
         comparison.Agreed.ShouldBe(true);
-        comparison.Dot.ShouldBeFalse();
+        comparison.SeimasShareFor.ShouldBeNull();
     }
 
     [Fact]
@@ -347,4 +346,100 @@ public sealed class AnalyticsShareFormatTests
     [Fact]
     public void No_share_is_no_text() =>
         Lt2.Web.Client.Analytics.AnalyticsFormat.Share(null).ShouldBeNull();
+
+    [Fact]
+    public void A_difference_is_written_as_a_whole_percent_like_the_shares()
+    {
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Difference(0.148m).ShouldBe("15\u00a0%");
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Difference(0m).ShouldBe("0\u00a0%");
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Difference(null).ShouldBeNull();
+    }
+
+    [Fact]
+    public void A_share_on_the_track_is_a_percentage_of_its_width() =>
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Position(0.4321m).ShouldBe("43.2%");}
+
+/// <summary>Design 8.26.1 item 2 (owner, 2026-11-18): the list of closed bills, its filters and orders, rule by rule.</summary>
+public sealed class ComparedBillListRuleTests
+{
+    private static readonly DateTimeOffset Day = new(2026, 10, 1, 9, 0, 0, TimeSpan.Zero);
+
+    private static ComparedBillKey Key(string number, int daysLater, decimal? difference, int positions) =>
+        new(Day.AddDays(daysLater), number, difference, positions);
+
+    private static readonly ComparedBillKey[] Bills =
+    [
+        Key("XVP-0701", 0, 0.10m, 300),
+        Key("XVP-0702", 5, null, 900),
+        Key("XVP-0703", 3, 0.40m, 25),
+        Key("XVP-0704", 3, 0.40m, 25),
+        Key("XVP-0705", 9, 0.05m, 7),
+    ];
+
+    private static IEnumerable<string> Ordered(ComparedBillOrder order) => AnalyticsRules.OrderBills(Bills, order, b => b).Select(b => b.Number);
+
+    [Fact]
+    public void The_difference_is_the_distance_between_the_seimas_share_for_and_the_members_share_for()
+    {
+        AnalyticsRules.Difference(0.62m, 0.48m).ShouldBe(0.14m);
+        AnalyticsRules.Difference(0.30m, 0.75m).ShouldBe(0.45m);
+    }
+
+    [Fact]
+    public void Without_either_share_there_is_no_difference()
+    {
+        AnalyticsRules.Difference(null, 0.48m).ShouldBeNull("a consensus or a vote without numbers");
+        AnalyticsRules.Difference(0.62m, null).ShouldBeNull("fewer than twenty positions");
+    }
+
+    [Fact]
+    public void By_default_the_newest_closing_vote_comes_first_then_the_number() =>
+        Ordered(ComparedBillOrder.Latest).ShouldBe(["XVP-0705", "XVP-0702", "XVP-0703", "XVP-0704", "XVP-0701"]);
+
+    [Fact]
+    public void By_difference_the_largest_comes_first_and_bills_without_one_come_last() =>
+        Ordered(ComparedBillOrder.Difference).ShouldBe(["XVP-0703", "XVP-0704", "XVP-0701", "XVP-0705", "XVP-0702"]);
+
+    [Fact]
+    public void By_positions_the_most_come_first_ties_to_the_newest_closing_vote() =>
+        Ordered(ComparedBillOrder.Positions).ShouldBe(["XVP-0702", "XVP-0701", "XVP-0703", "XVP-0704", "XVP-0705"]);
+
+    [Fact]
+    public void The_search_finds_every_word_in_the_number_or_the_title_ignoring_case()
+    {
+        AnalyticsRules.MatchesSearch("pajamų xvp-0412", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBeTrue();
+        AnalyticsRules.MatchesSearch("PAJAMŲ", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBeTrue();
+        AnalyticsRules.MatchesSearch("pajamų pirkimų", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBeFalse();
+        AnalyticsRules.MatchesSearch("  ", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBeTrue("a blank search matches every bill");
+    }
+
+    [Fact]
+    public void The_result_filter_keeps_only_compared_bills_with_that_result()
+    {
+        AnalyticsRules.MatchesResult(true, true).ShouldBeTrue();
+        AnalyticsRules.MatchesResult(true, false).ShouldBeFalse();
+        AnalyticsRules.MatchesResult(false, false).ShouldBeTrue();
+        AnalyticsRules.MatchesResult(true, null).ShouldBeFalse("a bill that is not compared has no result");
+        AnalyticsRules.MatchesResult(false, null).ShouldBeFalse();
+        AnalyticsRules.MatchesResult(null, null).ShouldBeTrue("no filter keeps every bill");
+    }
+
+    [Fact]
+    public void The_majority_filter_keeps_only_bills_with_that_seimas_majority()
+    {
+        AnalyticsRules.MatchesMajority(SeimasMajorities.None, SeimasMajorities.None).ShouldBeTrue();
+        AnalyticsRules.MatchesMajority(SeimasMajorities.Against, SeimasMajorities.None).ShouldBeFalse("against and none are two choices in the filter");
+        AnalyticsRules.MatchesMajority(SeimasMajorities.For, null).ShouldBeFalse("a vote without numbers has no majority");
+        AnalyticsRules.MatchesMajority(null, null).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void The_days_of_the_closing_vote_include_both_ends_and_either_may_be_open()
+    {
+        var day = new DateOnly(2026, 10, 1);
+        AnalyticsRules.InDays(day, day, day).ShouldBeTrue();
+        AnalyticsRules.InDays(day, day.AddDays(1), null).ShouldBeFalse();
+        AnalyticsRules.InDays(day, null, day.AddDays(-1)).ShouldBeFalse();
+        AnalyticsRules.InDays(day, null, null).ShouldBeTrue();
+    }
 }

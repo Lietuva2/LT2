@@ -33,4 +33,14 @@ public static class AnalyticsFormat
 
         return Math.Round(percent, decimals, MidpointRounding.AwayFromZero).ToString("0." + new string('0', decimals), Lithuanian) + " %";
     }
+
+    /// <summary>
+    /// A difference of two shares as a whole percent, like the shares beside it ("15 %"; owner, 2026-11-18: "%", not
+    /// "p. p."); null when there is none.
+    /// </summary>
+    public static string? Difference(decimal? difference) => Display.Percent(difference);
+
+    /// <summary>A share as a place on a track, in per cent of its width, for an SVG attribute ("43.2%").</summary>
+    public static string Position(decimal share) =>
+        Math.Round(share * 100, 1, MidpointRounding.AwayFromZero).ToString("0.#", CultureInfo.InvariantCulture) + "%";
 }
