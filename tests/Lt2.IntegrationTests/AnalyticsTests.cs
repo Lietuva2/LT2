@@ -222,7 +222,9 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
 
             var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
             var plotRow = PlotRow(page, Bill);
-            plotRow.ShouldContain($"<a href=\"/seimas/{Bill}\" aria-label=\"{Bill} {row.Title}\">", customMessage: "the plot names the bill by its title and links to it (owner, 2026-11-19)");
+            plotRow.ShouldContain($"<a class=\"dotplot__label\" href=\"/seimas/{Bill}\" title=\"{Bill} {row.Title}\" aria-label=\"{Bill} {row.Title}\">", customMessage: "the label links to the bill, its full number and title the tooltip and the name (owner, 2026-11-19)");
+            plotRow.ShouldContain($"<span class=\"dotplot__num num\">{Bill}</span>", customMessage: "the number on the first line, the title under it");
+            plotRow.ShouldContain($"<span class=\"dotplot__title\">{row.Title}</span>", customMessage: "the whole title in the page; CSS cuts it to the column");
             plotRow.ShouldContain("class=\"dotplot__seimas\"");
             plotRow.ShouldContain("class=\"dotplot__members\"");
             plotRow.ShouldContain("Lietuva 2.0 naudotojų pozicijų „už“ – 80\u00a0% (pozicijų:\u00a025)");
@@ -513,20 +515,20 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             // The page: ten bills in the plot and the same ten in the table, then "Rodyti daugiau" to the same address with
             // more, landing on the first bill added in the plot.
             var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T"));
-            Regex.Count(page, "<g id=\"projektas-").ShouldBe(10);
+            Regex.Count(page, "<li class=\"dotplot__row\" id=\"projektas-").ShouldBe(10);
             Regex.Count(page, "<tr id=\"row-").ShouldBe(10);
-            Regex.Matches(page, "<g id=\"projektas-([^\"]+)\"").Select(m => m.Groups[1].Value)
+            Regex.Matches(page, "<li class=\"dotplot__row\" id=\"projektas-([^\"]+)\"").Select(m => m.Groups[1].Value)
                 .ShouldBe(Regex.Matches(page, "<tr id=\"row-([^\"]+)\"").Select(m => m.Groups[1].Value), "the plot and the table hold the same bills in the same order");
             Regex.IsMatch(page, @"id=""compare-shown"">Rodoma\s10\siš\s12<").ShouldBeTrue();
             page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=30#projektas-XVP-T011\" id=\"compare-more\"");
             var more = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rodyti=30"));
-            Regex.Count(more, "<g id=\"projektas-").ShouldBe(12);
+            Regex.Count(more, "<li class=\"dotplot__row\" id=\"projektas-").ShouldBe(12);
             Regex.Count(more, "<tr id=\"row-").ShouldBe(12);
             more.ShouldNotContain("id=\"compare-more\"");
 
             // The plot follows the chosen order too: by the most positions, XVP-T012 (36) comes first.
             var byPositions = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rikiuoti=pozicijos"));
-            Regex.Match(byPositions, "<g id=\"projektas-([^\"]+)\"").Groups[1].Value.ShouldBe("XVP-T012");
+            Regex.Match(byPositions, "<li class=\"dotplot__row\" id=\"projektas-([^\"]+)\"").Groups[1].Value.ShouldBe("XVP-T012");
             byPositions.ShouldContain("id=\"compare-filters-toggle\">Filtrai (2)</summary>");
 
             // The period's form keeps the list's filters; the list's form keeps the period; the figures are the same as without filters.
@@ -562,7 +564,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
 
     /// <summary>A bill's row in the plot of closed bills on the page.</summary>
     private static string PlotRow(string html, string number) =>
-        Regex.Match(html, $"<g id=\"{Regex.Escape(AnalyticsListRow(number))}\".*?</g>", RegexOptions.Singleline).Value;
+        Regex.Match(html, $"<li class=\"dotplot__row\" id=\"{Regex.Escape(AnalyticsListRow(number))}\".*?</li>", RegexOptions.Singleline).Value;
 
     /// <summary>A bill's row in the table of closed bills on the page.</summary>
     private static string TableRow(string html, string number) =>

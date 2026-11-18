@@ -358,21 +358,6 @@ public sealed class AnalyticsShareFormatTests
     [Fact]
     public void A_share_on_the_track_is_a_percentage_of_its_width() =>
         Lt2.Web.Client.Analytics.AnalyticsFormat.Position(0.4321m).ShouldBe("43.2%");
-
-    [Fact]
-    public void A_plot_label_is_the_number_and_the_title_whole_when_it_fits() =>
-        Lt2.Web.Client.Analytics.AnalyticsFormat.Label("XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", 60)
-            .ShouldBe("XVP-0412 Gyventojų pajamų mokesčio įstatymo pataisa");
-
-    [Fact]
-    public void A_longer_plot_label_is_cut_at_a_whole_word_and_ends_in_an_ellipsis()
-    {
-        var label = Lt2.Web.Client.Analytics.AnalyticsFormat.Label("XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", 30);
-        label.ShouldBe("XVP-0412 Gyventojų pajamų…");
-        label.Length.ShouldBeLessThanOrEqualTo(30);
-        Lt2.Web.Client.Analytics.AnalyticsFormat.Label("XVP-0412", "Pirmas, antras ir trečias", 17).ShouldBe("XVP-0412 Pirmas…", "no comma before the ellipsis");
-        Lt2.Web.Client.Analytics.AnalyticsFormat.Label("XVP-0412", "Neįprastaiilgasžodis", 14).ShouldBe("XVP-0412 Neįp…", "a single long word is cut inside it");
-    }
 }
 
 /// <summary>Design 8.26.1 item 2 (owner, 2026-11-18): the list of closed bills, its filters and orders, rule by rule.</summary>

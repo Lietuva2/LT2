@@ -480,16 +480,19 @@ Each is built as written; "no" names what changes.
 **Decided by the owner on 2026-11-19: back to the plot and the table on `/statistika`, with the bills' titles (8.26.1 item 2)**
 
 - One dot plot drawn by the server again, and "Rodyti lentelę" again, as before 2026-11-18, but every bill is named by
-  its title as well as its number: in the plot, the number and title as a link on a line of their own above the bill's
-  marks, cut at a whole word with "…" to fit the screen (the full title is the link's name and in the table); in the
-  table, the title as a link in a column beside the number. The plot fits the screen's width and never scrolls.
+  its title as well as its number. In the plot (the owner, later the same day, after a label on its own line above the
+  marks stretched the chart): one row per bill, about two lines tall, a label column on the left (at most 38 % of the
+  width and 12rem) with the number on the first line and the title under it cut with "…", the whole a link with the full
+  "number title" as its tooltip and name, and the marks on the same row to the right on one shared 0–100 % axis with the
+  line at 50 %, whose words stand under the tracks only. In the table, the title as a link in a column beside the number.
+  The plot fits the screen's width and never scrolls.
 - The filters, the order and "Rodyti daugiau" of 2026-11-18 apply to both: the bills shown are the first 10 (then 30, …)
   of the filtered set in the chosen order; the plot shows those with both shares, the table all of them. The table also
   shows the difference ("%", as the shares) and the "Daugumos sutapo" / "Daugumos skyrėsi" chip.
 - The filters' form is closed at first ("Filtrai", "Filtrai (2)" with the number of fields set) and open whenever one of
   its fields is set (the owner asked for it closed; open when set was chosen in the build so what applies is in sight).
-- Built so, awaiting the owner's look: the label's two cut lengths (about 40 and 90 characters, picked by the screen's
-  width at 48rem); the table opens at once when none of the bills shown can stand in the plot; on a narrow screen the
+- Built so, awaiting the owner's look: the label column at 38 % / 12rem (on a phone about 14 letters of a title show);
+  the axis names only 0, 50 and 100 % on a phone; the table opens at once when none of the bills shown can stand in the plot; on a narrow screen the
   table's rows are blocks with each figure named, as the privacy notice's storage table.
 
 **Asked by the owner on 2026-11-18: one green, the sides' pair, the threshold reached, straight bubbles (8.12.2, 8.16.3)**

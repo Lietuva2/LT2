@@ -43,29 +43,4 @@ public static class AnalyticsFormat
     /// <summary>A share as a place on a track, in per cent of its width, for an SVG attribute ("43.2%").</summary>
     public static string Position(decimal share) =>
         Math.Round(share * 100, 1, MidpointRounding.AwayFromZero).ToString("0.#", CultureInfo.InvariantCulture) + "%";
-
-    /// <summary>
-    /// A bill's label in the dot plot (design 8.26.1 item 2, owner 2026-11-19): its number and title, at most
-    /// <paramref name="max"/> characters. A longer one is cut at the last whole word that fits and ends in "…" (SVG text does
-    /// not wrap); the full title is the link's name and stands in the table.
-    /// </summary>
-    public static string Label(string number, string title, int max)
-    {
-        ArgumentNullException.ThrowIfNull(number);
-        ArgumentNullException.ThrowIfNull(title);
-        var full = string.IsNullOrWhiteSpace(title) ? number : number + " " + title.Trim();
-        if (full.Length <= max)
-        {
-            return full;
-        }
-
-        var cut = full[..(max - 1)];
-        var space = cut.LastIndexOf(' ');
-        if (space > number.Length)
-        {
-            cut = cut[..space];
-        }
-
-        return cut.TrimEnd(' ', ',', ';', ':', '–', '-', '.') + "…";
-    }
 }

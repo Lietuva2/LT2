@@ -214,36 +214,52 @@
                         <span class="key key--members">@T["Compare.Members"]</span>
                         <span>@T["Compare.Half"]</span>
                     </p>
-                    @* One plot drawn here (owner, 2026-11-19): per bill its number and title as a link on a line of their own, cut to
-                       fit (a shorter cut on a narrow screen, CSS picks one), and under it the two marks; places are per cent of the
-                       width, so the plot fits any screen without scrolling. Exact numbers: each mark's <title> and the table. *@
-                    <div class="dotplot-wrap">
-                        <svg class="dotplot" width="100%" height="@Px(PlotHeight(dots.Count))" role="group" aria-label="@T["Compare.Aria"]" id="compare-plot">
-                            @foreach (var tick in Ticks)
+                    @* One plot (owner, 2026-11-19): per bill a row, a label column on the left (the number, the title under it cut by CSS with
+                       an ellipsis, the whole as one link with the full "number title" as its name and tooltip) and the marks on the same
+                       row to the right, on one 0–100 % axis shared by every row. Each row's track is an SVG laid over its cell, so the row
+                       is as tall as its two text lines and the grid lines join from row to row; places are per cent of the track's width,
+                       so the plot fits any screen without scrolling. Exact numbers: each mark's <title>, the track's name and the table. *@
+                    <div class="dotplot" role="group" aria-label="@T["Compare.Aria"]" id="compare-plot">
+                        <ol class="dotplot__rows">
+                            @foreach (var bill in dots)
                             {
-                                var x = tick.ToString(CultureInfo.InvariantCulture) + "%";
-                                <line class="@(tick == 50 ? "dotplot__half" : "dotplot__axis")" x1="@x" x2="@x" y1="@Px(PlotTop)" y2="@Px(PlotTop + RowHeight * dots.Count)" />
-                                @SvgText("dotplot__tick", x, Px(PlotTop + RowHeight * dots.Count + 16), tick == 0 ? "start" : tick == 100 ? "end" : "middle", tick.ToString(CultureInfo.InvariantCulture) + " %")
-                            }
-                            @for (var i = 0; i < dots.Count; i++)
-                            {
-                                var bill = dots[i];
-                                var top = PlotTop + RowHeight * i;
                                 var seimas = bill.SeimasShareFor!.Value;
                                 var members = bill.MembersShareFor!.Value;
                                 var full = bill.Number + " " + bill.Title;
-                                <g id="@AnalyticsList.Row(bill.Number)" @key="bill.Number">
-                                    <a href="/seimas/@Uri.EscapeDataString(bill.Number)" aria-label="@full">
-                                        <title>@full</title>
-                                        @Label("dotplot__label dotplot__label--short", top + LabelLine, bill, ShortLabel)
-                                        @Label("dotplot__label dotplot__label--long", top + LabelLine, bill, LongLabel)
+                                var seimasText = T.Format("Compare.DotSeimas", full, AnalyticsFormat.Share(seimas));
+                                var membersText = T.Format("Compare.DotMembers", full, AnalyticsFormat.Share(members), Display.Number(bill.MembersFor + bill.MembersAgainst));
+                                <li class="dotplot__row" id="@AnalyticsList.Row(bill.Number)" @key="bill.Number">
+                                    <a class="dotplot__label" href="/seimas/@Uri.EscapeDataString(bill.Number)" title="@full" aria-label="@full">
+                                        <span class="dotplot__num num">@bill.Number</span>
+                                        <span class="dotplot__title">@bill.Title</span>
                                     </a>
-                                    <line class="dotplot__gap" x1="@AnalyticsFormat.Position(seimas)" x2="@AnalyticsFormat.Position(members)" y1="@Px(top + DotLine)" y2="@Px(top + DotLine)" />
-                                    <rect class="dotplot__seimas" x="@AnalyticsFormat.Position(seimas)" y="@Px(top + DotLine - 5.5m)" width="11" height="11" transform="translate(-5.5 0)"><title>@T.Format("Compare.DotSeimas", full, AnalyticsFormat.Share(seimas))</title></rect>
-                                    <circle class="dotplot__members" cx="@AnalyticsFormat.Position(members)" cy="@Px(top + DotLine)" r="6"><title>@T.Format("Compare.DotMembers", full, AnalyticsFormat.Share(members), Display.Number(bill.MembersFor + bill.MembersAgainst))</title></circle>
-                                </g>
+                                    <div class="dotplot__track">
+                                        <svg role="img" aria-label="@(seimasText + "; " + membersText)">
+                                            @foreach (var tick in Ticks)
+                                            {
+                                                var x = tick.ToString(CultureInfo.InvariantCulture) + "%";
+                                                <line class="@(tick == 50 ? "dotplot__half" : "dotplot__axis")" x1="@x" x2="@x" y1="0" y2="100%" />
+                                            }
+                                            <line class="dotplot__gap" x1="@AnalyticsFormat.Position(seimas)" x2="@AnalyticsFormat.Position(members)" y1="50%" y2="50%" />
+                                            <rect class="dotplot__seimas" x="@AnalyticsFormat.Position(seimas)" y="50%" width="11" height="11" transform="translate(-5.5 -5.5)"><title>@seimasText</title></rect>
+                                            <circle class="dotplot__members" cx="@AnalyticsFormat.Position(members)" cy="50%" r="6"><title>@membersText</title></circle>
+                                        </svg>
+                                    </div>
+                                </li>
                             }
-                        </svg>
+                        </ol>
+                        @* The axis's words under the tracks only, not under the labels. *@
+                        <div class="dotplot__row dotplot__row--axis" aria-hidden="true">
+                            <span></span>
+                            <div class="dotplot__track">
+                                <svg>
+                                    @foreach (var tick in Ticks)
+                                    {
+                                        @SvgText(tick is 25 or 75 ? "dotplot__tick dotplot__tick--minor" : "dotplot__tick", tick.ToString(CultureInfo.InvariantCulture) + "%", "14", tick == 0 ? "start" : tick == 100 ? "end" : "middle", tick.ToString(CultureInfo.InvariantCulture) + " %")
+                                    }
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                     <p class="small" id="compare-plot-note">@T.Format("Compare.PlotNote", Display.Number(d.SmallSample))</p>
                 }
@@ -458,18 +474,8 @@
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
     }
 
-    // The plot's rows (pixels down; across, per cent of the width): the label's baseline, then the marks' line under it.
-    private const decimal PlotTop = 4;
-    private const decimal RowHeight = 50;
-    private const decimal LabelLine = 16;
-    private const decimal DotLine = 34;
+    /// <summary>The plot's axis, in per cent of the track's width; the line at 50 % is the majority's.</summary>
     private static readonly int[] Ticks = [0, 25, 50, 75, 100];
-
-    /// <summary>The label's length on a narrow screen and on a wide one (lt2.css shows one of the two at 48rem).</summary>
-    private const int ShortLabel = 38;
-    private const int LongLabel = 90;
-
-    private static decimal PlotHeight(int rows) => PlotTop + RowHeight * rows + 22;
 
     private static string Px(decimal value) => value.ToString("0.#", CultureInfo.InvariantCulture);
 
@@ -479,15 +485,6 @@
     /// <summary>An SVG <c>text</c> element (Razor reads a literal one inside a loop as its own tag); the content is encoded.</summary>
     private static MarkupString SvgText(string cssClass, string x, string y, string anchor, string content) =>
         new($"<text class=\"{cssClass}\" x=\"{x}\" y=\"{y}\" text-anchor=\"{anchor}\">{System.Net.WebUtility.HtmlEncode(content)}</text>");
-
-    /// <summary>A bill's label in the plot, its number in bold, cut to <paramref name="max"/> characters.</summary>
-    private static MarkupString Label(string cssClass, decimal y, BillComparisonResponse bill, int max)
-    {
-        var label = AnalyticsFormat.Label(bill.Number, bill.Title, max);
-        var number = System.Net.WebUtility.HtmlEncode(bill.Number);
-        var rest = System.Net.WebUtility.HtmlEncode(label[bill.Number.Length..]);
-        return new($"<text class=\"{cssClass}\" x=\"0\" y=\"{Px(y)}\"><tspan class=\"dotplot__num\">{number}</tspan>{rest}</text>");
-    }
 
     /// <summary>The Seimas's share "for" in the table, "pritarta bendru sutarimu", or that the vote has no result.</summary>
     private string SeimasShare(BillComparisonResponse bill) =>
