@@ -497,3 +497,19 @@ Each is built as written; "no" names what changes.
   does; where a shape in a side's colour is under 3:1 against a dark ground or track it keeps its colour and gets a light
   1px edge. The threshold's progress is the same `#3a8e54` in both themes; the dark menu keeps its own link green, since
   the light one is under 3:1 on the dark ground.
+
+**Decided by the owner on 2026-11-18: "Man svarbu" on either side, a side taken back by pressing it again (8.2, 8.7, 8.23.10)**
+
+- "Man svarbu" may be given on an argument of either side, with or without a side of one's own; it needs the positions
+  consent as a side does, never on one's own argument, within `Appeals:EndorsementsPerPerson` (every mark counts towards
+  it). A mark counts only while its giver asks for the argument's side, read from the current position when counted; the
+  figure, the order of the arguments and the summaries use only counted marks. Taking, changing or withdrawing a side
+  deletes no mark. The giver's own uncounted marks show pressed with a short note. Any mark, counted or not, ends editing.
+  Marks stay private: a list of names beside a count of same-side marks only would tell sides by difference.
+- Pressing the side one has takes it back; "Atsiimti" for sides is removed from the bill's page and the front page's rows
+  ("Atsiimti" stays for one's own argument and for "Sutinku"). Disabled while a request runs; a double click's second press
+  does nothing; the withdrawal names its side and changes nothing when the person no longer has it.
+- Open for the owner: the positions consent form (`Consent.Text`, `Consent.Check`, versioned `PositionConsent.TextVersion`)
+  speaks of sides only, though it is now also asked before a first mark; rewording it needs a new text version (and the
+  invented members' consents given again). Not changed here. The terms (`Terms.Summaries.1`: "argumentai, kuriuos
+  daugiausia žmonių pažymėjo „Man svarbu“") likewise, being versioned.

@@ -37,7 +37,7 @@ internal static class AppealMapping
         p.NextCursor);
 
     public static MyBillRecordResponse Map(MyBillRecord m) =>
-        new(m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.HasPositionConsent) { Editable = m.Editable, HiddenStatements = m.HiddenStatements };
+        new(m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.HasPositionConsent) { Editable = m.Editable, HiddenStatements = m.HiddenStatements, Uncounted = m.Uncounted };
 
     public static AppealRulesResponse Map(AppealRulesInfo r) =>
         new(r.ThresholdDefault, r.ThresholdMinimum, r.TextMaxLength, r.ReasonsPerPerson, r.EndorsementsPerPerson, r.DescriptionMaxLength, r.AiSummaries) { MinReasonWords = r.MinReasonWords };
@@ -126,8 +126,8 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, TakingSides sides
     public async Task<ApiResult> TakePositionAsync(string number, PositionRequest request, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => sides.TakeAsync(number, id, request.Side, cancellationToken));
 
-    public async Task<ApiResult> ClearPositionAsync(string number, CancellationToken cancellationToken = default) =>
-        await AsMemberAsync(id => sides.ClearAsync(number, id, cancellationToken));
+    public async Task<ApiResult> ClearPositionAsync(string number, PositionRequest? request = null, CancellationToken cancellationToken = default) =>
+        await AsMemberAsync(id => sides.ClearAsync(number, id, request?.Side, cancellationToken));
 
     public async Task<ApiResult<IReadOnlyList<ReasonResponse>>> FindSimilarAsync(string number, ReasonRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(

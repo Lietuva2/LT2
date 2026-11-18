@@ -201,6 +201,16 @@ internal sealed class AppealsService(
         var names = await reads.NamesAsync([userId], cancellationToken);
         var mineIds = mine.Select(r => r.Id).ToList();
         var endorsements = await AppealReads.EndorsementCountsAsync(db, mineIds, cancellationToken);
+
+        // Owner, 2026-11-18: the person's own marks that do not count now (no side, or the other side's argument), for the
+        // short note beside them; only ever the caller's own.
+        var uncounted = (await db.Reasons.AsNoTracking()
+                .Where(r => endorsed.Contains(r.Id))
+                .Select(r => new { r.Id, r.Side })
+                .ToListAsync(cancellationToken))
+            .Where(r => !AppealRules.MarkCounts(side, r.Side))
+            .Select(r => r.Id)
+            .ToList();
         return new MyBillRecord(
             side,
             endorsed,
@@ -209,8 +219,9 @@ internal sealed class AppealsService(
             AppealRules.Left(mine.Count(r => AppealRules.CountedReasonStatuses.Contains(r.Status)), reasonLimit),
             facts?.HasPositionConsent == true)
         {
-            Editable = await EditableAsync(db, record, userId, facts, mine, endorsements, cancellationToken),
+            Editable = await EditableAsync(db, record, userId, facts, mine, cancellationToken),
             HiddenStatements = await HideStatementsAsync(db, mine.Where(r => r.Status == ReasonStatuses.Hidden).Select(r => r.Id).ToList(), cancellationToken),
+            Uncounted = uncounted,
         };
     }
 
@@ -237,10 +248,11 @@ internal sealed class AppealsService(
 
     /// <summary>
     /// The person's own arguments they may edit now (design 8.2, owner 2026-11-17), by the rules the edit is checked by: the
-    /// record open, no writing restriction, and nobody reacted (comments counted whatever their state).
+    /// record open, no writing restriction, and nobody reacted (comments counted whatever their state; every "Man svarbu",
+    /// counted or not, owner 2026-11-18).
     /// </summary>
     private async Task<IReadOnlyList<Guid>> EditableAsync(
-        AppealsDb db, BillRecord record, Guid userId, ParticipantFacts? facts, List<Reason> mine, Dictionary<Guid, int> endorsements, CancellationToken ct)
+        AppealsDb db, BillRecord record, Guid userId, ParticipantFacts? facts, List<Reason> mine, CancellationToken ct)
     {
         if (mine.Count == 0 || facts is null || MpAccounts.Refusal(facts) is not null || await NotOpenAsync(record, ct) is not null
             || await RestrictedAsync(db, userId, ct) is not null)
@@ -249,6 +261,7 @@ internal sealed class AppealsService(
         }
 
         var ids = mine.Select(r => r.Id).ToList();
+        var endorsements = await AppealReads.ReactionCountsAsync(db, ids, ct);
         var comments = await db.Comments.AsNoTracking()
             .Where(c => c.TargetKind == CommentKinds.Reason && ids.Contains(c.TargetId))
             .GroupBy(c => c.TargetId).Select(g => new { g.Key, Count = g.Count() })
@@ -308,16 +321,8 @@ internal sealed class AppealsService(
         }
         else if (position.Side != side)
         {
-            if (AppealRules.ChangingSideDropsEndorsementsOfTheOldSide(position.Side, side))
-            {
-                var oldSide = position.Side;
-                await db.Endorsements
-                    .Where(e => e.RecordId == record.Value.Id && e.UserId == userId
-                        && db.Reasons.Any(r => r.Id == e.ReasonId && r.Side == oldSide))
-                    .ExecuteDeleteAsync(cancellationToken);
-            }
-
-            // Overwritten in place: no earlier side is kept anywhere (design 5.3).
+            // Overwritten in place: no earlier side is kept anywhere (design 5.3). The person's "Man svarbu" marks stay; which
+            // of them count follows the new side when they are counted (owner, 2026-11-18, AppealRules.MarkCounts).
             position.Side = side;
             position.ChangedAt = now;
         }
@@ -333,8 +338,13 @@ internal sealed class AppealsService(
         return position is null;
     }
 
-    public async Task<Result<Unit>> ClearPositionAsync(string billNumber, Guid userId, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> ClearPositionAsync(string billNumber, Guid userId, string? side, CancellationToken cancellationToken)
     {
+        if (side is not null && AppealRules.CheckSide(side) is { } invalid)
+        {
+            return RuleErrors.Of(invalid);
+        }
+
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await AdvisoryLocks.PersonAsync(db, userId, cancellationToken);
@@ -351,8 +361,11 @@ internal sealed class AppealsService(
             return notOpen;
         }
 
-        await db.Endorsements.Where(e => e.RecordId == record.Id && e.UserId == userId).ExecuteDeleteAsync(cancellationToken);
-        if (await db.Positions.Where(p => p.RecordId == record.Id && p.UserId == userId).ExecuteDeleteAsync(cancellationToken) > 0)
+        // Owner, 2026-11-18: withdrawing a side deletes no "Man svarbu" (they stop counting until a side is taken again), and
+        // a withdrawal of a side the person no longer has (a late second press, another tab) changes nothing.
+        var current = await db.Positions.Where(p => p.RecordId == record.Id && p.UserId == userId).Select(p => p.Side).FirstOrDefaultAsync(cancellationToken);
+        if (AppealRules.WithdrawalApplies(current, side)
+            && await db.Positions.Where(p => p.RecordId == record.Id && p.UserId == userId && p.Side == current).ExecuteDeleteAsync(cancellationToken) > 0)
         {
             // Design 8.12.5: a side withdrawn is the bill's activity too.
             await RecordActivity.TouchAsync(db, record.Id, clock.GetUtcNow(), cancellationToken);
@@ -587,8 +600,15 @@ internal sealed class AppealsService(
         // Under the argument's lock, which its author's edit takes: a mark never crosses an edit (design 8.2).
         await AdvisoryLocks.ReasonAsync(db, reasonId, cancellationToken);
 
+        // Read after the lock: a consent withdrawn a moment ago is seen here (IPositionErasure takes the same lock).
+        var participant = await participants.FindAsync(userId, cancellationToken);
+        if (participant is null)
+        {
+            return Error.Forbidden("member.required");
+        }
+
         // Design 8.5.4: the MP's own account gives no "Man svarbu".
-        if (MpAccounts.Refusal(await participants.FindAsync(userId, cancellationToken)) is { } mpAccount)
+        if (MpAccounts.Refusal(participant) is { } mpAccount)
         {
             return mpAccount;
         }
@@ -610,10 +630,11 @@ internal sealed class AppealsService(
             return Result.Ok();
         }
 
-        var side = await db.Positions.Where(p => p.RecordId == record.Id && p.UserId == userId).Select(p => p.Side).FirstOrDefaultAsync(cancellationToken);
+        // Either side, with or without one's own (owner, 2026-11-18): the side decides only whether the mark counts, when the
+        // marks are counted. The limit counts every mark of the person on the bill.
         var already = await db.Endorsements.CountAsync(e => e.RecordId == record.Id && e.UserId == userId, cancellationToken);
         var limit = await settings.GetAsync(SettingKeys.AppealsEndorsementsPerPerson, cancellationToken);
-        if (AppealRules.CheckEndorsement(reason.AuthorUserId == userId, side, reason.Side, already, limit) is { } refused)
+        if (AppealRules.CheckEndorsement(reason.AuthorUserId == userId, participant.HasPositionConsent, already, limit) is { } refused)
         {
             return RuleErrors.Of(refused);
         }

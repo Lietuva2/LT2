@@ -1,8 +1,9 @@
 @inject IStringLocalizer<AppealUi> L
 
-@* The positions consent before a first side (design 6.5): the same title, text, checkbox and buttons wherever a side is
-   taken, on the bill's page (SidePicker) and in a row of the front page (MyAgendaSide). The component that shows it gives
-   the consent and takes the side when "Sutinku ir …" is pressed; nothing is saved before that, and "Atšaukti" only closes
+@* The positions consent before a first side or a first "Man svarbu" (design 6.5; owner 2026-11-18 for the mark): the same
+   title, text, checkbox and buttons wherever a side is taken or an argument marked, on the bill's page (SidePicker,
+   RecordReasons) and in a row of the front page (MyAgendaSide). The component that shows it gives the consent and takes
+   the side or gives the mark when "Sutinku ir …" is pressed; nothing is saved before that, and "Atšaukti" only closes
    it. A quiet sheet: it opens within the content (design 8.16). *@
 <div class="sheet sheet--quiet stack stack--tight" role="group" aria-labelledby="@(IdPrefix)consent-title" id="@(IdPrefix)consent">
     <h3 id="@(IdPrefix)consent-title">@L["Consent.Title"]</h3>
@@ -14,8 +15,8 @@
         <span>@L["Consent.Check"]</span>
     </label>
     <div class="row">
-        <button type="button" class="btn @(Side == "for" ? "btn--for" : "btn--against")" id="@(IdPrefix)consent-submit" disabled="@(Locked || !checkedBox)"
-                @onclick="OnConfirm">@L["Consent.Submit." + Side]</button>
+        <button type="button" class="btn @(ForMark ? null : Side == "for" ? "btn--for" : "btn--against")" id="@(IdPrefix)consent-submit" disabled="@(Locked || !checkedBox)"
+                @onclick="OnConfirm">@(ForMark ? L["Consent.Submit.mark"] : L["Consent.Submit." + Side])</button>
         <button type="button" class="btn btn--plain" id="@(IdPrefix)consent-cancel" disabled="@Locked" @onclick="OnCancel">@L["Cancel"]</button>
     </div>
 </div>
@@ -25,6 +26,12 @@
 
     /// <summary>The side the person pressed: <c>for</c> or <c>against</c>.</summary>
     [Parameter, EditorRequired] public string Side { get; set; } = "";
+
+    /// <summary>
+    /// Asked before a first "Man svarbu" rather than a side (owner, 2026-11-18: a mark needs the same consent): the button
+    /// says "Sutinku ir pažymėti" in the neutral look; <see cref="Side"/> is then the argument's side, unused.
+    /// </summary>
+    [Parameter] public bool ForMark { get; set; }
 
     /// <summary>While the island has not started or an action runs, nothing can be pressed.</summary>
     [Parameter] public bool Locked { get; set; }

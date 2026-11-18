@@ -118,8 +118,8 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
     public Task<ApiResult> TakePositionAsync(string number, PositionRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, AppealRoutes.PositionOf(number), request, cancellationToken);
 
-    public Task<ApiResult> ClearPositionAsync(string number, CancellationToken cancellationToken = default) =>
-        http.SendAsync(HttpMethod.Delete, AppealRoutes.PositionOf(number), null, cancellationToken);
+    public Task<ApiResult> ClearPositionAsync(string number, PositionRequest? request = null, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Delete, AppealRoutes.PositionOf(number), request, cancellationToken);
 
     public Task<ApiResult<IReadOnlyList<ReasonResponse>>> FindSimilarAsync(string number, ReasonRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<ReasonResponse>>(HttpMethod.Post, AppealRoutes.SimilarReasonsOf(number), request, cancellationToken);

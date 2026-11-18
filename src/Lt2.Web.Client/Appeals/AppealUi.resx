@@ -16,7 +16,6 @@
 <data name="Side.Yours.against" xml:space="preserve"><value>Jūs prašote balsuoti prieš. Tai matote tik jūs.</value></data>
 <data name="Side.MpAccount" xml:space="preserve"><value>Seimo nario paskyra pozicijos neužima.</value></data>
   <data name="Side.MpAccount.Respond" xml:space="preserve"><value>Seimo nario atsakymas</value></data>
-  <data name="Side.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
 <data name="Consent.Title" xml:space="preserve"><value>Prieš išsaugant jūsų poziciją</value></data>
 <data name="Consent.Text" xml:space="preserve"><value>Tai, ar prašote balsuoti už, ar prieš, yra jūsų politinė nuomonė – ypatingai saugomi asmens duomenys. Ją išsaugosime tik gavę jūsų aiškų sutikimą. Jūsų pozicijos niekam nerodome: viešai skelbiami tik bendri skaičiai. Sutikimą galite bet kada atšaukti savo paskyroje – tada visos jūsų pozicijos bus ištrintos.</value></data>
 <data name="Consent.PrivacyLink" xml:space="preserve"><value>Kaip saugome pozicijas – privatumo pranešime</value></data>
@@ -100,9 +99,7 @@
 <data name="Comments.Edited" xml:space="preserve"><value>Komentaras išsaugotas.</value></data>
 <data name="Reasons.Published" xml:space="preserve"><value>Argumentas paskelbtas.</value></data>
 <data name="Reasons.Pending" xml:space="preserve"><value>Argumentą pirma peržiūrės moderatorius. Kai jis bus paskelbtas, gausite laišką.</value></data>
-<data name="Reasons.NeedSide" xml:space="preserve"><value>„Man svarbu“ žymėti gali tie, kurie nurodė, ko prašo.</value></data>
 <data name="Reasons.OwnReason" xml:space="preserve"><value>Savo argumento „Man svarbu“ žymėti negalima.</value></data>
-<data name="Reasons.OwnSideOnly" xml:space="preserve"><value>„Man svarbu“ galite žymėti tik argumentus tos pusės, kurios prašote patys.</value></data>
 <data name="Reasons.NoEndorsementsLeft" xml:space="preserve"><value>Dėl šio projekto „Man svarbu“ daugiau pažymėti nebegalite.</value></data>
 <data name="Reasons.EndorsementsLeft" xml:space="preserve"><value>„Man svarbu“ dar galite pažymėti: {0}.</value></data>
 <data name="Reasons.Left" xml:space="preserve"><value>Argumentų dar galite parašyti: {0}.</value></data>
@@ -770,7 +767,6 @@
   <data name="Agenda.Ask" xml:space="preserve"><value>Prašau balsuoti</value></data>
   <data name="Agenda.Ask.for" xml:space="preserve"><value>Prašau balsuoti už projektą {0}</value></data>
   <data name="Agenda.Ask.against" xml:space="preserve"><value>Prašau balsuoti prieš projektą {0}</value></data>
-  <data name="Agenda.Withdraw" xml:space="preserve"><value>Atsiimti, ko prašote dėl projekto {0}</value></data>
   <data name="Agenda.Followed" xml:space="preserve"><value>Dabar sekate šį projektą.</value></data>
 <data name="Admin.Setting.Registration:OfficialAddressesWithoutInvitation" xml:space="preserve"><value>Seimo nariai be kvietimo</value></data>
 <data name="Admin.Help.Registration:OfficialAddressesWithoutInvitation" xml:space="preserve"><value>Kol registracija tik su kvietimu, Seimo nario oficialiu adresu galima registruotis ir be jo. Įjunkite tik kartu su prisistatymo laišku Seimo nariams.</value></data>
@@ -1019,7 +1015,7 @@
   <data name="News.Responses.Few" xml:space="preserve"><value>{0} nauji atsakymai</value></data>
   <data name="News.Responses.Many" xml:space="preserve"><value>{0} naujų atsakymų</value></data>
   <data name="Reasons.EndorseWhat" xml:space="preserve"><value>Kas yra „Man svarbu“?</value></data>
-  <data name="Reasons.EndorseAnswer" xml:space="preserve"><value>Pažymėkite argumentus, kurie jums svarbiausi. Žymėti galima nurodžius, ko prašote (už ar prieš), ir tik savo pusės argumentus, ne savo parašytus. Daugiausia pažymėti argumentai patenka į suvestines Seimo nariams.</value></data>
+  <data name="Reasons.EndorseAnswer" xml:space="preserve"><value>Pažymėkite jums svarbiausius argumentus – bet kurios pusės, tik ne savo parašytus. Skaičiuojamos tik žymos prie tos pusės argumentų, kurios prašote patys: daugiausia pažymėti patenka į suvestines Seimo nariams.</value></data>
   <data name="Admin.Setting.Digest:ReviewHours" xml:space="preserve"><value>Kiek anksčiau paruošiama suvestinė</value></data>
   <data name="Admin.Help.Digest:ReviewHours" xml:space="preserve"><value>Savaitinė ir prieš posėdį suvestinė paruošiama tiek valandų prieš išsiunčiant: tada nustatoma, kurie projektai ir argumentai į ją pateks, ir apie tai pranešama moderatoriams. Skaičiai imami išsiunčiant.</value></data>
   <data name="Admin.Unit.Digest:ReviewHours" xml:space="preserve"><value>val.</value></data>
@@ -1044,4 +1040,10 @@
   <data name="DigMod.ApproveHint" xml:space="preserve"><value>Patvirtinta suvestinė išeina savo laiku, ne anksčiau; iki tol dar galima paslėpti argumentą ar sulaikyti projekto siuntimą. Nepatvirtinta išeina taip pat.</value></data>
   <data name="DigMod.ApprovedDone" xml:space="preserve"><value>Suvestinė patvirtinta: ji išeis nustatytu laiku.</value></data>
   <data name="DigMod.Hidden" xml:space="preserve"><value>Atlikta: argumentas paslėptas, jo vietą užėmė kitas tos pusės argumentas, jei toks yra.</value></data>
+  <data name="Side.PressAgain" xml:space="preserve"><value>Paspaudę dar kartą, atsiimsite.</value></data>
+  <data name="Consent.Submit.mark" xml:space="preserve"><value>Sutinku ir pažymiu „Man svarbu“</value></data>
+  <data name="Reasons.Uncounted.NoSide.for" xml:space="preserve"><value>Bus skaičiuojama, kai prašysite balsuoti už.</value></data>
+  <data name="Reasons.Uncounted.NoSide.against" xml:space="preserve"><value>Bus skaičiuojama, kai prašysite balsuoti prieš.</value></data>
+  <data name="Reasons.Uncounted.Other.for" xml:space="preserve"><value>Neskaičiuojama: jūs prašote balsuoti už.</value></data>
+  <data name="Reasons.Uncounted.Other.against" xml:space="preserve"><value>Neskaičiuojama: jūs prašote balsuoti prieš.</value></data>
 </root>

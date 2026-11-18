@@ -199,6 +199,12 @@ public sealed record MyBillRecordResponse(
     /// author sees them in place, greyed, with it). Never in any public answer.
     /// </summary>
     public IReadOnlyDictionary<Guid, string> HiddenStatements { get; init; } = new Dictionary<Guid, string>();
+
+    /// <summary>
+    /// The caller's own marks in <c>Endorsed</c> that do not count now (owner, 2026-11-18): given without a side, or on the
+    /// other side's argument; shown pressed with a short note. Never in any public answer.
+    /// </summary>
+    public IReadOnlyList<Guid> Uncounted { get; init; } = [];
 }
 
 /// <summary>

@@ -145,6 +145,12 @@ public sealed record MyBillRecord(
     /// the author sees their hidden argument in its place with it); only in this never-cached answer.
     /// </summary>
     public IReadOnlyDictionary<Guid, string> HiddenStatements { get; init; } = new Dictionary<Guid, string>();
+
+    /// <summary>
+    /// The person's own marks in <see cref="Endorsed"/> that do not count now (owner, 2026-11-18): given without a side, or on
+    /// the other side's argument. They show pressed with a short note; only in this never-cached answer.
+    /// </summary>
+    public IReadOnlyList<Guid> Uncounted { get; init; } = [];
 }
 
 /// <summary>
@@ -277,7 +283,12 @@ public interface IAppealsModule
     /// </summary>
     Task<Result<bool>> TakePositionAsync(string billNumber, Guid userId, string side, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> ClearPositionAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
+    /// <summary>
+    /// Withdraws the person's side (design 8.7, owner 2026-11-18: pressing the pressed button again). With
+    /// <paramref name="side"/> only that side is withdrawn: a withdrawal of a side the person no longer has changes nothing.
+    /// Their "Man svarbu" marks stay and stop counting.
+    /// </summary>
+    Task<Result<Unit>> ClearPositionAsync(string billNumber, Guid userId, string? side, CancellationToken cancellationToken);
 
     Task<Result<IReadOnlyList<ReasonInfo>>> FindSimilarAsync(string billNumber, NewReason request, CancellationToken cancellationToken);
 

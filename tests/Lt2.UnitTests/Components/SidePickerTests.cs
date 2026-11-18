@@ -165,6 +165,40 @@ public sealed class SidePickerTests : BunitContext
         picker.Find("#side-for").HasAttribute("disabled").ShouldBeFalse("the other side is still a button that changes it");
     }
 
+    /// <summary>
+    /// Design 8.7, owner 2026-11-18: no "Atsiimti". The pressed button takes the side back, naming it (the server changes
+    /// nothing if the person no longer has it); it is described by the line saying so, and its title says it too. The second
+    /// click of a double click does nothing, so a side just taken is not taken back by the same gesture.
+    /// </summary>
+    [Fact]
+    public void Pressing_ones_own_side_again_takes_it_back_and_a_double_clicks_second_press_does_nothing()
+    {
+        _appeals.OnEach("GetMineAsync", Mine("for"), Mine(null));
+        _appeals.On("ClearPositionAsync", ApiResult.Ok());
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(new BillRecordResponse(
+            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
+            new SideCountsResponse(0, 0, 0, 0), Threshold(0), [])));
+        var picker = Render<SidePicker>(p => p.Add(c => c.Number, Bill));
+
+        picker.Markup.ShouldNotContain("Atsiimti");
+        picker.Find("#my-side").TextContent.ShouldBe("Jūs prašote balsuoti už. Tai matote tik jūs. Paspaudę dar kartą, atsiimsite.");
+        picker.Find("#side-for").GetAttribute("aria-describedby").ShouldBe("my-side");
+        picker.Find("#side-for").GetAttribute("title").ShouldBe("Paspaudę dar kartą, atsiimsite.");
+        picker.Find("#side-against").HasAttribute("aria-describedby").ShouldBeFalse();
+
+        picker.Find("#side-for").Click(new Microsoft.AspNetCore.Components.Web.MouseEventArgs { Detail = 2 });
+        _appeals.Calls.ShouldNotContain("ClearPositionAsync");
+
+        picker.Find("#side-for").Click();
+        picker.WaitForAssertion(() => picker.Find("#side-for").GetAttribute("aria-pressed").ShouldBe("false"));
+        ((PositionRequest)_appeals.Arguments[_appeals.Calls.IndexOf("ClearPositionAsync")][1]!).Side.ShouldBe("for");
+        _appeals.Calls.ShouldNotContain("TakePositionAsync");
+        picker.FindAll("#my-side").ShouldBeEmpty();
+        SidePresses.Ignored(0).ShouldBeFalse("a key press");
+        SidePresses.Ignored(1).ShouldBeFalse();
+        SidePresses.Ignored(2).ShouldBeTrue();
+    }
+
     [Fact]
     public void Without_a_side_neither_has_a_check_mark()
     {

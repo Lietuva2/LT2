@@ -255,7 +255,7 @@ internal static class ReasonStatuses
     public const string Merged = "merged";
 }
 
-/// <summary><c>appeals.endorsement</c>: "Man svarbu" on an argument of the person's own side (design 5.3).</summary>
+/// <summary><c>appeals.endorsement</c>: "Man svarbu" on an argument of either side (design 5.3, 8.2); it counts only while the person's position is on the argument's side, read when counted (owner, 2026-11-18).</summary>
 internal sealed class Endorsement
 {
     public Guid ReasonId { get; set; }

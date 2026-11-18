@@ -58,7 +58,7 @@ public static class DatabaseRoles
     /// <summary>
     /// What <c>lt2_readonly</c> never reads, each for a reason:
     /// <list type="bullet">
-    /// <item>positions (design 5.5), and the "Man svarbu" marks, which tell the side too;</item>
+    /// <item>positions (design 5.5), and the "Man svarbu" marks, which beside the positions tell the side too;</item>
     /// <item>moderators' writing restrictions on accounts (design 8.3), shown to nobody but the person and staff;</item>
     /// <item>organisations' tables, which hold an account beside an organisation (who represents, registered, wrote,
     /// was invited, asked for a code; design 8.14.14); their public content is in the public API;</item>
