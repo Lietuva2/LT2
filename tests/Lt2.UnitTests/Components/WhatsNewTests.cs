@@ -40,7 +40,7 @@ public sealed class WhatsNewTests : BunitContext
         (_comments, _) = CommentFakes.Add(Services);
         var appeals = DispatchProxy.Create<IAppealsApi, ApiFake>();
         var a = (ApiFake)(object)appeals;
-        a.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(Record(Reason(First), Reason(Second), Reason(Third))));
+        ReasonFakes.Serve(a, Bill, Reason(First), Reason(Second), Reason(Third));
         a.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse("for", [], null, [], null, true)));
         a.On("GetMyRestrictionAsync", ApiResult<MyRestrictionResponse>.Ok(new MyRestrictionResponse(false, null, null)));
         Services.AddSingleton(appeals);
@@ -65,7 +65,8 @@ public sealed class WhatsNewTests : BunitContext
         SeenAnswers();
         var toggle = Render<WhatsNew>(p => p.Add(c => c.Number, Bill));
         var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
-        reasons.FindAll("button.linkish").Single(b => b.TextContent.Trim().StartsWith("Visi argumentai", StringComparison.Ordinal)).Click();
+        reasons.Find("#reasons-more-for").Click();
+        reasons.WaitForAssertion(() => reasons.FindAll($"#reason-{Third}").ShouldNotBeEmpty());
 
         _myBills.Calls.ShouldBe(["SeenAsync"]);
         _myBills.Arguments[0][0].ShouldBe(Bill);
@@ -83,7 +84,7 @@ public sealed class WhatsNewTests : BunitContext
         SeenAnswers();
         var toggle = Render<WhatsNew>(p => p.Add(c => c.Number, Bill));
         var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
-        reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{First}", $"reason-{Second}"], "two per side before \"show all\"");
+        reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{First}", $"reason-{Second}"], "two per side before \"Rodyti daugiau argumentų\"");
 
         toggle.Find("#only-new").Change(true);
 
@@ -94,7 +95,9 @@ public sealed class WhatsNewTests : BunitContext
 
         toggle.Find("#only-new").Change(false);
 
-        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{First}", $"reason-{Second}"]));
+        // Owner, 2026-11-19: the new argument beyond the first page was read for the switch, and stays at the end of its column.
+        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{First}", $"reason-{Second}", $"reason-{Third}"]));
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 3 iš 3");
         reasons.Find($"#aptarimas-{Second:N}").HasAttribute("open").ShouldBeFalse();
     }
 
@@ -167,7 +170,4 @@ public sealed class WhatsNewTests : BunitContext
 
     private static ReasonResponse Reason(Guid id) => new(id, "for", "Argumentas " + id.ToString()[^1], "Rūta Mockutė", 0, "published", DateTimeOffset.UnixEpoch);
 
-    private static BillRecordResponse Record(params ReasonResponse[] reasons) => new(
-        Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
-        new SideCountsResponse(1, 1, 0, 0), new ThresholdResponse(100, "default", null, 1, false, false), reasons);
 }

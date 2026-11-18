@@ -279,6 +279,41 @@ public sealed class CommentThreadTests : BunitContext
         thread.Find($"#{CommentPaging.PositionAnchor(Target, 10)}").ShouldNotBeNull("each comment carries its position");
         thread.Find($"#comments-more-{Target:N}").GetAttribute("href")
             .ShouldBe($"/seimas/{Bill}?atsakymai=20&komentarai={Target:N}-12#{CommentPaging.PositionAnchor(Target, 11)}");
+        thread.Find($"#comments-shown-{Target:N}").TextContent.ShouldBe("Rodoma 10 iš 12");
+        thread.Find($"#comments-more-{Target:N}").HasAttribute("data-enhance-nav").ShouldBeFalse("before the island runs, the plain link");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-19 ("doesn't work on phone nor desktop"): once the island runs, "Rodyti daugiau komentarų" reads the next ten
+    /// from the API, from where the shown ones end, adds them in place and gives the first one added the focus; the link is taken
+    /// from enhanced navigation (which fetched the page while the island kept its own list) and points to the grown address.
+    /// </summary>
+    [Fact]
+    public void Once_the_island_runs_rodyti_daugiau_komentaru_reads_the_next_page_in_place_and_focuses_the_first_added()
+    {
+        AddAuthorization().SetNotAuthorized();
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        CommentResponse Comment(int i) => new(
+            Guid.Parse($"0193a1b2-0000-7000-8000-0000000001{i:D2}"), new CommentAuthorResponse("person", "Narys " + i, null, null, null), "Komentaras " + i, DateTimeOffset.UnixEpoch.AddMinutes(i), []);
+        var first = Enumerable.Range(1, 10).Select(Comment).ToList();
+        var thread = Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill)
+            .Add(c => c.Thread, new CommentThreadResponse("reason", Target, Bill, 23, true, true, first, null, "10")).Add(c => c.Count, 23)
+            .Add(c => c.PagePath, "/seimas/" + Bill));
+        thread.Find($"#comments-more-{Target:N}").GetAttribute("data-enhance-nav").ShouldBe("false");
+
+        _comments.On("GetThreadAsync", ApiResult<CommentThreadResponse>.Ok(
+            new CommentThreadResponse("reason", Target, Bill, 23, true, true, Enumerable.Range(10, 11).Select(Comment).ToList(), null, "20")));
+        thread.Find($"#comments-more-{Target:N}").Click();
+
+        thread.WaitForAssertion(() => thread.FindAll($"#comments-{Target:N} > li").Count.ShouldBe(20, "the tenth came again and is not added twice"));
+        var asked = _comments.Arguments[_comments.Calls.LastIndexOf("GetThreadAsync")];
+        asked[1].ShouldBe(Target);
+        asked[2].ShouldBe(CommentLimits.Step);
+        asked[3].ShouldBe("10", "from where the shown ones end");
+        thread.Find($"#{CommentLimits.ElementId(Comment(11).Id)}").GetAttribute("tabindex").ShouldBe("-1");
+        JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal), "the first one added takes the focus");
+        thread.Find($"#comments-shown-{Target:N}").TextContent.ShouldBe("Rodoma 20 iš 23");
+        thread.Find($"#comments-more-{Target:N}").GetAttribute("href").ShouldBe($"/seimas/{Bill}?komentarai={Target:N}-23#{CommentPaging.PositionAnchor(Target, 21)}");
     }
 
     /// <summary>Design 8.23.7: under a withdrawn response the discussion is read-only: no "Sutinku", no deleting, for anyone.</summary>

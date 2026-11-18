@@ -28,8 +28,7 @@
 <data name="Reasons.None" xml:space="preserve"><value>Argumentų dar nėra.</value></data>
 <data name="Reasons.Endorse" xml:space="preserve"><value>Man svarbu · {0}</value></data>
 <data name="Reasons.Anonymous" xml:space="preserve"><value>Lietuva 2.0 naudotojas</value></data>
-<data name="Reasons.All" xml:space="preserve"><value>Visi argumentai: {0}</value></data>
-<data name="Reasons.Fewer" xml:space="preserve"><value>Rodyti mažiau</value></data>
+<data name="Reasons.More" xml:space="preserve"><value>Rodyti daugiau argumentų</value></data>
 <data name="Reasons.Write" xml:space="preserve"><value>Parašyti argumentą</value></data>
 <data name="Reasons.WriteTitle" xml:space="preserve"><value>Jūsų argumentas</value></data>
 <data name="Reasons.SideLegend" xml:space="preserve"><value>Argumentas</value></data>

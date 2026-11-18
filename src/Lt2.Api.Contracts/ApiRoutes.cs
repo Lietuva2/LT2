@@ -195,6 +195,15 @@ public static class AppealRoutes
 
     public static string ReasonsOf(string number) => RecordOf(number) + "/reasons";
 
+    /// <summary>
+    /// <c>GET</c> one page of a side's arguments (design 8.12.1, owner 2026-11-19): <paramref name="limit"/> of them
+    /// (<see cref="Appeals.ReasonLimits"/>) from <paramref name="cursor"/> on.
+    /// </summary>
+    public static string ReasonPageOf(string number, string side, string? cursor = null, int? limit = null) =>
+        ReasonsOf(number) + "?side=" + Uri.EscapeDataString(side)
+        + (string.IsNullOrEmpty(cursor) ? "" : "&cursor=" + Uri.EscapeDataString(cursor))
+        + (limit is { } n ? "&limit=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
+
     public static string SimilarReasonsOf(string number) => RecordOf(number) + "/reasons/similar";
 
     public static string EndorsementOf(Guid reasonId) => $"{ApiRoutes.Prefix}/reasons/{reasonId}/endorsement";

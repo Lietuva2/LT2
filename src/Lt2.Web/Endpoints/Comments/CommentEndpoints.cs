@@ -21,8 +21,8 @@ internal static class CommentEndpoints
 {
     public static void Map(IEndpointRouteBuilder api)
     {
-        api.MapGet(ApiEndpoints.Relative(CommentRoutes.Thread), async (HttpContext http, string kind, Guid targetId, int? shown, CommentReads reads, ErrorMapper errors, CancellationToken ct) =>
-                PublicJson.From(http, errors, await reads.ThreadAsync(kind, targetId, shown, ct), maxAgeSeconds: 0))
+        api.MapGet(ApiEndpoints.Relative(CommentRoutes.Thread), async (HttpContext http, string kind, Guid targetId, int? limit, string? cursor, CommentReads reads, ErrorMapper errors, CancellationToken ct) =>
+                PublicJson.From(http, errors, await reads.ThreadAsync(kind, targetId, limit, cursor, ct), maxAgeSeconds: 0))
             .WithName("GetComments").WithTags("Comments").AllowAnonymous()
             .Produces<CommentThreadResponse>().Produces(StatusCodes.Status304NotModified).ProducesProblem(StatusCodes.Status404NotFound);
 

@@ -14,7 +14,11 @@ namespace Lt2.Api.Contracts.Comments;
 /// <summary>The routes of design 8.23.11.</summary>
 public static class CommentRoutes
 {
-    /// <summary><c>GET</c> (public) the shown comments of a target; <c>POST</c> a member writes one.</summary>
+    /// <summary>
+    /// <c>GET</c> (public) the shown comments of a target, oldest first, a page at a time: <c>limit</c> of them (the first page
+    /// at least <see cref="CommentLimits.First"/>) from <c>cursor</c> on (<see cref="CommentThreadResponse.NextCursor"/>);
+    /// <c>POST</c> a member writes one.
+    /// </summary>
     public const string Thread = ApiRoutes.Prefix + "/comments/{kind}/{targetId:guid}";
 
     /// <summary><c>DELETE</c>: whoever may delete it, while the bill is open; <c>PUT</c>: its author edits it until someone agrees.</summary>
@@ -41,8 +45,22 @@ public static class CommentRoutes
     /// <summary><c>GET</c>, moderators: the bill page's answer.</summary>
     public const string OnBill = ApiRoutes.Prefix + "/moderation/bills/{number}/comments";
 
-    public static string ThreadOf(string kind, Guid targetId, int? shown = null) =>
-        $"{ApiRoutes.Prefix}/comments/{Uri.EscapeDataString(kind)}/{targetId}" + (shown is { } n ? "?shown=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
+    /// <summary>The thread's address: <paramref name="limit"/> comments from <paramref name="cursor"/> on (both optional).</summary>
+    public static string ThreadOf(string kind, Guid targetId, int? limit = null, string? cursor = null)
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrEmpty(cursor))
+        {
+            query.Add("cursor=" + Uri.EscapeDataString(cursor));
+        }
+
+        if (limit is { } n)
+        {
+            query.Add("limit=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        return $"{ApiRoutes.Prefix}/comments/{Uri.EscapeDataString(kind)}/{targetId}" + (query.Count == 0 ? "" : "?" + string.Join("&", query));
+    }
 
     public static string OneOf(Guid id) => $"{ApiRoutes.Prefix}/comments/{id}";
 
@@ -97,12 +115,14 @@ public sealed record CommentAgreerResponse(string? Name, string? ProfileId = nul
 public sealed record CommentResponse(Guid Id, CommentAuthorResponse Author, string Text, DateTimeOffset CreatedAt, IReadOnlyList<CommentAgreerResponse> AgreedBy);
 
 /// <summary>
-/// The shown comments of one target, oldest first: <see cref="Count"/> in all, the first ones in <see cref="Items"/>.
+/// The shown comments of one target, oldest first: <see cref="Count"/> in all, one page of them in <see cref="Items"/>, and
+/// <see cref="NextCursor"/> where the next page starts (null after the last).
 /// <c>Open</c>: a member may write here now; <c>BillOpen</c>: "Sutinku" and deleting still work. <c>Cards</c>: once per person
 /// with a public profile among the names shown (design 8.25.4), no follower number.
 /// </summary>
 public sealed record CommentThreadResponse(
-    string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentResponse> Items, IReadOnlyList<AuthorCardResponse>? Cards = null);
+    string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentResponse> Items, IReadOnlyList<AuthorCardResponse>? Cards = null,
+    string? NextCursor = null);
 
 /// <summary>The caller's voice under one target where it is not a person's (<c>organisation</c>, <c>mp</c>), or why not (a code).</summary>
 public sealed record CommentTargetVoiceResponse(string Kind, Guid TargetId, string? Voice, string? Refusal);
@@ -167,8 +187,11 @@ public sealed class CommentRequestValidator : AbstractValidator<CommentRequest>
 /// <summary>Design 8.23: reading and writing comments, and "Sutinku".</summary>
 public interface ICommentsApi
 {
-    /// <summary>Public: a target's shown comments, the first <paramref name="shown"/> (at least 10).</summary>
-    Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? shown = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Public: a target's shown comments, <paramref name="limit"/> of them from <paramref name="cursor"/> on (the first page at
+    /// least 10; "Rodyti daugiau komentarų" in an island asks for the next <see cref="CommentLimits.Step"/>).
+    /// </summary>
+    Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? limit = null, string? cursor = null, CancellationToken cancellationToken = default);
 
     /// <summary>Public: where a shown comment stands, for the page a link to it lands on (design 8.23.6); not found otherwise.</summary>
     Task<ApiResult<CommentPlaceResponse>> GetPlaceAsync(Guid commentId, CancellationToken cancellationToken = default);

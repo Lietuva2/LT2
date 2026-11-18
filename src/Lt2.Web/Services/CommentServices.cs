@@ -18,9 +18,9 @@ namespace Lt2.Web.Services;
 /// </summary>
 internal sealed class CommentReads(IComments comments, ICommentModeration moderation, IPoliticians politicians, IMpDirectory mps)
 {
-    public async Task<Result<CommentThreadResponse>> ThreadAsync(string kind, Guid targetId, int? shown, CancellationToken ct)
+    public async Task<Result<CommentThreadResponse>> ThreadAsync(string kind, Guid targetId, int? limit, string? cursor, CancellationToken ct)
     {
-        var result = await comments.ThreadAsync(kind, targetId, shown, ct);
+        var result = await comments.ThreadAsync(kind, targetId, cursor, limit, ct);
         if (!result.IsSuccess)
         {
             return result.Error!;
@@ -30,7 +30,8 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
         var names = await MpNamesAsync(t.Items.Select(i => i.Author.SeimasPersonId), ct);
         return new CommentThreadResponse(
             t.Kind, t.TargetId, t.BillNumber, t.Count, t.Open, t.BillOpen, t.Items.Select(i => Map(i, names)).ToList(),
-            t.Cards.Select(c => new AuthorCardResponse(c.ProfileId, c.Name, c.About)).ToList());
+            t.Cards.Select(c => new AuthorCardResponse(c.ProfileId, c.Name, c.About)).ToList(),
+            t.NextCursor);
     }
 
     public async Task<Result<CommentPlaceResponse>> PlaceAsync(Guid commentId, CancellationToken ct)
@@ -150,8 +151,8 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
 /// </summary>
 internal sealed class ServerCommentsApi(CommentReads reads, IComments comments, IHttpContextAccessor accessor, ErrorMapper errors) : ICommentsApi
 {
-    public async Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? shown = null, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await reads.ThreadAsync(kind, targetId, shown, cancellationToken), r => r);
+    public async Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? limit = null, string? cursor = null, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.ThreadAsync(kind, targetId, limit, cursor, cancellationToken), r => r);
 
     public async Task<ApiResult<CommentPlaceResponse>> GetPlaceAsync(Guid commentId, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.PlaceAsync(commentId, cancellationToken), r => r);

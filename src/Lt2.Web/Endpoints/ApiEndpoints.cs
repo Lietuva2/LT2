@@ -73,6 +73,8 @@ internal static class ApiEndpoints
         GetAppealRulesEndpoint.Map(api);
         GetAppealsEndpoint.Map(api);
         GetRecordEndpoint.Map(api);
+        GetReasonsEndpoint.Map(api);
+        GetReasonEndpoint.Map(api);
         GetMyRecordEndpoint.Map(api);
         GetRecordHistoryEndpoint.Map(api);
         TakePositionEndpoint.Map(api);

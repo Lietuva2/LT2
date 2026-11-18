@@ -117,8 +117,20 @@ internal static class CommentRules
 
     public static bool MayKeep(string status) => status == CommentStatuses.Published;
 
-    /// <summary>How many comments a thread shows (design 8.23.6): 10 at first, 10 more each time, never fewer than 10.</summary>
-    public static int Shown(int? asked, int total) => Math.Min(Math.Max(asked ?? First, First), Math.Max(total, First));
+    /// <summary>
+    /// How many comments one page of a thread holds (design 8.23.6): the first page <paramref name="asked"/> but never fewer
+    /// than 10 (10 when not asked); a later page, from <paramref name="offset"/> on, as many as asked (10 when not asked).
+    /// </summary>
+    public static int Limit(int? asked, int offset) =>
+        offset == 0 ? Math.Max(asked ?? First, First) : Math.Max(asked ?? Step, 1);
+
+    /// <summary>Where a page starts: the cursor is the number of comments before it; anything else starts at the first.</summary>
+    public static int Offset(string? cursor) =>
+        int.TryParse(cursor, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : 0;
+
+    /// <summary>The next page's cursor, or null when the page holds the last comment.</summary>
+    public static string? NextCursor(int offset, int taken, int total) =>
+        offset + taken < total ? (offset + taken).ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
 
     /// <summary>The comments a thread shows first.</summary>
     public const int First = 10;
