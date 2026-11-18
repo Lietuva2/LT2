@@ -455,5 +455,8 @@ Each is built as written; "no" names what changes.
 - Every voted row says how the vote went, in a neutral chip beside the numbers. Asked as "Priimta" / "Nepriimta"; the
   open data has no official outcome and 8.26.2 says "balsavusiųjų dauguma", never "priimta", so it is built as the
   majority of those who voted ("Dauguma už", "Dauguma prieš", "Nėra daugumos"; a consensus "Pritarta bendru sutarimu")
-  with one hint beside the list, until the owner decides (12-open, "The outcome of a vote").
+  with one hint beside the list. The owner chose these words (2026-11-18: "Keep Dauguma už"): no "Priimta" /
+  "Pritarta" read from the numbers, which cannot see qualified majorities, MPs registered but not voting, or the quorum.
+  If the live contract run once the service reopens finds an official outcome (a result field, or a result text in the
+  proceedings), that is a new question for the owner.
 - "Dar niekas nenurodė, ko prašo" reads "Niekas nenurodė, ko prašo".
