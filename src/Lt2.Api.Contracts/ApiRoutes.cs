@@ -32,6 +32,18 @@ public static class ApiRoutes
         /// <summary>The session becomes a passkey session with one of the account's own passkeys, in place (owner, 2026-11-17).</summary>
         public const string PasskeySession = Root + "/passkey-session";
 
+        /// <summary>Design 6.2, changing the email address: a code to the address in use, the proof a code session gives.</summary>
+        public const string EmailProofCode = Root + "/email/proof-code";
+
+        /// <summary>The new address (and the proof): a code goes to it.</summary>
+        public const string EmailChange = Root + "/email/change";
+
+        /// <summary>The code from the new address: the account moves to it.</summary>
+        public const string EmailConfirm = Root + "/email/confirm";
+
+        /// <summary>The old address's link puts it back; no session needed, open behind the terms.</summary>
+        public const string EmailRestore = Root + "/email/restore";
+
         public const string Sessions = Root + "/sessions";
         public const string Session = Root + "/sessions/{id:guid}";
 

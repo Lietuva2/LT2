@@ -96,6 +96,7 @@ public sealed class TermsExemptionTests
             "DELETE /api/v1/me/profile/public",
             "DELETE /api/v1/mp-mail/{token}/extra",
             "POST /api/v1/auth/sign-out",
+            "POST /api/v1/me/email/restore",
             "POST /api/v1/mp-mail/extra/confirm",
             "POST /api/v1/mp-mail/extra/stop",
             "POST /api/v1/mp-mail/{token}/renew",

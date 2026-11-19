@@ -151,6 +151,33 @@ public sealed record CompleteRegistrationRequest
     public string? OfficeInvitation { get; init; }
 }
 
+/// <summary>
+/// Design 6.2: the address the account is to move to, and, from a session not signed in with a passkey, the code sent to the
+/// address in use (<c>POST /me/email/proof-code</c>). The answer is the same whether the address is free or not.
+/// </summary>
+public sealed record EmailChangeRequest
+{
+    public string Email { get; init; } = "";
+
+    /// <summary>The six-digit code sent to the address in use; none in a passkey session.</summary>
+    public string? ProofCode { get; init; }
+}
+
+/// <summary>The six-digit code sent to the new address (design 6.2).</summary>
+public sealed record EmailConfirmRequest
+{
+    public string Code { get; init; } = "";
+}
+
+/// <summary>The account's address once the change is confirmed.</summary>
+public sealed record EmailChangedResponse(string Email);
+
+/// <summary>The old address's link (design 6.2): its one-time code, from the page's <c>#</c> or typed there.</summary>
+public sealed record EmailRestoreRequest
+{
+    public string Token { get; init; } = "";
+}
+
 public sealed record SessionResponse
 {
     public Guid Id { get; init; }

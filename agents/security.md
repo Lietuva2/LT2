@@ -46,6 +46,13 @@ code review.
   wrong code are the same whether the address has an account and whether the browser is known. The account page lists
   "Žinomos naršyklės" beside the sessions with "Pamiršti" (`GET|DELETE /me/known-browsers`), at most 20 per account, deleted
   after a year unseen, exported and deleted with the account; `identity.known_device` is withheld from `lt2_readonly`.
+- **Changing the email address (design 6.2).** Only a passkey session or a code to the address in use starts it (a staff
+  account: its staff passkey, freshly confirmed; the MP's account: a passkey session; `EmailChangeRules.Proof`); the answer to an
+  address is the same whether an account has it (that account is told instead, no code); the code to the new address follows
+  the sign-in code's rules and limits, counted per new address under `IdentityLocks.EmailAddressAsync`; the change ends the
+  other sessions and the open codes, changes the security stamp and re-keys this session; the old address's link back
+  (`POST /me/email/restore`, no session, on `TermsExemptions.Routes`, `RateLimitPolicies.OneTimeCode`) ends every session. The
+  link's row keeps the old address for its seven days only; audits and logs hold no address.
 - The read-only database role reads only the tables on `DatabaseRoles.ReadableTables`; a new table goes on that list
   or on `DatabaseRoles.WithheldTables` in the same change (an architecture test fails otherwise).
 - Session cookie only (`__Host-`, Secure, HttpOnly, SameSite=Lax). No tokens in the browser. The one other lasting cookie is a
@@ -74,10 +81,11 @@ code review.
 - Outbound requests go only to the allowlisted hosts, and follow no redirect to another host.
 - Codes and tokens are not sent in addresses: a link the site makes carries its secret after the `#` (`/prisijungti#kodas=…`,
   a share line's `/seimas/{number}#kodas=…`, a representative's `/organizacijos/kvietimas#…`, an MP's take-over link
-  `/seimo-narys/perimti#…`, an office member's `/seimo-narys/biuras#…`); the page reads it and sends it in a request body
+  `/seimo-narys/perimti#…`, an office member's `/seimo-narys/biuras#…`, the old address's link back after the account's
+  address changed `/paskyra/el-pastas/grazinti#…`, design 6.2); the page reads it and sends it in a request body
   (design 6.8). The old `?kodas=` form is not read any more (owner, 2026-11-17: no old links). A link preview's `og:url` is the
   page's path alone, never a query or a fragment (design 8.22.5).
-  The secret of those last three links is a typeable one-time code (owner, 2026-11-17: `OneTimeCode` in SharedKernel, also
+  The secret of those last four links is a typeable one-time code (owner, 2026-11-17: `OneTimeCode` in SharedKernel, also
   compiled into Lt2.Web.Client: twelve characters of the invitation alphabet in three groups, stored only as `OneTimeCode.Hash`
   of its one form, one use, the link's lifetime): the email gives it under the link with the page to open, a representative sees
   it beside the copied link, and the page opened without a `#` asks for it (`<CodeEntry>`, which puts it after the page's own `#`).

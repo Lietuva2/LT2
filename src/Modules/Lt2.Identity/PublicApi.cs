@@ -284,6 +284,33 @@ public interface IIdentityModule
     /// </summary>
     Task<Result<Unit>> WithdrawPartySupportAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Design 6.2, changing the email address: a code to the address in use, the proof a code session gives (the account's code
+    /// like any other, with the sign-in code's limits). Refused where a code proves nothing: a staff account
+    /// (<c>passkey.staff-required</c>, <c>passkey.confirmation-required</c>) and the MP's own account (<c>mp.passkey-required</c>).
+    /// </summary>
+    Task<Result<Unit>> SendEmailProofCodeAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The new address, with the proof: a passkey session, or <paramref name="proofCode"/> sent to the address in use
+    /// (<c>email.proof-required</c> without it, <c>auth.code-invalid</c> on <c>proofCode</c> for a wrong one). Refused for an address
+    /// that is no address (<c>email.invalid</c>), a disposable one (<c>email.disposable</c>) or the one in use (<c>email.same</c>).
+    /// Otherwise the same answer whatever the address: a code goes to it, or another member's account holding it is told.
+    /// </summary>
+    Task<Result<Unit>> ChangeEmailAsync(ClaimsPrincipal user, string email, string? proofCode, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The code from the new address, in the session that asked: the account moves to it (<c>auth.code-invalid</c> otherwise), its
+    /// other sessions end and this one goes on under a new key; the old address gets the link back. Answers the new address.
+    /// </summary>
+    Task<Result<string>> ConfirmEmailChangeAsync(ClaimsPrincipal user, string code, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The old address's link (design 6.2): puts it back and ends every session of the account, without a session; one answer,
+    /// <c>email.restore-invalid</c>, for a link that cannot.
+    /// </summary>
+    Task<Result<Unit>> RestoreEmailAsync(string token, string? ipHash, CancellationToken cancellationToken);
+
     /// <summary>Everything the person gave (design 6.5), their own data only.</summary>
     Task<Result<object>> ExportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 

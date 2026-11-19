@@ -923,6 +923,15 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult.Ok());
 
+        public Task<ApiResult> SendEmailProofCodeAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<ApiResult> ChangeEmailAsync(EmailChangeRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<ApiResult<EmailChangedResponse>> ConfirmEmailChangeAsync(EmailConfirmRequest request, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<ApiResult> RestoreEmailAsync(EmailRestoreRequest request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
         public List<TermsAcceptanceRequest> Acceptances { get; } = [];
 
         public Task<ApiResult> AcceptTermsAsync(TermsAcceptanceRequest request, CancellationToken cancellationToken = default)

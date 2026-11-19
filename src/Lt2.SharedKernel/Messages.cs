@@ -7,6 +7,18 @@ public static class MessageKinds
 
     public const string AccountNoticeEmail = "email.account-notice";
 
+    /// <summary>The code to the address a member wants to move the account to (design 6.2).</summary>
+    public const string EmailChangeCodeEmail = "email.email-change-code";
+
+    /// <summary>To an address that already belongs to an account, when someone asked to move another account to it (design 6.2).</summary>
+    public const string EmailChangeTakenEmail = "email.email-change-taken";
+
+    /// <summary>To the old address once the account's address changed, with the link that puts it back (design 6.2).</summary>
+    public const string EmailChangedEmail = "email.email-changed";
+
+    /// <summary>To the address the account had moved to, once the old address was put back (design 6.2).</summary>
+    public const string EmailRestoredEmail = "email.email-restored";
+
     public const string ModerationNoticeEmail = "email.moderation-notice";
 
     /// <summary>The decision on a member's report, to the member who reported (owner, 2026-11-17; DSA art. 16(5)).</summary>
@@ -438,7 +450,50 @@ public static class ModerationNotices
 /// <param name="To">Recipient address as the person typed it.</param>
 /// <param name="Code">The six-digit code.</param>
 /// <param name="ValidMinutes">How long the code is valid, for the email text.</param>
-public sealed record SignInCodeEmail(string To, string Code, int ValidMinutes);
+/// <param name="Purpose">
+/// Null for signing in and registering; <see cref="SignInCodePurposes.EmailChange"/> when a member asked for it on the account page to
+/// prove the address in use before changing it (design 6.2): the same code, other words.
+/// </param>
+public sealed record SignInCodeEmail(string To, string Code, int ValidMinutes, string? Purpose = null);
+
+/// <summary>Why a member asked for a code to the account's own address, when not to sign in (design 6.2).</summary>
+public static class SignInCodePurposes
+{
+    /// <summary>To prove the address in use before the account's address changes.</summary>
+    public const string EmailChange = "email-change";
+}
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.EmailChangeCodeEmail"/> (design 6.2): the code that proves the address a member wants to move
+/// the account to. The address and the code live here, in the outbox row, until the email is sent; Identity keeps the code's hash.
+/// </summary>
+public sealed record EmailChangeCodeEmail(string To, string Code, int ValidMinutes);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.EmailChangeTakenEmail"/> (design 6.2): someone asked to move an account to this address, which
+/// already belongs to an account (<paramref name="To"/> is that account's address), and nothing was changed. No code, no link.
+/// </summary>
+public sealed record EmailChangeTakenEmail(string To);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.EmailChangedEmail"/> (design 6.2): to the old address, that the account's address was
+/// changed, when, and to which address in part (<paramref name="NewAddress"/>, <c>r***@pavyzdys.test</c>), with the one-time link
+/// that puts it back. The code lives here, in the outbox row, until the email is sent; Identity keeps its hash.
+/// </summary>
+/// <param name="To">The old address.</param>
+/// <param name="NewAddress">The new address in part.</param>
+/// <param name="ChangedAt">When it changed.</param>
+/// <param name="Path">The page that puts the address back, with the code after the <c>#</c>.</param>
+/// <param name="PagePath">The same page without it, where the code can be typed instead.</param>
+/// <param name="Code">The link's one-time code, <c>XXXX-XXXX-XXXX</c>.</param>
+/// <param name="ExpiresAt">When the link stops working.</param>
+public sealed record EmailChangedEmail(string To, string NewAddress, DateTimeOffset ChangedAt, string Path, string PagePath, string Code, DateTimeOffset ExpiresAt);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.EmailRestoredEmail"/> (design 6.2): to the address the account had moved to, that the earlier
+/// address was put back with the old address's link and every session ended.
+/// </summary>
+public sealed record EmailRestoredEmail(string To, DateTimeOffset RestoredAt);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.AccountNoticeEmail"/>: tells a person that something security-relevant changed on

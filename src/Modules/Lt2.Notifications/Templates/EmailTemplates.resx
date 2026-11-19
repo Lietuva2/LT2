@@ -294,4 +294,23 @@
   <data name="Report.Where" xml:space="preserve"><value>Kur tai skelbiama</value></data>
   <data name="Report.Rules" xml:space="preserve"><value>Moderavimo taisyklės</value></data>
   <data name="Report.Why" xml:space="preserve"><value>Šį laišką gavote, nes apie šį turinį pranešėte moderatoriams.</value></data>
+  <data name="EmailProofCode.Subject" xml:space="preserve"><value>Lietuva 2.0 kodas el. pašto adresui keisti: {0}</value></data>
+  <data name="EmailProofCode.Intro" xml:space="preserve"><value>paskyros puslapyje paprašyta pakeisti jūsų Lietuva 2.0 paskyros el. pašto adresą. Kad tai jūs, patvirtinkite šiuo kodu:</value></data>
+  <data name="EmailProofCode.NewestOnly" xml:space="preserve"><value>Kodą įveskite toje pačioje formoje. Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
+  <data name="EmailProofCode.Ignore" xml:space="preserve"><value>Jei adreso keisti neprašėte, kodo niekam neduokite: be jo adreso niekas nepakeis. Paskyros puslapyje „Saugumas ir duomenys“ galite baigti sesijas, kurių neatpažįstate.</value></data>
+  <data name="EmailChange.Code.Subject" xml:space="preserve"><value>Lietuva 2.0 kodas naujam el. pašto adresui patvirtinti: {0}</value></data>
+  <data name="EmailChange.Code.Intro" xml:space="preserve"><value>šį adresą norima nurodyti Lietuva 2.0 paskyroje. Kad adresas jūsų, patvirtinkite šiuo kodu:</value></data>
+  <data name="EmailChange.Code.NewestOnly" xml:space="preserve"><value>Kodą įveskite toje formoje, kurioje nurodėte šį adresą. Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
+  <data name="EmailChange.Code.Ignore" xml:space="preserve"><value>Jei šio adreso niekur nenurodėte, nieko daryti nereikia: be šio kodo jis niekur nebus įrašytas.</value></data>
+  <data name="EmailChange.Taken.Subject" xml:space="preserve"><value>Lietuva 2.0: bandyta nurodyti jūsų el. pašto adresą</value></data>
+  <data name="EmailChange.Taken.Body" xml:space="preserve"><value>kažkas kitos Lietuva 2.0 paskyros puslapyje nurodė šį el. pašto adresą kaip naują savo adresą. Šis adresas jau priklauso paskyrai, todėl niekas nepakeista.</value></data>
+  <data name="EmailChange.Taken.Nothing" xml:space="preserve"><value>Jūsų paskyra liko tokia pati, nieko daryti nereikia.</value></data>
+  <data name="EmailChange.Changed.Subject" xml:space="preserve"><value>Lietuva 2.0: paskyros el. pašto adresas pakeistas</value></data>
+  <data name="EmailChange.Changed.Body" xml:space="preserve"><value>{0} jūsų Lietuva 2.0 paskyros el. pašto adresas pakeistas į {1}.</value></data>
+  <data name="EmailChange.Changed.After" xml:space="preserve"><value>Laiškai ir prisijungimo kodai eina naujuoju adresu. Šiuo adresu prie paskyros prisijungti nebegalima.</value></data>
+  <data name="EmailChange.Changed.Link" xml:space="preserve"><value>Ne jūs? Grąžinti ankstesnį adresą</value></data>
+  <data name="EmailChange.Changed.Validity" xml:space="preserve"><value>Nuoroda ir kodas tinka vieną kartą, iki {0}. Grąžinus adresą, visos paskyros sesijos baigiamos ir reikia prisijungti iš naujo.</value></data>
+  <data name="EmailChange.Restored.Subject" xml:space="preserve"><value>Lietuva 2.0: grąžintas ankstesnis paskyros el. pašto adresas</value></data>
+  <data name="EmailChange.Restored.Body" xml:space="preserve"><value>{0} paskyrai, kuri naudojo šį adresą, grąžintas ankstesnis el. pašto adresas: tai padaryta nuoroda, išsiųsta ankstesniuoju adresu. Visos paskyros sesijos baigtos.</value></data>
+  <data name="EmailChange.Restored.NotYou" xml:space="preserve"><value>Šiuo adresu prie tos paskyros prisijungti nebegalima. Jei to nesitikėjote, praneškite Lietuva 2.0 komandai.</value></data>
 </root>

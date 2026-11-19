@@ -32,6 +32,10 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 
     public DbSet<KnownDevice> KnownDevices => Set<KnownDevice>();
 
+    public DbSet<EmailChange> EmailChanges => Set<EmailChange>();
+
+    public DbSet<EmailRestore> EmailRestores => Set<EmailRestore>();
+
     public DbSet<Session> Sessions => Set<Session>();
 
     public DbSet<RoleActivation> RoleActivations => Set<RoleActivation>();
@@ -188,6 +192,32 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => new { x.UserId, x.IdentifierHash }).IsUnique();
             b.HasIndex(x => x.LastSeenAt);
+        });
+
+        // Design 6.2, changing the email address: the codes to a new address, counted per address; the old address's link back.
+        builder.Entity<EmailChange>(b =>
+        {
+            b.ToTable("email_change");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Email).HasMaxLength(256);
+            b.Property(x => x.NormalizedEmail).HasMaxLength(256);
+            b.Property(x => x.CodeHash).HasMaxLength(32);
+            b.Property(x => x.Proof).HasMaxLength(10);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.UserId, x.CreatedAt });
+            b.HasIndex(x => new { x.NormalizedEmail, x.CreatedAt });
+        });
+
+        builder.Entity<EmailRestore>(b =>
+        {
+            b.ToTable("email_restore");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Email).HasMaxLength(256);
+            b.Property(x => x.NormalizedEmail).HasMaxLength(256);
+            b.Property(x => x.TokenHash).HasMaxLength(32);
+            b.HasIndex(x => x.TokenHash).IsUnique();
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => x.UserId);
         });
 
         builder.Entity<Session>(b =>

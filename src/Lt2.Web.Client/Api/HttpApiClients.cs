@@ -65,6 +65,18 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
     public Task<ApiResult> StartPasskeySessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Me.PasskeySession, request, cancellationToken);
 
+    public Task<ApiResult> SendEmailProofCodeAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Me.EmailProofCode, null, cancellationToken);
+
+    public Task<ApiResult> ChangeEmailAsync(EmailChangeRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Me.EmailChange, request, cancellationToken);
+
+    public Task<ApiResult<EmailChangedResponse>> ConfirmEmailChangeAsync(EmailConfirmRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<EmailChangedResponse>(HttpMethod.Post, ApiRoutes.Me.EmailConfirm, request, cancellationToken);
+
+    public Task<ApiResult> RestoreEmailAsync(EmailRestoreRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Me.EmailRestore, request, cancellationToken);
+
     public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, request, cancellationToken);
 

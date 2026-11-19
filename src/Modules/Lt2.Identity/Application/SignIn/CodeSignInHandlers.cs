@@ -35,6 +35,42 @@ internal sealed class RequestCodeHandler(IdentityDb db, UserManager<User> users,
 }
 
 /// <summary>
+/// Using one of an account's emailed codes (design 6.2, 8.20.2): signing in, and proving the address in use before the address
+/// changes. A browser tries the newest code any browser may use and, when it is known to the account, the newest code it asked
+/// for itself; a known browser's code is never tried from elsewhere, so guesses there cannot use it up. A wrong code counts as an
+/// attempt against each code it was tried against; the right one is used up atomically, so of two requests with it only one goes on.
+/// </summary>
+internal static class SignInCodeUse
+{
+    public static async Task<bool> ConsumeAsync(IdentityDb db, KnownBrowsers browsers, Guid userId, string code, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var browser = await browsers.RecognisedAsync(userId, cancellationToken);
+        var open = await db.SignInCodes.AsNoTracking()
+            .Where(c => c.UserId == userId && c.ConsumedAt == null)
+            .ToListAsync(cancellationToken);
+        var tried = KnownBrowserRules.CodesToTry(open, browser);
+        var current = tried.FirstOrDefault(c => SignInCodeRules.Check(c, code, now) == CodeCheck.Valid);
+        if (current is null)
+        {
+            var mismatched = tried.Where(c => SignInCodeRules.Check(c, code, now) == CodeCheck.Mismatch).Select(c => c.Id).ToList();
+            if (mismatched.Count > 0)
+            {
+                await db.SignInCodes
+                    .Where(c => mismatched.Contains(c.Id) && c.FailedAttempts < SignInCodeRules.MaxAttempts)
+                    .ExecuteUpdateAsync(s => s.SetProperty(c => c.FailedAttempts, c => c.FailedAttempts + 1), cancellationToken);
+            }
+
+            return false;
+        }
+
+        var consumed = await db.SignInCodes
+            .Where(c => c.Id == current.Id && c.ConsumedAt == null && c.FailedAttempts < SignInCodeRules.MaxAttempts)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.ConsumedAt, now), cancellationToken);
+        return consumed == 1;
+    }
+}
+
+/// <summary>
 /// Signs in with the emailed code. Every failure (unknown address, wrong, expired, used or exhausted code) gives the
 /// same error. The first successful code confirms the email address; a pending account then completes its registration.
 /// </summary>
@@ -61,35 +97,7 @@ internal sealed class CodeSignInHandler(
             return InvalidCode;
         }
 
-        var now = clock.GetUtcNow();
-
-        // Design 8.20.2: a browser tries the newest code any browser may use and, when it is known to the account, the newest
-        // code it asked for itself. A known browser's code is never tried from elsewhere, so guesses there cannot use it up.
-        var browser = await browsers.RecognisedAsync(profile.UserId, cancellationToken);
-        var open = await db.SignInCodes.AsNoTracking()
-            .Where(c => c.UserId == profile.UserId && c.ConsumedAt == null)
-            .ToListAsync(cancellationToken);
-        var tried = KnownBrowserRules.CodesToTry(open, browser);
-        var current = tried.FirstOrDefault(c => SignInCodeRules.Check(c, code, now) == CodeCheck.Valid);
-        if (current is null)
-        {
-            // A wrong code counts as an attempt against each code it was tried against.
-            var mismatched = tried.Where(c => SignInCodeRules.Check(c, code, now) == CodeCheck.Mismatch).Select(c => c.Id).ToList();
-            if (mismatched.Count > 0)
-            {
-                await db.SignInCodes
-                    .Where(c => mismatched.Contains(c.Id) && c.FailedAttempts < SignInCodeRules.MaxAttempts)
-                    .ExecuteUpdateAsync(s => s.SetProperty(c => c.FailedAttempts, c => c.FailedAttempts + 1), cancellationToken);
-            }
-
-            return InvalidCode;
-        }
-
-        // Consume atomically: of two concurrent requests with the right code, only one signs in.
-        var consumed = await db.SignInCodes
-            .Where(c => c.Id == current.Id && c.ConsumedAt == null && c.FailedAttempts < SignInCodeRules.MaxAttempts)
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.ConsumedAt, now), cancellationToken);
-        if (consumed == 0)
+        if (!await SignInCodeUse.ConsumeAsync(db, browsers, profile.UserId, code, clock.GetUtcNow(), cancellationToken))
         {
             return InvalidCode;
         }

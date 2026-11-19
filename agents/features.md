@@ -67,7 +67,7 @@ text gets a new, later version: every member is asked again. A member whose acce
 any island refused with `terms.required` (`InteractiveBase`); until they accept, reads work and every API write is refused in
 one place, `Security/TermsGate` (before authorization, so a new write route is covered by default; `TermsTests` sweeps every
 mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes, a
-member's stop link `POST /notices/{token}/stop`, and
+member's stop link `POST /notices/{token}/stop`, the old address's link back `POST /me/email/restore` (design 6.2), and
 (owner, 2026-11-17) withdrawing a consent: `DELETE /me/profile/public`, `DELETE /me/consents/positions`,
 `DELETE /me/party-support`, `DELETE /me/party-support/public`; giving one again stays refused, and so does the "Profilis"
 form, `PUT /me/profile`, even when it only unticks a box). The export is a read. The version stays 2026-11-17 until the
@@ -87,12 +87,53 @@ form's rate limit guards against a runaway script), audited without the names (`
 names kept. Names are read live everywhere, so a
 change shows beside older arguments too.
 
+**Changing the email address (design 6.2; owner, 2026-11-19: "Yes, build it", the five points in `design/12-decisions.md`).**
+`Identity/Application/Email/EmailChangeHandlers` behind four routes (`Lt2.Web/Endpoints/Me/EmailChangeEndpoints`), codes only in
+bodies: `POST /me/email/proof-code` (202) sends the code to the address in use: the account's own sign-in code
+(`SignInCodeIssuer`, its limits and known-browser allowance) with `SignInCodeEmail.Purpose` = `email-change`, which only changes
+the email's words (`EmailProofCode.*`); `POST /me/email/change` (`EmailChangeRequest`: `email`, `proofCode`; 202, empty) checks
+the address (`email.invalid`, `email.disposable`, `email.same` by `EmailAddress.Same`, normalised), then the proof
+(`EmailChangeRules.Proof`, pure, `EmailChangeRuleTests`): a passkey session; a code session only with `proofCode`
+(`email.proof-required` without it, `auth.code-invalid` on `proofCode` for a wrong one, used up by `SignInCodeUse`, shared with
+the code sign-in); a staff account only its staff-passkey session freshly confirmed (`passkey.staff-required`,
+`passkey.confirmation-required`), the MP's own account only a passkey session (`mp.passkey-required`). Then, under
+`IdentityLocks.EmailAddressAsync` (the new normalised address), the sign-in code's two settings count every row of
+`identity.email_change` to that address (beyond them nothing is sent, same answer); the account's earlier rows are replaced; a
+code goes to the address (`email.email-change-code`, `EmailChangeCodeEmail`), or, when a member's account holds it, that
+account's own address is told and no code is made (`email.email-change-taken`, a row without a hash still counted).
+`POST /me/email/confirm` (`EmailConfirmRequest`, 200 `EmailChangedResponse`) takes the newest open row, only from the session that
+asked (`session_id`), with `SignInCodeRules.Check` (ten minutes, five attempts, single use; `auth.code-invalid` for all), and in
+one transaction: an account only pending on the address is deleted with its unsent emails (`outbox.ForgetAsync`), a member's
+account that took it meanwhile refuses; `profile.normalized_email`, Identity's `Email`/`NormalizedEmail` and the security stamp
+change (`UserName` is the id, not the address); every open sign-in code and change code ends; the other sessions are deleted;
+`identity.email_restore` gets the old address with the hash of a `OneTimeCode` (seven days, `EmailChangeRules.RestoreLifetime`);
+audit `account.email-changed` (`proof`, `sessionsEnded`, `pendingAccountRemoved`; no address); the old address is told
+(`email.email-changed`, `EmailChangedEmail`: when, `EmailAddress.Mask` of the new one, `/paskyra/el-pastas/grazinti#CODE`, the
+page and the code to type). After the commit the session is signed in again under a new key as what it was
+(`SessionSignIn` with the row's method and passkey). Passkeys, known browsers, invitation codes, an MP's link stay; the MP offer
+reads the current address (`PoliticianHandlers.MineAsync`). `POST /me/email/restore` (`EmailRestoreRequest`, 204;
+`AllowAnonymous`, the group's antiforgery and Origin filter, `RateLimitPolicies.OneTimeCode`, on `TermsExemptions.Routes`)
+puts the old address back under its lock, refuses with one answer (`email.restore-invalid`) an unknown, malformed, used or
+expired link and an old address a member's account holds by then (an account only pending on it goes), ends the account's
+other links back, its codes and every session (and signs the asking browser out if it was that account), audits
+`account.email-restored` (no actor, no address) and tells the address it replaced (`email.email-restored`). The four emails are
+`EmailChangeTemplates` (Notifications). The maintenance job deletes change rows after a day and links back once used or
+expired; both tables go with the account and are withheld from `lt2_readonly`; the export holds only the address in use.
+The part is `MyEmail` (`Lt2.Web.Client/Pages`, `#el-pastas`, first on "Saugumas ir duomenys"): it reads `GET /me` in the
+browser only (nothing personal in the served page), "Keisti adresą" opens the steps in place (proof: `PasskeyStep` with its
+`Text`, or "Siųsti kodą"; a staff account's step is the staff `PasskeyStep`; then the address; then the code), a staff
+account's `passkey.confirmation-required` is answered by a passkey confirmation and the same press again, and on success the
+part shows the new address and the page reads its sessions again (no reload). The link's page is `EmailRestore`
+(`/paskyra/el-pastas/grazinti`, no sign-in, `<CodeEntry>` without a `#`, one press "Grąžinti ankstesnį adresą", then a full load
+to `/prisijungti`). Tests: `EmailChangeTests` (integration, E2E), `EmailChangeRuleTests`, `EmailChangeTemplateTests`,
+`MyEmailTests` (bUnit).
+
 **The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
 parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, change it"; `/sveiki` is gone, no redirect).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
 "Profilis" `/paskyra` (level and roles, then one form, `MyProfile`, below), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/paskyra/dalyvavimas`
 (`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/paskyra/saugumas`
-(passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
+(the email address `MyEmail` `#el-pastas`, passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
 The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
 written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Without a page to
 return to, signing in, a staff session and accepting the terms land on the front page `/` (owner, 2026-11-17); a

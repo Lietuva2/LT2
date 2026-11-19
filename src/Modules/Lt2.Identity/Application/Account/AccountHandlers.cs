@@ -102,7 +102,7 @@ internal sealed class AccountHandlers(
 }
 
 /// <summary>
-/// Housekeeping: old sign-in codes, expired sessions, known browsers not seen for a year (design 8.20.2), and accounts
+/// Housekeeping: old sign-in codes and codes of an address change, used or expired links back to an old address, expired sessions, known browsers not seen for a year (design 8.20.2), and accounts
 /// still pending after the configured number of days (design 6.2), so an address typed by a stranger is not kept, nor any unsent email to it (design 6.8).
 /// One context for the run.
 /// </summary>
@@ -114,6 +114,11 @@ internal sealed class MaintenanceHandler(IDbContextFactory<IdentityDb> contexts,
         var now = clock.GetUtcNow();
         var codeCutoff = now - TimeSpan.FromDays(1);
         var codes = await db.SignInCodes.Where(c => c.CreatedAt < codeCutoff).ExecuteDeleteAsync(cancellationToken);
+
+        // Design 6.2, changing the email address: the codes to new addresses after a day, as sign-in codes; the old address's
+        // link back once used or past its seven days, so no earlier address is kept longer.
+        codes += await db.EmailChanges.Where(c => c.CreatedAt < codeCutoff).ExecuteDeleteAsync(cancellationToken);
+        codes += await db.EmailRestores.Where(r => r.UsedAt != null || r.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
         var sessions = await db.Sessions.Where(s => s.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
 
         // Design 8.20.2: a browser not seen for a year is a stranger again; its codes go with it.

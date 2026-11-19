@@ -33,6 +33,15 @@ public static class AccountScreens
     /// </summary>
     public const string EmailRhythm = Follows + "#laisku-daznis";
 
+    /// <summary>"El. pašto adresas": the address in use and changing it (design 6.2).</summary>
+    public const string Email = Security + "#el-pastas";
+
+    /// <summary>
+    /// The page the old address's link opens to put it back (design 6.2), its one-time code after the <c>#</c>. It needs no session;
+    /// it is not one of the four screens.
+    /// </summary>
+    public const string EmailRestore = "/paskyra/el-pastas/grazinti";
+
     /// <summary>The known browsers (design 8.20.2).</summary>
     public const string KnownBrowsers = Security + "#zinomos-narsykles";
 

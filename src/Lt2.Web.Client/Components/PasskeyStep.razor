@@ -22,7 +22,7 @@
         {
             @* The sentence and its action on one line where they fit (.note--act). *@
             <div class="note note--quiet note--act">
-                <p id="@(IdPrefix)passkey-step-text">@L["PasskeyStep.Text"]</p>
+                <p id="@(IdPrefix)passkey-step-text">@(Text ?? L["PasskeyStep.Text"])</p>
                 <button type="button" class="btn" id="@(IdPrefix)passkey-step-confirm" disabled="@Locked" @onclick="ConfirmAsync">@L["PasskeyStep.Confirm"]</button>
             </div>
         }
@@ -47,6 +47,13 @@
     /// <summary>Prefix of the element ids, for a step shown more than once on a page.</summary>
     [Parameter]
     public string? IdPrefix { get; set; }
+
+    /// <summary>
+    /// The sentence before the button where a passkey is one way of two (design 6.2: changing the address, or a code to the
+    /// address in use); without it, "Šiam veiksmui reikia prisijungimo prieigos raktu.".
+    /// </summary>
+    [Parameter]
+    public string? Text { get; set; }
 
     /// <summary>What the island does once the session is a passkey session; without it the page is loaded again.</summary>
     [Parameter]

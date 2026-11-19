@@ -27,6 +27,32 @@ public sealed class RoleActivationRequestValidator : AbstractValidator<RoleActiv
 }
 
 
+public sealed class EmailChangeRequestValidator : AbstractValidator<EmailChangeRequest>
+{
+    public EmailChangeRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Email).ValidEmail(l);
+        RuleFor(x => x.ProofCode).Matches("^[0-9]{6}$").When(x => !string.IsNullOrEmpty(x.ProofCode)).WithMessage(l["Code.Format"]);
+    }
+}
+
+public sealed class EmailConfirmRequestValidator : AbstractValidator<EmailConfirmRequest>
+{
+    public EmailConfirmRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.Code).Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage(l["Code.Required"])
+            .Matches("^[0-9]{6}$").WithMessage(l["Code.Format"]);
+}
+
+/// <summary>Present and not too long: whether the text is a code at all is the server's one answer for every link that does not work.</summary>
+public sealed class EmailRestoreRequestValidator : AbstractValidator<EmailRestoreRequest>
+{
+    public EmailRestoreRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.Token).Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage(l["EmailRestore.Required"])
+            .MaximumLength(100).WithMessage(l["EmailRestore.Required"]);
+}
+
 public sealed class PositionConsentRequestValidator : AbstractValidator<PositionConsentRequest>
 {
     public PositionConsentRequestValidator(IStringLocalizer<ValidationMessages> l) =>

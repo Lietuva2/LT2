@@ -15,6 +15,9 @@
   <data name="validation" xml:space="preserve"><value>Patikrinkite įvestus duomenis.</value></data>
   <data name="email.invalid" xml:space="preserve"><value>Patikrinkite el. pašto adresą.</value></data>
   <data name="email.disposable" xml:space="preserve"><value>Laikinųjų el. pašto dėžučių adresai netinka. Naudokite nuolatinį adresą.</value></data>
+  <data name="email.same" xml:space="preserve"><value>Šį adresą paskyra ir naudoja. Įveskite kitą adresą.</value></data>
+  <data name="email.proof-required" xml:space="preserve"><value>Pirmiausia patvirtinkite, kad tai jūs: prieigos raktu arba kodu, išsiųstu dabartiniu adresu.</value></data>
+  <data name="email.restore-invalid" xml:space="preserve"><value>Ši nuoroda netinka: ji jau panaudota, nebegalioja arba ankstesnio adreso grąžinti nebegalima.</value></data>
   <data name="invitation.invalid" xml:space="preserve"><value>Šis kvietimo kodas negalioja. Paprašykite jus pakvietusio žmogaus naujo kodo.</value></data>
   <data name="invitation.required" xml:space="preserve"><value>Kol vyksta uždaras bandymas, registruotis galima tik su kvietimo kodu.</value></data>
   <data name="adult.required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>

@@ -108,6 +108,18 @@ internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor
     public async Task<ApiResult> StartPasskeySessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.StartPasskeySessionAsync(User, request.Credential, IpHash, cancellationToken));
 
+    public async Task<ApiResult> SendEmailProofCodeAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.SendEmailProofCodeAsync(User, cancellationToken));
+
+    public async Task<ApiResult> ChangeEmailAsync(EmailChangeRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.ChangeEmailAsync(User, request.Email, request.ProofCode, cancellationToken));
+
+    public async Task<ApiResult<EmailChangedResponse>> ConfirmEmailChangeAsync(EmailConfirmRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.ConfirmEmailChangeAsync(User, request.Code, IpHash, cancellationToken), email => new EmailChangedResponse(email));
+
+    public async Task<ApiResult> RestoreEmailAsync(EmailRestoreRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.RestoreEmailAsync(request.Token, IpHash, cancellationToken));
+
     public async Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GivePositionConsentAsync(User, request.TextVersion, cancellationToken));
 

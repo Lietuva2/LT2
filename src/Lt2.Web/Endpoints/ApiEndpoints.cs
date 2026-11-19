@@ -41,6 +41,7 @@ internal static class ApiEndpoints
         GetSessionsEndpoint.Map(api);
         EndSessionEndpoint.Map(api);
         KnownBrowserEndpoints.Map(api);
+        EmailChangeEndpoints.Map(api);
         GivePositionConsentEndpoint.Map(api);
         AcceptTermsEndpoint.Map(api);
         WithdrawPositionConsentEndpoint.Map(api);
