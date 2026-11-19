@@ -68,7 +68,7 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
 }
 
-internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration, AnalyticsCopies analytics, ISettings settings) : IMeApi
+internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration, AnalyticsCopies analytics) : IMeApi
 {
     /// <summary>
     /// The account as a page rendered on the server sees it: without the MP offer or link (design 8.5.4: nothing about it is
@@ -92,9 +92,6 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 
     public async Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.ForgetKnownBrowserAsync(User, id, cancellationToken));
-
-    public async Task<ApiResult> ChangeDisplayNameAsync(DisplayNameRequest request, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.ChangeDisplayNameAsync(User, request.DisplayName, IpHash, cancellationToken));
 
     public async Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.CompleteRegistrationAsync(User, Mapping.ToCompletion(request), cancellationToken));
@@ -122,18 +119,6 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
         ForgetAnalytics();
         return errors.ToApiResult(await identity.WithdrawPositionConsentAsync(User, cancellationToken));
     }
-
-    public async Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default)
-    {
-        var choices = await mps.PartiesAsync(cancellationToken);
-        var minimum = await settings.GetAsync(SettingKeys.DigestPartyGroupMinimum, cancellationToken);
-        return errors.ToApiResult(await identity.GetPartySupportAsync(User, cancellationToken), state => Mapping.ToResponse(state, choices, minimum));
-    }
-
-    public async Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(show
-            ? await identity.ShowPartyAsync(User, PartyPublicLimits.ConsentVersion, IpHash, cancellationToken)
-            : await identity.HidePartyAsync(User, IpHash, cancellationToken));
 
     public async Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default)
     {
@@ -166,9 +151,6 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
         return errors.ToApiResult(await action(id), mine => InvitationMapping.Map(mine, configuration));
     }
 
-    public async Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.SetPartySupportAsync(User, request.Party, request.Consent, await mps.PartiesAsync(cancellationToken), cancellationToken));
-
     private string? IpHash => accessor.HttpContext is { } context ? ipHasher.Hash(context) : null;
 
     private System.Security.Claims.ClaimsPrincipal User =>
@@ -183,9 +165,6 @@ internal static class Mapping
 
     public static RegistrationCompletion ToCompletion(CompleteRegistrationRequest request) =>
         new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode, request.AcceptsTerms, request.OfficeInvitation);
-
-    public static PartySupportResponse ToResponse(PartySupportState state, IReadOnlyList<string> choices, int groupMinimum) =>
-        new(state.Party, choices, groupMinimum, state.Public, state.ProfilePublic, state.ConsentVersion);
 
     public static MeResponse ToResponse(AccountSummary account) => new()
     {

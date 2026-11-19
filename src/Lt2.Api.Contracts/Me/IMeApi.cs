@@ -15,11 +15,6 @@ public interface IMeApi
     /// <summary>"Pamiršti": the browser becomes a stranger to the account again (design 8.20.2).</summary>
     Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Changes the display name (design 6.2), as often as the member likes; <c>writing.restricted</c> while a restriction holds.
-    /// </summary>
-    Task<ApiResult> ChangeDisplayNameAsync(DisplayNameRequest request, CancellationToken cancellationToken = default);
-
     /// <summary>Completes a pending registration (design 6.2).</summary>
     Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default);
 
@@ -55,13 +50,6 @@ public interface IMeApi
 
     /// <summary>Withdraws the consent; every position of the person is deleted (design 6.5).</summary>
     Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default);
-
-    Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default);
-
-    Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>"Rodyti viešame profilyje" (design 8.25.9): <c>show</c> gives the consent <c>party-public</c>, otherwise it is withdrawn.</summary>
-    Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default);
 
     /// <summary>Deletes the account and everything the person gave (design 6.5).</summary>
     Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default);

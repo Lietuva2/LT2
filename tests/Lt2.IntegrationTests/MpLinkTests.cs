@@ -410,8 +410,8 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             await (await mp.Browser.TakeSideAsync(Bill, "for")).ShouldBeProblemAsync(HttpStatusCode.Forbidden, "mp.takes-no-part");
             await (await mp.Browser.WriteReasonAsync(Bill, "for", "Seimo nario argumentas, kurio būti neturi.")).ShouldBeProblemAsync(HttpStatusCode.Forbidden, "mp.takes-no-part");
             await (await mp.Browser.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reason))).ShouldBeProblemAsync(HttpStatusCode.Forbidden, "mp.takes-no-part");
-            var parties = await mp.Browser.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport);
-            await (await mp.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = parties.Choices[0], Consent = true }))
+            var parties = await mp.Browser.MyProfileAsync();
+            await (await mp.Browser.SavePartyAsync(parties.PartyChoices[0]))
                 .ShouldBeProblemAsync(HttpStatusCode.Forbidden, "mp.takes-no-part");
             await (await mp.Browser.PostAsync(OrganisationRoutes.Organisations, new OrganisationRequest { Name = OrganisationSteps.NewName("Seimo nario asociacija"), Description = "Išgalvota." }))
                 .ShouldBeProblemAsync(HttpStatusCode.Forbidden, "mp.takes-no-part");

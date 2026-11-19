@@ -51,9 +51,9 @@ public sealed class ProfileAddressTests(DatabaseFixture database) : ApiTest(data
         (await GetAsync(visitor, $"/nariai/vardas-zxcvbnmk45-{id}")).ShouldBe((HttpStatusCode.MovedPermanently, address));
 
         // A changed display name changes the address; the old one leads to the new one.
-        using (var renamed = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.DisplayName, new DisplayNameRequest { DisplayName = "Rūta Mockutė" }))
+        using (var renamed = await member.SaveFormAsync(f => f with { DisplayName = "Rūta Mockutė" }))
         {
-            renamed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await renamed.Content.ReadAsStringAsync());
+            renamed.StatusCode.ShouldBe(HttpStatusCode.OK, await renamed.Content.ReadAsStringAsync());
         }
 
         var changed = await AddressAsync(member);

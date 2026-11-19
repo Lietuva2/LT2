@@ -113,8 +113,6 @@
 <data name="Party.Label" xml:space="preserve"><value>Partija</value></data>
 <data name="Party.None" xml:space="preserve"><value>Nenurodyti</value></data>
 <data name="Party.Consent" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano nurodytą partiją taip, kaip aprašyta. Galiu ją bet kada pašalinti.</value></data>
-<data name="Party.Save" xml:space="preserve"><value>Išsaugoti</value></data>
-<data name="Party.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
 <data name="Party.Removed" xml:space="preserve"><value>Partija pašalinta.</value></data>
 <data name="Party.Public" xml:space="preserve"><value>Rodyti viešame profilyje</value></data>
 <data name="Party.PublicText" xml:space="preserve"><value>Partiją matys visi, kas atvers jūsų viešo profilio puslapį, ją gali rodyti ir paieškos sistemos; nuėmus žymę, pašalinus ar pakeitus partiją arba išjungus profilį, ji iš karto nebebus rodoma.</value></data>
@@ -264,8 +262,6 @@
   <data name="StaffKey.Submit" xml:space="preserve"><value>Patvirtinti prieigos raktu</value></data>
   <data name="Name.Title" xml:space="preserve"><value>Vardas</value></data>
   <data name="Name.Hint" xml:space="preserve"><value>Šis vardas viešai rodomas prie jūsų argumentų, taip pat ir anksčiau parašytų. Ne daugiau kaip 60 ženklų. Palikus tuščią, rodoma „Lietuva 2.0 naudotojas“.</value></data>
-  <data name="Name.Save" xml:space="preserve"><value>Išsaugoti vardą</value></data>
-  <data name="Name.Saved" xml:space="preserve"><value>Vardas išsaugotas.</value></data>
   <data name="Name.Removed" xml:space="preserve"><value>Vardo neliko: prie jūsų argumentų rodoma „Lietuva 2.0 naudotojas“.</value></data>
   <data name="Parts.Label" xml:space="preserve"><value>Paskyros dalys</value></data>
   <data name="Parts.Profile" xml:space="preserve"><value>Profilis</value></data>
@@ -286,8 +282,10 @@
   <data name="PublicProfile.Consent" xml:space="preserve"><value>Jūsų profilio puslapyje bus jūsų vardas, „Apie mane“ ir viskas, ką viešai parašėte (argumentai ir komentarai), surinkta į vieną vietą su nuorodomis; prie visų jūsų argumentų, komentarų ir „Sutinku“ bus nuoroda į jį. Puslapį gali rodyti paieškos sistemos. Kiti nariai galės jus sekti ir gaus laišką, kai paskelbsite argumentą ar komentarą; puslapyje bus rodomas sekėjų skaičius, bet ne tai, kas jus seka (to nesužinosite ir jūs). Išjungus profilį, puslapis dingsta iš karto, bet paieškos sistemų kopijos išnyksta tik joms vėl apsilankius. Išsaugodami įjungtą profilį sutinkate su tuo.</value></data>
   <data name="PublicProfile.NameNeeded" xml:space="preserve"><value>Viešam profiliui reikia vardo: pirmiau įrašykite jį aukščiau.</value></data>
   <data name="PublicProfile.OffText" xml:space="preserve"><value>Išsaugojus profilis išsijungs iš karto: puslapis ir nuorodos prie argumentų, komentarų ir „Sutinku“ dings, visi jus sekantys nebesekys. Jo adresas daugiau niekada nebus naudojamas.</value></data>
-  <data name="PublicProfile.Save" xml:space="preserve"><value>Išsaugoti</value></data>
-  <data name="PublicProfile.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="Profile.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+  <data name="Profile.SaveAndGo" xml:space="preserve"><value>Išsaugoti ir tęsti</value></data>
+  <data name="Profile.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="Profile.NotSaved" xml:space="preserve"><value>Nieko neišsaugota: pataisykite pažymėtus laukus.</value></data>
   <data name="PublicProfile.SavedOn" xml:space="preserve"><value>Viešas profilis įjungtas.</value></data>
   <data name="PublicProfile.SavedOff" xml:space="preserve"><value>Viešas profilis išjungtas, jo adresas panaikintas.</value></data>
   <data name="Mp.Copies.Title" xml:space="preserve"><value>Suvestinių kopijos jums</value></data>

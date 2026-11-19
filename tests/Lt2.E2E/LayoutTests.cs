@@ -38,7 +38,7 @@ public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : E2ETes
 
         // Design 8.21: the four account screens, and the member's own public page (design 8.25), at 390 px.
         var page = member.Page;
-        var (status, body) = await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/profile", new { about = "Rodoma narė, bandymas (E2E bandymas).", @public = true, consentVersion = "2026-11-16" });
+        var (status, body) = await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/profile", new { displayName = "Rodoma Narė", about = "Rodoma narė, bandymas (E2E bandymas).", @public = true, publicConsentVersion = "2026-11-16" });
         status.ShouldBe(200, body);
         var profileId = System.Text.Json.JsonDocument.Parse(body).RootElement.GetProperty("address").GetString()!;
         await page.SetViewportSizeAsync(390, 900);

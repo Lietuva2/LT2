@@ -23,18 +23,24 @@ internal static class MemberEndpoints
 {
     public static void Map(IEndpointRouteBuilder api)
     {
-        api.MapGet(ApiEndpoints.Relative(ProfileRoutes.Mine), async (ClaimsPrincipal user, IMemberProfiles profiles, ErrorMapper errors, CancellationToken ct) =>
-                Ok(await profiles.MineAsync(user, ct), ProfileMapping.Map, errors))
+        api.MapGet(ApiEndpoints.Relative(ProfileRoutes.Mine), async (ClaimsPrincipal user, MyProfileForms forms, ErrorMapper errors, CancellationToken ct) =>
+                Ok(await forms.MineAsync(user, ct), x => x, errors))
             .WithName("GetMyProfile").WithTags("Me").RequireAuthorization(Policies.Member).Produces<MyProfileResponse>();
 
-        api.MapPut(ApiEndpoints.Relative(ProfileRoutes.Mine), async (ProfileRequest request, ClaimsPrincipal user, HttpContext context, IpHasher ip, IMemberProfiles profiles, ErrorMapper errors, CancellationToken ct) =>
-                Ok(await profiles.ChangeAsync(user, ProfileMapping.ToModule(request), ip.Hash(context), ct), ProfileMapping.Map, errors))
+        // Design 8.28.5: the whole "Profilis" form, saved whole or not at all; a refusal names every refused field.
+        api.MapPut(ApiEndpoints.Relative(ProfileRoutes.Mine), async (ProfileRequest request, ClaimsPrincipal user, HttpContext context, IpHasher ip, MyProfileForms forms, ErrorMapper errors, CancellationToken ct) =>
+                Ok(await forms.SaveAsync(user, request, ip.Hash(context), ct), x => x, errors))
             .WithName("SaveMyProfile").WithTags("Me").RequireAuthorization(Policies.Member)
             .WithValidation<ProfileRequest>().RequireRateLimiting(RateLimitPolicies.WriteReason)
-            .Produces<MyProfileResponse>().ProducesProblem(StatusCodes.Status400BadRequest).ProducesProblem(StatusCodes.Status409Conflict);
+            .Produces<MyProfileResponse>().ProducesProblem(StatusCodes.Status400BadRequest).ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
-        api.MapDelete(ApiEndpoints.Relative(ProfileRoutes.MinePublic), async (ClaimsPrincipal user, HttpContext context, IpHasher ip, IMemberProfiles profiles, ErrorMapper errors, CancellationToken ct) =>
-                Ok(await profiles.SwitchOffAsync(user, ip.Hash(context), ct), ProfileMapping.Map, errors))
+        api.MapDelete(ApiEndpoints.Relative(ProfileRoutes.MinePublic), async (ClaimsPrincipal user, HttpContext context, IpHasher ip, IMemberProfiles profiles, MyProfileForms forms, ErrorMapper errors, CancellationToken ct) =>
+            {
+                // Design 8.22.2: "Viešas profilis" off alone, open behind the terms; the answer is the whole form's state.
+                var off = await profiles.SwitchOffAsync(user, ip.Hash(context), ct);
+                return off.IsSuccess ? Ok(await forms.MineAsync(user, ct), x => x, errors) : errors.ToResult(off.Error!);
+            })
             .WithName("SwitchMyProfileOff").WithTags("Me").RequireAuthorization(Policies.Member)
             .Produces<MyProfileResponse>();
 

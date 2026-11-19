@@ -1,114 +1,248 @@
 @inherits InteractiveBase<UiText>
 @inject IProfilesApi Profiles
 @inject MyAccountState Account
+@inject NavigationManager Navigation
 
-@* Design 8.25 on the "Profilis" screen: "Apie mane" and the switch "Viešas profilis", one form. The switch is the consent
-   (kind public-profile): before it is saved on, the form says everything it covers (design 8.25.1), inline, since a consent
-   and what it covers stay where the person acts (design 8.15). "Apie mane" can be written while the profile is off and is
-   shown nowhere then. The person's own answer only, filled from GET /me/profile. The MP's own account has no public profile
-   (design 8.5.4, 8.25.1; owner 2026-11-17): once the island runs the part is gone. *@
-@if (!_mpAccount)
-{
-<section class="sheet stack" aria-labelledby="profile-title" id="viesas-profilis">
-    <h3 id="profile-title">@L["PublicProfile.Title"]</h3>
+@* Design 8.28.5: "Profilis" is one form with one button, saved by one request (PUT /me/profile) whole or not at all: the
+   display name (design 6.2), "Apie mane" and the switch "Viešas profilis" (design 8.25), party support with its box "Rodyti
+   viešame profilyje" (design 5.2, 8.25.9). Each consent stays a box of its own with its own text, unticked until ticked, and
+   what it covers is said inline before it is given (design 8.15); the button never stands for a consent. A refusal saves
+   nothing and each refused field says why, with what was typed kept. On the visit that follows a registration (the mark
+   after "#", read here in the browser, nothing stored) the button reads "Išsaugoti ir tęsti" and a save leads on to the front
+   page. The MP's own account has no public profile and declares no party (design 8.5.4): once the island runs those parts
+   are gone, unless a party given before the take-over is still there to remove. The person's own answer only. *@
+<div class="sheet stack" id="profile-form-sheet">
     @if (Mine is { } mine)
     {
-        @if (mine.Address is { } address)
-        {
-            <p class="note note--quiet" id="profile-public">@L["PublicProfile.IsPublic"] <a href="@address" id="profile-link">@address</a></p>
-        }
-        else
-        {
-            <p id="profile-off">@L["PublicProfile.IsOff"]</p>
-        }
-
-        @if (mine.AboutHidden)
-        {
-            <p class="note" id="about-hidden">@L["PublicProfile.AboutHidden"]@(mine.AboutHiddenStatement is { } why ? " " + L.Format("PublicProfile.AboutHiddenWhy", why) : "")</p>
-        }
-
-        <form class="stack" @onsubmit="SaveAsync" novalidate>
-            <div class="field @ErrorClass("about")">
-                <label for="about-text">@L["PublicProfile.AboutLabel"]</label>
-                <textarea class="textarea" id="about-text" maxlength="@MemberTextLimits.Allowed(mine.TextMaxLength)"
-                          aria-invalid="@Invalid("about")" aria-describedby="@DescribedBy("about", "about-text", "about-hint", "about-layout")"
-                          @bind="_about" @bind:event="oninput" disabled="@Locked"></textarea>
-                <p class="field__hint num" id="about-hint">@(mine.TextMaxLength > 0 ? L.Format("PublicProfile.AboutHint", Display.Number(_about?.Length ?? 0), Display.Number(mine.TextMaxLength)) : L["PublicProfile.AboutHintNoLimit"].Value)</p>
-                <TextLayoutHint Id="about-layout" />
+        <form class="stack stack--loose" id="profile-form" @onsubmit="SaveAsync" novalidate>
+            <div class="stack" role="group" aria-labelledby="name-title" id="vardas">
+                <h3 id="name-title">@L["Name.Title"]</h3>
+                <div class="field @ErrorClass("displayName")">
+                    <label for="display-name">@L["DisplayName.Label"]</label>
+                    <input class="input" id="display-name" autocomplete="nickname" placeholder="@L["DisplayName.Placeholder"]"
+                           @bind="_name" @bind:event="oninput" disabled="@Locked"
+                           aria-invalid="@Invalid("displayName")" aria-describedby="@DescribedBy("displayName", "display-name", "display-name-hint")" />
+                    <p class="field__hint" id="display-name-hint">@L["Name.Hint"]</p>
+                    <FieldError Errors="Errors" Field="displayName" For="display-name" />
+                </div>
             </div>
 
-            <label class="check">
-                <input type="checkbox" id="profile-public-switch" @bind="_public" disabled="@Locked" />
-                <span>@L["PublicProfile.Switch"]</span>
-            </label>
-            @if (_public && mine.ProfileId is null)
+            @if (!_mpAccount)
             {
-                @* What the consent covers, said before it is given (design 8.25.1). *@
-                <p class="note" id="profile-consent-text">@L["PublicProfile.Consent"]</p>
-                @if (!HasName)
-                {
-                    <p class="small" id="profile-name-needed">@L["PublicProfile.NameNeeded"]</p>
-                }
+                <div class="stack" role="group" aria-labelledby="profile-title" id="viesas-profilis">
+                    <h3 id="profile-title">@L["PublicProfile.Title"]</h3>
+                    @if (mine.Address is { } address)
+                    {
+                        <p class="note note--quiet" id="profile-public">@L["PublicProfile.IsPublic"] <a href="@address" id="profile-link">@address</a></p>
+                    }
+                    else
+                    {
+                        <p id="profile-off">@L["PublicProfile.IsOff"]</p>
+                    }
+
+                    @if (mine.AboutHidden)
+                    {
+                        <p class="note" id="about-hidden">@L["PublicProfile.AboutHidden"]@(mine.AboutHiddenStatement is { } why ? " " + L.Format("PublicProfile.AboutHiddenWhy", why) : "")</p>
+                    }
+
+                    <div class="field @ErrorClass("about")">
+                        <label for="about-text">@L["PublicProfile.AboutLabel"]</label>
+                        <textarea class="textarea" id="about-text" maxlength="@MemberTextLimits.Allowed(mine.TextMaxLength)"
+                                  aria-invalid="@Invalid("about")" aria-describedby="@DescribedBy("about", "about-text", "about-hint", "about-layout")"
+                                  @bind="_about" @bind:event="oninput" disabled="@Locked"></textarea>
+                        <p class="field__hint num" id="about-hint">@(mine.TextMaxLength > 0 ? L.Format("PublicProfile.AboutHint", Display.Number(_about?.Length ?? 0), Display.Number(mine.TextMaxLength)) : L["PublicProfile.AboutHintNoLimit"].Value)</p>
+                        <TextLayoutHint Id="about-layout" />
+                        <FieldError Errors="Errors" Field="about" For="about-text" />
+                    </div>
+
+                    <div class="field @ErrorClass("public")">
+                        <label class="check">
+                            <input type="checkbox" id="profile-public-switch" @bind="_public" disabled="@Locked"
+                                   aria-invalid="@Invalid("public")" aria-describedby="@DescribedBy("public", "profile-public-switch")" />
+                            <span>@L["PublicProfile.Switch"]</span>
+                        </label>
+                        @if (_public && mine.ProfileId is null)
+                        {
+                            @* What the consent covers, said before it is given (design 8.25.1). *@
+                            <p class="note" id="profile-consent-text">@L["PublicProfile.Consent"]</p>
+                            @if (string.IsNullOrWhiteSpace(_name))
+                            {
+                                <p class="small" id="profile-name-needed">@L["PublicProfile.NameNeeded"]</p>
+                            }
+                        }
+                        else if (!_public && mine.ProfileId is not null)
+                        {
+                            <p class="note" id="profile-off-text">@L["PublicProfile.OffText"]</p>
+                        }
+                        <FieldError Errors="Errors" Field="public" For="profile-public-switch" />
+                    </div>
+                </div>
             }
-            else if (!_public && mine.ProfileId is not null)
+
+            @if (!(_mpAccount && mine.Party is null))
             {
-                <p class="note" id="profile-off-text">@L["PublicProfile.OffText"]</p>
+                <div class="stack" role="group" aria-labelledby="party-title" id="party-support">
+                    <h3 id="party-title">@L["Party.Title"]</h3>
+                    <p id="party-text">@(mine.PartyGroupMinimum <= 1 ? L["Party.TextAny"] : L.Format("Party.Text", Display.Number(mine.PartyGroupMinimum)))</p>
+                    <div class="field @ErrorClass("party")">
+                        <label for="party-choice">@L["Party.Label"]</label>
+                        <select class="input" id="party-choice" @bind="_party" disabled="@Locked"
+                                aria-invalid="@Invalid("party")" aria-describedby="@DescribedBy("party", "party-choice")">
+                            <option value="">@L["Party.None"]</option>
+                            @foreach (var choice in mine.PartyChoices)
+                            {
+                                <option value="@choice">@choice</option>
+                            }
+                        </select>
+                        <FieldError Errors="Errors" Field="party" For="party-choice" />
+                    </div>
+                    @if (PartyChosen && _party != mine.Party)
+                    {
+                        <div class="field @ErrorClass("partyConsent")">
+                            <label class="check">
+                                <input type="checkbox" id="party-consent" @bind="_partyConsent" disabled="@Locked"
+                                       aria-invalid="@Invalid("partyConsent")" aria-describedby="@DescribedBy("partyConsent", "party-consent")" />
+                                <span>@L["Party.Consent"]</span>
+                            </label>
+                            <FieldError Errors="Errors" Field="partyConsent" For="party-consent" />
+                        </div>
+                    }
+                    @if (PartyChosen && !_mpAccount)
+                    {
+                        @* Design 8.25.9: offered only while the profile is public, as the form will save it. *@
+                        @if (_public)
+                        {
+                            <div class="field @ErrorClass("partyPublic")">
+                                <label class="check">
+                                    <input type="checkbox" id="party-public" @bind="_show" disabled="@Locked"
+                                           aria-invalid="@Invalid("partyPublic")" aria-describedby="@DescribedBy("partyPublic", "party-public")" />
+                                    <span>@L["Party.Public"]</span>
+                                </label>
+                                @if (_show && !(mine.PartyPublic && _party == mine.Party))
+                                {
+                                    @* What the consent covers, said before it is given (design 8.25.9, 8.15). *@
+                                    <p class="note" id="party-public-text">@L["Party.PublicText"]</p>
+                                }
+                                <FieldError Errors="Errors" Field="partyPublic" For="party-public" />
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="small" id="party-public-needs-profile">@L["Party.PublicNeedsProfile"]</p>
+                        }
+                    }
+                </div>
             }
-            <FieldError Errors="Errors" Field="public" For="profile-public-switch" />
-            <p><button class="btn btn--plain" type="submit" id="profile-save" disabled="@Locked">@L["PublicProfile.Save"]</button></p>
+
             <Messages Message="@Message" Info="@Info" />
+            <p><button class="btn" type="submit" id="profile-save" disabled="@Locked">@L[_afterRegistration ? "Profile.SaveAndGo" : "Profile.Save"]</button></p>
         </form>
     }
-</section>
-}
+</div>
 
 @code {
+    /// <summary>The mark after "#" on the visit that follows a registration (design 8.28.5).</summary>
+    private static readonly string AfterRegistrationMark = AccountScreens.AfterRegistration[AccountScreens.Profile.Length..];
+
+    private string? _name;
     private string? _about;
     private bool _public;
+    private string _party = "";
+    private bool _partyConsent;
+    private bool _show;
     private bool _mpAccount;
+    private bool _afterRegistration;
 
-    /// <summary>The account has a display name: a public profile needs one (design 8.25.6).</summary>
-    [Parameter] public bool HasName { get; set; }
-
-    /// <summary>"Viešas profilis" was switched on or off: the party's box on the same screen depends on it (design 8.25.9).</summary>
-    [Parameter] public EventCallback PublicChanged { get; set; }
+    /// <summary>Told the stored display name after a save, so the page's greeting follows.</summary>
+    [Parameter] public EventCallback<string?> NameChanged { get; set; }
 
     [PersistentState] public MyProfileResponse? Mine { get; set; }
+
+    private bool PartyChosen => !string.IsNullOrEmpty(_party);
 
     protected override async Task OnInitializedAsync()
     {
         Mine ??= (await Profiles.GetMineAsync()).Value;
         Take(Mine);
         _mpAccount = await Account.IsMpAccountAsync(RendererInfo.IsInteractive);
+
+        // Only the browser has the part after "#": the server renders "Išsaugoti", the island reads the mark once it runs.
+        _afterRegistration = RendererInfo.IsInteractive
+            && string.Equals(new Uri(Navigation.Uri).Fragment, AfterRegistrationMark, StringComparison.Ordinal);
     }
 
     private void Take(MyProfileResponse? mine)
     {
+        _name = mine?.DisplayName;
         _about = mine?.About;
         _public = mine?.ProfileId is not null;
+        _party = mine?.Party ?? "";
+        _partyConsent = false;
+        _show = mine?.PartyPublic ?? false;
     }
 
     private Task SaveAsync() => RunAsync(async () =>
     {
-        var wasPublic = Mine?.ProfileId is not null;
-        var saved = await Profiles.SaveAsync(new ProfileRequest { About = _about, Public = _public, ConsentVersion = _public ? ProfileLimits.ConsentVersion : null });
-        if (!Succeeded(saved, "about", "public"))
+        var was = Mine!;
+        var party = PartyChosen ? _party : null;
+        var show = party is not null && _public && _show && !_mpAccount;
+        var request = new ProfileRequest
         {
+            DisplayName = string.IsNullOrWhiteSpace(_name) ? null : _name.Trim(),
+            About = _about,
+            Public = _public,
+            PublicConsentVersion = _public ? ProfileLimits.ConsentVersion : null,
+            Party = party,
+            PartyConsent = party is not null && party != was.Party && _partyConsent,
+            PartyPublic = show,
+            PartyPublicConsentVersion = show ? PartyPublicLimits.ConsentVersion : null,
+        };
+
+        var saved = await Profiles.SaveAsync(request);
+        if (!Succeeded(saved, "displayName", "about", "public", "party", "partyConsent", "partyPublic"))
+        {
+            // Nothing was saved: the form stays as typed, each refused field says why (design 8.28.5).
+            if (Errors.Count > 0)
+            {
+                Message ??= L["Profile.NotSaved"];
+            }
+
             return;
         }
 
-        Mine = saved.Value;
+        Mine = saved.Value!;
         Take(Mine);
-        if (wasPublic != (Mine!.ProfileId is not null))
+        if (Mine.DisplayName != was.DisplayName)
         {
-            await PublicChanged.InvokeAsync();
+            await NameChanged.InvokeAsync(Mine.DisplayName);
         }
 
-        Info = (wasPublic, Mine!.ProfileId is not null) switch
+        // The visit after the registration leads on to the front page, also when nothing was filled (design 8.28.5).
+        if (_afterRegistration)
         {
-            (false, true) => L["PublicProfile.SavedOn"],
-            (true, false) => L["PublicProfile.SavedOff"],
-            _ => L["PublicProfile.Saved"],
+            Navigation.NavigateTo(AccountScreens.ProfileSavedHome);
+            return;
+        }
+
+        var said = new List<string>
+        {
+            (was.ProfileId is not null, Mine.ProfileId is not null) switch
+            {
+                (false, true) => L["PublicProfile.SavedOn"],
+                (true, false) => L["PublicProfile.SavedOff"],
+                _ => L["Profile.Saved"],
+            },
         };
+        if (was.DisplayName is not null && Mine.DisplayName is null)
+        {
+            said.Add(L["Name.Removed"]);
+        }
+
+        if (was.Party is not null && Mine.Party is null)
+        {
+            said.Add(L["Party.Removed"]);
+        }
+
+        Info = string.Join(" ", said);
     });
 }

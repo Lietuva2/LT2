@@ -16,13 +16,6 @@ public sealed class CompleteRegistrationRequestValidator : AbstractValidator<Com
     }
 }
 
-/// <summary>The same rule as at registration (design 6.2).</summary>
-public sealed class DisplayNameRequestValidator : AbstractValidator<DisplayNameRequest>
-{
-    public DisplayNameRequestValidator(IStringLocalizer<ValidationMessages> l) =>
-        RuleFor(x => x.DisplayName).MaximumLength(AuthRules.DisplayNameMaxLength).WithMessage(l["DisplayName.TooLong"]);
-}
-
 public sealed class RoleActivationRequestValidator : AbstractValidator<RoleActivationRequest>
 {
     public RoleActivationRequestValidator(IStringLocalizer<ValidationMessages> l)
@@ -44,13 +37,4 @@ public sealed class TermsAcceptanceRequestValidator : AbstractValidator<TermsAcc
 {
     public TermsAcceptanceRequestValidator(IStringLocalizer<ValidationMessages> l) =>
         RuleFor(x => x.TextVersion).NotEmpty().WithMessage(l["Terms.Version"]).MaximumLength(50).WithMessage(l["Terms.Version"]);
-}
-
-public sealed class PartySupportRequestValidator : AbstractValidator<PartySupportRequest>
-{
-    public PartySupportRequestValidator(IStringLocalizer<ValidationMessages> l)
-    {
-        RuleFor(x => x.Consent).Equal(true).When(x => x.Party is not null).WithMessage(l["Consent.Required"]);
-        RuleFor(x => x.Party).MaximumLength(200);
-    }
 }

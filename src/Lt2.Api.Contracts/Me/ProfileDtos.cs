@@ -8,24 +8,67 @@ namespace Lt2.Api.Contracts.Me;
 // followers. Who follows is in no answer; no public answer carries an account id.
 
 /// <summary>
-/// The caller's own profile for the "Profilis" screen: "Apie mane", whether a moderator hid it (and why), the public id while
-/// "Viešas profilis" is on, the consent text's version in force and <c>Texts:MaxLength</c> (0 = no limit but the ceiling).
+/// The "Profilis" form's state (design 8.28.5), the caller's own: the display name; "Apie mane", whether a moderator hid it
+/// (and why); the public id and address while "Viešas profilis" is on, its consent text's version in force and
+/// <c>Texts:MaxLength</c> (0 = no limit but the ceiling); the party supported (private, design 5.2), the parties to choose
+/// from, whether the party is shown on the public profile (design 8.25.9) and its box's consent text version in force; and
+/// <c>Digest:PartyGroupMinimum</c> (design 8.4), which the party's text states.
 /// </summary>
-public sealed record MyProfileResponse(
-    string? About, bool AboutHidden, string? AboutHiddenStatement, string? ProfileId, DateTimeOffset? PublicSince, string ConsentVersion, int TextMaxLength,
-    string? Address = null);
+public sealed record MyProfileResponse
+{
+    public string? DisplayName { get; init; }
+
+    public string? About { get; init; }
+
+    public bool AboutHidden { get; init; }
+
+    public string? AboutHiddenStatement { get; init; }
+
+    public string? ProfileId { get; init; }
+
+    public DateTimeOffset? PublicSince { get; init; }
+
+    public string? Address { get; init; }
+
+    public string PublicConsentVersion { get; init; } = ProfileLimits.ConsentVersion;
+
+    public int TextMaxLength { get; init; }
+
+    public string? Party { get; init; }
+
+    public IReadOnlyList<string> PartyChoices { get; init; } = [];
+
+    public int PartyGroupMinimum { get; init; }
+
+    public bool PartyPublic { get; init; }
+
+    public string PartyPublicConsentVersion { get; init; } = PartyPublicLimits.ConsentVersion;
+}
 
 /// <summary>
-/// "Apie mane" and the switch. Switching on sends <c>ConsentVersion</c>, the version of the text the form showed; switching
-/// off withdraws the consent at once.
+/// The whole "Profilis" form (design 8.28.5), saved whole or not at all by <c>PUT /me/profile</c>: the display name (empty
+/// removes it), "Apie mane", "Viešas profilis" with <see cref="PublicConsentVersion"/> (the version of the text the form showed,
+/// needed to switch it on), the party (null: none) with <see cref="PartyConsent"/> (needed to give or change it), and
+/// "Rodyti viešame profilyje" with <see cref="PartyPublicConsentVersion"/>. An unticked box withdraws its consent at once. A
+/// refusal names every refused field by these names (camelCase).
 /// </summary>
 public sealed record ProfileRequest
 {
+    public string? DisplayName { get; init; }
+
     public string? About { get; init; }
 
     public bool Public { get; init; }
 
-    public string? ConsentVersion { get; init; }
+    public string? PublicConsentVersion { get; init; }
+
+    public string? Party { get; init; }
+
+    public bool PartyConsent { get; init; }
+
+    public bool PartyPublic { get; init; }
+
+    public string? PartyPublicConsentVersion { get; init; }
 }
 
 /// <summary>
@@ -148,7 +191,10 @@ public interface IProfilesApi
     Task<ApiResult> RestoreAsync(Guid id, StatementRequest request, CancellationToken cancellationToken = default);
 }
 
-/// <summary>The shared checks of the profile form: only the technical ceiling (the setting is checked where it is written).</summary>
+/// <summary>
+/// The shared checks of the profile form: only technical ceilings. Every rule of the form (the name's length included) is
+/// checked where it is written, all at once, so a refusal names every refused field (design 8.28.5).
+/// </summary>
 public sealed class ProfileRequestValidator : AbstractValidator<ProfileRequest>
 {
     public ProfileRequestValidator(IStringLocalizer<ValidationMessages> l)
@@ -156,6 +202,10 @@ public sealed class ProfileRequestValidator : AbstractValidator<ProfileRequest>
         ArgumentNullException.ThrowIfNull(l);
         RuleFor(x => x.About).Must(t => t is null || t.Trim().Length <= MemberTextLimits.Ceiling)
             .WithMessage(l["About.TooLong", MemberTextLimits.Number(MemberTextLimits.Ceiling)]);
+        RuleFor(x => x.DisplayName).MaximumLength(MemberTextLimits.Ceiling).WithMessage(l["DisplayName.TooLong"]);
+        RuleFor(x => x.Party).MaximumLength(200);
+        RuleFor(x => x.PublicConsentVersion).MaximumLength(50).WithMessage(l["Consent.Required"]);
+        RuleFor(x => x.PartyPublicConsentVersion).MaximumLength(50).WithMessage(l["Consent.Required"]);
     }
 }
 

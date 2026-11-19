@@ -115,8 +115,9 @@ internal sealed class MemberProfiles(ProfileHandlers own, ProfileModerationHandl
     public Task<Result<MyProfileState>> SwitchOffAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken) =>
         own.SwitchOffOwnAsync(user, ipHash, cancellationToken);
 
-    public Task<Result<MyProfileState>> ChangeAsync(ClaimsPrincipal user, ProfileChange change, string? ipHash, CancellationToken cancellationToken) =>
-        own.ChangeAsync(user, change, ipHash, cancellationToken);
+    public Task<Result<MyProfileState>> SaveAsync(
+        ClaimsPrincipal user, ProfileForm form, IReadOnlyCollection<string> parties, string? ipHash, CancellationToken cancellationToken) =>
+        own.SaveAsync(user, form, parties, ipHash, cancellationToken);
 
     public Task<Result<Unit>> ReportAsync(Guid reporterUserId, string profileId, string ground, string? text, CancellationToken cancellationToken) =>
         moderation.ReportAsync(reporterUserId, profileId, ground, text, cancellationToken);

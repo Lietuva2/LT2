@@ -53,7 +53,7 @@ public sealed class SignInComponentTests : BunitContext
         // Design 8.25: the "Profilis" screen's "Apie mane" and "Viešas profilis": a member without a public profile.
         var profiles = System.Reflection.DispatchProxy.Create<IProfilesApi, ApiFake>();
         _profiles = (ApiFake)(object)profiles;
-        _profiles.On("GetMineAsync", ApiResult<MyProfileResponse>.Ok(new MyProfileResponse(null, false, null, null, null, ProfileLimits.ConsentVersion, 2000)));
+        _profiles.On("GetMineAsync", ApiResult<MyProfileResponse>.Ok(Form));
         Services.AddSingleton(profiles);
         _authorization = AddAuthorization();
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -410,16 +410,35 @@ public sealed class SignInComponentTests : BunitContext
         Lt2.SharedKernel.AccountScreens.All.ShouldBe(AccountScreens.All, "the browser's copy and the modules' are one file");
     }
 
+    /// <summary>The "Profilis" form's state the fake answers: an ordinary member without a public profile or a party.</summary>
+    private static readonly MyProfileResponse Form = new()
+    {
+        DisplayName = "Rūta M.",
+        TextMaxLength = 2000,
+        PartyChoices = ["Reformų partija", "Pilietinė sąjunga"],
+        PartyGroupMinimum = Lt2.SharedKernel.SettingKeys.DigestPartyGroupMinimum.Default,
+    };
+
+    /// <summary>The form's state <c>GET /me/profile</c> answers.</summary>
+    private void Profile(MyProfileResponse state) => _profiles.On("GetMineAsync", ApiResult<MyProfileResponse>.Ok(state));
+
+    /// <summary>The request the form sent last.</summary>
+    private ProfileRequest Sent() => (ProfileRequest)_profiles.Arguments[_profiles.Calls.LastIndexOf("SaveAsync")][0]!;
+
     /// <summary>
-    /// Design 8.25.1: "Viešas profilis" says everything the consent covers before it is saved on, sends the version of the
-    /// text it showed, and a member without a name is told one is needed.
+    /// Design 8.25.1, 8.28.5: "Viešas profilis" says everything the consent covers before it is saved on, the one form sends the
+    /// version of the text it showed with the rest, and a member without a name is told one is needed.
     /// </summary>
     [Fact]
     public void The_public_profile_switch_says_what_it_covers_before_the_consent_is_sent()
     {
         SignedIn(FakeMeApi.Member with { DisplayName = null });
-        var fake = _profiles;
-        fake.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(new MyProfileResponse("Mokytoja iš Kauno. https://pavyzdys.test/ruta", false, null, "abcdefgh23", DateTimeOffset.UnixEpoch, ProfileLimits.ConsentVersion, 2000, Address: "/nariai/ruta-mockute-abcdefgh23")));
+        Profile(Form with { DisplayName = null });
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(Form with
+        {
+            DisplayName = "Rūta Mockutė", About = "Mokytoja iš Kauno. https://pavyzdys.test/ruta", ProfileId = "abcdefgh23", PublicSince = DateTimeOffset.UnixEpoch,
+            Address = "/nariai/ruta-mockute-abcdefgh23",
+        }));
         var page = Render<Hello>();
 
         page.FindAll("#profile-consent-text").ShouldBeEmpty("nothing is said before the switch is chosen");
@@ -427,64 +446,93 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#profile-consent-text").TextContent.ShouldBe(Text("PublicProfile.Consent"));
         page.Find("#profile-name-needed").TextContent.ShouldBe(Text("PublicProfile.NameNeeded"));
 
+        page.Find("#display-name").Input("Rūta Mockutė");
+        page.FindAll("#profile-name-needed").ShouldBeEmpty("a name is typed above");
         page.Find("#about-text").Input("Mokytoja iš Kauno. https://pavyzdys.test/ruta");
-        page.Find("#viesas-profilis form").Submit();
+        page.FindAll("#profile-form button[type=submit]").ShouldHaveSingleItem("one button for the whole form").TextContent.ShouldBe(Text("Profile.Save"));
+        page.Find("#profile-form").Submit();
 
-        page.WaitForAssertion(() => fake.Calls.ShouldContain("SaveAsync"));
-        var sent = (ProfileRequest)fake.Arguments[fake.Calls.IndexOf("SaveAsync")][0]!;
-        sent.Public.ShouldBeTrue();
-        sent.ConsentVersion.ShouldBe(ProfileLimits.ConsentVersion);
-        sent.About.ShouldBe("Mokytoja iš Kauno. https://pavyzdys.test/ruta");
+        page.WaitForAssertion(() => _profiles.Calls.ShouldContain("SaveAsync"));
+        _profiles.Calls.Count(c => c == "SaveAsync").ShouldBe(1, "one request");
+        var sent = Sent();
+        (sent.DisplayName, sent.About, sent.Public, sent.PublicConsentVersion).ShouldBe(("Rūta Mockutė", "Mokytoja iš Kauno. https://pavyzdys.test/ruta", true, ProfileLimits.ConsentVersion));
+        (sent.Party, sent.PartyConsent, sent.PartyPublic, sent.PartyPublicConsentVersion).ShouldBe(((string?)null, false, false, (string?)null));
         page.WaitForAssertion(() => page.Find("#profile-link").GetAttribute("href").ShouldBe("/nariai/ruta-mockute-abcdefgh23"));
+        page.Find("#profile-form").TextContent.ShouldContain(Text("PublicProfile.SavedOn"));
+        page.Find("#hello-title").TextContent.ShouldContain("Rūta Mockutė", Case.Sensitive, "the greeting follows the saved name");
     }
 
     /// <summary>
-    /// Design 8.25.9 (owner, 2026-11-17): "Rodyti viešame profilyje" is offered under a saved party only while the profile is
-    /// public, says what it covers before the consent is sent, and unticking it withdraws it.
+    /// Design 8.25.9 (owner, 2026-11-17), 8.28.5: "Rodyti viešame profilyje" is offered under a party only while the form has the
+    /// profile public, says what it covers before the consent is sent, and goes unticked to withdraw it.
     /// </summary>
     [Fact]
     public void The_party_box_is_offered_only_with_a_public_profile_and_says_what_it_covers_before_it_is_sent()
     {
         SignedIn(FakeMeApi.Member);
-        _me.Party = new PartySupportResponse("Reformų partija", ["Reformų partija", "Pilietinė sąjunga"], Lt2.SharedKernel.SettingKeys.DigestPartyGroupMinimum.Default);
+        Profile(Form with { Party = "Reformų partija" });
         var off = Render<Hello>();
         off.FindAll("#party-public").ShouldBeEmpty("nothing to show it on while the profile is off");
         off.Find("#party-public-needs-profile").TextContent.ShouldBe(Text("Party.PublicNeedsProfile"));
+        off.FindAll("#party-consent").ShouldBeEmpty("the saved party's consent is in force");
+        off.Find("#profile-public-switch").Change(true);
+        off.FindAll("#party-public").ShouldNotBeEmpty("offered once the switch is ticked in the form");
 
-        _me.Party = _me.Party with { ProfilePublic = true };
+        var open = Form with { Party = "Reformų partija", ProfileId = "abcdefgh23", Address = "/nariai/ruta-m-abcdefgh23" };
+        Profile(open);
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(open with { PartyPublic = true }));
         var page = Render<Hello>();
         page.Find("#party-public").HasAttribute("checked").ShouldBeFalse("off unless ticked");
         page.FindAll("#party-public-text").ShouldBeEmpty();
         page.Find("#party-public").Change(true);
         page.Find("#party-public-text").TextContent.ShouldBe(Text("Party.PublicText"));
-        page.Find("#party-save").Click();
-        page.WaitForAssertion(() => _me.PartyPublicCalls.ShouldBe([true]));
+        page.Find("#profile-form").Submit();
+        page.WaitForAssertion(() => _profiles.Calls.ShouldContain("SaveAsync"));
+        (Sent().PartyPublic, Sent().PartyPublicConsentVersion, Sent().Party).ShouldBe((true, PartyPublicLimits.ConsentVersion, "Reformų partija"));
         page.WaitForAssertion(() => page.FindAll("#party-public-text").ShouldBeEmpty("given: nothing more to say"));
 
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(open));
         page.Find("#party-public").Change(false);
-        page.Find("#party-save").Click();
-        page.WaitForAssertion(() => _me.PartyPublicCalls.ShouldBe([true, false]));
-        _me.Party.Public.ShouldBeFalse();
+        page.Find("#profile-form").Submit();
+        page.WaitForAssertion(() => _profiles.Calls.Count(c => c == "SaveAsync").ShouldBe(2));
+        (Sent().PartyPublic, Sent().PartyPublicConsentVersion).ShouldBe((false, (string?)null));
+    }
+
+    /// <summary>Design 5.2, 8.28.5: a new party is sent with its own box, unticked until ticked; the button does not stand for it.</summary>
+    [Fact]
+    public void A_new_party_is_sent_with_its_own_consent_box()
+    {
+        SignedIn(FakeMeApi.Member);
+        Profile(Form);
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(Form with { Party = "Pilietinė sąjunga" }));
+        var page = Render<Hello>();
+        page.FindAll("#party-consent").ShouldBeEmpty();
+        page.Find("#party-choice").Change("Pilietinė sąjunga");
+        page.Find("#party-consent").HasAttribute("checked").ShouldBeFalse("unticked until the person ticks it");
+        page.Find("#party-consent").Change(true);
+        page.Find("#profile-form").Submit();
+        page.WaitForAssertion(() => _profiles.Calls.ShouldContain("SaveAsync"));
+        (Sent().Party, Sent().PartyConsent).ShouldBe(("Pilietinė sąjunga", true));
     }
 
     /// <summary>
-    /// Design 8.4 (owner, 2026-11-17): the party form says the smallest group a summary shows as the setting holds now, and
-    /// in words when there is no floor (0 or 1).
+    /// Design 8.4 (owner, 2026-11-17): the party's part says the smallest group a summary shows as the setting holds now, and in
+    /// words when there is no floor (0 or 1).
     /// </summary>
     [Fact]
     public void The_party_form_states_the_group_minimum_as_it_holds_now_and_in_words_without_a_floor()
     {
         SignedIn(FakeMeApi.Member);
         var minimum = Lt2.SharedKernel.SettingKeys.DigestPartyGroupMinimum.Default;
-        _me.Party = new PartySupportResponse(null, ["Reformų partija"], minimum);
+        Profile(Form with { PartyGroupMinimum = minimum });
         Render<Hello>().Find("#party-text").TextContent.ShouldBe(Text("Party.Text").Replace("{0}", Display.Number(minimum), StringComparison.Ordinal));
 
-        _me.Party = _me.Party with { GroupMinimum = 1000 };
+        Profile(Form with { PartyGroupMinimum = 1000 });
         Render<Hello>().Find("#party-text").TextContent.ShouldContain("bent " + Display.Number(1000) + ".");
 
         foreach (var none in new[] { 0, 1 })
         {
-            _me.Party = _me.Party with { GroupMinimum = none };
+            Profile(Form with { PartyGroupMinimum = none });
             Render<Hello>().Find("#party-text").TextContent.ShouldBe(Text("Party.TextAny"), none.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
     }
@@ -514,50 +562,114 @@ public sealed class SignInComponentTests : BunitContext
         member.FindAll("#staff-links").ShouldBeEmpty();
     }
 
-    /// <summary>Design 6.2: the display name is changed on the account page; the greeting follows.</summary>
+    /// <summary>Design 6.2, 8.28.5: the display name is changed with the one form; the greeting follows.</summary>
     [Fact]
     public void A_member_changes_the_display_name_and_the_greeting_follows()
     {
         SignedIn(FakeMeApi.Member);
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(Form with { DisplayName = "Rūta Mockutė" }));
         var page = Render<Hello>();
         page.Find("#display-name").GetAttribute("value").ShouldBe("Rūta M.");
         page.Find("#display-name-hint").TextContent.ShouldBe(Text("Name.Hint"));
 
         page.Find("#display-name").Input("  Rūta Mockutė ");
-        page.Find("#vardas form").Submit();
+        page.Find("#profile-form").Submit();
 
-        page.WaitForAssertion(() => _me.NameChanges.ShouldHaveSingleItem().DisplayName.ShouldBe("Rūta Mockutė"));
+        page.WaitForAssertion(() => Sent().DisplayName.ShouldBe("Rūta Mockutė"));
         page.WaitForAssertion(() => page.Find("#hello-title").TextContent.ShouldContain("Rūta Mockutė"));
-        page.Find("#vardas").TextContent.ShouldContain(Text("Name.Saved"));
+        page.Find("#profile-form").TextContent.ShouldContain(Text("Profile.Saved"));
     }
 
+    /// <summary>
+    /// Design 8.28.5: a refused save keeps what was typed; each refused field says why under itself, and the form's foot says
+    /// nothing was saved.
+    /// </summary>
     [Fact]
-    public void A_name_longer_than_60_characters_is_refused_under_the_field_before_sending()
+    public void Every_refused_field_says_why_under_itself_and_what_was_typed_stays()
     {
+        const string tooLong = "Vardas per ilgas: ne daugiau kaip 60 ženklų.";
+        const string code = "Tekste „Apie mane“ yra asmens kodas. Jo skelbti negalima – ištrinkite jį.";
         SignedIn(FakeMeApi.Member);
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Fail(new ApiProblem
+        {
+            Status = 400,
+            Code = "validation",
+            Detail = "Patikrinkite įvestus duomenis.",
+            Errors = new Dictionary<string, string[]> { ["displayName"] = [tooLong], ["about"] = [code] },
+        }));
         var page = Render<Hello>();
 
         page.Find("#display-name").Input(new string('a', 61));
-        page.Find("#vardas form").Submit();
+        page.Find("#about-text").Input("Asmens kodas 39001010000");
+        page.Find("#profile-form").Submit();
 
-        page.Find("#vardas .field--error").ShouldNotBeNull();
-        page.Find("#display-name").GetAttribute("aria-invalid").ShouldBe("true");
-        _me.NameChanges.ShouldBeEmpty();
+        page.WaitForAssertion(() => page.Find("#display-name").GetAttribute("aria-invalid").ShouldBe("true"));
+        page.Find("#vardas").TextContent.ShouldContain(tooLong);
+        page.Find("#viesas-profilis").TextContent.ShouldContain(code);
+        page.Find("#about-text").GetAttribute("aria-invalid").ShouldBe("true");
+        page.Find("#profile-form .note[role=alert]").TextContent.ShouldBe(Text("Profile.NotSaved"));
+        page.Find("#display-name").GetAttribute("value").ShouldBe(new string('a', 61), "what was typed stays");
+        page.Find("#hello-title").TextContent.ShouldContain("Rūta M.");
     }
 
+    /// <summary>A writing restriction's refusal of a changed name is said under the name.</summary>
     [Fact]
-    public void The_servers_refusal_of_a_name_change_is_said_beside_the_form()
+    public void The_servers_refusal_of_a_name_change_is_said_beside_the_field()
     {
         const string restricted = "Moderatorius apribojo jūsų galimybę rašyti, todėl šiuo metu to padaryti negalite.";
         SignedIn(FakeMeApi.Member);
-        _me.ChangeName = _ => ApiResult.Fail(new ApiProblem { Status = 403, Code = "writing.restricted", Detail = restricted });
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Fail(new ApiProblem
+        {
+            Status = 403, Code = "writing.restricted", Detail = restricted, Errors = new Dictionary<string, string[]> { ["displayName"] = [restricted] },
+        }));
         var page = Render<Hello>();
 
         page.Find("#display-name").Input("Rūta Mockutė");
-        page.Find("#vardas form").Submit();
+        page.Find("#profile-form").Submit();
 
-        page.WaitForAssertion(() => page.Find("#vardas .note[role=alert]").TextContent.ShouldBe(restricted));
+        page.WaitForAssertion(() => page.Find("#vardas .field--error").TextContent.ShouldContain(restricted));
         page.Find("#hello-title").TextContent.ShouldContain("Rūta M.");
+    }
+
+    /// <summary>
+    /// Design 8.28.5: on the visit after a registration (the mark after "#") the one button reads "Išsaugoti ir tęsti" and a save,
+    /// also of an empty form, opens the front page with its mark; a refusal leads nowhere; without the mark it reads "Išsaugoti"
+    /// and the person stays.
+    /// </summary>
+    [Fact]
+    public void After_the_registration_the_button_saves_and_leads_on_to_the_front_page_and_otherwise_stays()
+    {
+        SignedIn(FakeMeApi.Member with { DisplayName = null });
+        Profile(Form with { DisplayName = null });
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(Form with { DisplayName = null }));
+        var navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo(AccountScreens.AfterRegistration);
+        var page = Render<Hello>();
+        var button = page.Find("#profile-save");
+        button.TextContent.ShouldBe(Text("Profile.SaveAndGo"));
+        page.Find("#profile-form").Submit();
+        page.WaitForAssertion(() => navigation.Uri.ShouldBe(navigation.BaseUri + AccountScreens.ProfileSavedHome.TrimStart('/')));
+        Sent().ShouldBe(new ProfileRequest(), "nothing filled is a valid form");
+
+        // Refused: nothing leads on.
+        navigation.NavigateTo(AccountScreens.AfterRegistration);
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Fail(new ApiProblem
+        {
+            Status = 400, Code = "about.personal-code", Detail = "Kodas.", Errors = new Dictionary<string, string[]> { ["about"] = ["Kodas."] },
+        }));
+        var refused = Render<Hello>();
+        refused.Find("#profile-form").Submit();
+        refused.WaitForAssertion(() => refused.Find("#about-text").GetAttribute("aria-invalid").ShouldBe("true"));
+        navigation.Uri.ShouldEndWith(AccountScreens.AfterRegistration);
+
+        // A later visit: "Išsaugoti", and the person stays.
+        navigation.NavigateTo(AccountScreens.Profile);
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(Form with { DisplayName = null }));
+        var later = Render<Hello>();
+        later.Find("#profile-save").TextContent.ShouldBe(Text("Profile.Save"));
+        later.Find("#profile-form").Submit();
+        later.WaitForAssertion(() => later.Find("#profile-form").TextContent.ShouldContain(Text("Profile.Saved")));
+        navigation.Uri.ShouldEndWith(AccountScreens.Profile);
     }
 
     [Fact]
@@ -796,16 +908,6 @@ public sealed class SignInComponentTests : BunitContext
 
         public Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
-        public List<DisplayNameRequest> NameChanges { get; } = [];
-
-        public Func<DisplayNameRequest, ApiResult> ChangeName { get; set; } = _ => ApiResult.Ok();
-
-        public Task<ApiResult> ChangeDisplayNameAsync(DisplayNameRequest request, CancellationToken cancellationToken = default)
-        {
-            NameChanges.Add(request);
-            return Task.FromResult(ChangeName(request));
-        }
-
         public Task<ApiResult> StartStaffSessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult> StartPasskeySessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
@@ -829,27 +931,6 @@ public sealed class SignInComponentTests : BunitContext
 
         public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult.Ok());
-
-        /// <summary>The party as the server holds it (design 5.2, 8.25.9); changing or removing it stops showing it, as the server does.</summary>
-        public PartySupportResponse Party { get; set; } = new(null, [], Lt2.SharedKernel.SettingKeys.DigestPartyGroupMinimum.Default);
-
-        public List<bool> PartyPublicCalls { get; } = [];
-
-        public Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult<PartySupportResponse>.Ok(Party));
-
-        public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default)
-        {
-            Party = Party with { Party = request.Party, Public = Party.Public && request.Party == Party.Party };
-            return Task.FromResult(ApiResult.Ok());
-        }
-
-        public Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default)
-        {
-            PartyPublicCalls.Add(show);
-            Party = Party with { Public = show };
-            return Task.FromResult(ApiResult.Ok());
-        }
 
         public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 

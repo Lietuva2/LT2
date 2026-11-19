@@ -103,6 +103,7 @@ internal static class WebHost
 
         // Design 8.25: public profiles, the page composed from Identity, Notifications and Appeals.
         services.AddScoped<MemberReads>();
+        services.AddScoped<MyProfileForms>();
         services.AddScoped<Lt2.Api.Contracts.Me.IProfilesApi, ServerProfilesApi>();
         services.AddScoped<MyBillsReads>();
         services.AddScoped<TakingSides>();
