@@ -110,6 +110,23 @@ public sealed partial class SignUpTests : E2ETest
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#profile-save")).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await Assertions.Expect(page.Locator("#profile-save")).ToHaveTextAsync("Išsaugoti ir tęsti");
+
+        // Design 8.28.5: the button saves (nothing filled is fine) and opens the front page, which says "Profilis išsaugotas."
+        // once and takes the mark out of the address; a reload does not say it again; a later visit has "Išsaugoti" and stays.
+        await page.Locator("#profile-save").ClickAsync();
+        await Assertions.Expect(page.Locator("#home-profile-saved")).ToHaveTextAsync("Profilis išsaugotas.", new() { Timeout = E2ESteps.Slow });
+        await page.WaitForURLAsync(new Regex("^[^#]*/$"), new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#home-start")).ToBeVisibleAsync();
+        await page.ReloadAsync();
+        await Assertions.Expect(page.Locator("#home-title")).ToHaveTextAsync("Sveiki prisijungę", new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#home-profile-saved")).ToHaveCountAsync(0);
+        await page.GotoAsync(E2ESteps.Base + "/paskyra");
+        await Assertions.Expect(page.Locator("#profile-save")).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await Assertions.Expect(page.Locator("#profile-save")).ToHaveTextAsync("Išsaugoti");
+        await page.Locator("#profile-save").ClickAsync();
+        await Assertions.Expect(page.Locator("#profile-form-sheet [role=status]")).Not.ToBeEmptyAsync(new() { Timeout = E2ESteps.Slow });
+        page.Url.ShouldEndWith("/paskyra");
+
         await page.GotoAsync(E2ESteps.Base + "/paskyra/saugumas");
         await Assertions.Expect(page.GetByText("Ši sesija")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.Locator("#account-sign-out")).ToBeEnabledAsync(new() { Timeout = 60_000 });
