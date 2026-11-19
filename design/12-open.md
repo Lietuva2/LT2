@@ -278,6 +278,11 @@ for the lawyer).
   (`EmailTemplates` `Follow.Closed.*`, `Gathered.Closed.*`); the refusals (`ProblemText` `closing.*`,
   `closing-url.invalid`; `ValidationMessages` `Closing.*`); the methodology's "kol dalyvauti dėl projekto galima"
   (`AppealText` `Method.Privacy.1`, also for the lawyer).
+- 8.3: the lock from an item and the list of locked accounts: "Užrakinti autoriaus paskyrą" and "Paskyra užrakinta; žmogui išsiųstas laiškas."
+  (`AppealUi` `Lock.*`, `Mod.Action.lock`, `Comments.Mod.Action.lock`, `OrgMod.Action.lock`, `ProfileMod.Action.lock`), "Užrakintos paskyros",
+  its lead, "Užrakinta {0}", "Atrakinti", the unlock sentence and "Užrakinimas pagal el. pašto adresą" with "Jei paskyros savininkas parašė
+  komandai iš savo adreso." (`AppealUi` `Acc.Locked.*`, `Acc.Lock.Title`, `Acc.Lock.Lead`), and the validation line "Nurodykite, kieno paskyrą
+  užrakinti." (`ValidationMessages` `Lock.Target`).
 - 8.3: the full lock: the "Paskyros" screen (`AppealUi` `Acc.*`, `PageText` `Nav.Accounts`), the two emails ("Lietuva 2.0: paskyra
   užrakinta" and "…atrakinta" with their bodies and the line on writing to the team and on erasure, `EmailTemplates`
   `Notice.account-locked.*`, `Notice.account-unlocked.*`) and the refusals (`ProblemText` `account.lock-self`,

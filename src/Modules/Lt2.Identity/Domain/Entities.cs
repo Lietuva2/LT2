@@ -78,9 +78,11 @@ internal sealed class Profile
 
     /// <summary>
     /// An administrator locked the account (design 8.3): no sign-in, no public profile, no follow emails until it is unlocked.
-    /// The statement is in the audit log and the email, not here.
     /// </summary>
     public DateTimeOffset? LockedAt { get; set; }
+
+    /// <summary>The administrator's statement with the lock, for the administrators' list; also in the audit log and the email. Cleared when unlocked.</summary>
+    public string? LockedStatement { get; set; }
 }
 
 /// <summary>

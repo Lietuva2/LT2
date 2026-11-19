@@ -111,13 +111,44 @@ internal sealed class RoleAdministration(IDbContextFactory<IdentityDb> contexts,
     public Task<Result<Unit>> UnlockAccountAsync(string email, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken) =>
         SetLockAsync(email, statement, administrator, contact, locked: false, cancellationToken);
 
-    /// <summary>
-    /// Design 8.3: locking ends every session and the open sign-in codes in the same transaction as the mark, so no sign-in works
-    /// afterwards (<see cref="AccountLocks"/> is checked where a code or a passkey is used). The statement is kept in the audit
-    /// entry and the email only.
-    /// </summary>
+    public Task<Result<Unit>> LockAccountByIdAsync(Guid userId, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken) =>
+        SetLockAsync(userId, statement, administrator, contact, locked: true, cancellationToken);
+
+    public Task<Result<Unit>> UnlockAccountByIdAsync(Guid userId, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken) =>
+        SetLockAsync(userId, statement, administrator, contact, locked: false, cancellationToken);
+
+    public async Task<IReadOnlyList<LockedAccount>> LockedAccountsAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var rows = await db.Profiles.AsNoTracking()
+            .Where(p => p.LockedAt != null)
+            .OrderByDescending(p => p.LockedAt)
+            .Select(p => new { p.UserId, p.DisplayName, LockedAt = p.LockedAt!.Value, p.LockedStatement })
+            .ToListAsync(cancellationToken);
+        return rows.Select(r => new LockedAccount(r.UserId, r.DisplayName, r.LockedAt, r.LockedStatement)).ToList();
+    }
+
     private async Task<Result<Unit>> SetLockAsync(
         string email, string statement, StaffActor administrator, string? contact, bool locked, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await SetLockAsync(db, await FindAccountAsync(db, email, cancellationToken), statement, administrator, contact, locked, cancellationToken);
+    }
+
+    private async Task<Result<Unit>> SetLockAsync(
+        Guid userId, string statement, StaffActor administrator, string? contact, bool locked, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await SetLockAsync(db, await FindAccountByIdAsync(db, userId, cancellationToken), statement, administrator, contact, locked, cancellationToken);
+    }
+
+    /// <summary>
+    /// Design 8.3: locking ends every session and the open sign-in codes in the same transaction as the mark, so no sign-in works
+    /// afterwards (<see cref="AccountLocks"/> is checked where a code or a passkey is used). The statement is kept with the mark
+    /// (for the administrators' list), in the audit entry and in the email, never with an address.
+    /// </summary>
+    private async Task<Result<Unit>> SetLockAsync(
+        IdentityDb db, (Guid UserId, string Email)? account, string statement, StaffActor administrator, string? contact, bool locked, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(administrator);
         if (StaffStatements.Check(statement) is { } broken)
@@ -125,8 +156,6 @@ internal sealed class RoleAdministration(IDbContextFactory<IdentityDb> contexts,
             return broken;
         }
 
-        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var account = await FindAccountAsync(db, email, cancellationToken);
         if (account is null)
         {
             return Error.NotFound("account.not-found");
@@ -152,9 +181,9 @@ internal sealed class RoleAdministration(IDbContextFactory<IdentityDb> contexts,
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var changed = locked
             ? await db.Profiles.Where(p => p.UserId == userId && p.LockedAt == null)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.LockedAt, now), cancellationToken)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.LockedAt, now).SetProperty(p => p.LockedStatement, text), cancellationToken)
             : await db.Profiles.Where(p => p.UserId == userId && p.LockedAt != null)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.LockedAt, (DateTimeOffset?)null), cancellationToken);
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.LockedAt, (DateTimeOffset?)null).SetProperty(p => p.LockedStatement, (string?)null), cancellationToken);
         if (changed == 0)
         {
             return Error.Conflict(locked ? "account.locked" : "account.not-locked");
@@ -179,6 +208,16 @@ internal sealed class RoleAdministration(IDbContextFactory<IdentityDb> contexts,
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
+    }
+
+    /// <summary>A completed account by id (an id the host found from an item its person wrote); pending accounts cannot be locked.</summary>
+    private static async Task<(Guid UserId, string Email)?> FindAccountByIdAsync(IdentityDb db, Guid userId, CancellationToken cancellationToken)
+    {
+        var account = await db.Profiles.AsNoTracking()
+            .Where(p => p.UserId == userId && p.RegisteredAt != null)
+            .Join(db.Users, p => p.UserId, u => u.Id, (p, u) => new { p.UserId, u.Email })
+            .FirstOrDefaultAsync(cancellationToken);
+        return account is null ? null : (account.UserId, account.Email!);
     }
 
     /// <summary>A completed account by address; pending accounts cannot hold roles.</summary>

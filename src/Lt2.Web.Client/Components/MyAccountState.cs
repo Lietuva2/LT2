@@ -26,6 +26,14 @@ public sealed class MyAccountState(IMeApi me)
     public async Task<string?> SpeaksForAsync(bool interactive) =>
         interactive ? (await MeAsync())?.Mp?.Slug : null;
 
+    /// <summary>
+    /// Whether this session works as an administrator's (an active staff role, design 6.2); always false before the island runs
+    /// (<paramref name="interactive"/> false) and for anyone else. Only decides whether the menus offer the lock of an item's author
+    /// (design 8.3); the server decides for itself.
+    /// </summary>
+    public async Task<bool> IsAdministratorAsync(bool interactive) =>
+        interactive && (await MeAsync())?.ActiveStaffRoles.Contains("administrator") == true;
+
     /// <summary>The caller's own <c>GET /me</c>, asked once for the page; null when it failed. Only in the browser.</summary>
     public Task<MeResponse?> MeAsync()
     {

@@ -28,7 +28,7 @@ public sealed class SharedComponentTests : BunitContext
         Services.AddSingleton(DispatchProxy.Create<IModerationApi, ApiFake>());
         Services.AddSingleton(DispatchProxy.Create<IAppealsApi, ApiFake>());
         Services.AddSingleton(DispatchProxy.Create<Lt2.Api.Contracts.Auth.IAuthApi, ApiFake>());
-        Services.AddSingleton(DispatchProxy.Create<Lt2.Api.Contracts.Me.IMeApi, ApiFake>());
+        MeFakes.Add(Services);
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
     }
 

@@ -582,3 +582,15 @@ public interface IAppealsMaintenance
     /// <summary>Closes every open record whose bill had its final Seimas vote, freezing the counts; returns how many.</summary>
     Task<int> CloseFinishedAsync(CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// Who wrote an item the moderators see (design 8.3), for the administrators' full lock of that person's account. The answer is the
+/// account's id for the host to hand to Identity; it goes to no browser. Only the kinds the writing restriction is reached from:
+/// <c>reason</c> (an argument), <c>comment</c> and <c>statement</c> (an organisation's, by the person who wrote it). An MP's
+/// response is not among them: the restriction does not reach it, so neither does the lock.
+/// </summary>
+public interface IAuthorLookup
+{
+    /// <summary><c>reason.not-found</c>, <c>comment.not-found</c> or <c>statement.not-found</c> when the item or its author's account is gone.</summary>
+    Task<Result<Guid>> AuthorOfAsync(string kind, Guid id, CancellationToken cancellationToken);
+}

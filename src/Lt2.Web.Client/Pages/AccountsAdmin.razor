@@ -99,8 +99,63 @@ else
         }
     </section>
 
+    <section class="sheet stack" aria-labelledby="acc-h-locked" id="locked-accounts">
+        <h2 id="acc-h-locked">@L["Acc.Locked.Title"]</h2>
+        <p class="small">@L["Acc.Locked.Lead"]</p>
+        @if (LockedList is null)
+        {
+            <p class="small">@L["Loading"]</p>
+        }
+        else if (LockedList.Count == 0)
+        {
+            <p class="small" id="acc-locked-none">@L["Acc.Locked.None"]</p>
+        }
+        else
+        {
+            <ul class="rows" id="acc-locked">
+                @foreach (var account in LockedList)
+                {
+                    <li class="stack stack--tight" id="acc-locked-@account.Id" @key="account.Id">
+                        <div class="row">
+                            <div class="rows__main">
+                                <b>@(account.DisplayName ?? L["Reasons.Anonymous"])</b>
+                                <span class="small num">@L.Format("Acc.Locked.Since", Display.DayTime(account.LockedAt))</span>
+                                @if (account.Statement is { } why)
+                                {
+                                    <span class="small">@why</span>
+                                }
+                            </div>
+                            @if (_unlocking != account.Id)
+                            {
+                                <button type="button" class="btn btn--plain" id="acc-unlock-@account.Id" disabled="@Locked" @onclick="() => OpenUnlock(account.Id)">@L["Acc.Locked.Unlock"]</button>
+                            }
+                        </div>
+                        @if (_unlocking == account.Id)
+                        {
+                            <form class="sheet sheet--quiet stack stack--tight" @onsubmit="() => UnlockByIdAsync(account)" novalidate aria-labelledby="acc-unlock-title-@account.Id" id="acc-unlock-form-@account.Id">
+                                <ActionHeading Id="@($"acc-unlock-title-{account.Id}")">@L["Acc.Locked.Unlock"]</ActionHeading>
+                                <p class="small">@L["Acc.Locked.Sentence"]</p>
+                                <div class="field @ErrorClass("statement")">
+                                    <label for="acc-unlock-statement-@account.Id">@L["Acc.Lock.Statement"]</label>
+                                    <textarea class="textarea" id="acc-unlock-statement-@account.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_unlockStatement" @bind:event="oninput" disabled="@Locked"
+                                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"acc-unlock-statement-{account.Id}")"></textarea>
+                                    <FieldError Errors="Errors" Field="statement" For="@($"acc-unlock-statement-{account.Id}")" />
+                                </div>
+                                <div class="row">
+                                    <button type="submit" class="btn" id="acc-unlock-submit-@account.Id" disabled="@Locked">@L["Acc.Locked.Unlock"]</button>
+                                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="CloseUnlock">@L["Cancel"]</button>
+                                </div>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
     <section class="sheet stack" aria-labelledby="acc-h-lock" id="account-lock">
         <h2 id="acc-h-lock">@L["Acc.Lock.Title"]</h2>
+        <p class="small">@L["Acc.Lock.Lead"]</p>
         <p class="small" id="acc-lock-sentence">@L["Acc.Lock.Sentence"]</p>
         <div class="field @ErrorClass("email")">
             <label for="acc-lock-address">@L["Acc.Lock.Address"]</label>
@@ -131,12 +186,17 @@ else
     private string _statement = "";
     private string? _ending;
     private string _endStatement = "";
+    private Guid? _unlocking;
+    private string _unlockStatement = "";
 
     /// <summary>Whether this session works as an administrator's; null until it is known.</summary>
     [PersistentState] public bool? Administrator { get; set; }
 
     /// <summary>The MPs whose profile is taken over (design 8.5.2); null until read.</summary>
     [PersistentState] public List<AdminMpLinkResponse>? Links { get; set; }
+
+    /// <summary>The locked accounts (design 8.3): name, day, statement; never an address. Null until read.</summary>
+    [PersistentState] public List<LockedAccountResponse>? LockedList { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -158,6 +218,20 @@ else
                 Show(links.Problem);
             }
         }
+
+        if (Administrator is true && LockedList is null)
+        {
+            await LoadLockedAsync();
+        }
+    }
+
+    private async Task LoadLockedAsync()
+    {
+        var locked = await Admin.GetLockedAccountsAsync();
+        if (Succeeded(locked))
+        {
+            LockedList = locked.Value!.ToList();
+        }
     }
 
     private async Task LoadLinksAsync()
@@ -178,6 +252,47 @@ else
     }
 
     private void CloseEnd() => _ending = null;
+
+    /// <summary>Opens the statement field under one locked account, closing any other: one action at a time (design 8.3).</summary>
+    private void OpenUnlock(Guid id)
+    {
+        ClearMessages();
+        _unlocking = id;
+        _unlockStatement = "";
+    }
+
+    private void CloseUnlock() => _unlocking = null;
+
+    private Task UnlockByIdAsync(LockedAccountResponse account) => RunAsync(async () =>
+    {
+        var request = new StatementRequest { Statement = _unlockStatement.Trim() };
+        if (!Valid(await StatementValidator.ValidateAsync(request)))
+        {
+            return;
+        }
+
+        var sent = await Admin.UnlockAccountByIdAsync(account.Id, request);
+        if (sent.Problem?.Code == ConfirmationRequired)
+        {
+            // Design 6.2: the staff passkey once more, then the same action again; the statement stays if it is not given.
+            if (!await ConfirmPasskeyAsync())
+            {
+                return;
+            }
+
+            sent = await Admin.UnlockAccountByIdAsync(account.Id, request);
+        }
+
+        if (!Succeeded(sent, "statement"))
+        {
+            return;
+        }
+
+        _unlocking = null;
+        _unlockStatement = "";
+        await LoadLockedAsync();
+        Info ??= L["Acc.Lock.Unlocked"];
+    });
 
     private Task EndAsync(AdminMpLinkResponse link) => RunAsync(async () =>
     {
@@ -238,6 +353,7 @@ else
         _address = null;
         _statement = "";
         Info = L[locked ? "Acc.Lock.Locked" : "Acc.Lock.Unlocked"];
+        await LoadLockedAsync();
     });
 
     private Task<ApiResult> SendAsync(bool locked, AccountLockRequest request) =>

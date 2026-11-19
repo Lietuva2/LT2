@@ -31,6 +31,7 @@ public sealed class AccountsAdminPageTests : BunitContext
         Services.AddLt2ClientComponents();
         Services.AddLt2Validators();
         Admin = AddFake<IAdminApi>();
+        Admin.On("GetLockedAccountsAsync", ApiResult<IReadOnlyList<LockedAccountResponse>>.Ok(Locked));
         Admin.OnEach("GetMpLinksAsync", ApiResult<IReadOnlyList<AdminMpLinkResponse>>.Ok(Linked), ApiResult<IReadOnlyList<AdminMpLinkResponse>>.Ok([Linked[1]]));
         Me = AddFake<IMeApi>();
         Me.On("ConfirmPasskeyAsync", ApiResult.Ok());
@@ -44,6 +45,12 @@ public sealed class AccountsAdminPageTests : BunitContext
     [
         new("darius-liepaitis", "Darius", "Liepaitis", new DateTimeOffset(2026, 11, 3, 10, 0, 0, TimeSpan.Zero)),
         new("rasa-ievaite", "Rasa", "Ievaitė", new DateTimeOffset(2026, 11, 9, 10, 0, 0, TimeSpan.Zero)),
+    ];
+
+    private static readonly LockedAccountResponse[] Locked =
+    [
+        new(Guid.Parse("0193a1b2-0000-7000-8000-000000000001"), "Tomas Kazlauskas", new DateTimeOffset(2026, 11, 18, 9, 30, 0, TimeSpan.Zero), "Pakartotinai skelbė kitų asmenų duomenis."),
+        new(Guid.Parse("0193a1b2-0000-7000-8000-000000000002"), null, new DateTimeOffset(2026, 11, 12, 7, 0, 0, TimeSpan.Zero), "Piktnaudžiavimas."),
     ];
 
     private ApiFake Admin { get; }
@@ -173,6 +180,95 @@ public sealed class AccountsAdminPageTests : BunitContext
         first.TextContent.ShouldContain("2026-11-03");
         first.QuerySelector("a")!.GetAttribute("href").ShouldBe("/p/darius-liepaitis");
         page.FindAll("[id^='acc-mp-form-']").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void The_locked_accounts_are_listed_with_their_name_the_day_and_the_statement_and_never_an_address()
+    {
+        SignedInAs("administrator");
+
+        var page = Open();
+
+        page.WaitForAssertion(() => page.FindAll("#acc-locked > li").Count.ShouldBe(2));
+        var first = page.Find("#acc-locked-0193a1b2-0000-7000-8000-000000000001");
+        first.TextContent.ShouldContain("Tomas Kazlauskas");
+        first.TextContent.ShouldContain("Pakartotinai skelbė kitų asmenų duomenis.");
+        first.TextContent.ShouldContain(Services.GetRequiredService<IStringLocalizer<AppealUi>>().Format("Acc.Locked.Since", Display.DayTime(Locked[0].LockedAt)));
+        page.Find("#acc-locked-0193a1b2-0000-7000-8000-000000000002").TextContent.ShouldContain(L["Reasons.Anonymous"].Value, Case.Sensitive, "a member without a name");
+        page.Markup.ShouldNotContain("@pavyzdys.test");
+        page.FindAll("[id^='acc-unlock-form-']").ShouldBeEmpty();
+        page.FindAll("#account-lock").Count.ShouldBe(1, "the address form stays below the list as the other way");
+        page.Markup.IndexOf("id=\"locked-accounts\"", StringComparison.Ordinal).ShouldBeLessThan(page.Markup.IndexOf("id=\"account-lock\"", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Without_a_locked_account_the_list_says_so()
+    {
+        SignedInAs("administrator");
+        Admin.On("GetLockedAccountsAsync", ApiResult<IReadOnlyList<LockedAccountResponse>>.Ok([]));
+
+        var page = Open();
+
+        page.WaitForAssertion(() => page.Find("#acc-locked-none").TextContent.ShouldBe(L["Acc.Locked.None"].Value));
+    }
+
+    [Fact]
+    public void Atrakinti_asks_the_passkey_on_the_same_press_sends_the_statement_by_id_and_reads_the_list_again()
+    {
+        SignedInAs("administrator");
+        Admin.OnEach("UnlockAccountByIdAsync", ConfirmationRequired(), ApiResult.Ok());
+        Admin.OnEach("GetLockedAccountsAsync", ApiResult<IReadOnlyList<LockedAccountResponse>>.Ok(Locked), ApiResult<IReadOnlyList<LockedAccountResponse>>.Ok([Locked[1]]));
+        var module = JSInterop.SetupModule("./js/passkeys.js");
+        module.Setup<bool>("isSupported").SetResult(true);
+        module.Setup<string>("get", _ => true).SetResult("{\"id\":\"staff-key\"}");
+        var page = Open();
+        page.WaitForAssertion(() => page.FindAll("#acc-locked > li").Count.ShouldBe(2));
+
+        page.Find("#acc-unlock-0193a1b2-0000-7000-8000-000000000001").Click();
+        page.FindAll("[id^='acc-unlock-form-']").Count.ShouldBe(1);
+        page.Find("#acc-unlock-statement-0193a1b2-0000-7000-8000-000000000001").Input("Klaida ištaisyta.");
+        page.Find("#acc-unlock-form-0193a1b2-0000-7000-8000-000000000001").Submit();
+
+        page.WaitForAssertion(() => Admin.Calls.Count(c => c == "UnlockAccountByIdAsync").ShouldBe(2));
+        Me.Calls.ShouldContain("ConfirmPasskeyAsync");
+        Admin.Arguments[Admin.Calls.LastIndexOf("UnlockAccountByIdAsync")][0].ShouldBe(Locked[0].Id);
+        ((StatementRequest)Admin.Arguments[Admin.Calls.LastIndexOf("UnlockAccountByIdAsync")][1]!).Statement.ShouldBe("Klaida ištaisyta.");
+        page.WaitForAssertion(() => page.FindAll("#acc-locked > li").Count.ShouldBe(1));
+        page.Markup.ShouldContain(L["Acc.Lock.Unlocked"].Value);
+    }
+
+    [Fact]
+    public void Cancelling_the_passkey_prompt_unlocks_nothing_and_keeps_the_statement()
+    {
+        SignedInAs("administrator");
+        Admin.On("UnlockAccountByIdAsync", ConfirmationRequired());
+        var module = JSInterop.SetupModule("./js/passkeys.js");
+        module.Setup<bool>("isSupported").SetResult(true);
+        module.Setup<string>("get", _ => true).SetException(new Microsoft.JSInterop.JSException("NotAllowedError"));
+        var page = Open();
+        page.WaitForAssertion(() => page.FindAll("#acc-locked > li").Count.ShouldBe(2));
+
+        page.Find("#acc-unlock-0193a1b2-0000-7000-8000-000000000001").Click();
+        page.Find("#acc-unlock-statement-0193a1b2-0000-7000-8000-000000000001").Input("Klaida ištaisyta.");
+        page.Find("#acc-unlock-form-0193a1b2-0000-7000-8000-000000000001").Submit();
+
+        page.WaitForAssertion(() => page.Markup.ShouldContain(L["Acc.Passkey.Cancelled"].Value));
+        Admin.Calls.Count(c => c == "UnlockAccountByIdAsync").ShouldBe(1);
+        page.Find("#acc-unlock-statement-0193a1b2-0000-7000-8000-000000000001").GetAttribute("value").ShouldBe("Klaida ištaisyta.");
+    }
+
+    [Fact]
+    public void Unlocking_without_a_statement_is_refused_under_the_field_and_nothing_is_sent()
+    {
+        SignedInAs("administrator");
+        var page = Open();
+        page.WaitForAssertion(() => page.FindAll("#acc-locked > li").Count.ShouldBe(2));
+
+        page.Find("#acc-unlock-0193a1b2-0000-7000-8000-000000000001").Click();
+        page.Find("#acc-unlock-form-0193a1b2-0000-7000-8000-000000000001").Submit();
+
+        page.WaitForAssertion(() => page.FindAll("#acc-unlock-form-0193a1b2-0000-7000-8000-000000000001 .field--error").Count.ShouldBe(1));
+        Admin.Calls.ShouldNotContain("UnlockAccountByIdAsync");
     }
 
     [Fact]

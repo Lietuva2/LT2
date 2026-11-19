@@ -188,4 +188,16 @@ public interface IAdminApi
 
     /// <summary>Design 8.3: unlocks the account with this address, with a statement; a fresh passkey confirmation.</summary>
     Task<ApiResult> UnlockAccountAsync(Admin.AccountLockRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Design 8.3: locks the account of whoever wrote the item (an argument, a comment, an organisation's statement, a reported
+    /// profile), found by the server; a statement and a fresh passkey confirmation. Administrators only.
+    /// </summary>
+    Task<ApiResult> LockAuthorAsync(Admin.AuthorLockRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Design 8.3: the locked accounts, newest lock first: id, display name, day, statement; never an address.</summary>
+    Task<ApiResult<IReadOnlyList<Admin.LockedAccountResponse>>> GetLockedAccountsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Design 8.3: unlocks the account by its id from the list, with a statement; a fresh passkey confirmation.</summary>
+    Task<ApiResult> UnlockAccountByIdAsync(Guid id, StatementRequest request, CancellationToken cancellationToken = default);
 }

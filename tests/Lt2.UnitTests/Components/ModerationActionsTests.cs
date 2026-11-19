@@ -44,6 +44,7 @@ public sealed class ModerationActionsTests : BunitContext
         var me = DispatchProxy.Create<IMeApi, ApiFake>();
         _me = (ApiFake)(object)me;
         _me.On("ConfirmPasskeyAsync", ApiResult.Ok());
+        _me.On("GetAsync", ApiResult<MeResponse>.Ok(MeFakes.Member));
         Services.AddSingleton(me);
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -370,7 +371,7 @@ public sealed class ModerationActionsTests : BunitContext
         actions.Find("form").Submit();
 
         actions.WaitForAssertion(() => _api.Calls.Count(c => c == "UrgentAsync").ShouldBe(2));
-        _me.Calls.ShouldBe(["ConfirmPasskeyAsync"]);
+        _me.Calls.Where(c => c != "GetAsync").ToList().ShouldBe(["ConfirmPasskeyAsync"]);
         _api.Arguments.Where((_, i) => _api.Calls[i] == "UrgentAsync").Select(a => ((UrgentDigestRequest)a[1]!).Statement)
             .ShouldBe(["Balsavimas perkeltas į rytojų.", "Balsavimas perkeltas į rytojų."]);
         actions.WaitForAssertion(() => actions.Markup.ShouldContain(Text("Mod.Done.urgent")));
@@ -391,7 +392,7 @@ public sealed class ModerationActionsTests : BunitContext
 
         actions.WaitForAssertion(() => actions.Markup.ShouldContain(Text("Mod.Passkey.Cancelled")));
         _api.Calls.Count(c => c == "UrgentAsync").ShouldBe(1, "no second press without the confirmation");
-        _me.Calls.ShouldBeEmpty();
+        _me.Calls.ShouldNotContain("ConfirmPasskeyAsync");
         actions.Find($"#statement-{Item}").GetAttribute("value").ShouldBe("Balsavimas perkeltas į rytojų.");
         actions.Markup.ShouldNotContain(Text("Mod.Done.urgent"));
     }

@@ -47,6 +47,9 @@ public static class AppealsModule
         services.AddScoped<ModerationService>();
         services.AddScoped<IAppealsModeration>(sp => sp.GetRequiredService<ModerationService>());
 
+        // Design 8.3: the account of whoever wrote an item, for the administrators' lock; the host passes the id to Identity.
+        services.AddScoped<IAuthorLookup, AuthorLookup>();
+
         // Design 8.14.14 (stage A): organisations and their statements, in this module beside the moderation they use.
         services.AddScoped<OrganisationReads>();
         services.AddScoped<IOrganisations, OrganisationsService>();

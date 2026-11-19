@@ -185,6 +185,27 @@ when `passkey.confirmation-required`, the fields kept until the action goes thro
 again). Tests: `AccountLockTests` (integration), `EmailRhythmTests.A_locked_accounts_follows_send_nothing`, `AccountsAdminPageTests`
 (bUnit), `NotificationTests` (the lock's email).
 
+**The lock from an item and the list of locked accounts (design 8.3; the owner, 2026-11-19: administrators cannot find an address to type).**
+Same file `AccountLockEndpoints` (`Policies.Administrator`, `FreshConfirmation` through the one `ActAsync`): `POST /admin/accounts/lock-author`
+(`AuthorLockRequest`: `targetKind` of `LockTargets` = `reason`, `comment`, `statement`, `profile`; `targetId`; `statement`; validator in
+`Lt2.Api.Contracts/Admin/RoleDtos.cs`) goes through `AuthorLock.LockAsync`, shared with the in-process `ServerAdminApi`: for the first three
+kinds `IAuthorLookup.AuthorOfAsync` (Appeals, `AuthorLookup`: `reasons.author_user_id`, `comments.author_user_id`,
+`organisation_statements.written_by_user_id`, the same columns the writing restriction reads; `reason.not-found`, `comment.not-found`,
+`statement.not-found`), for `profile` the id is the moderation id `ProfileModerationResponse.Id` (the account id the profile queue already
+carries); then only the id goes to `IIdentityAdministration.LockAccountByIdAsync` (the same `SetLockAsync` as by address: statement, not
+oneself, no active staff role, one transaction, audit, one email; `account.not-found` for an id no completed account holds). The kinds
+are exactly the places the restriction reaches an author, plus the profile; an MP's response has none, an organisation's statement locks
+the person who wrote it (`written_by_user_id`), as `RestrictWriterOfStatementAsync` does. `GET /admin/accounts/locked`
+(`LockedAccountResponse`: `id`, `displayName`, `lockedAt`, `statement`; `IIdentityAdministration.LockedAccountsAsync`, newest first) and
+`POST /admin/accounts/{id}/unlock` (`StatementRequest`, `UnlockAccountByIdAsync`) serve the list; the statement is kept in
+`identity.profile.locked_statement` (migration `LockStatement`, cleared on unlock). The menus: `MyAccountState.IsAdministratorAsync`
+(`GET /me` active role `administrator`, asked once, never while prerendering) lets `ModerationActions` (argument, where "restrict" is
+offered), `CommentModerationActions`, `OrgModerationActions` (a statement where "restrict" is offered) and `ProfileModerationView` add
+`lock` last, after hiding in the one run set apart; `<LockAuthor>` (`Lt2.Web.Client/Appeals`) is the form (the sentence `Acc.Lock.Sentence`,
+the statement, the passkey asked again on the same press, then the same request once more, the statement kept). `AccountsAdmin` shows the
+list ("Užrakintos paskyros": `Reasons.Anonymous` for a person without a name, `Acc.Locked.*`) between the MPs and the address form
+(the secondary way, "Pagal el. pašto adresą"); "Atrakinti" opens one statement form at a time. Tests: `AuthorLockTests` (integration),
+`LockAuthorTests` and `AccountsAdminPageTests` (bUnit).
 **The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
 parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, change it"; `/sveiki` is gone, no redirect).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:

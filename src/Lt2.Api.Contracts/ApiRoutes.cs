@@ -103,6 +103,20 @@ public static class ApiRoutes
         /// <summary>Design 8.3, <c>POST</c>, administrators: unlocks an account, with a statement and a fresh passkey confirmation.</summary>
         public const string UnlockAccount = Prefix + "/admin/accounts/unlock";
 
+        /// <summary>
+        /// Design 8.3, <c>POST</c>, administrators: locks the account of whoever wrote an item (<c>targetKind</c>, <c>targetId</c>), with a statement and a fresh
+        /// passkey confirmation; the address is never sent.
+        /// </summary>
+        public const string LockAuthor = Prefix + "/admin/accounts/lock-author";
+
+        /// <summary>Design 8.3, <c>GET</c>, administrators: the locked accounts (id, name, day, statement), never an address.</summary>
+        public const string LockedAccounts = Prefix + "/admin/accounts/locked";
+
+        /// <summary>Design 8.3, <c>POST</c>, administrators: unlocks the account by its id, with a statement and a fresh passkey confirmation.</summary>
+        public const string UnlockById = Prefix + "/admin/accounts/{id:guid}/unlock";
+
+        public static string UnlockOf(Guid id) => $"{Prefix}/admin/accounts/{id}/unlock";
+
         public static string SettingByKey(string key) => $"{Settings}/{Uri.EscapeDataString(key)}";
 
         public const string Invitations = Prefix + "/admin/invitations";

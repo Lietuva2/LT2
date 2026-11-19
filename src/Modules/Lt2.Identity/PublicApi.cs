@@ -196,7 +196,23 @@ public interface IIdentityAdministration
 
     /// <summary>Unlocks the account, with a statement; audited; one email. <c>account.not-locked</c> when it is not locked.</summary>
     Task<Result<Unit>> UnlockAccountAsync(string email, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The full lock (as <see cref="LockAccountAsync"/>) of the account whose id the host found from an item its person wrote
+    /// (design 8.3); the address is read here only to send the notice, never returned. Also <c>account.not-found</c> for an id no
+    /// completed account holds.
+    /// </summary>
+    Task<Result<Unit>> LockAccountByIdAsync(Guid userId, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>Unlocks the account by its id (from <see cref="LockedAccountsAsync"/>), with a statement; audited; one email.</summary>
+    Task<Result<Unit>> UnlockAccountByIdAsync(Guid userId, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>The locked accounts, newest lock first: id, display name, when, the statement. Never the address.</summary>
+    Task<IReadOnlyList<LockedAccount>> LockedAccountsAsync(CancellationToken cancellationToken);
 }
+
+/// <summary>A locked account for the administrators (design 8.3): never its address.</summary>
+public sealed record LockedAccount(Guid UserId, string? DisplayName, DateTimeOffset LockedAt, string? Statement);
 
 /// <summary>One signed-in browser.</summary>
 public sealed record SessionSummary(
