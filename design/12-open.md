@@ -244,6 +244,8 @@ for the lawyer).
 
 ## Awaiting a native speaker
 
+- 6.5, 8.4, 8.25.1: the refusals when a consent text in force is not the one the form showed, "Galioja kitas sutikimo
+  tekstas. …" (`ProblemText` `consent.outdated`, `party.consent-outdated`, `profile.consent-outdated`).
 - 6.2: the texts of changing the email address ("El. pašto adresas", "Keisti adresą", "Kodą išsiuntėme adresu …",
   "Ne jūs? Grąžinti ankstesnį adresą", the rest of the part and of the page that puts the old address back: `UiText`
   `EmailPart.*`, `EmailRestore.*`), its emails (`EmailTemplates` `EmailChange.*`: the code to the new address, to an
