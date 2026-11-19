@@ -12,12 +12,14 @@ namespace Lt2.Identity.Application.Invitations;
 /// for it, in the format and under the rules of personal codes, with its own uses setting. It belongs to the organisation:
 /// no account is kept on it, so it stays when the representative who asked leaves or deletes their account. Whether the
 /// caller represents the organisation, and whether it is active, the host asks the Appeals module first; this module only
-/// knows the organisation's id. Nothing here is logged or audited, so no row ties a representative to the code.
+/// knows the organisation's id. Nothing here is logged or audited, so no row ties a representative to the code. A context of
+/// its own per operation.
 /// </summary>
-internal sealed class OrganisationInvitationHandlers(IdentityDb db, ISettings settings, TimeProvider clock) : IOrganisationInvitations
+internal sealed class OrganisationInvitationHandlers(IDbContextFactory<IdentityDb> contexts, ISettings settings, TimeProvider clock) : IOrganisationInvitations
 {
     public async Task<Result<OrganisationInvitation>> ForOrganisationAsync(Guid organisationId, bool active, Guid requestedByUserId, CancellationToken cancellationToken)
     {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await IdentityLocks.OrganisationCodeAsync(db, organisationId, cancellationToken);
         var current = await InvitationHandlers.CurrentAsync(db, InvitationKinds.Organisation, organisationId, cancellationToken);
@@ -29,7 +31,7 @@ internal sealed class OrganisationInvitationHandlers(IdentityDb db, ISettings se
         }
 
         await transaction.CommitAsync(cancellationToken);
-        return await InfoAsync(organisationId, current, cancellationToken);
+        return await InfoAsync(db, organisationId, current, cancellationToken);
     }
 
     public async Task<Result<OrganisationInvitation>> ReplaceAsync(Guid organisationId, bool active, CancellationToken cancellationToken)
@@ -39,6 +41,7 @@ internal sealed class OrganisationInvitationHandlers(IdentityDb db, ISettings se
             return Error.Conflict("invitation.organisation-inactive");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await IdentityLocks.OrganisationCodeAsync(db, organisationId, cancellationToken);
         var current = await InvitationHandlers.CurrentAsync(db, InvitationKinds.Organisation, organisationId, cancellationToken);
@@ -55,10 +58,10 @@ internal sealed class OrganisationInvitationHandlers(IdentityDb db, ISettings se
 
         var replacement = await InvitationHandlers.ReplaceCurrentAsync(db, clock, current, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return await InfoAsync(organisationId, replacement, cancellationToken);
+        return await InfoAsync(db, organisationId, replacement, cancellationToken);
     }
 
-    private async Task<OrganisationInvitation> InfoAsync(Guid organisationId, Invitation? current, CancellationToken ct)
+    private async Task<OrganisationInvitation> InfoAsync(IdentityDb db, Guid organisationId, Invitation? current, CancellationToken ct)
     {
         // One number: everyone who completed registration with any of the organisation's codes, replaced ones too. Never
         // broken down by day, bill or side for the organisation (design 8.14.14).

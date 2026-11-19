@@ -9,21 +9,34 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Lt2.Identity.Application.Account;
 
-/// <summary>The signed-in person's account and sessions.</summary>
+/// <summary>
+/// The signed-in person's account and sessions. A context of its own per call: a page's components read the account while
+/// others read at the same time, so the account, its roles and passkeys are read here rather than through the request's
+/// <see cref="UserManager{TUser}"/>.
+/// </summary>
 internal sealed class AccountHandlers(
-    IdentityDb db, UserManager<User> users, StaffAccess staff, Politicians.PoliticianHandlers politicians, Politicians.PoliticianAccess sessions, TimeProvider clock)
+    IDbContextFactory<IdentityDb> contexts, StaffAccess staff, Politicians.PoliticianHandlers politicians, Politicians.PoliticianAccess sessions, TimeProvider clock)
 {
     public async Task<Result<AccountSummary>> GetAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        var user = await users.GetUserAsync(principal);
+        if (principal.UserId() is not { } userId)
+        {
+            return Error.Unauthorized("auth.required");
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user is null)
         {
             return Error.Unauthorized("auth.required");
         }
 
         var profile = await db.Profiles.AsNoTracking().FirstAsync(p => p.UserId == user.Id, cancellationToken);
-        var roles = await users.GetRolesAsync(user);
-        var passkeys = await users.GetPasskeysAsync(user);
+        var roles = await (from ur in db.UserRoles.AsNoTracking()
+                           join r in db.Roles.AsNoTracking() on ur.RoleId equals r.Id
+                           where ur.UserId == user.Id
+                           select r.Name!).ToListAsync(cancellationToken);
+        var passkeys = await db.Set<IdentityUserPasskey<Guid>>().CountAsync(p => p.UserId == user.Id, cancellationToken);
         var state = await staff.ForAsync(principal, cancellationToken);
         var session = state?.ToSession() ?? StaffSession.None;
         var now = clock.GetUtcNow();
@@ -39,7 +52,7 @@ internal sealed class AccountHandlers(
             profile.DisplayName,
             profile.VerificationLevel,
             roles.Order(StringComparer.Ordinal).ToList(),
-            passkeys.Count,
+            passkeys,
             profile.CreatedAt,
             !profile.IsPending,
             session.ActiveRoles,
@@ -61,6 +74,7 @@ internal sealed class AccountHandlers(
 
         var current = principal.FindFirstValue(SessionTicketStore.SessionIdClaim);
         var now = clock.GetUtcNow();
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var sessions = await db.Sessions.AsNoTracking()
             .Where(s => s.UserId == userId && s.ExpiresAt > now)
             .OrderByDescending(s => s.LastSeenAt)
@@ -78,6 +92,7 @@ internal sealed class AccountHandlers(
             return Error.Unauthorized("auth.required");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var deleted = await db.Sessions
             .Where(s => s.Id == sessionId && s.UserId == userId)
             .ExecuteDeleteAsync(cancellationToken);
@@ -89,11 +104,13 @@ internal sealed class AccountHandlers(
 /// <summary>
 /// Housekeeping: old sign-in codes, expired sessions, known browsers not seen for a year (design 8.20.2), and accounts
 /// still pending after the configured number of days (design 6.2), so an address typed by a stranger is not kept, nor any unsent email to it (design 6.8).
+/// One context for the run.
 /// </summary>
-internal sealed class MaintenanceHandler(IdentityDb db, IOutbox outbox, ISettings settings, TimeProvider clock) : IIdentityMaintenance
+internal sealed class MaintenanceHandler(IDbContextFactory<IdentityDb> contexts, IOutbox outbox, ISettings settings, TimeProvider clock) : IIdentityMaintenance
 {
     public async Task<int> PurgeExpiredAsync(CancellationToken cancellationToken)
     {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var now = clock.GetUtcNow();
         var codeCutoff = now - TimeSpan.FromDays(1);
         var codes = await db.SignInCodes.Where(c => c.CreatedAt < codeCutoff).ExecuteDeleteAsync(cancellationToken);

@@ -20,9 +20,10 @@ internal sealed record PoliticianState(Guid UserId, Session? Session, Politician
 
 /// <summary>
 /// Reads the link and the session from the database on every call (design 8.5.4: a link is not a role in the session), as
-/// the staff checks do, so ending a link or removing a passkey works at once.
+/// the staff checks do, so ending a link or removing a passkey works at once. A context of its own per call: a page's
+/// components ask (who speaks for an MP, the account) while others read at the same time.
 /// </summary>
-internal sealed class PoliticianAccess(IdentityDb db, TimeProvider clock)
+internal sealed class PoliticianAccess(IDbContextFactory<IdentityDb> contexts, TimeProvider clock)
 {
     public static readonly Error PasskeyRequired = Error.Forbidden("mp.passkey-required");
 
@@ -33,6 +34,7 @@ internal sealed class PoliticianAccess(IdentityDb db, TimeProvider clock)
             return null;
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var now = clock.GetUtcNow();
         Session? session = null;
         if (Guid.TryParse(principal.FindFirstValue(SessionTicketStore.SessionIdClaim), out var sessionId))

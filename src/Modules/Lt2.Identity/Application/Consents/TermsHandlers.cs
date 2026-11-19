@@ -9,9 +9,10 @@ namespace Lt2.Identity.Application.Consents;
 /// <summary>
 /// The terms of use (design 8.22.2): a member's accepted version is a consent of kind <c>terms</c> with its text version. A
 /// member whose newest accepted version is behind the one in force (or who never accepted, an account older than the terms)
-/// must accept before writing; <see cref="TermsOfUse.NeedsAcceptance"/> is the rule.
+/// must accept before writing; <see cref="TermsOfUse.NeedsAcceptance"/> is the rule. A context of its own per operation: every
+/// request asks whether the terms are behind (<c>TermsGate</c>), and pages ask while their other components read.
 /// </summary>
-internal sealed class TermsHandlers(IdentityDb db, TimeProvider clock)
+internal sealed class TermsHandlers(IDbContextFactory<IdentityDb> contexts, TimeProvider clock)
 {
     public async Task<Result<Unit>> AcceptAsync(ClaimsPrincipal principal, string textVersion, CancellationToken cancellationToken)
     {
@@ -26,6 +27,7 @@ internal sealed class TermsHandlers(IdentityDb db, TimeProvider clock)
             return Error.Conflict("terms.outdated");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var profile = await db.Profiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         if (profile is null)
         {
@@ -49,8 +51,16 @@ internal sealed class TermsHandlers(IdentityDb db, TimeProvider clock)
     }
 
     /// <summary>Whether the account is a member who must accept the terms in force first; false for a pending or unknown account.</summary>
-    public async Task<bool> RequiredAsync(ClaimsPrincipal principal, CancellationToken cancellationToken) =>
-        principal.UserId() is { } userId && await RequiredAsync(db, userId, cancellationToken);
+    public async Task<bool> RequiredAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
+    {
+        if (principal.UserId() is not { } userId)
+        {
+            return false;
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await RequiredAsync(db, userId, cancellationToken);
+    }
 
     public static async Task<bool> RequiredAsync(IdentityDb db, Guid userId, CancellationToken cancellationToken)
     {

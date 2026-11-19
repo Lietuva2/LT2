@@ -13,9 +13,9 @@ namespace Lt2.Identity.Application.Account;
 /// is shown (beside arguments, in representatives' lists, on feedback and moderation screens), so a change shows everywhere at
 /// once, older arguments included; summaries never hold names. The same rule as at registration (at most 60 characters, empty
 /// allowed); refused while a writing restriction holds (asked of Appeals through <see cref="IWritingRestrictions"/>). Audited
-/// that it changed, never the names; no earlier names are kept.
+/// that it changed, never the names; no earlier names are kept. A context of its own per change.
 /// </summary>
-internal sealed class DisplayNameHandlers(IdentityDb db, IWritingRestrictions restrictions, AccountEvents events)
+internal sealed class DisplayNameHandlers(IDbContextFactory<IdentityDb> contexts, IWritingRestrictions restrictions, AccountEvents events)
 {
     public async Task<Result<Unit>> ChangeAsync(ClaimsPrincipal principal, string? typed, string? ipHash, CancellationToken cancellationToken)
     {
@@ -34,6 +34,7 @@ internal sealed class DisplayNameHandlers(IdentityDb db, IWritingRestrictions re
             return Error.Forbidden("writing.restricted");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await IdentityLocks.ProfileAsync(db, userId, cancellationToken);
         var profile = await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);

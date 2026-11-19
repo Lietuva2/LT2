@@ -128,6 +128,11 @@ tools/standin_overlay.py    writes every file of Recent/ (fixed seeds; --check c
   Vilnius days come from `VilniusTime` in SharedKernel (`Zone`, `DateOf`, `Today`, `StartOf`); do not look the zone up again.
 - The signed-in account is `principal.UserId()` (SharedKernel); a staff member acting is a `StaffActor`. A module's
   `DbContext` is configured with `UseLt2Npgsql` (SharedKernel/Persistence), nowhere by hand.
+- Appeals, Parliament, Notifications and Identity read and write through `IDbContextFactory<TDb>`, a context per operation:
+  a page's components render at the same time in one scope, and one context cannot run two operations at once. In
+  Identity only the flows that write through ASP.NET Core Identity's `UserManager`/`SignInManager` in the same transaction
+  use the request's `IdentityDb`: registration, sign-in by code or passkey, passkeys, staff activation and sessions, an
+  MP's link changes and deleting the account (`ConcurrentReadTests` runs the module's reads at once in one scope).
 - Limits that count rows (codes per address and per known browser, known browsers per account, one current invitation
   code, one urgent summary a week, follows per account) are counted under a PostgreSQL advisory lock in the same
   transaction (design 6.8); Identity's are in `IdentityLocks`, Appeals' in `AdvisoryLocks`.

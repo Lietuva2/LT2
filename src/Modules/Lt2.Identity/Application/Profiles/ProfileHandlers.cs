@@ -12,9 +12,10 @@ namespace Lt2.Identity.Application.Profiles;
 /// A member's public profile and "Apie mane" (design 8.25), the person's own side: reading the state, writing the text,
 /// switching "Viešas profilis" on (the consent <c>public-profile</c>) and off (the consent withdrawn, the id retired, every
 /// follow of it ended, in one transaction). Every rule is checked here, whoever calls (design 6.8). Audited without the text.
+/// A context of its own per operation; switching off runs in the caller's context and transaction.
 /// </summary>
 internal sealed class ProfileHandlers(
-    IdentityDb db,
+    IDbContextFactory<IdentityDb> contexts,
     IParticipants participants,
     IWritingRestrictions restrictions,
     IMemberFollowEnd follows,
@@ -30,6 +31,7 @@ internal sealed class ProfileHandlers(
             return Error.Unauthorized("auth.required");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var profile = await db.Profiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         if (profile is null || profile.IsPending)
         {
@@ -55,6 +57,7 @@ internal sealed class ProfileHandlers(
                 : Error.Validation(aboutError, "about");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await IdentityLocks.ProfileAsync(db, userId, cancellationToken);
         var profile = await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
@@ -109,7 +112,7 @@ internal sealed class ProfileHandlers(
                 return mp;
             }
 
-            profile.PublicProfileId = await FreshIdAsync(cancellationToken);
+            profile.PublicProfileId = await FreshIdAsync(db, cancellationToken);
             profile.PublicSince = now;
             db.Consents.Add(new Consent { Id = Ids.New(clock), UserId = userId, Kind = PublicProfileConsent.Kind, TextVersion = PublicProfileConsent.TextVersion, GivenAt = now });
             await db.SaveChangesAsync(cancellationToken);
@@ -118,7 +121,7 @@ internal sealed class ProfileHandlers(
         else if (!change.Public && isPublic)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await SwitchOffAsync(profile, now, dbTransaction, cancellationToken);
+            await SwitchOffAsync(db, profile, now, dbTransaction, cancellationToken);
             await events.RecordAsync(dbTransaction, "profile.public-off", userId, actor, null, null, cancellationToken);
         }
 
@@ -138,6 +141,7 @@ internal sealed class ProfileHandlers(
             return Error.Unauthorized("auth.required");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await IdentityLocks.ProfileAsync(db, userId, cancellationToken);
         if (await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken) is not { IsPending: false } profile)
@@ -148,7 +152,7 @@ internal sealed class ProfileHandlers(
         if (profile.PublicProfileId is not null)
         {
             var now = clock.GetUtcNow();
-            await SwitchOffAsync(profile, now, transaction.GetDbTransaction(), cancellationToken);
+            await SwitchOffAsync(db, profile, now, transaction.GetDbTransaction(), cancellationToken);
             await events.RecordAsync(transaction.GetDbTransaction(), "profile.public-off", userId, new Actor(userId, Roles.Member, ipHash), null, null, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
         }
@@ -158,10 +162,11 @@ internal sealed class ProfileHandlers(
     }
 
     /// <summary>
-    /// Switching off (design 8.25.1), in the caller's transaction: the consent withdrawn, the id retired for good (410), every
-    /// follow of it ended (no follower is told). Also used when the account is deleted.
+    /// Switching off (design 8.25.1), in the caller's context and transaction (<paramref name="db"/> tracks
+    /// <paramref name="profile"/>): the consent withdrawn, the id retired for good (410), every follow of it ended (no follower
+    /// is told). Also used when the account is deleted and when the MP's own account takes the profile over.
     /// </summary>
-    public async Task SwitchOffAsync(Profile profile, DateTimeOffset now, System.Data.Common.DbTransaction transaction, CancellationToken cancellationToken)
+    public async Task SwitchOffAsync(IdentityDb db, Profile profile, DateTimeOffset now, System.Data.Common.DbTransaction transaction, CancellationToken cancellationToken)
     {
         if (profile.PublicProfileId is not { } id)
         {
@@ -177,12 +182,12 @@ internal sealed class ProfileHandlers(
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.WithdrawnAt, now), cancellationToken);
 
         // Design 8.25.9: the party shown on the page goes with it, and switching on again does not bring it back.
-        await parties.WithdrawShownAsync(profile.UserId, "profile", new Actor(profile.UserId, Roles.Member, null), transaction, cancellationToken);
+        await parties.WithdrawShownAsync(db, profile.UserId, "profile", new Actor(profile.UserId, Roles.Member, null), transaction, cancellationToken);
         await follows.EndAsync(id, transaction, cancellationToken);
     }
 
     /// <summary>A random id never issued before: not in use and not retired.</summary>
-    private async Task<string> FreshIdAsync(CancellationToken cancellationToken)
+    private static async Task<string> FreshIdAsync(IdentityDb db, CancellationToken cancellationToken)
     {
         while (true)
         {
