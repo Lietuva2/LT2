@@ -8,7 +8,8 @@ namespace Lt2.Web.Endpoints.Auth;
 
 /// <summary>
 /// <c>POST /api/v1/auth/register</c>: email and invitation code; creates a pending account (design 6.2). Answers 202
-/// whether the address is new, pending or registered; in every case a sign-in code is emailed.
+/// whether the address is new, pending or registered; in every case a sign-in code is emailed. The proof of work comes first:
+/// without a good one, 400 <c>bot-check.failed</c> (design 6.4), whatever the address.
 /// </summary>
 internal static class RegisterEndpoint
 {

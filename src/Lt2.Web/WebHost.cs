@@ -134,6 +134,12 @@ internal static class WebHost
             app.Logger.LogWarning("Security:DeviceHashKey is not set (deploy/secrets/device_hash_key): no browser is known to an account");
         }
 
+        // Design 6.4: without the key of the proof of work's signatures the host signs with a key of its own, valid on this instance only.
+        if (string.IsNullOrWhiteSpace(app.Configuration["Security:BotCheckKey"]))
+        {
+            app.Logger.LogWarning("Security:BotCheckKey is not set (deploy/secrets/bot_check_key): proof-of-work challenges are signed with a key of this instance only");
+        }
+
         TrustedProxy.UseTrustedForwardedHeaders(app);
         app.UseLt2SecurityHeaders();
         if (!app.Environment.IsDevelopment())

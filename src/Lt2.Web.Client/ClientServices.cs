@@ -54,6 +54,7 @@ public static class ClientServices
     public static IServiceCollection AddLt2ClientComponents(this IServiceCollection services)
     {
         services.AddScoped<Passkeys>();
+        services.AddScoped<BotCheckBrowser>();
         services.AddScoped<Appeals.MyBillState>();
         services.AddScoped<Agenda.MyAgendaState>();
         services.AddScoped<Comments.CommentState>();

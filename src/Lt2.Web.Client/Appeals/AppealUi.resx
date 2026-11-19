@@ -438,6 +438,15 @@
 <data name="Admin.Setting.SignIn:CodesPerDay" xml:space="preserve"><value>Prisijungimo kodų per parą vienam adresui</value></data>
 <data name="Admin.Help.SignIn:CodesPerDay" xml:space="preserve"><value>Kiek prisijungimo kodų vienas adresas gali gauti per parą. Tai saugo žmogaus pašto dėžutę nuo užtvindymo ir riboja spėliojimą: kiekvienam kodui leidžiami penki bandymai.</value></data>
 <data name="Admin.Unit.SignIn:CodesPerDay" xml:space="preserve"><value>kodai</value></data>
+<data name="Admin.Setting.BotCheck:Enabled" xml:space="preserve"><value>Patikra, ar registruojasi ne robotas</value></data>
+<data name="Admin.Help.BotCheck:Enabled" xml:space="preserve"><value>Registruojantis ir prašant prisijungimo kodo naršyklė savo jėgomis baigia nedidelį skaičiavimą; žmogui nieko spausti ar spręsti nereikia. Išjunkite tik laikinai, jei patikra trukdo tikriems žmonėms.</value></data>
+<data name="Admin.Unit.BotCheck:Enabled" xml:space="preserve"><value>taip / ne</value></data>
+<data name="Admin.Setting.BotCheck:MaxNumber" xml:space="preserve"><value>Patikros sudėtingumas</value></data>
+<data name="Admin.Help.BotCheck:MaxNumber" xml:space="preserve"><value>Kuo didesnis skaičius, tuo ilgiau naršyklė skaičiuoja: vidutiniškai pusę tiek bandymų. Numatytoji reikšmė telefonui užtrunka mažiau nei sekundę, o skaičiavimas vyksta, kol žmogus rašo. Didinkite tik užplūdus robotams.</value></data>
+<data name="Admin.Unit.BotCheck:MaxNumber" xml:space="preserve"><value>bandymai</value></data>
+<data name="Admin.Setting.BotCheck:ChallengeMinutes" xml:space="preserve"><value>Kiek minučių tinka patikros užduotis</value></data>
+<data name="Admin.Help.BotCheck:ChallengeMinutes" xml:space="preserve"><value>Naršyklės gauta patikros užduotis tinka tiek minučių ir tik vieną kartą; pasibaigus laikui naršyklė pati gauna naują.</value></data>
+<data name="Admin.Unit.BotCheck:ChallengeMinutes" xml:space="preserve"><value>minutės</value></data>
 <data name="Admin.Setting.Registration:PendingAccountDays" xml:space="preserve"><value>Kiek dienų laikoma nebaigta registracija</value></data>
 <data name="Admin.Help.Registration:PendingAccountDays" xml:space="preserve"><value>Paskyra, kurios adresas nepatvirtintas arba registracija nebaigta, ištrinama po tiek dienų; tada tuo adresu galima registruotis iš naujo.</value></data>
 <data name="Admin.Unit.Registration:PendingAccountDays" xml:space="preserve"><value>dienos</value></data>

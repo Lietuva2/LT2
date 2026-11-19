@@ -218,6 +218,7 @@ separate secret. Nothing secret is committed; `deploy/secrets/README.md` lists e
 | `DataProtection:KeyEncryptionKey` | Base64 32-byte key wrapping the data-protection keys stored in PostgreSQL; required outside development |
 | `Security:IpHashKey` | Key for hashing client IP addresses in the audit log |
 | `Security:DeviceHashKey` | Web: key of the known browsers' hashes (design 8.20.2), the secret `device_hash_key`; without it no browser is known and the host logs a warning at start |
+| `Security:BotCheckKey` | Web: key of the proof of work's signatures on registration and code requests (design 6.4), the secret `bot_check_key`; without it the host signs with a key of its own that holds on that instance only, and logs a warning at start |
 | `Email:Smtp:*` | SMTP host, port, security, user, password, from address (Mailpit locally; the provider is not chosen yet) |
 | `ReverseProxy:Address` | The proxy whose `X-Forwarded-For`/`-Proto` are believed (design 6.8): a host name resolved through Docker's DNS (again when the proxy's address changes) or an IP address; `caddy` in `compose.yaml`, `LT2_PROXY_HOST` with `compose.shared-proxy.yaml`; empty (the default) believes no forwarding header |
 | `RateLimits:*` | Per-IP limits for code requests, registration and sign-in attempts |
@@ -248,6 +249,7 @@ MP mail (design 8.19) adds:
 | `LT2_MAIL_FROM_MP` | `Email:Mp:FromAddress`: the sender of MP mail, an address of the sending domain. |
 | `LT2_MP_SMTP_HOST`, `LT2_MP_SMTP_PORT`, `LT2_MP_SMTP_SECURITY`, `LT2_MP_SMTP_USERNAME` | `Email:Mp:Smtp`: MP mail's own SMTP account (port 587 and `StartTls` by default); with the host empty MP mail uses the common account (`LT2_SMTP_*`). Its password is the secret `mp_smtp_password`. |
 | `LT2_RATE_MP_MAIL` | Requests per client address to an MP's link pages and token routes in 15 minutes (default 60); only the local `.env` raises it. |
+| `LT2_RATE_BOT_CHALLENGES` | Proof-of-work challenges per client address in 15 minutes (design 6.4; default 60); only the local `.env` raises it. |
 
 and two secrets, `mail_hash_key` (web and worker: the suppression list's keyed hashes, the MPs' link tokens and the members' stop links of design 8.24.1; changing
 it breaks every link already emailed and forgets the suppressed addresses) and `mp_smtp_password` (worker; empty while
@@ -270,7 +272,7 @@ link token. Real hostnames, addresses and paths live only on the server, never i
 
 On a server set up before MP mail (design 8.19), run `sudo python3 deploy/init-secrets.py $LT2_HOME/secrets` once more
 before the first deploy of the new compose file: it adds `mail_hash_key` and `mp_smtp_password` and keeps the rest. The same
-again on a server set up before known browsers (design 8.20.2): it adds `device_hash_key` (web).
+again on a server set up before known browsers (design 8.20.2): it adds `device_hash_key` (web); and before the bot check (design 6.4): it adds `bot_check_key` (web).
 
 What survives a redeploy lives outside the application tree, here `$LT2_HOME` (for example a directory under `/srv`,
 owned by root):

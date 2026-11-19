@@ -5,7 +5,14 @@ namespace Lt2.Identity;
 
 /// <summary>Registration request as the module sees it; validated by the shared contracts first.</summary>
 /// <param name="OfficeInvitation">An MP office member's invitation code in place of an invitation code (design 8.5.3, owner 2026-11-17).</param>
-public sealed record Registration(string Email, string? InvitationCode, string? OfficeInvitation = null);
+/// <param name="BotCheck">The solved proof of work (design 6.4), checked before anything about the address is looked up.</param>
+public sealed record Registration(string Email, string? InvitationCode, string? OfficeInvitation = null, string? BotCheck = null);
+
+/// <summary>
+/// A proof-of-work challenge in the ALTCHA format (design 6.4): the browser finds the number whose SHA-256 with the salt is
+/// <paramref name="Challenge"/>, up to <paramref name="MaxNumber"/>; the server's HMAC of the challenge is <paramref name="Signature"/>.
+/// </summary>
+public sealed record BotChallenge(string Algorithm, string Challenge, int MaxNumber, string Salt, string Signature);
 
 /// <summary>What a person gives once their address is proven (design 6.2), with the terms of use accepted (design 8.22.2).</summary>
 public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAdult, string? InvitationCode, bool AcceptsTerms, string? OfficeInvitation = null);
@@ -197,8 +204,14 @@ public interface IIdentityModule
     /// <summary>Completes the signed-in person's pending registration and makes the account a member.</summary>
     Task<Result<Unit>> CompleteRegistrationAsync(ClaimsPrincipal user, RegistrationCompletion completion, CancellationToken cancellationToken);
 
-    /// <summary>Emails a sign-in code if the address belongs to an account; succeeds either way.</summary>
-    Task<Result<Unit>> RequestSignInCodeAsync(string email, CancellationToken cancellationToken);
+    /// <summary>
+    /// Emails a sign-in code if the address belongs to an account; succeeds either way, but for a missing or wrong proof of work
+    /// (<c>bot-check.failed</c>, design 6.4), which is checked first and says nothing about the address.
+    /// </summary>
+    Task<Result<Unit>> RequestSignInCodeAsync(string email, string? botCheck, CancellationToken cancellationToken);
+
+    /// <summary>A new proof-of-work challenge (design 6.4), or null while <c>BotCheck:Enabled</c> is off.</summary>
+    Task<BotChallenge?> NewBotChallengeAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Signs in with the emailed code under a new session key. A browser signed in to another account ends that session, as

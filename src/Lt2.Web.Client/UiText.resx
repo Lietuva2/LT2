@@ -64,6 +64,7 @@
   <data name="Complete.Confirmed.After" xml:space="preserve"><value>patvirtintas.</value></data>
   <data name="Complete.Submit" xml:space="preserve"><value>Baigti registraciją</value></data>
   <data name="Complete.SignOut" xml:space="preserve"><value>Atsijungti</value></data>
+  <data name="BotCheck.Working" xml:space="preserve"><value>Tikrinama, ar jūs ne robotas…</value></data>
   <data name="Code.Resent" xml:space="preserve"><value>Naujas kodas išsiųstas.</value></data>
   <data name="Passkey.Unsupported" xml:space="preserve"><value>Ši naršyklė nepalaiko prieigos raktų.</value></data>
   <data name="PasskeyStep.Text" xml:space="preserve"><value>Šiam veiksmui reikia prisijungimo prieigos raktu.</value></data>

@@ -48,6 +48,16 @@ code review.
   wrong code are the same whether the address has an account and whether the browser is known. The account page lists
   "Žinomos naršyklės" beside the sessions with "Pamiršti" (`GET|DELETE /me/known-browsers`), at most 20 per account, deleted
   after a year unseen, exported and deleted with the account; `identity.known_device` is withheld from `lt2_readonly`.
+- **Bot check (design 6.2, 6.4).** A proof of work in the ALTCHA protocol, written here (`BotCheckRules`, pure: challenge,
+  `Check`, expiry from the salt's `?expires=`; `Application/BotCheck.cs`: the key, issuing, the single-use insert). Registration
+  and a code request (the resend too) carry it in `botCheck` of the body, checked first in `RegisterHandler` and
+  `RequestCodeHandler` (so for every caller), before anything about the address; one answer, 400 `bot-check.failed`. Not on
+  sign-in by code or passkey, nor on the email change (a signed-in account, its own limits). `GET /api/v1/bot-check/challenge`
+  is no-store, per client address (`RateLimitPolicies.BotChallenge`), 204 while `BotCheck:Enabled` is off. The key is the
+  secret `bot_check_key` (`Security:BotCheckKey`, web only; absent: a key of the instance, warned at start). A used challenge
+  is `identity.bot_check_use` (primary key = the signature, until the challenge's expiry; withheld from `lt2_readonly`),
+  deleted by `MaintenanceHandler`. The script `js/lt2-botcheck.js` keeps nothing in the browser and loads nothing from
+  elsewhere (`BotCheckScriptTests`). Logs say only the outcome name, never the solution.
 - **Changing the email address (design 6.2).** Only a passkey session or a code to the address in use starts it (a staff
   account: its staff passkey, freshly confirmed; the MP's account: a passkey session; `EmailChangeRules.Proof`); the answer to an
   address is the same whether an account has it (that account is told instead, no code); the code to the new address follows

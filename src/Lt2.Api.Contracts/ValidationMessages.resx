@@ -8,6 +8,7 @@
   <data name="Email.TooLong" xml:space="preserve"><value>El. pašto adresas per ilgas.</value></data>
   <data name="Email.Invalid" xml:space="preserve"><value>Patikrinkite el. pašto adresą.</value></data>
   <data name="Invitation.TooLong" xml:space="preserve"><value>Kvietimo kodas per ilgas.</value></data>
+  <data name="BotCheck.TooLong" xml:space="preserve"><value>Patikros atsakymas per ilgas.</value></data>
   <data name="DisplayName.TooLong" xml:space="preserve"><value>Vardas per ilgas: ne daugiau kaip 60 ženklų.</value></data>
   <data name="Adult.Required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
   <data name="Terms.Required" xml:space="preserve"><value>Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.</value></data>

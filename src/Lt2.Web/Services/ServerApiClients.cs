@@ -17,7 +17,7 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
         errors.ToApiResult(await identity.RegisterAsync(Mapping.ToRegistration(request), cancellationToken));
 
     public async Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.RequestSignInCodeAsync(request.Email, cancellationToken));
+        errors.ToApiResult(await identity.RequestSignInCodeAsync(request.Email, request.BotCheck, cancellationToken));
 
     public async Task<ApiResult<SignInResponse>> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default)
     {
@@ -173,7 +173,7 @@ internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor
 internal static class Mapping
 {
     public static Registration ToRegistration(RegisterRequest request) =>
-        new(request.Email, request.InvitationCode, request.OfficeInvitation);
+        new(request.Email, request.InvitationCode, request.OfficeInvitation, request.BotCheck);
 
     public static RegistrationCompletion ToCompletion(CompleteRegistrationRequest request) =>
         new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode, request.AcceptsTerms, request.OfficeInvitation);

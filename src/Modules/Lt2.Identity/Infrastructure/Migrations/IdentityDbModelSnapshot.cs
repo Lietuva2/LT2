@@ -23,6 +23,26 @@ namespace Lt2.Identity.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Lt2.Identity.Domain.BotCheckUse", b =>
+                {
+                    b.Property<string>("Signature")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("signature");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.HasKey("Signature")
+                        .HasName("pk_bot_check_use");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_bot_check_use_expires_at");
+
+                    b.ToTable("bot_check_use", "identity");
+                });
+
             modelBuilder.Entity("Lt2.Identity.Domain.Consent", b =>
                 {
                     b.Property<Guid>("Id")

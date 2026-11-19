@@ -6,7 +6,7 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 
 ## Designed, not built
 
-- 3, 6.2: a bot check at registration (ALTCHA); account verification beyond email.
+- 6.2: account verification beyond email.
 - 5.4: the `notify.email_message` table.
 - 6.4: rate limiting in Caddy (only the application's own limits exist).
 - 6.5: disk encryption, TLS to the database, encrypted backups (none of them in the repository).
@@ -252,7 +252,9 @@ for the lawyer).
   `EmailPart.*`, `EmailRestore.*`), its emails (`EmailTemplates` `EmailChange.*`: the code to the new address, to an
   address that has an account, to the old address, when the old address was put back) and the code to the address in
   use (`EmailProofCode.*`), and the refusals `email.same`, `email.proof-required`, `email.restore-invalid`.
-- 6.2: the urgent summary's passkey messages "Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos
+- 6.2, 6.4: the bot check: its status line "Tikrinama, ar jūs ne robotas…" (`UiText` `BotCheck.Working`), its refusal
+  "Nepavyko patikrinti, ar jūs ne robotas. Bandykite dar kartą." (`ProblemText` `bot-check.failed`), "Patikros atsakymas
+  per ilgas." (`ValidationMessages` `BotCheck.TooLong`) and the settings's passkey messages "Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos
   raktu. …" and "Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. …" (`AppealUi` `Mod.Passkey.*`).
 - 6.5: the positions consent text (`UiText` `PositionConsent.Text`); for a consent to an older text, the account page's
   line "Sutikote su ankstesne šio sutikimo teksto versija. Perskaitykite galiojančią ir patvirtinkite.", "Skaityti

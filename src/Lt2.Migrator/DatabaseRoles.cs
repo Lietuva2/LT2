@@ -80,6 +80,7 @@ public static class DatabaseRoles
         "audit.event",
         "identity.consent", "identity.data_protection_key", "identity.feedback", "identity.invitation", "identity.invitation_daily",
         "identity.known_device",
+        "identity.bot_check_use", // design 6.4: used proof-of-work challenges, random, until their expiry
         "identity.email_change", "identity.email_restore", // design 6.2: addresses an account is moving to or from
         "identity.profile_report", "identity.retired_profile_id",
         "identity.party_support", "identity.politician_link", "identity.politician_token", "identity.profile", "identity.role",

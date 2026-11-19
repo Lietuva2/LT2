@@ -106,6 +106,8 @@ public static class IdentityModule
 
         services.AddHttpContextAccessor();
         services.AddSingleton<DeviceKeys>();
+        services.AddSingleton<BotCheckKey>();
+        services.AddScoped<BotCheck>();
         services.AddScoped<KnownBrowsers>();
         services.AddScoped<SignInCodeIssuer>();
         services.AddScoped<RegisterHandler>();
@@ -250,6 +252,7 @@ internal sealed class IdentityModuleFacade(
     AccountDataHandlers data,
     KnownBrowsers browsers,
     Application.Email.EmailChangeHandlers emailChange,
+    BotCheck proofOfWork,
     SignInManager<User> signIn) : IIdentityModule
 {
     public Task<Result<Unit>> SendEmailProofCodeAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
@@ -270,8 +273,10 @@ internal sealed class IdentityModuleFacade(
     public Task<Result<Unit>> CompleteRegistrationAsync(ClaimsPrincipal user, RegistrationCompletion completion, CancellationToken cancellationToken) =>
         completeRegistration.HandleAsync(user, completion, cancellationToken);
 
-    public Task<Result<Unit>> RequestSignInCodeAsync(string email, CancellationToken cancellationToken) =>
-        requestCode.HandleAsync(email, cancellationToken);
+    public Task<Result<Unit>> RequestSignInCodeAsync(string email, string? botCheck, CancellationToken cancellationToken) =>
+        requestCode.HandleAsync(email, botCheck, cancellationToken);
+
+    public Task<BotChallenge?> NewBotChallengeAsync(CancellationToken cancellationToken) => proofOfWork.NewChallengeAsync(cancellationToken);
 
     public Task<Result<SignInOutcome>> SignInWithCodeAsync(string email, string code, CancellationToken cancellationToken) =>
         codeSignIn.HandleAsync(email, code, cancellationToken);

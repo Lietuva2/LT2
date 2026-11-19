@@ -30,6 +30,9 @@ internal static class RateLimitPolicies
     public const string Registration = "auth-register";
     public const string SignIn = "auth-sign-in";
 
+    /// <summary>Fetching a proof-of-work challenge (design 6.4), per client address: a person needs one or two a visit.</summary>
+    public const string BotChallenge = "bot-challenge";
+
     /// <summary>Registering an organisation, per account (design 8.14.14).</summary>
     public const string RegisterOrganisation = "organisation-register";
 
@@ -98,6 +101,9 @@ internal sealed class RateLimitOptions
     public FixedWindow Registration { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
 
     public FixedWindow SignIn { get; set; } = new() { PermitLimit = 30, WindowSeconds = 15 * 60 };
+
+    /// <summary>A challenge costs the server one hash and costs a visitor's browser a fraction of a second of work; this stops a script asking for many.</summary>
+    public FixedWindow BotChallenge { get; set; } = new() { PermitLimit = 60, WindowSeconds = 15 * 60 };
 
     public FixedWindow RegisterOrganisation { get; set; } = new() { PermitLimit = 5, WindowSeconds = 60 * 60 };
 
@@ -187,6 +193,7 @@ internal static class SecurityServices
             options.AddPolicy(RateLimitPolicies.CodeRequest, context => PerIp(context, Limits(context).CodeRequest));
             options.AddPolicy(RateLimitPolicies.Registration, context => PerIp(context, Limits(context).Registration));
             options.AddPolicy(RateLimitPolicies.SignIn, context => PerIp(context, Limits(context).SignIn));
+            options.AddPolicy(RateLimitPolicies.BotChallenge, context => PerIp(context, Limits(context).BotChallenge));
             options.AddPolicy(RateLimitPolicies.RegisterOrganisation, context => PerAccount(context, Limits(context).RegisterOrganisation));
             options.AddPolicy(RateLimitPolicies.WriteReason, context => PerAccount(context, Limits(context).WriteReason));
             options.AddPolicy(RateLimitPolicies.WriteComment, context => PerAccount(context, Limits(context).WriteComment));

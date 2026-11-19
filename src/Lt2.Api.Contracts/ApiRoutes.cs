@@ -19,6 +19,14 @@ public static class ApiRoutes
         public const string PasskeySignIn = Group + "/passkeys/sign-in";
     }
 
+    public static class BotCheck
+    {
+        public const string Group = Prefix + "/bot-check";
+
+        /// <summary>A proof-of-work challenge (design 6.4): the site's own script fetches it and solves it; 204 while the check is off.</summary>
+        public const string Challenge = Group + "/challenge";
+    }
+
     public static class Me
     {
         public const string Root = Prefix + "/me";

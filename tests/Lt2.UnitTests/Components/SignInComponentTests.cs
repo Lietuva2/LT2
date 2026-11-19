@@ -137,6 +137,161 @@ public sealed class SignInComponentTests : BunitContext
         page.FindAll(".note[role]").ShouldBeEmpty();
     }
 
+    private static readonly ApiProblem BotCheckRefused = new() { Status = 400, Code = "bot-check.failed", Detail = "Nepavyko patikrinti." };
+
+    /// <summary>Design 6.4: the script's work starts when the form is shown, and its solution travels with the request.</summary>
+    [Fact]
+    public void A_code_request_carries_the_solution_the_script_prepared_while_the_form_was_shown()
+    {
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetVoidResult();
+        module.Setup<string?>("take", _ => true).SetResult("SOLVED");
+        var asked = new List<RequestCodeRequest>();
+        _auth.RequestCode = request => { asked.Add(request); return Task.FromResult(ApiResult.Ok()); };
+        var page = Render<SignIn>();
+        module.VerifyInvoke("prepare");
+
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+
+        page.WaitForElement("#code");
+        asked.ShouldHaveSingleItem().BotCheck.ShouldBe("SOLVED");
+        asked[0].Email.ShouldBe(Email);
+        module.Invocations["prepare"].Count.ShouldBe(2, "and the next one is prepared at once, for asking again");
+    }
+
+    [Fact]
+    public void A_registration_carries_the_solution_too()
+    {
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetVoidResult();
+        module.Setup<string?>("take", _ => true).SetResult("SOLVED");
+        var registered = new List<RegisterRequest>();
+        _auth.Register = request => { registered.Add(request); return Task.FromResult(ApiResult.Ok()); };
+        var page = Render<SignIn>();
+        page.FindAll("button.linkish")[0].Click();
+
+        page.Find("#reg-email").Input(Email);
+        page.Find("#reg-invite").Input("BANDYMAS-2026");
+        page.Find("form").Submit();
+
+        page.WaitForElement("#code");
+        registered.ShouldHaveSingleItem().BotCheck.ShouldBe("SOLVED");
+    }
+
+    [Fact]
+    public void Asking_for_the_code_again_carries_a_solution_as_well()
+    {
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetVoidResult();
+        module.Setup<string?>("take", _ => true).SetResult("SOLVED");
+        var asked = new List<RequestCodeRequest>();
+        _auth.RequestCode = request => { asked.Add(request); return Task.FromResult(ApiResult.Ok()); };
+        var page = Render<SignIn>();
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+        page.WaitForElement("#code");
+
+        page.FindAll("button.linkish").Single(b => b.TextContent == Text("Code.Resend")).Click();
+
+        page.WaitForAssertion(() => asked.Count.ShouldBe(2));
+        asked.ShouldAllBe(r => r.BotCheck == "SOLVED");
+    }
+
+    [Fact]
+    public void A_refusal_of_the_proof_alone_is_answered_once_more_with_a_new_one_without_a_word()
+    {
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetVoidResult();
+        module.Setup<string?>("take", _ => true).SetResult("SOLVED");
+        var calls = 0;
+        _auth.RequestCode = _ => Task.FromResult(++calls == 1 ? ApiResult.Fail(BotCheckRefused) : ApiResult.Ok());
+        var page = Render<SignIn>();
+
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+
+        page.WaitForElement("#code");
+        calls.ShouldBe(2);
+        module.Invocations["take"].Count.ShouldBe(2, "the second try takes a new solution");
+        page.FindAll(".note[role=alert]").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_proof_refused_twice_is_told_to_the_person_and_not_tried_a_third_time()
+    {
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetVoidResult();
+        module.Setup<string?>("take", _ => true).SetResult("SOLVED");
+        var calls = 0;
+        _auth.RequestCode = _ => { calls++; return Task.FromResult(ApiResult.Fail(BotCheckRefused)); };
+        var page = Render<SignIn>();
+
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+
+        page.WaitForElement(".note[role=alert]").TextContent.ShouldBe(BotCheckRefused.Detail);
+        calls.ShouldBe(2);
+    }
+
+    [Fact]
+    public void Another_refusal_is_not_answered_with_a_second_try()
+    {
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetVoidResult();
+        module.Setup<string?>("take", _ => true).SetResult("SOLVED");
+        var calls = 0;
+        _auth.RequestCode = _ => { calls++; return Task.FromResult(ApiResult.Fail(new ApiProblem { Status = 429, Code = "rate-limited", Detail = "Per daug." })); };
+        var page = Render<SignIn>();
+
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+
+        page.WaitForElement(".note[role=alert]");
+        calls.ShouldBe(1);
+    }
+
+    [Fact]
+    public void A_status_line_shows_only_when_the_work_takes_longer_than_a_moment_and_is_gone_afterwards()
+    {
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetVoidResult();
+        var take = module.Setup<string?>("take", _ => true);
+        var asked = new List<RequestCodeRequest>();
+        _auth.RequestCode = request => { asked.Add(request); return Task.FromResult(ApiResult.Ok()); };
+        var page = Render<SignIn>();
+        page.FindAll(".note--quiet").ShouldBeEmpty("nothing is said before the button is pressed");
+
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+
+        page.WaitForAssertion(() => page.Find(".note--quiet").TextContent.ShouldBe(Text("BotCheck.Working")), TimeSpan.FromSeconds(3));
+        asked.ShouldBeEmpty("the request waits for the work");
+        take.SetResult("LATE");
+
+        page.WaitForElement("#code");
+        asked.ShouldHaveSingleItem().BotCheck.ShouldBe("LATE");
+        page.FindAll(".note--quiet").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Without_the_script_the_request_goes_without_a_solution_and_the_servers_refusal_is_what_the_person_reads()
+    {
+        // The module cannot be loaded (blocked, old browser): no solution, no crash.
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetException(new Microsoft.JSInterop.JSException("no crypto.subtle"));
+        module.Setup<string?>("take", _ => true).SetException(new Microsoft.JSInterop.JSException("no crypto.subtle"));
+        var asked = new List<RequestCodeRequest>();
+        _auth.RequestCode = request => { asked.Add(request); return Task.FromResult(ApiResult.Fail(BotCheckRefused)); };
+        var page = Render<SignIn>();
+
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+
+        page.WaitForElement(".note[role=alert]").TextContent.ShouldBe(BotCheckRefused.Detail);
+        asked.ShouldAllBe(r => r.BotCheck == null);
+    }
+
     [Fact]
     public void A_request_that_cannot_reach_the_server_shows_the_network_error()
     {
@@ -855,8 +1010,10 @@ public sealed class SignInComponentTests : BunitContext
     {
         public Func<RequestCodeRequest, Task<ApiResult>> RequestCode { get; set; } = _ => Task.FromResult(ApiResult.Ok());
 
+        public Func<RegisterRequest, Task<ApiResult>> Register { get; set; } = _ => Task.FromResult(ApiResult.Ok());
+
         public Task<ApiResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult.Ok());
+            Register(request);
 
         public Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default) =>
             RequestCode(request);
