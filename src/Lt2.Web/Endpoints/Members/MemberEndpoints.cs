@@ -35,6 +35,16 @@ internal static class MemberEndpoints
             .Produces<MyProfileResponse>().ProducesProblem(StatusCodes.Status400BadRequest).ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        // Design 8.25.1 (owner, 2026-11-19): the consent text in force accepted by a person whose profile is on under an earlier one.
+        api.MapPut(ApiEndpoints.Relative(ProfileRoutes.MineConsent), async (ProfileConsentRequest request, ClaimsPrincipal user, HttpContext context, IpHasher ip, IMemberProfiles profiles, ErrorMapper errors, CancellationToken ct) =>
+            {
+                var accepted = await profiles.AcceptConsentAsync(user, request.TextVersion, ip.Hash(context), ct);
+                return accepted.IsSuccess ? Results.NoContent() : errors.ToResult(accepted.Error!);
+            })
+            .WithName("AcceptMyProfileConsent").WithTags("Me").RequireAuthorization(Policies.Member)
+            .WithValidation<ProfileConsentRequest>()
+            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status409Conflict);
+
         api.MapDelete(ApiEndpoints.Relative(ProfileRoutes.MinePublic), async (ClaimsPrincipal user, HttpContext context, IpHasher ip, IMemberProfiles profiles, MyProfileForms forms, ErrorMapper errors, CancellationToken ct) =>
             {
                 // Design 8.22.2: "Viešas profilis" off alone, open behind the terms; the answer is the whole form's state.

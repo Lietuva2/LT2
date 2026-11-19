@@ -30,6 +30,7 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Me.EmailConfirmRequest>, Me.EmailConfirmRequestValidator>();
         services.AddScoped<IValidator<Me.EmailRestoreRequest>, Me.EmailRestoreRequestValidator>();
         services.AddScoped<IValidator<Me.ProfileRequest>, Me.ProfileRequestValidator>();
+        services.AddScoped<IValidator<Me.ProfileConsentRequest>, Me.ProfileConsentRequestValidator>();
         services.AddScoped<IValidator<Me.MemberReportRequest>, Me.MemberReportRequestValidator>();
         services.AddScoped<IValidator<Appeals.PositionRequest>, Appeals.PositionRequestValidator>();
         services.AddScoped<IValidator<Appeals.ReasonRequest>, Appeals.ReasonRequestValidator>();

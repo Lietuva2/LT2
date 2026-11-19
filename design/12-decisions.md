@@ -19,6 +19,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The account page shows the positions consent and its withdrawal for any consent not withdrawn, whatever text it was
   given to ("show any live consent"); a consent to an older text has one line more, with the text in force to read and
   accept there (6.5, 2026-11-19).
+- A public profile switched on under an earlier consent text stays on (the earlier consent covered it); the person is asked
+  once, on the account page where the switch is, by one line and a way to read the text in force and accept it; switching the
+  profile off stays one step; no email, no banner elsewhere (8.25.1, 2026-11-19, "go ahead with the designer's recommendations").
 
 ## 6.2 Sign-in and accounts
 

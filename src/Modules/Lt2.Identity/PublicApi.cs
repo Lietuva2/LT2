@@ -15,6 +15,8 @@ public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAd
 /// this session is), so deleting it needs a session signed in with its staff passkey (design 6.9).
 /// <paramref name="HasPositionConsent"/>: the positions consent to the text in force; <paramref name="OlderPositionConsent"/>:
 /// none to that text, but one to an older text not withdrawn (design 6.5, owner 2026-11-19).
+/// <paramref name="OlderPublicProfileConsent"/>: the public profile is on and no consent to the text in force stands for it, so the
+/// profile (switched on under an earlier text) stays on and the person is asked on the account page (design 8.25.1, owner 2026-11-19).
 /// </summary>
 public sealed record AccountSummary(
     Guid Id,
@@ -33,7 +35,8 @@ public sealed record AccountSummary(
     MpLinkState? Mp = null,
     bool TermsRequired = false,
     bool PasskeySession = false,
-    bool OlderPositionConsent = false);
+    bool OlderPositionConsent = false,
+    bool OlderPublicProfileConsent = false);
 
 /// <summary>
 /// A sign-in's outcome: <paramref name="AccountChanged"/> when the browser was signed in to another account, whose session
@@ -463,6 +466,14 @@ public interface IMemberProfiles
     /// <c>party.profile-off</c>, <c>mp.takes-no-part</c>. An unchanged part is not checked, written or audited.
     /// </summary>
     Task<Result<MyProfileState>> SaveAsync(ClaimsPrincipal user, ProfileForm form, IReadOnlyCollection<string> parties, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.25.1 (owner, 2026-11-19): a person whose profile is on under an earlier consent text accepts the text in force
+    /// (<paramref name="textVersion"/> must be it, <c>profile.consent-outdated</c> otherwise): their earlier consents end and a
+    /// <c>public-profile</c> consent to that version is recorded, audited; nothing else changes. <c>profile.not-public</c> while the
+    /// profile is off; accepting what is accepted already changes nothing.
+    /// </summary>
+    Task<Result<Unit>> AcceptConsentAsync(ClaimsPrincipal user, string textVersion, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>"Viešas profilis" off and nothing else (design 8.25.1): open behind the terms (8.22.2) and under a writing restriction.</summary>
     Task<Result<MyProfileState>> SwitchOffAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);

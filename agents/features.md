@@ -193,6 +193,16 @@ included, navigates to `AccountScreens.ProfileSavedHome` (`/#profilis-issaugotas
 (integration) cover the whole form.
 
 **Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
+- A profile on under an earlier consent text stays on (owner, 2026-11-19; design 8.25.1): `AccountHandlers.MineAsync` sets
+  `AccountSummary.OlderPublicProfileConsent` (the profile is on and `PublicProfileConsents.CurrentAsync` finds no live consent to the
+  text in force), `MeResponse.PublicProfileConsentOutdated` carries it to the person alone, `Hello` hands it to `MyProfile`
+  (`ConsentOutdated`, `ConsentAccepted` re-reads `GET /me`), which shows `#profile-consent-outdated`, "Skaityti galiojantį tekstą"
+  (`#profile-consent-read`) and in place the text, a box and "Sutinku" (`#profile-consent`); a save that switches the profile on or off
+  settles it locally. `PUT /me/profile/consent` (`ProfileConsentRequest`, `MemberEndpoints`, `IMemberProfiles.AcceptConsentAsync`,
+  `ProfileHandlers.AcceptConsentOwnAsync`, behind the terms like any write) refuses another version (`profile.consent-outdated`) and a
+  profile that is off (`profile.not-public`); otherwise under `IdentityLocks.ProfileAsync` it ends the earlier `public-profile`
+  consents, records one to `PublicProfileConsent.TextVersion` and audits `profile.consent-accepted` (no details); accepting twice
+  changes nothing. Tests: `ProfileConsentVersionTests` (integration), `SignInComponentTests` (bUnit).
 - Only by the member's box "Viešas profilis" in the "Profilis" form (`PUT /me/profile`), which is the consent `public-profile`
   (`PublicProfileConsent.TextVersion`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{name-slug}-{id}`
   (a random ten-character id, `ProfileRules.NewId`; the name part from the current display name by `AddressSlugs.Of`,
@@ -380,7 +390,8 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `AppealUi`, `PositionConsent.*` in `UiText`; a consent to an older text counts as none: `CurrentPositionConsent.Of`;
   the account page shows any not withdrawn, `CurrentPositionConsent.Live`, with its withdrawal, and for an older text
   (`MeResponse.PositionConsentOutdated`, owner 2026-11-19) the line `#consent-outdated` and the text in force in place,
-  `PositionConsentForm ForAccount`, accepted through `PUT /me/consents/positions`)
+  `PositionConsentForm ForAccount`, accepted through `PUT /me/consents/positions`; the public-profile consent is asked the same way,
+  below)
   (owner, 2026-11-18; 2026-11-17 for one's own: `AppealRules.CheckEndorsement`, `endorsement.own-reason`,
   `consent.required`; the island disables it on one's own argument from the never-cached answer and asks for the consent in
   place, `PositionConsentForm ForMark`, before a first mark; a merge drops a mark that would land on its giver's own

@@ -184,6 +184,52 @@ internal sealed class ProfileHandlers(
     }
 
     /// <summary>
+    /// The consent text in force accepted by a person whose profile is on under an earlier text (design 8.25.1, owner 2026-11-19):
+    /// the earlier public-profile consents are withdrawn and one to the version in force is recorded, in one transaction; the
+    /// profile, its page and its followers are not touched. Audited without details.
+    /// </summary>
+    public async Task<Result<Unit>> AcceptConsentOwnAsync(ClaimsPrincipal principal, string textVersion, string? ipHash, CancellationToken cancellationToken)
+    {
+        if (principal.UserId() is not { } userId)
+        {
+            return Error.Unauthorized("auth.required");
+        }
+
+        if (textVersion != PublicProfileConsent.TextVersion)
+        {
+            // The page showed an older wording: the person must see the text in force.
+            return Error.Conflict("profile.consent-outdated");
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await IdentityLocks.ProfileAsync(db, userId, cancellationToken);
+        if (await db.Profiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken) is not { IsPending: false } profile)
+        {
+            return Error.Unauthorized("auth.required");
+        }
+
+        if (profile.PublicProfileId is null)
+        {
+            return Error.Conflict("profile.not-public");
+        }
+
+        if (!await PublicProfileConsents.CurrentAsync(db, userId, cancellationToken))
+        {
+            var now = clock.GetUtcNow();
+            await db.Consents
+                .Where(c => c.UserId == userId && c.Kind == PublicProfileConsent.Kind && c.WithdrawnAt == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.WithdrawnAt, now), cancellationToken);
+            db.Consents.Add(new Consent { Id = Ids.New(clock), UserId = userId, Kind = PublicProfileConsent.Kind, TextVersion = PublicProfileConsent.TextVersion, GivenAt = now });
+            await db.SaveChangesAsync(cancellationToken);
+            await events.RecordAsync(transaction.GetDbTransaction(), "profile.consent-accepted", userId, new Actor(userId, Roles.Member, ipHash), null, null, cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    /// <summary>
     /// Switching off (design 8.25.1), in the caller's context and transaction (<paramref name="db"/> tracks
     /// <paramref name="profile"/>): the consent withdrawn, the id retired for good (410), every follow of it ended (no follower
     /// is told). Also used when the account is deleted and when the MP's own account takes the profile over.

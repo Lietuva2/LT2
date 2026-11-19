@@ -32,7 +32,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
   summary job runs and makes nothing; the AI provider is off until configured.
 - 8.14.4: organisations named in the summaries to MPs. 8.14.9: "keep out of summaries" and the automatic check of an
   organisation's website.
-- 8.25.1: asking members again when the public-profile consent text gets a new version.
 
 ## Where the code does not do what a rule says
 
@@ -294,7 +293,12 @@ for the lawyer).
 - 8.22.5, 8.11.5: the link-preview and share-link texts.
 - 8.23.1: the terms "Aptarimas" and "komentaras".
 - 8.24.1: the stop page's texts ("Nebegauti laiškų", its sentence, button and confirmation).
-- 8.25.1: the public-profile consent text (`UiText` `PublicProfile.Consent`).
+- 8.25.1: the public-profile consent text (`UiText` `PublicProfile.Consent`); for a profile on under an earlier text, the
+  account page's line "Sutikote su ankstesne šio teksto versija. Perskaitykite galiojančią ir patvirtinkite.", "Skaityti
+  galiojantį tekstą", "Galiojantis sutikimo tekstas", "Perskaičiau šį tekstą ir sutinku", "Sutinku" and "Sutikimas su
+  galiojančiu tekstu išsaugotas." (`UiText` `PublicProfile.Consent{Outdated,Read,Title,Check,Accept,Accepted}`), and the refusal
+  `profile.not-public`. The consent text's last sentence ("Išsaugodami įjungtą profilį sutinkate su tuo.") reads oddly beside
+  "Sutinku"; for the reader to word.
 - 8.25.9: the party box's sentence (`UiText` `Party.PublicText`), the page's line "Palaikoma partija: …", `Party.Text`.
 - 8.28: the lines' and the steps' texts, "Išsaugoti ir tęsti", "Profilis išsaugotas." (8.28.2, 8.28.3, 8.28.5); "Kur ką
   rasti"'s group names "Meniu" and "Puslapio apačioje" and the line under "Projektai" ("Keturi puslapiai apie tai, ką

@@ -133,6 +133,17 @@ internal sealed class ServerProfilesApi(IMemberProfiles profiles, MyProfileForms
     private async Task<ApiResult<MyProfileResponse>> ReadMineAsync(HttpContext http, CancellationToken cancellationToken) =>
         errors.ToApiResult(await forms.MineAsync(http.User, cancellationToken), x => x);
 
+    public async Task<ApiResult> AcceptConsentAsync(ProfileConsentRequest request, CancellationToken cancellationToken = default)
+    {
+        if (Http is not { } http)
+        {
+            return ApiResult.Fail(errors.ToProblem(SignInRequired));
+        }
+
+        http.Items.Remove(typeof(ServerProfilesApi));
+        return errors.ToApiResult(await profiles.AcceptConsentAsync(http.User, request.TextVersion, ipHasher.Hash(http), cancellationToken));
+    }
+
     public async Task<ApiResult<MyProfileResponse>> SaveAsync(ProfileRequest request, CancellationToken cancellationToken = default)
     {
         if (Http is not { } http)

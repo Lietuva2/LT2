@@ -50,6 +50,13 @@ public sealed record MeResponse
     public bool PositionConsentOutdated { get; init; }
 
     /// <summary>
+    /// Design 8.25.1 (owner, 2026-11-19): the public profile is on and no consent to the text in force stands for it: it was
+    /// switched on under an earlier text and stays on. "Profilis" shows one line and a way to read the text in force and accept it.
+    /// Only the person's own answer says so.
+    /// </summary>
+    public bool PublicProfileConsentOutdated { get; init; }
+
+    /// <summary>
     /// The account holds an activated staff role, in any session. Deleting it needs a session signed in with its staff
     /// passkey, which is when <see cref="ActiveStaffRoles"/> is not empty (design 6.9).
     /// </summary>
