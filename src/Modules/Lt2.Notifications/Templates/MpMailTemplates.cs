@@ -43,7 +43,7 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         var name = model.SignerName.Trim();
         var role = model.SignerRole.Trim();
         blocks.Add(new EmailBlock(name + "\n" + role, EmailLayout.SignatureHtml(name, role)));
-        blocks.AddRange(Closing(model.PreferencesPath ?? (model.Test ? MpMailPaths.Preferences("…") : null), null));
+        blocks.AddRange(Closing(model.PreferencesPath ?? (model.Test ? MpMailPaths.Preferences("…") : null), null, signOff: false));
         return EmailLayout.BuildMp(model.To, (model.Test ? l["Intro.TestSubject"] + " " : "") + model.Subject.Trim(), blocks, EmailLayout.Footer(l, site.Value.Address), Headers(model.UnsubscribePath, null));
     }
 
@@ -306,10 +306,10 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
 
     /// <summary>
     /// What ends every MP email (design 8.19.3, 8.19.5): what the numbers are and are not and the public copy (summaries only),
-    /// then what the system adds, set apart by a rule: the sentence on taking over the profile (the MP's own address) as a short
+    /// then the sign-off "Lietuva 2.0" (not in the introduction letter, whose signer signs it), then below it what the system adds, set apart by a rule: the sentence on taking over the profile (the MP's own address) as a short
     /// lead line and a button, and the preferences link as a quiet link, or a copy's own stop link.
     /// </summary>
-    private IEnumerable<EmailBlock> Closing(string? preferencesPath, string? copyStopPath, string? publicCopyPath = null)
+    private IEnumerable<EmailBlock> Closing(string? preferencesPath, string? copyStopPath, string? publicCopyPath = null, bool signOff = true)
     {
         if (publicCopyPath is not null)
         {
@@ -318,6 +318,11 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
                 l["Digest.NotAPoll"] + "\n" + publicCopy,
                 $"<div style=\"margin:0 0 12px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:6px;background-color:#f8fafc;font-size:14px;line-height:1.5;color:#475569\">{EmailLayout.Encode(l["Digest.NotAPoll"])}</div>"
                 + $"<p style=\"{EmailLayout.ParagraphStyle}\">{EmailLayout.ActionAnchor(Link(publicCopyPath), l["Digest.PublicCopyLabel"])}</p>");
+        }
+
+        if (signOff)
+        {
+            yield return Signature();
         }
 
         if (preferencesPath is not null)
@@ -333,8 +338,6 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             var stop = l.Format("Digest.CopyStop", Link(copyStopPath));
             yield return new EmailBlock(stop, EmailLayout.SystemHtml(null, null, null, stop));
         }
-
-        yield return Signature();
     }
 
     /// <summary>

@@ -200,6 +200,22 @@ public sealed class EmailLookTests
     }
 
     [Fact]
+    public void What_the_system_adds_comes_below_the_signature_and_the_letter_has_no_second_sign_off()
+    {
+        var intro = Introduction();
+        intro.TextBody.ShouldNotContain("\n\nLietuva 2.0\n\n", Case.Sensitive, "the signer signs the letter");
+        intro.TextBody.IndexOf("VšĮ Lietuva 2.0 direktorius", StringComparison.Ordinal).ShouldBeLessThan(intro.TextBody.IndexOf("Keisti suvestinių", StringComparison.Ordinal));
+
+        var summary = Digest().TextBody;
+        var signOff = summary.IndexOf("\n\nLietuva 2.0\n\nKeisti suvestinių", StringComparison.Ordinal);
+        signOff.ShouldBeGreaterThan(summary.IndexOf("Ta pati suvestinė viešai", StringComparison.Ordinal));
+        var html = Digest().HtmlBody!;
+        html.IndexOf(">Ši suvestinė viešai<", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("font-weight:600\">Lietuva 2.0</p>", StringComparison.Ordinal));
+        html.IndexOf("font-weight:600\">Lietuva 2.0</p>", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("Perimti profilį ir atsakyti visiems iš karto</a>", StringComparison.Ordinal));
+        Introduction().HtmlBody!.ShouldNotContain("font-weight:600\">Lietuva 2.0</p>", Case.Sensitive);
+    }
+
+    [Fact]
     public void A_bill_in_a_summary_is_a_card_with_a_linked_heading_the_counts_a_bar_and_the_arguments_per_side()
     {
         var html = Digest().HtmlBody!;

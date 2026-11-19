@@ -38,8 +38,8 @@ XVP-1811 · …
 Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.
 Ta pati suvestinė viešai: https://lietuva2.lt/suvestines/2026-09-21
 
+Lietuva 2.0
+
 Keisti suvestinių dažnumą arba jų atsisakyti: https://lietuva2.lt/suvestines/nustatymai/…
 Prisijungę prie Lietuva 2.0 šiuo adresu galite perimti savo Seimo nario profilį ir atsakyti visiems iš karto: https://lietuva2.lt/prisijungti
-
-Lietuva 2.0
 ```
