@@ -32,13 +32,13 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 - 8.14.4: organisations named in the summaries to MPs. 8.14.9: "keep out of summaries" and the automatic check of an
   organisation's website.
 - 8.25.1: asking members again when the public-profile consent text gets a new version.
-- 8.28: getting started, the whole section, with the start (8.7), "Išsaugoti ir tęsti" (8.11.5) and the profile's one
-  form (8.25.1).
 
 ## Where the code does not do what a rule says
 
 For the owner to decide in each case: fix the code or change the rule.
 
+- 8.28.5 names "a name that is taken" among the refusals of the profile's form; display names are not unique (6.2) and
+  nothing refuses a name for being taken. Remove the example, or make names unique.
 - 8.1: participants were to get one closing email at the final vote; there is no such email, and they hear through
   the follow email about the vote (a first side follows the bill, 8.11.2).
 - 8.1: a record was also to close when a bill is rejected or withdrawn before adoption; the code closes a record only
@@ -252,7 +252,7 @@ for the lawyer).
   when none of the bills shown can stand in the plot; on a narrow screen the table's rows are blocks.
 - 8.26.6: should a periodic job make the public analytics copy?
 
-**8.28 Getting started.** Not built; each is designed as written, "no" names what changes:
+**8.28 Getting started.** Built as designed; "no" names what changes:
 1. Step 2 of the start says that pressing the pressed side again takes it back ("Paspaudę dar kartą, atsiimsite."). It
    is read before the first side, not after: the start goes when the side is taken. If no: a hint beside "Prašau
    balsuoti", for everyone.
@@ -300,7 +300,10 @@ for the lawyer).
 - 8.24.1: the stop page's texts ("Nebegauti laiškų", its sentence, button and confirmation).
 - 8.25.1: the public-profile consent text (`UiText` `PublicProfile.Consent`).
 - 8.25.9: the party box's sentence (`UiText` `Party.PublicText`), the page's line "Palaikoma partija: …", `Party.Text`.
-- 8.28: the lines' and the steps' texts, "Išsaugoti ir tęsti", "Profilis išsaugotas." (8.28.2, 8.28.3, 8.28.5).
+- 8.28: the lines' and the steps' texts, "Išsaugoti ir tęsti", "Profilis išsaugotas." (8.28.2, 8.28.3, 8.28.5); "Kur ką
+  rasti"'s group names "Meniu" and "Puslapio apačioje" and the line under "Projektai" ("Keturi puslapiai apie tai, ką
+  svarsto Seimas:", from the mock-up); the form's "Nieko neišsaugota: pataisykite pažymėtus laukus." and `party.none`,
+  "Pirmiausia pasirinkite, kurią partiją palaikote." (`UiText`, `ProblemText`).
 - Appendix A: the summary email's texts, above all "Iš nurodžiusių, kad palaiko {party}:" with the party's name not
   declined.
 

@@ -30,10 +30,20 @@ Voting with delegation is not designed; do not build towards it.
   Deleting an account or purging a pending one calls `IOutbox.ForgetAsync` in the same transaction.
 
 
-**Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17, 2026-11-19).** The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
+**Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17, 2026-11-19; 8.28.2).** **One list,** `MenuSections.Items`
+(`Lt2.Web.Client/Components`), holds every item of the menu and the footer: its address, its `MenuPlace` (the dropdown of
+"Projektai", the menu's line, the account item, the footer's "Apie" and "Dalyvauti"), and its texts in `UiText`:
+`Menu.{Key}` the name and `Menu.{Key}.Line` the one line that says what the page is. The dropdown, the menu's line, the tab
+row, the footer and "Kur ką rasti" on `/metodika` (`Components/Parliament/WhereToFind`, `#kur-ka-rasti`, 8.28.4) are drawn
+from it; element ids are `nav-{Slug}`, `{Slug}` (tab row), `foot-{Slug}`, `where-{Slug}`. Unit `MenuTests` fails for an item
+without a name or a line. Each dropdown entry shows its line under its name (`.drop__label`, `.drop__desc`; `.drop--desc`, the
+panel as wide as the page under 32rem); the menu's line, the tab row and the footer show names only. The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
 (`/statistika`, design 8.26) and "Prisijungti" or the account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" is
-a `<details>` dropdown (`#projects-menu`, links `#nav-tab-…`, closed by `js/lt2-account.js` like the account item) holding its four
-tabs and is current (`aria-current` on its summary) on them and everything under them (`MenuSections`); the four tabs ("Darbotvarkė",
+one item `div.drop#projects-menu` (owner, 2026-11-19): where the device can hover (`@media (hover: hover) and (pointer: fine)`) the
+link `#nav-projects` to `/darbotvarke` and the panel `#projects-panel` on `:hover` and `:has(:focus-visible)` (Escape sets
+`data-dismissed`, `js/lt2-account.js`); on a touch screen the `<details>` `#projects-touch` (`#nav-projects-touch`) whose open
+state shows the panel beside it (`.drop__touch[open] ~ .drop__panel`), closed by `js/lt2-account.js` like the account item.
+The panel holds its four tabs (links `#nav-tab-…` with their lines) and is current (`aria-current` on its summary) on them and everything under them (`MenuSections`); the four tabs ("Darbotvarkė",
 "Projektai", "Balsavimai", "Suvestinės") are also `<ProjectTabs>` (`#tab-…`) under the heading of `/darbotvarke`, `/projektai`,
 `/seimas/balsavimai`, `/suvestines`. "Balsavimai" is a tab again (owner, 2026-11-19; out from 2026-11-16); the link under the
 agenda's voted list to it stays. A page under a tab (a vote, a summary's date page) has no tab row and no marked dropdown item,
@@ -43,8 +53,7 @@ account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "At
 staff account whose session is not a staff session, "Prisijungti darbuotojo prieigos raktu" to `StaffSessionPage` with the
 page to come back to after the `#`) from `GET /me` when it opens and closes it on Escape, a press outside and focus
 leaving. **No served page holds a member's name or role links**: the header is the same for every member apart from the antiforgery token (`NavigationTests`). The footer, on
-every page (token pages from emails included), holds "Naršyti" (the menu's sections in its order, from `MenuSections.Tabs`,
-`MenuSections.Mps` and `MenuSections.Statistics` with the menu's strings, ids `foot-tab-…`, `foot-mps`, `foot-statistics`,
+every page (token pages from emails included), holds "Naršyti" (the menu's sections in its order, `MenuSections.Browse`, ids `foot-tab-…`, `foot-mps`, `foot-statistics`,
 nothing marked current; owner, 2026-11-19: no scrolling back to the top; the heading awaits a native read), "Apie"
 (Metodika, Moderavimo taisyklės, Naudojimo taisyklės, Privatumas), "Dalyvauti" (Organizacijos, Atsiliepimai), the theme
 switch and the trial line. `/metodika` is called "Metodika".
@@ -60,7 +69,8 @@ one place, `Security/TermsGate` (before authorization, so a new write route is c
 mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes, a
 member's stop link `POST /notices/{token}/stop`, and
 (owner, 2026-11-17) withdrawing a consent: `DELETE /me/profile/public`, `DELETE /me/consents/positions`,
-`DELETE /me/party-support`; giving one again stays refused). The export is a read. The version stays 2026-11-17 until the
+`DELETE /me/party-support`, `DELETE /me/party-support/public`; giving one again stays refused, and so does the "Profilis"
+form, `PUT /me/profile`, even when it only unticks a box). The export is a read. The version stays 2026-11-17 until the
 launch although the text changed while building (owner, 2026-11-17): nobody accepted an earlier one. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
 the invented demonstration members get the consent like their others (`--demo-appeal`, repeatable).
 
@@ -70,27 +80,51 @@ asked after the code, never before. One account per normalised address. Each acc
 verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
 `Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
 code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.
-A member changes the display name on `/paskyra` (`PUT /me/display-name`, `DisplayNameHandlers`; the designer's proposal
-awaiting the owner): the registration's rule (60 characters, empty allowed), refused under a writing restriction (asked of
-Appeals through `IWritingRestrictions`), as often as the member likes (owner, 2026-11-16; `RateLimits:Participation` guards
-against a runaway script), audited without the names, no earlier names kept. Names are read live everywhere, so a
+A member changes the display name with the "Profilis" form (`PUT /me/profile`, `ProfileHandlers.SaveAsync`, design
+8.28.5; the designer's proposal awaiting the owner): the registration's rule (60 characters, empty allowed), refused under a
+writing restriction (asked of Appeals through `IWritingRestrictions`), as often as the member likes (owner, 2026-11-16; the
+form's rate limit guards against a runaway script), audited without the names (`profile.display-name-changed`), no earlier
+names kept. Names are read live everywhere, so a
 change shows beside older arguments too.
 
 **The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
 parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, change it"; `/sveiki` is gone, no redirect).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
-"Profilis" `/paskyra` (level and roles, the display name `MyDisplayName`, "Apie mane" and "Viešas profilis" `MyProfile`, party
-support `MyPartySupport`), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/paskyra/dalyvavimas`
+"Profilis" `/paskyra` (level and roles, then one form, `MyProfile`, below), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/paskyra/dalyvavimas`
 (`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/paskyra/saugumas`
 (passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
 The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
 written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Without a page to
 return to, signing in, a staff session and accepting the terms land on the front page `/` (owner, 2026-11-17); a
-registration just completed lands on "Profilis", the MP's take-over on "Dalyvavimas". Every screen is
+registration just completed lands on "Profilis" with the mark of that visit (`AccountScreens.AfterRegistration`,
+`/paskyra#po-registracijos`, only when `SignInFlow` falls back to it; one begun from a bill's page ends on the bill), the MP's
+take-over on "Dalyvavimas". Every screen is
 `no-store` and carries `<NeedsScript />`; `IslandsBeforeStartTests` walks all four.
 
+**"Profilis", one form (design 8.28.5).** `MyProfile` (`Lt2.Web.Client/Pages`) is one `.sheet` holding one form with one
+button (`#profile-save`): the display name (`#vardas`), "Apie mane" and "Viešas profilis" (`#viesas-profilis`, gone for the MP's
+own account), the party with its consent box and "Rodyti viešame profilyje" (`#party-support`, offered while the form's switch
+is ticked). Each consent is its own box, unticked until ticked, with its text inline before it is given. `GET /me/profile`
+answers the whole form (`MyProfileResponse`: the name, "Apie mane" and its hiding, the public id and address, both consent
+versions in force, `Texts:MaxLength`, the party, the parties to choose from, whether it is shown, `Digest:PartyGroupMinimum`;
+composed by the host's `MyProfileForms` from `IMemberProfiles.MineAsync`, `IMpDirectory.PartiesAsync` and the setting).
+`PUT /me/profile` takes the whole form (`ProfileRequest`: `displayName`, `about`, `public` + `publicConsentVersion`, `party` +
+`partyConsent`, `partyPublic` + `partyPublicConsentVersion`) and saves it whole or not at all (`ProfileHandlers.SaveAsync`):
+`ProfileFormRules.Check` (Identity `Domain`, pure, `ProfileFormRuleTests`) finds every refusal first, each with the request's
+field; an unchanged part is not checked, written or audited (`ProfileFormRules.Changes`), so a writing restriction refuses only a
+changed name or a written text. One refusal answers with its own status and code; several answer 400 `validation`; either way
+`errors` names every refused field (`Error.Refusals`, `Error.All`; `ErrorMapper` keeps a field's own status). What changes is
+written in one transaction with each part's consent and audit entry (`profile.display-name-changed`, `profile.about-changed`,
+`profile.public-on|off`, `party.public-on|off`). The HTTP validator holds only technical ceilings, so the module names every
+field. The separate writes (`PUT /me/display-name`, `PUT /me/party-support`, `PUT /me/party-support/public`) and
+`GET /me/party-support` are gone; the withdrawals stay (`DELETE /me/profile/public`, `PartyWithdrawalEndpoints`:
+`DELETE /me/party-support`, `DELETE /me/party-support/public`). On the visit after a registration (`#po-registracijos`, read
+by the island in the browser, nothing stored) the button reads "Išsaugoti ir tęsti" and a successful save, an empty form
+included, navigates to `AccountScreens.ProfileSavedHome` (`/#profilis-issaugotas`); a refusal stays. `ProfileFormTests`
+(integration) cover the whole form.
+
 **Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
-- Only by the member's switch "Viešas profilis" on "Profilis" (`PUT /me/profile`), which is the consent `public-profile`
+- Only by the member's box "Viešas profilis" in the "Profilis" form (`PUT /me/profile`), which is the consent `public-profile`
   (`PublicProfileConsent.TextVersion`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{name-slug}-{id}`
   (a random ten-character id, `ProfileRules.NewId`; the name part from the current display name by `AddressSlugs.Of`,
   the one slug function MPs' `/p/{slug}` use too; owner, 2026-11-16), indexed, followable, with "Sekėjai: n". The id
@@ -114,10 +148,10 @@ registration just completed lands on "Profilis", the MP's take-over on "Dalyvavi
   organisations, anything written as an organisation or MP, "Sutinku" (the designer's proposal), counts of the person's
   texts, or who follows.
 - **The party on the page (design 8.25.9, owner 2026-11-17).** The party already on "Profilis" (`identity.party_support`,
-  `MyPartySupport`), never a free field, shown as "Palaikoma partija: …" on `/nariai/…` only while the profile is public and
+  the form's party), never a free field, shown as "Palaikoma partija: …" on `/nariai/…` only while the profile is public and
   the box "Rodyti viešame profilyje" is on: its own versioned consent `party-public` (`PartyPublicConsent`, SharedKernel; the
-  form's `PartyPublicLimits.ConsentVersion`), `PUT|DELETE /me/party-support/public` (`PartySupportHandlers.ShowAsync|HideAsync`;
-  the DELETE is on `TermsExemptions.Routes`), read for the page only through `IPublicProfiles.ShownPartyAsync`
+  form's `PartyPublicLimits.ConsentVersion`), given by the form's `partyPublic` (`PartySupportHandlers.GiveShownAsync`),
+  withdrawn by unticking it or `DELETE /me/party-support/public` (`PartySupportHandlers.HideAsync`, on `TermsExemptions.Routes`), read for the page only through `IPublicProfiles.ShownPartyAsync`
   (`MemberProfileResponse.Party`, null otherwise). Unticking, removing or changing the party and switching the profile off
   (`ProfileHandlers.SwitchOffAsync`, also on deletion and take-over) withdraw it at once; switching on again does not bring it
   back. Never in the card, beside a text or in any list; nothing for the MP's own account (`mp.takes-no-part`); the party
@@ -193,8 +227,8 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   restricted. Its forms are not shown to it (design 8.5.4): the islands ask `MyAccountState.IsMpAccountAsync` (the browser's
   `GET /me`, `mp.part` = `mp`, never while prerendering, so the served HTML is the same for every member) and the front
   page's rows `GET /me/bills`'s `mpAccount`; `SidePicker` shows one line to the responses instead, `RecordReasons` the
-  number without "Man svarbu" and no "Rašyti argumentą", `MyAgendaSide` the numbers only; `MyPartySupport` (unless a party
-  is still set), `MyProfile`, `MyOrganisations`'s "Registruoti" and `/organizacijos/nauja`'s form go; `CommentThread` already
+  number without "Man svarbu" and no "Rašyti argumentą", `MyAgendaSide` the numbers only; `MyProfile`'s party part (unless a party
+  is still set) and its public profile part, `MyOrganisations`'s "Registruoti" and `/organizacijos/nauja`'s form go; `CommentThread` already
   hides by `MyComments.MpAccount`. The server's refusal stays the safety net.
 - The only public trace: "Profilį tvarko Seimo narys arba jo biuras" with the date on the profile (`managedSince` of
   `GET /mps/{slug}`). A profile nobody took over says nothing about joining. Who is linked and who the office members are
@@ -439,6 +473,17 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   the shown rows only (`AgendaRules.Asked`; `MyAgendaState` splits them into requests of `MyBillsQuery.MaxNumbers`, sent side by side); "Jūsų projektai" (`MyAgendaPanel`,
   `MyAgendaState.PanelAsync`) lists the followed bills of the whole agenda and last week from `GET /me/follows`
   (`OnTheAgenda`) and asks `/me/bills` about those not shown, 30 a request (`Requests`).
+  **The greeting and the new member's start (design 8.28.3).** `MyStart` (`Lt2.Web.Client/Agenda`, an island) renders the
+  member's `h1#home-title`: "Sveiki" as served and before the island runs, then "Sveiki prisijungę" with the start
+  (`#home-start`: the full steps `.intro-steps.starter__full`, the short `.starter__short` under 54rem, "Kaip tai veikia →" to
+  `/metodika#kaip-tai-veikia`) while `MyAgendaState.ShowsStart` (positions consent not given, not the MP's own account; from
+  the rows' `/me/bills` answer, or `GET /me` through `MyAccountState` when the agenda is empty), else "Sveiki sugrįžę". It
+  follows `MyAgendaState.Changed`, so a first side takes it away without a reload. Step 4 is the same text as "Kaip tai
+  veikia" (`HowItWorks.4.*` in `AppealUi`, which `HowItWorks.razor` reads for its fourth step); the steps name the controls
+  by their own texts (`Agenda.Ask`, `Agenda.For`, `Agenda.Against`, `Reasons.EndorseName`). `MyAgendaPanel` is left out while
+  the start shows and nothing followed is on the agenda. After "Išsaugoti ir tęsti" (8.28.5) the front page's address carries
+  `#profilis-issaugotas` (`AccountScreens.ProfileSavedHome`): `MyStart` says "Profilis išsaugotas." once in a status region and
+  takes the mark out of the address (`history.replaceState`). Tests: unit `MyStartTests`; E2E `StartPageTests`.
   **How a vote went (design 8.18, "The majority"; the owner asked for "Priimta", open in 12-open).** `<VoteMajorityTag>`
   (`Components/Parliament`) shows `AnalyticsRules.SeimasMajority` (the open data has no official outcome) as
   `span.tag.tag--outcome` with `data-majority` (`for` filled, `against` `tag--outline`, `none` also `tag--dashed`;

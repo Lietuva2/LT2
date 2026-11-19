@@ -27,7 +27,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Mano paties argumentas eksportui.")).StatusCode.ShouldBe(HttpStatusCode.Created);
         (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(othersReason.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = "Reformų partija", Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await member.SetPartyAsync("Reformų partija");
 
         using var response = await member.Client.GetAsync(ApiRoutes.Me.Export);
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -75,7 +75,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
             (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             (await member.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Šis argumentas dings su paskyra.")).StatusCode.ShouldBe(HttpStatusCode.Created);
-            (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = "Reformų partija", Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            await member.SetPartyAsync("Reformų partija");
             (await member.RecordAsync(AppealSteps.ThirdBill)).Counts.Against.ShouldBe(2);
 
             using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Prieš ištrynimą." });
@@ -243,7 +243,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         var followed = await rep.RegisterOrganisationAsync();
         (await person.SendAsync(HttpMethod.Put, FollowRoutes.OrganisationOf(followed.Slug))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await person.SendAsync(HttpMethod.Put, FollowRoutes.Notices, new NoticeSettingsRequest { Planned = true, Voted = false, Statements = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await person.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = "Reformų partija", Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await person.SetPartyAsync("Reformų partija");
         (await person.PostAsync(FeedbackRoutes.Send, new FeedbackRequest { Text = "Atsiliepimas, į kurį galima atsakyti.", PagePath = "/paskyra", MayReply = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var own = await person.RegisterOrganisationAsync();
         await person.PublishStatementAsync(AppealSteps.SecondBill, own.Slug, "remarks", "Organizacijos pastabos, kurių rašytojas išnyks.");

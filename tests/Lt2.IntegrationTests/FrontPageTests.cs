@@ -169,7 +169,9 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         await Database.PlanAsync(AppealSteps.SecondBill, ReasonsToComeSteps.VilniusToday().AddDays(2));
         var (first, firstEmail) = await Factory.MemberAsync("Pirmoji Narė");
         using var _f = first;
-        var (second, secondEmail) = await Factory.MemberAsync("Antrasis Narys");
+        // Design 8.28.7: the second has never taken a side (no positions consent), so the browser shows them the start; the
+        // page as served is the same for both.
+        var (second, secondEmail) = await Factory.MemberAsync("Antrasis Narys", consent: false);
         using var _s = second;
         try
         {
@@ -186,7 +188,9 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
 
 
             // The proof that the sweep reads the right page: the member's version, with the bill and the islands' places.
-            WebUtility.HtmlDecode(firstPage).ShouldContain("Sveiki sugrįžę");
+            // Design 8.28.3: the served greeting is "Sveiki" for every member; the browser completes it.
+            WebUtility.HtmlDecode(firstPage).ShouldMatch("<h1 id=\"home-title\"[^>]*>Sveiki</h1>");
+            firstPage.ShouldNotContain("id=\"home-start\"", customMessage: "the start is filled in the browser only");
             firstPage.ShouldMatch("id=\"agenda-\\d{4}-\\d{2}-\\d{2}-" + AppealSteps.SecondBill + "\"");
             firstPage.ShouldNotContain("id=\"home-head\"", customMessage: "no introduction for a member");
             Frameless(firstPage).ShouldBe(Frameless(secondPage), "the same page for every member, apart from the frame");
@@ -240,10 +244,11 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
 
         // Owner, 2026-11-19: no row of links under the agenda ("Visi projektai", the summaries, the MPs); the footer repeats
         // the menu's sections instead (design 8.21, NavigationTests).
-        html.ShouldNotContain("id=\"home-more\"");
-        html.ShouldNotContain("Visi projektai");
-        html.ShouldNotContain("Suvestinės Seimo nariams");
+        // The menu's dropdown says "Visi projektai, kurių…" on every page (design 8.28.2): the page's own part is read.
         var main = html[html.IndexOf("<main", StringComparison.Ordinal)..html.IndexOf("</main>", StringComparison.Ordinal)];
+        main.ShouldNotContain("id=\"home-more\"");
+        main.ShouldNotContain("Visi projektai");
+        main.ShouldNotContain("Suvestinės Seimo nariams");
         main.ShouldNotContain("href=\"/suvestines\"", customMessage: "the summaries are reached from the menu and the footer");
 
         // Design 8.15: "Kas yra riba?" once, beside the note under the timeline, with the number that holds now; none per row.

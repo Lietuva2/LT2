@@ -4,8 +4,9 @@
 @inherits AccountScreenBase
 
 @* "Dalyvavimas" (design 8.21): the MP part (design 8.5), the organisations the person represents (design 8.14.14), the personal
-   invitation code (design 6.2, #my-invitation) and the staff part: a granted role's activation, the staff links in a staff
-   session, or in their place the way to the staff passkey (design 6.2), which comes back to this screen. *@
+   invitation code (design 6.2, #my-invitation) and the staff part: a granted role's activation and, for a staff account whose
+   session is not a staff session, the way to the staff passkey (design 6.2), which comes back to this screen. The staff
+   screens ("Moderavimas", "Nustatymai") are reached from the account item only (owner, 2026-11-19). *@
 @if (Me is null)
 {
     <p class="small">@L["Loading"]</p>
@@ -42,20 +43,9 @@ else
             </section>
         }
 
-        @if (Me.ActiveStaffRoles.Count > 0)
+        @if (Me.StaffAccount && Me.ActiveStaffRoles.Count == 0)
         {
-            <nav class="row" aria-label="@L["Staff.Nav"]" id="staff-links">
-                <a class="btn btn--plain" href="/moderavimas">@L["Staff.Moderation"]</a>
-                @if (Me.ActiveStaffRoles.Contains("administrator"))
-                {
-                    <a class="btn btn--plain" href="/administravimas/nustatymai">@L["Staff.Settings"]</a>
-                }
-            </nav>
-        }
-        else if (Me.StaffAccount)
-        {
-            @* Design 6.2 (owner, 2026-11-16): in the place of the staff links, the way to a staff session without signing out, in
-               place (owner, 2026-11-17). *@
+            @* Design 6.2 (owner, 2026-11-16): the way to a staff session without signing out, in place (owner, 2026-11-17). *@
             <p class="note note--quiet" id="staff-key-note"><span>@L["Staff.KeyText"]</span></p>
             <PasskeyStep Staff="true" Account="Me" IdPrefix="staff-key-" />
         }

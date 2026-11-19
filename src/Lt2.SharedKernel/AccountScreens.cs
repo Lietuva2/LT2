@@ -48,6 +48,18 @@ public static class AccountScreens
     /// <summary>The MP part of a linked account (design 8.5.4).</summary>
     public const string MpLink = Taking + "#mp-link";
 
+    /// <summary>
+    /// "Profilis" on the visit that follows a registration just completed (design 8.28.5): the mark after <c>#</c> makes its
+    /// button "Išsaugoti ir tęsti", which saves and opens <see cref="ProfileSavedHome"/>. Nothing is stored.
+    /// </summary>
+    public const string AfterRegistration = Profile + "#po-registracijos";
+
+    /// <summary>
+    /// The front page after "Išsaugoti ir tęsti" (design 8.28.5): it shows "Profilis išsaugotas." once and takes the mark out
+    /// of the address. Nothing is stored.
+    /// </summary>
+    public const string ProfileSavedHome = "/#profilis-issaugotas";
+
     /// <summary>The four screens in their order.</summary>
     public static readonly IReadOnlyList<string> All = [Profile, Follows, Taking, Security];
 }

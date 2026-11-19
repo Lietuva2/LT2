@@ -87,33 +87,40 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         using var visitor = NewBrowser();
 
         // Owner, 2026-11-17: "Projektai" is a dropdown of its tabs, a disclosure that opens without script; 2026-11-19:
-        // "Balsavimai" is one of them again, the third.
+        // "Balsavimai" is one of them again, the third. Design 8.28.2: each entry shows its line under its name, for everyone.
         var agenda = HeaderOf(await visitor.Client.GetStringAsync("/darbotvarke"));
-        agenda.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
-        WebUtility.HtmlDecode(agenda).ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-darbotvarke\" aria-current=\"page\">Darbotvarkė</a>");
-        agenda.ShouldContain("<a href=\"/projektai\" id=\"nav-tab-projektai\">Projektai</a>");
-        agenda.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\">Balsavimai</a>");
-        WebUtility.HtmlDecode(agenda).ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-suvestines\">Suvestinės</a>");
+        // Owner, 2026-11-19: where the device can hover, "Projektai" is a link to the agenda with the panel on hover; on a touch
+        // screen a disclosure beside the same panel (CSS chooses).
+        agenda.ShouldContain("<div class=\"drop drop--desc\" id=\"projects-menu\" data-nav-hover>");
+        agenda.ShouldContain("<details class=\"drop__touch\" id=\"projects-touch\" data-nav-menu>");
+        agenda.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects-touch\" aria-current=\"true\">Projektai</summary>");
+        agenda.ShouldContain("<div class=\"drop__panel drop__panel--start drop__panel--desc\" id=\"projects-panel\">");
+        agenda.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>");
+        var entries = WebUtility.HtmlDecode(agenda);
+        entries.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-darbotvarke\" aria-current=\"page\"><span class=\"drop__label\">Darbotvarkė</span><span class=\"drop__desc\">Ką Seimas planuoja svarstyti artimiausiomis dienomis.</span></a>");
+        entries.ShouldContain("<a href=\"/projektai\" id=\"nav-tab-projektai\"><span class=\"drop__label\">Projektai</span><span class=\"drop__desc\">Visi projektai, kurių Seimas dar nebaigė svarstyti.</span></a>");
+        entries.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\"><span class=\"drop__label\">Balsavimai</span><span class=\"drop__desc\">Kaip Seimas balsavo: visi balsavimai nuo naujausio.</span></a>");
+        entries.ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-suvestines\"><span class=\"drop__label\">Suvestinės</span><span class=\"drop__desc\">Ką apie dalyvių prašymus sužino Seimo nariai.</span></a>");
         Regex.Matches(agenda, "id=\"nav-tab-([a-z-]+)\"").Select(m => m.Groups[1].Value)
             .ShouldBe(["darbotvarke", "projektai", "seimas-balsavimai", "suvestines"]);
         agenda.ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\">Seimo nariai</a>");
         agenda.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\">Statistika</a>");
         agenda.ShouldContain("<a href=\"/prisijungti\" id=\"nav-sign-in\">Prisijungti</a>");
-        Regex.Count(agenda, "<a ").ShouldBe(8, "the logo, the four tabs in the dropdown and three items");
+        Regex.Count(agenda, "<a ").ShouldBe(9, "the logo, Projektai, the four tabs in the dropdown and three items");
         agenda.ShouldNotContain("Kaip skaičiuojama");
         agenda.ShouldNotContain("data-theme-switch", customMessage: "the theme switch is in the footer");
 
         HeaderOf(await visitor.Client.GetStringAsync("/seimas/XVP-0412"))
-            .ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
+            .ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>");
         var votes = HeaderOf(await visitor.Client.GetStringAsync("/seimas/balsavimai"));
-        votes.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
-        votes.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\" aria-current=\"page\">Balsavimai</a>");
+        votes.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>");
+        votes.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\" aria-current=\"page\"><span class=\"drop__label\">Balsavimai</span>");
         Regex.Count(votes, "aria-current=\"page\"").ShouldBe(1);
         HeaderOf(await visitor.Client.GetStringAsync("/seimo-nariai"))
             .ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\" aria-current=\"page\">Seimo nariai</a>");
         var statistics = HeaderOf(await visitor.Client.GetStringAsync("/statistika"));
         statistics.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\" aria-current=\"page\">Statistika</a>");
-        statistics.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\">Projektai</summary>");
+        statistics.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\">Projektai</a>");
         var methodology = HeaderOf(await visitor.Client.GetStringAsync("/metodika"));
         methodology.ShouldNotContain("aria-current");
     }
@@ -137,6 +144,42 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         row.Value.ShouldContain($"id=\"{tab}\" aria-current=\"page\"");
         html.IndexOf("<h1", StringComparison.Ordinal).ShouldBeLessThan(row.Index, "under the page's heading");
     }
+    /// <summary>
+    /// Design 8.28.4: "Kur ką rasti" under the four steps of <c>/metodika</c> lists exactly the items of the menu and the footer
+    /// (the menu's, then the footer's own), each with its line and each name a link, and each link leads to its page.
+    /// </summary>
+    [Fact]
+    public async Task Kur_ka_rasti_lists_exactly_the_items_of_the_menu_and_the_footer_and_each_link_leads_to_its_page()
+    {
+        using var visitor = NewBrowser();
+        var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/metodika"));
+
+        var part = Regex.Match(html, "<section class=\"stack\" aria-labelledby=\"where-title\" id=\"kur-ka-rasti\">.*?</section>", RegexOptions.Singleline);
+        part.Success.ShouldBeTrue("the part is on the page");
+        html.IndexOf("id=\"kaip-tai-veikia\"", StringComparison.Ordinal).ShouldBeLessThan(part.Index, "under the four steps");
+        part.Value.ShouldContain("<h2 id=\"where-title\">Kur ką rasti</h2>");
+        var links = Regex.Matches(part.Value, "<a href=\"([^\"]+)\" id=\"where-[a-z-]+\">([^<]+)</a></dt>\\s*<dd>([^<]+)</dd>")
+            .Select(m => (Path: m.Groups[1].Value, Name: m.Groups[2].Value, Line: m.Groups[3].Value)).ToList();
+        links.Select(l => l.Path).ShouldBe(
+        [
+            "/darbotvarke", "/projektai", "/seimas/balsavimai", "/suvestines", "/seimo-nariai", "/statistika", "/paskyra",
+            "/metodika", "/moderavimo-taisykles", "/taisykles", "/privatumas", "/organizacijos", "/atsiliepimai",
+        ]);
+        links.Select(l => l.Path).Where(p => p != "/paskyra").ShouldBe(FooterLinks, "the footer's links, the account item besides");
+        links.ShouldContain(("/seimo-nariai", "Seimo nariai", "Kiekvieno Seimo nario pareigos, balsavimai ir atsakymai."));
+        links.ShouldContain(("/statistika", "Statistika", "Kiek projektų sulaukė dalyvių ir kur jų dauguma sutampa su Seimo dauguma."));
+        links.ShouldContain(("/paskyra", "Paskyra", "Jūsų profilis, sekami projektai, laiškai ir duomenys."));
+        Regex.Count(part.Value, "<dt class=\"where__sub\">").ShouldBe(4, "the four entries of Projektai, indented");
+
+        foreach (var (path, _, _) in links)
+        {
+            using var response = await visitor.Client.GetAsync(path);
+            // The account item sends a visitor to sign in and back (design 8.21); every other page answers itself.
+            var expected = path == "/paskyra" ? new[] { HttpStatusCode.OK, HttpStatusCode.Redirect, HttpStatusCode.Found } : [HttpStatusCode.OK];
+            response.StatusCode.ShouldBeOneOf(expected, path);
+        }
+    }
+
     [Fact]
     public async Task The_methodology_page_is_called_metodika()
     {

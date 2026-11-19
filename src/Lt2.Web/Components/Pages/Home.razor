@@ -15,7 +15,8 @@
 @* The front page (design 8.7, reworked 2026-11-15: variant A, with the member's panel of variant C; the mockup is in
    design/ui/pradzia.html and pradzia-narys.html). The page is the agenda with what a person can do about it, built from the one public agenda
    answer kept in memory for a minute (FrontPageAgenda). A visitor first gets the introduction ("Kaip tai veikia") and
-   the links to register or sign in, never a form; a member gets "Sveiki sugrįžę" and "Jūsų projektai". Everything that
+   the links to register or sign in, never a form; a member gets the greeting, the new member's start (design 8.28.3) and
+   "Jūsų projektai". Everything that
    is a member's own (the panel, the marks and actions in the rows) is an island filled in the browser from their own
    answers, so the server renders the same page for every member and nothing per person is in it. *@
 <PageTitle>Lietuva 2.0</PageTitle>
@@ -24,10 +25,9 @@
 
 <AuthorizeView>
     <Authorized>
-        <div class="stack stack--tight" id="home-welcome">
-            <h1 id="home-title" class="home-h1-s">@T["Home.Welcome"]</h1>
-            <Lt2.Web.Client.Components.NeedsScript />
-        </div>
+        @* Design 8.28.3: the greeting ("Sveiki" as served, completed in the browser) and, for a member who has never taken a
+           side, the start on the ground between the greeting and the agenda, both from the member's own answer. *@
+        <MyStart Numbers="_numbers" Sending="@_sending" @rendermode="InteractiveWebAssembly" />
         <MyAgendaPanel Numbers="_numbers" @rendermode="InteractiveWebAssembly" />
     </Authorized>
     <NotAuthorized>

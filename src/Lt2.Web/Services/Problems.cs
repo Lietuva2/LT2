@@ -30,28 +30,49 @@ internal sealed class ErrorMapper(IStringLocalizer<ProblemText> l)
     public ApiProblem ToProblem(Error error)
     {
         var status = StatusOf(error);
-        // A rule whose number is a setting says the number that holds now (for example the length of an argument).
-        var key = error.MessageKey ?? error.Code;
-        var detail = error.Numbers.Count > 0
-            ? l[key, error.Numbers.Select(n => (object)Lt2.Web.Client.Display.Number(n)).ToArray()].Value
-            : l[key].Value;
+        var detail = MessageOf(error);
+
+        // A form saved whole or not at all (design 8.28.5) names every refused field, each with its own reason.
+        var errors = error.Refusals.Count > 0
+            ? error.Refusals.GroupBy(r => r.Field ?? "").ToDictionary(g => g.Key, g => g.Select(MessageOf).ToArray())
+            : error.Field is null ? null : new Dictionary<string, string[]> { [error.Field] = [detail] };
         return new ApiProblem
         {
             Status = status,
             Title = l[$"Title.{status}"],
             Detail = detail,
             Code = error.Code,
-            Errors = error.Field is null ? null : new Dictionary<string, string[]> { [error.Field] = [detail] },
+            Errors = errors,
         };
+    }
+
+    /// <summary>The error's message; a rule whose number is a setting says the number that holds now (for example a length).</summary>
+    private string MessageOf(Error error)
+    {
+        var key = error.MessageKey ?? error.Code;
+        return error.Numbers.Count > 0
+            ? l[key, error.Numbers.Select(n => (object)Lt2.Web.Client.Display.Number(n)).ToArray()].Value
+            : l[key].Value;
     }
 
     public IResult ToResult(Error error)
     {
         var problem = ToProblem(error);
         var extensions = new Dictionary<string, object?> { ["code"] = problem.Code };
-        return problem.Errors is null
-            ? TypedResults.Problem(statusCode: problem.Status, title: problem.Title, detail: problem.Detail, extensions: extensions)
-            : TypedResults.ValidationProblem(problem.Errors, detail: problem.Detail, title: problem.Title, extensions: extensions);
+        if (problem.Errors is null)
+        {
+            return TypedResults.Problem(statusCode: problem.Status, title: problem.Title, detail: problem.Detail, extensions: extensions);
+        }
+
+        if (problem.Status == StatusCodes.Status400BadRequest)
+        {
+            return TypedResults.ValidationProblem(problem.Errors, detail: problem.Detail, title: problem.Title, extensions: extensions);
+        }
+
+        // A field's refusal that is not a validation (a writing restriction, an out-of-date consent): its own status, the field named.
+        var details = new HttpValidationProblemDetails(problem.Errors) { Status = problem.Status, Title = problem.Title, Detail = problem.Detail };
+        details.Extensions["code"] = problem.Code;
+        return TypedResults.Problem(details);
     }
 
     public IResult ValidationFailed(IDictionary<string, string[]> errors) =>

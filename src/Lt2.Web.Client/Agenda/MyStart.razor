@@ -1,0 +1,103 @@
+@inherits InteractiveBase<AppealUi>
+@implements IDisposable
+@inject MyAgendaState State
+@inject IJSRuntime JS
+
+@* The member's greeting and the new member's start on the front page (design 8.28.3). Served (prerendered), before the
+   island starts and without script, the title is "Sveiki" for every member, with nothing else: the page's HTML is the same
+   whether a member sees the start or not. Once the member's own answer is read in the browser (MyAgendaState: /me/bills for
+   the rows shown, GET /me when the agenda is empty) the title is completed, "Sveiki prisijungę" for a member who has never
+   taken a side (the positions consent not given) and "Sveiki sugrįžę" for everyone else, and the start is shown to the first.
+   It goes away by itself when the member takes a first side in a row (MyAgendaState.Changed), without a reload; it has no
+   button to close it and nothing is stored. The full steps are the visitor's numbered steps; the short ones, one line a
+   step, are shown under 54rem (CSS, no script). The controls' names in the steps are the controls' own texts.
+
+   Design 8.28.5: after "Išsaugoti ir tęsti" on "Profilis" the address carries #profilis-issaugotas: "Profilis išsaugotas."
+   is said once, above the start, and the mark is taken out of the address (nothing stored), so a reload does not say it
+   again. *@
+<div class="stack stack--tight" id="home-welcome">
+    <h1 id="home-title" class="home-h1-s">@Greeting</h1>
+    <NeedsScript />
+    <div class="live" role="status">
+        @if (_saved)
+        {
+            <p class="note note--quiet" id="home-profile-saved">@L["Start.Saved"]</p>
+        }
+    </div>
+</div>
+@if (_answer is { } answer && MyAgendaState.ShowsStart(answer))
+{
+    <section class="stack starter" aria-labelledby="h-starter" id="home-start">
+        <h2 id="h-starter">@L["Start.Title"]</h2>
+        <ol class="intro-steps starter__full" id="home-start-full">
+            <li><h3>@L["Start.1.Title"]</h3><p>@L["Start.1.Text"]</p></li>
+            <li><h3>@L["Start.2.Title"]</h3><p>@L.Format("Start.2.Text", L["Agenda.Ask"], L["Agenda.For"], L["Agenda.Against"])</p></li>
+            <li><h3>@L["Start.3.Title"]</h3><p>@L.Format("Start.3.Text", L["Reasons.EndorseName"])</p></li>
+            @* The fourth step of "Kaip tai veikia" (design 8.7), the same text; while nothing is sent it says so. *@
+            <li><h3>@L["HowItWorks.4.Title"]</h3><p>@L["HowItWorks.4.Text"]@(Sending == "off" ? " " + L["HowItWorks.4.Trial"] : "")</p></li>
+        </ol>
+        <ol class="starter__short" id="home-start-short">
+            <li>@L["Start.1.Short"]</li>
+            <li>@L.Format("Start.2.Short", L["Agenda.For"], L["Agenda.Against"])</li>
+            <li>@L["Start.3.Short"]</li>
+            <li>@L["Start.4.Short"]</li>
+        </ol>
+        <p><a href="/metodika#kaip-tai-veikia" id="home-start-how">@L["Start.How"]</a></p>
+    </section>
+}
+
+@code {
+    /// <summary>The address mark that says the profile was just saved (design 8.28.5).</summary>
+    private const string SavedMark = "#profilis-issaugotas";
+
+    private MyAgendaAnswer? _answer;
+    private bool _saved;
+
+    /// <summary>Every bill the page shows (the rows ask with the same list, so the page asks once).</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    /// <summary>Sending as it is now (design 8.19.1): step 4 says that nothing is sent only while that is so.</summary>
+    [Parameter] public string Sending { get; set; } = "off";
+
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    /// <summary>"Sveiki" until the member's own answer is read, then completed (design 8.28.3).</summary>
+    private string Greeting => _answer is null ? L["Start.Greeting"] : MyAgendaState.ShowsStart(_answer) ? L["Start.Greeting.New"] : L["Start.Greeting.Back"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: the server renders "Sveiki" and no start for every member.
+        if (!RendererInfo.IsInteractive || !await IsSignedInAsync())
+        {
+            return;
+        }
+
+        State.Changed += OnChanged;
+        _answer = await State.MineAsync(Numbers);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        var uri = new Uri(Navigation.Uri);
+        if (uri.Fragment == SavedMark)
+        {
+            // Said once: the mark leaves the address, so a reload or a return by Back does not say it again.
+            await JS.InvokeVoidAsync("history.replaceState", null, "", uri.GetLeftPart(UriPartial.Query));
+            _saved = true;
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose() => State.Changed -= OnChanged;
+
+    private void OnChanged() => _ = InvokeAsync(async () =>
+    {
+        _answer = await State.MineAsync(Numbers) ?? _answer;
+        StateHasChanged();
+    });
+}

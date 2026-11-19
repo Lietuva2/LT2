@@ -34,7 +34,6 @@ internal static class ApiEndpoints
 
         GetMeEndpoint.Map(api);
         CompleteRegistrationEndpoint.Map(api);
-        ChangeDisplayNameEndpoint.Map(api);
         ActivateRoleEndpoint.Map(api);
         ConfirmPasskeyEndpoint.Map(api);
         StartStaffSessionEndpoint.Map(api);
@@ -45,9 +44,7 @@ internal static class ApiEndpoints
         GivePositionConsentEndpoint.Map(api);
         AcceptTermsEndpoint.Map(api);
         WithdrawPositionConsentEndpoint.Map(api);
-        GetPartySupportEndpoint.Map(api);
-        SetPartySupportEndpoint.Map(api);
-        PartyPublicEndpoint.Map(api);
+        PartyWithdrawalEndpoints.Map(api);
         ExportEndpoint.Map(api);
         DeleteAccountEndpoint.Map(api);
 

@@ -12,21 +12,31 @@
 <header class="page top">
     <a class="top__brand" href="/"><Logo /><span class="top__name">Lietuva 2.0</span></a>
     <nav class="top__nav" aria-label="@T["Nav.Label"]">
-        @* Like the account item: a disclosure that opens without script; js/lt2-account.js closes it on Escape, a press
-           outside and focus leaving. *@
-        <details class="drop" id="projects-menu" data-nav-menu>
-            <summary class="drop__toggle" id="nav-projects" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</summary>
-            <div class="drop__panel drop__panel--start">
+        @* Design 8.21 (owner, 2026-11-19): "Projektai" is two things in one place, and CSS chooses by the device, with no script.
+           Where the device can hover (a mouse), it is a link to the agenda (ProjectsHome) and its panel shows on hover and while
+           focus is inside it, so the keyboard reaches the entries; js/lt2-account.js lets Escape close it. Where it cannot (a
+           touch screen), it is a disclosure like the account item, opened by a press; the script closes it on Escape, a press
+           outside and focus leaving. The one panel follows either. Design 8.28.2: every entry shows its line under its name,
+           for everyone; under 32rem the panel is as wide as the page. *@
+        <div class="drop drop--desc" id="projects-menu" data-nav-hover>
+            <a class="drop__toggle drop__link" href="@MenuSections.ProjectsHome" id="nav-projects" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</a>
+            <details class="drop__touch" id="projects-touch" data-nav-menu>
+                <summary class="drop__toggle" id="nav-projects-touch" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</summary>
+            </details>
+            <div class="drop__panel drop__panel--start drop__panel--desc" id="projects-panel">
                 <ul class="drop__links">
-                    @foreach (var (_, path, key) in MenuSections.Tabs)
+                    @foreach (var item in MenuSections.Tabs)
                     {
-                        <li><a href="@path" id="@("nav-tab-" + path.TrimStart('/').Replace('/', '-'))" aria-current="@("/" + Path == path ? "page" : null)">@U[key]</a></li>
+                        <li><a href="@item.Path" id="@("nav-" + item.Slug)" aria-current="@("/" + Path == item.Path ? "page" : null)"><span class="drop__label">@U[item.NameKey]</span><span class="drop__desc">@U[item.LineKey]</span></a></li>
                     }
                 </ul>
             </div>
-        </details>
-        <a href="@MenuSections.Mps" id="nav-mps" aria-current="@Current(MenuSections.InMps(Path), "seimo-nariai")">@T["Nav.Mps"]</a>
-        <a href="@MenuSections.Statistics" id="nav-statistics" aria-current="@(MenuSections.InStatistics(Path) ? "page" : null)">@T["Nav.Statistics"]</a>
+        </div>
+        @* The menu's one line shows no lines (it stays one line from 340 px); they are read in "Kur ką rasti". *@
+        @foreach (var item in MenuSections.In(MenuPlace.Menu))
+        {
+            <a href="@item.Path" id="@("nav-" + item.Slug)" aria-current="@MenuSections.CurrentMark(item, Path)">@U[item.NameKey]</a>
+        }
         <AuthorizeView>
             <Authorized>
                 <AccountMenu />
@@ -70,7 +80,7 @@
     }
 </main>
 
-@* Design 8.21, 8.22: on every page, the token pages opened from emails included; plain links, no script. The first group
+@* Design 8.21, 8.22, 8.28.2: on every page, the token pages opened from emails included; plain links, no script. The first group
    repeats the menu's sections in the menu's order, so the end of a long page needs no scrolling back to the top (owner,
    2026-11-19); like the footer's other links it marks nothing current, the menu does that. *@
 <footer class="page foot stack">
@@ -78,28 +88,28 @@
         <section class="foot__group" aria-labelledby="foot-browse">
             <h2 class="label" id="foot-browse">@T["Footer.Browse"]</h2>
             <ul>
-                @foreach (var (_, path, key) in MenuSections.Tabs)
+                @foreach (var item in MenuSections.Browse)
                 {
-                    <li><a href="@path" id="@("foot-tab-" + path.TrimStart('/').Replace('/', '-'))">@U[key]</a></li>
+                    <li><a href="@item.Path" id="@("foot-" + item.Slug)">@U[item.NameKey]</a></li>
                 }
-                <li><a href="@MenuSections.Mps" id="foot-mps">@T["Nav.Mps"]</a></li>
-                <li><a href="@MenuSections.Statistics" id="foot-statistics">@T["Nav.Statistics"]</a></li>
             </ul>
         </section>
         <section class="foot__group" aria-labelledby="foot-about">
             <h2 class="label" id="foot-about">@T["Footer.About"]</h2>
             <ul>
-                <li><a href="/metodika" id="foot-methodology">@T["Footer.Methodology"]</a></li>
-                <li><a href="/moderavimo-taisykles" id="foot-moderation-rules">@T["Footer.ModerationRules"]</a></li>
-                <li><a href="/taisykles" id="foot-terms">@T["Footer.Terms"]</a></li>
-                <li><a href="/privatumas" id="foot-privacy">@T["Footer.Privacy"]</a></li>
+                @foreach (var item in MenuSections.In(MenuPlace.FooterAbout))
+                {
+                    <li><a href="@item.Path" id="@("foot-" + item.Slug)">@U[item.NameKey]</a></li>
+                }
             </ul>
         </section>
         <section class="foot__group" aria-labelledby="foot-take-part">
             <h2 class="label" id="foot-take-part">@T["Footer.TakePart"]</h2>
             <ul>
-                <li><a href="/organizacijos" id="foot-organisations">@T["Footer.Organisations"]</a></li>
-                <li><a href="/atsiliepimai" id="foot-feedback">@T["Footer.Feedback"]</a></li>
+                @foreach (var item in MenuSections.In(MenuPlace.FooterTakePart))
+                {
+                    <li><a href="@item.Path" id="@("foot-" + item.Slug)">@U[item.NameKey]</a></li>
+                }
             </ul>
         </section>
     </nav>

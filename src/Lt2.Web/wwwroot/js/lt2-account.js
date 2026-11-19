@@ -1,5 +1,7 @@
-// The menu's two disclosures (design 8.21): the account item and "Projektai" (owner, 2026-11-17: a dropdown with its three
-// tabs). Both are <details>, so they open without this script. With it: when the person opens the account item, the name and
+// The menu's two disclosures (design 8.21): the account item and, on a touch screen, "Projektai" (owner, 2026-11-17: a
+// dropdown with its tabs). Both are <details>, so they open without this script; the panel of "Projektai" stands beside its
+// <details>, inside the item (.drop), which counts as inside. Where the device can hover, "Projektai" is a link whose panel
+// shows on hover and focus (CSS); Escape closes it here until the pointer and focus have left the item (owner, 2026-11-19). With it: when the person opens the account item, the name and
 // the links their account has (the acceptance of changed terms, staff screens or the staff passkey, an MP's projects) are
 // read from GET /api/v1/me and shown; the page as served holds nothing about the person. Each closes on Escape (focus back to
 // its toggle), on a press outside it and when focus leaves it.
@@ -16,6 +18,9 @@
     const response = await fetch("/api/v1/me", { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
     return response.ok ? response.json() : null;
   };
+
+  // What counts as inside a disclosure: the whole item for "Projektai", whose panel stands beside its <details>.
+  const area = (details) => (details.matches("[data-nav-menu]") && details.closest(".drop")) || details;
 
   const close = (details, focusToggle) => {
     details.open = false;
@@ -138,18 +143,44 @@
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
     for (const details of document.querySelectorAll(MENU)) {
-      if (details.open) close(details, details.contains(document.activeElement));
+      if (details.open) close(details, area(details).contains(document.activeElement));
+    }
+
+    // The hover panel: hidden until the pointer and focus leave the item; focus stays on (or goes back to) its link.
+    for (const item of document.querySelectorAll("[data-nav-hover]")) {
+      if (item.matches(":hover") || item.contains(document.activeElement)) {
+        if (item.contains(document.activeElement)) item.querySelector(".drop__link")?.focus();
+        item.setAttribute("data-dismissed", "");
+      }
+    }
+  });
+
+  document.addEventListener("pointerover", (event) => {
+    for (const item of document.querySelectorAll("[data-nav-hover][data-dismissed]")) {
+      if (!(event.target instanceof Node) || !item.contains(event.target)) {
+        if (!item.contains(document.activeElement)) item.removeAttribute("data-dismissed");
+      }
     }
   });
 
   document.addEventListener("pointerdown", (event) => {
     for (const details of document.querySelectorAll(MENU)) {
-      if (details.open && (!(event.target instanceof Node) || !details.contains(event.target))) close(details, false);
+      if (details.open && (!(event.target instanceof Node) || !area(details).contains(event.target))) close(details, false);
     }
   });
 
   document.addEventListener("focusout", (event) => {
-    const details = event.target instanceof Element ? event.target.closest(MENU) : null;
-    if (details?.open && event.relatedTarget instanceof Node && !details.contains(event.relatedTarget)) close(details, false);
+    if (!(event.target instanceof Element)) return;
+    for (const details of document.querySelectorAll(MENU)) {
+      const inside = area(details);
+      if (details.open && inside.contains(event.target) && event.relatedTarget instanceof Node && !inside.contains(event.relatedTarget)) {
+        close(details, false);
+      }
+    }
+
+    const item = event.target.closest("[data-nav-hover][data-dismissed]");
+    if (item && !(event.relatedTarget instanceof Node && item.contains(event.relatedTarget)) && !item.matches(":hover")) {
+      item.removeAttribute("data-dismissed");
+    }
   });
 })();

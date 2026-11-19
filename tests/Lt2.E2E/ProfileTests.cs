@@ -33,7 +33,7 @@ public sealed partial class ProfileTests : E2ETest
         await about.FillAsync("Mokytoja iš Kauno (E2E bandymas). https://pavyzdys.test/apie");
         await page.Locator("#profile-public-switch").CheckAsync();
         await Assertions.Expect(page.Locator("#profile-consent-text")).ToContainTextAsync("Puslapį gali rodyti paieškos sistemos");
-        await E2ESteps.ShootBothAsync(page, Shots, "profile-form", page.Locator("#viesas-profilis"));
+        await E2ESteps.ShootBothAsync(page, Shots, "profile-form", page.Locator("#profile-form"));
         await page.Locator("#profile-save").ClickAsync();
         var link = page.Locator("#profile-link");
         await Assertions.Expect(link).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });

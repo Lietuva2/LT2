@@ -247,13 +247,6 @@ public interface IIdentityModule
 
     Task<Result<AccountSummary>> GetAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Changes the member's display name (design 6.2): at most 60 characters, empty allowed; <c>writing.restricted</c> while a
-    /// writing restriction holds; no limit on how often; the same name again changes nothing.
-    /// Audited without the names.
-    /// </summary>
-    Task<Result<Unit>> ChangeDisplayNameAsync(ClaimsPrincipal user, string? displayName, string? ipHash, CancellationToken cancellationToken);
-
     Task<IReadOnlyList<SessionSummary>> GetSessionsAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
     Task<Result<Unit>> EndSessionAsync(ClaimsPrincipal user, Guid sessionId, CancellationToken cancellationToken);
@@ -282,26 +275,14 @@ public interface IIdentityModule
     /// <summary>Withdraws the consent and, in the same transaction, deletes every position of the person (design 6.5).</summary>
     Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// The party the person said they support, if any (design 5.2; private, optional), whether it is shown on their public
-    /// profile and whether the profile is public (design 8.25.9).
-    /// </summary>
-    Task<Result<PartySupportState>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// "Rodyti viešame profilyje" (design 8.25.9): the consent <c>party-public</c> against the version the form showed;
-    /// <c>party.consent-outdated</c>, <c>party.none</c>, <c>party.profile-off</c>, <c>mp.takes-no-part</c>. Audited without the party.
-    /// </summary>
-    Task<Result<Unit>> ShowPartyAsync(ClaimsPrincipal user, string? textVersion, string? ipHash, CancellationToken cancellationToken);
-
     /// <summary>The party no longer shown: <c>party-public</c> withdrawn at once (open behind the terms, design 8.22.2).</summary>
     Task<Result<Unit>> HidePartyAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Sets the party (one of <paramref name="allowed"/>) with the explicit consent it needs (<paramref name="consent"/>;
-    /// refused with <c>party.consent-required</c> without it), or with <c>null</c> removes it and its consent. Stored without history.
+    /// The party support withdrawn (design 5.2): the party removed, its consent withdrawn and the party no longer shown; open
+    /// behind the terms (design 8.22.2). Giving one is the "Profilis" form's (<see cref="IMemberProfiles.SaveAsync"/>).
     /// </summary>
-    Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, bool consent, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken);
+    Task<Result<Unit>> WithdrawPartySupportAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>Everything the person gave (design 6.5), their own data only.</summary>
     Task<Result<object>> ExportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
@@ -309,12 +290,6 @@ public interface IIdentityModule
     /// <summary>Deletes the account and everything the person gave (design 6.5), and signs out.</summary>
     Task<Result<Unit>> DeleteAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 }
-
-/// <summary>
-/// The person's own party (design 5.2) and its public showing (design 8.25.9): <paramref name="Public"/> while the profile is
-/// public and <c>party-public</c> is in force; <paramref name="ConsentVersion"/> is the box's text in force.
-/// </summary>
-public sealed record PartySupportState(string? Party, bool Public, bool ProfilePublic, string ConsentVersion);
 
 /// <summary>Housekeeping run by the worker.</summary>
 public interface IIdentityMaintenance
@@ -396,15 +371,22 @@ public interface IOrganisationInvitations
 }
 
 /// <summary>
-/// The person's own profile state for the "Profilis" screen (design 8.25): "Apie mane", whether a moderator hid it (with the
-/// statement), the public id while "Viešas profilis" is on, the consent text's version in force, and <c>Texts:MaxLength</c>.
+/// The "Profilis" form's state (design 8.28.5): the display name; "Apie mane", whether a moderator hid it (with the statement);
+/// the public id while "Viešas profilis" is on and the consent text's version in force; <c>Texts:MaxLength</c>; the party
+/// supported (private, design 5.2) and whether it is shown on the public profile (design 8.25.9: the consent
+/// <c>party-public</c> in force while the profile is public).
 /// </summary>
 public sealed record MyProfileState(
-    string? About, bool AboutHidden, string? AboutHiddenStatement, string? ProfileId, DateTimeOffset? PublicSince, string ConsentVersion, int TextMaxLength,
-    string? Address = null);
+    string? DisplayName, string? About, bool AboutHidden, string? AboutHiddenStatement, string? ProfileId, DateTimeOffset? PublicSince, string ConsentVersion,
+    int TextMaxLength, string? Address, string? Party, bool PartyPublic);
 
-/// <summary>What the "Profilis" form sends: the text, the switch and, to switch on, the consent's version the form showed.</summary>
-public sealed record ProfileChange(string? About, bool Public, string? ConsentVersion);
+/// <summary>
+/// The whole "Profilis" form (design 8.28.5), saved whole or not at all: the display name, "Apie mane", "Viešas profilis" with
+/// the version of the consent text the form showed, the party with its explicit consent, and "Rodyti viešame profilyje" with
+/// the version of its text. An unticked box withdraws its consent.
+/// </summary>
+public sealed record ProfileForm(
+    string? DisplayName, string? About, bool Public, string? PublicConsentVersion, string? Party, bool PartyConsent, bool PartyPublic, string? PartyPublicConsentVersion);
 
 /// <summary>A report of a profile as the moderators see it: never who reported.</summary>
 public sealed record ProfileReportInfo(Guid Id, string Ground, string? Text, DateTimeOffset CreatedAt);
@@ -422,10 +404,14 @@ public interface IMemberProfiles
     Task<Result<MyProfileState>> MineAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Saves "Apie mane" and the switch: <c>about.too-long</c>, <c>about.personal-code</c>, <c>writing.restricted</c> (a changed
-    /// text), <c>profile.consent-outdated</c>, <c>profile.name-required</c>, <c>mp.takes-no-part</c> (switching on).
+    /// Saves the whole "Profilis" form (design 8.28.5) in one transaction, or nothing: every changed part is checked first and
+    /// every refusal is answered at once, each with its field (<see cref="Error.Refusals"/>): <c>display-name.too-long</c>,
+    /// <c>about.too-long</c>, <c>about.personal-code</c>, <c>writing.restricted</c> (a changed name or text),
+    /// <c>profile.consent-outdated</c>, <c>profile.name-required</c>, <c>party.unknown</c> (not one of
+    /// <paramref name="parties"/>), <c>party.consent-required</c>, <c>party.consent-outdated</c>, <c>party.none</c>,
+    /// <c>party.profile-off</c>, <c>mp.takes-no-part</c>. An unchanged part is not checked, written or audited.
     /// </summary>
-    Task<Result<MyProfileState>> ChangeAsync(ClaimsPrincipal user, ProfileChange change, string? ipHash, CancellationToken cancellationToken);
+    Task<Result<MyProfileState>> SaveAsync(ClaimsPrincipal user, ProfileForm form, IReadOnlyCollection<string> parties, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>"Viešas profilis" off and nothing else (design 8.25.1): open behind the terms (8.22.2) and under a writing restriction.</summary>
     Task<Result<MyProfileState>> SwitchOffAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);

@@ -71,6 +71,9 @@ Read before changing a page, a component or an island. The rules behind it are d
   an MP's faction and dates under the bubble; a bubble with no name above it takes `bubble--nameless` (no tail).
   Figures in a row (`.pair--keep`, `.totals`, `.analytics-figures`) are a subgrid of five lines at most, top-aligned: a
   figure with more lines needs the span raised.
+- **The menu's items come from one list (design 8.28.2).** A new item of the menu or the footer is one entry in
+  `MenuSections.Items` with its name and its line (`Menu.{Key}`, `Menu.{Key}.Line` in `UiText`); the menu, the dropdown,
+  the tab row, the footer and "Kur ką rasti" follow. Never write a menu or footer link by hand.
 - **A new public, server-rendered page puts `<LinkPreview Title="…" Description="…" />` beside its `<PageTitle>`** (design
   8.22.5: the title without " · Lietuva 2.0", one or two sentences, never counts or a member's own text; `Path` when the page's
   own address differs from the requested path). A page behind sign-in, a staff page or a token page puts none; such a path

@@ -32,8 +32,6 @@ public static class ApiRoutes
         /// <summary>The session becomes a passkey session with one of the account's own passkeys, in place (owner, 2026-11-17).</summary>
         public const string PasskeySession = Root + "/passkey-session";
 
-        /// <summary>Changing the display name (design 6.2).</summary>
-        public const string DisplayName = Root + "/display-name";
         public const string Sessions = Root + "/sessions";
         public const string Session = Root + "/sessions/{id:guid}";
 
@@ -44,11 +42,15 @@ public static class ApiRoutes
 
         /// <summary>Accepting the terms of use in force (design 8.22.2).</summary>
         public const string Terms = Root + "/consents/terms";
+        /// <summary>
+        /// <c>DELETE</c>: the party support withdrawn (design 5.2; open behind the terms, 8.22.2). The party is given and changed
+        /// by the "Profilis" form, <c>PUT /me/profile</c> (design 8.28.5).
+        /// </summary>
         public const string PartySupport = Root + "/party-support";
 
         /// <summary>
-        /// <c>PUT</c>: the party shown on the public profile, with the consent <c>party-public</c>; <c>DELETE</c>: no longer shown
-        /// (design 8.25.9; open behind the terms, 8.22.2).
+        /// <c>DELETE</c>: the party no longer shown on the public profile (design 8.25.9; open behind the terms, 8.22.2). It is
+        /// shown by the "Profilis" form, <c>PUT /me/profile</c> (design 8.28.5).
         /// </summary>
         public const string PartyPublic = Root + "/party-support/public";
         public const string Export = Root + "/export";

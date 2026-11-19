@@ -4,10 +4,11 @@
 @inherits AccountScreenBase
 
 @* "Profilis", the first account screen (design 8.21; the owner, 2026-11-16: "Starting with name, about me and probably a
-   party"): what others may see of the person and what they say of themself. Its forms: the display name (design 6.2),
-   "Apie mane" with "Viešas profilis" (design 8.25), party support (design 5.2, private); for an MP's official address, one line
-   about the MP (design 8.5.1, owner 2026-11-17). The other screens are reached from
-   the row under the title. *@
+   party"): what others may see of the person and what they say of themself. Its one form (design 8.28.5): the display name
+   (design 6.2), "Apie mane" with "Viešas profilis" (design 8.25), party support (design 5.2, private) with "Rodyti viešame
+   profilyje" (design 8.25.9), one "Išsaugoti". Above it, not part of it: the level and roles, and for an MP's official
+   address one line about the MP (design 8.5.1, owner 2026-11-17). The other screens are reached from the row under the
+   title. *@
 @if (Me is null)
 {
     <p class="small">@L["Loading"]</p>
@@ -29,25 +30,14 @@ else
         @* Design 8.5.1, 8.5.4 (owner, 2026-11-17): the MP whose official address this is, filled in the browser only. *@
         <MyMpLine />
 
-        @* Design 6.2: the display name, changed here. *@
-        <MyDisplayName Name="@Me.DisplayName" Changed="NameChanged" />
-
-        @* Design 8.25: "Apie mane" and the switch "Viešas profilis", the consent to a public page. *@
-        <MyProfile HasName="@(Me.DisplayName is not null)" PublicChanged="PublicChangedAsync" />
-
-        @* Design 5.2 and 8.25.9: the party, private unless shown on the public profile by its own box. *@
-        <MyPartySupport @ref="_party" />
+        @* Design 8.28.5: the name, "Apie mane", "Viešas profilis", the party and its box, one form saved whole. *@
+        <MyProfile NameChanged="NameChanged" />
     </section>
 }
 
 <Messages Message="@Message" Info="@Info" />
 
 @code {
-    private MyPartySupport? _party;
-
-    /// <summary>The party's box is offered only while the profile is public, and switching it off stops showing the party.</summary>
-    private Task PublicChangedAsync() => _party?.ReloadAsync() ?? Task.CompletedTask;
-
     protected override async Task OnInitializedAsync() => await LoadMeAsync();
 
     /// <summary>The greeting follows a changed display name (the email when it was removed).</summary>

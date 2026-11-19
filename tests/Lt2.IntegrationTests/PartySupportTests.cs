@@ -27,30 +27,26 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
     {
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
-        var initial = await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport);
+        var initial = await member.MyProfileAsync();
         initial.Party.ShouldBeNull();
-        initial.Choices.ShouldContain(Party);
+        initial.PartyChoices.ShouldContain(Party);
 
-        using (var noConsent = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = Party }))
+        using (var noConsent = await member.SaveFormAsync(f => f with { Party = Party }))
         {
-            await noConsent.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
+            await noConsent.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "party.consent-required");
         }
 
-        using (var unknown = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = "Išgalvota partija", Consent = true }))
-        {
-            await unknown.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "party.unknown");
-        }
-
-        (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = Party, Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Party.ShouldBe(Party);
+        await (await member.SavePartyAsync("Išgalvota partija")).ShouldBeProblemAsync(HttpStatusCode.BadRequest, "party.unknown");
+        await member.SetPartyAsync(Party);
+        (await member.MyProfileAsync()).Party.ShouldBe(Party);
         var userId = await Database.UserIdAsync(email);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.consent WHERE user_id = @u AND kind = 'party-support' AND withdrawn_at IS NULL", ("u", userId))).ShouldBe(1);
 
         var (other, _) = await Factory.MemberAsync();
         using var _o = other;
-        (await other.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Party.ShouldBeNull("only one's own");
+        (await other.MyProfileAsync()).Party.ShouldBeNull("only one's own");
 
-        (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = null })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await member.SetPartyAsync(null);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.party_support WHERE user_id = @u", ("u", userId))).ShouldBe(0);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.consent WHERE user_id = @u AND kind = 'party-support' AND withdrawn_at IS NULL", ("u", userId))).ShouldBe(0);
     }
@@ -69,7 +65,7 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
             RequestServices = scope.ServiceProvider,
         };
 
-        var result = await scope.ServiceProvider.GetRequiredService<IMeApi>().SetPartySupportAsync(new PartySupportRequest { Party = Party, Consent = false });
+        var result = await scope.ServiceProvider.GetRequiredService<IProfilesApi>().SaveAsync(new ProfileRequest { DisplayName = "Rūta M.", Party = Party, PartyConsent = false });
 
         result.IsSuccess.ShouldBeFalse();
         result.Problem!.Code.ShouldBe("party.consent-required");
@@ -193,8 +189,8 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
     }
 
     /// <summary>
-    /// Design 8.4: the party form states the minimum as it holds now (the number, or in words without a floor), from
-    /// <c>GET /me/party-support</c>.
+    /// Design 8.4: the party's part of the form states the minimum as it holds now (the number, or in words without a floor),
+    /// from <c>GET /me/profile</c>.
     /// </summary>
     [Fact]
     public async Task The_party_form_is_told_the_minimum_as_it_holds_now()
@@ -203,12 +199,12 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         await admin.Browser.ResetSettingAsync(SettingKeys.DigestPartyGroupMinimum.Name);
-        (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).GroupMinimum.ShouldBe(SettingKeys.DigestPartyGroupMinimum.Default);
+        (await member.MyProfileAsync()).PartyGroupMinimum.ShouldBe(SettingKeys.DigestPartyGroupMinimum.Default);
 
         try
         {
             await admin.Browser.SetSettingAsync(SettingKeys.DigestPartyGroupMinimum.Name, 0);
-            (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).GroupMinimum.ShouldBe(0);
+            (await member.MyProfileAsync()).PartyGroupMinimum.ShouldBe(0);
         }
         finally
         {

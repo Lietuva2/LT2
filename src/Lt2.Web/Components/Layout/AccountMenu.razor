@@ -1,11 +1,12 @@
 @inject IStringLocalizer<PageText> T
+@inject IStringLocalizer<Lt2.Web.Client.UiText> U
 
 @* Design 8.21: the account item, "Paskyra", a disclosure that works without script: "Mano paskyra" and "Atsijungti". The HTML
    is the same for every member (nothing about the person; the sign-out form's antiforgery token is the session's own): the
    name and the links an account has are filled in by js/lt2-account.js from GET /api/v1/me when the item is opened, and
    the links that do not apply stay hidden. The script also closes it on Escape, on a press outside and when focus leaves. *@
 <details class="account" id="account-menu" data-account-menu>
-    <summary class="account__toggle" id="account-toggle">@T["Nav.AccountItem"]</summary>
+    <summary class="account__toggle" id="account-toggle">@U["Menu.Account"]</summary>
     <div class="account__panel">
         <p class="account__name" data-account-name hidden></p>
         <ul class="account__links">

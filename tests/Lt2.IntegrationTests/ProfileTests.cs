@@ -39,7 +39,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         using var _ = member;
         var off = await member.GetJsonAsync<MyProfileResponse>(ProfileRoutes.Mine);
         off.ProfileId.ShouldBeNull("nobody has a public profile until they switch it on");
-        off.ConsentVersion.ShouldBe(PublicProfileConsent.TextVersion);
+        off.PublicConsentVersion.ShouldBe(PublicProfileConsent.TextVersion);
 
         var on = await member.SavedProfileAsync("Mokytoja iš Kauno. https://pavyzdys.test/ruta", isPublic: true);
         var id = on.ProfileId.ShouldNotBeNull();
@@ -156,7 +156,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
 
         var (member, _, _) = await Factory.PublicMemberAsync();
         using var _m = member;
-        using var emptied = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.DisplayName, new DisplayNameRequest { DisplayName = null });
+        using var emptied = await member.SaveFormAsync(f => f with { DisplayName = null });
         await emptied.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "profile.name-required");
     }
 
@@ -226,9 +226,9 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         var comment = await other.CommentOkAsync("reason", endorsedId, Agreed);
         (await member.AgreeAsync(comment)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         await member.FollowBillAsync(AppealSteps.ThirdBill);
-        var party = (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Choices[0];
-        (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = party, Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Party.ShouldBe(party);
+        var party = (await member.MyProfileAsync()).PartyChoices[0];
+        await member.SetPartyAsync(party);
+        (await member.MyProfileAsync()).Party.ShouldBe(party);
         var code = (await member.GetJsonAsync<MyInvitationResponse>(ApiRoutes.Me.Invitation)).Code;
         code.ShouldNotBeNullOrWhiteSpace();
 

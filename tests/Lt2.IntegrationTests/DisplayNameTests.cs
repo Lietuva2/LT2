@@ -7,14 +7,14 @@ using Lt2.IntegrationTests.Infrastructure;
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 6.2: a member changes the display name on the account page, as often as they like (owner, 2026-11-16). The name
+/// Design 6.2, 8.28.5: a member changes the display name with the "Profilis" form (<c>PUT /me/profile</c>), as often as they like (owner, 2026-11-16). The name
 /// is read live, so it shows beside the person's arguments at once, older ones included; the registration's rule; refused
 /// under a writing restriction (the designer's proposal, awaiting the owner); audited without the names.
 /// </summary>
 public sealed class DisplayNameTests(DatabaseFixture database) : ApiTest(database)
 {
     private static Task<HttpResponseMessage> ChangeAsync(TestBrowser browser, string? name) =>
-        browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.DisplayName, new DisplayNameRequest { DisplayName = name });
+        browser.SaveFormAsync(f => f with { DisplayName = name });
 
     private async Task<long> AuditCountAsync(string email) =>
         await Database.ScalarAsync<long>(
@@ -35,7 +35,7 @@ public sealed class DisplayNameTests(DatabaseFixture database) : ApiTest(databas
 
             using (var changed = await ChangeAsync(member, "  Vardas Antrasis "))
             {
-                changed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await changed.Content.ReadAsStringAsync());
+                changed.StatusCode.ShouldBe(HttpStatusCode.OK, await changed.Content.ReadAsStringAsync());
             }
 
             var reasons = (await stranger.RecordAsync(AppealSteps.SecondBill)).Reasons;
@@ -50,7 +50,7 @@ public sealed class DisplayNameTests(DatabaseFixture database) : ApiTest(databas
                 .ShouldBe(0, "no names or addresses in the audit log");
 
             // Empty removes the name, as registration allows: the argument shows without one.
-            (await ChangeAsync(member, "")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await ChangeAsync(member, "")).StatusCode.ShouldBe(HttpStatusCode.OK);
             (await stranger.RecordAsync(AppealSteps.SecondBill)).Reasons.ShouldContain(r => r.AuthorName == null);
         }
         finally
@@ -66,12 +66,12 @@ public sealed class DisplayNameTests(DatabaseFixture database) : ApiTest(databas
         var (member, email) = await Factory.MemberAsync("Keičiamas Vardas");
         using var _m = member;
 
-        (await ChangeAsync(member, "Keičiamas Vardas")).StatusCode.ShouldBe(HttpStatusCode.NoContent, "the same name again changes nothing");
+        (await ChangeAsync(member, "Keičiamas Vardas")).StatusCode.ShouldBe(HttpStatusCode.OK, "the same name again changes nothing");
         (await AuditCountAsync(email)).ShouldBe(0);
         foreach (var name in new[] { "Vardas 1", "Vardas 2", "Vardas 3", "Vardas 4", "Vardas 5" })
         {
             using var changed = await ChangeAsync(member, name);
-            changed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await changed.Content.ReadAsStringAsync());
+            changed.StatusCode.ShouldBe(HttpStatusCode.OK, await changed.Content.ReadAsStringAsync());
         }
 
         (await member.GetJsonAsync<MeResponse>(ApiRoutes.Me.Root)).DisplayName.ShouldBe("Vardas 5");
@@ -86,7 +86,8 @@ public sealed class DisplayNameTests(DatabaseFixture database) : ApiTest(databas
 
         using var refused = await ChangeAsync(member, new string('a', 61));
 
-        refused.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "display-name.too-long");
+        (await refused.ProblemAsync()).GetProperty("errors").GetProperty("displayName").GetArrayLength().ShouldBe(1);
         (await member.GetJsonAsync<MeResponse>(ApiRoutes.Me.Root)).DisplayName.ShouldBe("Trumpas Vardas");
     }
 

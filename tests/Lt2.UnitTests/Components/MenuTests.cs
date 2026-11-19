@@ -2,6 +2,7 @@ using Bunit;
 using Lt2.Web.Client;
 using Lt2.Web.Client.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 
 namespace Lt2.UnitTests.Components;
 
@@ -90,6 +91,51 @@ public sealed class MenuTests : BunitContext
     [InlineData("/prisijungti", false)]
     public void Seimo_nariai_is_current_on_the_list_and_on_profiles(string path, bool current) =>
         MenuSections.InMps(path).ShouldBe(current);
+
+    /// <summary>Design 8.28.2: an item cannot be added or renamed without the line that says what its page is.</summary>
+    [Fact]
+    public void Every_item_of_the_menu_and_the_footer_has_a_name_and_a_line()
+    {
+        var texts = Services.GetRequiredService<IStringLocalizer<UiText>>();
+
+        MenuSections.Items.ShouldNotBeEmpty();
+        foreach (var item in MenuSections.Items)
+        {
+            texts[item.NameKey].ResourceNotFound.ShouldBeFalse(item.NameKey);
+            texts[item.LineKey].ResourceNotFound.ShouldBeFalse(item.LineKey);
+            texts[item.NameKey].Value.ShouldNotBeNullOrWhiteSpace(item.NameKey);
+            texts[item.LineKey].Value.ShouldNotBeNullOrWhiteSpace(item.LineKey);
+        }
+
+        texts["Menu.Projects.Line"].ResourceNotFound.ShouldBeFalse("the dropdown's own line in Kur ką rasti");
+        MenuSections.Items.Select(i => i.Slug).ShouldBeUnique();
+        MenuSections.Items.Select(i => i.Path).ShouldBeUnique();
+    }
+
+    /// <summary>Design 8.21, 8.28.2: where each item stands, in the order every place shows them.</summary>
+    [Fact]
+    public void The_one_list_holds_the_menu_and_the_footer_in_their_order()
+    {
+        var texts = Services.GetRequiredService<IStringLocalizer<UiText>>();
+        string[] Names(IEnumerable<MenuItem> items) => [.. items.Select(i => texts[i.NameKey].Value)];
+
+        Names(MenuSections.Tabs).ShouldBe(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės"]);
+        MenuSections.Tabs.Select(t => t.Tab).ShouldBe([ProjectTab.Agenda, ProjectTab.Bills, ProjectTab.Votes, ProjectTab.Digests]);
+        Names(MenuSections.In(MenuPlace.Menu)).ShouldBe(["Seimo nariai", "Statistika"]);
+        Names(MenuSections.In(MenuPlace.Account)).ShouldBe(["Paskyra"]);
+        Names(MenuSections.Browse).ShouldBe(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės", "Seimo nariai", "Statistika"]);
+        Names(MenuSections.In(MenuPlace.FooterAbout)).ShouldBe(["Metodika", "Moderavimo taisyklės", "Naudojimo taisyklės", "Privatumas"]);
+        Names(MenuSections.In(MenuPlace.FooterTakePart)).ShouldBe(["Organizacijos", "Atsiliepimai"]);
+    }
+
+    [Theory]
+    [InlineData("/seimo-nariai", "mps", "page")]
+    [InlineData("/p/jonas-petraitis", "mps", "true")]
+    [InlineData("/statistika", "statistics", "page")]
+    [InlineData("/statistika", "mps", null)]
+    [InlineData("/projektai", "statistics", null)]
+    public void An_item_of_the_menus_line_is_marked_on_its_page_and_under_it(string path, string slug, string? mark) =>
+        MenuSections.CurrentMark(MenuSections.Items.Single(i => i.Slug == slug), path).ShouldBe(mark);
 
     [Fact]
     public void The_first_tab_is_the_agenda() =>

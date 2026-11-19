@@ -116,7 +116,6 @@ public static class IdentityModule
         services.AddScoped<AccountHandlers>();
 
         // Design 6.2: needs IWritingRestrictions (Appeals) from the host.
-        services.AddScoped<DisplayNameHandlers>();
         services.AddScoped<StaffAccess>();
         services.AddScoped<AccountEvents>();
         services.AddScoped<StaffHandlers>();
@@ -249,12 +248,8 @@ internal sealed class IdentityModuleFacade(
     PartySupportHandlers parties,
     AccountDataHandlers data,
     KnownBrowsers browsers,
-    SignInManager<User> signIn,
-    DisplayNameHandlers names) : IIdentityModule
+    SignInManager<User> signIn) : IIdentityModule
 {
-    public Task<Result<Unit>> ChangeDisplayNameAsync(ClaimsPrincipal user, string? displayName, string? ipHash, CancellationToken cancellationToken) =>
-        names.ChangeAsync(user, displayName, ipHash, cancellationToken);
-
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
         register.HandleAsync(registration, cancellationToken);
 
@@ -323,17 +318,11 @@ internal sealed class IdentityModuleFacade(
     public Task<bool> TermsRequiredAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         terms.RequiredAsync(user, cancellationToken);
 
-    public Task<Result<PartySupportState>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
-        parties.GetAsync(user, cancellationToken);
-
-    public Task<Result<Unit>> ShowPartyAsync(ClaimsPrincipal user, string? textVersion, string? ipHash, CancellationToken cancellationToken) =>
-        parties.ShowAsync(user, textVersion, ipHash, cancellationToken);
-
     public Task<Result<Unit>> HidePartyAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken) =>
         parties.HideAsync(user, ipHash, cancellationToken);
 
-    public Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, bool consent, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken) =>
-        parties.SetAsync(user, party, consent, allowed, cancellationToken);
+    public Task<Result<Unit>> WithdrawPartySupportAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken) =>
+        parties.WithdrawAsync(user, ipHash, cancellationToken);
 
     public Task<Result<object>> ExportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) => data.ExportAsync(user, cancellationToken);
 

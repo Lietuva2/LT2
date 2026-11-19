@@ -1,8 +1,4 @@
-using FluentValidation;
-using Lt2.Api.Contracts;
-using Lt2.Api.Contracts.Me;
 using Lt2.Identity.Domain;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.UnitTests;
 
@@ -29,10 +25,5 @@ public sealed class DisplayNameRuleTests
         ProfileRules.CheckDisplayName(new string('a', 61)).ShouldBe("display-name.too-long");
         ProfileRules.CheckDisplayName("").ShouldBeNull("empty is allowed, as at registration");
         ProfileRules.DisplayName("  Rūta M.  ").ShouldBe("Rūta M.");
-
-        var services = new ServiceCollection().AddLogging().AddLocalization().AddLt2Validators().BuildServiceProvider();
-        var validator = services.GetRequiredService<IValidator<DisplayNameRequest>>();
-        validator.Validate(new DisplayNameRequest { DisplayName = new string('a', 61) }).IsValid.ShouldBeFalse();
-        validator.Validate(new DisplayNameRequest { DisplayName = null }).IsValid.ShouldBeTrue();
     }
 }

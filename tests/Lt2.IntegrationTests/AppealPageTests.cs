@@ -309,7 +309,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         // item's dropdown holds this page and is current here; this page is the tab "Projektai".
         html.ShouldContain("<title>Projektai · Lietuva 2.0</title>");
         html.ShouldContain("<h1>Projektai</h1>");
-        html.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>", customMessage: "the menu item");
+        html.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>", customMessage: "the menu item");
         html.ShouldContain("<a href=\"/projektai\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab");
         html.ShouldNotContain("Kreipimaisi");
         html.ShouldContain("href=\"/seimas/XVP-0618\"");

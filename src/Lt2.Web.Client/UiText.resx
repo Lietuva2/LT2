@@ -101,9 +101,6 @@
   <data name="KnownBrowsers.None" xml:space="preserve"><value>Žinomų naršyklių nėra.</value></data>
   <data name="KnownBrowsers.Forgotten" xml:space="preserve"><value>Naršyklė pamiršta.</value></data>
   <data name="SignOut" xml:space="preserve"><value>Atsijungti</value></data>
-<data name="Staff.Nav" xml:space="preserve"><value>Darbuotojo darbai</value></data>
-<data name="Staff.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
-<data name="Staff.Settings" xml:space="preserve"><value>Nustatymai</value></data>
 <data name="PositionConsent.Title" xml:space="preserve"><value>Sutikimas saugoti pozicijas ir žymas</value></data>
 <data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų ir tai, kuriuos argumentus pažymite „Man svarbu“. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai ir komentarai liks. „Man svarbu“ privatus, o „Sutinku“ prie komentaro viešas su jūsų vardu ir jūsų pusės neparodo.</value></data>
 <data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas bei žymas</value></data>
@@ -113,8 +110,6 @@
 <data name="Party.Label" xml:space="preserve"><value>Partija</value></data>
 <data name="Party.None" xml:space="preserve"><value>Nenurodyti</value></data>
 <data name="Party.Consent" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano nurodytą partiją taip, kaip aprašyta. Galiu ją bet kada pašalinti.</value></data>
-<data name="Party.Save" xml:space="preserve"><value>Išsaugoti</value></data>
-<data name="Party.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
 <data name="Party.Removed" xml:space="preserve"><value>Partija pašalinta.</value></data>
 <data name="Party.Public" xml:space="preserve"><value>Rodyti viešame profilyje</value></data>
 <data name="Party.PublicText" xml:space="preserve"><value>Partiją matys visi, kas atvers jūsų viešo profilio puslapį, ją gali rodyti ir paieškos sistemos; nuėmus žymę, pašalinus ar pakeitus partiją arba išjungus profilį, ji iš karto nebebus rodoma.</value></data>
@@ -213,11 +208,37 @@
   <data name="Mp.Mail.Frequency.stopped" xml:space="preserve"><value>Nesiųsti</value></data>
   <data name="Mp.Mail.Save" xml:space="preserve"><value>Išsaugoti</value></data>
   <data name="Mp.Mail.Saved" xml:space="preserve"><value>Išsaugota. Patvirtinimas išsiųstas oficialiu adresu.</value></data>
+  <data name="Menu.Agenda" xml:space="preserve"><value>Darbotvarkė</value></data>
+  <data name="Menu.Agenda.Line" xml:space="preserve"><value>Ką Seimas planuoja svarstyti artimiausiomis dienomis.</value></data>
+  <data name="Menu.Bills" xml:space="preserve"><value>Projektai</value></data>
+  <data name="Menu.Bills.Line" xml:space="preserve"><value>Visi projektai, kurių Seimas dar nebaigė svarstyti.</value></data>
+  <data name="Menu.Votes" xml:space="preserve"><value>Balsavimai</value></data>
+  <data name="Menu.Votes.Line" xml:space="preserve"><value>Kaip Seimas balsavo: visi balsavimai nuo naujausio.</value></data>
+  <data name="Menu.Digests" xml:space="preserve"><value>Suvestinės</value></data>
+  <data name="Menu.Digests.Line" xml:space="preserve"><value>Ką apie dalyvių prašymus sužino Seimo nariai.</value></data>
+  <data name="Menu.Mps" xml:space="preserve"><value>Seimo nariai</value></data>
+  <data name="Menu.Mps.Line" xml:space="preserve"><value>Kiekvieno Seimo nario pareigos, balsavimai ir atsakymai.</value></data>
+  <data name="Menu.Statistics" xml:space="preserve"><value>Statistika</value></data>
+  <data name="Menu.Statistics.Line" xml:space="preserve"><value>Kiek projektų sulaukė dalyvių ir kur jų dauguma sutampa su Seimo dauguma.</value></data>
+  <data name="Menu.Account" xml:space="preserve"><value>Paskyra</value></data>
+  <data name="Menu.Account.Line" xml:space="preserve"><value>Jūsų profilis, sekami projektai, laiškai ir duomenys.</value></data>
+  <data name="Menu.Methodology" xml:space="preserve"><value>Metodika</value></data>
+  <data name="Menu.Methodology.Line" xml:space="preserve"><value>Iš kur duomenys, kaip skaičiuojama ir kas matoma viešai.</value></data>
+  <data name="Menu.ModerationRules" xml:space="preserve"><value>Moderavimo taisyklės</value></data>
+  <data name="Menu.ModerationRules.Line" xml:space="preserve"><value>Kas skelbiama, kas slepiama ir kaip tam paprieštarauti.</value></data>
+  <data name="Menu.Terms" xml:space="preserve"><value>Naudojimo taisyklės</value></data>
+  <data name="Menu.Terms.Line" xml:space="preserve"><value>Kam skirta paskyra ir ko joje galima.</value></data>
+  <data name="Menu.Privacy" xml:space="preserve"><value>Privatumas</value></data>
+  <data name="Menu.Privacy.Line" xml:space="preserve"><value>Kokius duomenis saugome, kodėl ir kiek laiko.</value></data>
+  <data name="Menu.Organisations" xml:space="preserve"><value>Organizacijos</value></data>
+  <data name="Menu.Organisations.Line" xml:space="preserve"><value>Organizacijos, viešai pasisakančios dėl projektų savo vardu.</value></data>
+  <data name="Menu.Feedback" xml:space="preserve"><value>Atsiliepimai</value></data>
+  <data name="Menu.Feedback.Line" xml:space="preserve"><value>Parašykite mums, kas neaišku ar neveikia.</value></data>
+  <data name="Menu.Projects.Line" xml:space="preserve"><value>Keturi puslapiai apie tai, ką svarsto Seimas:</value></data>
+  <data name="Where.Title" xml:space="preserve"><value>Kur ką rasti</value></data>
+  <data name="Where.Menu" xml:space="preserve"><value>Meniu</value></data>
+  <data name="Where.Footer" xml:space="preserve"><value>Puslapio apačioje</value></data>
   <data name="Tabs.Label" xml:space="preserve"><value>Projektai</value></data>
-  <data name="Tabs.Agenda" xml:space="preserve"><value>Darbotvarkė</value></data>
-  <data name="Tabs.Bills" xml:space="preserve"><value>Projektai</value></data>
-  <data name="Tabs.Votes" xml:space="preserve"><value>Balsavimai</value></data>
-  <data name="Tabs.Digests" xml:space="preserve"><value>Suvestinės</value></data>
   <data name="Terms.Check.Before" xml:space="preserve"><value>Sutinku su</value></data>
   <data name="Terms.Check.Link" xml:space="preserve"><value>naudojimo taisyklėmis</value></data>
   <data name="Privacy.Sentence.Before" xml:space="preserve"><value>Kaip tvarkome jūsų duomenis, rašoma</value></data>
@@ -238,8 +259,6 @@
   <data name="StaffKey.Submit" xml:space="preserve"><value>Patvirtinti prieigos raktu</value></data>
   <data name="Name.Title" xml:space="preserve"><value>Vardas</value></data>
   <data name="Name.Hint" xml:space="preserve"><value>Šis vardas viešai rodomas prie jūsų argumentų, taip pat ir anksčiau parašytų. Ne daugiau kaip 60 ženklų. Palikus tuščią, rodoma „Lietuva 2.0 naudotojas“.</value></data>
-  <data name="Name.Save" xml:space="preserve"><value>Išsaugoti vardą</value></data>
-  <data name="Name.Saved" xml:space="preserve"><value>Vardas išsaugotas.</value></data>
   <data name="Name.Removed" xml:space="preserve"><value>Vardo neliko: prie jūsų argumentų rodoma „Lietuva 2.0 naudotojas“.</value></data>
   <data name="Parts.Label" xml:space="preserve"><value>Paskyros dalys</value></data>
   <data name="Parts.Profile" xml:space="preserve"><value>Profilis</value></data>
@@ -260,8 +279,10 @@
   <data name="PublicProfile.Consent" xml:space="preserve"><value>Jūsų profilio puslapyje bus jūsų vardas, „Apie mane“ ir viskas, ką viešai parašėte (argumentai ir komentarai), surinkta į vieną vietą su nuorodomis; prie visų jūsų argumentų, komentarų ir „Sutinku“ bus nuoroda į jį. Puslapį gali rodyti paieškos sistemos. Kiti nariai galės jus sekti ir gaus laišką, kai paskelbsite argumentą ar komentarą; puslapyje bus rodomas sekėjų skaičius, bet ne tai, kas jus seka (to nesužinosite ir jūs). Išjungus profilį, puslapis dingsta iš karto, bet paieškos sistemų kopijos išnyksta tik joms vėl apsilankius. Išsaugodami įjungtą profilį sutinkate su tuo.</value></data>
   <data name="PublicProfile.NameNeeded" xml:space="preserve"><value>Viešam profiliui reikia vardo: pirmiau įrašykite jį aukščiau.</value></data>
   <data name="PublicProfile.OffText" xml:space="preserve"><value>Išsaugojus profilis išsijungs iš karto: puslapis ir nuorodos prie argumentų, komentarų ir „Sutinku“ dings, visi jus sekantys nebesekys. Jo adresas daugiau niekada nebus naudojamas.</value></data>
-  <data name="PublicProfile.Save" xml:space="preserve"><value>Išsaugoti</value></data>
-  <data name="PublicProfile.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="Profile.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+  <data name="Profile.SaveAndGo" xml:space="preserve"><value>Išsaugoti ir tęsti</value></data>
+  <data name="Profile.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="Profile.NotSaved" xml:space="preserve"><value>Nieko neišsaugota: pataisykite pažymėtus laukus.</value></data>
   <data name="PublicProfile.SavedOn" xml:space="preserve"><value>Viešas profilis įjungtas.</value></data>
   <data name="PublicProfile.SavedOff" xml:space="preserve"><value>Viešas profilis išjungtas, jo adresas panaikintas.</value></data>
   <data name="Mp.Copies.Title" xml:space="preserve"><value>Suvestinių kopijos jums</value></data>

@@ -119,14 +119,6 @@ public sealed record PositionConsentRequest
     public string TextVersion { get; init; } = "";
 }
 
-/// <summary>
-/// A new display name (design 6.2): shown beside what the person writes in public; at most 60 characters; empty removes it.
-/// </summary>
-public sealed record DisplayNameRequest
-{
-    public string? DisplayName { get; init; }
-}
-
 /// <summary>The one-time code an administrator passed on, used in a passkey session (design 6.2).</summary>
 public sealed record RoleActivationRequest
 {
@@ -182,32 +174,6 @@ public sealed record SessionResponse
 /// </summary>
 /// <param name="Device">A short, coarse description of the browser when it last signed in, as for sessions.</param>
 public sealed record KnownBrowserResponse(Guid Id, string? Device, DateTimeOffset FirstSeenAt, DateTimeOffset LastSeenAt, bool IsCurrent);
-
-/// <summary>
-/// The party the person said they support (private, optional), and the parties to choose from; whether it is shown on the
-/// public profile (<c>Public</c>, design 8.25.9), whether the profile is public, and the box's consent text version in force.
-/// <paramref name="GroupMinimum"/> is the setting <c>Digest:PartyGroupMinimum</c> (design 8.4), which the form's text states.
-/// </summary>
-public sealed record PartySupportResponse(
-    string? Party, IReadOnlyList<string> Choices, int GroupMinimum, bool Public = false, bool ProfilePublic = false, string ConsentVersion = PartyPublicLimits.ConsentVersion);
-
-/// <summary>
-/// Sets the party, or with <c>null</c> removes it. Giving one needs <see cref="Consent"/>: a party preference is a
-/// political opinion; it is used only for group numbers of at least 20 and shown nowhere unless the person ticks
-/// "Rodyti viešame profilyje" (<see cref="PartyPublicRequest"/>). Removing or changing it stops showing it.
-/// </summary>
-public sealed record PartySupportRequest
-{
-    public string? Party { get; init; }
-
-    public bool Consent { get; init; }
-}
-
-/// <summary>"Rodyti viešame profilyje" ticked (design 8.25.9): the version of the box's text the form showed.</summary>
-public sealed record PartyPublicRequest
-{
-    public string? ConsentVersion { get; init; }
-}
 
 public static class PartyPublicLimits
 {

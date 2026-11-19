@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Lt2.Identity.Application.Consents;
 using Lt2.Identity.Application.Staff;
 using Lt2.Identity.Domain;
 using Lt2.Identity.Infrastructure;
@@ -9,10 +10,12 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Lt2.Identity.Application.Profiles;
 
 /// <summary>
-/// A member's public profile and "Apie mane" (design 8.25), the person's own side: reading the state, writing the text,
-/// switching "Viešas profilis" on (the consent <c>public-profile</c>) and off (the consent withdrawn, the id retired, every
-/// follow of it ended, in one transaction). Every rule is checked here, whoever calls (design 6.8). Audited without the text.
-/// A context of its own per operation; switching off runs in the caller's context and transaction.
+/// The "Profilis" form (design 8.28.5), the person's own side: the display name (design 6.2), "Apie mane" and "Viešas profilis"
+/// (design 8.25: the consent <c>public-profile</c>; switching off withdraws it, retires the id and ends every follow of it),
+/// party support and the party shown on the public profile (design 5.2, 8.25.9). The form is saved whole or not at all:
+/// every changed part is checked first (<see cref="ProfileFormRules"/>), then everything is written in one transaction.
+/// Every rule is checked here, whoever calls (design 6.8). Audited without the name, the text or the party. A context of its
+/// own per operation; switching off runs in the caller's context and transaction.
 /// </summary>
 internal sealed class ProfileHandlers(
     IDbContextFactory<IdentityDb> contexts,
@@ -21,7 +24,7 @@ internal sealed class ProfileHandlers(
     IMemberFollowEnd follows,
     ISettings settings,
     AccountEvents events,
-    Consents.PartySupportHandlers parties,
+    PartySupportHandlers parties,
     TimeProvider clock)
 {
     public async Task<Result<MyProfileState>> MineAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
@@ -38,24 +41,30 @@ internal sealed class ProfileHandlers(
             return Error.Unauthorized("auth.required");
         }
 
-        return await StateAsync(profile, cancellationToken);
+        return await StateAsync(db, profile, cancellationToken);
     }
 
-    public async Task<Result<MyProfileState>> ChangeAsync(ClaimsPrincipal principal, ProfileChange change, string? ipHash, CancellationToken cancellationToken)
+    /// <summary>
+    /// Saves the whole form (design 8.28.5): nothing is written unless every changed part may be (the answer then names every
+    /// refused field); an unchanged part is not checked, written or audited; what changes is written in one transaction with
+    /// each consent given or withdrawn and the audit entries each part has. <paramref name="choices"/> are the parties to
+    /// choose from.
+    /// </summary>
+    public async Task<Result<MyProfileState>> SaveAsync(
+        ClaimsPrincipal principal, ProfileForm form, IReadOnlyCollection<string> choices, string? ipHash, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(change);
+        ArgumentNullException.ThrowIfNull(form);
+        ArgumentNullException.ThrowIfNull(choices);
         if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
 
-        var maxLength = await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken);
-        if (ProfileRules.CheckAbout(change.About, maxLength) is { } aboutError)
-        {
-            return aboutError == "about.too-long"
-                ? Error.Validation(aboutError, "about") with { Numbers = [MemberTextLength.Allowed(maxLength)] }
-                : Error.Validation(aboutError, "about");
-        }
+        var facts = new ProfileFormFacts(
+            await restrictions.IsRestrictedAsync(userId, cancellationToken),
+            MpAccounts.Refusal(await participants.FindAsync(userId, cancellationToken)) is not null,
+            await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken),
+            choices);
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -66,68 +75,81 @@ internal sealed class ProfileHandlers(
             return Error.Unauthorized("auth.required");
         }
 
+        // A pending account gives its name with the rest of its registration (design 6.2).
         if (profile.IsPending)
         {
             return Error.Conflict("registration.pending");
         }
 
+        var isPublic = profile.PublicProfileId is not null;
+        var partyBefore = await PartySupportHandlers.PartyAsync(db, userId, cancellationToken);
+        var before = new ProfileFormBefore(
+            profile.DisplayName,
+            profile.About,
+            isPublic,
+            partyBefore,
+            partyBefore is not null && isPublic && await PartySupportHandlers.ShownAsync(db, userId, cancellationToken));
+        if (ProfileFormRules.Check(before, form, facts) is { Count: > 0 } refusals)
+        {
+            return Error.All(refusals);
+        }
+
+        var changes = ProfileFormRules.Changes(before, form);
         var now = clock.GetUtcNow();
         var actor = new Actor(userId, Roles.Member, ipHash);
         var dbTransaction = transaction.GetDbTransaction();
 
-        // "Apie mane": the text is for others to read, so a writing restriction blocks writing or changing it (design 8.25.3);
-        // clearing it is erasure, not writing, and stays open (owner, 2026-11-17). A new text replaces a hidden one and shows at
-        // once (design 8.25.6).
-        if (ProfileRules.IsAboutChange(profile.About, change.About))
+        // The display name (design 6.2): read live wherever it shows; audited that it changed, never the names.
+        if (changes.Name)
         {
-            if (ProfileRules.About(change.About) is not null && await restrictions.IsRestrictedAsync(userId, cancellationToken))
-            {
-                return Error.Forbidden("writing.restricted");
-            }
+            profile.DisplayName = ProfileRules.DisplayName(form.DisplayName);
+            await db.SaveChangesAsync(cancellationToken);
+            await events.RecordAsync(dbTransaction, "profile.display-name-changed", userId, actor, null, null, cancellationToken);
+        }
 
-            profile.About = ProfileRules.About(change.About);
+        // "Apie mane": a new text replaces a hidden one and shows at once (design 8.25.6).
+        if (changes.About)
+        {
+            profile.About = ProfileRules.About(form.About);
             profile.AboutChangedAt = now;
             profile.AboutHiddenAt = null;
             profile.AboutHiddenStatement = null;
+            await db.SaveChangesAsync(cancellationToken);
             await events.RecordAsync(dbTransaction, "profile.about-changed", userId, actor, null, null, cancellationToken);
         }
 
-        var isPublic = profile.PublicProfileId is not null;
-        if (change.Public && !isPublic)
+        if (changes.SwitchOn)
         {
-            if (change.ConsentVersion != PublicProfileConsent.TextVersion)
-            {
-                // The form showed another wording: the person must see the text in force.
-                return Error.Conflict("profile.consent-outdated");
-            }
-
-            if (ProfileRules.CheckNameWhilePublic(true, profile.DisplayName) is { } nameError)
-            {
-                return Error.Validation(nameError, "public");
-            }
-
-            // Design 8.5.4: the MP's own account takes no part as a member; it speaks only through its responses.
-            if (MpAccounts.Refusal(await participants.FindAsync(userId, cancellationToken)) is { } mp)
-            {
-                return mp;
-            }
-
             profile.PublicProfileId = await FreshIdAsync(db, cancellationToken);
             profile.PublicSince = now;
             db.Consents.Add(new Consent { Id = Ids.New(clock), UserId = userId, Kind = PublicProfileConsent.Kind, TextVersion = PublicProfileConsent.TextVersion, GivenAt = now });
             await db.SaveChangesAsync(cancellationToken);
             await events.RecordAsync(dbTransaction, "profile.public-on", userId, actor, null, null, cancellationToken);
         }
-        else if (!change.Public && isPublic)
+        else if (changes.SwitchOff)
         {
-            await db.SaveChangesAsync(cancellationToken);
             await SwitchOffAsync(db, profile, now, dbTransaction, cancellationToken);
             await events.RecordAsync(dbTransaction, "profile.public-off", userId, actor, null, null, cancellationToken);
         }
 
+        if (changes.Party)
+        {
+            await parties.ChangeAsync(db, userId, before.Party, changes.NewParty, actor, dbTransaction, cancellationToken);
+        }
+
+        if (changes.GiveShown)
+        {
+            await parties.GiveShownAsync(db, userId, actor, dbTransaction, cancellationToken);
+        }
+        else if (changes.HideShown)
+        {
+            // Nothing more when switching off or a changed party withdrew it already.
+            await parties.WithdrawShownAsync(db, userId, "box", actor, dbTransaction, cancellationToken);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return await StateAsync(profile, cancellationToken);
+        return await StateAsync(db, profile, cancellationToken);
     }
 
     /// <summary>
@@ -158,7 +180,7 @@ internal sealed class ProfileHandlers(
         }
 
         await transaction.CommitAsync(cancellationToken);
-        return await StateAsync(profile, cancellationToken);
+        return await StateAsync(db, profile, cancellationToken);
     }
 
     /// <summary>
@@ -200,8 +222,13 @@ internal sealed class ProfileHandlers(
         }
     }
 
-    private async Task<MyProfileState> StateAsync(Profile profile, CancellationToken cancellationToken) =>
-        new(
+    /// <summary>The form's state after <paramref name="profile"/>, read in <paramref name="db"/>.</summary>
+    private async Task<MyProfileState> StateAsync(IdentityDb db, Profile profile, CancellationToken cancellationToken)
+    {
+        var party = await PartySupportHandlers.PartyAsync(db, profile.UserId, cancellationToken);
+        var shown = party is not null && profile.PublicProfileId is not null && await PartySupportHandlers.ShownAsync(db, profile.UserId, cancellationToken);
+        return new(
+            profile.DisplayName,
             profile.About,
             profile.AboutHiddenAt is not null,
             profile.AboutHiddenStatement,
@@ -209,5 +236,8 @@ internal sealed class ProfileHandlers(
             profile.PublicSince,
             PublicProfileConsent.TextVersion,
             await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken),
-            profile.PublicProfileId is { } id ? MemberAddress.Page(id, profile.DisplayName) : null);
+            profile.PublicProfileId is { } id ? MemberAddress.Page(id, profile.DisplayName) : null,
+            party,
+            shown);
+    }
 }

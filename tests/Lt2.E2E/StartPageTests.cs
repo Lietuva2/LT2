@@ -137,6 +137,10 @@ public sealed partial class StartPageTests : E2ETest
         await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-label", $"Prašau balsuoti už projektą {number}");
         try
         {
+            // Design 8.28.3: a member who has never taken a side is greeted as new and shown the start.
+            await Assertions.Expect(page.Locator("#home-title")).ToHaveTextAsync("Sveiki prisijungę");
+            await Assertions.Expect(page.Locator("#home-start")).ToBeVisibleAsync();
+
             // The first side ever: the consent is asked in the row, across its width; nothing is saved before it.
             await forButton.ClickAsync();
             var consent = page.Locator($"#home-consent-{place}");
@@ -156,6 +160,10 @@ public sealed partial class StartPageTests : E2ETest
             await page.Locator($"#home-{place}-consent-submit").ClickAsync();
             await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
             (await MySideAsync(page, number)).ShouldBe("for");
+
+            // Design 8.28.3: the first side takes the start away and completes the greeting, without a reload.
+            await Assertions.Expect(page.Locator("#home-start")).ToHaveCountAsync(0, new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator("#home-title")).ToHaveTextAsync("Sveiki sugrįžę");
 
             // The row's numbers are the bill's live ones, the member's side among them; a first side follows the bill
             // (design 8.11.2), and the mark under the title and the panel show it without a reload.
@@ -244,22 +252,15 @@ public sealed partial class StartPageTests : E2ETest
         (await E2ESteps.ApiAsync(page, "PUT", $"/api/v1/bills/{number}/record/position", new { side = "for" })).Status.ShouldBe(204);
         try
         {
-            // For the owner's screenshots, one more row shows the consent open: the answer is made to say the consent is
-            // missing (only in this browser), so pressing "prieš" there asks for it; nothing is saved.
-            await page.RouteAsync("**/api/v1/me/bills?*", async route =>
-            {
-                var response = await route.FetchAsync();
-                var json = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(await response.TextAsync())!;
-                json["hasPositionConsent"] = JsonSerializer.SerializeToElement(false);
-                await route.FulfillAsync(new() { Response = response, Body = JsonSerializer.Serialize(json) });
-            });
             foreach (var (width, height) in new[] { (1280, 900), (390, 844), (360, 740) })
             {
                 await page.SetViewportSizeAsync(width, height);
                 await page.GotoAsync(Base + "/");
-                await Assertions.Expect(page.Locator("#home-title")).ToHaveTextAsync("Sveiki sugrįžę");
+                // Design 8.28.3: a member who has taken a side is greeted back and gets no start.
+                await Assertions.Expect(page.Locator("#home-title")).ToHaveTextAsync("Sveiki sugrįžę", new() { Timeout = E2ESteps.Slow });
                 await Assertions.Expect(page.Locator("#home-head")).ToHaveCountAsync(0);
                 await Assertions.Expect(page.Locator(".intro-steps")).ToHaveCountAsync(0);
+                await Assertions.Expect(page.Locator("#home-start")).ToHaveCountAsync(0);
                 // Owner, 2026-11-17: no "Kaip tai veikia" and "Mano paskyra" links in the member's head; both are reachable elsewhere.
                 await Assertions.Expect(page.Locator("#home-welcome a")).ToHaveCountAsync(0);
 
@@ -285,8 +286,7 @@ public sealed partial class StartPageTests : E2ETest
                     (heading!.Y + heading.Height).ShouldBeLessThanOrEqualTo(height, "the agenda's heading is on the first screen");
                 }
 
-                await page.Locator($"#home-against-{otherPlace}").ClickAsync();
-                await Assertions.Expect(page.Locator($"#home-consent-{otherPlace}")).ToBeVisibleAsync();
+                await OpenTheConsentInARowAsync(page, otherPlace);
                 await E2ESteps.NoSidewaysScrollAsync(page, $"/ for a member at {width}, with the consent open in a row");
                 Directory.CreateDirectory(Shots);
                 await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"member-{width}.png"), FullPage = true });
@@ -298,11 +298,9 @@ public sealed partial class StartPageTests : E2ETest
             await page.GotoAsync(Base + "/");
             await Assertions.Expect(page.Locator($"#my-agenda-{number}")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(page.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "true");
-            await page.Locator($"#home-against-{otherPlace}").ClickAsync();
-            await Assertions.Expect(page.Locator($"#home-consent-{otherPlace}")).ToBeVisibleAsync();
+            await OpenTheConsentInARowAsync(page, otherPlace);
             await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, "member-1280-dark.png"), FullPage = true });
             await page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Light });
-            await page.UnrouteAllAsync();
 
             // With JavaScript off the member's page is the public page: nothing of their own is in it, and the sides are
             // disabled, the same for every member.
@@ -312,7 +310,9 @@ public sealed partial class StartPageTests : E2ETest
             });
             var plain = await noScript.NewPageAsync();
             await plain.GotoAsync(Base + "/");
-            await Assertions.Expect(plain.Locator("#home-title")).ToHaveTextAsync("Sveiki sugrįžę");
+            // Design 8.28.3: without script the greeting is "Sveiki", for every member.
+            await Assertions.Expect(plain.Locator("#home-title")).ToHaveTextAsync("Sveiki");
+            await Assertions.Expect(plain.Locator("#home-start")).ToHaveCountAsync(0);
             await Assertions.Expect(plain.Locator("#home-coming .tl-item").First).ToBeVisibleAsync();
             await Assertions.Expect(plain.Locator("#my-agenda")).ToHaveCountAsync(0);
             await Assertions.Expect(plain.Locator(".mine")).ToHaveCountAsync(0);
@@ -327,6 +327,79 @@ public sealed partial class StartPageTests : E2ETest
             await page.UnrouteAllAsync();
             await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/record/position");
             await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/follow");
+        }
+    }
+
+    /// <summary>
+    /// Design 8.28.3, 8.28.7: a member who has never taken a side sees "Sveiki prisijungę" and the four steps, the full form
+    /// at 1280 px and the short one at 390 px, where the agenda's heading is still on the first screen (390 × 844); no
+    /// sideways scroll at 340, 360 and 390 px. Screenshots for the owner.
+    /// </summary>
+    [Fact]
+    public async Task A_new_member_gets_the_full_steps_on_a_wide_screen_and_the_short_ones_on_a_phone()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var member = await PasskeyBrowser.StartAsync("native", 1280, 900);
+        var page = member.Page;
+        await PasskeyTests.RegisterAsync(page, "Naujoji Narė");
+        Directory.CreateDirectory(Shots);
+        foreach (var (width, height) in new[] { (1280, 900), (390, 844), (360, 740), (340, 720) })
+        {
+            await page.SetViewportSizeAsync(width, height);
+            await page.GotoAsync(Base + "/");
+            await Assertions.Expect(page.Locator("#home-title")).ToHaveTextAsync("Sveiki prisijungę", new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator("#home-start")).ToBeVisibleAsync();
+            var full = page.Locator("#home-start-full");
+            var shortSteps = page.Locator("#home-start-short");
+            if (width >= 864)
+            {
+                await Assertions.Expect(full).ToBeVisibleAsync();
+                await Assertions.Expect(shortSteps).ToBeHiddenAsync();
+            }
+            else
+            {
+                await Assertions.Expect(shortSteps).ToBeVisibleAsync();
+                await Assertions.Expect(full).ToBeHiddenAsync();
+            }
+
+            await Assertions.Expect(page.Locator("#my-agenda")).ToHaveCountAsync(0, new() { Timeout = 1000 });
+            if (width == 390)
+            {
+                var heading = await page.Locator("#h-home-coming").BoundingBoxAsync();
+                (heading!.Y + heading.Height).ShouldBeLessThanOrEqualTo(height, "the agenda's heading is on a phone's first screen");
+            }
+
+            await E2ESteps.NoSidewaysScrollAsync(page, $"/ for a new member at {width}");
+            await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"new-member-{width}.png"), FullPage = true });
+        }
+
+        member.ConsoleErrors.ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// For the owner's screenshots, one more row shows the consent open: the answer is made to say the consent is missing
+    /// (only in this browser, only for this look; it also shows the new member's start, design 8.28.3), so pressing "prieš"
+    /// there asks for it; nothing is saved.
+    /// </summary>
+    private static async Task OpenTheConsentInARowAsync(IPage page, string place)
+    {
+        await page.RouteAsync("**/api/v1/me/bills?*", async route =>
+        {
+            var response = await route.FetchAsync();
+            var json = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(await response.TextAsync())!;
+            json["hasPositionConsent"] = JsonSerializer.SerializeToElement(false);
+            await route.FulfillAsync(new() { Response = response, Body = JsonSerializer.Serialize(json) });
+        });
+        try
+        {
+            await page.ReloadAsync();
+            await Assertions.Expect(page.Locator("#home-start")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+            await page.Locator($"#home-against-{place}").ClickAsync();
+            await Assertions.Expect(page.Locator($"#home-consent-{place}")).ToBeVisibleAsync();
+        }
+        finally
+        {
+            await page.UnrouteAllAsync();
         }
     }
 
@@ -461,7 +534,8 @@ public sealed partial class StartPageTests : E2ETest
                 await Task.Delay(TimeSpan.FromSeconds(1));
             }
 
-            firstHtml.ShouldContain("Sveiki sugrįžę", customMessage: "the members' version of the page");
+            firstHtml.ShouldMatch("<h1 id=\"home-title\"[^>]*>Sveiki</h1>", customMessage: "the members' version of the page, its greeting as served (design 8.28.3)");
+            firstHtml.ShouldNotContain("id=\"home-start\"", customMessage: "the second sees the start, filled in the browser only");
             firstHtml.ShouldContain($"id=\"home-for-{(await row.GetAttributeAsync("id"))!["agenda-".Length..]}\"");
             Frameless(firstHtml).ShouldBe(Frameless(secondHtml), "the same page for every member, apart from the frame");
             firstHtml.ShouldNotContain("aria-pressed=\"true\"");

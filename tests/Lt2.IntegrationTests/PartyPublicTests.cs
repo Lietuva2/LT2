@@ -23,16 +23,13 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
             "SELECT count(*) FROM identity.consent c JOIN identity.\"user\" u ON u.id = c.user_id WHERE u.email = @e AND c.kind = 'party-public' AND c.withdrawn_at IS NULL AND c.text_version = @v",
             ("e", email), ("v", PartyPublicConsent.TextVersion))!;
 
-    private static async Task SetPartyAsync(TestBrowser member, string? party)
-    {
-        using var set = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = party, Consent = party is not null });
-        set.StatusCode.ShouldBe(HttpStatusCode.NoContent, await set.Content.ReadAsStringAsync());
-    }
+    private static Task SetPartyAsync(TestBrowser member, string? party) => member.SetPartyAsync(party);
 
+    /// <summary>"Rodyti viešame profilyje" ticked and the form saved (design 8.28.5).</summary>
     private static async Task ShowAsync(TestBrowser member)
     {
-        using var shown = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartyPublic, new PartyPublicRequest { ConsentVersion = PartyPublicLimits.ConsentVersion });
-        shown.StatusCode.ShouldBe(HttpStatusCode.NoContent, await shown.Content.ReadAsStringAsync());
+        using var shown = await member.ShowPartyAsync();
+        shown.StatusCode.ShouldBe(HttpStatusCode.OK, await shown.Content.ReadAsStringAsync());
     }
 
     /// <summary>The page's answer and its served HTML, as a visitor reads them.</summary>
@@ -55,14 +52,14 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
         using var _m = member;
         await SetPartyAsync(member, Party);
 
-        var mine = await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport);
-        (mine.Party, mine.Public, mine.ProfilePublic, mine.ConsentVersion).ShouldBe((Party, false, true, PartyPublicConsent.TextVersion));
+        var mine = await member.MyProfileAsync();
+        (mine.Party, mine.PartyPublic, mine.ProfileId is not null, mine.PartyPublicConsentVersion).ShouldBe((Party, false, true, PartyPublicConsent.TextVersion));
         var (before, beforeHtml) = await PageAsync(id, name);
         before.Party.ShouldBeNull("\"Viešas profilis\" alone never shows the party");
         beforeHtml.ShouldNotContain(Party);
         beforeHtml.ShouldNotContain("id=\"member-party\"", Case.Sensitive);
 
-        using (var outdated = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartyPublic, new PartyPublicRequest { ConsentVersion = "2020-01-01" }))
+        using (var outdated = await member.ShowPartyAsync("2020-01-01"))
         {
             await outdated.ShouldBeProblemAsync(HttpStatusCode.Conflict, "party.consent-outdated");
         }
@@ -71,7 +68,7 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
         await ShowAsync(member);
         await ShowAsync(member);
         (await ShownConsentsAsync(email)).ShouldBe(1, "one consent, with its version; giving it again changes nothing");
-        (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Public.ShouldBeTrue();
+        (await member.MyProfileAsync()).PartyPublic.ShouldBeTrue();
 
         var (after, afterHtml) = await PageAsync(id, name);
         after.ShouldBe(before with { Party = Party });
@@ -121,14 +118,14 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
         const string name = "Partiją Slepianti Narė";
         var (member, email, id) = await Factory.PublicMemberAsync(name);
         using var _m = member;
-        var other = (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Choices.First(c => c != Party);
+        var other = (await member.MyProfileAsync()).PartyChoices.First(c => c != Party);
         await SetPartyAsync(member, Party);
         var userId = (await Database.UserIdAsync(email)).ToString();
 
         async Task GoneAsync(string why, string reason)
         {
             (await ShownConsentsAsync(email)).ShouldBe(0, why);
-            (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Public.ShouldBeFalse(why);
+            (await member.MyProfileAsync()).PartyPublic.ShouldBeFalse(why);
             (await Database.ScalarAsync<long>(
                 "SELECT count(*) FROM audit.event WHERE action = 'party.public-off' AND target = @t AND details->>'reason' = @r", ("t", userId), ("r", reason))).ShouldBeGreaterThan(0, why);
         }
@@ -164,7 +161,7 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
         var (back, backHtml) = await PageAsync(again, name);
         back.Party.ShouldBeNull("switching the profile on again does not bring it back by itself");
         backHtml.ShouldNotContain(Party);
-        (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Party.ShouldBe(Party, "the party itself stays, private");
+        (await member.MyProfileAsync()).Party.ShouldBe(Party, "the party itself stays, private");
     }
 
     [Fact]
@@ -172,7 +169,7 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
     {
         var (member, email, _) = await Factory.PublicMemberAsync("Be Partijos Narė");
         using var _m = member;
-        using (var none = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartyPublic, new PartyPublicRequest { ConsentVersion = PartyPublicLimits.ConsentVersion }))
+        using (var none = await member.ShowPartyAsync())
         {
             await none.ShouldBeProblemAsync(HttpStatusCode.Conflict, "party.none");
         }
@@ -180,8 +177,8 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
         var (closed, closedEmail) = await Factory.MemberAsync("Uždaro Profilio Narė");
         using var _c = closed;
         await SetPartyAsync(closed, Party);
-        (await closed.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).ProfilePublic.ShouldBeFalse();
-        using (var off = await closed.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartyPublic, new PartyPublicRequest { ConsentVersion = PartyPublicLimits.ConsentVersion }))
+        (await closed.MyProfileAsync()).ProfileId.ShouldBeNull();
+        using (var off = await closed.ShowPartyAsync())
         {
             await off.ShouldBeProblemAsync(HttpStatusCode.Conflict, "party.profile-off");
         }
@@ -192,7 +189,7 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
         using var mp = await Factory.MpAccountAsync(MpSteps.Ievaite);
         try
         {
-            using var refused = await mp.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartyPublic, new PartyPublicRequest { ConsentVersion = PartyPublicLimits.ConsentVersion });
+            using var refused = await mp.Browser.ShowPartyAsync();
             await refused.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "mp.takes-no-part");
         }
         finally
@@ -217,7 +214,7 @@ public sealed class PartyPublicTests(DatabaseFixture database) : ApiTest(databas
         (await ShownConsentsAsync(email)).ShouldBe(0);
         (await PageAsync(id, name)).Answer.Party.ShouldBeNull();
 
-        using var again = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartyPublic, new PartyPublicRequest { ConsentVersion = PartyPublicLimits.ConsentVersion });
+        using var again = await member.ShowPartyAsync();
         await again.ShouldBeProblemAsync(HttpStatusCode.Forbidden, TermsOfUse.RequiredCode);
         (await ShownConsentsAsync(email)).ShouldBe(0);
     }
