@@ -94,10 +94,10 @@ public sealed class ModerationActionsTests : BunitContext
     }
 
     [Fact]
-    public void An_open_bill_offers_the_description_the_timing_actions_and_keep_only_when_something_was_reported()
+    public void An_open_bill_offers_the_description_the_timing_actions_closing_and_keep_only_when_something_was_reported()
     {
-        Offered(Render("record", "open", openItems: true)).ShouldBe(["keep", "describe", "planned", "threshold", "hold", "urgent", "hide"]);
-        Offered(Render("record", "open")).ShouldBe(["describe", "planned", "threshold", "hold", "urgent", "hide"]);
+        Offered(Render("record", "open", openItems: true)).ShouldBe(["keep", "describe", "planned", "threshold", "close", "hold", "urgent", "hide"]);
+        Offered(Render("record", "open")).ShouldBe(["describe", "planned", "threshold", "close", "hold", "urgent", "hide"]);
     }
 
     [Fact]
@@ -186,9 +186,9 @@ public sealed class ModerationActionsTests : BunitContext
     public void An_AI_summary_nobody_has_read_can_be_confirmed_corrected_or_removed_and_any_description_removed()
     {
         Offered(Render("record", "open", openItems: true, description: "DI santrauka.", source: "ai"))
-            .ShouldBe(["keep", "confirm", "describe", "undescribe", "planned", "threshold", "hold", "urgent", "hide"]);
+            .ShouldBe(["keep", "confirm", "describe", "undescribe", "planned", "threshold", "close", "hold", "urgent", "hide"]);
         Offered(Render("record", "open", description: "Moderatoriaus tekstas.", source: "moderator"))
-            .ShouldBe(["describe", "undescribe", "planned", "threshold", "hold", "urgent", "hide"]);
+            .ShouldBe(["describe", "undescribe", "planned", "threshold", "close", "hold", "urgent", "hide"]);
         Offered(Render("record", "open", description: "Patvirtinta santrauka.", source: "ai-draft")).ShouldNotContain("confirm");
     }
 
@@ -219,7 +219,7 @@ public sealed class ModerationActionsTests : BunitContext
         actions.Find("form").Submit();
 
         _api.Calls.ShouldContain("RemoveDescriptionAsync");
-        Offered(actions).ShouldBe(["describe", "planned", "threshold", "hold", "urgent", "hide"]);
+        Offered(actions).ShouldBe(["describe", "planned", "threshold", "close", "hold", "urgent", "hide"]);
         actions.Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.write"));
     }
 
@@ -409,5 +409,93 @@ public sealed class ModerationActionsTests : BunitContext
         var offered = Offered(actions);
         offered.ShouldContain("release");
         offered.ShouldNotContain("urgent");
+    }
+
+    /// <summary>
+    /// Design 8.1 step 6 (owner, 2026-11-19): under "Seime" an open bill offers closing it as rejected or withdrawn; a closed one
+    /// offers undoing the close only when a moderator closed it, never after the Seimas's vote.
+    /// </summary>
+    [Theory]
+    [InlineData("rejected", true)]
+    [InlineData("withdrawn", true)]
+    [InlineData("vote", false)]
+    [InlineData(null, false)]
+    public void A_closed_bill_offers_undoing_the_close_only_when_a_moderator_closed_it(string? reason, bool offered)
+    {
+        var actions = Render<ModerationActions>(p => p
+            .Add(c => c.Id, Item).Add(c => c.Number, Bill).Add(c => c.Kind, "record").Add(c => c.Status, "closed")
+            .Add(c => c.Description, "").Add(c => c.ClosedReason, reason));
+        Offered(actions).ShouldBe(offered ? ["describe", "reopen", "hide"] : ["describe", "hide"]);
+        Offered(actions).ShouldNotContain("close");
+    }
+
+    [Fact]
+    public void Closing_asks_what_happened_the_day_as_a_typed_date_the_lrs_source_and_a_statement_and_sends_them()
+    {
+        _api.On("CloseRecordAsync", ApiResult.Ok());
+        var actions = Render("record", "open");
+        actions.Find($"#action-close-{Item}").TextContent.ShouldBe(Text("Mod.Action.close"));
+        actions.Find($"#action-close-{Item}").Click();
+
+        actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.close"));
+        actions.FindAll($"input[name=close-reason-{Item}]").Select(r => r.GetAttribute("value")).ShouldBe(["rejected", "withdrawn"]);
+        var date = actions.Find($"#close-date-{Item}");
+        date.GetAttribute("type").ShouldBe("text", "never the browser's date control");
+        date.GetAttribute("placeholder").ShouldBe(Display.DateExample);
+
+        actions.Find($"#close-reason-withdrawn-{Item}").Change(true);
+        date.Change("2026-11-17");
+        actions.Find($"#close-url-{Item}").Input("https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys");
+        actions.Find($"#statement-{Item}").Input("Iniciatoriai projektą atsiėmė.");
+        actions.Find("form").Submit();
+
+        var sent = (CloseRecordRequest)_api.Arguments[_api.Calls.IndexOf("CloseRecordAsync")][1]!;
+        sent.ShouldBe(new CloseRecordRequest
+        {
+            Reason = "withdrawn",
+            DecidedOn = new DateOnly(2026, 11, 17),
+            SourceUrl = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys",
+            Statement = "Iniciatoriai projektą atsiėmė.",
+        });
+        actions.Markup.ShouldContain(Text("Mod.Done.close"));
+    }
+
+    [Theory]
+    [InlineData(null, "2026-11-17", "https://lrs.lt/a", "reason")]
+    [InlineData("rejected", "17.11.2026", "https://lrs.lt/a", "decidedOn")]
+    [InlineData("rejected", "2026-11-17", "", "sourceUrl")]
+    [InlineData("rejected", "2026-11-17", "https://pavyzdys.test/a", "sourceUrl")]
+    public void A_close_without_a_reason_with_a_wrong_day_or_without_an_lrs_source_is_not_sent(string? reason, string day, string source, string field)
+    {
+        var actions = Render("record", "open");
+        actions.Find($"#action-close-{Item}").Click();
+        if (reason is not null)
+        {
+            actions.Find($"#close-reason-{reason}-{Item}").Change(true);
+        }
+
+        actions.Find($"#close-date-{Item}").Change(day);
+        actions.Find($"#close-url-{Item}").Input(source);
+        actions.Find($"#statement-{Item}").Input("Bandymas.");
+        actions.Find("form").Submit();
+
+        _api.Calls.ShouldNotContain("CloseRecordAsync");
+        actions.FindAll(".field--error").Count.ShouldBeGreaterThan(0, field);
+    }
+
+    [Fact]
+    public void Undoing_a_close_asks_for_a_statement_and_sends_it()
+    {
+        _api.On("ReopenRecordAsync", ApiResult.Ok());
+        var actions = Render<ModerationActions>(p => p
+            .Add(c => c.Id, Item).Add(c => c.Number, Bill).Add(c => c.Kind, "record").Add(c => c.Status, "closed").Add(c => c.ClosedReason, "rejected"));
+        actions.Find($"#action-reopen-{Item}").Click();
+        actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.reopen"));
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Required"));
+        actions.Find($"#statement-{Item}").Input("Projektas neatmestas, grąžintas tobulinti.");
+        actions.Find("form").Submit();
+
+        ((StatementRequest)_api.Arguments[_api.Calls.IndexOf("ReopenRecordAsync")][1]!).Statement.ShouldBe("Projektas neatmestas, grąžintas tobulinti.");
+        actions.Markup.ShouldContain(Text("Mod.Done.reopen"));
     }
 }

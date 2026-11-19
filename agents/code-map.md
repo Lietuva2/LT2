@@ -62,6 +62,7 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            Parliament, for sending), IDigestSource, IPartySupporters, IAccountData (one per module),
                            IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource,
                            IOrganisationDirectory, IOrganisationCodeSwitch, IMpLinks, IMpResponseFeed,
+                           IRecordClosureFeed (moderators' closes of rejected or withdrawn bills, for the follow emails),
                            IWritingRestrictions, IStaffAddresses). The host
                            composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
                            Identity also owns MPs' links (Application/Politicians: politician_link, politician_token,

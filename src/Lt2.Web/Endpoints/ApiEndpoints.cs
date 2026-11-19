@@ -97,6 +97,8 @@ internal static class ApiEndpoints
         RestrictionsEndpoints.Map(api);
         KeepRecordEndpoint.Map(api);
         HideRecordEndpoint.Map(api);
+        CloseRecordEndpoint.Map(api);
+        ReopenRecordEndpoint.Map(api);
         HiddenEndpoints.Map(api);
         SetRecordThresholdEndpoint.Map(api);
         ModerationRecordEndpoints.Map(api);

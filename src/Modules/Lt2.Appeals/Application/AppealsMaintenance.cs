@@ -98,18 +98,11 @@ internal sealed class AppealsMaintenance(
             // Frozen now: once the status is closed no side can be taken or changed, and the page shows these numbers.
             var counts = (await reads.CountsAsync(db, [record.Id], cancellationToken))[record.Id];
             var now = clock.GetUtcNow();
-            record.Status = BillRecordStatuses.Closed;
-            record.ClosedAt = now;
-            record.ChangedAt = now;
-            record.ClosingVoteId = final!.VoteId;
-            record.ClosedFor = counts.For;
-            record.ClosedForOlderThan30Days = counts.ForOlderThan30Days;
-            record.ClosedAgainst = counts.Against;
-            record.ClosedAgainstOlderThan30Days = counts.AgainstOlderThan30Days;
+            ClosingRules.Close(record, counts, now, ClosedReasons.Vote, final!.VoteId, null, null);
             await db.SaveChangesAsync(cancellationToken);
             await audit.WriteAsync(
                 new AuditEntry("record.closed", null, "system", "record:" + record.Id,
-                    System.Text.Json.JsonSerializer.SerializeToElement(new { bill = record.BillNumber, vote = final.VoteId }, System.Text.Json.JsonSerializerOptions.Web)),
+                    System.Text.Json.JsonSerializer.SerializeToElement(new { bill = record.BillNumber, reason = ClosedReasons.Vote, vote = final.VoteId }, System.Text.Json.JsonSerializerOptions.Web)),
                 Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction),
                 cancellationToken);
             await transaction.CommitAsync(cancellationToken);

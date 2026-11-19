@@ -179,8 +179,9 @@ summary is sent.
 - **Reports after the final vote (8.3, 8.12).** A report about an argument or a description on a closed bill reaches
   the moderators' queue like any other. On a closed record a moderator can hide and restore an argument, correct or
   remove the description, and answer the report with "Palikti", each with a statement, audited, the author told, as
-  on an open one. The whole record of a closed bill can be hidden too. The frozen counts and the summaries already made
-  do not change. Everything else on a closed record stays refused.
+  on an open one. The whole record of a closed bill can be hidden too, and a close a moderator made (a bill rejected or
+  withdrawn, 8.1 step 6) can be undone. The frozen counts and the summaries already made do not change. Everything else
+  on a closed record stays refused.
 - **Party numbers (8.2).** Each party's number is shown when that party has at least `Digest:PartyGroupMinimum` people
   (default 10, 0 = no floor; 8.4). A side's party number is also withheld when the rest of that side is a non-empty
   group under the same minimum, so the rest cannot be read by subtraction from the side's total shown beside it

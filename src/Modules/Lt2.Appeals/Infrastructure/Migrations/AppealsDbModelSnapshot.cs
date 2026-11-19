@@ -82,6 +82,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("closed_at");
 
+                    b.Property<DateOnly?>("ClosedDecidedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("closed_decided_on");
+
                     b.Property<int?>("ClosedFor")
                         .HasColumnType("integer")
                         .HasColumnName("closed_for");
@@ -89,6 +93,16 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.Property<int?>("ClosedForOlderThan30Days")
                         .HasColumnType("integer")
                         .HasColumnName("closed_for_older_than30days");
+
+                    b.Property<string>("ClosedReason")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("closed_reason");
+
+                    b.Property<string>("ClosedSourceUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("closed_source_url");
 
                     b.Property<long?>("ClosingVoteId")
                         .HasColumnType("bigint")

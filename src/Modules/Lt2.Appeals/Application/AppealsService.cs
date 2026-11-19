@@ -1004,7 +1004,10 @@ internal sealed class AppealsService(
             record.Status == BillRecordStatuses.Closed ? null : (await agenda.ForBillsAsync([record.BillNumber], ct)).GetValueOrDefault(record.BillNumber),
             null,
             forPage.Cards.Concat(againstPage.Cards).DistinctBy(c => c.ProfileId).OrderBy(c => c.ProfileId, StringComparer.Ordinal).ToList(),
-            new ReasonTotals(forPage.Total, againstPage.Total));
+            new ReasonTotals(forPage.Total, againstPage.Total),
+            record.Status == BillRecordStatuses.Closed ? record.ClosedReason : null,
+            record.Status == BillRecordStatuses.Closed ? record.ClosedDecidedOn : null,
+            record.Status == BillRecordStatuses.Closed ? record.ClosedSourceUrl : null);
     }
 
     public async Task<Result<ReasonPage>> ReasonsAsync(string billNumber, string side, string? cursor, int? limit, CancellationToken cancellationToken)

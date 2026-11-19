@@ -43,6 +43,36 @@ public sealed class FollowTemplateTests
         email.TextBody.ShouldNotContain("kreipim", Case.Insensitive, "nothing about the person's side or the record");
     }
 
+    /// <summary>
+    /// Design 8.1 step 6, 8.6: a followed bill rejected or withdrawn, as a moderator recorded: what happened and when, that
+    /// taking a side has ended, the source on lrs.lt and the bill's page; never the counts, a side or the moderator.
+    /// </summary>
+    [Theory]
+    [InlineData("rejected", "Lietuva 2.0: Seimas atmetė XVP-0618", "2026-11-17 Seimas atmetė jūsų sekamą projektą XVP-0618 · Pataisa.", "Seimas projektą atmetė.")]
+    [InlineData("withdrawn", "Lietuva 2.0: XVP-0618 atsiimtas", "2026-11-17 jūsų sekamą projektą XVP-0618 · Pataisa atsiėmė jo iniciatoriai.", "Iniciatoriai projektą atsiėmė.")]
+    public void The_closed_email_says_what_happened_the_day_the_source_and_the_bill_and_nothing_else(string reason, string subject, string body, string line)
+    {
+        var templates = new FollowTemplates(
+            new StringLocalizer<EmailTemplates>(new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance)),
+            Options.Create(new SiteOptions { Address = "https://lt2.pavyzdys.test" }));
+        const string Source = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas";
+        var model = new FollowClosedEmail("ruta@pavyzdys.test", "XVP-0618", "Pataisa", reason, new DateOnly(2026, 11, 17), Source, "/seimas/XVP-0618", "/paskyra/sekimas#laisku-daznis");
+        var email = templates.Closed(model);
+        email.Subject.ShouldBe(subject);
+        email.TextBody.ShouldContain(body);
+        email.TextBody.ShouldContain("Nurodyti, ko prašote dėl šio projekto, nebegalima.");
+        email.TextBody.ShouldContain("Šaltinis: " + Source);
+        email.TextBody.ShouldContain("https://lt2.pavyzdys.test/seimas/XVP-0618");
+        email.TextBody.ShouldNotContain("{", Case.Sensitive, "every placeholder is filled");
+        email.TextBody.ShouldNotContain("moderator", Case.Insensitive);
+        email.HtmlBody!.ShouldNotContain("<img", Case.Insensitive);
+
+        var part = templates.ClosedPart([model]);
+        part.ShouldStartWith("Seimas nebesvarsto:");
+        part.ShouldContain($"– 2026-11-17 XVP-0618 · Pataisa. {line} https://lt2.pavyzdys.test/seimas/XVP-0618");
+        part.ShouldContain("Šaltinis: " + Source);
+    }
+
     [Theory]
     [InlineData("domain", "lgs.pavyzdys.test", "patvirtinta per el. pašto adresą @lgs.pavyzdys.test")]
     [InlineData("moderator", null, "patvirtino moderatorius")]

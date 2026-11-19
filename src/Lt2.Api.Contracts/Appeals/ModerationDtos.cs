@@ -91,6 +91,35 @@ public sealed record StatementRequest
     public string Statement { get; init; } = "";
 }
 
+/// <summary>
+/// A moderator closes an open record because the Seimas rejected the bill (<c>Reason</c> <c>rejected</c>) or its initiators
+/// withdrew it (<c>withdrawn</c>) (design 8.1 step 6, owner 2026-11-19): the day of that decision (not in the future), the source
+/// that says so (https on lrs.lt or a host under it, at most 500 characters, the rule of <see cref="OfficialTextAddress"/>) and
+/// the statement, all required.
+/// </summary>
+public sealed record CloseRecordRequest
+{
+    public string Reason { get; init; } = "";
+
+    public DateOnly DecidedOn { get; init; }
+
+    public string SourceUrl { get; init; } = "";
+
+    public string Statement { get; init; } = "";
+}
+
+/// <summary>Why a record a moderator closes closed (design 8.1 step 6): the values of <see cref="CloseRecordRequest.Reason"/>.</summary>
+public static class ClosingReasons
+{
+    public const string Rejected = "rejected";
+    public const string Withdrawn = "withdrawn";
+
+    /// <summary>A record closed by the Seimas's final vote; never a moderator's choice.</summary>
+    public const string Vote = "vote";
+
+    public static readonly IReadOnlyList<string> ByModerator = [Rejected, Withdrawn];
+}
+
 public sealed record ModeratorThresholdRequest
 {
     public int Threshold { get; init; }
@@ -122,12 +151,14 @@ public sealed record ModeratorDescriptionRequest
 /// and published arguments as the queue shows them (arguments are moderated on the bill's page too, decided 2026-11-14).
 /// <c>Id</c> is the bill's record, null while it has none (an action creates it). <c>DescriptionUrl</c> is the address the
 /// description form starts from; <c>DescriptionReports</c> the open reports about the description, as the queue shows them
-/// (decided by the owner on 2026-11-14). Moderators only; holds no position and nothing about who reported.
+/// (decided by the owner on 2026-11-14). <c>ClosedReason</c> says why a closed record closed (<c>vote</c>, <c>rejected</c>,
+/// <c>withdrawn</c>): only a moderator's close can be undone (design 8.1 step 6). Moderators only; holds no position and nothing
+/// about who reported.
 /// </summary>
 public sealed record ModerationBillResponse(
     Guid? Id, string Number, string Status, string Description, string? DescriptionSource, int Threshold, string ThresholdSetBy, bool Held,
     PlannedDateResponse? Planned, bool HasOpenItems, IReadOnlyList<QueueReasonResponse> Reasons,
-    string? DescriptionUrl, IReadOnlyList<QueueReportResponse> DescriptionReports);
+    string? DescriptionUrl, IReadOnlyList<QueueReportResponse> DescriptionReports, string? ClosedReason = null);
 
 /// <summary>The bill's record a moderator acts on (design 8.12.1: found, or created on an active bill).</summary>
 public sealed record BillRecordIdResponse(Guid Id);

@@ -67,6 +67,15 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - A bill's number and title are one link in an MP's list of bills and in the follow list, as on a member's page
   (2026-11-17).
 
+## 8.1 Life of an appeal
+
+- A bill rejected by the Seimas or withdrawn by its initiators before its adoption stage closes too: the open data has
+  no such status, so a moderator closes its record with the reason (rejected or withdrawn), the day of that decision and
+  the source on lrs.lt, with a statement; the counts freeze, the page shows what happened with the source, and followers
+  are told as of a vote. A moderator can undo a wrong close; a close by the Seimas's vote is never undone. Closing
+  automatically from the open data is designed and waits until a live run of the Seimas service confirms the field that
+  says so (8.1 step 6, 2026-11-19).
+
 ## 8.2 Rules
 
 - An argument may be written for either side, whatever the author's own; the author's side is only the preselected

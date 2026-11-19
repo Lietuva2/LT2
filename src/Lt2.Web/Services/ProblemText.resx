@@ -86,6 +86,10 @@
 <data name="report.target" xml:space="preserve"><value>Nenurodyta, apie ką pranešate.</value></data>
 <data name="report.target-not-found" xml:space="preserve"><value>To, apie ką pranešate, nebėra.</value></data>
 <data name="moderation.wrong-state" xml:space="preserve"><value>Šiam turiniui šio veiksmo atlikti negalima.</value></data>
+<data name="closing.reason" xml:space="preserve"><value>Pasirinkite, ar Seimas projektą atmetė, ar iniciatoriai jį atsiėmė.</value></data>
+<data name="closing.date-required" xml:space="preserve"><value>Nurodykite sprendimo datą.</value></data>
+<data name="closing.date-future" xml:space="preserve"><value>Sprendimo data negali būti vėlesnė už šiandieną.</value></data>
+<data name="closing-url.invalid" xml:space="preserve"><value>Nurodykite šaltinio adresą lrs.lt svetainėje, prasidedantį https://.</value></data>
 <data name="merge.target-invalid" xml:space="preserve"><value>Sujungti galima tik su paskelbtu tos pačios pusės argumentu tame pačiame kreipimesi.</value></data><data name="flag.kind" xml:space="preserve"><value>Pasirinkite, kas negerai su data.</value></data>
 <data name="flag.link" xml:space="preserve"><value>Nurodykite nuorodą (http arba https), kur matyti tikroji data.</value></data>
 <data name="flag.note" xml:space="preserve"><value>Paaiškinimas per ilgas: ne daugiau kaip 1 000 ženklų.</value></data>

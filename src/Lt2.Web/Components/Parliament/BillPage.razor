@@ -142,7 +142,7 @@
                            them at once, without reloading the page (owner, 2026-11-17). A closed record's note, worded here,
                            stands between the counts and the surge note. *@
                         <SideFigures Number="@b.Number" Status="@a.Status" Counts="a.Counts" Surge="a.Surge"
-                                     Frozen="@(a.Status == "closed" && a.ClosedAt is { } closedAt ? A.Format("Closed.Frozen", F.Date(closedAt)) : null)"
+                                     Frozen="@(a.Status == "closed" && a.ClosedAt is { } closedAt ? A.Format(a.ClosingVoteId is null ? "Closed.Frozen.Ended" : "Closed.Frozen", F.Date(closedAt)) : null)"
                                      @rendermode="InteractiveWebAssembly" />
                         @if (a.Status == "open")
                         {
@@ -204,6 +204,19 @@
                                     <p class="small"><a href="/seimas/balsavimai/@vote.Summary.Vote.Id#balsai" id="each-mp">@A["Closed.EachMp"]</a></p>
                                 }
                             }
+                        </section>
+                    }
+                    else if (a is { Status: "closed", ClosedReason: "rejected" or "withdrawn", ClosedDecidedOn: { } decidedOn })
+                    {
+                        @* Design 8.1 step 6 (owner, 2026-11-19): a moderator recorded that the Seimas rejected the bill or its
+                           initiators withdrew it, which the open data does not say: what happened, the day and the source on lrs.lt,
+                           where a vote-closed record shows the Seimas result. No vote, so no MPs' ballots. *@
+                        <section class="sheet stack" aria-labelledby="h-result" id="seimas-result">
+                            <h2 id="h-result">@A[a.ClosedReason == "withdrawn" ? "Closed.Heading.withdrawn" : "Closed.Heading"]</h2>
+                            <p id="closed-decision">@A.Format("Closed.Decision." + a.ClosedReason, Display.Day(decidedOn))@if (a.ClosedSourceUrl is { } closedSource)
+                                {
+                                    @(" ")<a href="@closedSource" rel="external noopener" id="closed-source">@A["Closed.Source"]</a>
+                                }</p>
                         </section>
                     }
                 </div>
@@ -374,7 +387,9 @@
             }
         }
 
-        if (_record is { Status: "open" } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
+        // Owner, 2026-11-19 (design 8.3, 8.12.3): the moderators' panel and "Moderuoti" on an open record and on a closed one,
+        // where only what applies there is offered ("Atšaukti uždarymą" among it).
+        if (_record is { Status: "open" or "closed" } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
         {
             _moderator = (await Authorization.AuthorizeAsync(http.User, http, Lt2.Web.Security.Policies.Moderator)).Succeeded;
         }

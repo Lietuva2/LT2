@@ -172,7 +172,10 @@ public static class ReasonLimits
 /// only the moderators' <c>HiddenStatement</c>. <c>DescriptionUrl</c> is the official text the description was made from,
 /// when known, and <c>DescriptionAt</c> when its text was made or last changed (design 8.13). <c>Reasons</c> holds each
 /// side's first <see cref="ReasonLimits.First"/> arguments only, <c>ReasonTotals</c> how many each side has (owner,
-/// 2026-11-19); the rest comes a page at a time (<see cref="IAppealsApi.GetReasonsAsync"/>).
+/// 2026-11-19); the rest comes a page at a time (<see cref="IAppealsApi.GetReasonsAsync"/>). On a closed record
+/// <c>ClosedReason</c> says why (design 8.1 step 6): <c>vote</c>, the final vote <c>ClosingVoteId</c>; <c>rejected</c> or
+/// <c>withdrawn</c>, a moderator recorded that the Seimas rejected the bill or its initiators withdrew it on <c>ClosedDecidedOn</c>,
+/// as <c>ClosedSourceUrl</c> on lrs.lt says.
 /// </summary>
 public sealed record BillRecordResponse(
     Guid? Id,
@@ -191,7 +194,10 @@ public sealed record BillRecordResponse(
     string? DescriptionUrl = null,
     DateTimeOffset? DescriptionAt = null,
     IReadOnlyList<AuthorCardResponse>? Cards = null,
-    ReasonTotalsResponse? ReasonTotals = null);
+    ReasonTotalsResponse? ReasonTotals = null,
+    string? ClosedReason = null,
+    DateOnly? ClosedDecidedOn = null,
+    string? ClosedSourceUrl = null);
 
 /// <summary>The bill's planned date on the Seimas agenda (design 8.4): shown as "Planuojama …", never a countdown.</summary>
 public sealed record PlannedDateResponse(DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator);

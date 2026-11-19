@@ -2,6 +2,7 @@
 @inherits InteractiveBase<AppealUi>
 @inject IModerationApi Moderation
 @inject FluentValidation.IValidator<ModeratorDescriptionRequest> DescriptionValidator
+@inject FluentValidation.IValidator<CloseRecordRequest> CloseValidator
 @inject IAuthApi Auth
 @inject IMeApi MeApi
 @inject Passkeys PasskeyBrowser
@@ -15,10 +16,12 @@
    merge) leaves the confirmation in place of the controls. On a bill without a record (Id null) the first action creates
    it (design 8.12.1). "Rašyti aprašymą" works on any active bill and offers the AI draft from pasted official text only
    when a provider is configured (8.11.4); without one nothing here mentions a draft. A bill's description can also be
-   confirmed (only an AI summary nobody has read) or removed (design 8.13). Approving an urgent summary needs the staff
-   passkey confirmed in the last ten minutes (design 6.2): when the server asks for it, the browser's passkey prompt opens
-   on the same press, then the action is sent again, the form and its statement kept. Every element id carries IdPrefix,
-   so the same item's actions in the panel and in the list beside it never share an id. *@
+   confirmed (only an AI summary nobody has read) or removed (design 8.13). Under "Seime" an open record also offers
+   "Uždaryti: projektas atmestas ar atsiimtas" (the reason, the day, the lrs.lt source) and a record a moderator closed
+   "Atšaukti uždarymą" (design 8.1 step 6, owner 2026-11-19). Approving an urgent summary needs the staff passkey
+   confirmed in the last ten minutes (design 6.2): when the server asks for it, the browser's passkey prompt opens on the
+   same press, then the action is sent again, the form and its statement kept. Every element id carries IdPrefix, so the
+   same item's actions in the panel and in the list beside it never share an id. *@
 <div class="stack stack--tight" id="actions-@Key">
     @if (!_finished)
     {
@@ -110,6 +113,39 @@
                         </div>
                     </div>
                 }
+                @if (_open == "close")
+                {
+                    @* Design 8.1 step 6 (owner, 2026-11-19): what happened, the day of that decision (a typed date, never the
+                       browser's control) and the source on lrs.lt, with the statement below. *@
+                    <fieldset class="stack stack--tight @ErrorClass("reason")" id="close-reason-@Key">
+                        <legend class="label">@L["Mod.Close.Reason"]</legend>
+                        @foreach (var reason in ClosingReasons.ByModerator)
+                        {
+                            <label class="check">
+                                <input type="radio" name="close-reason-@Key" id="close-reason-@reason-@Key" value="@reason" checked="@(_closeReason == reason)"
+                                       @onchange="() => _closeReason = reason" disabled="@Locked" />
+                                <span>@L["Mod.Close.Reason." + reason]</span>
+                            </label>
+                        }
+                        <FieldError Errors="Errors" Field="reason" For="@($"close-reason-{Key}")" />
+                    </fieldset>
+                    <div class="field @ErrorClass("decidedOn")">
+                        <label for="close-date-@Key">@L["Mod.Close.Date"]</label>
+                        <p class="field__hint" id="close-date-hint-@Key">@L.Format("Date.Hint", Display.DateExample)</p>
+                        <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                               id="close-date-@Key" aria-describedby="@DescribedBy("decidedOn", $"close-date-{Key}", $"close-date-hint-{Key}")" aria-invalid="@Invalid("decidedOn")"
+                               @bind="_decidedOn" disabled="@Locked" />
+                        <FieldError Errors="Errors" Field="decidedOn" For="@($"close-date-{Key}")" />
+                    </div>
+                    <div class="field @ErrorClass("sourceUrl")">
+                        <label for="close-url-@Key">@L["Mod.Close.Url"]</label>
+                        <p class="field__hint" id="close-url-hint-@Key">@L["Mod.Close.UrlHint"]</p>
+                        <input class="input" type="url" inputmode="url" autocomplete="off" spellcheck="false" id="close-url-@Key"
+                               aria-describedby="@DescribedBy("sourceUrl", $"close-url-{Key}", $"close-url-hint-{Key}")" aria-invalid="@Invalid("sourceUrl")"
+                               maxlength="@AppealLimits.DescriptionUrlMaxLength" @bind="_sourceUrl" @bind:event="oninput" disabled="@Locked" />
+                        <FieldError Errors="Errors" Field="sourceUrl" For="@($"close-url-{Key}")" />
+                    </div>
+                }
                 @if (_open == "merge" && MergeCandidates is { Count: > 0 })
                 {
                     <fieldset class="stack stack--tight @ErrorClass("into")">
@@ -166,6 +202,9 @@
     private bool _fromDraft;
     private AiStatusResponse? _ai;
     private Guid? _record;
+    private string? _closeReason;
+    private string? _decidedOn;
+    private string? _sourceUrl;
 
     /// <summary>The argument, or the bill's record; null for a bill without a record (an action creates it).</summary>
     [Parameter] public Guid? Id { get; set; }
@@ -188,6 +227,9 @@
 
     /// <summary>The argument's comments, which a merge deletes (design 8.23.7): the confirmation says how many.</summary>
     [Parameter] public int Comments { get; set; }
+
+    /// <summary>For a closed bill: why it closed (<c>vote</c>, <c>rejected</c>, <c>withdrawn</c>); only a moderator's close can be undone (design 8.1 step 6).</summary>
+    [Parameter] public string? ClosedReason { get; set; }
 
     /// <summary>For a bill: its sending is held.</summary>
     [Parameter] public bool Held { get; set; }
@@ -245,8 +287,8 @@
     /// </summary>
     private IReadOnlyList<string> Offered => (Kind, Status) switch
     {
-        ("record", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "planned", "threshold", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
-        ("record", "closed") => [.. (HasOpenItems ? new[] { "keep" } : []), .. ClosedDescriptionActions, "hide"],
+        ("record", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "planned", "threshold", "close", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
+        ("record", "closed") => [.. (HasOpenItems ? new[] { "keep" } : []), .. ClosedDescriptionActions, .. (ClosingReasons.ByModerator.Contains(ClosedReason ?? "") ? new[] { "reopen" } : []), "hide"],
         ("reason", "published") when RecordStatus == "closed" => [.. KeepReason, "hide"],
         ("reason", _) when RecordStatus == "closed" => ["hide"],
         ("reason", "pending") => ["publish", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict", "hide"],
@@ -267,7 +309,7 @@
     private string? GroupOf(string action) => Kind != "record" ? null : action switch
     {
         "confirm" or "describe" or "undescribe" => L["Mod.Group.description"].Value,
-        "planned" or "threshold" => L["Mod.Group.seimas"].Value,
+        "planned" or "threshold" or "close" or "reopen" => L["Mod.Group.seimas"].Value,
         "hold" or "release" or "urgent" => L["Mod.Group.digests"].Value,
         _ => null,
     };
@@ -325,6 +367,9 @@
         _descriptionUrl = CurrentUrl;
         _source = "";
         _fromDraft = false;
+        _closeReason = null;
+        _decidedOn = null;
+        _sourceUrl = null;
         if (action == "describe" && _ai is null)
         {
             // Without an answer the form works as without a provider: nothing mentions a draft.
@@ -376,7 +421,7 @@
             sent = await SendAsync(action);
         }
 
-        if (!Succeeded(sent, "statement", "threshold", "date", "stage", "description", "descriptionUrl"))
+        if (!Succeeded(sent, "statement", "threshold", "date", "stage", "description", "descriptionUrl", "reason", "decidedOn", "sourceUrl"))
         {
             return;
         }
@@ -446,12 +491,33 @@
             return false;
         }
 
+        if (action == "close" && !Display.TryReadDate(_decidedOn, out _))
+        {
+            FieldFails("decidedOn", L.Format("Date.Invalid", Display.DateExample));
+            return false;
+        }
+
+        // A close: the reason, the source and the statement, by the validator the server applies; the day not in the future
+        // is the server's to say (its clock, Vilnius).
+        if (action == "close")
+        {
+            return Valid(CloseValidator.Validate(CloseRequest()));
+        }
+
         // The description, the statement and the official text's address: the same validator the server applies.
         return action != "describe" || Valid(DescriptionValidator.Validate(DescribeRequest()));
     }
 
     private ModeratorDescriptionRequest DescribeRequest() =>
         new() { Description = _description, Statement = _statement, FromDraft = _fromDraft, DescriptionUrl = OfficialTextAddress.Normalise(_descriptionUrl) };
+
+    private CloseRecordRequest CloseRequest() => new()
+    {
+        Reason = _closeReason ?? "",
+        DecidedOn = Display.TryReadDate(_decidedOn, out var day) ? day : default,
+        SourceUrl = OfficialTextAddress.Normalise(_sourceUrl) ?? "",
+        Statement = _statement,
+    };
 
     private async Task<ApiResult> SendAsync(string action)
     {
@@ -496,6 +562,8 @@
         {
             "keep" => await Moderation.KeepRecordAsync(id.Value, note),
             "hide" => await Moderation.HideRecordAsync(id.Value, statement),
+            "close" => await Moderation.CloseRecordAsync(id.Value, CloseRequest()),
+            "reopen" => await Moderation.ReopenRecordAsync(id.Value, statement),
             "threshold" => await Moderation.SetThresholdAsync(id.Value, new ModeratorThresholdRequest { Threshold = _threshold ?? 0, Statement = _statement }),
             "planned" => await Moderation.SetPlannedAsync(id.Value, new ModeratorPlannedRequest { Date = Display.TryReadDate(_planned, out var day) ? day : default, Stage = _stage, Statement = _statement }),
             "hold" => await Moderation.HoldAsync(id.Value, statement),

@@ -37,6 +37,12 @@ public static class MessageKinds
     /// <summary>The Seimas held a stage vote on a followed bill (design 8.11.2).</summary>
     public const string FollowVotedEmail = "email.follow-voted";
 
+    /// <summary>
+    /// A followed bill's record was closed by a moderator because the Seimas rejected the bill or its initiators withdrew it
+    /// (design 8.1 step 6, 8.6): the counterpart of the voted email where there is no vote. Under the "voted" switch.
+    /// </summary>
+    public const string FollowClosedEmail = "email.follow-closed";
+
     /// <summary>An organisation the person follows made a statement on a bill public (design 8.14.14, stage B).</summary>
     public const string FollowStatementEmail = "email.follow-statement";
 
@@ -266,6 +272,22 @@ public sealed record FollowVotedEmail(
     string? OfficialNote,
     string VotePath,
     IReadOnlyList<FollowedMpChoice> Mps,
+    string AccountPath,
+    string? StopToken = null);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.FollowClosedEmail"/> (design 8.1 step 6, 8.6): a followed bill was rejected by the Seimas
+/// (<paramref name="Reason"/> <c>rejected</c>) or withdrawn by its initiators (<c>withdrawn</c>) on <paramref name="Day"/>, as
+/// the source on lrs.lt says; taking part on it has closed. Nothing about the person's side, the counts or other people.
+/// </summary>
+public sealed record FollowClosedEmail(
+    string To,
+    string BillNumber,
+    string BillTitle,
+    string Reason,
+    DateOnly Day,
+    string SourceUrl,
+    string BillPath,
     string AccountPath,
     string? StopToken = null);
 

@@ -16,6 +16,10 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 - 7.3: "appeals in progress" on an MP's profile (the profile shows only the MP's responses); the line was taken out of
   7.3, so whether it stays designed is for the owner.
 - 8.1, 8.6, 8.20.1: telling participants and followers that a bill changed between stages (for example in a committee).
+- 8.1: closing a record automatically when the open data says rejected or withdrawn: once a live run of the Seimas
+  service confirms which field of `p2b.ad_sp_klausimo_svarstymo_eiga` (or the vote's wording) states it, the import
+  closes the record with that reason and the date, a moderator can reopen a wrong close; "returned to the initiators for
+  improvement" is not a rejection. Until then a moderator closes such a record (owner, 2026-11-19).
 - 8.3: a full lock of an account that also stops signing in.
 - 8.4, 8.19.6: a sending subdomain with SPF, DKIM and DMARC; complaint and bounce reports from an email provider.
 - 8.5.2: a screen for the administrator's end of an MP's link (there is an API route only).
@@ -38,15 +42,10 @@ For the owner to decide in each case: fix the code or change the rule.
 
 - 8.1: participants were to get one closing email at the final vote; there is no such email, and they hear through
   the follow email about the vote (a first side follows the bill, 8.11.2).
-- 8.1: a record was also to close when a bill is rejected or withdrawn before adoption; the code closes a record only
-  at the adoption-stage vote (8.26.2), so such a bill's record stays open (see the risk about 8.26.7).
 - 6.4: Caddy was to rate-limit per IP address; the Caddyfile has no rate limiting, only the ASP.NET policies.
 - 8.4: in an MP's summary, bills led by the MP's committee come first; the group is always empty, because lead
   committees are not imported.
 - 8.4 (deliverability): only permanent SMTP 5xx refusals go to the suppression list; complaints are not handled.
-- 8.3, 8.12.3: on a closed record the bill's page shows no "Moderavimas" panel and no "Moderuoti" (`BillPage.razor`
-  asks for the moderator only on an open record; a closed record is moderated from the queue, as 8.3 says), though
-  `RecordModerationPanel` handles a closed record and its actions (6.9).
 
 ## Awaiting the owner
 
@@ -262,6 +261,15 @@ for the lawyer).
   `Consent.Submit.account`).
 - 8.2: the notes "Bus skaičiuojama, kai prašysite balsuoti už." and "Neskaičiuojama: jūs prašote balsuoti prieš."; the
   writing box's hint "Sąrašą rašykite eilutėmis, pradėtomis „-“ arba „1.“." (also for the owner).
+- 8.1, 8.3, 8.6, 8.12.1: closing a rejected or withdrawn bill: the actions "Uždaryti: projektas atmestas ar atsiimtas" and
+  "Atšaukti uždarymą", the form's "Kas nutiko", "Seimas projektą atmetė", "Iniciatoriai projektą atsiėmė", "Sprendimo
+  data", "Šaltinis lrs.lt" and its hint, the sentences and confirmations (`AppealUi` `Mod.Action.close|reopen`,
+  `Mod.Sentence.appeal.close|reopen`, `Mod.Close.*`, `Mod.Done.close|reopen`); the page's "Seimas projektą atmetė {0}.",
+  "Iniciatoriai projektą atsiėmė {0}.", "Projektas atsiimtas", "Šaltinis", "Skaičiai užfiksuoti {0} ir nebesikeičia."
+  (`AppealText` `Closed.*`); the follow email's subjects, lines and the gathered part "Seimas nebesvarsto:"
+  (`EmailTemplates` `Follow.Closed.*`, `Gathered.Closed.*`); the refusals (`ProblemText` `closing.*`,
+  `closing-url.invalid`; `ValidationMessages` `Closing.*`); the methodology's "kol dalyvauti dėl projekto galima"
+  (`AppealText` `Method.Privacy.1`, also for the lawyer).
 - 8.7, 8.12.1: "Paspaudę dar kartą, atsiimsite." (`AppealUi` `Side.PressAgain`), the pressed button's title.
 - 8.10: the feedback texts.
 - 8.12.2: the reached threshold, "Riba pasiekta – …" (`AppealUi` `Threshold.Reached.*`, `Threshold.ReachedClosed.*`)
@@ -364,6 +372,6 @@ them all once, before going live.
 | A followed member watched and pressed (8.25.5) | The profile switch is the consent to being followed and ends every follow at once; only the number of followers shows, nobody (the person included) is told who follows; harassment in comments answered by reports, hiding and the writing restriction. What stays: one particular follower cannot be blocked without showing followers. |
 | The product drifts from "people tell MPs" towards a social network (8.25, 8.11.2) | A number of followers on every thing that can be followed, members included, stands only on the thing's own page and nothing is ranked, sorted or listed by it; who follows is invisible to all but the follower; summaries carry no follower number. What stays: a visible count invites collecting followers, which is what a social network rewards. |
 | MPs' follower numbers read as a popularity score or a scorecard (7.1, 8.11.2) | No ordering (no list sorted by it, no "most followed", no number in list rows), no comparison (no total per faction or party, nothing set beside another MP's number), and the note that these are self-selected users who asked for emails, not supporters and not a representative poll. What stays: anyone can open profiles one by one and build the table elsewhere; the site does not make it. |
-| A bill rejected or withdrawn before its adoption stage is never compared on the analytics page (8.26.7): the code closes a record only at the adoption-stage vote, which such a bill never gets (under "Where the code does not do what a rule says", 8.1) | Said in 8.26.7; the comparison covers bills with an adoption-stage vote. Closing on an earlier rejection needs the open data to say so (the bill's status, 5.1), which is not read yet. |
+| A bill rejected or withdrawn before its adoption stage stays open, taking sides, until a moderator notices and closes it (8.1 step 6); and it is never compared on the analytics page, having no closing vote (8.26.2) | A moderator closes it with the reason, the day and the lrs.lt source, and can undo a wrong close; followers are told. Closing on the open data's word is designed and waits for a live run of the Seimas service ("Designed, not built", 8.1). The comparison covers bills with an adoption-stage vote, and its page says so ("Seimas balsavo galutinai"). |
 | A member's comparison kept in server memory (8.26.6) reveals their sides to anyone who can read the web process's memory | Kept only in memory, never in a table, a log or the browser, bounded to 10 000 members and dropped after 12 idle hours, at sign-out, account deletion and withdrawal of the positions consent; the same exposure as the sides themselves in the database. |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |

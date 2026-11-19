@@ -324,6 +324,95 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
     }
 }
 /// <summary>
+/// A moderator closed a followed bill's record because the Seimas rejected the bill or its initiators withdrew it (design 8.1
+/// step 6, 8.6; kind <c>closed</c>, key: <see cref="FollowRules.ClosedKey"/>): the counterpart of the voted email where the open
+/// data has no vote, under the same switch ("voted") and rhythm. The bill, what happened, the day and the source on lrs.lt; never
+/// the counts or anyone's side. Told to those who followed before the close; a close undone (reopened) by the time the email is
+/// made is left out.
+/// </summary>
+internal sealed class ClosedNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IRecordClosureFeed closures) : IMemberNoticeKind
+{
+    public async Task<int> RecordAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var closed = await closures.ClosedAsync(now - FollowRules.EventLookBack, now, cancellationToken);
+        if (closed.Count == 0)
+        {
+            return 0;
+        }
+
+        // An event is recorded only for a followed bill, as a vote's.
+        var numbers = closed.Select(c => c.BillNumber).Distinct().ToList();
+        var followed = (await db.Follows.AsNoTracking().Where(f => f.Kind == FollowKinds.Bill && numbers.Contains(f.Key)).Select(f => f.Key).Distinct().ToListAsync(cancellationToken))
+            .ToHashSet(StringComparer.Ordinal);
+        var fresh = closed.Where(c => followed.Contains(c.BillNumber)).ToList();
+        var keys = fresh.Select(c => FollowRules.ClosedKey(c.ClosedAt)).ToList();
+        var known = (await db.BillEvents.AsNoTracking().Where(e => e.Kind == BillEventKinds.Closed && keys.Contains(e.Key)).Select(e => new { e.BillNumber, e.Key }).ToListAsync(cancellationToken))
+            .Select(e => (e.BillNumber, e.Key))
+            .ToHashSet();
+        var recorded = 0;
+        foreach (var c in fresh)
+        {
+            var key = FollowRules.ClosedKey(c.ClosedAt);
+            if (known.Add((c.BillNumber, key)))
+            {
+                FollowEvents.Record(db, c.BillNumber, BillEventKinds.Closed, key, now, FollowRules.ClosedIsSendable(c.ClosedAt, now));
+                recorded++;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return recorded;
+    }
+
+    public async Task<IReadOnlyList<DueNotice>> TakeAsync(NoticePass pass, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(pass);
+        if (pass.Which == Pass.Early)
+        {
+            return [];
+        }
+
+        var events = await FollowEvents.PendingAsync(pass, BillEventKinds.Closed, cancellationToken);
+        if (events.Count == 0)
+        {
+            return [];
+        }
+
+        // What is closed now; a close undone meanwhile is not, and is never sent rather than sent late.
+        var closedNow = (await closures.ClosedAsync(pass.Now - FollowRules.EventLookBack, pass.Now.AddSeconds(1), cancellationToken))
+            .ToDictionary(c => (c.BillNumber, FollowRules.ClosedKey(c.ClosedAt)));
+        var numbers = events.Select(e => e.BillNumber).Distinct().ToList();
+        var followers = await FollowEvents.FollowersAsync(pass.Db, FollowKinds.Bill, numbers, cancellationToken);
+        var facts = await bills.FindManyAsync(numbers, cancellationToken);
+        var due = new List<DueNotice>();
+        foreach (var e in events)
+        {
+            if (closedNow.GetValueOrDefault((e.BillNumber, e.Key)) is not { } closure)
+            {
+                FollowEvents.Dropped(e, pass);
+                continue;
+            }
+
+            var bill = facts.GetValueOrDefault(e.BillNumber) ?? new BillFacts(e.BillNumber, e.BillNumber);
+            foreach (var f in followers[e.BillNumber])
+            {
+                if (FollowRules.IsRecipient(f.CreatedAt, e.FirstSeen, closure.ClosedAt) && pass.Tells(f.UserId, e.FirstSeen, n => n.Voted))
+                {
+                    due.Add(new DueNotice(f.UserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowClosedEmail, new FollowClosedEmail(
+                        to.To, bill.Number, bill.Title, closure.Reason, closure.DecidedOn, closure.SourceUrl, FollowEvents.BillPath(bill.Number),
+                        NoticeDelivery.AccountPath, to.StopToken))));
+                }
+            }
+
+            FollowEvents.Taken(e, pass);
+        }
+
+        return due;
+    }
+}
+
+/// <summary>
 /// A followed organisation's statement on a bill became public (design 8.14.14, stage B; kind <c>statement</c>, key: the
 /// statement): the organisation with its label, the bill and the stance, never the text. Left out when it is no longer public or
 /// its organisation is blocked or closed by the time the email is made.

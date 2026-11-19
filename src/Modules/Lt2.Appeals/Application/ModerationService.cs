@@ -163,6 +163,49 @@ internal sealed class ModerationService(
             return Task.FromResult(Result.Ok());
         }, cancellationToken);
 
+    public Task<Result<Unit>> CloseRecordAsync(Guid recordId, RecordClosure closure, StaffActor moderator, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(closure);
+        var reason = closure.Reason?.Trim();
+        var source = RecordRules.NormaliseDescriptionUrl(closure.SourceUrl);
+
+        // Design 8.1 step 6 (owner, 2026-11-19): the Seimas rejected the bill or its initiators withdrew it, which the open data
+        // does not say. Under the bill's lock in one transaction, as the closing job's close: the counts frozen, nothing can be
+        // taken or changed afterwards. It answers no report (the description's stay open). Followers hear of it by the follow
+        // job (IRecordClosureFeed), as of a vote.
+        return Refused(closure.Statement, required: true) ?? OnRecordAsync(recordId, moderator, "close", closure.Statement, answersReports: false, async (db, record, now) =>
+        {
+            var finished = await records.IsFinishedAsync(record.Status, record.BillNumber, cancellationToken);
+            if (RecordRules.CheckClose(record.Status, finished, reason, closure.DecidedOn, VilniusTime.DateOf(now), source, closure.Statement) is { } refused)
+            {
+                return RuleErrors.Of(refused);
+            }
+
+            var counts = (await reads.CountsAsync(db, [record.Id], cancellationToken))[record.Id];
+            ClosingRules.Close(record, counts, now, reason!, null, closure.DecidedOn, source);
+            return Result.Ok();
+        }, cancellationToken, details: new { reason, decidedOn = closure.DecidedOn, sourceUrl = source }, auditAction: "record.closed");
+    }
+
+    public Task<Result<Unit>> ReopenRecordAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken)
+    {
+        string? undone = null;
+
+        // Design 8.1 step 6: a moderator's wrong close is undone; one closed by the Seimas's vote never. The positions were kept,
+        // so the live counts come back as they are. Nobody is told.
+        return Refused(statement, required: true) ?? OnRecordAsync(recordId, moderator, "reopen", statement, answersReports: false, (_, record, now) =>
+        {
+            if (RecordRules.CheckReopen(record.Status, record.ClosedReason, statement) is { } refused)
+            {
+                return Task.FromResult<Result<Unit>>(RuleErrors.Of(refused));
+            }
+
+            undone = record.ClosedReason;
+            ClosingRules.Reopen(record, now);
+            return Task.FromResult(Result.Ok());
+        }, () => new { reason = undone }, cancellationToken, auditAction: "record.reopened");
+    }
+
     public async Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
@@ -418,7 +461,7 @@ internal sealed class ModerationService(
             record.Id, record.BillNumber, record.Status, record.Description, described ? record.DescriptionSource : null,
             ThresholdRules.Effective(record.Threshold, threshold.Default, threshold.Minimum), record.ThresholdSetBy, record.Sending == "held",
             planned.GetValueOrDefault(record.BillNumber), hasOpenItems, await QueueReasonsAsync(db, reasons, reports, cancellationToken),
-            described ? record.DescriptionUrl : null, descriptionReports);
+            described ? record.DescriptionUrl : null, descriptionReports, record.Status == BillRecordStatuses.Closed ? record.ClosedReason : null);
     }
 
     public async Task<Result<Guid>> EnsureRecordAsync(string billNumber, CancellationToken cancellationToken)
@@ -602,15 +645,17 @@ internal sealed class ModerationService(
     private delegate Task<Result<string?>> ReasonAction(AppealsDb db, Reason reason, DateTimeOffset now);
 
     private Task<Result<Unit>> OnRecordAsync(
-        Guid recordId, StaffActor moderator, string action, string? statement, bool answersReports, RecordAction apply, CancellationToken ct, object? details = null) =>
-        OnRecordAsync(recordId, moderator, action, statement, answersReports, apply, () => details, ct);
+        Guid recordId, StaffActor moderator, string action, string? statement, bool answersReports, RecordAction apply, CancellationToken ct, object? details = null,
+        string? auditAction = null) =>
+        OnRecordAsync(recordId, moderator, action, statement, answersReports, apply, () => details, ct, auditAction);
 
     /// <summary>
     /// An action on a bill's record: applied, recorded and audited in one transaction, under the bill's lock (design 6.8).
     /// Nobody is emailed: a record has no author since 2026-11-14 (design 8.12.4).
     /// </summary>
     private async Task<Result<Unit>> OnRecordAsync(
-        Guid recordId, StaffActor moderator, string action, string? statement, bool answersReports, RecordAction apply, Func<object?> details, CancellationToken ct)
+        Guid recordId, StaffActor moderator, string action, string? statement, bool answersReports, RecordAction apply, Func<object?> details, CancellationToken ct,
+        string? auditAction = null)
     {
         await using var db = await contexts.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -635,7 +680,7 @@ internal sealed class ModerationService(
         }
 
         record.ChangedAt = now;
-        await recorder.RecordAsync(db, transaction, "record", recordId, action, StatementRules.Normalise(statement), moderator, now, record.BillNumber, details(), answersReports, ct);
+        await recorder.RecordAsync(db, transaction, "record", recordId, action, StatementRules.Normalise(statement), moderator, now, record.BillNumber, details(), answersReports, ct, auditAction);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         return Result.Ok();

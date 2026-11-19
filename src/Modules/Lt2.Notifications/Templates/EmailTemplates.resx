@@ -90,6 +90,12 @@
 <data name="Choice.did-not-vote" xml:space="preserve"><value>nebalsavo</value></data>
 <data name="Choice.none" xml:space="preserve"><value>balsavimo pagal asmenis nebuvo</value></data>
 <data name="Follow.VoteLink" xml:space="preserve"><value>Balsavimo rezultatai: {0}</value></data>
+<data name="Follow.Closed.Subject.rejected" xml:space="preserve"><value>Lietuva 2.0: Seimas atmetė {0}</value></data>
+<data name="Follow.Closed.Subject.withdrawn" xml:space="preserve"><value>Lietuva 2.0: {0} atsiimtas</value></data>
+<data name="Follow.Closed.Body.rejected" xml:space="preserve"><value>{1} Seimas atmetė jūsų sekamą projektą {0}.</value></data>
+<data name="Follow.Closed.Body.withdrawn" xml:space="preserve"><value>{1} jūsų sekamą projektą {0} atsiėmė jo iniciatoriai.</value></data>
+<data name="Follow.Closed.Ended" xml:space="preserve"><value>Nurodyti, ko prašote dėl šio projekto, nebegalima.</value></data>
+<data name="Follow.Closed.Source" xml:space="preserve"><value>Šaltinis: {0}</value></data>
 <data name="Follow.Reason" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.</value></data>
 <data name="Organisation.Code.Subject" xml:space="preserve"><value>Lietuva 2.0 organizacijos patvirtinimo kodas: {0}</value></data>
 <data name="Organisation.Code.Intro" xml:space="preserve"><value>kodas, kuriuo patvirtinsite, kad organizacija „{0}“ valdo domeną {1}:</value></data>
@@ -223,6 +229,9 @@
   <data name="Gathered.Planned.DateStage" xml:space="preserve"><value>{0} ({1})</value></data>
   <data name="Gathered.Voted.Title" xml:space="preserve"><value>Seimas balsavo:</value></data>
   <data name="Gathered.Voted.Line" xml:space="preserve"><value>– {0} {1}. {2} {3}</value></data>
+  <data name="Gathered.Closed.Title" xml:space="preserve"><value>Seimas nebesvarsto:</value></data>
+  <data name="Gathered.Closed.Line.rejected" xml:space="preserve"><value>– {0} {1}. Seimas projektą atmetė. {2}</value></data>
+  <data name="Gathered.Closed.Line.withdrawn" xml:space="preserve"><value>– {0} {1}. Iniciatoriai projektą atsiėmė. {2}</value></data>
   <data name="Gathered.Statement.Title" xml:space="preserve"><value>Organizacijų pozicijos:</value></data>
   <data name="Gathered.Statement.Line" xml:space="preserve"><value>– {0} „{1}“ ({2}) dėl {3}: {4}. {5}</value></data>
   <data name="Gathered.Responses.Title" xml:space="preserve"><value>Seimo narių atsakymai:</value></data>

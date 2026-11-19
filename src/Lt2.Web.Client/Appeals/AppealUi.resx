@@ -271,6 +271,19 @@
 <data name="Mod.Passkey.Unsupported" xml:space="preserve"><value>Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos raktu. Atidarykite šį puslapį naršyklėje, kurioje yra jūsų darbuotojo prieigos raktas.</value></data>
 <data name="Mod.Passkey.Cancelled" xml:space="preserve"><value>Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. Spauskite „Patvirtinti skubią suvestinę“ dar kartą ir patvirtinkite.</value></data>
 <data name="Mod.Done.merge" xml:space="preserve"><value>Atlikta: sujungta.</value></data>
+<data name="Mod.Action.close" xml:space="preserve"><value>Uždaryti: projektas atmestas ar atsiimtas</value></data>
+<data name="Mod.Action.reopen" xml:space="preserve"><value>Atšaukti uždarymą</value></data>
+<data name="Mod.Sentence.appeal.close" xml:space="preserve"><value>Skaičiai bus užfiksuoti, nurodyti ar keisti, ko prašoma, niekas nebegalės; puslapyje bus parodyta, kas nutiko, su data ir šaltiniu, o projektą sekantiems bus pranešta el. paštu.</value></data>
+<data name="Mod.Sentence.appeal.reopen" xml:space="preserve"><value>Dalyvauti dėl projekto vėl bus galima, skaičiai vėl bus skaičiuojami iš išsaugotų pozicijų. Niekam nepranešama.</value></data>
+<data name="Mod.Close.Reason" xml:space="preserve"><value>Kas nutiko</value></data>
+<data name="Mod.Close.Reason.rejected" xml:space="preserve"><value>Seimas projektą atmetė</value></data>
+<data name="Mod.Close.Reason.withdrawn" xml:space="preserve"><value>Iniciatoriai projektą atsiėmė</value></data>
+<data name="Mod.Close.Date" xml:space="preserve"><value>Sprendimo data</value></data>
+<data name="Mod.Close.DateFuture" xml:space="preserve"><value>Sprendimo data negali būti vėlesnė už šiandieną.</value></data>
+<data name="Mod.Close.Url" xml:space="preserve"><value>Šaltinis lrs.lt</value></data>
+<data name="Mod.Close.UrlHint" xml:space="preserve"><value>Puslapis lrs.lt ar e. seime, kuriame tai matyti; adresas prasideda https://.</value></data>
+<data name="Mod.Done.close" xml:space="preserve"><value>Atlikta: projektas uždarytas.</value></data>
+<data name="Mod.Done.reopen" xml:space="preserve"><value>Atlikta: uždarymas atšauktas.</value></data>
 <data name="Mod.Refresh" xml:space="preserve"><value>Atnaujinti eilę</value></data>
 <data name="Date.Hint" xml:space="preserve"><value>Data skaičiais, pvz., {0}</value></data>
 <data name="Date.Invalid" xml:space="preserve"><value>Įrašykite datą skaičiais: metai-mėnuo-diena, pvz., {0}.</value></data>

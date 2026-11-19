@@ -342,7 +342,7 @@ public static class InventedRecord
         await connection.OpenAsync(cancellationToken);
         await using var close = new NpgsqlCommand(
             """
-            UPDATE appeals.bill_record r SET status = 'closed', closed_at = @at, changed_at = @at, closing_vote_id = @vote,
+            UPDATE appeals.bill_record r SET status = 'closed', closed_at = @at, changed_at = @at, closing_vote_id = @vote, closed_reason = 'vote',
               closed_for = (SELECT count(*) FROM appeals.position p WHERE p.record_id = r.id AND p.side = 'for'),
               closed_for_older_than30days = (SELECT count(*) FROM appeals.position p WHERE p.record_id = r.id AND p.side = 'for' AND p.member_since < @established),
               closed_against = (SELECT count(*) FROM appeals.position p WHERE p.record_id = r.id AND p.side = 'against'),
