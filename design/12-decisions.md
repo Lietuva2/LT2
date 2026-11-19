@@ -606,3 +606,13 @@ Each is built as written; "no" names what changes.
   island ran: enhanced navigation fetched the grown page, but the island kept its own list).
 - The MPs' responses' link reads "Rodyti daugiau atsakymų". The agenda's "Rodyti likusius" stays (the rest of one day).
 
+**Decided by the owner on 2026-11-19: "Balsavimai" is a tab of "Projektai" again (8.21, 8.18)**
+
+- "Now that the agenda is large, reaching the past votings is too hard": the history of votes (`/seimas/balsavimai`) is
+  again the tab "Balsavimai", third in the dropdown of "Projektai" and in the tab row: "Darbotvarkė", "Projektai",
+  "Balsavimai", "Suvestinės". This reverses the 2026-11-16 decision that the link under the agenda's voted list was
+  enough. The history has the tab row under its heading instead of the breadcrumb back to the agenda; the "Ankstesni
+  balsavimai →" links under the agenda's and the start page's voted lists stay.
+- Built so: a vote's page (`/seimas/balsavimai/{id}`) is under the tab, as a summary's date page is under "Suvestinės":
+  "Projektai" is current there, no tab row, and its breadcrumb leads up to the history.
+

@@ -30,12 +30,14 @@ Read the part for the feature you change, after its design file ([design/README.
   Deleting an account or purging a pending one calls `IOutbox.ForgetAsync` in the same transaction.
 
 
-**Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17).** The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
+**Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17, 2026-11-19).** The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
 (`/statistika`, design 8.26) and "Prisijungti" or the account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" is
-a `<details>` dropdown (`#projects-menu`, closed by `js/lt2-account.js` like the account item) holding its three tabs and is current
-(`aria-current` on its summary) on them and everything under them (`MenuSections`); the three tabs ("Darbotvarkė", "Projektai",
-"Suvestinės") are also `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`. The history of votes is no tab (the
-owner, 2026-11-16): the agenda's voted list links to it and it leads back by a breadcrumb (`#to-agenda`). The
+a `<details>` dropdown (`#projects-menu`, links `#nav-tab-…`, closed by `js/lt2-account.js` like the account item) holding its four
+tabs and is current (`aria-current` on its summary) on them and everything under them (`MenuSections`); the four tabs ("Darbotvarkė",
+"Projektai", "Balsavimai", "Suvestinės") are also `<ProjectTabs>` (`#tab-…`) under the heading of `/darbotvarke`, `/projektai`,
+`/seimas/balsavimai`, `/suvestines`. "Balsavimai" is a tab again (owner, 2026-11-19; out from 2026-11-16); the link under the
+agenda's voted list to it stays. A page under a tab (a vote, a summary's date page) has no tab row and no marked dropdown item,
+only the current menu item and its breadcrumb. The
 account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "Atsijungti" (the server-rendered sign-out form);
 `js/lt2-account.js` fills the name and the account's links (staff screens, an MP's projects, accepting changed terms; for a
 staff account whose session is not a staff session, "Prisijungti darbuotojo prieigos raktu" to `StaffSessionPage` with the

@@ -203,6 +203,8 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     {
         var html = await OkAsync("/seimas/balsavimai?iki=" + Until);
         html.ShouldContain("<h1>Seimo balsavimai</h1>");
+        html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"tab-seimas-balsavimai\" aria-current=\"page\">Balsavimai</a>", customMessage: "the tab row, its own tab marked with the search in the address too (design 8.21, owner 2026-11-19)");
+        html.ShouldNotContain("id=\"to-agenda\"", customMessage: "the tab row leads back to the agenda; no breadcrumb");
         html.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimas/balsavimai\" role=\"search\" id=\"votes-search\">");
         html.IndexOf("id=\"votes-search\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"balsavimai\"", StringComparison.Ordinal), "the controls lie above the list's sheet");
         var list = List(html);
@@ -411,7 +413,15 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     {
         foreach (var path in new[] { "/seimas/balsavimai/99100002", "/seimas/balsavimai/99100101" })
         {
-            (await OkAsync(path)).ShouldContain("<li><a href=\"/seimas/balsavimai\" id=\"to-vote-history\">Seimo balsavimai</a></li>", customMessage: path);
+            var html = await OkAsync(path);
+            html.ShouldContain("<li><a href=\"/seimas/balsavimai\" id=\"to-vote-history\">Seimo balsavimai</a></li>", customMessage: path);
+
+            // Design 8.21: a vote is under the tab "Balsavimai", as a summary's date page is under "Suvestinės": the menu item
+            // "Projektai" is current, the dropdown marks no page of its own, and there is no tab row.
+            var header = html[..html.IndexOf("</header>", StringComparison.Ordinal)];
+            header.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>", customMessage: path);
+            header.ShouldNotContain("aria-current=\"page\"", customMessage: path);
+            html.ShouldNotContain("id=\"project-tabs\"", customMessage: path);
         }
 
         using var browser = NewBrowser();
