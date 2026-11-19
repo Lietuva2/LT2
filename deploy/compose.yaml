@@ -118,6 +118,14 @@ services:
       Email__Smtp__Security: ${LT2_SMTP_SECURITY:-None}
       Email__Smtp__UserName: ${LT2_SMTP_USERNAME:-}
       Email__Smtp__FromAddress: ${LT2_MAIL_FROM:-prisijungimas@lt2.localhost}
+      # The notices stream (design 8.19.3): members' and the team's emails, from their own sender address and, when
+      # LT2_NOTICES_SMTP_HOST is set, their own SMTP account (password in secrets/notices_smtp_password); otherwise the
+      # common account above. A flood of notices cannot stop sign-in codes, which keep the common account.
+      Email__Notices__FromAddress: ${LT2_MAIL_FROM_NOTICES:-pranesimai@lt2.localhost}
+      Email__Notices__Smtp__Host: ${LT2_NOTICES_SMTP_HOST:-}
+      Email__Notices__Smtp__Port: ${LT2_NOTICES_SMTP_PORT:-587}
+      Email__Notices__Smtp__Security: ${LT2_NOTICES_SMTP_SECURITY:-StartTls}
+      Email__Notices__Smtp__UserName: ${LT2_NOTICES_SMTP_USERNAME:-}
       # MP mail's own stream (design 8.19.3): its sender address and, when LT2_MP_SMTP_HOST is set, its own SMTP account
       # (password in secrets/mp_smtp_password); otherwise the common account above. Trouble there cannot block sign-in codes.
       Email__Mp__FromAddress: ${LT2_MAIL_FROM_MP:-suvestines@lt2.localhost}
@@ -150,6 +158,8 @@ services:
         target: Database__Password
       - source: smtp_password
         target: Email__Smtp__Password
+      - source: notices_smtp_password
+        target: Email__Notices__Smtp__Password
       - source: mp_smtp_password
         target: Email__Mp__Smtp__Password
       - source: mail_hash_key
@@ -275,6 +285,8 @@ secrets:
     file: ${LT2_SECRETS_DIR:-./secrets}/ip_hash_key
   smtp_password:
     file: ${LT2_SECRETS_DIR:-./secrets}/smtp_password
+  notices_smtp_password:
+    file: ${LT2_SECRETS_DIR:-./secrets}/notices_smtp_password
   mp_smtp_password:
     file: ${LT2_SECRETS_DIR:-./secrets}/mp_smtp_password
   mail_hash_key:

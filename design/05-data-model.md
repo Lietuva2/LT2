@@ -74,6 +74,7 @@ ASP.NET Core Identity tables (`user`, `role`, claims, logins, tokens, `user_pass
 | Table | Notes |
 |---|---|
 | `outbox` | Kind, `jsonb` payload, due time, attempts, last attempt, error, failed time. Written in the same transaction as the change; dispatched with `FOR UPDATE SKIP LOCKED`. |
+| `stream_send` | One row per email sent: its stream (`codes`, `notices`, `mp`) and the time; no address, no kind. Counted over 24 hours for the streams' daily ceilings (8.19.3), purged after two days. |
 | `digest_run` | Kind (`weekly`, `before-vote`, `urgent`, `introduction`), the day it goes and the sitting it is for, created and due times, status (`prepared`, `dry-run`, `sent`, `cancelled`, `dropped`), who approved or declined it and when, the statement when declined, how many MPs, when it went, the introduction letter's version. |
 | `digest_choice` | Per run: an argument chosen for a prepared summary, its side and place, whether it came in for a hidden one, and when it left (8.19.2). No author. |
 | `digest_item` | Per run and bill's record (`record_id`): bill number and title, stage, planned date, counts per side, counts for accounts older than 30 days, the surge note's share and window, top reasons (text and "Man svarbu" count, without the author's name). A frozen snapshot: what MPs were told. |

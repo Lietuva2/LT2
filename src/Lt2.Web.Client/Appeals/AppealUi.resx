@@ -1077,4 +1077,14 @@
   <data name="Start.4.Short" xml:space="preserve"><value>Pasiekus ribą, projektas patenka į suvestinę Seimo nariams.</value></data>
   <data name="Start.How" xml:space="preserve"><value>Kaip tai veikia →</value></data>
   <data name="Start.Saved" xml:space="preserve"><value>Profilis išsaugotas.</value></data>
+  <data name="Admin.Group.email" xml:space="preserve"><value>Laiškų siuntimo ribos</value></data>
+  <data name="Admin.Setting.Email:CeilingCodesPerDay" xml:space="preserve"><value>Prisijungimo laiškų riba per parą</value></data>
+  <data name="Admin.Help.Email:CeilingCodesPerDay" xml:space="preserve"><value>Daugiausia tiek prisijungimo kodų ir paskyros saugumo laiškų išsiunčiama per 24 valandas. Nustatykite šiek tiek mažiau nei pašto dėžutės riba pas paslaugos teikėją. Pasiekus ribą, laiškai laukia eilėje, o kiti laiškų srautai siunčiami toliau. 0 – riba netaikoma.</value></data>
+  <data name="Admin.Unit.Email:CeilingCodesPerDay" xml:space="preserve"><value>laiškai per parą (0 – neribojama)</value></data>
+  <data name="Admin.Setting.Email:CeilingNoticesPerDay" xml:space="preserve"><value>Pranešimų laiškų riba per parą</value></data>
+  <data name="Admin.Help.Email:CeilingNoticesPerDay" xml:space="preserve"><value>Daugiausia tiek narių ir komandos pranešimų (sekimo, moderavimo, organizacijų ir kitų) išsiunčiama per 24 valandas. Pasiekus ribą, laiškai laukia eilėje, o prisijungimo kodai siunčiami toliau. 0 – riba netaikoma.</value></data>
+  <data name="Admin.Unit.Email:CeilingNoticesPerDay" xml:space="preserve"><value>laiškai per parą (0 – neribojama)</value></data>
+  <data name="Admin.Setting.Email:CeilingMpPerDay" xml:space="preserve"><value>Laiškų Seimo nariams riba per parą</value></data>
+  <data name="Admin.Help.Email:CeilingMpPerDay" xml:space="preserve"><value>Daugiausia tiek laiškų Seimo nariams išsiunčiama per 24 valandas. Tai kita riba nei savaitinė riba vienam Seimo nariui: abi galioja. Pasiekus ribą, laiškai laukia eilėje. 0 – riba netaikoma.</value></data>
+  <data name="Admin.Unit.Email:CeilingMpPerDay" xml:space="preserve"><value>laiškai per parą (0 – neribojama)</value></data>
 </root>

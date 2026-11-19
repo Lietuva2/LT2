@@ -421,3 +421,10 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - "Profilis" is one form with one "Išsaugoti", one request to one endpoint: "if anything is refused, the form shows
   validation and stays open, unsaved". On the visit that follows the registration the button reads "Išsaugoti ir tęsti"
   and opens the front page, which says once that the profile was saved (8.28.5, 2026-11-19).
+
+## 9. Hosting
+
+- Email goes by plain SMTP, for now `smtp.hostinger.com`, configurable; sign-in codes (with every account-security
+  email), members' and the team's notices, and MP mail are three streams, each on its own address and mailbox, with a
+  daily ceiling a runtime setting, so a flood of notices can never stop sign-in codes; the provider's own limit never
+  puts a recipient on the suppression list (8.19.3, 8.19.6, 9.6, 2026-11-19).

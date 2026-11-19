@@ -132,9 +132,10 @@ summary is sent.
 - **The outbox forgets.** Deleting an account, and purging an unfinished registration, delete the outbox rows
   addressed to that person that were not sent. Rows that failed are deleted after 30 days. An error stored or logged
   for a failed email holds the error's type and the server's status code, never its text, which can quote the address.
-- **Sign-in codes go first.** The dispatcher sends sign-in and confirmation codes before any other waiting email, so
-  a large batch of follow emails cannot delay a code past its lifetime (8.4 separates the streams by sender address;
-  this is the order within the queue).
+- **Codes go first.** The dispatcher sends the `codes` stream (sign-in and confirmation codes and the other account-security
+  emails, 8.19.3) before any other waiting email, and a stream at its ceiling or paused is left out of the batch, so a
+  large batch of follow emails cannot delay a code past its lifetime (the streams also have their own sender address and
+  SMTP account; this is the order within the queue).
 - **Redirects stay inside the allowlist.** An outbound request does not follow a redirect to a host that is not on
   the allowlist (6.4).
 - **Codes and tokens are not sent in addresses.** A link the site makes carries its secret after the `#`: the

@@ -36,6 +36,7 @@ FILES = {
     "device_hash_key": 32,  # keys the known browsers' hashes (design 8.20.2)
     "data_protection_key": 32,  # wraps the data-protection key ring; must be exactly 32 bytes
     "smtp_password": 0,  # empty locally: Mailpit needs no password
+    "notices_smtp_password": 0,  # the notices stream's own SMTP account (design 8.19.3); empty: the common account is used
     "mp_smtp_password": 0,  # MP mail's own SMTP account (design 8.19.3); empty: the common account is used
     "ai_api_key": 0,  # empty: the AI draft (design 8.11.4) stays off until a Claude API key is put here and LT2_AI_PROVIDER=claude
 }

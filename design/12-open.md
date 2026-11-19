@@ -45,7 +45,7 @@ For the owner to decide in each case: fix the code or change the rule.
 - 6.4: Caddy was to rate-limit per IP address; the Caddyfile has no rate limiting, only the ASP.NET policies.
 - 8.4: in an MP's summary, bills led by the MP's committee come first; the group is always empty, because lead
   committees are not imported.
-- 8.4 (deliverability): only permanent SMTP 5xx refusals go to the suppression list; complaints are not handled.
+- 8.4 (deliverability): only permanent SMTP 5xx refusals about the recipient's mailbox go to the suppression list; complaints and later bounces are not handled (plain SMTP reports none, 8.19.6).
 
 ## Awaiting the owner
 
@@ -247,6 +247,7 @@ for the lawyer).
 
 ## Awaiting a native speaker
 
+- 8.19.3: the settings screen's group "Laiškų siuntimo ribos" and the three daily ceilings of the email streams (`AppealUi` `Admin.Group.email`, `Admin.Setting.Email:Ceiling*PerDay`, `Admin.Help.Email:Ceiling*PerDay`, `Admin.Unit.Email:Ceiling*PerDay`).
 - 6.2: the texts of changing the email address ("El. pašto adresas", "Keisti adresą", "Kodą išsiuntėme adresu …",
   "Ne jūs? Grąžinti ankstesnį adresą", the rest of the part and of the page that puts the old address back: `UiText`
   `EmailPart.*`, `EmailRestore.*`), its emails (`EmailTemplates` `EmailChange.*`: the code to the new address, to an
@@ -346,7 +347,6 @@ them all once, before going live.
 
 | Decision | Options | Needed |
 |---|---|---|
-| Email provider | An EU-owned service (for example Brevo or Scaleway) or Amazon SES in an EU region. Compare deliverability to `lrs.lt`, price, processor terms. Locally and on the trial Mailpit catches every email. | Before going live |
 | Telemetry backend | A hosted free tier with EU storage, or self-hosted. | Before going live |
 | How accounts are verified once registration is open | **Stay with email** and label numbers as email-confirmed accounts; or add **phone verification** (an EU provider such as Infobip or Sinch, or a Lithuanian bulk-SMS service; paid per message; Lithuanian numbers only would exclude people abroad); or **Lithuanian e-identity** (Smart-ID, Mobile-ID, a bank's login, the e-signature) through a paid broker or the state e-services gateway, as an optional "verified person" level that also proves the age, storing only a salted hash of the personal code to keep one account per person, never the code (the designer's proposal of 2026-11-19); or wait for the EU Digital Identity Wallet. Sign-in through Google, Apple or Facebook is not proposed: each sign-in would tell the provider that the person uses a political site, passkeys already sign in with one press, and such accounts prove no more than an email address. The public pages promise one account per confirmed phone number, so staying with email also means rewording them. | Before registration opens or real summaries go |
 | CDN and DDoS protection | Bunny (EU) or Cloudflare. | Before the first public campaign |
@@ -363,6 +363,7 @@ them all once, before going live.
 | MPs' mail system filters the summaries, or MPs see them as spam | Introduction letter, low and capped frequency, both sides in every email, one-click stop, no tracking, discussions with offices before the first send. |
 | A campaign registers many accounts to inflate one side. With email-only registration this costs nothing, so it is the main weakness of the numbers | Registration by invitation (`Registration:RequireInvitation`), one account per normalised address, disposable domains refused, the 30-day count beside every number, surge note, moderator hold; phone verification stays available as an upgrade. The numbers stay a signal, and say so. |
 | The upcoming-agenda page changes layout or is late | Watcher alerts, moderator-entered dates, "Planuojama …" wording, no extra emails when dates move. |
+| A campaign's volume can exceed a shared mailbox's daily cap (plain SMTP, 9.6: about 1 000 or 3 000 emails a day per mailbox, bulk mail unwelcome) | Three streams with their own mailboxes, so notices cannot stop sign-in codes (8.19.3); a daily ceiling per stream set under the cap, with the excess waiting in the outbox; codes sent first; a provider's refusal for its limit pauses the stream and suppresses nobody (8.19.6). Before a public campaign, sign-in codes move to a transactional provider. |
 | Open-data service outages | Raw responses stored, retries, pages show the last import time, imports resume. |
 | Someone who knows a person's address uses up its daily codes | A known browser (8.20.2) keeps its own five codes an hour and ten a day, counted separately, and a code only it can use; a passkey is not affected. What stays possible: keeping a person from signing in by code from a browser they have never signed in with, and keeping a new address from finishing its registration (a pending account has no known browser). Nothing leaks either way. |
 | A leak of positions | Minimised data, no position in logs or admin screens, encrypted backups, impact assessment, penetration test, incident runbook. |

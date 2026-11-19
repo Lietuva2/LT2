@@ -216,6 +216,18 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> CommentsPerPersonPerTarget = new("Comments:PerPersonPerTarget", 0, v => v is >= 0 and <= 1000);
 
+    /// <summary>
+    /// Design 8.19.3 (owner, 2026-11-19): the most emails the sign-in and security stream (<c>codes</c>) sends in 24 hours; 0 = no
+    /// ceiling, the default. Set to a little under the mailbox's cap at the provider: at the ceiling the stream's messages wait.
+    /// </summary>
+    public static readonly SettingKey<int> EmailCeilingCodesPerDay = new("Email:CeilingCodesPerDay", 0, v => v is >= 0 and <= 1_000_000);
+
+    /// <summary>Design 8.19.3: the same for the members' and the team's notices (<c>notices</c>); 0 = no ceiling.</summary>
+    public static readonly SettingKey<int> EmailCeilingNoticesPerDay = new("Email:CeilingNoticesPerDay", 0, v => v is >= 0 and <= 1_000_000);
+
+    /// <summary>Design 8.19.3: the same for MP mail (<c>mp</c>), whatever the weekly ceiling per MP says; 0 = no ceiling.</summary>
+    public static readonly SettingKey<int> EmailCeilingMpPerDay = new("Email:CeilingMpPerDay", 0, v => v is >= 0 and <= 1_000_000);
+
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>
     public static readonly SettingKey<decimal> SurgeMinimumShare = new("Surge:MinimumShare", 0.30m, v => v is > 0 and <= 1);
 
@@ -254,6 +266,9 @@ public static class SettingKeys
         CommentsOnStatements,
         CommentsOnResponses,
         CommentsPerPersonPerTarget,
+        EmailCeilingCodesPerDay,
+        EmailCeilingNoticesPerDay,
+        EmailCeilingMpPerDay,
         AiDraftModel,
         AiSummariesPerDay,
         SurgeMinimumShare,

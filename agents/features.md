@@ -28,6 +28,23 @@ Voting with delegation is not designed; do not build towards it.
   its footer holds the reason (`*.Reason` keys, no link), "Keisti periodiškumą arba atsisakyti laiškų" (`Email.Notices.*`;
   plain part "Keisti periodiškumą: … · Atsisakyti laiškų: …") and the privacy line, with the stop headers.
   Deleting an account or purging a pending one calls `IOutbox.ForgetAsync` in the same transaction.
+- **Three streams (design 8.19.3, owner 2026-11-19).** The stream of an outbox kind is chosen in one table, `EmailStreams`
+  (Notifications/Outbox), and the dispatcher stamps it on the message (`EmailMessage.Stream`); `EmailStreamTests` fails until a
+  new kind is in the table. **`codes`** (sender `Email:Smtp:FromAddress`, account `Email:Smtp`): `email.sign-in-code`,
+  `email.account-notice` (passkey added, role granted or activated, account reset, MP link and office changes),
+  `email.email-change-code`, `-taken`, `email.email-changed`, `email.email-restored`, `email.organisation-code`,
+  `email.mp-takeover-link`. **`notices`** (`Email:Notices:FromAddress`, `Email:Notices:Smtp` when its host is set, else the common
+  account; secret `notices_smtp_password`): every other `email.*` kind (follow, gathered, comment, moderation, report-decided,
+  writing-restriction, feedback reply and notice, organisation notice, profile notice, MP-response notice, office
+  invitation, digest-review). **`mp`**: the three `email.mp-*` kinds (`Email:Mp`). Each stream has a daily ceiling, the
+  settings `Email:CeilingCodesPerDay`, `Email:CeilingNoticesPerDay`, `Email:CeilingMpPerDay` (0 = none, group "Laiškų siuntimo
+  ribos" on the settings screen), the rule `StreamCeilings.Remaining`; the dispatcher counts `notify.stream_send` (one row
+  per email sent, purged after two days by the daily clean-up) under an advisory lock and leaves a stream at its ceiling out
+  of the batch (`kind <> ALL(held)`), its rows untouched. `SmtpRefusals.Classify` (Notifications/Transports) says whether a
+  failed send is about the recipient's `Mailbox`, the `Sender` (a failed login, a reply to `MAIL FROM`, enhanced 4.7.x or
+  5.7.x, reply text about a limit, quota or rate) or `Other`: only `Mailbox` on an MP kind suppresses; `Sender` leaves the row
+  due and untried and pauses that stream for `SmtpRefusals.StreamPause` (one hour, in the worker's memory) while the others
+  go on. Tests: `EmailStreamTests` (unit), `EmailStreamDispatchTests` (integration, fake transport).
 
 
 **Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17, 2026-11-19; 8.28.2).** **One list,** `MenuSections.Items`
@@ -775,7 +792,7 @@ Integration: `DemoAppealTests`, `DemoSidesTests`.
   presses act once. Recipients are worked out when it goes (`SendingRules.DeliveryStatus`: suppressed, the MP's choice, the
   letter first, the ceiling); one delivery row per run, MP and recipient, never an address. The public copy says what
   happened in one line, never which MPs; a prepared or dropped run has none.
-- The email (`MpMailTemplates`, through `EmailLayout.BuildMp`, the MP stream: `Email:Mp:FromAddress`, optional `Email:Mp:Smtp`)
+- The email (`MpMailTemplates`, through `EmailLayout.BuildMp`, the `mp` stream: `Email:Mp:FromAddress`, optional `Email:Mp:Smtp`; ceiling `Email:CeilingMpPerDay`)
   holds both sides with the 30-day counts, the MP's own published response or the link to answer, the closing lines, and
   `List-Unsubscribe` with `List-Unsubscribe-Post`. The address comes only from `IMpMailAddresses` and travels only in the outbox
   row.

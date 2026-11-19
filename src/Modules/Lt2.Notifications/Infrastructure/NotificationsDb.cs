@@ -11,6 +11,9 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 {
     public DbSet<OutboxRow> Outbox => Set<OutboxRow>();
 
+    /// <summary>One row per email sent, by stream, for the streams' daily ceilings (design 8.19.3); purged after two days.</summary>
+    public DbSet<StreamSend> StreamSends => Set<StreamSend>();
+
     public DbSet<Digests.DigestRun> DigestRuns => Set<Digests.DigestRun>();
 
     public DbSet<Digests.DigestItem> DigestItems => Set<Digests.DigestItem>();
@@ -51,6 +54,13 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.Kind).HasMaxLength(100);
             b.Property(x => x.Payload).HasColumnType("jsonb");
             b.HasIndex(x => x.DueAt).HasFilter("failed_at IS NULL");
+        });
+        modelBuilder.Entity<StreamSend>(b =>
+        {
+            b.ToTable("stream_send");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Stream).HasMaxLength(20);
+            b.HasIndex(x => new { x.Stream, x.SentAt });
         });
         modelBuilder.Entity<Digests.DigestRun>(b =>
         {

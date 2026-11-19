@@ -75,6 +75,7 @@ public static class NotificationsModule
         services.AddOptions<SmtpOptions>().Bind(configuration.GetSection(SmtpOptions.Section)).ValidateOnStart();
         services.AddOptions<OutboxOptions>().Bind(configuration.GetSection(OutboxOptions.Section));
         services.AddOptions<MpStreamOptions>().Bind(configuration.GetSection(MpStreamOptions.Section));
+        services.AddOptions<NoticesStreamOptions>().Bind(configuration.GetSection(NoticesStreamOptions.Section));
         services.AddSingleton<IEmailTransport, SmtpEmailTransport>();
         services.AddSingleton<SignInCodeTemplate>();
         services.AddSingleton<AccountNoticeTemplate>();

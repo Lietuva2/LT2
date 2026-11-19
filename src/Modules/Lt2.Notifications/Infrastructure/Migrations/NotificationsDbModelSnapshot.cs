@@ -732,6 +732,32 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                     b.ToTable("outbox", "notify");
                 });
 
+            modelBuilder.Entity("Lt2.Notifications.Outbox.StreamSend", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.Property<string>("Stream")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("stream");
+
+                    b.HasKey("Id")
+                        .HasName("pk_stream_send");
+
+                    b.HasIndex("Stream", "SentAt")
+                        .HasDatabaseName("ix_stream_send_stream_sent_at");
+
+                    b.ToTable("stream_send", "notify");
+                });
+
             modelBuilder.Entity("Lt2.Notifications.Rhythm.RhythmPassMade", b =>
                 {
                     b.Property<string>("Pass")

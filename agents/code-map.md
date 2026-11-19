@@ -84,9 +84,12 @@ src/Lt2.Worker             Hangfire server (RecurringJobs registers the jobs of 
                            gone at their time: a dry run or sent by Digest:Sending), the follow emails (every 15 minutes, in each member's rhythm: at once, the morning from Follows:ResponsesAt, or Monday), the AI summaries
                            of bills (hourly; makes nothing until a text reader and a provider exist), a daily identity
                            clean-up (with the unsent mail of purged registrations and known browsers not seen for a year) and a daily outbox clean-up (failed
-                           messages after 30 days); the dispatcher sends sign-in and confirmation codes first, a batch
-                           over one SMTP connection per stream (MP mail on its own: Email:Mp), and stores only an error's
-                           type and status code (design 6.8); a 5xx refusal of an MP email suppresses the address
+                           messages after 30 days); the dispatcher sends the codes stream first (EmailStreams: codes, notices, mp; Outbox/EmailStreams.cs), a batch
+                           over one SMTP connection per stream (Email:Smtp, Email:Notices, Email:Mp), leaves a stream at its
+                           daily ceiling (Email:Ceiling*PerDay, StreamCeilings, notify.stream_send) or paused out of the batch,
+                           and stores only an error's type and status code (design 6.8); a 5xx refusal of an MP email's mailbox
+                           suppresses the address, a refusal about the sender or its quota (Transports/SmtpRefusals.cs)
+                           pauses the stream for an hour and suppresses nobody
 src/Lt2.Migrator           creates the database roles, applies migrations and grants (with the superuser's connection,
                            lt2_app on the worker's Hangfire tables for the dashboard: DatabaseRoles.GrantHangfireToAppAsync); also seeds invitations, grants
                            the first staff role, empties invented parliament data, switches on registration with an MP's
