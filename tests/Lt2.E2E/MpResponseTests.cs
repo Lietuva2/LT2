@@ -54,7 +54,7 @@ public sealed partial class MpResponseTests : E2ETest
             // 1. Step one's take-over: registration with the official address, the link from the mailbox, the passkey.
             await page.GotoAsync(Base + "/prisijungti?registruotis=true");
             await E2ESteps.RegisterHereAsync(page, Official, Name);
-            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra#po-registracijos$"), new() { Timeout = E2ESteps.Slow });
             await page.GotoAsync(Base + "/paskyra/dalyvavimas");
             var claim = page.Locator("#mp-claim");
             await Assertions.Expect(claim).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });

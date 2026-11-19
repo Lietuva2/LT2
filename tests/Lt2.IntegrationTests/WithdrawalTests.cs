@@ -11,7 +11,8 @@ namespace Lt2.IntegrationTests;
 
 /// <summary>
 /// The owner, 2026-11-17: (a) withdrawing what one consented to works before accepting changed terms (switching the public
-/// profile off, the positions consent, the party support consent), and nothing else does; (b) a restricted member may clear
+/// profile off, the positions consent, the party support consent, the party shown on the profile), and nothing else does, the
+/// "Profilis" form included (design 8.28.5); (b) a restricted member may clear
 /// "Apie mane" and switch the profile off, and still not write or change the text.
 /// </summary>
 public sealed class WithdrawalTests(DatabaseFixture database) : ApiTest(database)
@@ -26,15 +27,28 @@ public sealed class WithdrawalTests(DatabaseFixture database) : ApiTest(database
     {
         var (member, email, id) = await Factory.PublicMemberAsync("Atsiimanti Narė", "Apie mane.");
         using var _m = member;
-        var party = (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Choices[0];
-        (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = party, Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var party = (await member.MyProfileAsync()).PartyChoices[0];
+        await member.SetPartyAsync(party);
+        using (var shown = await member.ShowPartyAsync())
+        {
+            shown.StatusCode.ShouldBe(HttpStatusCode.OK, await shown.Content.ReadAsStringAsync());
+        }
+
+        (await ConsentsAsync(email, PartyPublicConsent.Kind)).ShouldBe(1, "the party is shown before");
         (await ConsentsAsync(email, "party-support")).ShouldBe(1, "the party consent exists before");
         (await ConsentsAsync(email, "positions")).ShouldBe(1, "the positions consent exists before");
         await Database.ExecuteAsync("DELETE FROM identity.consent WHERE kind = 'terms' AND user_id = (SELECT id FROM identity.\"user\" WHERE email = @e)", ("e", email));
         (await member.MeAsync()).TermsRequired.ShouldBeTrue();
 
-        // Changing "Apie mane" goes through the form's route, which stays refused; so does switching on.
+        // Changing "Apie mane" goes through the form's route, which stays refused; so does switching on, and so does a form
+        // that only unticks a box (design 8.28.5: the withdrawals are requests of their own).
         await (await member.SaveProfileAsync("Kitas tekstas.", isPublic: true)).ShouldBeProblemAsync(HttpStatusCode.Forbidden, TermsOfUse.RequiredCode);
+        await (await member.SaveFormAsync(f => f with { PartyPublic = false })).ShouldBeProblemAsync(HttpStatusCode.Forbidden, TermsOfUse.RequiredCode);
+
+        // The party no longer shown: open behind the terms.
+        (await member.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PartyPublic)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await ConsentsAsync(email, PartyPublicConsent.Kind)).ShouldBe(0);
+        (await member.MyProfileAsync()).PartyPublic.ShouldBeFalse();
 
         using (var off = await member.SendAsync(HttpMethod.Delete, ProfileRoutes.MinePublic))
         {
@@ -51,11 +65,10 @@ public sealed class WithdrawalTests(DatabaseFixture database) : ApiTest(database
         (await ConsentsAsync(email, "positions")).ShouldBe(0);
         (await member.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PartySupport)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await ConsentsAsync(email, "party-support")).ShouldBe(0);
-        (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Party.ShouldBeNull();
+        (await member.MyProfileAsync()).Party.ShouldBeNull();
 
-        // Giving a consent again stays refused.
-        await (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = party, Consent = true }))
-            .ShouldBeProblemAsync(HttpStatusCode.Forbidden, TermsOfUse.RequiredCode);
+        // Giving a consent again stays refused: the form cannot be saved behind the terms.
+        await (await member.SavePartyAsync(party)).ShouldBeProblemAsync(HttpStatusCode.Forbidden, TermsOfUse.RequiredCode);
     }
 
     [Fact]

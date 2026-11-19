@@ -50,9 +50,6 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
     public Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.KnownBrowserById(id), null, cancellationToken);
 
-    public Task<ApiResult> ChangeDisplayNameAsync(DisplayNameRequest request, CancellationToken cancellationToken = default) =>
-        http.SendAsync(HttpMethod.Put, ApiRoutes.Me.DisplayName, request, cancellationToken);
-
     public Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, request, cancellationToken);
 
@@ -76,17 +73,6 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
 
     public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PositionConsent, null, cancellationToken);
-
-    public Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default) =>
-        http.SendAsync<PartySupportResponse>(HttpMethod.Get, ApiRoutes.Me.PartySupport, null, cancellationToken);
-
-    public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
-        http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, request, cancellationToken);
-
-    public Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default) =>
-        show
-            ? http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartyPublic, new PartyPublicRequest { ConsentVersion = PartyPublicLimits.ConsentVersion }, cancellationToken)
-            : http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PartyPublic, null, cancellationToken);
 
     public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root, null, cancellationToken);

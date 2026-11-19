@@ -50,12 +50,51 @@ internal sealed class MemberReads(IPublicProfiles profiles, IFollowerCounts foll
     }
 }
 
+/// <summary>
+/// The "Profilis" form (design 8.28.5) as the host answers it: the Identity module's state with the parties to choose from
+/// (the MP directory) and <c>Digest:PartyGroupMinimum</c>, which the party's text states (design 8.4); saved whole by the
+/// module, which checks the party against the same list.
+/// </summary>
+internal sealed class MyProfileForms(IMemberProfiles profiles, IMpDirectory mps, ISettings settings)
+{
+    public async Task<Result<MyProfileResponse>> MineAsync(System.Security.Claims.ClaimsPrincipal user, CancellationToken ct) =>
+        await ToResponseAsync(await profiles.MineAsync(user, ct), await mps.PartiesAsync(ct), ct);
+
+    public async Task<Result<MyProfileResponse>> SaveAsync(System.Security.Claims.ClaimsPrincipal user, ProfileRequest request, string? ipHash, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var choices = await mps.PartiesAsync(ct);
+        return await ToResponseAsync(await profiles.SaveAsync(user, ProfileMapping.ToModule(request), choices, ipHash, ct), choices, ct);
+    }
+
+    private async Task<Result<MyProfileResponse>> ToResponseAsync(Result<MyProfileState> state, IReadOnlyList<string> choices, CancellationToken ct) =>
+        state.IsSuccess
+            ? ProfileMapping.Map(state.Value, choices, await settings.GetAsync(SettingKeys.DigestPartyGroupMinimum, ct))
+            : state.Error!;
+}
+
 internal static class ProfileMapping
 {
-    public static MyProfileResponse Map(MyProfileState s) =>
-        new(s.About, s.AboutHidden, s.AboutHiddenStatement, s.ProfileId, s.PublicSince, s.ConsentVersion, s.TextMaxLength, s.Address);
+    public static MyProfileResponse Map(MyProfileState s, IReadOnlyList<string> choices, int groupMinimum) => new()
+    {
+        DisplayName = s.DisplayName,
+        About = s.About,
+        AboutHidden = s.AboutHidden,
+        AboutHiddenStatement = s.AboutHiddenStatement,
+        ProfileId = s.ProfileId,
+        PublicSince = s.PublicSince,
+        Address = s.Address,
+        PublicConsentVersion = s.ConsentVersion,
+        TextMaxLength = s.TextMaxLength,
+        Party = s.Party,
+        PartyChoices = choices,
+        PartyGroupMinimum = groupMinimum,
+        PartyPublic = s.PartyPublic,
+        PartyPublicConsentVersion = PartyPublicConsent.TextVersion,
+    };
 
-    public static ProfileChange ToModule(ProfileRequest r) => new(r.About, r.Public, r.ConsentVersion);
+    public static ProfileForm ToModule(ProfileRequest r) =>
+        new(r.DisplayName, r.About, r.Public, r.PublicConsentVersion, r.Party, r.PartyConsent, r.PartyPublic, r.PartyPublicConsentVersion);
 
     public static IReadOnlyList<ProfileModerationResponse> Map(IReadOnlyList<ProfileModerationItem> items) =>
         items.Select(i => new ProfileModerationResponse(
@@ -65,7 +104,7 @@ internal static class ProfileMapping
 }
 
 /// <summary>Server-side <see cref="IProfilesApi"/> for the server-rendered page and prerendered islands, as the request's person.</summary>
-internal sealed class ServerProfilesApi(IMemberProfiles profiles, MemberReads reads, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IProfilesApi
+internal sealed class ServerProfilesApi(IMemberProfiles profiles, MyProfileForms forms, MemberReads reads, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IProfilesApi
 {
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 
@@ -92,7 +131,7 @@ internal sealed class ServerProfilesApi(IMemberProfiles profiles, MemberReads re
     }
 
     private async Task<ApiResult<MyProfileResponse>> ReadMineAsync(HttpContext http, CancellationToken cancellationToken) =>
-        errors.ToApiResult(await profiles.MineAsync(http.User, cancellationToken), ProfileMapping.Map);
+        errors.ToApiResult(await forms.MineAsync(http.User, cancellationToken), x => x);
 
     public async Task<ApiResult<MyProfileResponse>> SaveAsync(ProfileRequest request, CancellationToken cancellationToken = default)
     {
@@ -102,7 +141,7 @@ internal sealed class ServerProfilesApi(IMemberProfiles profiles, MemberReads re
         }
 
         http.Items.Remove(typeof(ServerProfilesApi));
-        return errors.ToApiResult(await profiles.ChangeAsync(http.User, ProfileMapping.ToModule(request), ipHasher.Hash(http), cancellationToken), ProfileMapping.Map);
+        return errors.ToApiResult(await forms.SaveAsync(http.User, request, ipHasher.Hash(http), cancellationToken), x => x);
     }
 
     public async Task<ApiResult<MemberProfileResponse>> GetMemberAsync(string id, CancellationToken cancellationToken = default) =>

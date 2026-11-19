@@ -72,7 +72,6 @@ public sealed class ConcurrentReadTests(DatabaseFixture database) : ApiTest(data
             var sessions = Twice(() => identity.GetSessionsAsync(principal, ct));
             var browsers = Twice(() => identity.GetKnownBrowsersAsync(principal, ct));
             var terms = Twice(() => identity.TermsRequiredAsync(principal, ct));
-            var parties = Twice(() => identity.GetPartySupportAsync(principal, ct));
             var staff = Twice(() => identity.GetStaffSessionAsync(principal, ct));
             var speakers = Twice(() => politicians.SpeakerAsync(principal, ct));
             var takenOver = Twice(() => politicians.TakenOverAsync([1], ct));
@@ -85,7 +84,7 @@ public sealed class ConcurrentReadTests(DatabaseFixture database) : ApiTest(data
             var speaks = Twice(() => links.SpeaksForAsync([userId], ct));
             await Task.WhenAll(new IEnumerable<Task>[]
             {
-                accounts, sessions, browsers, terms, parties, staff, speakers, takenOver, offices, mine, queues, codes, stats, items, speaks,
+                accounts, sessions, browsers, terms, staff, speakers, takenOver, offices, mine, queues, codes, stats, items, speaks,
             }.SelectMany(t => t));
 
             var label = $"round {round + 1}";
@@ -93,12 +92,11 @@ public sealed class ConcurrentReadTests(DatabaseFixture database) : ApiTest(data
             sessions.ShouldAllBe(s => s.Result.Count > 0, label);
             browsers.ShouldAllBe(b => b.Result.IsSuccess, label);
             terms.ShouldAllBe(t => !t.Result, label);
-            parties.ShouldAllBe(p => p.Result.IsSuccess && p.Result.Value.Party == null, label);
             staff.ShouldAllBe(s => s.Result.ActiveRoles.Count == 0, label);
             speakers.ShouldAllBe(s => s.Result == null, label);
             takenOver.ShouldAllBe(t => t.Result.Count == 0, label);
             offices.ShouldAllBe(o => !o.Result.IsSuccess, label);
-            mine.ShouldAllBe(m => m.Result.IsSuccess, label);
+            mine.ShouldAllBe(m => m.Result.IsSuccess && m.Result.Value.Party == null, label);
             codes.ShouldAllBe(c => c.Result.IsSuccess, label);
             codes.Select(c => c.Result.Value.Code).Distinct().Count().ShouldBe(1, label);
             speaks.ShouldAllBe(s => s.Result.Count == 0, label);

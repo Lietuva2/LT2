@@ -123,7 +123,7 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
         }
 
         // Design 8.25: a member's public page ("Sekti", "Pranešti"), here the member's own.
-        var (status, body) = await E2ESteps.ApiAsync(member.Page, "PUT", "/api/v1/me/profile", new { about = "Bandymas (E2E bandymas).", @public = true, consentVersion = "2026-11-16" });
+        var (status, body) = await E2ESteps.ApiAsync(member.Page, "PUT", "/api/v1/me/profile", new { displayName = "Laukianti Pradžios", about = "Bandymas (E2E bandymas).", @public = true, publicConsentVersion = "2026-11-16" });
         status.ShouldBe(200, body);
         var id = System.Text.Json.JsonDocument.Parse(body).RootElement.GetProperty("address").GetString()!;
         await NothingUsableBeforeStartAsync(member.Page.Context, id);

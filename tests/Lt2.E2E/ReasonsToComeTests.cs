@@ -215,6 +215,6 @@ public sealed partial class ReasonsToComeTests : E2ETest
         return new Uri(page.Url).AbsolutePath;
     }
 
-    [GeneratedRegex("(/paskyra|/seimas/XVP-0412)$")]
+    [GeneratedRegex("(/paskyra#po-registracijos|/seimas/XVP-0412)$")]
     private static partial Regex Landed();
 }

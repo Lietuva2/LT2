@@ -29,6 +29,27 @@ public sealed record Error(ErrorKind Kind, string Code, string? Field = null)
     /// </summary>
     public string? MessageKey { get; init; }
 
+    /// <summary>
+    /// Every refusal of a form saved whole or not at all (design 8.28.5), each with its <see cref="Field"/>; empty for most errors.
+    /// The answer names every refused field with its own message.
+    /// </summary>
+    public IReadOnlyList<Error> Refusals { get; init; } = Array.Empty<Error>();
+
+    /// <summary>
+    /// The refusals of one form as one error: a single refusal stays itself (its own status and code), several are a
+    /// <c>validation</c> error that carries them all in <see cref="Refusals"/>.
+    /// </summary>
+    public static Error All(IReadOnlyList<Error> refusals)
+    {
+        ArgumentNullException.ThrowIfNull(refusals);
+        if (refusals.Count == 0)
+        {
+            throw new ArgumentException("A refusal needs at least one reason.", nameof(refusals));
+        }
+
+        return refusals.Count == 1 ? refusals[0] : new Error(ErrorKind.Validation, "validation") { Refusals = refusals };
+    }
+
     public static Error Validation(string code, string? field = null) => new(ErrorKind.Validation, code, field);
     public static Error NotFound(string code) => new(ErrorKind.NotFound, code);
     public static Error Conflict(string code) => new(ErrorKind.Conflict, code);

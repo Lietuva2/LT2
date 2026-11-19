@@ -481,8 +481,9 @@
             if (Succeeded(await Me.CompleteRegistrationAsync(request), FieldsOnThisStep))
             {
                 await StorageAsync("sessionStorage.removeItem", CodeKey);
-                // Owner, 2026-11-17: a registration just completed lands on "Profilis" when there is no page to return to.
-                await GoAsync(ReturnTo ?? await NextPageAsync(AccountScreens.Profile));
+                // Owner, 2026-11-17: a registration just completed lands on "Profilis" when there is no page to return to, with
+                // the mark that makes its button lead on to the front page (design 8.28.5).
+                await GoAsync(ReturnTo ?? await NextPageAsync(AccountScreens.AfterRegistration));
                 return;
             }
 
