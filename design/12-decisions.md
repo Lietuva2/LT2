@@ -102,6 +102,8 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - A moderator can restrict an account from writing, until a date or until lifted, with a statement emailed to the person;
   it is not public, touches no side, mark or count, and goes with the account; no hash of the address is kept. A full
   lock that stops sign-in was left for later (2026-11-13) and is built (2026-11-19, below).
+- The administrator's end of an MP's link has its screen: the first section of "Paskyros", a list of the MPs whose profile is
+  taken over with "Baigti ryšį" opening the statement field in place (8.5.2, 2026-11-19).
 - A full lock that stops signing in is an administrator's action, never a moderator's, with a required statement and a fresh
   passkey confirmation (2026-11-19, "go ahead with the designer's recommendations"): sessions end, no sign-in works and the
   answers reveal nothing, the public profile is not shown and the follows send nothing, texts stay as they are; the person

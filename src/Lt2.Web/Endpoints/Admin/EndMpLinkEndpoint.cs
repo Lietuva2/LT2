@@ -15,7 +15,8 @@ namespace Lt2.Web.Endpoints.Admin;
 /// </summary>
 internal static class EndMpLinkEndpoint
 {
-    public static void Map(IEndpointRouteBuilder api) =>
+    public static void Map(IEndpointRouteBuilder api)
+    {
         api.MapPost(ApiEndpoints.Relative(MpRoutes.EndLink), HandleAsync)
             .WithName("EndMpLink")
             .WithTags("Admin")
@@ -23,6 +24,15 @@ internal static class EndMpLinkEndpoint
             .WithValidation<StatementRequest>()
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        // The list the administrators' screen ends links from: the MPs whose profile is taken over, never the accounts.
+        api.MapGet(ApiEndpoints.Relative(MpRoutes.AdminLinks), async (IPoliticians politicians, IMpDirectory mps, CancellationToken cancellationToken) =>
+                TypedResults.Ok(await MpLinkList.ReadAsync(politicians, mps, cancellationToken)))
+            .WithName("GetMpLinks")
+            .WithTags("Admin")
+            .RequireAuthorization(Policies.Administrator)
+            .Produces<IReadOnlyList<AdminMpLinkResponse>>();
+    }
 
     private static async Task<IResult> HandleAsync(
         string slug,

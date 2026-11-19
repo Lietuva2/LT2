@@ -1093,4 +1093,12 @@
   <data name="Acc.Lock.Unlocked" xml:space="preserve"><value>Paskyra atrakinta.</value></data>
   <data name="Acc.Passkey.Unsupported" xml:space="preserve"><value>Veiksmas neatliktas: ši naršyklė negali patvirtinti prieigos raktu. Atidarykite šį puslapį naršyklėje, kurioje yra jūsų darbuotojo prieigos raktas.</value></data>
   <data name="Acc.Passkey.Cancelled" xml:space="preserve"><value>Veiksmas neatliktas, nes prieigos raktu nepatvirtinote. Spauskite mygtuką dar kartą ir patvirtinkite.</value></data>
+  <data name="Acc.Mps.Title" xml:space="preserve"><value>Seimo narių profiliai</value></data>
+  <data name="Acc.Mps.Lead" xml:space="preserve"><value>Seimo nariai, kurių profilį tvarko paskyra. Ryšį administratorius baigia, kai jis klaidingas arba juo piktnaudžiaujama.</value></data>
+  <data name="Acc.Mps.None" xml:space="preserve"><value>Nė vieno Seimo nario profilio niekas neperėmė.</value></data>
+  <data name="Acc.Mps.Since" xml:space="preserve"><value>Perimtas {0}</value></data>
+  <data name="Acc.Mps.End" xml:space="preserve"><value>Baigti ryšį</value></data>
+  <data name="Acc.Mps.Sentence" xml:space="preserve"><value>Ryšį baigus, paskyra nebetvarko profilio, o biuro narių prieiga baigiasi kartu. Paskelbti atsakymai lieka. Paskyros savininkas gauna laišką su jūsų paaiškinimu.</value></data>
+  <data name="Acc.Mps.Statement" xml:space="preserve"><value>Paaiškinimas (privalomas)</value></data>
+  <data name="Acc.Mps.Ended" xml:space="preserve"><value>Ryšys baigtas. Seimo narys: {0}.</value></data>
 </root>

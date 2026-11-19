@@ -5,6 +5,7 @@
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Api.Contracts.Auth
 @using Lt2.Api.Contracts.Me
+@using Lt2.Api.Contracts.Mps
 @using Lt2.Web.Client.Appeals
 @inherits InteractiveBase<AppealUi>
 @inject IAdminApi Admin
@@ -12,9 +13,12 @@
 @inject IAuthApi Auth
 @inject Passkeys PasskeyBrowser
 @inject FluentValidation.IValidator<AccountLockRequest> LockValidator
+@inject FluentValidation.IValidator<StatementRequest> StatementValidator
 
-@* "Paskyros" (design 8.3, 8.5.2), for administrators in a staff-passkey session: the full lock of an account, which stops it signing
-   in (the address typed, the statement required, audited and emailed to the person). Every action asks for the staff passkey again
+@* "Paskyros" (design 8.3, 8.5.2), for administrators in a staff-passkey session: the Seimas members whose profile is taken over,
+   each with "Baigti ryšį" (the statement field opens in place, one at a time, design 8.3's pattern; audited, the account told),
+   and the full lock of an account, which stops it signing in (the address typed, the statement required, audited and emailed
+   to the person). Every action asks for the staff passkey again
    when it was last confirmed more than ten minutes ago, on the same press (design 6.2): the browser's prompt, then the same action
    once more, what was typed kept. Nothing here names an account beyond what the administrator typed. *@
 <PageTitle>@L["Acc.PageTitle"]</PageTitle>
@@ -45,6 +49,56 @@
 }
 else
 {
+    <section class="sheet stack" aria-labelledby="acc-h-mps" id="mp-links">
+        <h2 id="acc-h-mps">@L["Acc.Mps.Title"]</h2>
+        <p class="small">@L["Acc.Mps.Lead"]</p>
+        @if (Links is null)
+        {
+            <p class="small">@L["Loading"]</p>
+        }
+        else if (Links.Count == 0)
+        {
+            <p class="small" id="acc-mps-none">@L["Acc.Mps.None"]</p>
+        }
+        else
+        {
+            <ul class="rows" id="acc-mps">
+                @foreach (var link in Links)
+                {
+                    <li class="stack stack--tight" id="acc-mp-@link.Slug" @key="link.Slug">
+                        <div class="row">
+                            <div class="rows__main">
+                                <a href="/p/@link.Slug"><b>@link.FirstName @link.LastName</b></a>
+                                <span class="small num">@L.Format("Acc.Mps.Since", Display.Day(link.Since))</span>
+                            </div>
+                            @if (_ending != link.Slug)
+                            {
+                                <button type="button" class="btn btn--plain" id="acc-mp-end-@link.Slug" disabled="@Locked" @onclick="() => OpenEnd(link.Slug)">@L["Acc.Mps.End"]</button>
+                            }
+                        </div>
+                        @if (_ending == link.Slug)
+                        {
+                            <form class="sheet sheet--quiet stack stack--tight" @onsubmit="() => EndAsync(link)" novalidate aria-labelledby="acc-mp-title-@link.Slug" id="acc-mp-form-@link.Slug">
+                                <ActionHeading Id="@($"acc-mp-title-{link.Slug}")">@L["Acc.Mps.End"]</ActionHeading>
+                                <p class="small">@L["Acc.Mps.Sentence"]</p>
+                                <div class="field @ErrorClass("statement")">
+                                    <label for="acc-mp-statement-@link.Slug">@L["Acc.Mps.Statement"]</label>
+                                    <textarea class="textarea" id="acc-mp-statement-@link.Slug" maxlength="@AppealLimits.StatementMaxLength" @bind="_endStatement" @bind:event="oninput" disabled="@Locked"
+                                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"acc-mp-statement-{link.Slug}")"></textarea>
+                                    <FieldError Errors="Errors" Field="statement" For="@($"acc-mp-statement-{link.Slug}")" />
+                                </div>
+                                <div class="row">
+                                    <button type="submit" class="btn" id="acc-mp-submit-@link.Slug" disabled="@Locked">@L["Acc.Mps.End"]</button>
+                                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="CloseEnd">@L["Cancel"]</button>
+                                </div>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
     <section class="sheet stack" aria-labelledby="acc-h-lock" id="account-lock">
         <h2 id="acc-h-lock">@L["Acc.Lock.Title"]</h2>
         <p class="small" id="acc-lock-sentence">@L["Acc.Lock.Sentence"]</p>
@@ -75,9 +129,14 @@ else
 
     private string? _address;
     private string _statement = "";
+    private string? _ending;
+    private string _endStatement = "";
 
     /// <summary>Whether this session works as an administrator's; null until it is known.</summary>
     [PersistentState] public bool? Administrator { get; set; }
+
+    /// <summary>The MPs whose profile is taken over (design 8.5.2); null until read.</summary>
+    [PersistentState] public List<AdminMpLinkResponse>? Links { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,7 +145,70 @@ else
             var me = await Me.GetAsync();
             Administrator = me.IsSuccess && me.Value!.ActiveStaffRoles.Contains("administrator");
         }
+
+        if (Administrator is true && Links is null)
+        {
+            var links = await Admin.GetMpLinksAsync();
+            if (links.IsSuccess)
+            {
+                Links = links.Value!.ToList();
+            }
+            else
+            {
+                Show(links.Problem);
+            }
+        }
     }
+
+    private async Task LoadLinksAsync()
+    {
+        var links = await Admin.GetMpLinksAsync();
+        if (Succeeded(links))
+        {
+            Links = links.Value!.ToList();
+        }
+    }
+
+    /// <summary>Opens the statement field under one MP, closing any other: one action at a time (design 8.3).</summary>
+    private void OpenEnd(string slug)
+    {
+        ClearMessages();
+        _ending = slug;
+        _endStatement = "";
+    }
+
+    private void CloseEnd() => _ending = null;
+
+    private Task EndAsync(AdminMpLinkResponse link) => RunAsync(async () =>
+    {
+        var request = new StatementRequest { Statement = _endStatement.Trim() };
+        if (!Valid(await StatementValidator.ValidateAsync(request)))
+        {
+            return;
+        }
+
+        var sent = await Admin.EndMpLinkAsync(link.Slug, request);
+        if (sent.Problem?.Code == ConfirmationRequired)
+        {
+            // Design 6.2: the staff passkey once more, then the same action again; the statement stays if it is not given.
+            if (!await ConfirmPasskeyAsync())
+            {
+                return;
+            }
+
+            sent = await Admin.EndMpLinkAsync(link.Slug, request);
+        }
+
+        if (!Succeeded(sent, "statement"))
+        {
+            return;
+        }
+
+        _ending = null;
+        _endStatement = "";
+        await LoadLinksAsync();
+        Info ??= L.Format("Acc.Mps.Ended", link.FirstName + " " + link.LastName);
+    });
 
     private Task SetLockAsync(bool locked) => RunAsync(async () =>
     {

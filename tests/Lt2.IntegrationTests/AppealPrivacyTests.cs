@@ -43,7 +43,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             AppealRoutes.ModerationQueue, ApiRoutes.Admin.Settings, ApiRoutes.Me.Root, ApiRoutes.Me.Sessions,
             AppealRoutes.HistoryOf(AppealSteps.ThirdBill), Lt2.Api.Contracts.Digests.DigestRoutes.Digests, Lt2.Api.Contracts.Digests.DigestRoutes.Rules,
             Lt2.Api.Contracts.Me.ProfileRoutes.Mine, ApiRoutes.Me.Export, "/projektai", "/seimas/XVP-0618", "/suvestines", "/moderavimas",
-            ApiRoutes.Me.Invitation, ApiRoutes.Admin.Invitations, "/paskyra", "/administravimas/kvietimai",
+            ApiRoutes.Me.Invitation, ApiRoutes.Admin.Invitations, "/paskyra", "/administravimas/kvietimai", "/administravimas/paskyros", Lt2.Api.Contracts.Mps.MpRoutes.AdminLinks,
             Lt2.Api.Contracts.Feedback.FeedbackRoutes.Staff, "/atsiliepimai", "/moderavimas/atsiliepimai",
         };
 

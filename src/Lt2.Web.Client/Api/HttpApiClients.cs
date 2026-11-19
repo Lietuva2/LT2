@@ -253,6 +253,12 @@ internal sealed class HttpAdminApi(ApiHttp http) : IAdminApi
     public Task<ApiResult> SwitchInvitationAsync(Guid invitationId, bool on, StatementRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Admin.SwitchInvitation(invitationId, on), request, cancellationToken);
 
+    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Mps.AdminMpLinkResponse>>> GetMpLinksAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Mps.AdminMpLinkResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Mps.MpRoutes.AdminLinks, null, cancellationToken);
+
+    public Task<ApiResult> EndMpLinkAsync(string slug, StatementRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, Lt2.Api.Contracts.Mps.MpRoutes.EndLinkOf(slug), request, cancellationToken);
+
     public Task<ApiResult> LockAccountAsync(Lt2.Api.Contracts.Admin.AccountLockRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Admin.LockAccount, request, cancellationToken);
 

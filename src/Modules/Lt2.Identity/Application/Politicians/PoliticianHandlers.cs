@@ -618,6 +618,18 @@ internal sealed class PoliticianHandlers(
             .ToDictionaryAsync(l => l.SeimasPersonId, l => l.CreatedAt, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<LinkedMp>> LinkedAsync(CancellationToken cancellationToken)
+    {
+        await using var reads = await contexts.CreateDbContextAsync(cancellationToken);
+        return (await PoliticianAccess.OpenLinks(reads).AsNoTracking()
+                .Where(l => l.Part == PoliticianParts.Mp)
+                .Select(l => new { l.SeimasPersonId, l.CreatedAt })
+                .ToListAsync(cancellationToken))
+            .OrderBy(l => l.CreatedAt)
+            .Select(l => new LinkedMp(l.SeimasPersonId, l.CreatedAt))
+            .ToList();
+    }
+
     public async Task<MpSpeaker?> SpeakerAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
         var state = await access.ForAsync(principal, cancellationToken);

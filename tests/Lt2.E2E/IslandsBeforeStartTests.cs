@@ -176,7 +176,7 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
         }
 
         var admin = await administrator.PageAsync();
-        foreach (var path in new[] { "/administravimas/nustatymai", "/administravimas/kvietimai", "/administravimas/pristatymas", "/administravimas/nesiunciama", "/administravimas/lankomumas", "/paskyra", "/paskyra/dalyvavimas" })
+        foreach (var path in new[] { "/administravimas/nustatymai", "/administravimas/kvietimai", "/administravimas/pristatymas", "/administravimas/nesiunciama", "/administravimas/lankomumas", "/administravimas/paskyros", "/paskyra", "/paskyra/dalyvavimas" })
         {
             await NothingUsableBeforeStartAsync(admin.Context, path);
         }

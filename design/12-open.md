@@ -21,7 +21,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
   closes the record with that reason and the date, a moderator can reopen a wrong close; "returned to the initiators for
   improvement" is not a rejection. Until then a moderator closes such a record (owner, 2026-11-19).
 - 8.4, 8.19.6: a sending subdomain with SPF, DKIM and DMARC; complaint and bounce reports from an email provider.
-- 8.5.2: a screen for the administrator's end of an MP's link (there is an API route only).
 - 9.1: a second web instance, the backup container (pgBackRest), the telemetry collector, host hardening, CDN and DDoS
   protection, a rehearsed recovery. 9.2: separate staging and production. 9.3: an image per commit in a registry, an
   approved deploy, expand-then-contract migrations. 9.4: an external uptime check, a telemetry backend, dashboards,
@@ -273,6 +272,8 @@ for the lawyer).
   užrakinta" and "…atrakinta" with their bodies and the line on writing to the team and on erasure, `EmailTemplates`
   `Notice.account-locked.*`, `Notice.account-unlocked.*`) and the refusals (`ProblemText` `account.lock-self`,
   `account.lock-staff`, `account.locked`, `account.not-locked`).
+- 8.5.2: the MPs' section of "Paskyros": "Seimo narių profiliai", its lead, "Perimtas {0}", "Baigti ryšį", the sentence and
+  "Ryšys baigtas. Seimo narys: {0}." (`AppealUi` `Acc.Mps.*`).
 - 8.7, 8.12.1: "Paspaudę dar kartą, atsiimsite." (`AppealUi` `Side.PressAgain`), the pressed button's title.
 - 8.10: the feedback texts.
 - 8.12.2: the reached threshold, "Riba pasiekta – …" (`AppealUi` `Threshold.Reached.*`, `Threshold.ReachedClosed.*`)

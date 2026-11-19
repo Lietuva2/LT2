@@ -144,7 +144,11 @@ and `PasskeyHandlers.SignInAsync` (`passkey.invalid`); public profiles by `Publi
 query, `FindAsync` answers `Retired` so the page and `GET /members/{id}` say 410) and `ProfileModerationHandlers.ReportAsync`;
 follow emails by `ParticipantFacts.IsLocked` (`ParticipantDirectory`), skipped in `NoticeDelivery.WriteAsync`. Statements of reasons
 and report notices still reach a locked account (they use `IParticipants.FindAsync`, not the follow path). The screen is
-`AccountsAdmin` (`/administravimas/paskyros`, `Nav.Accounts` in the account item, `data-account-link="accounts"` in
+`AccountsAdmin` (`/administravimas/paskyros`; its first section ends an MP's link, design 8.5.2: `GET /admin/mps/links`
+(`EndMpLinkEndpoint`, `MpLinkList` joins `IPoliticians.LinkedAsync` with `IMpDirectory.MpsAsync`, `AdminMpLinkResponse`: slug, name,
+since, nothing of the account) fills `Links`; "Baigti ryšį" opens one statement form at a time under its MP (`_ending`), `EndMpLinkAsync`
+with the same passkey dance, then the list is read again; `MpLinksScreenTests` (integration), `AccountsAdminPageTests`);
+`Nav.Accounts` in the account item, `data-account-link="accounts"` in
 `js/lt2-account.js`): it asks `GET /me` for an active administrator role (`Administrator` persistent state), else `#accounts-refused`
 and the staff `PasskeyStep`; address and statement, "Užrakinti paskyrą" / "Atrakinti paskyrą", the staff passkey asked on the same press
 when `passkey.confirmation-required`, the fields kept until the action goes through and then cleared (the address is never shown
@@ -284,7 +288,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   sends `NewPasskey` (made now) or `Passkey` (an assertion) with the token in `POST /me/mp/office/acceptance`, checked before
   anything is stored, and the session becomes a passkey session under a new key (`SessionRotation`); `GET /me` says
   `passkeySession`. Giving the profile up (`DELETE /me/mp`), an administrator's end
-  (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; no screen yet) and deleting the account end the
+  (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; the screen is the first section of `AccountsAdmin`, below) and deleting the account end the
   link and the office with it. An office member gets copies of the MP's summaries by their own choice (owner, 2026-11-17; see
   "Copies for the MP's office" under Summaries to MPs); any end of the office link ends them. Every change is audited and told to the MP's account's own address (`AccountNotices.Mp*`),
   never naming an office member.

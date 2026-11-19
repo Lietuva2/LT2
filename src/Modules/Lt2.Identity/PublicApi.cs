@@ -53,6 +53,9 @@ public sealed record MpOffer(string Slug, string FirstName, string LastName);
 /// </summary>
 public sealed record MpLinkState(string Slug, string FirstName, string LastName, string Part, bool MayWrite);
 
+/// <summary>An MP whose profile is taken over (design 8.5.2), as the administrators' list holds one: the Seimas person number and since when.</summary>
+public sealed record LinkedMp(long SeimasPersonId, DateTimeOffset Since);
+
 /// <summary>An office member as the MP's account sees them (design 8.5.3): the display name and since when. Nobody else does.</summary>
 public sealed record OfficeMember(Guid Id, string? DisplayName, DateTimeOffset Since);
 
@@ -110,6 +113,12 @@ public interface IPoliticians
 
     /// <summary>An administrator ends an MP's link with a statement (the caller checks the fresh confirmation).</summary>
     Task<Result<Unit>> EndByAdministratorAsync(string slug, string statement, StaffActor administrator, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The administrators' list (design 8.5.2): every MP whose profile is taken over now (an open MP link), with the Seimas person number
+    /// and since when, oldest first. Nothing of the account.
+    /// </summary>
+    Task<IReadOnlyList<LinkedMp>> LinkedAsync(CancellationToken cancellationToken);
 
     /// <summary>The public trace (design 8.5.2): of the given MPs, those whose profile is taken over, and since when.</summary>
     Task<IReadOnlyDictionary<long, DateTimeOffset>> TakenOverAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
