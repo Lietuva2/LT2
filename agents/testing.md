@@ -7,9 +7,10 @@ Read before writing or changing a test. The commands are in [AGENTS.md](../AGENT
   responses, an adoption vote, the responses part without its islands), `CommentSteps` (design 8.23: comments, "Sutinku", a bill with an argument and a statement to comment on), `MpSendingSteps` (design 8.19: `ResetMpMailAsync`,
   `IntroduceAsync`, settings after a fresh passkey confirmation, the MP mail in the outbox and its links' tokens),
   `ReasonsToComeSteps` with `VilniusToday` and `MondayInWeeks`, `SettingsSteps`,
-  `StaffMembers`, `LoggingFactory`). End-to-end tests: `tests/Lt2.E2E/E2ESteps.cs` (registration from any link, ticking the
+  `StaffMembers` with `ConfirmFreshAsync` (a fresh passkey confirmation right before a sensitive action, design 6.2: a
+  setting, a role, an urgent summary), `LoggingFactory`). End-to-end tests: `tests/Lt2.E2E/E2ESteps.cs` (registration from any link, ticking the
   age and the terms of use, `Mailpit`, screenshots, API calls from the page, closing a test's organisation, `SqlAsync` against
-  the stack's database).
+  the stack's database); a staff fixture's `ConfirmFreshAsync` before an API call that needs a fresh confirmation.
 - **Terms of use in tests (design 8.22.2).** Every member made through the shared steps accepts the terms (`TestBrowser`'s
   completion sends `AcceptsTerms`); an account older than them is made by deleting its `terms` consent (integration
   `TermsTests`) or setting an earlier `text_version` (E2E `TermsTests`). A new API write route needs nothing: the sweep in

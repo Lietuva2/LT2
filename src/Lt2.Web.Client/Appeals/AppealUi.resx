@@ -22,6 +22,8 @@
 <data name="Consent.Check" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano pozicijas dėl įstatymų projektų ir „Man svarbu“ žymas taip, kaip aprašyta.</value></data>
 <data name="Consent.Submit.for" xml:space="preserve"><value>Sutinku ir prašau balsuoti už</value></data>
 <data name="Consent.Submit.against" xml:space="preserve"><value>Sutinku ir prašau balsuoti prieš</value></data>
+<data name="Consent.Title.account" xml:space="preserve"><value>Galiojantis sutikimo tekstas</value></data>
+<data name="Consent.Submit.account" xml:space="preserve"><value>Sutinku</value></data>
 <data name="Reasons.Title" xml:space="preserve"><value>Kodėl</value></data>
 <data name="Reasons.for" xml:space="preserve"><value>Už</value></data>
 <data name="Reasons.against" xml:space="preserve"><value>Prieš</value></data>
@@ -266,6 +268,8 @@
 <data name="Mod.Done.hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
 <data name="Mod.Done.release" xml:space="preserve"><value>Atlikta: siuntimas atnaujintas.</value></data>
 <data name="Mod.Done.urgent" xml:space="preserve"><value>Atlikta: skubi suvestinė sudaryta (bandymas, nesiunčiama).</value></data>
+<data name="Mod.Passkey.Unsupported" xml:space="preserve"><value>Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos raktu. Atidarykite šį puslapį naršyklėje, kurioje yra jūsų darbuotojo prieigos raktas.</value></data>
+<data name="Mod.Passkey.Cancelled" xml:space="preserve"><value>Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. Spauskite „Patvirtinti skubią suvestinę“ dar kartą ir patvirtinkite.</value></data>
 <data name="Mod.Done.merge" xml:space="preserve"><value>Atlikta: sujungta.</value></data>
 <data name="Mod.Refresh" xml:space="preserve"><value>Atnaujinti eilę</value></data>
 <data name="Date.Hint" xml:space="preserve"><value>Data skaičiais, pvz., {0}</value></data>

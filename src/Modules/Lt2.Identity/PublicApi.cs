@@ -13,6 +13,8 @@ public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAd
 /// <summary>
 /// The signed-in person's own account. <paramref name="StaffAccount"/>: the account holds an activated staff role (whatever
 /// this session is), so deleting it needs a session signed in with its staff passkey (design 6.9).
+/// <paramref name="HasPositionConsent"/>: the positions consent to the text in force; <paramref name="OlderPositionConsent"/>:
+/// none to that text, but one to an older text not withdrawn (design 6.5, owner 2026-11-19).
 /// </summary>
 public sealed record AccountSummary(
     Guid Id,
@@ -30,7 +32,8 @@ public sealed record AccountSummary(
     MpOffer? MpOffer = null,
     MpLinkState? Mp = null,
     bool TermsRequired = false,
-    bool PasskeySession = false);
+    bool PasskeySession = false,
+    bool OlderPositionConsent = false);
 
 /// <summary>
 /// A sign-in's outcome: <paramref name="AccountChanged"/> when the browser was signed in to another account, whose session

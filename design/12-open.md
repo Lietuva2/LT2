@@ -6,8 +6,7 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 
 ## Designed, not built
 
-- 3, 6.2: a bot check at registration (ALTCHA); account verification beyond email; a fresh passkey confirmation before
-  approving an urgent send of a summary.
+- 3, 6.2: a bot check at registration (ALTCHA); account verification beyond email.
 - 5.4: the `notify.email_message` table.
 - 6.4: rate limiting in Caddy (only the application's own limits exist).
 - 6.5: disk encryption, TLS to the database, encrypted backups (none of them in the repository).
@@ -41,7 +40,6 @@ For the owner to decide in each case: fix the code or change the rule.
   the follow email about the vote (a first side follows the bill, 8.11.2).
 - 8.1: a record was also to close when a bill is rejected or withdrawn before adoption; the code closes a record only
   at the adoption-stage vote (8.26.2), so such a bill's record stays open (see the risk about 8.26.7).
-- 6.2: approving an urgent send of a summary needs a fresh passkey confirmation; `UrgentDigestEndpoint` asks for none.
 - 6.4: Caddy was to rate-limit per IP address; the Caddyfile has no rate limiting, only the ASP.NET policies.
 - 8.4: in an MP's summary, bills led by the MP's committee come first; the group is always empty, because lead
   committees are not imported.
@@ -62,13 +60,6 @@ name alone); the change is audited without the names and no earlier names are ke
 office are left out of the invitation codes' counts. Before registration opens or real summaries go: see
 "How accounts are verified" under Decisions needed.
 
-**6.5 Positions consent.** A person whose consent was given to an older text of the positions consent keeps their sides
-and marks, stored, counted and shown as theirs; taking a side back and removing a mark work; a new side or mark opens
-the consent form in place. But the account page shows "Sutikimas saugoti pozicijas ir žymas" and its withdrawal only
-for the consent in force, so until the person consents again the page offers no way to withdraw the older consent and
-delete what it covered (the API, `DELETE /me/consents/positions`, withdraws every version). Not built. Options: show the
-part and its withdrawal for any consent not withdrawn, with a line asking to read the new text; or ask for the new text
-on the account page itself. Needed before the first change of the consent text after going live.
 
 **6.8 Rules held throughout.** The agenda watcher keeps its items when a parse comes back empty, until the owner
 decides otherwise. One-time codes are limited per address, not per code.
@@ -262,7 +253,13 @@ for the lawyer).
   `EmailPart.*`, `EmailRestore.*`), its emails (`EmailTemplates` `EmailChange.*`: the code to the new address, to an
   address that has an account, to the old address, when the old address was put back) and the code to the address in
   use (`EmailProofCode.*`), and the refusals `email.same`, `email.proof-required`, `email.restore-invalid`.
-- 6.5: the positions consent text (`UiText` `PositionConsent.Text`).
+- 6.2: the urgent summary's passkey messages "Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos
+  raktu. …" and "Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. …" (`AppealUi` `Mod.Passkey.*`).
+- 6.5: the positions consent text (`UiText` `PositionConsent.Text`); for a consent to an older text, the account page's
+  line "Sutikote su ankstesne šio sutikimo teksto versija. Perskaitykite galiojančią ir patvirtinkite.", "Skaityti
+  galiojantį tekstą", "Sutikimas su galiojančiu tekstu išsaugotas." (`UiText` `PositionConsent.Outdated`, `.Read`,
+  `.Accepted`) and the form's "Galiojantis sutikimo tekstas" and "Sutinku" (`AppealUi` `Consent.Title.account`,
+  `Consent.Submit.account`).
 - 8.2: the notes "Bus skaičiuojama, kai prašysite balsuoti už." and "Neskaičiuojama: jūs prašote balsuoti prieš."; the
   writing box's hint "Sąrašą rašykite eilutėmis, pradėtomis „-“ arba „1.“." (also for the owner).
 - 8.7, 8.12.1: "Paspaudę dar kartą, atsiimsite." (`AppealUi` `Side.PressAgain`), the pressed button's title.

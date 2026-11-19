@@ -284,6 +284,12 @@ internal sealed class ServerModerationApi(
     public Task<ApiResult> UrgentAsync(Guid recordId, Lt2.Api.Contracts.Digests.UrgentDigestRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(async m =>
         {
+            // Design 6.2: the staff passkey confirmed in the last ten minutes, the same check as the endpoint's.
+            if (await FreshConfirmation.MissingAsync(identity, accessor.HttpContext!.User, cancellationToken) is { } missing)
+            {
+                return missing;
+            }
+
             var made = await digests.UrgentAsync(recordId, request.Statement, m, cancellationToken);
             return made.IsSuccess ? Result.Ok() : made.Error!;
         });

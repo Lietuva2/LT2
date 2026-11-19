@@ -191,6 +191,7 @@ internal static class Mapping
         ActiveStaffRoles = account.ActiveStaffRoles,
         AwaitingActivation = account.AwaitingActivation,
         HasPositionConsent = account.HasPositionConsent,
+        PositionConsentOutdated = account.OlderPositionConsent,
         StaffAccount = account.StaffAccount,
         MpOffer = account.MpOffer is { } offer ? MpMapping.Map(offer) : null,
         Mp = account.Mp is { } link ? MpMapping.Map(link) : null,

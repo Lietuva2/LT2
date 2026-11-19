@@ -78,6 +78,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
             await member.SetPartyAsync("Reformų partija");
             (await member.RecordAsync(AppealSteps.ThirdBill)).Counts.Against.ShouldBe(2);
 
+            await moderator.ConfirmFreshAsync();
             using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Prieš ištrynimą." });
             var frozen = await urgent.ReadAsync<DigestRunResponse>();
             frozen.Items.Single().Against.ShouldBe(2);

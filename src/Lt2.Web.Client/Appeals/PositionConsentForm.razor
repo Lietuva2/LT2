@@ -4,9 +4,18 @@
    title, text, checkbox and buttons wherever a side is taken or an argument marked, on the bill's page (SidePicker,
    RecordReasons) and in a row of the front page (MyAgendaSide). The component that shows it gives the consent and takes
    the side or gives the mark when "Sutinku ir …" is pressed; nothing is saved before that, and "Atšaukti" only closes
-   it. A quiet sheet: it opens within the content (design 8.16). *@
+   it. On the account page (ForAccount; owner 2026-11-19) the same text is read and accepted by a person whose consent was
+   given to an older text: its own title one level down, and "Sutinku" alone. A quiet sheet: it opens within the content
+   (design 8.16). *@
 <div class="sheet sheet--quiet stack stack--tight" role="group" aria-labelledby="@(IdPrefix)consent-title" id="@(IdPrefix)consent">
-    <h3 id="@(IdPrefix)consent-title">@L["Consent.Title"]</h3>
+    @if (ForAccount)
+    {
+        <h4 id="@(IdPrefix)consent-title">@L["Consent.Title.account"]</h4>
+    }
+    else
+    {
+        <h3 id="@(IdPrefix)consent-title">@L["Consent.Title"]</h3>
+    }
     <p>@L["Consent.Text"]</p>
     @* Design 8.22.3: the privacy notice, from the consent; a new tab keeps the row as it is. *@
     <p class="small"><a href="/privatumas#pozicijos" target="_blank" rel="noopener" id="@(IdPrefix)consent-privacy">@L["Consent.PrivacyLink"]</a></p>
@@ -15,8 +24,8 @@
         <span>@L["Consent.Check"]</span>
     </label>
     <div class="row">
-        <button type="button" class="btn @(ForMark ? null : Side == "for" ? "btn--for" : "btn--against")" id="@(IdPrefix)consent-submit" disabled="@(Locked || !checkedBox)"
-                @onclick="OnConfirm">@(ForMark ? L["Consent.Submit.mark"] : L["Consent.Submit." + Side])</button>
+        <button type="button" class="btn @(ForMark || ForAccount ? null : Side == "for" ? "btn--for" : "btn--against")" id="@(IdPrefix)consent-submit" disabled="@(Locked || !checkedBox)"
+                @onclick="OnConfirm">@(ForAccount ? L["Consent.Submit.account"] : ForMark ? L["Consent.Submit.mark"] : L["Consent.Submit." + Side])</button>
         <button type="button" class="btn btn--plain" id="@(IdPrefix)consent-cancel" disabled="@Locked" @onclick="OnCancel">@L["Cancel"]</button>
     </div>
 </div>
@@ -24,7 +33,7 @@
 @code {
     private bool checkedBox;
 
-    /// <summary>The side the person pressed: <c>for</c> or <c>against</c>.</summary>
+    /// <summary>The side the person pressed: <c>for</c> or <c>against</c>; unused with <see cref="ForMark"/> or <see cref="ForAccount"/>.</summary>
     [Parameter, EditorRequired] public string Side { get; set; } = "";
 
     /// <summary>
@@ -32,6 +41,12 @@
     /// says "Sutinku ir pažymėti" in the neutral look; <see cref="Side"/> is then the argument's side, unused.
     /// </summary>
     [Parameter] public bool ForMark { get; set; }
+
+    /// <summary>
+    /// On the account page, for a consent given to an older text (design 6.5, owner 2026-11-19): the text in force is read
+    /// and accepted on its own, with nothing else saved; the title says so and the button is "Sutinku" in the neutral look.
+    /// </summary>
+    [Parameter] public bool ForAccount { get; set; }
 
     /// <summary>While the island has not started or an action runs, nothing can be pressed.</summary>
     [Parameter] public bool Locked { get; set; }

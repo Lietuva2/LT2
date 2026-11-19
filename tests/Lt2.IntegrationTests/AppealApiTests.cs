@@ -532,6 +532,86 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
+
+    /// <summary>
+    /// Design 6.5 (owner, 2026-11-19: "show any live consent"): a consent to an older text is shown on the account page with
+    /// its withdrawal and one line about the text in force; withdrawing it there deletes every side and mark it covered, and
+    /// the part goes.
+    /// </summary>
+    [Fact]
+    public async Task A_consent_to_an_older_text_is_on_the_account_page_and_withdrawing_it_deletes_what_it_covered()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
+        var userId = await Database.UserIdAsync(email);
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var reasonId = (await member.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Database.ExecuteAsync("UPDATE identity.consent SET text_version = '2026-11-13' WHERE kind = 'positions' AND user_id = @u", ("u", userId));
+
+        var me = await member.MeAsync();
+        (me.HasPositionConsent, me.PositionConsentOutdated).ShouldBe((false, true));
+        var page = await member.Client.GetStringAsync(AccountScreens.Security);
+        page.ShouldContain("id=\"positions-consent\"");
+        page.ShouldContain("id=\"withdraw-consent\"");
+        page.ShouldContain("id=\"consent-outdated\"");
+
+        using (var withdrawn = await member.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PositionConsent))
+        {
+            withdrawn.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.position WHERE user_id = @u", ("u", userId))).ShouldBe(0, "the side goes");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.endorsement WHERE user_id = @u", ("u", userId))).ShouldBe(0, "the mark goes");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.consent WHERE kind = 'positions' AND user_id = @u AND withdrawn_at IS NULL", ("u", userId))).ShouldBe(0);
+        var record = await member.RecordAsync(AppealSteps.ThirdBill);
+        record.Counts.Against.ShouldBe(1, "only the initiator's side is counted");
+        record.Reasons.Single().Endorsements.ShouldBe(0);
+        me = await member.MeAsync();
+        (me.HasPositionConsent, me.PositionConsentOutdated).ShouldBe((false, false));
+        (await member.Client.GetStringAsync(AccountScreens.Security)).ShouldNotContain("id=\"positions-consent\"");
+    }
+
+    /// <summary>
+    /// Design 6.5 (owner, 2026-11-19): accepting the text in force from the account page records that version and the line
+    /// goes, the sides and marks kept; a person with the consent in force sees no line; a person with no consent sees no part.
+    /// </summary>
+    [Fact]
+    public async Task Accepting_the_text_in_force_records_it_and_only_an_older_consent_has_the_line()
+    {
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
+        var userId = await Database.UserIdAsync(email);
+        var me = await member.MeAsync();
+        (me.HasPositionConsent, me.PositionConsentOutdated).ShouldBe((true, false));
+        var page = await member.Client.GetStringAsync(AccountScreens.Security);
+        page.ShouldContain("id=\"positions-consent\"");
+        page.ShouldNotContain("id=\"consent-outdated\"");
+
+        await Database.ExecuteAsync("UPDATE identity.consent SET text_version = '2026-11-13' WHERE kind = 'positions' AND user_id = @u", ("u", userId));
+        (await member.Client.GetStringAsync(AccountScreens.Security)).ShouldContain("id=\"consent-outdated\"");
+
+        (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, new PositionConsentRequest { TextVersion = PositionConsentText.Version }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM identity.consent WHERE kind = 'positions' AND user_id = @u AND text_version = @v AND withdrawn_at IS NULL",
+            ("u", userId), ("v", PositionConsent.TextVersion))).ShouldBe(1, "the version in force is recorded");
+        me = await member.MeAsync();
+        (me.HasPositionConsent, me.PositionConsentOutdated).ShouldBe((true, false));
+        page = await member.Client.GetStringAsync(AccountScreens.Security);
+        page.ShouldContain("id=\"withdraw-consent\"");
+        page.ShouldNotContain("id=\"consent-outdated\"");
+
+        var (unconsented, _) = await Factory.MemberAsync(consent: false);
+        using var _u = unconsented;
+        me = await unconsented.MeAsync();
+        (me.HasPositionConsent, me.PositionConsentOutdated).ShouldBe((false, false));
+        (await unconsented.Client.GetStringAsync(AccountScreens.Security)).ShouldNotContain("id=\"positions-consent\"");
+    }
+
     [Fact]
     public async Task A_similar_existing_argument_is_offered_before_a_new_one()
     {

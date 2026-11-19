@@ -133,7 +133,8 @@ parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, c
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
 "Profilis" `/paskyra` (level and roles, then one form, `MyProfile`, below), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/paskyra/dalyvavimas`
 (`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/paskyra/saugumas`
-(the email address `MyEmail` `#el-pastas`, passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
+(the email address `MyEmail` `#el-pastas`, passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent
+`#positions-consent` for any consent not withdrawn, export and deletion `#my-data`, signing out).
 The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
 written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Without a page to
 return to, signing in, a staff session and accepting the terms land on the front page `/` (owner, 2026-11-17); a
@@ -348,7 +349,10 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   about 300 characters, a statement or a response about 1 500; the moderators' queue keeps texts whole.
 - "Man svarbu" endorses a reason of either side, with or without a side of one's own, never one you wrote, and needs the
   positions consent, whose text names the marks since version 2026-11-18 (`PositionConsent.TextVersion`, `Consent.*` in
-  `AppealUi`, `PositionConsent.*` in `UiText`; a consent to an older text counts as none: `CurrentPositionConsent`)
+  `AppealUi`, `PositionConsent.*` in `UiText`; a consent to an older text counts as none: `CurrentPositionConsent.Of`;
+  the account page shows any not withdrawn, `CurrentPositionConsent.Live`, with its withdrawal, and for an older text
+  (`MeResponse.PositionConsentOutdated`, owner 2026-11-19) the line `#consent-outdated` and the text in force in place,
+  `PositionConsentForm ForAccount`, accepted through `PUT /me/consents/positions`)
   (owner, 2026-11-18; 2026-11-17 for one's own: `AppealRules.CheckEndorsement`, `endorsement.own-reason`,
   `consent.required`; the island disables it on one's own argument from the never-cached answer and asks for the consent in
   place, `PositionConsentForm ForMark`, before a first mark; a merge drops a mark that would land on its giver's own
@@ -729,7 +733,10 @@ Integration: `DemoAppealTests`, `DemoSidesTests`.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
   A bill's page links to it as `/suvestines/{day}?projektas={number}` (`DigestRoutes.PageAt`; owner, 2026-11-17): the summaries
   holding the bill first, its item first, no fragment; a day with one summary has one title, its kind and date.
-- Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
+- Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary. The
+  urgent one needs a fresh staff-passkey confirmation (design 6.2, `FreshConfirmation` in `UrgentDigestEndpoint` and
+  `ServerModerationApi.UrgentAsync`); `ModerationActions` asks for the passkey on the same press when refused with
+  `passkey.confirmation-required` and sends it again with the statement typed.
 - **Sending (design 8.19, built 2026-11-16; owner 2026-11-17).** `Digest:Sending` `off` (default: prepared and reviewed the
   same way, then dry runs, nothing for MPs in the outbox) or `automatic` (sent at its time; an urgent one at once). Two locks keep it off whatever
   the setting says (`SendingRules.State`, `MailLocks`): no introduction letter sent yet, and invented data (`Demo:Allowed`, or any synthetic parliament data: `IMpMailAddresses.HoldsInventedDataAsync`) without

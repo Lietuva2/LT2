@@ -43,6 +43,13 @@ public sealed record MeResponse
     public bool HasPositionConsent { get; init; }
 
     /// <summary>
+    /// Design 6.5 (owner, 2026-11-19): no consent to the positions text in force (<see cref="HasPositionConsent"/> false), but one
+    /// to an older text, not withdrawn. The person's sides and marks stay stored; the account page shows the consent's part with
+    /// its withdrawal, and a line to read and accept the text in force.
+    /// </summary>
+    public bool PositionConsentOutdated { get; init; }
+
+    /// <summary>
     /// The account holds an activated staff role, in any session. Deleting it needs a session signed in with its staff
     /// passkey, which is when <see cref="ActiveStaffRoles"/> is not empty (design 6.9).
     /// </summary>

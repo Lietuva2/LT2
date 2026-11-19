@@ -5,9 +5,10 @@
 @inject IAuthApi Auth
 @inject Passkeys PasskeyBrowser
 
-@* "Saugumas ir duomenys" (design 8.21): the email address (design 6.2, #el-pastas), passkeys, sessions, known browsers (design 8.20.2, #zinomos-narsykles), the positions
-   consent (design 6.5: a consent about stored data, withdrawn with what it covers), the export and deleting the account
-   (#my-data), signing out. *@
+@* "Saugumas ir duomenys" (design 8.21): the email address (design 6.2, #el-pastas), passkeys, sessions, known browsers
+   (design 8.20.2, #zinomos-narsykles), the positions consent (design 6.5: a consent about stored data, withdrawn with
+   what it covers; any consent not withdrawn, an older text's too, with a line to accept the text in force), the export
+   and deleting the account (#my-data), signing out. *@
 @if (Me is null)
 {
     <p class="small">@L["Loading"]</p>
@@ -96,12 +97,26 @@ else
             }
         </section>
 
-        @if (Me.HasPositionConsent)
+        @if (Me.HasPositionConsent || Me.PositionConsentOutdated)
         {
-            @* Withdrawing the consent deletes every position (design 6.5). *@
+            @* Withdrawing the consent deletes every position and mark (design 6.5), whatever text version it was given to
+               (owner, 2026-11-19: any consent not withdrawn is shown). A consent to an older text adds one line and the text in
+               force, read and accepted in place with the form a first side asks (PositionConsentForm). *@
             <section class="sheet stack" aria-labelledby="consent-title" id="positions-consent">
                 <h3 id="consent-title">@L["PositionConsent.Title"]</h3>
                 <p>@L["PositionConsent.Text"]</p>
+                @if (Me.PositionConsentOutdated)
+                {
+                    <p class="note note--quiet" id="consent-outdated">@L["PositionConsent.Outdated"]</p>
+                    @if (_readConsent)
+                    {
+                        <PositionConsentForm Side="" ForAccount="true" Locked="Locked" IdPrefix="account-" OnConfirm="AcceptConsentAsync" OnCancel="() => _readConsent = false" />
+                    }
+                    else
+                    {
+                        <p><button type="button" class="btn" id="read-consent" disabled="@Locked" @onclick="() => _readConsent = true">@L["PositionConsent.Read"]</button></p>
+                    }
+                }
                 <p><button type="button" class="btn btn--plain" id="withdraw-consent" disabled="@Locked" @onclick="WithdrawConsentAsync">@L["PositionConsent.Withdraw"]</button></p>
             </section>
         }
@@ -147,6 +162,7 @@ else
 @code {
     private bool _confirmDelete;
     private bool _passkeySessionNeeded;
+    private bool _readConsent;
 
     [PersistentState]
     public List<SessionResponse>? Sessions { get; set; }
@@ -244,7 +260,21 @@ else
             return;
         }
 
+        _readConsent = false;
         Info = L["PositionConsent.Withdrawn"];
+        await ReloadMeAsync();
+    });
+
+    /// <summary>The text in force accepted on its own (design 6.5): recorded as the bill's page records it; nothing else changes.</summary>
+    private Task AcceptConsentAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await MeApi.GivePositionConsentAsync(new PositionConsentRequest { TextVersion = PositionConsentText.Version })))
+        {
+            return;
+        }
+
+        _readConsent = false;
+        Info = L["PositionConsent.Accepted"];
         await ReloadMeAsync();
     });
 

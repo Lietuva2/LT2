@@ -232,6 +232,8 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
 
     private static async Task<DigestRunResponse> UrgentAsync(StaffMember moderator, Guid recordId)
     {
+        // Design 6.2: approving an urgent summary needs the staff passkey confirmed in the last ten minutes.
+        await moderator.ConfirmFreshAsync();
         using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, recordId), new UrgentDigestRequest { Statement = "Bandymas." });
         urgent.StatusCode.ShouldBe(HttpStatusCode.Created, await urgent.Content.ReadAsStringAsync());
         return await urgent.ReadAsync<DigestRunResponse>();

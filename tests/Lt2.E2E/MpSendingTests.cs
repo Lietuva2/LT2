@@ -116,6 +116,7 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
             var date = (await SqlAsync("select to_char((now() at time zone 'Europe/Vilnius')::date, 'YYYY-MM-DD')")).Trim();
             var digestQuery = $"to:\"{Official}\" subject:\"Lietuva 2.0 suvestinė Seimo nariams, {date}\"";
             var digestsBefore = await Mailpit.CountAsync(digestQuery);
+            await moderator.ConfirmFreshAsync();
             var (urgentStatus, urgentBody) = await E2ESteps.ApiAsync(mod, "POST", $"/api/v1/moderation/records/{record}/urgent", new { statement = "Bandymas (E2E): skubi suvestinė." });
             urgentStatus.ShouldBe(201, urgentBody);
             urgentBody.ShouldContain("\"status\":\"sent\"");

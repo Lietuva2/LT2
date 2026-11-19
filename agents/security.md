@@ -17,8 +17,10 @@ code review.
   with a staff passkey; a code session is a member session, whatever roles the account has. Politicians need a
   passkey too: speaking for an MP needs a passkey session, read from the database per request (the link is not a role in
   the session), and on a linked account (the MP's or an office member's) a passkey is added only in a passkey session or
-  by the take-over link. Responses never reveal whether an email is registered. Changing roles, resetting an account and saving
-  a runtime setting need a fresh passkey confirmation (`FreshConfirmation`, the last ten minutes); a staff account is
+  by the take-over link. Responses never reveal whether an email is registered. Changing roles, resetting an account, saving
+  a runtime setting, ending an MP's link, sending the introduction letter and approving an urgent summary need a fresh
+  passkey confirmation (`FreshConfirmation`, the last ten minutes, checked by the endpoint and the in-process client alike;
+  `passkey.confirmation-required`); a staff account is
   deleted only from its staff passkey session; what a staff member did keeps their account id after deletion (design 6.9).
   A code session on a staff account becomes a staff session without signing out (owner, 2026-11-16): `/prisijungti/raktas`,
   `POST /me/staff-session` (`StaffHandlers.StartStaffSessionAsync`), the signed-in account's own staff passkey only

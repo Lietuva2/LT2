@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Admin;
 using Lt2.Api.Contracts.Auth;
+using Lt2.Api.Contracts.Digests;
 using Lt2.Api.Contracts.Me;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Migrator;
@@ -234,6 +235,51 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         (await admin.Browser.ConfirmPasskeyAsync(admin.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         using var saved = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Feedback:KeepMonths"), request);
         saved.StatusCode.ShouldBe(HttpStatusCode.OK, await saved.Content.ReadAsStringAsync());
+    }
+
+    /// <summary>
+    /// Design 6.2: approving an urgent summary to MPs is a sensitive action: without a passkey confirmation in the last ten
+    /// minutes it is refused and nothing is made or audited; after one, the summary is made.
+    /// </summary>
+    [Fact]
+    public async Task Approving_an_urgent_summary_needs_a_fresh_passkey_confirmation()
+    {
+        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        var admin = await AdministratorAsync();
+        await admin.Browser.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        try
+        {
+            var (initiator, _) = await Factory.MemberAsync();
+            using var _i = initiator;
+            var record = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
+            var route = AppealRoutes.With(DigestRoutes.Urgent, record.Id);
+            var request = new UrgentDigestRequest { Statement = "Balsavimas perkeltas į rytojų." };
+            var moderatorId = await Database.UserIdAsync(moderator.Email);
+
+            await AgeConfirmationAsync(moderator.Email, minutes: 11);
+            using (var stale = await moderator.Browser.PostAsync(route, request))
+            {
+                await stale.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "passkey.confirmation-required");
+            }
+
+            (await Database.ScalarAsync<long>(
+                "SELECT count(*) FROM notify.digest_run r JOIN notify.digest_item i ON i.run_id = r.id WHERE r.kind = 'urgent' AND i.record_id = @r",
+                ("r", record.Id))).ShouldBe(0, "nothing was made");
+            (await Database.ScalarAsync<long>(
+                "SELECT count(*) FROM audit.event WHERE action = 'digest.urgent.approved' AND actor_user_id = @u", ("u", moderatorId))).ShouldBe(0);
+
+            (await moderator.Browser.ConfirmPasskeyAsync(moderator.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            using var fresh = await moderator.Browser.PostAsync(route, request);
+            fresh.StatusCode.ShouldBe(HttpStatusCode.Created, await fresh.Content.ReadAsStringAsync());
+            (await fresh.ReadAsync<DigestRunResponse>()).Kind.ShouldBe("urgent");
+            (await Database.ScalarAsync<long>(
+                "SELECT count(*) FROM audit.event WHERE action = 'digest.urgent.approved' AND actor_user_id = @u", ("u", moderatorId))).ShouldBe(1);
+        }
+        finally
+        {
+            await admin.Browser.ResetSettingAsync("Digest:ThresholdMinimum");
+            await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        }
     }
 
     [Fact]
