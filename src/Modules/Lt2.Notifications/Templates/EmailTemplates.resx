@@ -188,6 +188,14 @@
   <data name="Digest.AllNumbers" xml:space="preserve"><value>  Visi skaičiai ir argumentai: {0}</value></data>
   <data name="Digest.Preferences" xml:space="preserve"><value>Keisti suvestinių dažnumą arba jų atsisakyti: {0}</value></data>
   <data name="Digest.Takeover" xml:space="preserve"><value>Prisijungę prie Lietuva 2.0 šiuo adresu galite perimti savo Seimo nario profilį ir atsakyti visiems iš karto: {0}</value></data>
+  <data name="Digest.TakeoverLead" xml:space="preserve"><value>Prisijungę prie Lietuva 2.0 šiuo adresu, galite perimti savo Seimo nario profilį ir atsakyti visiems iš karto.</value></data>
+  <data name="Digest.TakeoverButton" xml:space="preserve"><value>Perimti profilį ir atsakyti visiems iš karto</value></data>
+  <data name="Digest.ForLabel" xml:space="preserve"><value>Prašo balsuoti už</value></data>
+  <data name="Digest.AgainstLabel" xml:space="preserve"><value>Prašo balsuoti prieš</value></data>
+  <data name="Digest.Older" xml:space="preserve"><value>iš jų {0} – paskyros senesnės nei 30 d.</value></data>
+  <data name="Digest.AnswerButton" xml:space="preserve"><value>Atsakyti visiems</value></data>
+  <data name="Digest.WholeReasonLabel" xml:space="preserve"><value>Skaityti visą</value></data>
+  <data name="Digest.PublicCopyLabel" xml:space="preserve"><value>Ši suvestinė viešai</value></data>
   <data name="Digest.CopyStop" xml:space="preserve"><value>Nebegauti kopijų: {0}</value></data>
   <data name="Intro.Test" xml:space="preserve"><value>[Bandomoji kopija: Seimo nariams šis laiškas dar neišsiųstas. Asmeninės nuorodos jame pakeistos pavyzdžiu.]</value></data>
   <data name="Intro.TestSubject" xml:space="preserve"><value>[Bandomoji kopija]</value></data>

@@ -26,7 +26,7 @@ public sealed class MemberStopLinkTests
     private const string Bill = "XVP-0412";
     private const string Title = "Gyventojų pajamų mokesčio įstatymo pataisa";
     private const string Account = AccountScreens.EmailRhythm;
-    private const string FooterStart = "<p style=\"margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:13px;color:#64748b\">";
+    private const string FooterStart = "<div style=\"margin:32px 0 0;padding:12px 0 0;border-top:1px solid #cbd5e1;font-size:13px;line-height:1.5;color:#64748b\">";
 
     /// <summary>Why each email of <see cref="EveryKind"/> came, in its order: the footer's first sentence.</summary>
     private static readonly string[] Reasons =
@@ -113,7 +113,7 @@ public sealed class MemberStopLinkTests
             footer.ShouldBe(
                 FooterStart + System.Net.WebUtility.HtmlEncode(Reasons[i])
                 + $"<br><a href=\"{System.Net.WebUtility.HtmlEncode(Site + Account)}\" style=\"color:#64748b;text-decoration:underline\">Keisti periodiškumą</a> arba <a href=\"{Site}/laiskai/nebegauti/{Token}\" style=\"color:#64748b;text-decoration:underline\">atsisakyti laiškų</a>"
-                + $"<br><a href=\"{Site}/privatumas\" style=\"color:#64748b;text-decoration:underline\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p></body></html>",
+                + $"<br><a href=\"{Site}/privatumas\" style=\"color:#64748b;text-decoration:underline\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></div></td></tr></table></td></tr></table></body></html>",
                 email.Subject);
             html[..footerAt].ShouldNotContain("laiskai/nebegauti", Case.Sensitive, "only the footer links the stop page");
             html[..footerAt].ShouldNotContain("Keisti periodiškumą", Case.Sensitive);

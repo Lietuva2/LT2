@@ -58,7 +58,7 @@ public sealed class MpMailTemplateTests
         email.TextBody.ShouldContain("Dažniausi argumentai už (iš 14):");
         email.TextBody.ShouldContain("Dažniausi argumentai prieš (iš 9):");
         email.HtmlBody.ShouldNotBeNull();
-        email.HtmlBody.ShouldContain("Prašo balsuoti prieš: 4 280");
+        email.HtmlBody.ShouldContain(">4 280</div>");
         email.Stream.ShouldBe("mp", "MP mail has its own stream");
     }
 
@@ -204,7 +204,7 @@ public sealed class MpMailTemplateTests
     {
         var html = Templates().Digest(Email()).HtmlBody!;
 
-        html.ShouldContain("<a href=\"https://lt2.test/suvestines/nustatymai/" + Token + "\">");
+        html.ShouldContain("<a href=\"https://lt2.test/suvestines/nustatymai/" + Token + "\" style=\"color:#475569;text-decoration:underline\">Keisti suvestinių dažnumą arba jų atsisakyti</a>", Case.Sensitive, "the label is the link, the address is not printed");
         html.ShouldNotContain("<img", Case.Insensitive, "no tracking pixel");
         System.Text.RegularExpressions.Regex.Matches(html, "href=\"([^\"]+)\"").Select(m => m.Groups[1].Value)
             .ShouldAllBe(href => href.StartsWith("https://lt2.test/", StringComparison.Ordinal), "links are the site's own addresses, never rewritten");
@@ -247,8 +247,8 @@ public sealed class MpMailTemplateTests
             Official, 1, "Tema", Letter, "Rūta Mockutė", "VšĮ LT2.0 vadovė", MpMailPaths.Preferences(Token), MpMailPaths.OneClick(Token), Test: false, null));
 
         email.TextBody.ShouldStartWith(Letter + "\n\nRūta Mockutė");
-        email.HtmlBody!.ShouldContain("<p>Ką rasite:</p><ul><li>projektų puslapius</li><li>argumentus &lt;b&gt;abiem&lt;/b&gt; pusėms</li></ul>"
-            + "<p>Kaip tai veikia:</p><ol><li value=\"1\">Žmonės renkasi pusę.</li><li value=\"2\">Suvestinę gaunate jūs.</li></ol>");
+        email.HtmlBody!.ShouldContain("<p style=\"margin:0 0 16px\">Ką rasite:</p><ul style=\"margin:0 0 16px;padding-left:24px\"><li style=\"margin:0 0 4px\">projektų puslapius</li><li style=\"margin:0 0 4px\">argumentus &lt;b&gt;abiem&lt;/b&gt; pusėms</li></ul>"
+            + "<p style=\"margin:0 0 16px\">Kaip tai veikia:</p><ol style=\"margin:0 0 16px;padding-left:24px\"><li value=\"1\" style=\"margin:0 0 4px\">Žmonės renkasi pusę.</li><li value=\"2\" style=\"margin:0 0 4px\">Suvestinę gaunate jūs.</li></ol>");
         email.HtmlBody!.ShouldNotContain("<b>abiem</b>", Case.Sensitive, "nothing typed becomes markup");
     }
 

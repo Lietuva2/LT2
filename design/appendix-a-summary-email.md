@@ -2,7 +2,11 @@
 
 The text part of a weekly summary to an MP's official address, as `MpMailTemplates` renders it from
 `Templates/EmailTemplates.resx`. All names and numbers are fictional. The first bill's MP has answered; the second's
-line would read "Atsakyti vieną kartą visiems: …" instead. A side without published arguments reads "Argumentų už dar
+line would read "Atsakyti vieną kartą visiems: …" instead. Each bill's address appears once in the text part: the response's
+"Keisti arba papildyti" or "Atsakyti vieną kartą visiems", never also "Visi skaičiai ir argumentai" (kept only for a copy
+without either). The HTML part (8.19.3) shows the same content as a card per bill, with link labels instead of
+addresses: "Atsakyti visiems" (button), "Keisti arba papildyti", "Skaityti visą" (for "Visas argumentas: …"), "Ši suvestinė viešai"
+(for "Ta pati suvestinė viešai: …"), and the bill's heading as the link to its page. A side without published arguments reads "Argumentų už dar
 nėra." (or "prieš"); a side with one or two published arguments reads "Dažniausi argumentai už:" with no "(iš N)", since the
 two shown are all of them; a bill with a surge note adds "Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos
 per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima." under the counts. An argument longer than about 300
@@ -28,15 +32,14 @@ Priėmimas · planuojama rugsėjo 24 d.
   · Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą. (1 480)
   · Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą. (970)
   Jūsų atsakymas: balsuosiu prieš (2026-09-18). Keisti arba papildyti: https://lietuva2.lt/seimas/XVP-0412
-  Visi skaičiai ir argumentai: https://lietuva2.lt/seimas/XVP-0412
 
 XVP-1811 · …
 
 Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.
 Ta pati suvestinė viešai: https://lietuva2.lt/suvestines/2026-09-21
 
+Lietuva 2.0
+
 Keisti suvestinių dažnumą arba jų atsisakyti: https://lietuva2.lt/suvestines/nustatymai/…
 Prisijungę prie Lietuva 2.0 šiuo adresu galite perimti savo Seimo nario profilį ir atsakyti visiems iš karto: https://lietuva2.lt/prisijungti
-
-Lietuva 2.0
 ```

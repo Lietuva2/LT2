@@ -13,3 +13,6 @@ deploy/secrets/*
 !deploy/secrets/README.md
 # Playwright traces and screenshots
 tests/Lt2.E2E/output/
+
+# Rendered samples and screenshots
+output/
