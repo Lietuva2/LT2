@@ -4,9 +4,9 @@
    under the page's heading on the four pages, the current one marked; on the ground (design 8.16), no script. Each tab
    reaches the other three. *@
 <nav class="row tabs project-tabs" aria-label="@T["Tabs.Label"]" id="project-tabs">
-    @foreach (var (tab, path, key) in MenuSections.Tabs)
+    @foreach (var item in MenuSections.Tabs)
     {
-        <a href="@path" id="@("tab-" + path.TrimStart('/').Replace('/', '-'))" aria-current="@(tab == Current ? "page" : null)">@T[key]</a>
+        <a href="@item.Path" id="@item.Slug" aria-current="@(item.Tab == Current ? "page" : null)">@T[item.NameKey]</a>
     }
 </nav>
 

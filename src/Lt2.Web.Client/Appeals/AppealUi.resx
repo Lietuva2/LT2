@@ -26,7 +26,8 @@
 <data name="Reasons.for" xml:space="preserve"><value>Už</value></data>
 <data name="Reasons.against" xml:space="preserve"><value>Prieš</value></data>
 <data name="Reasons.None" xml:space="preserve"><value>Argumentų dar nėra.</value></data>
-<data name="Reasons.Endorse" xml:space="preserve"><value>Man svarbu · {0}</value></data>
+<data name="Reasons.Endorse" xml:space="preserve"><value>{0} · {1}</value></data>
+<data name="Reasons.EndorseName" xml:space="preserve"><value>Man svarbu</value></data>
 <data name="Reasons.Anonymous" xml:space="preserve"><value>Lietuva 2.0 naudotojas</value></data>
 <data name="Reasons.More" xml:space="preserve"><value>Rodyti daugiau argumentų</value></data>
 <data name="Reasons.Write" xml:space="preserve"><value>Parašyti argumentą</value></data>
@@ -1040,4 +1041,23 @@
   <data name="Reasons.Uncounted.NoSide.against" xml:space="preserve"><value>Bus skaičiuojama, kai prašysite balsuoti prieš.</value></data>
   <data name="Reasons.Uncounted.Other.for" xml:space="preserve"><value>Neskaičiuojama: jūs prašote balsuoti už.</value></data>
   <data name="Reasons.Uncounted.Other.against" xml:space="preserve"><value>Neskaičiuojama: jūs prašote balsuoti prieš.</value></data>
+  <data name="HowItWorks.4.Title" xml:space="preserve"><value>Seimo nariai sužino</value></data>
+  <data name="HowItWorks.4.Text" xml:space="preserve"><value>Kai dalyvių skaičius pasiekia ribą, projektas patenka į suvestinę Seimo nariams: abi pusės ir svarbiausi argumentai.</value></data>
+  <data name="HowItWorks.4.Trial" xml:space="preserve"><value>Kol vyksta bandymas, suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
+  <data name="Start.Greeting" xml:space="preserve"><value>Sveiki</value></data>
+  <data name="Start.Greeting.New" xml:space="preserve"><value>Sveiki prisijungę</value></data>
+  <data name="Start.Greeting.Back" xml:space="preserve"><value>Sveiki sugrįžę</value></data>
+  <data name="Start.Title" xml:space="preserve"><value>Pradėkite nuo vieno projekto</value></data>
+  <data name="Start.1.Title" xml:space="preserve"><value>Pasirinkite projektą</value></data>
+  <data name="Start.1.Text" xml:space="preserve"><value>Žemiau – ką Seimas planuoja svarstyti artimiausiomis dienomis. Pavadinimas veda į projekto puslapį.</value></data>
+  <data name="Start.2.Title" xml:space="preserve"><value>Nurodykite, ko prašote</value></data>
+  <data name="Start.2.Text" xml:space="preserve"><value>Prie „{0}“ paspauskite „{1}“ arba „{2}“. Paspaudę dar kartą, atsiimsite.</value></data>
+  <data name="Start.3.Title" xml:space="preserve"><value>Paaiškinkite kodėl</value></data>
+  <data name="Start.3.Text" xml:space="preserve"><value>Projekto puslapyje parašykite argumentą arba pažymėkite „{0}“ prie kitų.</value></data>
+  <data name="Start.1.Short" xml:space="preserve"><value>Pasirinkite projektą žemiau.</value></data>
+  <data name="Start.2.Short" xml:space="preserve"><value>Paspauskite „{0}“ arba „{1}“; paspaudę dar kartą, atsiimsite.</value></data>
+  <data name="Start.3.Short" xml:space="preserve"><value>Projekto puslapyje paaiškinkite kodėl.</value></data>
+  <data name="Start.4.Short" xml:space="preserve"><value>Pasiekus ribą, projektas patenka į suvestinę Seimo nariams.</value></data>
+  <data name="Start.How" xml:space="preserve"><value>Kaip tai veikia →</value></data>
+  <data name="Start.Saved" xml:space="preserve"><value>Profilis išsaugotas.</value></data>
 </root>

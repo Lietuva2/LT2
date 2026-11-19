@@ -1,14 +1,17 @@
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
+@inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> U
 
 @* "Kaip tai veikia" (design 8.7): four numbered steps and the link to what stays private. The same
    texts on the visitor's front page and at the top of the methodology page (/metodika#kaip-tai-veikia), where a member's
-   "Kaip tai veikia" link leads. The one place where the short-texts rule of 8.15 does not apply. *@
+   "Kaip tai veikia" link leads. The one place where the short-texts rule of 8.15 does not apply. The fourth step's texts
+   are the client's (AppealUi), shared with the new member's start on the front page (design 8.28.3, MyStart). *@
 <section class="stack home-how" aria-labelledby="@($"{IdPrefix}how-title")" id="@Id">
     <h2 id="@($"{IdPrefix}how-title")">@A["HowItWorks.Title"]</h2>
     <ol class="intro-steps">
         @for (var step = 1; step <= 4; step++)
         {
-            <li><h3>@A[$"HowItWorks.{step}.Title"]</h3><p>@A[$"HowItWorks.{step}.Text"]@(step == 4 && Sending == "off" ? " " + A["HowItWorks.4.Trial"] : "")</p></li>
+            var texts = step == 4 ? (IStringLocalizer)U : A;
+            <li><h3>@texts[$"HowItWorks.{step}.Title"]</h3><p>@texts[$"HowItWorks.{step}.Text"]@(step == 4 && Sending == "off" ? " " + U["HowItWorks.4.Trial"] : "")</p></li>
         }
     </ol>
     <p><a href="/metodika#privatumas">@A["HowItWorks.PrivacyLink"]</a></p>

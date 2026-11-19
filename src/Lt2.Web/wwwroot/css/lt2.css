@@ -1002,6 +1002,22 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .intro-steps h3 { font-size: var(--fs-3); }
 
+/* Design 8.28.3: the start for a member who has not taken a side yet. From 54rem the visitor's numbered steps; under it one
+   line a step, so the agenda's heading stays on a phone's first screen. Both are in the page; the width chooses. */
+.starter { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
+.starter__short { display: none; flex-direction: column; gap: var(--sp-2); list-style: none; margin: 0; padding: 0; counter-reset: step; font-weight: 600; }
+.starter__short > li { display: flex; align-items: flex-start; gap: var(--sp-2); }
+.starter__short > li::before {
+  counter-increment: step; content: counter(step); font: 800 var(--fs-2)/1 var(--font-display);
+  width: 1.75rem; height: 1.75rem; flex: none; display: grid; place-items: center; background: var(--brand-deep); color: #ffffff;
+}
+@media (max-width: 54rem) {
+  .starter { gap: var(--sp-3); padding-top: var(--sp-4); }
+  .starter h2 { font-size: var(--fs-3); }
+  .starter .starter__full { display: none; }
+  .starter__short { display: flex; }
+}
+
 /* The agenda's sheet (design 8.16): a sheet stands apart by itself, so it comes one step closer to what is above it,
    which keeps its heading on the first screen at 1280 px (design 8.7). */
 .home-agenda { margin-block-start: calc(var(--sp-6) - var(--sp-7)); }
@@ -1154,6 +1170,22 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .top__nav .drop__links a { display: block; padding: var(--sp-2) 0; color: var(--ink); text-decoration: none; font-weight: 600; border-bottom: 0; }
 .top__nav .drop__links a:hover { text-decoration: underline; }
 .top__nav .drop__links a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--link); text-decoration-thickness: 3px; text-underline-offset: 0.3em; }
+/* Design 8.28.2: each entry of "Projektai" carries one line that says what the page is, under its name; the current page's
+   name is marked, the line is not underlined. On a phone the panel is as wide as the page, not hung from the item. */
+.drop__panel--desc { inline-size: 21rem; max-inline-size: min(21rem, 100vw - 2rem); padding-block: var(--sp-3); }
+.drop__panel--desc .drop__links { gap: var(--sp-2); }
+.drop__label { display: block; }
+.drop__desc { display: block; font-weight: 400; font-size: var(--fs-0); line-height: 1.35; color: var(--ink-2); margin-block-start: 2px; }
+.top__nav .drop__panel--desc .drop__links a:hover,
+.top__nav .drop__panel--desc .drop__links a[aria-current="page"] { text-decoration: none; }
+.top__nav .drop__panel--desc .drop__links a:hover .drop__label { text-decoration: underline; }
+.top__nav .drop__panel--desc .drop__links a[aria-current="page"] .drop__label {
+  text-decoration: underline; text-decoration-color: var(--link); text-decoration-thickness: 3px; text-underline-offset: 0.3em; }
+@media (max-width: 32rem) {
+  .top { position: relative; }
+  .drop--desc { position: static; }
+  .drop--desc .drop__panel { inset-inline: 1rem; inset-block-start: 100%; inline-size: auto; max-inline-size: none; }
+}
 .account__panel {
   position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + var(--sp-2)); z-index: 30;
   display: flex; flex-direction: column; gap: var(--sp-2);
@@ -1169,6 +1201,18 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .top__nav .account__links a:hover, .account__links .top__signout button:hover { text-decoration: underline; border: 0; }
 .account__links .top__signout { display: block; }
+
+/* Design 8.28.4: "Kur ką rasti" on the methodology page, the menu's own list with the same lines. */
+.where { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: var(--sp-2) var(--sp-5); margin: 0; }
+.where dt { font-weight: 700; }
+.where dd { margin: 0; }
+.where .where__group { grid-column: 1 / -1; margin-block-start: var(--sp-3); }
+.where .where__sub { padding-inline-start: var(--sp-4); font-weight: 600; }
+@media (max-width: 36rem) {
+  .where { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .where dd { margin-block-end: var(--sp-3); }
+  .where .where__group { margin-block-end: var(--sp-2); }
+}
 
 /* The footer: three short groups of links (the menu's sections first, design 8.21), wrapping on a phone, then the theme switch and the line about the trial, on the ground. */
 .foot { display: flex; flex-direction: column; gap: var(--sp-5); }

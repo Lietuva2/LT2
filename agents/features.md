@@ -30,9 +30,16 @@ Voting with delegation is not designed; do not build towards it.
   Deleting an account or purging a pending one calls `IOutbox.ForgetAsync` in the same transaction.
 
 
-**Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17, 2026-11-19).** The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
+**Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17, 2026-11-19; 8.28.2).** **One list,** `MenuSections.Items`
+(`Lt2.Web.Client/Components`), holds every item of the menu and the footer: its address, its `MenuPlace` (the dropdown of
+"Projektai", the menu's line, the account item, the footer's "Apie" and "Dalyvauti"), and its texts in `UiText`:
+`Menu.{Key}` the name and `Menu.{Key}.Line` the one line that says what the page is. The dropdown, the menu's line, the tab
+row, the footer and "Kur ką rasti" on `/metodika` (`Components/Parliament/WhereToFind`, `#kur-ka-rasti`, 8.28.4) are drawn
+from it; element ids are `nav-{Slug}`, `{Slug}` (tab row), `foot-{Slug}`, `where-{Slug}`. Unit `MenuTests` fails for an item
+without a name or a line. Each dropdown entry shows its line under its name (`.drop__label`, `.drop__desc`; `.drop--desc`, the
+panel as wide as the page under 32rem); the menu's line, the tab row and the footer show names only. The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
 (`/statistika`, design 8.26) and "Prisijungti" or the account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" is
-a `<details>` dropdown (`#projects-menu`, links `#nav-tab-…`, closed by `js/lt2-account.js` like the account item) holding its four
+a `<details>` dropdown (`#projects-menu`, links `#nav-tab-…` with their lines, closed by `js/lt2-account.js` like the account item) holding its four
 tabs and is current (`aria-current` on its summary) on them and everything under them (`MenuSections`); the four tabs ("Darbotvarkė",
 "Projektai", "Balsavimai", "Suvestinės") are also `<ProjectTabs>` (`#tab-…`) under the heading of `/darbotvarke`, `/projektai`,
 `/seimas/balsavimai`, `/suvestines`. "Balsavimai" is a tab again (owner, 2026-11-19; out from 2026-11-16); the link under the
@@ -43,8 +50,7 @@ account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "At
 staff account whose session is not a staff session, "Prisijungti darbuotojo prieigos raktu" to `StaffSessionPage` with the
 page to come back to after the `#`) from `GET /me` when it opens and closes it on Escape, a press outside and focus
 leaving. **No served page holds a member's name or role links**: the header is the same for every member apart from the antiforgery token (`NavigationTests`). The footer, on
-every page (token pages from emails included), holds "Naršyti" (the menu's sections in its order, from `MenuSections.Tabs`,
-`MenuSections.Mps` and `MenuSections.Statistics` with the menu's strings, ids `foot-tab-…`, `foot-mps`, `foot-statistics`,
+every page (token pages from emails included), holds "Naršyti" (the menu's sections in its order, `MenuSections.Browse`, ids `foot-tab-…`, `foot-mps`, `foot-statistics`,
 nothing marked current; owner, 2026-11-19: no scrolling back to the top; the heading awaits a native read), "Apie"
 (Metodika, Moderavimo taisyklės, Naudojimo taisyklės, Privatumas), "Dalyvauti" (Organizacijos, Atsiliepimai), the theme
 switch and the trial line. `/metodika` is called "Metodika".
@@ -439,6 +445,17 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   the shown rows only (`AgendaRules.Asked`; `MyAgendaState` splits them into requests of `MyBillsQuery.MaxNumbers`, sent side by side); "Jūsų projektai" (`MyAgendaPanel`,
   `MyAgendaState.PanelAsync`) lists the followed bills of the whole agenda and last week from `GET /me/follows`
   (`OnTheAgenda`) and asks `/me/bills` about those not shown, 30 a request (`Requests`).
+  **The greeting and the new member's start (design 8.28.3).** `MyStart` (`Lt2.Web.Client/Agenda`, an island) renders the
+  member's `h1#home-title`: "Sveiki" as served and before the island runs, then "Sveiki prisijungę" with the start
+  (`#home-start`: the full steps `.intro-steps.starter__full`, the short `.starter__short` under 54rem, "Kaip tai veikia →" to
+  `/metodika#kaip-tai-veikia`) while `MyAgendaState.ShowsStart` (positions consent not given, not the MP's own account; from
+  the rows' `/me/bills` answer, or `GET /me` through `MyAccountState` when the agenda is empty), else "Sveiki sugrįžę". It
+  follows `MyAgendaState.Changed`, so a first side takes it away without a reload. Step 4 is the same text as "Kaip tai
+  veikia" (`HowItWorks.4.*` in `AppealUi`, which `HowItWorks.razor` reads for its fourth step); the steps name the controls
+  by their own texts (`Agenda.Ask`, `Agenda.For`, `Agenda.Against`, `Reasons.EndorseName`). `MyAgendaPanel` is left out while
+  the start shows and nothing followed is on the agenda. After "Išsaugoti ir tęsti" (8.28.5) the front page's address carries
+  `#profilis-issaugotas` (`AccountScreens.ProfileSavedHome`): `MyStart` says "Profilis išsaugotas." once in a status region and
+  takes the mark out of the address (`history.replaceState`). Tests: unit `MyStartTests`; E2E `StartPageTests`.
   **How a vote went (design 8.18, "The majority"; the owner asked for "Priimta", open in 12-open).** `<VoteMajorityTag>`
   (`Components/Parliament`) shows `AnalyticsRules.SeimasMajority` (the open data has no official outcome) as
   `span.tag.tag--outcome` with `data-majority` (`for` filled, `against` `tag--outline`, `none` also `tag--dashed`;

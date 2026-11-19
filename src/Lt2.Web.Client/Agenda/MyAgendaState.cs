@@ -1,5 +1,6 @@
 using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Me;
+using Lt2.Web.Client.Components;
 
 namespace Lt2.Web.Client.Agenda;
 
@@ -25,7 +26,7 @@ public sealed record MyAgendaAnswer(IReadOnlyDictionary<string, MyBillResponse> 
 /// HTML. A failed answer is not kept, so the next island asks again. After a member's own action in a row the answers are
 /// read again (<see cref="RefreshAsync"/>) and <see cref="Changed"/> tells every island.
 /// </summary>
-public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, TimeProvider clock)
+public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, MyAccountState account, TimeProvider clock)
 {
     /// <summary>"Voted on in the last week": the agenda's recent votes reach this far back (design 8.11.1).</summary>
     public const int RecentDays = 7;
@@ -159,6 +160,16 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, TimePr
         return listed.Select(b => new MyAgendaRow(b, sides.GetValueOrDefault(b.Number))).ToList();
     }
 
+    /// <summary>
+    /// Design 8.28.3: the new member's start is shown to a member who has never taken a side, which the answer says by the
+    /// positions consent not given (asked before the first side, design 6.5); never to an MP's own account (8.5.4).
+    /// </summary>
+    public static bool ShowsStart(MyAgendaAnswer answer)
+    {
+        ArgumentNullException.ThrowIfNull(answer);
+        return !answer.HasPositionConsent && !answer.MpAccount;
+    }
+
     /// <summary>Notes the consent as given, or as missing when the server refused a side without it.</summary>
     public void SetConsent(bool given)
     {
@@ -172,7 +183,10 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, TimePr
     {
         if (numbers.Count == 0)
         {
-            return new MyAgendaAnswer(new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase), false);
+            // Nothing on the agenda to ask about: the consent and the MP's own account come from the account's own GET /me.
+            return await account.MeAsync() is { } me
+                ? new MyAgendaAnswer(new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase), me.HasPositionConsent, me.Mp is { Part: "mp" })
+                : null;
         }
 
         // The page asks about the rows it shows (design 8.7: twenty on the front page, 8.11.1: ten a day on the agenda page;

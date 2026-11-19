@@ -202,10 +202,7 @@
   <data name="HowItWorks.2.Text" xml:space="preserve"><value>Dėl kiekvieno projekto, kurio Seimas dar nebaigė svarstyti, galite paprašyti Seimo narių balsuoti už arba prieš. Ko prašote, niekam nerodome – viešai matyti tik bendri skaičiai.</value></data>
   <data name="HowItWorks.3.Title" xml:space="preserve"><value>Paaiškinate kodėl</value></data>
   <data name="HowItWorks.3.Text" xml:space="preserve"><value>Parašykite argumentą arba pažymėkite „Man svarbu“ prie kitų. Argumentai vieši ir rodomi su autoriaus vardu, bet neparodo, ko autorius prašo.</value></data>
-  <data name="HowItWorks.4.Title" xml:space="preserve"><value>Seimo nariai sužino</value></data>
-  <data name="HowItWorks.4.Text" xml:space="preserve"><value>Kai dalyvių skaičius pasiekia ribą, projektas patenka į suvestinę Seimo nariams: abi pusės ir svarbiausi argumentai.</value></data>
   <data name="HowItWorks.PrivacyLink" xml:space="preserve"><value>Kas matoma viešai, o kas ne →</value></data>
-  <data name="HowItWorks.4.Trial" xml:space="preserve"><value>Kol vyksta bandymas, suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
   <data name="Digests.Line.dry-run" xml:space="preserve"><value>Bandomoji suvestinė: niekam nesiųsta</value></data>
   <data name="Digests.Line.sent" xml:space="preserve"><value>Išsiųsta Seimo nariams: {0} · {1}</value></data>
   <data name="Digests.Line.cancelled" xml:space="preserve"><value>Nesiųsta</value></data>

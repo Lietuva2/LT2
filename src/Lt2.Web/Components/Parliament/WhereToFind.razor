@@ -1,0 +1,37 @@
+@using Lt2.Web.Client.Components
+@inject IStringLocalizer<Lt2.Web.Client.UiText> U
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
+
+@* Design 8.28.4: "Kur ką rasti" under the four steps of /metodika: the items of the menu, then the footer's own, each with
+   its line and each name a link, the four entries of "Projektai" under it, indented. Drawn from the menu's one list
+   (MenuSections.Items, 8.28.2), so it cannot differ from the menu; the one place where the lines of "Seimo nariai",
+   "Statistika" and the account item are read. Server-rendered, no script. *@
+<section class="stack" aria-labelledby="where-title" id="kur-ka-rasti">
+    <h2 id="where-title">@U["Where.Title"]</h2>
+    <dl class="where">
+        <dt class="where__group label">@U["Where.Menu"]</dt>
+        <dt id="where-projects">@P["Nav.Appeals"]</dt>
+        <dd class="small">@U["Menu.Projects.Line"]</dd>
+        @foreach (var item in MenuSections.Tabs)
+        {
+            @Entry(item, "where__sub")
+        }
+        @foreach (var item in MenuSections.In(MenuPlace.Menu).Concat(MenuSections.In(MenuPlace.Account)))
+        {
+            @Entry(item, null)
+        }
+        <dt class="where__group label">@U["Where.Footer"]</dt>
+        @foreach (var item in MenuSections.In(MenuPlace.FooterAbout).Concat(MenuSections.In(MenuPlace.FooterTakePart)))
+        {
+            @Entry(item, null)
+        }
+    </dl>
+</section>
+
+@code {
+    private RenderFragment Entry(MenuItem item, string? css) => __builder =>
+    {
+        <dt class="@css"><a href="@item.Path" id="@("where-" + item.Slug)">@U[item.NameKey]</a></dt>
+        <dd>@U[item.LineKey]</dd>
+    };
+}

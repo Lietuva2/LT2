@@ -11,7 +11,7 @@
    only in the browser, so nothing shows until they have loaded and nothing of them is
    in the page's HTML. When the member takes, changes or withdraws a side in a row of the timeline, the panel follows
    without a reload (MyAgendaState.Changed). *@
-@if (_rows is { } rows)
+@if (_rows is { } rows && !(rows.Count == 0 && _startShown))
 {
     <section class="sheet stack stack--tight my-agenda" aria-labelledby="h-my-agenda" id="my-agenda">
         <h2 id="h-my-agenda">@L["Mine.Title"]</h2>
@@ -72,6 +72,12 @@ else if (Message is not null)
 @code {
     private IReadOnlyList<MyAgendaRow>? _rows;
 
+    /// <summary>
+    /// Design 8.28.3: the new member's start is shown above the panel; while it is and the member follows nothing on the
+    /// agenda, the panel (whose one line would say nothing to a person who has just come) is left out.
+    /// </summary>
+    private bool _startShown;
+
     /// <summary>When the panel was read: a vote since then less the agenda's week is "the last week's".</summary>
     private DateTimeOffset Since { get; set; }
 
@@ -106,6 +112,7 @@ else if (Message is not null)
 
         Message = null;
         Since = Clock.GetUtcNow().AddDays(-MyAgendaState.RecentDays);
+        _startShown = rows.Count == 0 && await State.MineAsync(Numbers) is { } mine && MyAgendaState.ShowsStart(mine);
         _rows = rows;
     }
 

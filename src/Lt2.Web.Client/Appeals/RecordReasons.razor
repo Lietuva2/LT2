@@ -77,7 +77,7 @@
                             <div class="act" id="said-actions-@reason.Id">
                                 @if (_mpAccount)
                                 {
-                                    <span class="mark act__item num" id="mark-@reason.Id"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></span>
+                                    <span class="mark act__item num" id="mark-@reason.Id"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", L["Reasons.EndorseName"], Display.Number(reason.Endorsements))</span></span>
                                 }
                                 else if (_signedIn)
                                 {
@@ -85,13 +85,13 @@
                                     <button class="mark act__item num" type="button" id="mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")"
                                             aria-describedby="@(UncountedNote(reason) is not null ? $"mark-note-{reason.Id}" : null)"
                                             disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)" @ref="_marks[reason.Id]"
-                                            @onclick="() => ToggleEndorsementAsync(reason, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></button>
+                                            @onclick="() => ToggleEndorsementAsync(reason, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", L["Reasons.EndorseName"], Display.Number(reason.Endorsements))</span></button>
                                 }
                                 else
                                 {
                                     @* A visitor: a sign-in link that comes back to the bill, of the same look (owner, 2026-11-17), as the
                                        side buttons and "Sekti" are (design 6.9). *@
-                                    <a class="mark act__item num" id="mark-@reason.Id" href="@LandingPath.SignInLink(BillPath)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></a>
+                                    <a class="mark act__item num" id="mark-@reason.Id" href="@LandingPath.SignInLink(BillPath)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", L["Reasons.EndorseName"], Display.Number(reason.Endorsements))</span></a>
                                 }
                                 @* Design 8.23.6: "Aptarimas" under the argument; prerendered with the island for the arguments the
                                    server renders, read when first opened for those a later page brought. *@
@@ -299,7 +299,7 @@
                                 <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"similar-more-{reason.Id}")" />
                                 <div class="act">
                                     <button class="mark act__item num" type="button" id="similar-mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")" disabled="@(Locked || !MayEndorse(reason, endorsed))"
-                                            title="@EndorseHint(reason, endorsed)" @onclick="() => ToggleEndorsementAsync(reason, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></button>
+                                            title="@EndorseHint(reason, endorsed)" @onclick="() => ToggleEndorsementAsync(reason, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", L["Reasons.EndorseName"], Display.Number(reason.Endorsements))</span></button>
                                 </div>
                                 @if (_consentForMark == reason.Id)
                                 {

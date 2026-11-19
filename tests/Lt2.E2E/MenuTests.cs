@@ -76,9 +76,54 @@ public sealed class MenuTests : E2ETest
         // Owner, 2026-11-17: "Projektai" opens a dropdown with its tabs (2026-11-19: four, "Balsavimai" again); Escape closes it.
         await page.Locator("#nav-projects").ClickAsync();
         await Assertions.Expect(page.Locator("#projects-menu")).ToHaveAttributeAsync("open", "");
-        await Assertions.Expect(page.Locator("#projects-menu .drop__links a")).ToHaveTextAsync(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės"]);
+        await Assertions.Expect(page.Locator("#projects-menu .drop__label")).ToHaveTextAsync(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės"]);
         await page.Keyboard.PressAsync("Escape");
         await Assertions.Expect(page.Locator("#projects-menu")).Not.ToHaveAttributeAsync("open", "");
+        visitor.ConsoleErrors.ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// Design 8.28.2, 8.28.7: the dropdown of "Projektai" shows its four entries, each with its line, opens without script,
+    /// and fits at 340, 360, 390 and 1280 px with no sideways scroll; the menu is still one line. Screenshots for the owner.
+    /// </summary>
+    [Fact]
+    public async Task The_projects_dropdown_shows_each_entry_with_its_line_and_fits_from_340_px()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var visitor = await PasskeyBrowser.StartAsync("native", 1280, 900);
+        var page = visitor.Page;
+        Directory.CreateDirectory(Shots);
+        string[] lines =
+        [
+            "Ką Seimas planuoja svarstyti artimiausiomis dienomis.",
+            "Visi projektai, kurių Seimas dar nebaigė svarstyti.",
+            "Kaip Seimas balsavo: visi balsavimai nuo naujausio.",
+            "Ką apie dalyvių prašymus sužino Seimo nariai.",
+        ];
+        foreach (var width in new[] { 340, 360, 390, 1280 })
+        {
+            await page.SetViewportSizeAsync(width, width == 1280 ? 900 : 780);
+            await page.GotoAsync(E2ESteps.Base + "/darbotvarke");
+            (await MenuProblemAsync(page)).ShouldBeNull($"the menu at {width} px");
+            await page.Locator("#nav-projects").ClickAsync();
+            var panel = page.Locator("#projects-menu .drop__panel");
+            await Assertions.Expect(panel).ToBeVisibleAsync();
+            await Assertions.Expect(panel.Locator(".drop__desc")).ToHaveTextAsync(lines);
+            var box = await panel.BoundingBoxAsync();
+            box!.X.ShouldBeGreaterThanOrEqualTo(0, $"the panel's left edge at {width} px");
+            (box.X + box.Width).ShouldBeLessThanOrEqualTo(width, $"the panel's right edge at {width} px");
+            await E2ESteps.NoSidewaysScrollAsync(page, $"the open dropdown at {width} px");
+            await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"dropdown-{width}.png") });
+            await page.Keyboard.PressAsync("Escape");
+        }
+
+        // Without script the dropdown still opens and shows the same lines.
+        await using var context = await page.Context.Browser!.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = false });
+        var plain = await context.NewPageAsync();
+        await plain.SetViewportSizeAsync(390, 780);
+        await plain.GotoAsync(E2ESteps.Base + "/darbotvarke");
+        await plain.Locator("#nav-projects").ClickAsync();
+        await Assertions.Expect(plain.Locator("#projects-menu .drop__desc")).ToHaveTextAsync(lines);
         visitor.ConsoleErrors.ShouldBeEmpty();
     }
 

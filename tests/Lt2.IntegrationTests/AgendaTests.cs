@@ -253,7 +253,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
                 text.ShouldNotContain("Jūs prašote balsuoti");
                 text.ShouldNotContain("Sekate");
                 text.ShouldNotContain("id=\"my-agenda\"", customMessage: "no \"Jūsų projektai\" on the agenda page");
-                text.ShouldNotContain("Sveiki sugrįžę");
+                text.ShouldNotContain("id=\"home-title\"");
                 var state = FrontPageTests.StateOf(page);
                 state.ShouldNotContain(firstEmail, Case.Insensitive);
                 state.ShouldNotContain(secondEmail, Case.Insensitive);

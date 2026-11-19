@@ -28,7 +28,8 @@ src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementation
                            and above only, owner 2026-11-17: no console line per request); the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
-                           ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
+                           ProjectTabs and MenuSections (design 8.21: the one list of the menu's and the footer's items
+                           with their lines, 8.28.2), MoreMenu and Icon (the action row, design 8.16.1,
                            js/lt2-menus.js), Appeals/ModerationMenu with ModerationChoice, and ActionHeading (a moderator's
                            main action and "Kiti veiksmai", design 8.3), BrowserKeys (the storage keys, design 8.22.1),
                            TypedText (a typed text's paragraphs and lists, design 8.2) and LongText (a long member's text with "Rodyti daugiau", laid out before it is cut), ShowMore (the one "show more" under a long list, design 8.16.4), TextChanges (one version in a public version history: what changed against the one before it, design 8.16.2), TextLayoutHint (the list hint under a writing box), the joined-button choice (CSS `.switch`

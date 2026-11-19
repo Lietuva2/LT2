@@ -26,7 +26,8 @@ public sealed class MyAccountState(IMeApi me)
     public async Task<string?> SpeaksForAsync(bool interactive) =>
         interactive ? (await MeAsync())?.Mp?.Slug : null;
 
-    private Task<MeResponse?> MeAsync()
+    /// <summary>The caller's own <c>GET /me</c>, asked once for the page; null when it failed. Only in the browser.</summary>
+    public Task<MeResponse?> MeAsync()
     {
         if (_me is null || _me.IsFaulted || (_me.IsCompletedSuccessfully && _me.Result is null))
         {
