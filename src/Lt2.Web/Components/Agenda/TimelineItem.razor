@@ -15,11 +15,11 @@
    record is open, "Prašau balsuoti" with "už" and "prieš" ("Taking a side in the row"), with no line saying nobody took
    part yet beside them (owner, 2026-11-19: "minimise non-essential texts"). A visitor's two are links to sign in that come
    back to the bill's page; a member's side column is an island (MyAgendaSide) that takes the side in the row, and the mark
-   under the title is another (MyAgendaMark), both filled in the browser and keyed by the row's place, so a day opened
-   whole in place keeps each island on its own row; everything here is public and the same for everyone. A closed record
+   under the title is another (MyAgendaMark), both filled in the browser and keyed by the row's place, so a day grown
+   in place ("Rodyti daugiau") keeps each island on its own row and starts those of the rows added; everything here is public and the same for everyone. A closed record
    says "Niekas nedalyvavo" when nobody did; a closed or hidden record and a bill the open data does not know yet have no
    sides to take; the last shows what the agenda says and its source. *@
-<li class="tl-item" id="agenda-@Display.Day(Day)-@Item.Number">
+<li class="tl-item" id="@Lt2.Web.Client.Agenda.AgendaPaging.PlannedRowId(Day, Item.Number)">
     <div class="tl-item__main">
         <span class="row">
             @if (Item.Title is not null)

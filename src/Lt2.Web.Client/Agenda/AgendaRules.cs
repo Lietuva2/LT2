@@ -1,17 +1,26 @@
 namespace Lt2.Web.Client.Agenda;
 
 /// <summary>
-/// One sitting or voting day of a list as a page shows it (design 8.7, 8.11.1): the rows shown at once, the rest of the
-/// day's known rows (fetched by "Rodyti likusius", AgendaPaging), the bills the open data does not know yet (folded into
-/// one line), and how many the day holds in all.
+/// One sitting or voting day of a list as a page shows it (design 8.7, 8.11.1): the known rows shown, the known rows not
+/// shown yet (the next pages, "Rodyti daugiau", AgendaPaging), the bills the open data does not know yet (folded into one
+/// line after the last known row), and how many the day holds in all.
 /// </summary>
 public sealed record AgendaDayView<T>(IReadOnlyList<T> Shown, IReadOnlyList<T> Rest, IReadOnlyList<T> Unknown)
 {
-    /// <summary>Every row of the day, known or not.</summary>
+    /// <summary>Every row of the day, known or not: the "M" of "Rodoma N iš M", the same as the day's head.</summary>
     public int Count => Shown.Count + Rest.Count + Unknown.Count;
 
     /// <summary>The day's known rows, shown and the rest.</summary>
     public int Known => Shown.Count + Rest.Count;
+
+    /// <summary>The line of bills the open data does not know yet stands in the page: every known row is shown.</summary>
+    public bool UnknownShown => Rest.Count == 0 && Unknown.Count > 0;
+
+    /// <summary>
+    /// The "N" of "Rodoma N iš M" (owner, 2026-11-19): the known rows shown, and the bills the open data does not know yet
+    /// once their line is shown (it comes after the last known row), so the last page reads "Rodoma 40 iš 40".
+    /// </summary>
+    public int ShownCount => Shown.Count + (Rest.Count == 0 ? Unknown.Count : 0);
 }
 
 /// <summary>
@@ -31,8 +40,34 @@ public static class AgendaRules
     /// <summary>The front page shows this many rows of each day.</summary>
     public const int FrontPerDay = 5;
 
-    /// <summary>The agenda page shows this many rows of each day before "Rodyti likusius".</summary>
+    /// <summary>The agenda page shows this many rows of each day before "Rodyti daugiau".</summary>
     public const int PagePerDay = 10;
+
+    /// <summary>"Rodyti daugiau" under a day adds this many rows, on both pages (owner, 2026-11-19: a page at a time).</summary>
+    public const int MorePerDay = PagePerDay;
+
+    /// <summary>The most known rows of a day an address asks for (a larger number shows this many).</summary>
+    public const int MaxAsked = 1000;
+
+    /// <summary>
+    /// How many of a day's known rows a page shows (owner, 2026-11-19): its first <paramref name="first"/>, or as many as the
+    /// address asks when that is more (a number at or below the first is not one the page makes, so it is left out), and
+    /// never more than the day has.
+    /// </summary>
+    public static int ShownKnown(int first, int? asked, int known) =>
+        Math.Max(0, Math.Min(asked is { } n && n > first ? Math.Min(n, MaxAsked) : first, known));
+
+    /// <summary>
+    /// What "Rodyti daugiau" under a day asks for: the rows shown and <see cref="MorePerDay"/> more; null when every known row
+    /// is shown (no link: the line of unknown bills, if any, is in the page already).
+    /// </summary>
+    public static int? NextAsked(int shownKnown, int known) => shownKnown < known ? Math.Min(shownKnown + MorePerDay, MaxAsked) : null;
+
+    /// <summary>
+    /// Whether a day carries the "Rodoma N iš M" line: its known rows do not all fit on its first page (a day whose rows all
+    /// fit has none). Once it grows it keeps the line, with no link on the last page.
+    /// </summary>
+    public static bool Paged(int first, int known) => known > first;
 
     /// <summary>Activity: participants on both sides together plus published arguments (design 8.12.5).</summary>
     public static int Activity(int participants, int arguments) => participants + arguments;
@@ -62,8 +97,8 @@ public static class AgendaRules
     /// <summary>
     /// The bills of a timeline's rows (the front page's, the agenda page's), each once, that its members' islands ask about:
     /// every row shown, in the order shown. The front page shows <see cref="FrontDays"/> × <see cref="FrontPerDay"/> × 2 rows,
-    /// one request, the agenda page <see cref="PagePerDay"/> a day; a day opened whole ("Rodyti likusius", owner 2026-11-18)
-    /// adds its rows, asked in requests of
+    /// one request, the agenda page <see cref="PagePerDay"/> a day; a day grown by "Rodyti daugiau" (owner 2026-11-19) adds
+    /// its rows, asked in requests of
     /// <see cref="Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers"/> (<see cref="MyAgendaState.Requests"/>). "Jūsų projektai"
     /// asks about the member's other followed bills itself.
     /// </summary>
@@ -75,7 +110,7 @@ public static class AgendaRules
 
     /// <summary>
     /// A day's rows, already in the order of <see cref="WithinDay{T}"/>, cut for a page: the first <paramref name="shown"/>
-    /// known ones, the other known ones, and the unknown ones apart.
+    /// known ones (<see cref="ShownKnown"/>), the other known ones, and the unknown ones apart.
     /// </summary>
     public static AgendaDayView<T> Day<T>(IReadOnlyList<T> ordered, Func<T, bool> known, int shown)
     {

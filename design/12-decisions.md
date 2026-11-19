@@ -641,3 +641,21 @@ Each is built as written; "no" names what changes.
   line ("Senesni balsavimai →", "Tolesni projektai →") are text links too. The agenda's "Rodyti likusius" was a text
   link already.
 
+**Decided by the owner on 2026-11-19: the agenda's days grow by the one "show more", no "Dabar sekate", the news in the rows, no share link in "Jūsų projektai" (8.7, 8.11.1, 8.11.2, 8.11.5, 8.11.8, 8.16.4)**
+
+- "Rodyti likusius" unified with the shared "show more": one way for every list, a page at a time, showing how much is
+  loaded. Under a longer day of `/darbotvarke` (ten first) and of the front page (five first) stands "Rodoma N iš M ·
+  Rodyti daugiau", ten more a press, by the address: `?diena=2026-11-24:20` (`?balsuota=…` a voted day; the parameter
+  repeats for every day grown), landing on the first row added (its own id). A bare day, a word or a number not above
+  the first rows is left out, never an error; a number beyond the day shows the day. M is the day's head count; the
+  bills the open data does not know yet are folded into one line after the last known row once every known row shows,
+  and count as shown from then ("Rodoma 40 iš 40" on the last page, no link). A day whose rows all fit has no such
+  line; on the front page too, its unknown bills then show at once (until now only in a day opened whole there).
+- "Dabar sekate šį projektą." after a first side in a row is gone: "No need, if the label 'Sekate' lights up anyway".
+  It showed only in the timeline's rows, where the mark's "Sekate" lights up; the bill's page never had it.
+- The member's mark in the timeline's rows (front page and `/darbotvarke`) says what is new on a followed bill, as
+  "Jūsų projektai" does ("It should be the same like start page"): a small link to the bill, from the same answer; a
+  bill in both shows it twice, the panel being the summary.
+- "Jūsų projektai" has no share line ("Pakvieskite kitus savo kvietimo nuoroda:" and its copy button): "the button
+  should go from start page, inside the details that's enough, now it's taking too much space". The bill's page keeps it
+  (8.11.5); the front page no longer reads the member's invitation.

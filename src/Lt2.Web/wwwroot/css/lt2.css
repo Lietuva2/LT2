@@ -1029,14 +1029,11 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* A vote's majority chip and its numbers on one line (design 8.18, "The majority"). */
 .result-line { gap: var(--sp-1) var(--sp-2); }
 
-/* A day's column (owner, 2026-11-18): its first rows, then "Rodyti likusius" (a link to the page with the day whole) or,
-   on a day shown whole, the rest as a second list that continues the first one, where that link lands; the bills the
-   open data does not know yet folded into one line, and on the front page the link to the whole day. Each under the
-   rows, at the rows' left edge. */
+/* A day's column (owner, 2026-11-18; 2026-11-19): the rows it shows, then, once every known row shows, the bills the open
+   data does not know yet folded into one line, then the shared "Rodoma N iš M · Rodyti daugiau" (ShowMore), each under the
+   rows, at the rows' left edge. The link lands on the first row added, a little below the top of the screen. */
 .tl-rows { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
-.tl-all { margin: 0; }
-.tl-items + .tl-items { margin-block-start: calc(-1 * var(--sp-3)); scroll-margin-top: var(--sp-4); }
-.tl-items + .tl-items > .tl-item:first-child { border-top: 0; }
+.tl-items > .tl-item { scroll-margin-top: var(--sp-4); }
 .tl-unknown > summary { padding-block: var(--sp-1); }
 .tl-unknown__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .tl-unknown__list > li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }

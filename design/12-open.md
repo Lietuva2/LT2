@@ -8,9 +8,9 @@ Nothing is built for these; the local stack and the trial show them as they are.
 
 1. About four in ten upcoming agenda rows are bills to be presented, which the open data does not know before their first
    sitting. Since 2026-11-18 (owner) they come last in their day, folded into one line "Dar N projektų, kurių
-   atviruosiuose Seimo duomenyse dar nėra" that opens to their numbers and the agenda source (on the agenda page at the
-   end of a day shown whole, or of a day whose known bills all show); the front page counts
-   them in the day and lists them only in a day opened whole (design 8.11.1, 8.7). Still open: the lrs.lt page names each bill's title in its row;
+   atviruosiuose Seimo duomenyse dar nėra" that opens to their numbers and the agenda source, after the day's last known
+   row once every known row shows, on both pages (since 2026-11-19, when the days grow by "Rodyti daugiau"); they are
+   counted in the day's head and in "Rodoma N iš M" (design 8.11.1, 8.7). Still open: the lrs.lt page names each bill's title in its row;
    the watcher could keep it for such rows until the open data has the bill, and they would then rank as other bills.
    If no: as now.
 2. [Decided by the owner on 2026-11-18, 12-decisions: the front page shows two voting days of five votes each, with

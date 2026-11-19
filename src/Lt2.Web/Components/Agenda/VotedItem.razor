@@ -7,7 +7,7 @@
    Seimo nariai". A member's row, on both pages (owner, 2026-11-19: the rows look the same), also carries the mark under the
    title and, on a bill nobody took part in yet, the side column that leaves out "nobody yet" for a member with a side of
    their own (islands filled in the browser, keyed by the row's place). *@
-<li class="tl-item" id="recent-@Vote.VoteId">
+<li class="tl-item" id="@Lt2.Web.Client.Agenda.AgendaPaging.VotedRowId(Vote.VoteId)">
     <VotedItemMain Number="@Vote.Number" Title="@Vote.Title" Stage="@Vote.Stage" IsConsensus="Vote.IsConsensus" Totals="Vote.Totals" OfficialNote="@Vote.OfficialNote">
         @if (Member)
         {

@@ -83,7 +83,6 @@
   <data name="Agenda.Votes.One" xml:space="preserve"><value>{0} balsavimas</value></data>
   <data name="Agenda.Votes.Few" xml:space="preserve"><value>{0} balsavimai</value></data>
   <data name="Agenda.Votes.Many" xml:space="preserve"><value>{0} balsavimų</value></data>
-  <data name="Agenda.ShowRest" xml:space="preserve"><value>Rodyti likusius</value></data>
   <data name="Agenda.Unknown.One" xml:space="preserve"><value>Dar {0} projektas, kurio atviruosiuose Seimo duomenyse dar nėra</value></data>
   <data name="Agenda.Unknown.Few" xml:space="preserve"><value>Dar {0} projektai, kurių atviruosiuose Seimo duomenyse dar nėra</value></data>
   <data name="Agenda.Unknown.Many" xml:space="preserve"><value>Dar {0} projektų, kurių atviruosiuose Seimo duomenyse dar nėra</value></data>

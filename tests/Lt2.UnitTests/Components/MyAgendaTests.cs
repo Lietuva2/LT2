@@ -17,8 +17,8 @@ namespace Lt2.UnitTests.Components;
 
 /// <summary>
 /// Design 8.7: the front page's member islands. "Jūsų projektai" lists the member's own bills of the agenda, each with its
-/// date, their own side or "Dar nenurodėte, ko prašote", the last vote and the share link when they took a side; the marks
-/// under the titles carry "Sekate" and their side. A coming bill's side column ("Taking a side in the row") offers "už" and
+/// date, their own side or "Dar nenurodėte, ko prašote", the last vote and what is new (no share link: owner, 2026-11-19);
+/// the marks under the titles carry "Sekate", their side and what is new on a followed bill (owner, 2026-11-19). A coming bill's side column ("Taking a side in the row") offers "už" and
 /// "prieš": one press saves the side, the pressed button shows it and, pressed again, takes it back (owner, 2026-11-18: no
 /// "Atsiimti"), the first side asks for the
 /// positions consent in the row, and after the member's own action the row shows the bill's live numbers while the other
@@ -76,7 +76,6 @@ public sealed class MyAgendaTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         _bills.On("GetAsync", Answer(consent: true, new MyBillResponse(Followed, null, true), new MyBillResponse(Sided, "for", true)));
         _follows.On("GetMineAsync", Follows(Bill(Followed, plannedIn: 1, voted: TwoDaysAgo), Bill(Sided, plannedIn: 3)));
-        _me.On("GetInvitationAsync", ApiResult<MyInvitationResponse>.Ok(new MyInvitationResponse("ABCD-EFGH", "/prisijungti#kodas=ABCD-EFGH", 0, true, null)));
         _me.On("GivePositionConsentAsync", ApiResult.Ok());
         _appeals.On("TakePositionAsync", ApiResult.Ok());
         _appeals.On("ClearPositionAsync", ApiResult.Ok());
@@ -96,6 +95,27 @@ public sealed class MyAgendaTests : BunitContext
 
     private IRenderedComponent<MyAgendaMark> Mark(string number, string place) => Render<MyAgendaMark>(p => p
         .Add(c => c.Number, number).Add(c => c.Place, place).Add(c => c.Numbers, Numbers));
+
+    /// <summary>
+    /// Owner, 2026-11-19 ("the same like start page"): the row's mark says what is new on a followed bill, as "Jūsų projektai"
+    /// does (design 8.11.8), as a small link to the bill's page, from the same answer: no request of its own.
+    /// </summary>
+    [Fact]
+    public void A_rows_mark_says_what_is_new_on_a_followed_bill_as_a_link_to_it()
+    {
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _bills.On("GetAsync", Answer(consent: true,
+            new MyBillResponse(Followed, null, true, new BillNewsCountsResponse(1, 3, 0, 0)), new MyBillResponse(Sided, "for", true)));
+
+        var followed = Mark(Followed, "2026-11-19-XVP-0533");
+        var quiet = Mark(Sided, "2026-11-19-XVP-0412");
+
+        var news = followed.Find("#home-new-2026-11-19-XVP-0533");
+        news.TextContent.ShouldBe("1 naujas argumentas · 3 nauji komentarai");
+        news.GetAttribute("href").ShouldBe("/seimas/XVP-0533");
+        quiet.FindAll("a").ShouldBeEmpty("nothing new, no line");
+        _bills.Calls.ShouldBe(["GetAsync"], "the marks share the page's one answer");
+    }
 
     [Fact]
     public void While_the_server_prerenders_nothing_of_the_member_is_asked_or_shown_and_the_sides_are_disabled()
@@ -146,7 +166,7 @@ public sealed class MyAgendaTests : BunitContext
     }
 
     [Fact]
-    public void The_panel_lists_only_the_members_own_bills_with_their_side_the_last_vote_and_the_share_link()
+    public void The_panel_lists_only_the_members_own_bills_with_their_side_and_the_last_vote_and_no_share_link()
     {
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
 
@@ -157,10 +177,10 @@ public sealed class MyAgendaTests : BunitContext
         followed.TextContent.ShouldContain(Text("Mine.NoSideAction"));
         followed.TextContent.ShouldContain($"{Display.Day(Today.AddDays(1))}");
         followed.TextContent.ShouldContain($"{Display.Day(TwoDaysAgo)}: už 69, prieš 31, susilaikė 18");
-        followed.QuerySelectorAll("button").ShouldBeEmpty("no share link without a side");
         var sided = panel.Find("#my-agenda-XVP-0412");
         sided.QuerySelector(".choice--for")!.TextContent.ShouldBe(Text("Mine.Side.for"));
-        sided.QuerySelector("#my-agenda-share-XVP-0412").ShouldNotBeNull("the share link once they took a side");
+        panel.FindAll("#my-agenda button").ShouldBeEmpty("no share link, a side or not (owner, 2026-11-19: the bill's page keeps it)");
+        _me.Calls.ShouldNotContain("GetInvitationAsync", "the panel reads no invitation");
         _bills.Calls.ShouldBe(["GetAsync"], "every listed bill is among the rows shown: one request");
         ((MyBillsQuery)_bills.Arguments[0][0]!).Numbers.ShouldBe(Numbers);
     }
@@ -324,7 +344,7 @@ public sealed class MyAgendaTests : BunitContext
         side.WaitForAssertion(() => side.Find("#home-for-2026-11-19-XVP-0618").GetAttribute("aria-pressed").ShouldBe("true"));
         side.Find("#home-counts-2026-11-19-XVP-0618").TextContent.ShouldContain("1", customMessage: "the bill's live numbers, the member among them");
         side.FindAll("#home-nobody-2026-11-19-XVP-0618").ShouldBeEmpty();
-        side.Find("[role=status]").TextContent.ShouldContain(Text("Agenda.Followed"), customMessage: "a first side follows the bill (design 8.11.2)");
+        side.FindAll("[role=status]").Select(s => s.TextContent.Trim()).ShouldAllBe(s => s.Length == 0, "no line says the bill is followed now: the mark's \"Sekate\" does (owner, 2026-11-19)");
         side.Find(".tl-item__side").TextContent.ShouldNotContain("Paspaudę dar kartą", customMessage: "no line after a press either (owner, 2026-11-19)");
         side.Find("#home-for-2026-11-19-XVP-0618").GetAttribute("title").ShouldBe("Paspaudę dar kartą, atsiimsite.");
         mark.WaitForAssertion(() => mark.Find(".tag").TextContent.ShouldBe(Text("Mine.Following")));

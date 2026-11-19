@@ -85,8 +85,8 @@ Read before changing a page, a component or an island. The rules behind it are d
   list page.
 - **A list by day is the timeline's day blocks (owner, 2026-11-18):** `section.tl-day` (`tl-past` for votes) with
   `<TimelineDate>` (label, the date in words, the weekday and the day's count) and the rows in `div.tl-rows`; on a narrow
-  screen the head is a band of its own. The rest of one day grows by the address ("Rodyti likusius" on `/darbotvarke` and
-  `/`, `AgendaPaging`: `?diena=`, landing on the day's second list). A vote's majority beside its numbers is
+  screen the head is a band of its own (`PlannedDay`, `VotedDay`). A longer day grows by `<ShowMore>` like every list
+  (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:20`, ten more a press, landing on the first row added). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the list.
 - **Every "show more" is `<ShowMore>` (design 8.16.4, owner 2026-11-19)** (`Lt2.Web.Client/Components`; on server pages
   `<Lt2.Web.Client.Components.ShowMore …/>`): `div.row.show-more` with "Rodoma N iš M" (`Total`, status id `StatusId` or
@@ -95,7 +95,7 @@ Read before changing a page, a component or an island. The rules behind it are d
   older page) as its child content, plain `<a>` too. Never
   hidden rows in the page. On a server-rendered page that is all: enhanced navigation (blazor.web.js) fetches the link
   without a reload (`VoteHistory`, `BillListPaging`, `MpVotePaging`, `AnalyticsList`, `ResponsePaging`, `BallotList`, the
-  member page). In an island pass `OnMore`: once the island runs the link carries `data-enhance-nav="false"` and
+  member page, the agenda's and the front page's days through `AgendaPaging`). In an island pass `OnMore`: once the island runs the link carries `data-enhance-nav="false"` and
   `@onclick:preventDefault`, and the island reads the next page from the API (`limit`, `cursor`), adds it in place and
   focuses the first item added (tabindex -1, `FocusAsync`), the `Href` still the grown address (`RecordReasons`,
   `CommentThread`). A link inside a running island must never be left to enhanced navigation: the island keeps its own

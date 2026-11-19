@@ -165,7 +165,8 @@ public sealed partial class StartPageTests : E2ETest
             await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate");
             await Assertions.Expect(row.Locator(".mine .choice--for")).ToBeVisibleAsync();
             await Assertions.Expect(page.Locator($"#my-agenda-{number}")).ToBeVisibleAsync();
-            await Assertions.Expect(row.Locator("[role=status]")).ToContainTextAsync("Dabar sekate šį projektą.");
+            // Owner, 2026-11-19: "Sekate" lighting up is enough: no line says the bill is followed now.
+            (await row.InnerTextAsync()).ShouldNotContain("Dabar sekate");
 
             // Owner, 2026-11-19 ("minimise non-essential texts"): no link to the arguments (the title leads to the bill), and no
             // line on taking the side back, after the press either; the pressed button's title says it.
@@ -265,7 +266,8 @@ public sealed partial class StartPageTests : E2ETest
                 var mine = page.Locator($"#my-agenda-{number}");
                 await Assertions.Expect(mine).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
                 await Assertions.Expect(mine.Locator(".choice--for")).ToHaveTextAsync("už");
-                await Assertions.Expect(mine.Locator($"#my-agenda-share-{number}")).ToBeVisibleAsync();
+                // Owner, 2026-11-19: no share link in the panel (the bill's page keeps it).
+                await Assertions.Expect(mine.Locator("button")).ToHaveCountAsync(0);
                 var row = page.Locator($"#agenda-{place}");
                 await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate", new() { Timeout = E2ESteps.Slow });
                 await Assertions.Expect(page.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "true");
@@ -330,11 +332,11 @@ public sealed partial class StartPageTests : E2ETest
 
     /// <summary>
     /// Owner, 2026-11-19: the agenda page's rows are the front page's (one component). A member takes a side in a row of
-    /// <c>/darbotvarke</c> after the consent asked in the row, changes it and takes it back by pressing it again; a day opened
-    /// whole ("Rodyti likusius", in place) brings rows whose buttons work too. A visitor's sides there are links to sign in.
+    /// <c>/darbotvarke</c> after the consent asked in the row, changes it and takes it back by pressing it again; a day grown
+    /// in place ("Rodyti daugiau", owner 2026-11-19) brings rows whose buttons work too. A visitor's sides there are links to sign in.
     /// </summary>
     [Fact]
-    public async Task On_the_agenda_page_a_member_takes_a_side_in_a_row_and_in_a_row_of_a_day_opened_whole()
+    public async Task On_the_agenda_page_a_member_takes_a_side_in_a_row_and_in_a_row_of_a_day_grown_in_place()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var member = await PasskeyBrowser.StartAsync("native", 1280, 900);
@@ -376,14 +378,17 @@ public sealed partial class StartPageTests : E2ETest
             await forButton.ClickAsync();
             await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
 
-            // A day opened whole in place: the rows added carry islands that start and take a side, and the rows already
-            // shown keep theirs (each island is keyed by its row).
-            var rest = page.Locator("#agenda-coming section.tl-day a[id$='-rodyti']").First;
-            await Assertions.Expect(rest).ToHaveCountAsync(1);
-            var dayId = (await rest.GetAttributeAsync("href"))!.Split('#')[1].Replace("-likusieji", "", StringComparison.Ordinal);
-            await rest.ClickAsync();
-            await page.WaitForURLAsync(new Regex("diena=.*#diena-.*-likusieji"), new() { Timeout = E2ESteps.Slow });
-            var added = page.Locator($"#{dayId}-likusieji li.tl-item:has(.tl-ask)").Last;
+            // A day grown in place by "Rodyti daugiau": the rows added carry islands that start and take a side, and the rows
+            // already shown keep theirs (each island is keyed by its row). The link lands on the first row added.
+            var more = page.Locator("#agenda-coming section.tl-day a.show-more__link").First;
+            await Assertions.Expect(more).ToHaveCountAsync(1);
+            var landing = (await more.GetAttributeAsync("href"))!.Split('#')[1];
+            var day = page.Locator("#diena-" + Regex.Match(landing, @"^agenda-(\d{4}-\d{2}-\d{2})-").Groups[1].Value);
+            await Assertions.Expect(day.Locator("li.tl-item")).ToHaveCountAsync(10);
+            await more.ClickAsync();
+            await page.WaitForURLAsync(new Regex("diena=.*:20#agenda-"), new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator("#" + landing)).ToBeInViewportAsync(new() { Timeout = E2ESteps.Slow });
+            var added = day.Locator("li.tl-item:has(.tl-ask)").Last;
             await Assertions.Expect(added).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
             addedNumber = (await added.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
             var addedPlace = (await added.GetAttributeAsync("id"))!["agenda-".Length..];

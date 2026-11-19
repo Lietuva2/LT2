@@ -16,7 +16,8 @@
    (a vote's, the MP's own account) keeps "nobody yet". The first side ever asks
    for the positions consent across the row's whole width (PositionConsentForm, the bill page's form); nothing is saved
    before it. A first side also follows the bill (design 8.11.2, on the server); "Sekate" then shows in the row's mark and
-   the panel, which read the shared answer again (MyAgendaState.Changed). After the member's own action the row shows the
+   the panel, which read the shared answer again (MyAgendaState.Changed), and no line under the buttons says so (owner,
+   2026-11-19: "No need, if the label 'Sekate' lights up anyway"). After the member's own action the row shows the
    bill's live numbers from its public answer, not the page's copy that may be a minute old; so does it once on start when
    that copy says nobody took part but the member's own answer has a side. A row of the last week's
    votes (VoteId) offers no sides, only "Kaip balsavo Seimo nariai"; nor does a row for an MP's own account (design 8.5.4,
@@ -53,7 +54,7 @@
                 }
             </div>
         </div>
-        <Messages Message="@Message" Info="@Info" />
+        <Messages Message="@Message" />
     }
 </div>
 @if (_consentFor is { } wanted)
@@ -185,7 +186,6 @@
 
     private async Task TakeAsync(string side)
     {
-        var wasFollowing = _mine?.Following == true;
         var result = await Appeals.TakePositionAsync(Number, new PositionRequest { Side = side });
         if (result.Problem?.Code == "consent.required")
         {
@@ -202,11 +202,9 @@
             return;
         }
 
+        // A first side also follows the bill (design 8.11.2): the row's mark shows "Sekate" once the shared answer is read
+        // again, and nothing else says so (owner, 2026-11-19: no "Dabar sekate šį projektą.").
         await AfterChangeAsync();
-        if (!wasFollowing && _mine?.Following == true)
-        {
-            Info = L["Agenda.Followed"];
-        }
     }
 
     /// <summary>Takes the side back, naming it: nothing changes on the server when the member no longer has it.</summary>

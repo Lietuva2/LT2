@@ -52,23 +52,25 @@ public sealed partial class ReasonsToComeTests : E2ETest
         });
         var page = await context.NewPageAsync();
 
-        // The stand-in's sitting days hold about forty bills each: ten show, and "Rodyti likusius" fetches the rest of the
-        // day by the address (owner, 2026-11-18: the hidden rows are not in the page), landing on the first row added.
+        // The stand-in's sitting days hold about forty bills each: ten show, and the shared "Rodyti daugiau" (owner,
+        // 2026-11-19) grows the day by ten by the address (the hidden rows are not in the page), landing on the first row added.
         await page.GotoAsync(Base + "/darbotvarke");
-        var rest = page.Locator("#agenda-coming section.tl-day a[id$='-rodyti']").First;
-        await Assertions.Expect(rest).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
-        await Assertions.Expect(rest).ToHaveTextAsync("Rodyti likusius");
-        var href = (await rest.GetAttributeAsync("href"))!;
-        href.ShouldMatch(@"^/darbotvarke\?diena=(\d{4}-\d{2}-\d{2})#diena-\1-likusieji$");
-        var dayId = href.Split('#')[1].Replace("-likusieji", "", StringComparison.Ordinal);
+        var dayMore = page.Locator("#agenda-coming section.tl-day a.show-more__link").First;
+        await Assertions.Expect(dayMore).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(dayMore).ToHaveTextAsync("Rodyti daugiau");
+        var href = (await dayMore.GetAttributeAsync("href"))!;
+        var link = Regex.Match(href, @"^/darbotvarke\?diena=(\d{4}-\d{2}-\d{2}):20#(agenda-\1-.+)$");
+        link.Success.ShouldBeTrue(href);
+        var dayId = "diena-" + link.Groups[1].Value;
         var dayRows = page.Locator($"#{dayId} li.tl-item");
         (await dayRows.CountAsync()).ShouldBe(10, "ten rows of a long day, and no more in the page");
-        await rest.ClickAsync();
-        await page.WaitForURLAsync(new Regex("diena=.*#diena-.*-likusieji"), new() { Timeout = E2ESteps.Slow });
-        (await dayRows.CountAsync()).ShouldBeGreaterThan(10, "the day whole");
-        await Assertions.Expect(page.Locator($"#{dayId}-likusieji")).ToBeInViewportAsync();
-        await Assertions.Expect(page.Locator($"#{dayId} a[id$='-rodyti']")).ToHaveCountAsync(0);
-        await E2ESteps.NoSidewaysScrollAsync(page, "/darbotvarke opened at 390");
+        await Assertions.Expect(page.Locator($"#{dayId}-shown")).ToHaveTextAsync(new Regex(@"^Rodoma 10 iš \d+$"));
+        await dayMore.ClickAsync();
+        await page.WaitForURLAsync(new Regex("diena=.*:20#agenda-"), new() { Timeout = E2ESteps.Slow });
+        (await dayRows.CountAsync()).ShouldBeGreaterThan(10, "the day grown");
+        (await dayRows.CountAsync()).ShouldBeLessThanOrEqualTo(20, "by ten");
+        await Assertions.Expect(page.Locator("#" + link.Groups[2].Value)).ToBeInViewportAsync();
+        await E2ESteps.NoSidewaysScrollAsync(page, "/darbotvarke grown at 390");
 
         // "/projektai": twenty, then "Rodyti daugiau" by the address, landing on the first bill added.
         await page.GotoAsync(Base + "/projektai");

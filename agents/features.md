@@ -390,8 +390,12 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   (`MyAgendaSide`, disabled before it starts) that takes, changes (the pressed button, pressed again, withdraws) the side with the bill page's
   request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
   shows the bill's live numbers from `GET /bills/{n}/record`; the other islands follow through `MyAgendaState.Changed`.
-  The islands (`MyAgendaSide`, `MyAgendaMark`) are keyed by the row's place (`@key`), so a day opened whole in place keeps
-  each on its row. Beside the side buttons no "Niekas nenurodė, ko prašo" (`RecordFigures.HideNobody`; `MyAgendaSide.Asks`)
+  The islands (`MyAgendaSide`, `MyAgendaMark`) are keyed by the row's place (`@key`), so a day grown in place keeps
+  each on its row and starts the rows added. A first side follows the bill and the mark's "Sekate" lights up; no status line
+  says so (owner, 2026-11-19: "Dabar sekate šį projektą." gone, `Agenda.Followed` removed). The mark (`MyAgendaMark`) also
+  says what is new on a followed bill (`NewsLine`, `#home-new-{place}`, a link to the bill; design 8.11.8, owner
+  2026-11-19: "the same like start page"), from the same `/me/bills` answer. "Jūsų projektai" has no share line (owner,
+  2026-11-19: `Mine.Share`, its `CopyLink` and `MyAgendaState.InvitationAsync` removed; the bill page's `ShareLine` stays). Beside the side buttons no "Niekas nenurodė, ko prašo" (`RecordFigures.HideNobody`; `MyAgendaSide.Asks`)
   and no link but the title (owner, 2026-11-19: "minimise non-essential texts"); a voted row keeps both its line and
   "Kaip balsavo Seimo nariai".
   The figures are one component (`Lt2.Web.Client/Agenda/RecordFigures`, with `SplitBar` in `Lt2.Web.Client/Components`),
@@ -407,13 +411,20 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   furthest, `AgendaParser.StageOf`), then number, bills without a title last; the votes by Vilnius day, newest first, each
   day the same way. `AgendaRules.Day` cuts a day: the front page (`Home.razor`) shows `FrontDays` (2) planned and voted
   days of `FrontPerDay` (5) and `/darbotvarke` `PagePerDay` (10), and only those (owner, 2026-11-18: the hidden rows are
-  not in the HTML): "Rodyti likusius" (`#…-rodyti`) is a link from `AgendaPaging.RestOfPlanned` / `RestOfVoted` (pages
-  `AgendaPaging.Agenda`, `#diena-…`/`#balsuota-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`) to the same page
-  with the day whole (`?diena=`, `?balsuota=`, repeating for every day opened; `AgendaPaging.Read` drops malformed values),
-  landing on the second list `ul#…-likusieji` (on the front page a day whose known rows all show lands on `#…-nezinomi`);
-  enhanced navigation swaps it in with script. The front page keeps "Visa darbotvarkė" by its heading and "Ankstesni
-  balsavimai →". The unknown bills are `UnknownBills` (`details.tl-unknown`) at the end of a day shown whole (on the agenda
-  page also of a day whose known rows all show);
+  not in the HTML). A day grows by the shared `<ShowMore>` (owner, 2026-11-19, design 8.16.4; "Rodyti likusius" and
+  `Agenda.ShowRest` gone): one day is `PlannedDay` / `VotedDay` (`Lt2.Web/Components/Agenda`, used by both pages), whose
+  line `#{day}-more` (status `#{day}-shown`, "Rodoma N iš M") stands under a day with more known rows than its first page
+  (`AgendaRules.Paged`) and links to `AgendaPaging.MorePlanned` / `MoreVoted`: the same page with the day grown by
+  `AgendaRules.MorePerDay` (10; `NextAsked`), `?diena=2026-11-24:20` / `?balsuota=2026-11-17:20` (pages `AgendaPaging.Agenda`,
+  blocks `#diena-…`/`#balsuota-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`; the parameter repeats for every
+  day grown, `AgendaPaging.Grown` carrying on only days shown beyond their first rows), landing on the first row added by its
+  own id (`AgendaPaging.PlannedRowId` `#agenda-{day}-{number}`, `VotedRowId` `#recent-{vote}`). `AgendaPaging.Read` takes
+  `day:N` only (a bare day, a word, a number ≤ 0 dropped); `AgendaRules.ShownKnown` ignores a number not above the first
+  rows and caps at the day (and `MaxAsked`). N is `AgendaDayView.ShownCount`: the known rows shown, plus the unknown bills
+  once their line shows; M is the head's count; the last page has the status and no link. Enhanced navigation swaps it in
+  with script. The front page keeps "Visa darbotvarkė" by its heading and "Ankstesni balsavimai →". The unknown bills are
+  `UnknownBills` (`details.tl-unknown`) after the last known row once every known row shows (`AgendaDayView.UnknownShown`),
+  on both pages;
   rows `TimelineItem` and `VotedItem` with `Member` and `Numbers` as on the front page (owner, 2026-11-19: the same rows;
   `AgendaPage` renders them through `AuthorizeView`, carries `<NeedsScript />` for a member, and has no "Jūsų projektai"),
   heads `TimelineDate` (date in words, weekday, count via `AgendaWords`).

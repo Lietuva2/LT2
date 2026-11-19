@@ -1,0 +1,64 @@
+@using Lt2.Api.Contracts.Agenda
+@using Lt2.Web.Client.Agenda
+@inject IStringLocalizer<PageText> T
+@inject Formats F
+
+@* One sitting day of the timeline, on the front page and the agenda page alike (design 8.7, 8.11.1): its head (date, weekday,
+   how many bills the day holds), the known rows the page shows, then, once every known row shows, the bills the open data
+   does not know yet folded into one line; under a day longer than its first page the shared "show more" (owner,
+   2026-11-19: one way for every list): "Rodoma N iš M" and "Rodyti daugiau", a link to the same page with the day grown by
+   ten (AgendaPaging, ?diena=2026-11-24:20), landing on the first row added. The served page holds only the rows it shows;
+   enhanced navigation swaps the grown page in without a reload, the rows' islands keyed by their place. *@
+<section class="tl-day" aria-label="@($"{T["Agenda.Planned"]} {F.DayMonth(Day)}")" id="@Id">
+    <TimelineDate Label="@T["Agenda.Planned"]" Day="Day" Count="@AgendaWords.Bills(T, View.Count)" />
+    <div class="tl-rows">
+        @if (View.Shown.Count > 0)
+        {
+            <ul class="tl-items">
+                @foreach (var item in View.Shown)
+                {
+                    <TimelineItem Item="item" Day="Day" Member="Member" Numbers="Numbers" />
+                }
+            </ul>
+        }
+        @if (View.UnknownShown)
+        {
+            <UnknownBills Items="View.Unknown" Day="Day" Id="@($"{Id}-nezinomi")" />
+        }
+        @if (AgendaRules.Paged(First, View.Known))
+        {
+            <Lt2.Web.Client.Components.ShowMore Id="@($"{Id}-more")" StatusId="@($"{Id}-shown")" Shown="View.ShownCount" Total="View.Count" Href="@More" />
+        }
+    </div>
+</section>
+
+@code {
+    /// <summary>The page the day is on: its path and its blocks' ids.</summary>
+    [Parameter, EditorRequired] public AgendaPagingPage Page { get; set; } = default!;
+
+    [Parameter, EditorRequired] public DateOnly Day { get; set; }
+
+    /// <summary>The day's rows as the page cuts them (<see cref="AgendaRules.Day{T}"/>).</summary>
+    [Parameter, EditorRequired] public AgendaDayView<AgendaItemResponse> View { get; set; } = default!;
+
+    /// <summary>How many rows the page shows of a day at first (the front page five, the agenda page ten).</summary>
+    [Parameter, EditorRequired] public int First { get; set; }
+
+    /// <summary>The planned days the page shows grown, for the link (<see cref="AgendaPaging.Grown"/>).</summary>
+    [Parameter, EditorRequired] public IReadOnlyDictionary<DateOnly, int> Planned { get; set; } = default!;
+
+    /// <summary>The voted days the page shows grown.</summary>
+    [Parameter, EditorRequired] public IReadOnlyDictionary<DateOnly, int> Voted { get; set; } = default!;
+
+    /// <summary>Rendered for a signed-in member: the rows' islands. The same HTML for every member.</summary>
+    [Parameter] public bool Member { get; set; }
+
+    /// <summary>Every bill the page shows, for the members' islands to ask about.</summary>
+    [Parameter] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    private string Id => Page.PlannedDayId(Day);
+
+    private string? More => AgendaRules.NextAsked(View.Shown.Count, View.Known) is { } asked
+        ? AgendaPaging.MorePlanned(Page, Planned, Voted, Day, asked, AgendaPaging.PlannedRowId(Day, View.Rest[0].Number))
+        : null;
+}

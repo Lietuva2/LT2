@@ -87,9 +87,59 @@ public sealed class AgendaRulesTests
         // Two planned and two voting days of five rows each: one request, with room to spare.
         (2 * AgendaRules.FrontDays * AgendaRules.FrontPerDay).ShouldBeLessThanOrEqualTo(MyBillsQuery.MaxNumbers);
 
-        // A day opened whole ("Rodyti likusius") adds its rows: every one is asked about, a request per thirty.
+        // A day grown by "Rodyti daugiau" adds its rows: every one is asked about, a request per thirty.
         var many = AgendaRules.Asked(Enumerable.Range(1, MyBillsQuery.MaxNumbers + 10).Select(i => $"XVP-{i:0000}"));
         many.Count.ShouldBe(MyBillsQuery.MaxNumbers + 10);
         MyAgendaState.Requests(many).Select(r => r.Count).ShouldBe([MyBillsQuery.MaxNumbers, 10]);
+    }
+
+    [Theory]
+    [InlineData(10, null, 40, 10)]
+    [InlineData(10, 20, 40, 20)]
+    [InlineData(5, 15, 40, 15)]
+    [InlineData(10, 50, 40, 40)]
+    [InlineData(10, 7, 40, 10)]
+    [InlineData(10, 10, 40, 10)]
+    [InlineData(10, 0, 40, 10)]
+    [InlineData(10, null, 3, 3)]
+    [InlineData(10, 5000, 2000, AgendaRules.MaxAsked)]
+    public void A_day_shows_its_first_rows_or_as_many_as_the_address_asks_beyond_them_never_more_than_it_has(int first, int? asked, int known, int shown) =>
+        AgendaRules.ShownKnown(first, asked, known).ShouldBe(shown);
+
+    [Theory]
+    [InlineData(10, 40, 20)]
+    [InlineData(5, 40, 15)]
+    [InlineData(35, 40, 45)]
+    [InlineData(40, 40, null)]
+    [InlineData(3, 3, null)]
+    public void Rodyti_daugiau_asks_for_ten_more_rows_until_every_known_row_shows(int shown, int known, int? next) =>
+        AgendaRules.NextAsked(shown, known).ShouldBe(next);
+
+    [Fact]
+    public void Rodyti_daugiau_adds_ten_rows_a_click_on_both_pages() => AgendaRules.MorePerDay.ShouldBe(10);
+
+    [Theory]
+    [InlineData(10, 40, true)]
+    [InlineData(10, 11, true)]
+    [InlineData(10, 10, false)]
+    [InlineData(5, 3, false)]
+    public void Only_a_day_whose_rows_do_not_all_fit_its_first_page_carries_the_shown_line(int first, int known, bool paged) =>
+        AgendaRules.Paged(first, known).ShouldBe(paged);
+
+    [Theory]
+    [InlineData(28, 10, 10, false)]
+    [InlineData(28, 20, 20, false)]
+    [InlineData(28, 28, 40, true)]
+    [InlineData(3, 10, 15, true)]
+    public void Rodoma_counts_the_bills_the_open_data_does_not_know_yet_once_their_line_shows(int known, int asked, int shownCount, bool unknownShown)
+    {
+        var rows = Enumerable.Range(1, known).Select(i => new Row($"XVP-{i:0000}", true, 0, 0, null))
+            .Concat(Enumerable.Range(1, 12).Select(i => new Row($"XVP-9{i:000}", false, 0, 0, null))).ToList();
+
+        var day = AgendaRules.Day(rows, r => r.Known, AgendaRules.ShownKnown(AgendaRules.PagePerDay, asked, known));
+
+        day.ShownCount.ShouldBe(shownCount);
+        day.UnknownShown.ShouldBe(unknownShown);
+        day.Count.ShouldBe(known + 12, "the M of \"Rodoma N iš M\" is the day's head count");
     }
 }
