@@ -21,6 +21,7 @@
   <data name="Nav.StaffKey" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>
   <data name="Nav.MpBills" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi</value></data>
   <data name="Footer.Label" xml:space="preserve"><value>Apie svetainę</value></data>
+  <data name="Footer.Browse" xml:space="preserve"><value>Naršyti</value></data>
   <data name="Footer.About" xml:space="preserve"><value>Apie</value></data>
   <data name="Footer.TakePart" xml:space="preserve"><value>Dalyvauti</value></data>
   <data name="Footer.Methodology" xml:space="preserve"><value>Metodika</value></data>
@@ -35,8 +36,6 @@
   <data name="Footer.Line" xml:space="preserve"><value>Lietuva 2.0 · uždaras bandymas</value></data>
   <data name="Home.Trial" xml:space="preserve"><value>Vyksta uždaras bandymas: registruotis galima tik su kvietimo kodu.</value></data>
   <data name="Home.Welcome" xml:space="preserve"><value>Sveiki sugrįžę</value></data>
-  <data name="Home.AllAppeals" xml:space="preserve"><value>Visi projektai</value></data>
-  <data name="Home.Digests" xml:space="preserve"><value>Suvestinės Seimo nariams</value></data>
   <data name="Error.Title" xml:space="preserve"><value>Įvyko klaida</value></data>
   <data name="Error.Text" xml:space="preserve"><value>Atsiprašome, kažkas nepavyko. Bandykite dar kartą vėliau.</value></data>
   <data name="Error.RequestId" xml:space="preserve"><value>Užklausos numeris:</value></data>

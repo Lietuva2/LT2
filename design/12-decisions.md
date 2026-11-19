@@ -659,3 +659,11 @@ Each is built as written; "no" names what changes.
 - "Jūsų projektai" has no share line ("Pakvieskite kitus savo kvietimo nuoroda:" and its copy button): "the button
   should go from start page, inside the details that's enough, now it's taking too much space". The bill's page keeps it
   (8.11.5); the front page no longer reads the member's invitation.
+
+**Decided by the owner on 2026-11-19: the front page's row of links goes, the footer repeats the menu (8.7, 8.21)**
+
+- "These should go, either out, or the menu could be repeated in the footer to not require the scroll back to top", of
+  "Visi projektai", "Suvestinės Seimo nariams" and "Seimo nariai" under the front page's agenda. Both: the row is gone,
+  and the footer, on every page, has a first group with the menu's sections in the menu's order and words (the four
+  tabs of "Projektai", then "Seimo nariai" and "Statistika"), plain links marking nothing current. Its heading,
+  "Naršyti", is the designer's proposal and awaits a native speaker.

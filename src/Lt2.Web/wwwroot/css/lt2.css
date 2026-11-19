@@ -1170,7 +1170,7 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .top__nav .account__links a:hover, .account__links .top__signout button:hover { text-decoration: underline; border: 0; }
 .account__links .top__signout { display: block; }
 
-/* The footer: two short groups of links, then the theme switch and the line about the trial, on the ground. */
+/* The footer: three short groups of links (the menu's sections first, design 8.21), wrapping on a phone, then the theme switch and the line about the trial, on the ground. */
 .foot { display: flex; flex-direction: column; gap: var(--sp-5); }
 .foot__groups { display: flex; flex-wrap: wrap; gap: var(--sp-5) var(--sp-7); }
 .foot__group { display: flex; flex-direction: column; gap: var(--sp-2); }

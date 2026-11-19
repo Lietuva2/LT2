@@ -23,6 +23,13 @@ The line "Paspaudę dar kartą, atsiimsite." under a pressed side button went on
 `aria-pressed` say that pressing it again takes the side back. Open: what the onboarding is (when it shows, to whom, how
 it is dismissed, what else it explains), and where it keeps that it was seen, since nothing non-essential is kept in the
 browser (a new cookie or storage key is a design change). Nothing is built.
+
+**Proposed by the designer while repeating the menu in the footer (8.21), 2026-11-19, awaiting the owner**
+
+The footer's new first group, the menu's sections, is headed "Naršyti" (`PageText` `Footer.Browse`), a proposal for a
+native read, one short word in the style of "Apie" and "Dalyvauti". If no: "Puslapiai", "Skyriai"
+or "Lietuva 2.0" (the last repeats the footer's own line).
+
 **The outcome of a vote: [Decided by the owner on 2026-11-18, 12-decisions: keep the majority words (choice 1).]**
 
 The background, kept for the live contract run: built in the words of 8.26.2 (8.18, "The majority"): a chip "Dauguma už" / "Dauguma prieš" / "Nėra daugumos"

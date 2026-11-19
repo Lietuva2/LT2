@@ -43,8 +43,11 @@ account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "At
 staff account whose session is not a staff session, "Prisijungti darbuotojo prieigos raktu" to `StaffSessionPage` with the
 page to come back to after the `#`) from `GET /me` when it opens and closes it on Escape, a press outside and focus
 leaving. **No served page holds a member's name or role links**: the header is the same for every member apart from the antiforgery token (`NavigationTests`). The footer, on
-every page (token pages from emails included), holds "Apie" (Metodika, Moderavimo taisyklės, Naudojimo taisyklės,
-Privatumas), "Dalyvauti" (Organizacijos, Atsiliepimai), the theme switch and the trial line. `/metodika` is called "Metodika".
+every page (token pages from emails included), holds "Naršyti" (the menu's sections in its order, from `MenuSections.Tabs`,
+`MenuSections.Mps` and `MenuSections.Statistics` with the menu's strings, ids `foot-tab-…`, `foot-mps`, `foot-statistics`,
+nothing marked current; owner, 2026-11-19: no scrolling back to the top; the heading awaits a native read), "Apie"
+(Metodika, Moderavimo taisyklės, Naudojimo taisyklės, Privatumas), "Dalyvauti" (Organizacijos, Atsiliepimai), the theme
+switch and the trial line. `/metodika` is called "Metodika".
 
 **Terms of use (design 8.22.2).** `/taisykles` and `/privatumas` are static pages from `LegalText.resx` (drafts for the lawyer;
 "[bus įrašyta]" marks what the owner has not given). Registration has the required box "Sutinku su naudojimo taisyklėmis"
@@ -381,7 +384,8 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
   consent), so the HTML is the same for every member. The timeline is on a `.sheet` (design 8.16); the page has no
   "Organizacijos" block and the introduction no paragraph on following (owner, 2026-11-16: the footer links to
-  organisations, the account page registers one, "Sekti" says what it sends); the visitor's head (owner, 2026-11-17) is the
+  organisations, the account page registers one, "Sekti" says what it sends), and no row of links under the agenda (owner,
+  2026-11-19: the footer repeats the menu's sections); the visitor's head (owner, 2026-11-17) is the
   headline (the lead sentence as `h1`; the title stays "Lietuva 2.0") and the trial note under it with the invented-data
   notice's edges, the turning logo centred to their right from 54rem (across the invented-data notice too, which on this
   page is the head's first row, not the layout's), beside the headline on a phone. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
