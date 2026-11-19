@@ -57,7 +57,8 @@ code review.
 - **Nothing non-essential in the browser (design 8.22.1), so no cookie banner.** No third-party analytics, no third-party script, font or
   embed, no advertising or measurement cookie. What the site keeps is one list, `Security/BrowserStorage.Inventory` (the
   session, the passkey step, the request-forgery and the known-browser cookies; `lt2-theme` in local storage once a theme is
-  chosen; `lt2.tikslas` and `lt2.kodas` in session storage, `Lt2.Web.Client/BrowserKeys`; `lt2.kodas` is written by
+  chosen; the framework's `blazor-resource-hash:Lt2.Web.Client` in local storage (`BrowserKeys.FrameworkResourceHash`);
+  `lt2.tikslas` and `lt2.kodas` in session storage, `Lt2.Web.Client/BrowserKeys`; `lt2.kodas` is written by
   `SignInFlow` and by `js/lt2-invitation.js`, which takes a link's `#kodas=` on any page, design 8.11.5). The privacy notice's
   "Slapukai ir naršyklės atmintis" is built from it (`data-storage` on each row); `TermsTests` (E2E) visits the site as a
   visitor and as a member and fails on any cookie or storage key outside it, `BrowserStorageTests` (architecture) on any script

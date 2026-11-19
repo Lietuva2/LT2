@@ -8,7 +8,7 @@ To check them against the real site, set `LT2_LRS_LIVE=1` (and `LT2_LRS_AGENDA_U
 below) and run `AgendaLiveTests`: it fetches the page once and reports what the parser found. Nothing fetches lrs.lt
 otherwise: the worker's watcher is off unless `Agenda:BaseAddress` is set, and the host must be on the allowlist.
 
-When the page cannot be read (no sitting date found), the watcher refuses it, logs an error (the alert of design 8.9),
+When the page cannot be read (no sitting date found), the watcher refuses it, logs an error (the alert of design 8.4),
 and leaves the planned dates and the moderators' corrections as they were.
 
 | Id | What the parser assumes | Status | Evidence |

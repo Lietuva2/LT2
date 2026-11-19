@@ -21,7 +21,7 @@ internal sealed record AgendaParse(IReadOnlyList<AgendaRow> Rows, string? Failur
 /// changes often). None of them has been seen in a live page yet: the register
 /// <c>tests/Lt2.Parliament.ImportTests/Agenda/ASSUMPTIONS.md</c> lists each one with its status, and the live check
 /// (<c>LT2_LRS_LIVE=1</c>) reports on them. The parser reads text, not a fixed structure, so small layout changes do not
-/// break it; when not one sitting date can be found the page is refused as a changed layout (design 8.9: alert, keep the
+/// break it; when not one sitting date can be found the page is refused as a changed layout (design 8.4: alert, keep the
 /// last dates and the moderators' corrections, never act on a guess).
 /// </summary>
 internal static class AgendaAssumptions

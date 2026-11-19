@@ -81,7 +81,7 @@ internal sealed class PlannedItem
     public string? Note { get; set; }
 }
 
-/// <summary>The agenda watcher (design 8.4, 8.9), run by the worker.</summary>
+/// <summary>The agenda watcher (design 8.4, 6.8), run by the worker.</summary>
 internal sealed class AgendaWatcher(
     IHttpClientFactory http,
     IOptions<AgendaOptions> options,

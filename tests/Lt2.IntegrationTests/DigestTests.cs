@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 8.4, 8.7, 8.9: summaries in dry-run. They are made by the rules, frozen, published without MP-specific figures,
+/// Design 8.4, 8.7, 8.19.8: summaries in dry-run. They are made by the rules, frozen, published without MP-specific figures,
 /// and never sent: no MP address reaches the outbox, and no summary holds a person.
 /// </summary>
 public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)

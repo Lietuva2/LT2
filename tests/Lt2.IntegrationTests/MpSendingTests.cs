@@ -496,7 +496,7 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
     }
 
     /// <summary>
-    /// Design 8.9, 8.19.8: a simulated month of agenda changes with review, preferences, the suppression list, the ceiling and
+    /// Design 8.19.8: a simulated month of agenda changes with review, preferences, the suppression list, the ceiling and
     /// the thresholds in play. Week 1 sends Monday's summary and the before-vote one is covered by it; week 2 declines Monday's
     /// on Sunday, so a bill moved from Tuesday to Thursday gets two before-vote summaries within the ceiling; in week 3 the only
     /// bill is held during review, so nothing goes; week 4 sends Monday's and Tuesday's and the third of the week meets the ceiling.

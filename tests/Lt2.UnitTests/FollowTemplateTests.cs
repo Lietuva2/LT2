@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lt2.UnitTests;
 
-/// <summary>Design 8.11.2, 8.11.3: the follow emails and the email to those who asked for a record. No tracking, nobody named.</summary>
+/// <summary>Design 8.11.2, 8.14.14, 8.20.1: the follow emails (planned, voted, an organisation's statement, MPs' answers). No tracking, nobody named.</summary>
 public sealed class FollowTemplateTests
 {
     private static FollowTemplates Templates() =>

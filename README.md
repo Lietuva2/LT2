@@ -1,8 +1,7 @@
 # Lietuva 2.0
 
 Code for the Lietuva 2.0 (LT2) Seimas engagement platform. This branch (`master`) holds the product code. **The
-system design this code follows is [`design/`](design/README.md)**; this is milestone M0
-"Foundation" from its section 11. Rules for changing the code are in `AGENTS.md`. The concept website stays on the
+system design this code follows is [`design/`](design/README.md).** Rules for changing the code are in `AGENTS.md`. The concept website stays on the
 `docs` branch.
 
 The user interface is in Lithuanian only. All names and data in examples and tests are fictional.
@@ -14,15 +13,17 @@ A modular monolith on .NET 10 (design sections 2–4):
 | Path | What |
 |---|---|
 | `src/Lt2.Web` | ASP.NET Core host: `/api/v1` minimal-API endpoints (one per file), Blazor server rendering, security plumbing |
-| `src/Lt2.Web.Client` | Blazor WebAssembly: the interactive sign-in, registration and "hello" pages; HTTP implementations of the API clients |
+| `src/Lt2.Web.Client` | Blazor WebAssembly: the islands of the signed-in features, sign-in, registration and the account screens; HTTP implementations of the API clients |
 | `src/Lt2.Api.Contracts` | DTOs, routes, typed client interfaces, FluentValidation validators shared by browser and server |
 | `src/Lt2.SharedKernel` | Result type, identifiers, outbox, audit and settings abstractions, the outbound allowlist |
 | `src/Lt2.Hosting` | What the web host and the worker set up the same way: Serilog and OpenTelemetry (`AddLt2Observability`) |
 | `src/Modules/Lt2.Identity` | Accounts, registration by invitation, emailed sign-in codes, passkeys, sessions — schema `identity` |
 | `src/Modules/Lt2.Notifications` | Transactional outbox, dispatcher, SMTP transport, the sign-in code email — schema `notify` |
 | `src/Modules/Lt2.Audit` | Append-only audit log and runtime settings — schemas `audit`, `config` |
-| `src/Modules/Lt2.Parliament` | Seimas open-data client, raw-response store, parsers, import, statistics — schema `parliament` (no pages yet) |
-| `src/Modules/Lt2.Appeals` | Empty module shell (schema and `DbContext` only) for milestone M2 |
+| `src/Modules/Lt2.Parliament` | Seimas open-data client, raw-response store, parsers, import, statistics — schema `parliament` |
+| `src/Modules/Lt2.Appeals` | Bills' records, positions, arguments, reports and moderation, descriptions, organisations and their statements, MPs' responses, comments — schema `appeals` |
+| `src/Modules/Lt2.Usage` | The site's own usage statistics — schema `usage` |
+| `src/Lt2.Jobs` | The Hangfire job classes the worker runs |
 | `src/Lt2.Worker` | Hangfire server (PostgreSQL storage): the outbox dispatch loop and the parliament import (every 15 minutes on sitting days, hourly otherwise; by hand, whatever the schedule, the manual jobs `parliament-members`, `parliament-sittings`, `parliament-votes` and `parliament-everything`); its job classes are in `src/Lt2.Jobs`, and administrators see and trigger them at `/administravimas/darbai` |
 | `src/Lt2.Migrator` | Creates the database roles, applies every module's migrations, grants access; run once per deploy |
 | `tests/` | Unit, integration (Testcontainers), architecture (NetArchTest) and end-to-end (Playwright) tests |

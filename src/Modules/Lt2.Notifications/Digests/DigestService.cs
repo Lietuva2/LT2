@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Lt2.Notifications.Digests;
 
 /// <summary>
-/// The summaries (design 8.4, 8.7, 8.9, 8.19; owner 2026-11-17: reviewed a day ahead). A weekly or before-vote summary is
+/// The summaries (design 8.4, 8.7, 8.19; owner 2026-11-17: reviewed a day ahead). A weekly or before-vote summary is
 /// prepared <c>Digest:ReviewHours</c> before its time: which bills (eligible and not held then) and, per bill and side, which
 /// arguments (the most endorsed published ones) are fixed, and every moderator and administrator is told. Moderators may hide
 /// an argument (the next of its side comes in), hold a bill (it drops out), approve it ("Patvirtinti": reviewed, it still goes at

@@ -21,11 +21,10 @@ When the code changes what one of these files says, correct it in the same chang
 
 ## What this is
 
-Lietuva 2.0 (LT2) is a Seimas (Lithuanian parliament) engagement platform run by VšĮ LT2.0. Build order (design 11):
-M0 foundation · M1 MP profiles from Seimas open data · M2a appeals without sending · M2a+ reasons to come (agenda, front
-page, following, AI draft) · M2a++ one object (every active bill open, one page per bill) · M2d profiles · email
-rhythm · M2c comments · M2b sending to MPs · Stage 3 (voting with delegation; not designed, do not build towards it).
-Build one stage at a time; do not start a later stage's features because they look close.
+Lietuva 2.0 (LT2) is a Seimas (Lithuanian parliament) engagement platform run by VšĮ LT2.0: MP profiles and votes from
+Seimas open data; every active bill open on one page, where members say what they ask of MPs and why; the agenda,
+following and emails; organisations, comments and public profiles; summaries to MPs and their responses. Voting with
+delegation is not designed: do not build towards it.
 
 ## Nothing is launched yet
 
@@ -37,16 +36,19 @@ security, wording, tests) still hold as written, and nothing is pushed or publis
 
 ## The design is the source of truth
 
-`design/` is the agreed design, one file per section. If the code and the design disagree, say so; do not silently pick
-one. A rule changes by discussion with the owner first, then the design, then the code. Do not decide an open item
-(`design/12-open.md`) in code. Where the design's section 4 differs from the code, `agents/code-map.md` describes the
-code and the design the intent.
+`design/` is the agreed design, one file per section. A section says what the product does today, with no history
+(that is in git); what is designed and not built yet is marked "Not built". The owner's decisions that hold are in
+`design/12-decisions.md`, what is still open in `design/12-open.md`. If the code and the design disagree, say so; do not
+silently pick one. A rule changes by discussion with the owner first, then the design, then the code. Do not decide an
+open item in code. When a change makes a section untrue, rewrite the section to what is true; do not add a dated note.
 
 ## Branches and the owner
 
 - `master`: product code, changed only through branches with **merge commits, not squash**. `docs`: the concept website
-  and discovery notes (where the design says `../docs/` or `design-notes.md`). `legacy`: the 2011–2020 platform; never modify.
+  and discovery notes. `legacy`: the 2011–2020 platform; never modify.
 - Never push, open a pull request or publish anything without the owner asking.
+- Never start a subagent or background job on the Fable model: every agent runs on Opus 5.5 (`model: "opus"`, no forks).
+  Fable plans, designs and reviews; Opus agents do the implementation.
 - Discuss complex mechanics in chat first. The owner's suggestions are proposals: weigh them, say where you disagree.
   State each thing once, most important first, in plain language. Don't present undecided things as settled. Report
   what was verified and what was not; a test that did not run is not a pass.

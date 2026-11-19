@@ -144,7 +144,7 @@ public sealed record DigestReview(
 public sealed record DigestPending(DateTimeOffset DueAt, int Bills, int Reasons);
 
 /// <summary>
-/// Summaries to MPs (design 8.4, 8.7, 8.9, 8.19): prepared for review by the rules, and gone at their time as design 8.19 says;
+/// Summaries to MPs (design 8.4, 8.7, 8.19): prepared for review by the rules, and gone at their time as design 8.19 says;
 /// nobody approves them (owner, 2026-11-17).
 /// </summary>
 public interface IDigests

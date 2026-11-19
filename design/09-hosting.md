@@ -2,76 +2,89 @@
 
 ## 9.1 Layout
 
-One EU VPS **[decided: the owner's Hostinger VPS]** running Docker Compose. At least 2 vCPU and 8 GB RAM; 4 vCPU and
-16 GB is comfortable. Choose a data-centre location inside the EU (the concept promises EU storage).
+One EU VPS running Docker Compose (`deploy/compose.yaml`, project `lt2`). At least 2 vCPU and 8 GB RAM; 4 vCPU and
+16 GB is comfortable. The data-centre location is inside the EU.
 
 | Container | Role |
 |---|---|
-| `caddy` | Ports 80 and 443, certificates, compression, per-IP limits, static assets. |
-| `web` | API and Blazor host. Two instances behind Caddy so a deploy does not drop requests. |
-| `worker` | Hangfire server: imports, agenda watcher, digests, outbox. One instance. |
-| `postgres` | Database, reachable only on the internal network. |
-| `backup` | pgBackRest: continuous WAL archiving and scheduled full backups to EU object storage, encrypted. |
-| `otel-collector` | Receives telemetry and forwards it. |
+| `caddy` | The published HTTP and HTTPS ports (HTTP/3 too), certificates (ACME, or Caddy's own CA locally), compression, the 1 MB request limit, no `Server` header; forwards to `web`. Its logs drop client addresses and headers and replace invitation codes and the tokens of MPs' and members' mail links. |
+| `web` | API and Blazor host, with the Hangfire dashboard. One instance. |
+| `worker` | Hangfire server: imports, agenda watcher, summaries, follow emails, outbox. One instance. |
+| `migrator` | Creates roles, applies migrations and grants, then exits; `web` and `worker` start after it succeeds. |
+| `postgres` | PostgreSQL 17, reachable only on the internal network. |
+| `mailpit` | Profile `local` only: catches every email. |
+| `seimas-standin` | Profile `local` only: the stand-in for the Seimas open data, with invented answers; never built by `deploy/Dockerfile`. |
 
-Host: SSH by key only on a non-default port for a named deploy user, firewall closed except 80 and 443, automatic
-security updates, CrowdSec or fail2ban, Docker with user namespaces.
+The .NET containers run with a read-only file system, all capabilities dropped and `no-new-privileges`. Secrets are files
+(`deploy/secrets/`, or `LT2_SECRETS_DIR`), made by `deploy/init-secrets.py`, mounted under `/run/secrets` and never
+committed. Per-client request limits are the application's (6.4), not Caddy's.
 
-A single VPS is a single point of failure. That is acceptable for this product if recovery is rehearsed: the target is to
-lose at most a few minutes of data (WAL archiving) and to be back on a fresh VPS within a few hours from backups and the
-compose files. A CDN with DDoS protection in front of Caddy is recommended before the first public campaign (section 12).
+**Not built.** Two `web` instances behind Caddy so a deploy does not drop requests; a `backup` container (pgBackRest:
+continuous WAL archiving and scheduled full backups to EU object storage, encrypted); an `otel-collector` container;
+host hardening (SSH by key only on a non-default port for a named deploy user, firewall closed except 80 and 443,
+automatic security updates, CrowdSec or fail2ban, Docker with user namespaces); a CDN with DDoS protection in front of
+Caddy. A single VPS is a single point of failure, acceptable only with rehearsed recovery: at most a few minutes of data
+lost (WAL archiving) and back on a fresh VPS within a few hours from backups and the compose files.
 
 ## 9.2 Environments
 
-`local` (Docker Compose with a seeded database and recorded Seimas responses), `staging` (same compose on a separate small
-VPS or an isolated project, synthetic data only, emails captured and never delivered), `production`. Staging never
-receives production data.
+`local`: Docker Compose with the stand-in's invented Seimas data and Mailpit (`deploy/.env`, profile `local`), at
+`https://lt2.localhost:8443`. The trial below is a staging environment. There is no production.
 
-**The trial on the owner's VPS [decided by the owner on 2026-11-14: deploy `master` there, leaving everything else on
-the server as it is].** It is a staging environment, an isolated Compose project (`lt2`) on the Hostinger VPS, which
-also runs the owner's other sites:
+**The trial on the owner's VPS.** It deploys `master` as an isolated Compose project (`lt2`) on the owner's Hostinger
+VPS, which also runs the owner's other sites:
 
 - **Data and emails.** The parliament data is the stand-in's, invented, and every page says so; the demonstration
-  record and organisations are seeded; emails are caught by Mailpit and never delivered. Registration needs an invitation code made for this
-  server, not the one in `deploy/.env`. The request limits are the code's defaults.
+  record and organisations are seeded; emails are caught by Mailpit and never delivered. Registration needs an
+  invitation code made for this server, not the one in `deploy/.env`. The request limits are the code's defaults.
 - **Behind the server's proxy.** Ports 80 and 443 belong to the Caddy that already serves the other sites. LT2 does
   not start its own Caddy there: that Caddy gets one site block for LT2's hostname and reaches `web` over its Docker
   network (`deploy/compose.shared-proxy.yaml`, `deploy/shared-proxy.Caddyfile`). The block keeps what LT2's own
   Caddyfile does (compression, the 1 MB request limit, no `Server` header, the forwarded scheme), writes no access log
   for the site, and adds `X-Robots-Tag: noindex, nofollow`, since a trial with invented data must not be indexed.
-  Nothing else on the server is changed: no other site's block, container, volume, port or firewall rule.
-- **Reading the caught emails [decided by the owner on 2026-11-15].** Whoever reads Mailpit reads every sign-in code
-  and can sign in to any account (a staff account only as an ordinary member, 6.2), so it is never open. Its web
-  interface has its own hostname, served by the server's Caddy over HTTPS only and marked `noindex`, and Mailpit
-  itself asks for a name and password (its own password file, generated on the server). The password is in a
-  root-only file on the server and in one copy that the owner keeps in their own private storage, to read the emails
-  from another device. It is nowhere else: in no repository and on no developer's machine. Whoever changes the
-  password replaces the owner's copy too. Its own hostname, not a path of the site: the viewer shows the HTML of
-  emails and must not share the site's origin. No port is opened for it; the SMTP port stays on the internal network.
-  Locally Mailpit stays without a password.
-- **Delivery.** Images are built from the deployed commit on the developer's machine and copied to the server over
-  SSH; nothing is pushed to a registry or to GitHub. The migrator runs once per deploy, as in 9.3.
-- **Not there yet, owed before production:** the host hardening of 9.1 (a named deploy user, a non-default SSH port,
-  user namespaces), two `web` instances, backups, telemetry and alerts (9.4), real email, the real Seimas data.
+  Forwarding headers count only from that Caddy (`LT2_PROXY_HOST`). Nothing else on the server is changed: no other
+  site's block, container, volume, port or firewall rule.
+- **Reading the caught emails.** Whoever reads Mailpit reads every sign-in code and can sign in to any account (a staff
+  account only as an ordinary member, 6.2), so it is never open. Its web interface has its own hostname, served by the
+  server's Caddy over HTTPS only and marked `noindex`, and Mailpit itself asks for a name and password (its own password
+  file, `mailpit_ui_auth`, generated on the server). The password is in a root-only file on the server and in one copy
+  that the owner keeps in their own private storage, to read the emails from another device. It is nowhere else: in no
+  repository and on no developer's machine. Whoever changes the password replaces the owner's copy too. Its own
+  hostname, not a path of the site: the viewer shows the HTML of emails and must not share the site's origin. No port
+  is opened for it; the SMTP port stays on the internal network. Locally Mailpit stays without a password.
+- **Delivery.** Images are built from the deployed commit on the developer's machine, tagged with it (`LT2_IMAGE_TAG`)
+  and copied to the server over SSH; nothing is pushed to a registry or to GitHub. The migrator runs once per deploy.
+- **Not built there:** the host hardening, two `web` instances, backups, telemetry and alerts (9.4), real email, the
+  real Seimas data.
+
+**Not built.** A separate staging and production pair: staging on its own small VPS or isolated project, synthetic
+data only, emails captured and never delivered, never receiving production data.
 
 ## 9.3 Delivery
 
-GitHub Actions: build, unit and integration tests, architecture tests, scans, then an image per commit in the container
-registry. Deploy is a manual, approved step: pull by digest, run `Lt2.Migrator`, start the new `web` instances, check
-health, stop the old ones. Schema changes follow expand-then-contract so the old and new versions can run side by side.
+GitHub Actions (`.github/workflows/ci.yml`) on every push to `master` and every pull request: restore, build (warnings
+are errors), a NuGet audit of direct and transitive packages, unit, architecture and integration tests; then a second
+job starts the compose stack and runs the end-to-end tests against it.
+
 The migrator holds a PostgreSQL advisory lock from its first step to its last, so a second copy started at the same
 time (a hand run during a deploy) waits for the first instead of changing roles and grants alongside it.
 
+**Not built.** An image per commit in a container registry and a manual, approved deploy step: pull by digest, run
+`Lt2.Migrator`, start the new `web` instances, check health, stop the old ones, with schema changes following
+expand-then-contract so the old and new versions can run side by side.
+
 ## 9.4 Watching it
 
-- Health endpoints for liveness and readiness; an external uptime check.
-- Telemetry over OTLP to one backend with EU storage (a hosted free tier or a self-hosted single-node stack; decide with
-  the budget). Dashboards: request errors, import freshness, outbox age, digest runs, email bounces, registrations per day.
-- Alerts: import older than expected, agenda watcher failing, outbox stuck, bounce rate up, backup missed, certificate
-  near expiry, an unusual jump in registrations.
-- Runbooks in `deploy/runbooks/`: restore from backup, rotate secrets, stop all outgoing email, respond to a data
-  incident (including the 72-hour notification duty).
-- A restore drill before launch and every quarter.
+- Health endpoints: `/health/live` (liveness) and `/health/ready` (readiness).
+- Telemetry: Serilog and OpenTelemetry traces, metrics and logs go over OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set;
+  health requests are not traced. Failed imports and summary runs are logged as errors.
+
+**Not built.** An external uptime check; one telemetry backend with EU storage (a hosted free tier or a self-hosted
+single-node stack) with dashboards (request errors, import freshness, outbox age, digest runs, email bounces,
+registrations per day); alerts (import older than expected, agenda watcher failing, outbox stuck, bounce rate up, backup
+missed, certificate near expiry, an unusual jump in registrations); runbooks in `deploy/runbooks/` (restore from backup,
+rotate secrets, stop all outgoing email, respond to a data incident, including the 72-hour notification duty); a
+restore drill before launch and every quarter.
 
 ## 9.5 Database connections
 
@@ -82,7 +95,7 @@ and every part fails at once. So the pools have a budget, set explicitly and che
 | Who | Pool | Where it is set |
 |---|---|---|
 | PostgreSQL `max_connections` | 150, of which 3 are kept for superusers | `deploy/compose.yaml` (`command`) |
-| `web`, per instance | 25; up to four instances at once (two, plus two new ones during a deploy) = 100 | `src/Lt2.Web/appsettings.json` `Database:MaxPoolSize` |
+| `web`, per instance | 25; the budget allows four instances at once (two, plus two new ones during a deploy) = 100 | `src/Lt2.Web/appsettings.json` `Database:MaxPoolSize` |
 | `worker` (modules, outbox, jobs) | 10 | `src/Lt2.Worker/appsettings.json` `Database:MaxPoolSize` |
 | Hangfire inside the worker | 10 (its own pool) | `src/Lt2.Worker/appsettings.json` `Database:HangfireMaxPoolSize` |
 | `migrator` | 5 | `src/Lt2.Migrator/appsettings.json` `Database:MaxPoolSize` |
@@ -96,4 +109,3 @@ Static files (the WebAssembly runtime, styles, scripts, images) are answered str
 authentication, so a signed-in browser's start (dozens of parallel downloads) never looks up the session in the
 database. Pages and the API still check the session on every request, so an ended session stops working at once. A
 server error is sent with `Cache-Control: no-store`, so no browser or proxy keeps it; Caddy caches nothing.
-

@@ -178,7 +178,7 @@ public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvide
 
 /// <summary>
 /// The agenda watcher (design 8.4): reads the upcoming plenary agenda hourly when <c>Agenda:BaseAddress</c> is set. A page
-/// it cannot read is an error line (the alert of design 8.9) and changes nothing.
+/// it cannot read is an error line (the alert of design 8.4) and changes nothing.
 /// </summary>
 public sealed class AgendaWatchJob(IAgendaWatch watch, ILogger<AgendaWatchJob> logger)
 {
