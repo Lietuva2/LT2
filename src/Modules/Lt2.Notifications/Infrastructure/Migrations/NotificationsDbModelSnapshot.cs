@@ -129,6 +129,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("against_older_than30days");
 
+                    b.Property<int?>("AgainstReasonCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("against_reason_count");
+
                     b.Property<string>("BillNumber")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -147,6 +151,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                     b.Property<int>("ForOlderThan30Days")
                         .HasColumnType("integer")
                         .HasColumnName("for_older_than30days");
+
+                    b.Property<int?>("ForReasonCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("for_reason_count");
 
                     b.Property<DateOnly?>("PlannedDate")
                         .HasColumnType("date")

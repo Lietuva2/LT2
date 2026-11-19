@@ -3,7 +3,8 @@
 The text part of a weekly summary to an MP's official address, as `MpMailTemplates` renders it from
 `Templates/EmailTemplates.resx`. All names and numbers are fictional. The first bill's MP has answered; the second's
 line would read "Atsakyti vieną kartą visiems: …" instead. A side without published arguments reads "Argumentų už dar
-nėra." (or "prieš"); a bill with a surge note adds "Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos
+nėra." (or "prieš"); a side with one or two published arguments reads "Dažniausi argumentai už:" with no "(iš N)", since the
+two shown are all of them; a bill with a surge note adds "Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos
 per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima." under the counts. An argument longer than about 300
 characters is cut with "…" and followed by "Visas argumentas: {link}" to it on the public copy.
 
@@ -20,10 +21,10 @@ Priėmimas · planuojama rugsėjo 24 d.
   Prašo balsuoti prieš: 4 280 (iš jų 3 900 – paskyros senesnės nei 30 d.)
   Iš nurodžiusių, kad palaiko Reformų partija: 410 prašo balsuoti už.
   Iš nurodžiusių, kad palaiko Reformų partija: 520 prašo balsuoti prieš.
-  Dažniausi argumentai už:
+  Dažniausi argumentai už (iš 14):
   · Didžiausias pajamas gaunantys moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai. (1 920)
   · Gynyba finansuojama nekeliant PVM. (1 310)
-  Dažniausi argumentai prieš:
+  Dažniausi argumentai prieš (iš 9):
   · Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą. (1 480)
   · Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą. (970)
   Jūsų atsakymas: balsuosiu prieš (2026-09-18). Keisti arba papildyti: https://lietuva2.lt/seimas/XVP-0412

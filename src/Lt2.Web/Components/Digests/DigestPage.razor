@@ -97,7 +97,7 @@
                                 @foreach (var side in new[] { "for", "against" })
                                 {
                                     <div class="stack stack--tight">
-                                        <h4><span class="choice choice--@side">@T["Digests.Side." + side]</span></h4>
+                                        <h4><span class="choice choice--@side">@T["Digests.Side." + side]</span>@if ((side == "for" ? item.ForReasonsOf : item.AgainstReasonsOf) is { } of) { <text> </text><span class="small num" id="@($"digest-of-{item.BillNumber}-{side}")">@T.Format("Digests.OfSide", Display.Number(of))</span> }</h4>
                                         @if (!item.Reasons.Any(r => r.Side == side))
                                         {
                                             <p class="small">@T["Digests.NoReasons"]</p>

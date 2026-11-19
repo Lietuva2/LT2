@@ -69,6 +69,8 @@
 <data name="Digest.Surge" xml:space="preserve"><value>  Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima.</value></data>
 <data name="Digest.Reasons.for" xml:space="preserve"><value>  Dažniausi argumentai už:</value></data>
 <data name="Digest.Reasons.against" xml:space="preserve"><value>  Dažniausi argumentai prieš:</value></data>
+<data name="Digest.ReasonsOf.for" xml:space="preserve"><value>  Dažniausi argumentai už (iš {0}):</value></data>
+<data name="Digest.ReasonsOf.against" xml:space="preserve"><value>  Dažniausi argumentai prieš (iš {0}):</value></data>
 <data name="Digest.NoReasons.for" xml:space="preserve"><value>  Argumentų už dar nėra.</value></data>
 <data name="Digest.NoReasons.against" xml:space="preserve"><value>  Argumentų prieš dar nėra.</value></data>
 <data name="Digest.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>

@@ -1050,6 +1050,7 @@
   <data name="DigMod.For" xml:space="preserve"><value>Prašo balsuoti už: {0} (iš jų {1} – paskyros senesnės nei 30 d.)</value></data>
   <data name="DigMod.Against" xml:space="preserve"><value>Prašo balsuoti prieš: {0} (iš jų {1} – paskyros senesnės nei 30 d.)</value></data>
   <data name="DigMod.Reasons.for" xml:space="preserve"><value>Argumentai už</value></data>
+  <data name="DigMod.OfSide" xml:space="preserve"><value>(iš {0})</value></data>
   <data name="DigMod.Reasons.against" xml:space="preserve"><value>Argumentai prieš</value></data>
   <data name="DigMod.NoReasons" xml:space="preserve"><value>Argumentų nėra.</value></data>
   <data name="DigMod.Endorsed" xml:space="preserve"><value>„Man svarbu“: {0}</value></data>

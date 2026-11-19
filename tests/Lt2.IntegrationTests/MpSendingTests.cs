@@ -131,6 +131,9 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
             var uosyte = emails.Single(e => e.To == MpSteps.Uosyte.Address);
             uosyte.Payload.GetProperty("recipient").GetString().ShouldBe("official");
             uosyte.Payload.GetProperty("bills")[0].GetProperty("item").GetProperty("against").GetInt32().ShouldBe(1);
+            var stored = await Database.ScalarAsync<int?>("SELECT for_reason_count FROM notify.digest_item WHERE run_id = @r AND bill_number = @b", ("r", weekly.Id), ("b", uosyte.Payload.GetProperty("bills")[0].GetProperty("item").GetProperty("billNumber").GetString()!));
+            stored.ShouldNotBeNull();
+            uosyte.Payload.GetProperty("bills")[0].GetProperty("item").GetProperty("forReasonCount").GetInt32().ShouldBe(stored.Value, "the email carries the stored number of arguments");
             uosyte.Payload.GetProperty("preferencesPath").GetString()!.ShouldStartWith(MpMailRoutes.PreferencesPage + "/");
             uosyte.Payload.GetProperty("unsubscribePath").GetString()!.ShouldEndWith("/stop");
             (await Database.DeliveryAsync(weekly.Id, MpSteps.Uosyte.SeimasPersonId)).ShouldBe("queued");

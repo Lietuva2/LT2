@@ -246,6 +246,8 @@ for the lawyer).
 
 ## Awaiting a native speaker
 
+- 8.4, 8.19.3: the heading of a side with more than two published arguments, "Dažniausi argumentai už (iš {0}):" / "prieš (iš {0}):"
+  (`EmailTemplates` `Digest.ReasonsOf.*`), and the same count beside a side on the public copy ("(iš {0})", `AppealText` `Digests.OfSide`) and on the moderators' screen (`AppealUi` `DigMod.OfSide`).
 - 8.19.3: the settings screen's group "Laiškų siuntimo ribos" and the three daily ceilings of the email streams (`AppealUi` `Admin.Group.email`, `Admin.Setting.Email:Ceiling*PerDay`, `Admin.Help.Email:Ceiling*PerDay`, `Admin.Unit.Email:Ceiling*PerDay`).
 - 6.5, 8.4, 8.25.1: the refusals when a consent text in force is not the one the form showed, "Galioja kitas sutikimo
   tekstas. …" (`ProblemText` `consent.outdated`, `party.consent-outdated`, `profile.consent-outdated`).
