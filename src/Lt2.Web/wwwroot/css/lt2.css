@@ -532,6 +532,9 @@ body > .page { width: 100%; }
 @media (max-width: 54rem) {
   .welcome { grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); }
   .welcome lt2-logo-spin { width: 9rem; }
+  /* On a phone the form comes first, so signing in needs no scrolling (owner, 2026-11-20); the welcome text follows. Only the
+     visual order changes: the text before it has nothing to focus, so the reading and tab order stay as they are. */
+  .welcome__form { order: -1; }
 }
 
 
