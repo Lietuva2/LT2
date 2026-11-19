@@ -1,7 +1,9 @@
+@using Lt2.Api.Contracts.Admin
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Api.Contracts.Me
 @inherits InteractiveBase<AppealUi>
 @inject IProfilesApi Profiles
+@inject MyAccountState Account
 
 @* Members' public profiles for the moderators (design 8.25.6): on the queue (Hidden = false) the reported ones, with "Palikti"
    and "Paslėpti „Apie mane“" (a statement emailed to the person; the text is then shown nowhere until they write another);
@@ -49,6 +51,10 @@
                 {
                     <p class="note note--quiet" role="status">@done</p>
                 }
+                else if (_open == p.Id && _action == "lock")
+                {
+                    <LockAuthor Kind="@LockTargets.Profile" Id="p.Id" IdPrefix="@(Hidden ? "hidden-profile-" : "profile-")" OnCancel="() => _open = null" OnDone="() => LockedAsync(p.Id)" />
+                }
                 else if (_open == p.Id)
                 {
                     <form class="sheet sheet--quiet stack stack--tight" @onsubmit="() => ActAsync(p.Id)" novalidate id="profile-action-form-@p.Id" aria-labelledby="profile-action-title-@p.Id">
@@ -85,6 +91,7 @@
     private string _action = "keep";
     private string _statement = "";
     private readonly Dictionary<Guid, string> _done = [];
+    private bool _administrator;
 
     /// <summary>The list of hidden items rather than the queue.</summary>
     [Parameter] public bool Hidden { get; set; }
@@ -97,6 +104,7 @@
     {
         if (RendererInfo.IsInteractive)
         {
+            _administrator = await Account.IsAdministratorAsync(true);
             Items = (await Profiles.GetModerationAsync()).Value;
         }
     }
@@ -105,10 +113,16 @@
     /// The shared menu (design 8.3, owner 2026-11-17): on the queue "Palikti" filled and "Paslėpti „Apie mane“" set apart while
     /// there is a shown text; on the hidden list "Atkurti" alone, disabled once the person wrote another text.
     /// </summary>
-    private IReadOnlyList<ModerationChoice> Choices(ProfileModerationResponse p) => Hidden
-        ? [new("restore", $"profile-action-restore-{p.Id}", L["ProfileMod.Action.restore"], Disabled: !p.Restorable)]
-        : [new("keep", $"profile-action-keep-{p.Id}", L["ProfileMod.Action.keep"]),
-            .. (p.About is not null && p.HiddenAt is null ? new ModerationChoice[] { new("hide", $"profile-action-hide-{p.Id}", L["ProfileMod.Action.hide"], Apart: true) } : [])];
+    private IReadOnlyList<ModerationChoice> Choices(ProfileModerationResponse p) =>
+    [
+        .. Hidden
+            ? [new("restore", $"profile-action-restore-{p.Id}", L["ProfileMod.Action.restore"], Disabled: !p.Restorable)]
+            : (ModerationChoice[])[new("keep", $"profile-action-keep-{p.Id}", L["ProfileMod.Action.keep"]),
+                .. (p.About is not null && p.HiddenAt is null ? new ModerationChoice[] { new("hide", $"profile-action-hide-{p.Id}", L["ProfileMod.Action.hide"], Apart: true) } : [])],
+
+        // Design 8.3: an administrator also locks the account behind the profile, last of all.
+        .. (_administrator ? new ModerationChoice[] { new("lock", $"profile-action-lock-{p.Id}", L["ProfileMod.Action.lock"], Apart: true) } : []),
+    ];
 
     private void Open(Guid id, string action)
     {
@@ -116,6 +130,12 @@
         _action = action;
         _statement = "";
         ClearMessages();
+    }
+
+    private void LockedAsync(Guid id)
+    {
+        _done[id] = L["Lock.Done"];
+        _open = null;
     }
 
     private Task ActAsync(Guid id) => RunAsync(async () =>

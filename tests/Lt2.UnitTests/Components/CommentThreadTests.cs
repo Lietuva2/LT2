@@ -33,6 +33,7 @@ public sealed class CommentThreadTests : BunitContext
         Services.AddLt2Validators();
         Services.AddLt2ClientComponents();
         (_comments, _moderation) = CommentFakes.Add(Services);
+        MeFakes.Add(Services);
         var appeals = DispatchProxy.Create<IAppealsApi, ApiFake>();
         ((ApiFake)(object)appeals).On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
         ((ApiFake)(object)appeals).On("GetMyRestrictionAsync", ApiResult<MyRestrictionResponse>.Ok(new MyRestrictionResponse(false, null, null)));

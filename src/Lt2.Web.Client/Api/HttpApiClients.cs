@@ -264,6 +264,15 @@ internal sealed class HttpAdminApi(ApiHttp http) : IAdminApi
 
     public Task<ApiResult> UnlockAccountAsync(Lt2.Api.Contracts.Admin.AccountLockRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Admin.UnlockAccount, request, cancellationToken);
+
+    public Task<ApiResult> LockAuthorAsync(Lt2.Api.Contracts.Admin.AuthorLockRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Admin.LockAuthor, request, cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Admin.LockedAccountResponse>>> GetLockedAccountsAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Admin.LockedAccountResponse>>(HttpMethod.Get, ApiRoutes.Admin.LockedAccounts, null, cancellationToken);
+
+    public Task<ApiResult> UnlockAccountByIdAsync(Guid id, StatementRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Admin.UnlockOf(id), request, cancellationToken);
 }
 
 

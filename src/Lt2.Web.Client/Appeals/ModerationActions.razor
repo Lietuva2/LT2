@@ -1,3 +1,4 @@
+@using Lt2.Api.Contracts.Admin
 @using Lt2.Api.Contracts.Appeals
 @inherits InteractiveBase<AppealUi>
 @inject IModerationApi Moderation
@@ -6,6 +7,7 @@
 @inject IAuthApi Auth
 @inject IMeApi MeApi
 @inject Passkeys PasskeyBrowser
+@inject MyAccountState Account
 
 @* The actions on one item (design 8.3, 8.12.3). Owner, 2026-11-17: one filled button for what the item needs most in its
    state ("Palikti" while a report or a date flag is open, "Patvirtinti aprašymą" while an AI summary nobody has read is
@@ -32,6 +34,10 @@
         else if (_open == "restrict" && Id is { } reasonId)
         {
             <RestrictAuthor Id="reasonId" IdPrefix="@IdPrefix" OnCancel="Close" OnDone="RestrictedAsync" />
+        }
+        else if (_open == "lock" && Id is { } lockId)
+        {
+            <LockAuthor Kind="@LockTargets.Reason" Id="lockId" IdPrefix="@IdPrefix" OnCancel="Close" OnDone="LockedAsync" />
         }
         else
         {
@@ -186,6 +192,7 @@
 @code {
     private string? _open;
     private string? _done;
+    private bool _administrator;
     private bool _finished;
     private bool? _held;
     private string _statement = "";
@@ -304,7 +311,13 @@
 
     /// <summary>The offered actions as the menu shows them: a bill's under the headings of their kind, hiding set apart.</summary>
     private IReadOnlyList<ModerationChoice> Choices =>
-        [.. Offered.Select(a => new ModerationChoice(a, $"action-{a}-{Key}", L[ActionLabel(a)], GroupOf(a), Apart: a == "hide"))];
+        [.. Offered.Concat(OffersLock ? ["lock"] : []).Select(a => new ModerationChoice(a, $"action-{a}-{Key}", L[ActionLabel(a)], GroupOf(a), Apart: a is "hide" or "lock"))];
+
+    /// <summary>
+    /// Design 8.3: an administrator also locks the author's account, wherever the author can be restricted from writing, last of all
+    /// after hiding (the heaviest action, set apart with it). A moderator who is not an administrator is never offered it.
+    /// </summary>
+    private bool OffersLock => _administrator && Offered.Contains("restrict");
 
     private string? GroupOf(string action) => Kind != "record" ? null : action switch
     {
@@ -377,6 +390,8 @@
         }
     });
 
+    protected override async Task OnInitializedAsync() => _administrator = await Account.IsAdministratorAsync(RendererInfo.IsInteractive);
+
     private void Close() => _open = null;
 
     private async Task RestrictedAsync()
@@ -384,6 +399,12 @@
         _open = null;
         _done = L["Restrict.Done"];
         await OnRestricted.InvokeAsync();
+    }
+
+    private void LockedAsync()
+    {
+        _open = null;
+        _done = L["Lock.Done"];
     }
 
     private Task DraftAsync() => RunAsync(async () =>

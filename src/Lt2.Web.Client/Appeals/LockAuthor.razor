@@ -1,0 +1,115 @@
+@using Lt2.Api.Contracts.Admin
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Auth
+@using Lt2.Api.Contracts.Me
+@inherits InteractiveBase<AppealUi>
+@inject IAdminApi Admin
+@inject IMeApi Me
+@inject IAuthApi Auth
+@inject Passkeys PasskeyBrowser
+@inject FluentValidation.IValidator<AuthorLockRequest> Validator
+
+@* Design 8.3: an administrator locks the account of whoever wrote an item, chosen among the item's actions ("Užrakinti autoriaus
+   paskyrą"). The server finds the person from the item (kind and id): the address is never here, and nobody is named. One required
+   statement, which the person gets by email and the audit log keeps. The staff passkey is asked for again on the same press when
+   the server says so (design 6.2's ten-minute rule), then the same request goes once more, the statement kept. "Atšaukti" is there
+   from the start. *@
+<form class="sheet sheet--quiet stack stack--tight" @onsubmit="LockAsync" novalidate aria-labelledby="lock-title-@Key" id="lock-@Key">
+    <ActionHeading Id="@($"lock-title-{Key}")">@L["Lock.Action"]</ActionHeading>
+    <p class="small" id="lock-sentence-@Key">@L["Acc.Lock.Sentence"]</p>
+    <div class="field @ErrorClass("statement")">
+        <label for="lock-statement-@Key">@L["Acc.Lock.Statement"]</label>
+        <textarea class="textarea" id="lock-statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                  aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"lock-statement-{Key}", $"lock-statement-hint-{Key}")"></textarea>
+        <p class="field__hint" id="lock-statement-hint-@Key">@L["Acc.Lock.StatementHint"]</p>
+        <FieldError Errors="Errors" Field="statement" For="@($"lock-statement-{Key}")" />
+    </div>
+    <div class="row">
+        <button type="submit" class="btn" id="lock-submit-@Key" disabled="@Locked">@L["Lock.Action"]</button>
+        <button type="button" class="btn btn--plain" id="lock-cancel-@Key" disabled="@Locked" @onclick="CancelAsync">@L["Cancel"]</button>
+    </div>
+    <Messages Message="@Message" Info="@Info" />
+</form>
+
+@code {
+    /// <summary>The server's answer when the staff passkey must be confirmed again (design 6.2).</summary>
+    private const string ConfirmationRequired = "passkey.confirmation-required";
+
+    private string _statement = "";
+
+    /// <summary>What the item is: <see cref="LockTargets"/> (<c>reason</c>, <c>comment</c>, <c>statement</c>, <c>profile</c>).</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = "";
+
+    /// <summary>The item's id (a reported profile's moderation id).</summary>
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    /// <summary>The start of the element ids (the action list's own prefix).</summary>
+    [Parameter] public string IdPrefix { get; set; } = "";
+
+    /// <summary>After the lock: the confirmation is the host's to show.</summary>
+    [Parameter] public EventCallback OnDone { get; set; }
+
+    /// <summary>"Atšaukti": hands control back to the action list.</summary>
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private string Key => IdPrefix + Id.ToString("N");
+
+    private Task CancelAsync() => OnCancel.InvokeAsync();
+
+    private Task LockAsync() => RunAsync(async () =>
+    {
+        var request = new AuthorLockRequest { TargetKind = Kind, TargetId = Id, Statement = _statement.Trim() };
+        if (!Valid(await Validator.ValidateAsync(request)))
+        {
+            return;
+        }
+
+        var sent = await Admin.LockAuthorAsync(request);
+        if (sent.Problem?.Code == ConfirmationRequired)
+        {
+            // Design 6.2: the staff passkey once more, then the same lock again; the statement stays if it is not given.
+            if (!await ConfirmPasskeyAsync())
+            {
+                return;
+            }
+
+            sent = await Admin.LockAuthorAsync(request);
+        }
+
+        if (!Succeeded(sent, "statement"))
+        {
+            return;
+        }
+
+        _statement = "";
+        await OnDone.InvokeAsync();
+    });
+
+    /// <summary>
+    /// The staff passkey once more, in this session: the browser's passkey prompt, then the server's check. False, with the
+    /// message set, when the browser cannot, the administrator cancels or the server refuses.
+    /// </summary>
+    private async Task<bool> ConfirmPasskeyAsync()
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Acc.Passkey.Unsupported"];
+            return false;
+        }
+
+        var options = await Auth.GetPasskeyRequestOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return false;
+        }
+
+        var credential = await PasskeyBrowser.GetAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Acc.Passkey.Cancelled"];
+            return false;
+        }
+
+        return Succeeded(await Me.ConfirmPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }));
+    }
+}

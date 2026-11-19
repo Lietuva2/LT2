@@ -64,6 +64,12 @@ code review.
   answers 202 and sends nothing (`SignInCodeIssuer`), a typed code is `auth.code-invalid`, a passkey `passkey.invalid`; the public profile
   is 410 as if switched off; follow emails are skipped (`ParticipantFacts.IsLocked`). A staff account holding an active role and the
   administrator's own account are never locked. The audit entry and the notice email hold the statement and no address.
+  The lock is also reached from an item its person wrote (`POST /admin/accounts/lock-author`, `{targetKind, targetId, statement}`:
+  argument, comment, organisation's statement, reported profile): the owning module resolves the author (`IAuthorLookup`, Appeals; a
+  profile's moderation id is the account id the moderators' list already carries) and only the id goes to Identity
+  (`LockAccountByIdAsync`), so no address is typed or sent. `GET /admin/accounts/locked` and `POST /admin/accounts/{id}/unlock` serve
+  the list (id, name, time, statement from `identity.profile.locked_statement`; never an address). All of it is `Policies.Administrator`
+  with the fresh confirmation; a moderator gets 403 and the menus do not offer it (`MyAccountState.IsAdministratorAsync`, a convenience only).
 - **Changing the email address (design 6.2).** Only a passkey session or a code to the address in use starts it (a staff
   account: its staff passkey, freshly confirmed; the MP's account: a passkey session; `EmailChangeRules.Proof`); the answer to an
   address is the same whether an account has it (that account is told instead, no code); the code to the new address follows

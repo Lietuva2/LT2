@@ -1,6 +1,8 @@
+@using Lt2.Api.Contracts.Admin
 @using Lt2.Api.Contracts.Organisations
 @inherits InteractiveBase<AppealUi>
 @inject IOrganisationModerationApi Moderation
+@inject MyAccountState Account
 
 @* The actions on an organisation or a statement (design 8.14.14), as on the queue's screen (8.3): the shared
    ModerationMenu (owner, 2026-11-17), choosing one opens only its own field with one sentence on what it does, only the actions that apply to the item's state
@@ -16,6 +18,10 @@
         else if (_open == "restrict")
         {
             <RestrictAuthor Id="Id" Statement="true" IdPrefix="org-" OnCancel="() => _open = null" OnDone="RestrictedAsync" />
+        }
+        else if (_open == "lock")
+        {
+            <LockAuthor Kind="@LockTargets.Statement" Id="Id" IdPrefix="org-" OnCancel="() => _open = null" OnDone="LockedAsync" />
         }
         else
         {
@@ -46,6 +52,7 @@
     private string? _open;
     private string? _done;
     private bool _finished;
+    private bool _administrator;
     private string _statement = "";
 
     [Parameter, EditorRequired] public Guid Id { get; set; }
@@ -85,8 +92,10 @@
     /// </summary>
     private string? Primary => Offered.FirstOrDefault() is { } first && first is "keep" or "publish" or "seen" or "leave" ? first : null;
 
+    /// <summary>Design 8.3: on a statement an administrator also locks the writer's account, last after hiding, where the writer can be restricted.</summary>
     private IReadOnlyList<ModerationChoice> Choices =>
-        [.. Offered.Select(a => new ModerationChoice(a, $"org-action-{a}-{Id}", L["OrgMod.Action." + a], Apart: a is "hide" or "block"))];
+        [.. Offered.Concat(_administrator && Kind == "statement" && Offered.Contains("restrict") ? ["lock"] : [])
+            .Select(a => new ModerationChoice(a, $"org-action-{a}-{Id}", L["OrgMod.Action." + a], Apart: a is "hide" or "block" or "lock"))];
 
     private static bool Optional(string action) => action is "keep" or "publish" or "seen" or "leave";
 
@@ -99,6 +108,14 @@
         {
             _done = null;
         }
+    }
+
+    protected override async Task OnInitializedAsync() => _administrator = await Account.IsAdministratorAsync(RendererInfo.IsInteractive);
+
+    private void LockedAsync()
+    {
+        _open = null;
+        _done = L["Lock.Done"];
     }
 
     private async Task RestrictedAsync()

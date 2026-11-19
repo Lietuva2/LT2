@@ -34,7 +34,7 @@ public sealed class ModerationMenuTests : BunitContext
         Services.AddSingleton(moderation);
         Services.AddSingleton(DispatchProxy.Create<ICommentModerationApi, ApiFake>());
         Services.AddSingleton(DispatchProxy.Create<Lt2.Api.Contracts.Auth.IAuthApi, ApiFake>());
-        Services.AddSingleton(DispatchProxy.Create<Lt2.Api.Contracts.Me.IMeApi, ApiFake>());
+        MeFakes.Add(Services);
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
     }

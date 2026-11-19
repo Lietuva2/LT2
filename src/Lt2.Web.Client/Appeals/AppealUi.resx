@@ -1101,7 +1101,8 @@
   <data name="Acc.Title" xml:space="preserve"><value>Paskyros</value></data>
   <data name="Acc.Lead" xml:space="preserve"><value>Čia administratorius užrakina paskyrą, kai kitaip piktnaudžiavimo sustabdyti nepavyksta, ir ją atrakina.</value></data>
   <data name="Acc.Refused" xml:space="preserve"><value>Šį puslapį gali matyti tik administratorius, prisijungęs darbuotojo prieigos raktu, kai vaidmuo aktyvintas.</value></data>
-  <data name="Acc.Lock.Title" xml:space="preserve"><value>Paskyros užrakinimas</value></data>
+  <data name="Acc.Lock.Title" xml:space="preserve"><value>Užrakinimas pagal el. pašto adresą</value></data>
+  <data name="Acc.Lock.Lead" xml:space="preserve"><value>Jei paskyros savininkas parašė komandai iš savo adreso.</value></data>
   <data name="Acc.Lock.Sentence" xml:space="preserve"><value>Užrakinta paskyra negali prisijungti: jos sesijos baigiamos, viešas profilis nerodomas, sekimo laiškai nesiunčiami. Parašyti tekstai lieka, jų slėpimas yra moderatorių veiksmas. Žmogus gauna laišką su jūsų paaiškinimu. Paskyros su aktyviu darbuotojo vaidmeniu užrakinti negalima: pirma ją reikia iš naujo nustatyti.</value></data>
   <data name="Acc.Lock.Address" xml:space="preserve"><value>Paskyros el. pašto adresas</value></data>
   <data name="Acc.Lock.AddressHint" xml:space="preserve"><value>Adresas niekur neįrašomas, tik naudojamas paskyrai surasti.</value></data>
@@ -1121,4 +1122,16 @@
   <data name="Acc.Mps.Sentence" xml:space="preserve"><value>Ryšį baigus, paskyra nebetvarko profilio, o biuro narių prieiga baigiasi kartu. Paskelbti atsakymai lieka. Paskyros savininkas gauna laišką su jūsų paaiškinimu.</value></data>
   <data name="Acc.Mps.Statement" xml:space="preserve"><value>Paaiškinimas (privalomas)</value></data>
   <data name="Acc.Mps.Ended" xml:space="preserve"><value>Ryšys baigtas. Seimo narys: {0}.</value></data>
+  <data name="Lock.Action" xml:space="preserve"><value>Užrakinti autoriaus paskyrą</value></data>
+  <data name="Lock.Done" xml:space="preserve"><value>Paskyra užrakinta; žmogui išsiųstas laiškas.</value></data>
+  <data name="Mod.Action.lock" xml:space="preserve"><value>Užrakinti autoriaus paskyrą</value></data>
+  <data name="Comments.Mod.Action.lock" xml:space="preserve"><value>Užrakinti autoriaus paskyrą</value></data>
+  <data name="OrgMod.Action.lock" xml:space="preserve"><value>Užrakinti autoriaus paskyrą</value></data>
+  <data name="ProfileMod.Action.lock" xml:space="preserve"><value>Užrakinti autoriaus paskyrą</value></data>
+  <data name="Acc.Locked.Title" xml:space="preserve"><value>Užrakintos paskyros</value></data>
+  <data name="Acc.Locked.Lead" xml:space="preserve"><value>Paskyros, kurios negali prisijungti. Užrakinti galima iš moderavimo ekranų: prie argumento, komentaro, pozicijos ar „Apie mane“ pasirinkus „Užrakinti autoriaus paskyrą“.</value></data>
+  <data name="Acc.Locked.None" xml:space="preserve"><value>Nė viena paskyra neužrakinta.</value></data>
+  <data name="Acc.Locked.Since" xml:space="preserve"><value>Užrakinta {0}</value></data>
+  <data name="Acc.Locked.Unlock" xml:space="preserve"><value>Atrakinti</value></data>
+  <data name="Acc.Locked.Sentence" xml:space="preserve"><value>Atrakinta paskyra vėl gali prisijungti, viešas profilis ir sekimo laiškai grįžta. Žmogus gauna laišką su jūsų paaiškinimu.</value></data>
 </root>

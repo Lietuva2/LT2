@@ -89,6 +89,7 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             // Design 8.25: "Apie mane" is any length (Texts:MaxLength is checked where it is written); one id per public profile.
             b.Property(x => x.About).HasColumnType("text");
             b.Property(x => x.AboutHiddenStatement).HasMaxLength(2000);
+        b.Property(x => x.LockedStatement).HasMaxLength(2000);
             b.Property(x => x.PublicProfileId).HasMaxLength(10);
             b.HasIndex(x => x.PublicProfileId).IsUnique().HasFilter("public_profile_id IS NOT NULL");
         });

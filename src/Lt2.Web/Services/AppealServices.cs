@@ -375,7 +375,7 @@ internal static class ServerStaff
 /// <summary>Server-side <see cref="IAdminApi"/>, for the prerendered settings page.</summary>
 internal sealed class ServerAdminApi(
     ISettingsAdministration settings, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IOrganisations organisations,
-    IIdentityAdministration administration, IConfiguration configuration, IPoliticians politicians, IMpDirectory mps) : IAdminApi
+    IIdentityAdministration administration, IConfiguration configuration, IPoliticians politicians, IMpDirectory mps, Lt2.Appeals.IAuthorLookup authors) : IAdminApi
 {
     public async Task<ApiResult<IReadOnlyList<SettingResponse>>> GetSettingsAsync(CancellationToken cancellationToken = default) =>
         await IsAdministratorAsync()
@@ -445,6 +445,28 @@ internal sealed class ServerAdminApi(
 
     private async Task<ApiResult> SetLockAsync(Lt2.Api.Contracts.Admin.AccountLockRequest request, bool locked, CancellationToken cancellationToken)
     {
+        var contact = AppealMapping.Contact(configuration);
+        return await ActAsLockAdministratorAsync(administrator => locked
+            ? administration.LockAccountAsync(request.Email, request.Statement, administrator, contact, cancellationToken)
+            : administration.UnlockAccountAsync(request.Email, request.Statement, administrator, contact, cancellationToken), cancellationToken);
+    }
+
+    public Task<ApiResult> LockAuthorAsync(Lt2.Api.Contracts.Admin.AuthorLockRequest request, CancellationToken cancellationToken = default) =>
+        ActAsLockAdministratorAsync(
+            administrator => Endpoints.Admin.AuthorLock.LockAsync(request, administrator, AppealMapping.Contact(configuration), authors, administration, cancellationToken), cancellationToken);
+
+    public async Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Admin.LockedAccountResponse>>> GetLockedAccountsAsync(CancellationToken cancellationToken = default) =>
+        await IsAdministratorAsync()
+            ? ApiResult<IReadOnlyList<Lt2.Api.Contracts.Admin.LockedAccountResponse>>.Ok(await Endpoints.Admin.AuthorLock.ListAsync(administration, cancellationToken))
+            : ApiResult<IReadOnlyList<Lt2.Api.Contracts.Admin.LockedAccountResponse>>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public Task<ApiResult> UnlockAccountByIdAsync(Guid id, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsLockAdministratorAsync(
+            administrator => administration.UnlockAccountByIdAsync(id, request.Statement, administrator, AppealMapping.Contact(configuration), cancellationToken), cancellationToken);
+
+    /// <summary>An administrator only, with a fresh passkey confirmation (design 8.3, 6.2), then the action as them.</summary>
+    private async Task<ApiResult> ActAsLockAdministratorAsync(Func<StaffActor, Task<Result<Unit>>> action, CancellationToken cancellationToken)
+    {
         if (!await IsAdministratorAsync())
         {
             return ApiResult.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
@@ -456,11 +478,7 @@ internal sealed class ServerAdminApi(
             return ApiResult.Fail(errors.ToProblem(missing));
         }
 
-        var administrator = new StaffActor(http.User.UserId()!.Value, Roles.Administrator, ipHasher.Hash(http));
-        var contact = AppealMapping.Contact(configuration);
-        return errors.ToApiResult(locked
-            ? await administration.LockAccountAsync(request.Email, request.Statement, administrator, contact, cancellationToken)
-            : await administration.UnlockAccountAsync(request.Email, request.Statement, administrator, contact, cancellationToken));
+        return errors.ToApiResult(await action(new StaffActor(http.User.UserId()!.Value, Roles.Administrator, ipHasher.Hash(http))));
     }
 
     private Task<bool> IsAdministratorAsync() => ServerStaff.IsAllowedAsync(accessor, Policies.Administrator);

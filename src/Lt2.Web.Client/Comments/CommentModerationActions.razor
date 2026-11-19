@@ -1,7 +1,9 @@
+@using Lt2.Api.Contracts.Admin
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Api.Contracts.Comments
 @inherits InteractiveBase<AppealUi>
 @inject ICommentModerationApi Moderation
+@inject MyAccountState Account
 
 @* A moderator's actions on one comment (design 8.23.8), in the shared ModerationMenu (design 8.3, owner 2026-11-17), each
    opening its own form with one sentence on what it does: on a shown
@@ -18,6 +20,10 @@
         else if (_open == "restrict")
         {
             <RestrictAuthor Id="Id" Comment="true" IdPrefix="@($"{IdPrefix}c-")" OnCancel="() => _open = null" OnDone="RestrictedAsync" />
+        }
+        else if (_open == "lock")
+        {
+            <LockAuthor Kind="@LockTargets.Comment" Id="Id" IdPrefix="@($"{IdPrefix}c-")" OnCancel="() => _open = null" OnDone="LockedAsync" />
         }
         else
         {
@@ -48,6 +54,7 @@
     private string? _open;
     private string? _done;
     private bool _finished;
+    private bool _administrator;
     private string _statement = "";
 
     [Parameter, EditorRequired] public Guid Id { get; set; }
@@ -73,8 +80,9 @@
     /// <summary>The filled button: "Atkurti" on a hidden comment, "Palikti" on a reported one; otherwise none.</summary>
     private string? Primary => Offered[0] is "keep" or "restore" ? Offered[0] : null;
 
+    /// <summary>Design 8.3: an administrator also locks the writer's account, last after hiding; offered where the writer can be restricted.</summary>
     private IReadOnlyList<ModerationChoice> Choices =>
-        [.. Offered.Select(a => new ModerationChoice(a, $"comment-action-{a}-{Key}", L["Comments.Mod.Action." + a], Apart: a == "hide"))];
+        [.. Offered.Concat(_administrator ? ["lock"] : []).Select(a => new ModerationChoice(a, $"comment-action-{a}-{Key}", L["Comments.Mod.Action." + a], Apart: a is "hide" or "lock"))];
 
     private void Open(string action)
     {
@@ -82,6 +90,14 @@
         _statement = "";
         _done = null;
         Errors = NoErrors();
+    }
+
+    protected override async Task OnInitializedAsync() => _administrator = await Account.IsAdministratorAsync(RendererInfo.IsInteractive);
+
+    private void LockedAsync()
+    {
+        _open = null;
+        _done = L["Lock.Done"];
     }
 
     private async Task RestrictedAsync()

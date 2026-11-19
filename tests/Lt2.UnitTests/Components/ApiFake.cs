@@ -75,6 +75,9 @@ public static class MeFakes
         RegistrationComplete = true,
     };
 
+    /// <summary>A staff account whose <paramref name="role"/> is active in this session (design 6.2).</summary>
+    public static Lt2.Api.Contracts.Me.MeResponse Staff(string role) => Member with { StaffAccount = true, ActiveStaffRoles = [role] };
+
     /// <summary>The MP's own linked account (design 8.5.4) in a passkey session.</summary>
     public static readonly Lt2.Api.Contracts.Me.MeResponse MpAccount = Member with
     {

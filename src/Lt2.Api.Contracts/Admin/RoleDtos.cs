@@ -50,6 +50,47 @@ public sealed class AccountLockRequestValidator : AbstractValidator<AccountLockR
     }
 }
 
+/// <summary>The kinds of item an administrator locks the author of (design 8.3): the same places the writing restriction is reached from, and a public profile.</summary>
+public static class LockTargets
+{
+    public const string Reason = "reason";
+    public const string Comment = "comment";
+    public const string Statement = "statement";
+    public const string Profile = "profile";
+
+    public static readonly IReadOnlyList<string> All = [Reason, Comment, Statement, Profile];
+}
+
+/// <summary>
+/// Locks the account of the person who wrote an item (design 8.3): <see cref="TargetKind"/> and <see cref="TargetId"/> name the
+/// item (an argument, a comment, an organisation's statement, or a reported profile by its moderation id); the server finds the
+/// person, whose address nobody sees. The statement is required, audited and emailed to the person.
+/// </summary>
+public sealed record AuthorLockRequest
+{
+    public string TargetKind { get; init; } = "";
+
+    public Guid TargetId { get; init; }
+
+    public string Statement { get; init; } = "";
+}
+
+public sealed class AuthorLockRequestValidator : AbstractValidator<AuthorLockRequest>
+{
+    public AuthorLockRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.TargetKind).Must(k => LockTargets.All.Contains(k)).WithMessage(l["Lock.Target"]);
+        RuleFor(x => x.TargetId).NotEmpty().WithMessage(l["Lock.Target"]);
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+    }
+}
+
+/// <summary>
+/// A locked account for the administrators' list (design 8.3): its id (for unlocking), its display name (null: none), when it was
+/// locked and the statement given. Never the address.
+/// </summary>
+public sealed record LockedAccountResponse(Guid Id, string? DisplayName, DateTimeOffset LockedAt, string? Statement);
+
 public sealed class GrantRoleRequestValidator : AbstractValidator<GrantRoleRequest>
 {
     public GrantRoleRequestValidator(IStringLocalizer<ValidationMessages> l)

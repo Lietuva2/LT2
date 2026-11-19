@@ -32,7 +32,9 @@ Read before changing a page, a component or an island. The rules behind it are d
   the same popover as "⋯", never disabled; items disabled until the island runs; `data-action` on every button for tests),
   and the chosen action's form opens in place of the row with its title as `<ActionHeading>`, which takes the focus.
   `ModerationActions`, `CommentModerationActions`, `OrgModerationActions`, `ResponseModerationView` and
-  `ProfileModerationView` use it; E2E tests choose an action with `E2ESteps.ChooseAsync`. Icons are `<Icon>` (inline SVG, currentColor). A link to copy is
+  `ProfileModerationView` use it; an administrator's menu there also holds "Užrakinti autoriaus paskyrą" last (design 8.3: where the
+  author can be restricted, and on a reported profile; `<LockAuthor>` is its form, with the passkey asked again on the same press; the host asks
+  `MyAccountState.IsAdministratorAsync` once per page, never while prerendering); E2E tests choose an action with `E2ESteps.ChooseAsync`. Icons are `<Icon>` (inline SVG, currentColor). A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side or a first "Man svarbu" is `<PositionConsentForm>` (`ForMark`; `ForAccount` on the account page, for a consent to an older text); the bill page's islands
   share the caller's answers through `MyBillState`, the timeline's (the front page's and `/darbotvarke`'s) through `MyAgendaState` (its `Changed` event tells
