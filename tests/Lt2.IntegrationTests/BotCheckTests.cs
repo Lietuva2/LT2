@@ -157,6 +157,10 @@ public sealed class BotCheckTests(DatabaseFixture database) : ApiTest(database)
         using var browser = NewBrowser();
         var solution = await browser.SolveAsync();
 
+        // The antiforgery cookie first: six first requests at once would each set their own and some tokens would not match
+        // it, refusing a request before the bot check is reached (a race of the test, not of the check).
+        await browser.AntiforgeryTokenAsync();
+
         var answers = await Task.WhenAll(Enumerable.Range(0, 6).Select(async _ =>
         {
             using var response = await browser.PostAsync(ApiRoutes.Auth.Code, new RequestCodeRequest { Email = TestData.Email(), BotCheck = solution });
