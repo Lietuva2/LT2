@@ -59,7 +59,7 @@ public interface IParliamentDataNotice
 public sealed record AgendaOutcome(string Status, int Rows, int Changes, string? Problem);
 
 /// <summary>
-/// The agenda watcher (design 8.4, 8.9): reads the upcoming plenary agenda from lrs.lt (or the local stand-in), keeps
+/// The agenda watcher (design 8.4, 6.8): reads the upcoming plenary agenda from lrs.lt (or the local stand-in), keeps
 /// the page raw, and updates the planned dates. A page it cannot read changes nothing and is logged as an error.
 /// </summary>
 public interface IAgendaWatch

@@ -1,49 +1,50 @@
-# 7. Stage 1: MP profiles
+# 7. MP profiles
 
 ## 7.1 Sources
 
 Everything below comes from the Seimas open data service (`https://apps.lrs.lt/sip/`, CC BY 4.0, attribution on every
-page). Endpoints marked ✔ were checked in September 2026 (`design-notes.md`); the service did not answer from this
-machine on 2026-11-12, so nothing could be re-checked today, and the rest must be confirmed against live responses as the
-first task of stage 1.
+page). The import reads one chain of services (`SeimasServices`), one query parameter each:
 
-| Data | Endpoint | Status |
-|---|---|---|
-| Terms | `p2b.ad_seimo_kadencijos` | ✔ |
-| MPs: person id, names, mandate dates, nominating party, how elected, number of terms, memberships with dates (`Pareigos`), contacts (`Kontaktai`, including the `@lrs.lt` address) | `p2b.ad_seimo_nariai?kadencijos_id=` | ✔ |
-| Sessions, sittings | `p2b.ad_seimo_sesijos?kadencijos_id=`, `p2b.ad_seimo_posedziai?sesijos_id=` | ✔ |
-| Agenda items with bill number, stage, e-seimas link | `p2b.ad_sp_darbotvarke?posedzio_id=` | ✔ |
-| Votes of an agenda item | `p2b.ad_sp_klausimo_svarstymo_eiga` | ✔ (parameter name to confirm) |
-| Each MP's vote with faction | `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=` | ✔ |
-| Lists of factions, committees, commissions, groups | separate services listed at `portal.show?p_r=35391` | To confirm; memberships already come with the MP record. |
-| Gender, birth date, biography link, photo | MP record and the MP's page on lrs.lt | To confirm field by field. |
+| Data | Service |
+|---|---|
+| Terms | `p2b.ad_seimo_kadencijos` |
+| MPs of the term: person id (`asmens_id`), names, gender, mandate dates, nominating party, how elected, constituency, number of terms, memberships with roles and dates (`Pareigos`), contacts (`Kontaktai`, including the `@lrs.lt` address) | `p2b.ad_seimo_nariai?kadencijos_id=` |
+| Sessions, sittings | `p2b.ad_seimo_sesijos?kadencijos_id=`, `p2b.ad_seimo_posedziai?sesijos_id=` |
+| Agenda items with bill number, stage, e-seimas link | `p2b.ad_sp_darbotvarke?posedzio_id=` |
+| Votes of a sitting's agenda items, with wording and type | `p2b.ad_sp_klausimo_svarstymo_eiga?posedzio_id=` (the parameter is the setting `Seimas:ProceedingsParameter`) |
+| Totals, the official note, and each MP's vote with faction | `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=` |
 
-Other official sources, used as **links first** and imported only where a stage needs them:
+The term imported is `Seimas:TermId` (10, 2024–2028). Factions, committees, commissions and groups come from the MPs'
+memberships; a body's kind is read from its name ("…frakcija", "…komitetas", "…komisija", "…grupė"), so the mixed
+group of MPs is a group, not a faction. Every element and attribute the parsers read is a line of the register
+`tests/Lt2.Parliament.ImportTests/Seimas/ASSUMPTIONS.md`, marked seen in a live response or assumed; the live contract
+suite (`LT2_SEIMAS_LIVE=1`) checks every line against the real service.
 
-| Source | What it adds | Stage 1 use |
-|---|---|---|
-| MP's page on lrs.lt | Photo, biography, assistants, office contacts | Link; photo shown only if the reuse terms allow it (to check), otherwise initials as in the mockups. |
-| e-seimas bill pages | Registration date, proposer, status, lead committee, documents | Parsed per bill (no API). Bills an MP proposed: later. |
-| Central Electoral Commission (VRK) | Election results, constituency, list position, candidate questionnaire | Link to the candidate page; data needed for stage 3's election mode. |
-| Chief Official Ethics Commission (VTEK) | Declarations of private interests | Link only. |
+The MP's photo, birth date and biography are not imported: a profile shows the MP's initials. The bill's e-seimas link
+comes from the agenda item; nothing is read from e-seimas pages, the Central Electoral Commission (VRK) or the Chief
+Official Ethics Commission (VTEK).
 
 Deliberately not shown: parliamentary expenses and anything else that grades the MP's work, and no ranking or comparison
-of MPs by any number (one exception, owner 2026-11-16: a member's own "Kas Seime balsuoja taip, kaip prašote jūs", seen by that member
-only, 8.26.4). The concept's tone is connection and explanation, and the profile shows what the MP did. The one
-number on it that is not about the MP's work is how many members follow the MP (8.11.2, owner 2026-11-16; designed, not
-built): it says how many chose to hear about the MP, not what the MP did or how well, and, as the designer proposes, it
+of MPs by any number, with one exception: a member's own "Kas Seime balsuoja taip, kaip prašote jūs", seen by that
+member only (8.26.4). The profile shows what the MP did. The one number on it that is not about the MP's work is how
+many members follow the MP (8.11.2): it says how many chose to hear about the MP, not what the MP did or how well; it
 stands only on the profile, orders no list and is never added up per faction or party.
 
 ## 7.2 Import
 
-- **Backfill** once for term 10: terms → sessions → sittings → agenda items → votes → ballots. A few thousand requests,
-  throttled to about one per second, resumable.
-- **Recurring:** MPs and memberships daily; sittings, agenda items and votes every 15 minutes on sitting days and hourly
-  otherwise; statistics recomputed after each run that changed anything. The scheduled job (`parliament-import`) is asked
-  every 15 minutes and imports only when due; a run that imports nothing says why, never silently: a log line at
-  information level ("Parliament import not due (last start yyyy-MM-dd HH:mm); skipped") and the parameter "Skipped" on
-  the job's page of the jobs dashboard (6.3), also when an administrator triggered it by hand. [owner 2026-11-18]
-- **By hand** [owner 2026-11-18]: four jobs on the jobs dashboard that never run on a schedule, only by "Trigger now":
+- **One walk** (`ParliamentImporter`): terms → MPs → sessions → sittings → agenda → proceedings → vote results, at most
+  one request a second, each with retries and exponential back-off. Each request has its own freshness rule: terms, MPs
+  and sessions daily; the sittings of a session not ended, or ended within `Seimas:RefetchDays` (14), on every run; the
+  agenda, proceedings and vote results of sittings that started within those days on every run, older ones once; a vote
+  result still missing is asked for again daily while the vote is under 60 days old, weekly after that. The first run on
+  an empty database reads the whole term; a run that broke off is resumed by the next one. Statistics are recomputed
+  after each run that changed anything.
+- **Recurring:** the scheduled job (`parliament-import`) is asked every 15 minutes and runs when due: every 15 minutes on
+  a day with a sitting, hourly otherwise, and every 15 minutes until a first run succeeds. A run that imports nothing
+  says why, never silently: a log line at information level ("Parliament import not due (last start yyyy-MM-dd HH:mm);
+  skipped") and the parameter "Skipped" on the job's page of the jobs dashboard (6.3), also when an administrator
+  triggered it by hand.
+- **By hand:** four jobs on the jobs dashboard that never run on a schedule, only by "Trigger now":
   `parliament-members` (the terms, the MP list with memberships and contacts, the sessions), `parliament-sittings` (every
   session's sittings, every sitting's agenda and proceedings, however old), `parliament-votes` (every recorded vote's
   per-MP result, however old) and `parliament-everything` (all three, a full re-read as on an empty database). Each is
@@ -54,36 +55,45 @@ stands only on the profile, orders no list and is never added up per faction or 
   the votes, and `parliament-everything` walks MPs, then sittings, then votes. A manual run that finds another import
   running, or that the service fails, fails the job, listed with its reason; its outcome is the job's parameter "Outcome".
 - Every response is stored in `raw_document` with its hash; parsing is a separate, repeatable step. Upserts are keyed by
-  Seimas identifiers, so re-running any step changes nothing.
+  Seimas identifiers, so re-running any step changes nothing. A ballot is matched to an MP by `asmens_id`, or by name
+  among the term's MPs when the row has none.
 - **Vote classification.** One agenda item can have many votes (amendments, procedure, the stage result). A rule set over
-  the vote wording marks the stage results; anything the rules cannot classify is "other" and shown without a stage. The
-  rules are tested against recorded real items, and a moderator can correct a classification.
-- Data quirks from `design-notes.md` are first-class: consensus votes are stored with `is_consensus` and no ballots; the
-  official "per-MP votes do not match the protocol" note is stored and shown next to the result.
-- Failures retry with backoff, then raise an alert; the pages keep showing the last good data with its import time.
+  the vote wording (`VoteRules.Classify`) marks each vote a stage result, an amendment, a procedural vote or "other";
+  anything the rules cannot classify is "other" and shown without a stage. The rules are tested against recorded real
+  items. **Not built:** a moderator correcting a classification.
+- Data quirks are first-class: consensus votes are stored with `is_consensus` and no ballots; the official "per-MP votes
+  do not match the protocol" note is stored and shown next to the result.
+- A run the service fails is marked failed and logged as an error for the alerting (9.4); the next period retries, and
+  the pages keep showing the last good data with its import time.
 
 ## 7.3 What a profile shows
 
-Matches the "unjoined MP" mockup in chapter 06, minus everything that needs voting or delegation.
+The profile is `/p/{slug}`.
 
-- Name, faction, nominating party, how elected (and constituency), terms served, mandate dates; "former MP" when the
-  mandate has ended.
-- Committees, commissions and groups with role and dates.
-- Official contacts and links to the official pages (Seimas, VRK, VTEK).
+- Name, "Seimo narys" / "Seimo narė", or "Buvęs Seimo narys" / "Buvusi Seimo narė" when the mandate has ended; the
+  current faction, committees and groups as tags; how elected, constituency, nominating party, terms served, mandate
+  dates.
+- Committees, commissions and groups with role, and former ones with their dates.
+- Official contacts (the e-mail address as a link).
 - **Dalyvavimas balsavimuose:** of the recorded votes held during the MP's mandate, the share in which the MP voted for,
-  against or abstained.
+  against or abstained ("balsavo {n} iš {m}").
 - **Balsavo kaip frakcija:** of the votes the MP took part in where the MP's faction had a position (at least two thirds
   of its members who voted chose the same option), the share where the MP chose that option. The number of free votes is
-  shown beside it. Votes the MP missed are not counted here: an absence already shows in the participation figure
-  **[decided 2026-11-12]**. The mixed group of MPs is not a faction and has no position: its members, and MPs outside
-  any faction at the time of a vote, have no figure for those votes **[decided 2026-11-12]**.
-- Recent votes: bill, stage, date, the MP's choice, the faction's split, a link to the vote page.
-- The line "Profilis sudarytas automatiškai iš Seimo atvirųjų duomenų" with the time of the last import.
-- From stage 2: appeals in progress and the MP's responses; how many members follow the MP (8.11.2; built 2026-11-16).
+  shown beside it ("frakcija balsavo laisvai: {n}"). Votes the MP missed are not counted here: an absence already shows
+  in the participation figure. The mixed group of MPs is not a faction and has no position: its members, and MPs outside
+  any faction at the time of a vote, have no figure for those votes; when the MP's faction memberships do not cover the
+  whole mandate, the profile names the periods counted ("Skaičiuojama tik narystės frakcijoje laikotarpiu: …").
+- The ten latest votes: bill, stage, date, the MP's choice, the faction's split, a link to the vote page; "Visi
+  balsavimai" leads to the MP's votes (`/p/{slug}/balsavimai`, 8.18).
+- The source line, as on every page of Seimas data: "Šaltinis: Lietuvos Respublikos Seimo atvirieji duomenys, CC BY 4.0
+  · atnaujinta {time of the last import} · Metodika".
+- The MP's responses (8.5.6), "Profilį tvarko Seimo narys arba jo biuras" when the profile is taken over (8.5.2), and
+  "Sekti" with how many members follow the MP (8.11.2).
 
-Also in stage 1: the list of MPs (search by name, filter by faction and committee), faction and committee pages, a vote
-page with the seat map (the hemicycle prototype, rendered as SVG on the server), a bill page with its stages and votes,
-and a public methodology page that states each formula above in plain language.
+Also: the list of MPs (`/seimo-nariai`: search by name, filter by faction and committee), faction and committee pages
+(`/frakcijos/{slug}`, `/komitetai/{slug}`), a vote page with the seat map rendered as SVG on the server
+(`/seimas/balsavimai/{id}`), a bill page with its stages and votes (`/seimas/{number}`), and a public methodology page
+(`/metodika`) that states each formula above in plain language.
 
 ## 7.4 API (all public, cached, with ETags)
 
@@ -91,10 +101,10 @@ and a public methodology page that states each formula above in plain language.
 GET /api/v1/terms/current
 GET /api/v1/mps?faction=&committee=&q=&cursor=
 GET /api/v1/mps/{slug}
-GET /api/v1/mps/{slug}/votes?cursor=
+GET /api/v1/mps/{slug}/votes?cursor=&limit=   newest first, 50 by default, at most 300
 GET /api/v1/factions            GET /api/v1/factions/{slug}
 GET /api/v1/committees          GET /api/v1/committees/{slug}
-GET /api/v1/bills?status=&q=&cursor=
+GET /api/v1/bills?q=&cursor=                 bills with votes, latest vote first
 GET /api/v1/bills/{number}
 GET /api/v1/votes?q=&kind=&until=&limit=&cursor=   the history of votes, newest first (8.18)
 GET /api/v1/votes/{id}                      totals, wording, notes, faction positions, every ballot
@@ -103,10 +113,6 @@ GET /api/v1/meta/imports                    last successful import per source
 
 ## 7.5 Done when
 
-- Every sitting MP of term 10 has a profile whose facts match lrs.lt on a checked sample of 20.
-- For 30 sampled votes, per-MP ballots sum to the official totals, or the official mismatch note is shown.
-- The two statistics match a hand calculation for five MPs.
-- Pages pass at 1280 px and 390 px, render without JavaScript, and score at least 90 on Lighthouse for performance and
-  accessibility.
-- An import outage of a day leaves the site up and clearly dated.
-
+The parliament pages work at 1280 px and 390 px in both themes without sideways scrolling, and render without
+JavaScript. An import outage leaves the site up and clearly dated (7.2). The two statistics are pure functions with unit
+tests (`MpStatisticsRule`, `FactionRule`).

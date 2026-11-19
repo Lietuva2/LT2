@@ -15,7 +15,7 @@ internal static class NewsRules
 
     /// <summary>
     /// An organisation's statement is the member's own when they wrote it or represent the organisation now (its representatives
-    /// write it together, 8.14.4).
+    /// write it together, 8.14.2).
     /// </summary>
     public static bool OwnStatement(Guid? writtenBy, Guid organisationId, Guid userId, IReadOnlySet<Guid> represented) =>
         writtenBy == userId || represented.Contains(organisationId);

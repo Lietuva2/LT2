@@ -121,7 +121,7 @@ has replaced the markup; it remembers for the page being read only and forgets w
 keeps the reader's place on Back and Forward while enhanced navigation patches the page in, in memory only; owner,
 2026-11-17); the summary
 names what opens ("Kaip tai veikia"; a bare "Plačiau" only when it is the only one on the screen).
-**New screens follow the rule from the start.** `design/text-audit-2026-11-15.md` is the screen-by-screen record.
+**New screens follow the rule from the start** (design 8.15).
 
 **A hint (design 8.15): the short answer without leaving the page, the first place for a term or a number.** A term or a
 number whose answer fits one or two sentences gets `<Hint Id="…" Text="Kas yra riba?" Answer="…" More="/metodika#…" />`

@@ -5,7 +5,7 @@ using Lt2.SeimasStandIn;
 
 namespace Lt2.Parliament.ImportTests.Agenda;
 
-/// <summary>Design 8.4, 8.9: the upcoming agenda from lrs.lt pages (the stand-in's invented page here).</summary>
+/// <summary>Design 8.4: the upcoming agenda from lrs.lt pages (the stand-in's invented page here).</summary>
 public sealed class AgendaParserTests
 {
     private static readonly DateOnly Thursday = new(2026, 11, 12);
@@ -119,7 +119,7 @@ public sealed class AgendaWatcherTests(ImportDatabase database) : IAsyncLifetime
     }
 }
 
-/// <summary>Design 6.8, 8.9: a run that cannot read the page is recorded as failed and changes nothing.</summary>
+/// <summary>Design 6.8, 8.4: a run that cannot read the page is recorded as failed and changes nothing.</summary>
 [Collection(ImportDatabaseGroup.Name)]
 public sealed class AgendaWatcherFailureTests(ImportDatabase database) : IAsyncLifetime
 {

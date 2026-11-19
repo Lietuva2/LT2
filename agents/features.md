@@ -2,20 +2,20 @@
 
 Read the part for the feature you change, after its design file ([design/README.md](../design/README.md) maps section numbers to files). The design is the rule; this file says how the code carries it out (class, route and test names) and records the owner's decisions as built.
 
-**Stages, as the owner ordered them.**
+**What is built.**
 
-| Stage | What |
+| Part | What |
 |---|---|
-| **M0 Foundation** | Solution skeleton, passwordless sign-in, security plumbing, deployment, monitoring. |
-| **M1 MP profiles** | Every MP of the current term imported from Seimas open data: mandate, faction, committees, contacts, voting record, statistics. |
-| **M2a Appeals without sending** | People take a side on a Seimas bill and give reasons; summaries for MPs are generated as previews only. |
-| **M2a+ Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). Its asking for an appeal and appeals opened by moderators were replaced by M2a++. |
-| **M2a++ One object** | Every active bill open at once, one page per bill, no proposals, requests or approval; lists and agenda on participation; moderation after the fact (design 8.12). Then descriptions with their labels and the AI summary job (8.13). |
-| **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2); the supported party on the public page by its own box and consent (8.25.9, owner 2026-11-17). |
-| **Email rhythm** | (Owner, 2026-11-16.) How often a member's emails come, one delivery for every member email kind, the gathered email (design 8.24). |
-| **M2c Comments** | (Owner, 2026-11-16: after M2d.) "Aptarimas" under arguments, statements and responses, "Sutinku", moderation, the argument author's notice in the rhythm; names link to public profiles (design 8.23, 8.25). |
-| **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, review a day ahead (owner, 2026-11-17: no approval needed), the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
-| **Stage 3** | Voting with delegation, AI summaries, analytics. Not designed yet; do not build towards it beyond what the design says. |
+| **Foundation** | Solution skeleton, passwordless sign-in, security plumbing, deployment, monitoring. |
+| **MP profiles** | Every MP of the current term imported from Seimas open data: mandate, faction, committees, contacts, voting record, statistics (design 7). |
+| **Bills and what people ask** | Every active bill open at once, one page per bill, no proposals, requests or approval: people take a side and give arguments; lists and agenda on participation; moderation after the fact (design 8.12). Descriptions with their labels and the AI summary job (8.13). |
+| **Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). |
+| **Profiles** | The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2); the supported party on the public page by its own box and consent (8.25.9). |
+| **Email rhythm** | How often a member's emails come, one delivery for every member email kind, the gathered email (design 8.24). |
+| **Comments** | "Aptarimas" under arguments, statements and responses, "Sutinku", moderation, the argument author's notice in the rhythm; names link to public profiles (design 8.23, 8.25). |
+| **Summaries to MPs** | The MP's link (recognised at once, the take-over, the office) and the response (design 8.5); sending (8.19): `Digest:Sending`, review a day ahead, the real email, preferences without an account, the introduction letter, the suppression list; off by default. The followers' email about MPs' answers and known browsers for sign-in (8.20). |
+
+Voting with delegation is not designed; do not build towards it.
 
 **Emails.**
 - Every email is built by `EmailLayout` (Notifications/Templates) and rendered from its outbox kind by one
@@ -371,7 +371,9 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   description and answer a report with "Palikti" (and hide the whole record, as before); each with a statement, audited,
   the author told. The frozen counts and summaries already made never change. Everything else (threshold, holds,
   urgent summaries, merging, publishing a waiting argument, confirming a description) stays refused; the rules live in
-  `RecordRules.CheckRecordAction` / `CheckReasonAction`, and the bill's moderators' panel and the queue offer exactly them.
+  `RecordRules.CheckRecordAction` / `CheckReasonAction`, and the queue offers exactly them. The bill's page asks
+  whether the caller is a moderator only on an open record (`BillPage.razor`), so a closed record's page shows no
+  moderators' panel and no "Moderuoti": it is moderated from the queue (design 8.3).
 
 **Reasons to come (design 8.11).**
 - The agenda (`/darbotvarke`, where the menu item "Projektai" leads) and the front page's "Artimiausiu metu Seime" come from one public,
@@ -582,7 +584,7 @@ from `--demo-appeal`'s own invented accounts (`DemoClosedBills`, `InventedMember
 (`DemoSides`) gives one named account with the consent in force (a real account consents itself, never by a script)
 random sides on them and adds them to the frozen counts (`InventedRecord.GiveClosedSidesAsync`), the address never logged.
 Integration: `DemoAppealTests`, `DemoSidesTests`.
-**Organisations (design 8.14, stage A of 8.14.14; built 2026-11-14).**
+**Organisations (design 8.14, 8.14.14).**
 - A voice on a bill, not control. A signed-in member registers an organisation (`/organizacijos/nauja`; at most
   `Organisations:PerAccount`, 3, not counting closed ones), shown at once with nobody approving it, and is its first
   representative. Profile `/o/{slug}` (the address never changes), list `/organizacijos`; no menu item.
@@ -606,13 +608,13 @@ Integration: `DemoAppealTests`, `DemoSidesTests`.
 - A statement still waiting when its bill closes (owner, 2026-11-15) can no longer be published (error
   `statement.waiting-bill-closed`); the queue still shows it and offers only "Palikti" (`/moderation/statements/{id}/keep`:
   it stays unpublished, leaves the queue unless reported, representatives are told) and hiding.
-- Stage B (built 2026-11-14): one invitation code per organisation (Identity, kind `organisation`, no account on it; the
+- Bringing members (design 8.14.6): one invitation code per organisation (Identity, kind `organisation`, no account on it; the
   representatives' part of the profile shows its link, a link per bill with a statement and one number, filled in only in
   the browser); a registration with it leaves only the level on the account (the pending account holds no such code: the
   browser sends it again at completion); blocking switches it off, lifting on, closing for good, apart from an
   administrator's switch; `Registration:OrganisationCodeUses`. Following an organisation (`follow` kind `organisation`, a
-  third email switch): one email when a statement first becomes public (`first_public_at`), never its text; no follower
-  count anywhere.
+  third email switch): one email when a statement first becomes public (`first_public_at`), never its text; the number of
+  followers stands on the organisation's own page (`OrganisationPage.razor`, design 8.11.2), nowhere else.
 
 **Summaries to MPs.**
 - Go to every sitting MP with an official address, joined or not. Nobody chooses recipients.
@@ -677,7 +679,8 @@ Integration: `DemoAppealTests`, `DemoSidesTests`.
   routes and pages are limited per address and per token (`RateLimits:MpMail`, `RateLimits:MpMailToken`) and answer the same for
   an unknown and a wrong token. Every change is confirmed to the official address. An extra recipient is confirmed from the
   official address (a page with a button, 24 hours, one use) and each copy has its own "Nebegauti kopijų" page. A linked account
-  changes the same choice under "Seimo narys" on `/paskyra` (`MyMp`, `GET|PUT /me/mp/mail`, passkey session).
+  changes the same choice on "Dalyvavimas", `/paskyra/dalyvavimas` (`MyMp` in `AccountTaking.razor`,
+  `GET|PUT /me/mp/mail`, passkey session).
 - The introduction letter (`/administravimas/pristatymas`; public `/suvestines/pristatymas`): written and signed by a person,
   a test copy to the administrator's own address, sent with a fresh passkey confirmation to MPs who have had none; a changed
   text is a new version. An MP who had none gets it in place of a summary (`introduced`).
@@ -695,7 +698,7 @@ statement and a response, one level, oldest first, public at once, never counted
 a representative under its organisation's own statement writes as the organisation, the MP's account or office under that
 MP's own response as the MP (passkey session, mandate not ended), everyone else as a person; the MP's account comments
 nowhere else. Pre-screening refuses an email address, a phone number or a personal code (`comment.screened`); the phone rule
-(`PreScreening.ContainsPhoneNumber`, every screened text) matches only Lithuanian numbers: `+370`/`00370`, the trunk `0`
+(`RuleBasedPreScreening.ContainsPhoneNumber` in `PreScreening.cs`, every screened text) matches only Lithuanian numbers: `+370`/`00370`, the trunk `0`
 or the old `8`, then eight digits starting 3–9 (owner, 2026-11-17), and (owner, 2026-11-17) a mobile without a prefix, eight
 digits starting with 6 alone or grouped `612 34567`, `6123 4567`, `6 1234 567` (a landline without a prefix stays unflagged),
 never a date, year span, sum, law number or a link's digits; an `https://`
