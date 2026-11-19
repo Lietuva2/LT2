@@ -118,10 +118,6 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("first_summarised_at");
 
-                    b.Property<Guid?>("InitiatorUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("initiator_user_id");
-
                     b.Property<DateTimeOffset?>("LastActivityAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_activity_at");

@@ -85,7 +85,7 @@ public sealed class MyAgendaTests : BunitContext
     private static ApiResult<MyBillsResponse> Answer(bool consent, params MyBillResponse[] rows) => ApiResult<MyBillsResponse>.Ok(new MyBillsResponse(rows, consent));
 
     private static BillRecordResponse Live(string number, int forCount, int againstCount) => new(
-        Guid.CreateVersion7(), new BillRefResponse(number, "Atliekų tvarkymo įstatymo pataisa"), "open", "", null, null,
+        Guid.CreateVersion7(), new BillRefResponse(number, "Atliekų tvarkymo įstatymo pataisa"), "open", "", null,
         new SideCountsResponse(forCount, 0, againstCount, 0), new ThresholdResponse(1000, "default", null, forCount + againstCount, false, false), []);
 
     private string Text(string key) => Services.GetRequiredService<IStringLocalizer<AppealUi>>()[key];

@@ -17,9 +17,6 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var bills = await db.BillRecords.AsNoTracking().ToDictionaryAsync(a => a.Id, a => a.BillNumber, cancellationToken);
 
-        // Only from before 2026-11-14 (design 8.12.4): appeals whose proposal the person wrote.
-        var appeals = await db.BillRecords.AsNoTracking().Where(a => a.InitiatorUserId == userId)
-            .Select(a => new { bill = a.BillNumber, a.Description, a.Status, a.OpenedAt }).ToListAsync(cancellationToken);
         var myPositions = (await db.Positions.AsNoTracking().Where(p => p.UserId == userId).ToListAsync(cancellationToken))
             .Select(p => new { bill = bills.GetValueOrDefault(p.RecordId), side = p.Side, takenAt = p.CreatedAt, changedAt = p.ChangedAt });
         var reasons = (await db.Reasons.AsNoTracking().Where(r => r.AuthorUserId == userId).ToListAsync(cancellationToken))
@@ -73,8 +70,8 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
             .ToListAsync(cancellationToken);
         return new
         {
-            appealsOpened = appeals, positions = myPositions, reasons, endorsements, reports, dateFlags = flags, writingRestrictions = restrictions,
-            aiDraftRequests = drafts, organisationRoles = roles, organisationStatements = written, mpResponses = responses, comments, commentAgreements = agreements,
+            positions = myPositions, reasons, endorsements, reports, dateFlags = flags, writingRestrictions = restrictions, aiDraftRequests = drafts,
+            organisationRoles = roles, organisationStatements = written, mpResponses = responses, comments, commentAgreements = agreements,
         };
     }
 

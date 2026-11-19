@@ -28,7 +28,7 @@ public sealed class SideSwitchTests : BunitContext
         var api = DispatchProxy.Create<IAppealsApi, ApiFake>();
         _api = (ApiFake)(object)api;
         var record = new BillRecordResponse(
-            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "Aprašymas.", "moderator", null,
+            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "Aprašymas.", "moderator",
             new SideCountsResponse(6800, 6000, 4280, 4000), new ThresholdResponse(100, "default", null, 11080, true, false), []);
         _api.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(record));
         _api.On("GetMyRestrictionAsync", ApiResult<MyRestrictionResponse>.Ok(new MyRestrictionResponse(false, null, null)));

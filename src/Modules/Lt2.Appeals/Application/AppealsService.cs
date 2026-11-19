@@ -141,7 +141,7 @@ internal sealed class AppealsService(
 
         var threshold = await reads.ThresholdSettingsAsync(cancellationToken);
         return new BillRecordInfo(
-            null, bill.Value, BillRecordStatuses.Open, "", null, null, null, null, SideCounts.None, AppealReads.Threshold(null, SideCounts.None, threshold), [], null, null, null,
+            null, bill.Value, BillRecordStatuses.Open, "", null, null, null, SideCounts.None, AppealReads.Threshold(null, SideCounts.None, threshold), [], null, null, null,
             (await agenda.ForBillsAsync([bill.Value.Number], cancellationToken)).GetValueOrDefault(bill.Value.Number), null);
     }
 
@@ -976,7 +976,7 @@ internal sealed class AppealsService(
                 .Select(m => m.Statement)
                 .FirstOrDefaultAsync(ct);
             return new BillRecordInfo(
-                record.Id, bill, record.Status, "", null, null, null, null, SideCounts.None, AppealReads.Threshold(null, SideCounts.None, threshold), [], null, null, null, null,
+                record.Id, bill, record.Status, "", null, null, null, SideCounts.None, AppealReads.Threshold(null, SideCounts.None, threshold), [], null, null, null, null,
                 statement ?? "");
         }
 
@@ -987,16 +987,12 @@ internal sealed class AppealsService(
         var forPage = await ReasonPageAsync(db, record.Id, "for", 0, ReasonPages.First, ct);
         var againstPage = await ReasonPageAsync(db, record.Id, "against", 0, ReasonPages.First, ct);
 
-        // An initiator's name only beside a description they wrote, before 2026-11-14 (design 8.12.4).
-        var author = record.DescriptionSource == DescriptionSources.Initiator && record.InitiatorUserId is { } initiator ? initiator : (Guid?)null;
-        var names = author is { } a ? await reads.NamesAsync([a], ct) : new Dictionary<Guid, string?>();
         return new BillRecordInfo(
             record.Id,
             bill,
             record.Status,
             record.Description,
             record.Description.Length == 0 ? null : record.DescriptionSource,
-            author is { } by ? names.GetValueOrDefault(by) : null,
             record.Description.Length == 0 ? null : record.DescriptionUrl,
             record.Description.Length == 0 ? null : record.DescriptionAt,
             counts,

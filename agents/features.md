@@ -199,8 +199,9 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   notice `#mp-offer-notice` under the header of every page but the take-over page and "Dalyvavimas" (`MainLayout`, hidden markup
   the same for every member, shown by `js/lt2-account.js` from one `GET /me` per page load), in the browser only; the page the
   server renders holds nothing of it (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
-- `Registration:OfficialAddressesWithoutInvitation` (off by default, the designer's proposal awaiting the owner): both
-  invitation gates ask `OfficialAddressGate`. The local `.env` switches it on through the migrator.
+- `Registration:OfficialAddressesWithoutInvitation` (off by default; on for the local stack and the trial site, owner
+  2026-11-19): both invitation gates ask `OfficialAddressGate`. The local `.env` and the trial's deploy switch it on
+  through the migrator (`--official-addresses-without-invitation`).
 - "Perimti profilį" (`POST /mps/{slug}/claim`) sends a 24-hour one-time link (its secret a typeable one-time code, hashed, a
   new one replaces the old, three a day per MP) to the account's own address; the email also gives `/seimo-narys/perimti` and
   the code to type there. `POST /me/mp/takeover` (token and passkey) does everything in one
@@ -386,8 +387,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 - **Descriptions** ("Apie ką projektas", design 8.13): one per bill, written or corrected by a moderator on any active
   bill with a statement, or made by the summary job from official text, shown at once, with a public history; labelled
   "Sukurta DI · žmonių neperžiūrėta" (the job's, read by nobody), "Sukurta DI · taisė žmonės" (a moderator confirmed or
-  corrected AI text), "Parašė moderatorius", or "Aprašymą parašė …" for an initiator's text from before 2026-11-14 (no
-  rights). Beside it: the day it was made, the official text it was made from when known, the history and "Pranešti
+  corrected AI text), or "Parašė moderatorius". Beside it: the day it was made, the official text it was made from when known, the history and "Pranešti
   apie klaidą"; a report reaches the queue, where a moderator confirms (an `ai` text becomes `ai-draft`), corrects or
   removes it. A description a person ever wrote, corrected or removed is never written over by the job. Without one the
   page says so and links to the Seimas page. Descriptions never go to MPs.

@@ -5,7 +5,6 @@
 <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
 <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
 <data name="Nav.Appeals" xml:space="preserve"><value>Projektai</value></data>
-<data name="Anonymous" xml:space="preserve"><value>Lietuva 2.0 naudotojas</value></data>
 <data name="NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Status.closed" xml:space="preserve"><value>Uždarytas</value></data>
 <data name="Sides.Heading" xml:space="preserve"><value>Ko prašo Lietuva 2.0 naudotojai</value></data>
@@ -91,8 +90,6 @@
 <data name="Method.Descriptions.ai" xml:space="preserve"><value>Aprašymą iš oficialaus projekto teksto automatiškai parengė dirbtinis intelektas (DI), ir jo dar neskaitė nė vienas žmogus. Jame gali būti klaidų.</value></data>
 <data name="Method.Descriptions.ai-draft" xml:space="preserve"><value>Aprašymas pradėtas nuo DI parengto teksto, o moderatorius jį perskaitė ir patvirtino arba pataisė. Ši žyma lieka ir vėliau taisant.</value></data>
 <data name="Method.Descriptions.moderator" xml:space="preserve"><value>Aprašymą parašė Lietuva 2.0 moderatorius.</value></data>
-  <data name="Method.Descriptions.initiator" xml:space="preserve"><value>Aprašymą iki 2026 m. lapkričio 14 d. parašė žmogus, pradėjęs dalyvavimą dėl projekto, o moderatorius jį patvirtino. Dėl projekto jis jokių teisių neturi.</value></data>
-<data name="Method.Descriptions.InitiatorLabel" xml:space="preserve"><value>Aprašymą parašė …</value></data>
 <data name="Method.Descriptions.Job" xml:space="preserve"><value>Projektams, kurie dar neturi aprašymo, DI kasdien parengia santraukas iš oficialaus teksto: pirmiausia projektams, kuriuos Seimas planuoja svarstyti greičiausiai, paskui tiems, dėl kurių dalyvauja daugiausia žmonių. DI gauna tik projekto numerį, pavadinimą ir oficialų tekstą: nieko, ką parašė naudotojai, ir jokių asmens duomenų. Kai iš teksto neaišku, ką projektas keičia, santrauka neskelbiama. Aprašymo, kurį rašė, taisė ar pašalino žmogus, DI niekada nepakeičia.</value></data>
 <data name="Method.Descriptions.Prompts" xml:space="preserve"><value>Nurodymai, kuriuos DI gauna, yra vieši ir laikomi Lietuva 2.0 programos kode. Juodraščiui, kurį moderatorius dar taiso: {0}. Santraukai, kuri skelbiama žmogaus neperžiūrėta: {1}.</value></data>
 <data name="Method.Descriptions.Report" xml:space="preserve"><value>Pastebėjote klaidą? Po aprašymu spauskite „Pranešti apie klaidą“ ir trumpai parašykite, kas negerai. Pranešimą gauna moderatoriai: jie aprašymą patvirtina, pataiso arba pašalina. Visi pakeitimai matomi keitimų istorijoje.</value></data>
@@ -156,7 +153,6 @@
 <data name="List.Tabs" xml:space="preserve"><value>Projektų sąrašai</value></data>
   <data name="What.None" xml:space="preserve"><value>Šio projekto aprašymo dar nėra.</value></data>
 <data name="What.Source.ai-draft" xml:space="preserve"><value>Sukurta DI · taisė žmonės</value></data>
-<data name="What.Source.initiator" xml:space="preserve"><value>Aprašymą parašė {0}</value></data>
 <data name="What.Source.moderator" xml:space="preserve"><value>Parašė moderatorius</value></data>
 <data name="List.Limit" xml:space="preserve"><value>riba {0}</value></data>
 <data name="Method.Organisations" xml:space="preserve"><value>Organizacijų pozicijos</value></data>

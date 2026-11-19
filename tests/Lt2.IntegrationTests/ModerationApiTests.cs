@@ -159,7 +159,6 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         described.Id.ShouldNotBeNull("writing the description created the bill's record");
         described.Description.ShouldBe(First);
         described.DescriptionSource.ShouldBe("moderator");
-        described.DescriptionAuthor.ShouldBeNull();
         described.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
 
         using (var unchanged = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = First, Statement = "Be pakeitimų." }))

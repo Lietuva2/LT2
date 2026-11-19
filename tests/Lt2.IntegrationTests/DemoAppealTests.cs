@@ -203,7 +203,6 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         var record = await stranger.RecordAsync(AppealSteps.TaxBill);
         record.Status.ShouldBe("open");
         record.DescriptionSource.ShouldBe("moderator");
-        record.DescriptionAuthor.ShouldBeNull("the record has no initiator (design 8.12)");
         record.Counts.ShouldBe(new SideCountsResponse(6800, 6150, 4280, 3900));
         record.Threshold.ShouldBe(new ThresholdResponse(100, "default", null, 11080, true, false));
         record.Surge.ShouldBeNull("the invented sides are spread over the record's life, not a surge of new accounts");

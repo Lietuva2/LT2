@@ -4,8 +4,8 @@ namespace Lt2.Appeals;
 
 // What the Appeals module answers and accepts. Codes are lower-case English words, stable for the API: side for |
 // against; record status open | closed | rejected (hidden by a moderator); reason status pending | published | hidden |
-// merged; threshold set by default | moderator; description source initiator | moderator | ai-draft | ai; report target
-// record (its description) | reason | organisation | statement.
+// merged; threshold set by default | moderator; description source moderator | ai-draft | ai; report target record (its
+// description) | reason | organisation | statement.
 //
 // Design 8.12: every active bill is open. A bill's record (the record) is created when first needed and has no
 // initiator; the answers for an active bill without one are the empty open state, not "not found".
@@ -70,8 +70,7 @@ public sealed record ReasonOnBill(string BillNumber, ReasonInfo Reason, IReadOnl
 /// </summary>
 /// <param name="Status"><c>open</c>, <c>closed</c>, or <c>rejected</c> (taking part closed by the moderators).</param>
 /// <param name="Description">What the bill is about (design 8.13); empty while there is none.</param>
-/// <param name="DescriptionSource"><c>initiator</c>, <c>moderator</c>, <c>ai-draft</c> or <c>ai</c>; null without a description.</param>
-/// <param name="DescriptionAuthor">Only for a description an initiator wrote before 2026-11-14: their display name.</param>
+/// <param name="DescriptionSource"><c>moderator</c>, <c>ai-draft</c> or <c>ai</c>; null without a description.</param>
 /// <param name="DescriptionUrl">The official text the description was made from, when known (design 8.13).</param>
 /// <param name="DescriptionAt">When the description's text was made or last changed; null without one or when unknown.</param>
 /// <param name="HiddenStatement">For a hidden record: the moderators' statement; nothing else of it is shown.</param>
@@ -83,7 +82,6 @@ public sealed record BillRecordInfo(
     string Status,
     string Description,
     string? DescriptionSource,
-    string? DescriptionAuthor,
     string? DescriptionUrl,
     DateTimeOffset? DescriptionAt,
     SideCounts Counts,

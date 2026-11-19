@@ -123,9 +123,6 @@ public sealed class SummaryRuleTests
         RecordRules.SourceOfModeratorText(fromDraft: false, source).ShouldBe(DescriptionSources.AiDraft);
 
     [Fact]
-    public void A_moderators_correction_of_a_moderators_or_initiators_text_is_a_moderators_text()
-    {
+    public void A_moderators_correction_of_a_moderators_text_is_a_moderators_text() =>
         RecordRules.SourceOfModeratorText(fromDraft: false, DescriptionSources.Moderator).ShouldBe(DescriptionSources.Moderator);
-        RecordRules.SourceOfModeratorText(fromDraft: false, DescriptionSources.Initiator).ShouldBe(DescriptionSources.Moderator);
-    }
 }

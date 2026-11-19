@@ -37,8 +37,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 
 For the owner to decide in each case: fix the code or change the rule.
 
-- 8.28.5 names "a name that is taken" among the refusals of the profile's form; display names are not unique (6.2) and
-  nothing refuses a name for being taken. Remove the example, or make names unique.
 - 8.1: participants were to get one closing email at the final vote; there is no such email, and they hear through
   the follow email about the vote (a first side follows the bill, 8.11.2).
 - 8.1: a record was also to close when a bill is rejected or withdrawn before adoption; the code closes a record only
@@ -105,9 +103,6 @@ hiding deletes them.
 **8.4 The party group minimum and its consent** (also for the lawyer). The party support consent (`party-support`,
 version `2026-11-13`) is given against the form's text, which states the value of `Digest:PartyGroupMinimum` as it
 holds then; a later lower value changes what that consent described.
-
-**8.5.1 MPs' registration.** `Registration:OfficialAddressesWithoutInvitation` (off by default) is still a proposal;
-is it to be on for the trial site?
 
 **8.11.1 The agenda.** About four in ten upcoming agenda rows are bills to be presented, which the open data does not
 know before their first sitting; they come last in their day, folded into "Dar N projektų, kurių atviruosiuose Seimo
@@ -190,11 +185,6 @@ for the lawyer).
   `?argumentas={id}` with the element's own fragment, resolved by the server (the target shown even behind "show all"
   or paging, its discussion open, the linked one marked; one 404 for hidden and unknown). Or: the fragment alone with a
   script that opens the thread (no help without script).
-- 8.23.7, 8.14.14: a comment in an organisation's name stays when its writer's account is deleted, but deleting the
-  last representative's account closes the organisation, which withdraws its statements and with them their comments.
-  The code does both, so the rule "stays" holds only while another representative remains. Either keep it so (the
-  closing decides); or keep a closed organisation's statements and their comments; or reword the rule to "stays unless
-  its organisation is closed".
 - 8.23.10 and the eight points of 8.23.14: built as proposed. Among them: the paging parameter `komentarai`; a
   `comments` count on each argument, statement and response in the public answers; no comment as the MP once the
   mandate has ended; the argument author's notice, told in the email rhythm as a kind of its own; the moderation
@@ -264,14 +254,6 @@ for the lawyer).
    restriction can still save a party or a box. If no: the whole form is refused under a restriction.
 4. The visit that follows the registration, and the notice "Profilis išsaugotas.", are each carried by a mark after `#`
    in the address, not stored. If no: the notice is left out.
-
-**The code.**
-- Code paths that nothing sets: the record status `BillRecordStatuses.Superseded`, `InitiatorUserId`, the description
-  source `DescriptionSources.Initiator`, and the texts `What.Source.initiator` and `Method.Descriptions.InitiatorLabel`
-  (8.12.4 keeps the initiator source for stored records, but nothing creates one). Remove them from the code, or keep.
-- `AGENTS.md` says "A feature is one folder: contract, validator, handler, endpoint, tests"; the code does not: the
-  contract is in `Lt2.Api.Contracts/<Area>`, the handler in the module's `Application/`, the endpoint in
-  `Lt2.Web/Endpoints/<Module>` and the tests in the test projects (section 4 describes it). Change the rule or the code.
 
 ## Awaiting a native speaker
 

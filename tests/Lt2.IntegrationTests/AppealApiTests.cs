@@ -85,8 +85,6 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
             var record = await members[0].Browser.RecordAsync(AppealSteps.SecondBill);
             record.Id.ShouldNotBeNull();
             record.Counts.ShouldBe(new SideCountsResponse(3, 0, 3, 0));
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.bill_record WHERE bill_number = @b AND initiator_user_id IS NOT NULL", ("b", AppealSteps.SecondBill)))
-                .ShouldBe(0, "the record has no initiator: nothing says who was first");
         }
         finally
         {
