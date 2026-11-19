@@ -34,6 +34,7 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   day, per code and per level, never who invited whom, and can switch codes off and on (2026-11-13).
 - A member may change their display name as often as they like; the account keeps no time of the change (2026-11-16).
 - Display names are not unique; only the email address is, one account per normalised address (2026-11-19).
+- A member can change the account's email address; an account has one address, no second one (6.2, 2026-11-19).
 - A passkey session stays one: no renewal or security-stamp check turns it into a code session or changes what it was
   signed in as (2026-11-17).
 - "Patvirtinti prieigos raktu" in place wherever an action needs a passkey session (speaking for an MP, a linked
