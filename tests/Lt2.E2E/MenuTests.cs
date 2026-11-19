@@ -124,7 +124,7 @@ public sealed class MenuTests : E2ETest
             await page.GotoAsync(E2ESteps.Base + "/metodika#kur-ka-rasti");
             await Assertions.Expect(page.Locator("#kur-ka-rasti dd")).ToHaveCountAsync(14);
             await E2ESteps.NoSidewaysScrollAsync(page, $"/metodika at {width} px");
-            await page.Locator("#kur-ka-rasti").ScreenshotAsync(new() { Path = Path.Combine(Shots, $"where-{width}.png") });
+            await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"where-{width}.png"), FullPage = true });
         }
 
         // Without script the dropdown still opens and shows the same lines.
