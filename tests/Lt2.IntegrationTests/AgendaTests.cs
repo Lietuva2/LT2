@@ -56,7 +56,16 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             html.ShouldContain("<h1>Seimo darbotvarkė</h1>");
             html.ShouldContain("Planuojama ");
             html.ShouldMatch("id=\"agenda-\\d{4}-\\d{2}-\\d{2}-" + AppealSteps.SecondBill + "\"");
-            html.ShouldContain(">Niekas nenurodė, ko prašo<");
+
+            // Owner, 2026-11-19: the front page's row ("Prašau balsuoti" in the row; a visitor's sides lead to signing in and
+            // back to the bill), with no line saying nobody took part beside the buttons and no link but the title to the bill.
+            var row = Row(html, today.AddDays(5), AppealSteps.SecondBill);
+            row.ShouldContain("Prašau balsuoti");
+            row.ShouldContain($"<a class=\"btn btn--for cta\" id=\"home-for-{today.AddDays(5):yyyy-MM-dd}-{AppealSteps.SecondBill}\" href=\"/prisijungti#tikslas=%2Fseimas%2F{AppealSteps.SecondBill}\"");
+            row.ShouldNotContain("Niekas nenurodė");
+            row.ShouldNotContain("Nurodyti, ko prašote");
+            Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldNotContain("Ko prašo, argumentai");
+            Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldContain($"id=\"home-counts-{today.AddDays(7):yyyy-MM-dd}-{AppealSteps.ThirdBill}\"");
             html.ShouldNotContain("Dar niekas nenurodė");
             html.ShouldNotContain("Kreipimosi prašo");
             html.ShouldNotContain("/kreipimasis\"");
@@ -108,7 +117,8 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             folded.ShouldContain("<summary class=\"linkish small\">Dar 1 projektas, kurio atviruosiuose Seimo duomenyse dar nėra</summary>");
             folded.ShouldContain($"id=\"agenda-{day:yyyy-MM-dd}-{Unknown}\"");
             block.IndexOf($"id=\"{id}-nezinomi\"", StringComparison.Ordinal).ShouldBeGreaterThan(block.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.SecondBill}\"", StringComparison.Ordinal));
-            html.ShouldNotContain("Prašau balsuoti", customMessage: "the agenda page's rows link to the bill; no island");
+            block.ShouldContain($"id=\"home-against-{day:yyyy-MM-dd}-{AppealSteps.ThirdBill}\"", customMessage: "the front page's row, with its sides (owner, 2026-11-19)");
+            block.ShouldNotContain("class=\"tl-item__side\" id=\"home-side-", customMessage: "a visitor's row has no island: its sides are links");
         }
         finally
         {
@@ -167,6 +177,70 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             await RemoveLongDayAsync(numbers, Unknown);
             ForgetAgenda();
         }
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-19: the agenda page's rows are the front page's, so a member's carry the islands of the mark and the
+    /// side column. The page's HTML is the same for two members and holds nothing of either one's own (design 8.7,
+    /// "Privacy"): their sides, follows, names and addresses are filled in the browser only. Without the front page's
+    /// "Jūsų projektai" and greeting. The buttons are disabled in the served page, which says JavaScript is needed.
+    /// </summary>
+    [Fact]
+    public async Task The_agenda_page_is_the_same_for_two_members_and_holds_neither_ones_own()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var day = ReasonsToComeSteps.VilniusToday().AddDays(2);
+        await Database.PlanAsync(AppealSteps.SecondBill, day);
+        var (first, firstEmail) = await Factory.MemberAsync("Pirmoji Darbotvarkės");
+        using var _f = first;
+        var (second, secondEmail) = await Factory.MemberAsync("Antrasis Darbotvarkės");
+        using var _s = second;
+        try
+        {
+            (await first.TakeSideAsync(AppealSteps.SecondBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            await first.FollowBillAsync(AppealSteps.SecondBill);
+
+            ForgetAgenda();
+            var firstPage = await first.Client.GetStringAsync("/darbotvarke");
+            var secondPage = await second.Client.GetStringAsync("/darbotvarke");
+
+            // The proof that the sweep reads the right page: the member's version, with the row's islands.
+            var place = $"{day:yyyy-MM-dd}-{AppealSteps.SecondBill}";
+            firstPage.ShouldContain($"id=\"home-side-{place}\"");
+            firstPage.ShouldMatch($"<button type=\"button\" class=\"btn btn--for cta\" id=\"home-for-{place}\" aria-pressed=\"false\"[^>]* disabled");
+            firstPage.ShouldContain("id=\"needs-script\"");
+            FrontPageTests.Frameless(firstPage).ShouldBe(FrontPageTests.Frameless(secondPage), "the same page for every member, apart from the frame");
+            foreach (var page in new[] { firstPage, secondPage })
+            {
+                var text = WebUtility.HtmlDecode(page);
+                foreach (var own in new[] { firstEmail, secondEmail, "Pirmoji Darbotvarkės", "Antrasis Darbotvarkės" })
+                {
+                    text.ShouldNotContain(own, Case.Insensitive);
+                }
+
+                text.ShouldNotContain("aria-pressed=\"true\"");
+                text.ShouldNotContain("Jūs prašote balsuoti");
+                text.ShouldNotContain("Sekate");
+                text.ShouldNotContain("id=\"my-agenda\"", customMessage: "no \"Jūsų projektai\" on the agenda page");
+                text.ShouldNotContain("Sveiki sugrįžę");
+                var state = FrontPageTests.StateOf(page);
+                state.ShouldNotContain(firstEmail, Case.Insensitive);
+                state.ShouldNotContain(secondEmail, Case.Insensitive);
+                state.ShouldNotContain("Darbotvarkės", Case.Insensitive);
+            }
+        }
+        finally
+        {
+            await Database.UnplanAsync(AppealSteps.SecondBill);
+            ForgetAgenda();
+        }
+    }
+
+    /// <summary>One row of the agenda page, by its day and bill.</summary>
+    private static string Row(string html, DateOnly day, string number)
+    {
+        var row = html[html.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{number}\"", StringComparison.Ordinal)..];
+        return row[..row.IndexOf("</li>", StringComparison.Ordinal)];
     }
 
     private async Task RemoveLongDayAsync(List<string> numbers, string unknown)

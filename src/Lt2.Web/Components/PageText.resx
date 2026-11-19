@@ -62,13 +62,11 @@
   <data name="Agenda.NoTitle" xml:space="preserve"><value>Projekto atviruosiuose Seimo duomenyse dar nėra.</value></data>
   <data name="Agenda.ToSource" xml:space="preserve"><value>Darbotvarkėje lrs.lt</value></data>
   <data name="Agenda.ToBill" xml:space="preserve"><value>Į projekto puslapį →</value></data>
-  <data name="Agenda.ToAppeal" xml:space="preserve"><value>Ko prašo, argumentai →</value></data>
   <data name="Agenda.ToClosedAppeal" xml:space="preserve"><value>Uždarytas →</value></data>
   <data name="Agenda.Threshold" xml:space="preserve"><value>{0} dalyvių · riba {1}</value></data>
   <data name="Agenda.OlderNote" xml:space="preserve"><value>Skliaustuose – kiek iš jų paskyrų senesnės nei 30 d.</value></data>
   <data name="Agenda.All" xml:space="preserve"><value>Visa darbotvarkė →</value></data>
   <data name="Home.Coming" xml:space="preserve"><value>Artimiausiu metu Seime</value></data>
-<data name="Agenda.TakePart" xml:space="preserve"><value>Nurodyti, ko prašote →</value></data>
 <data name="Agenda.TakingPartClosed" xml:space="preserve"><value>Dalyvavimas uždarytas</value></data>
   <data name="Home.Lead" xml:space="preserve"><value>Matykite, ką Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko prašote.</value></data>
   <data name="Home.HaveCode" xml:space="preserve"><value>Turite kvietimo kodą?</value></data>

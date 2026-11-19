@@ -60,9 +60,10 @@ public static class AgendaRules
     }
 
     /// <summary>
-    /// The bills of the front page's rows, each once, that its members' islands ask about: every row shown, in the order
-    /// shown. The page shows <see cref="FrontDays"/> × <see cref="FrontPerDay"/> × 2 rows, one request; a day opened whole
-    /// ("Rodyti likusius", owner 2026-11-18) adds its rows, asked in requests of
+    /// The bills of a timeline's rows (the front page's, the agenda page's), each once, that its members' islands ask about:
+    /// every row shown, in the order shown. The front page shows <see cref="FrontDays"/> × <see cref="FrontPerDay"/> × 2 rows,
+    /// one request, the agenda page <see cref="PagePerDay"/> a day; a day opened whole ("Rodyti likusius", owner 2026-11-18)
+    /// adds its rows, asked in requests of
     /// <see cref="Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers"/> (<see cref="MyAgendaState.Requests"/>). "Jūsų projektai"
     /// asks about the member's other followed bills itself.
     /// </summary>

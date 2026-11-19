@@ -109,10 +109,10 @@ public sealed class MyAgendaTests : BunitContext
         panel.Markup.Trim().ShouldBeEmpty();
         _follows.Calls.ShouldBeEmpty();
         mark.Markup.Trim().ShouldBeEmpty();
-        side.Find("#home-nobody-2026-11-19-XVP-0412").TextContent.ShouldBe(Text("Agenda.Nobody"), "as for anyone");
+        side.FindAll("#home-nobody-2026-11-19-XVP-0412").ShouldBeEmpty("the sides stand there instead, as for anyone (owner, 2026-11-19)");
         side.FindAll(".tl-ask button").Select(b => b.HasAttribute("disabled")).ShouldBe([true, true]);
         side.FindAll(".tl-ask button").Select(b => b.GetAttribute("aria-pressed")).ShouldBe(["false", "false"], "nobody's side");
-        side.FindAll("#home-again-2026-11-19-XVP-0412").ShouldBeEmpty();
+        side.FindAll(".tl-ask button[title]").ShouldBeEmpty();
         _bills.Calls.ShouldBeEmpty();
         _me.Calls.ShouldBeEmpty();
         _appeals.Calls.ShouldBeEmpty();
@@ -242,22 +242,27 @@ public sealed class MyAgendaTests : BunitContext
         sidedSide.Find(".tl-ask__sides").ClassList.ShouldContain("sides", customMessage: "styled as the bill page's sides");
         sidedSide.FindAll(".tl-ask button").ShouldAllBe(b => !b.HasAttribute("disabled"));
         sidedSide.FindAll("#home-withdraw-2026-11-19-XVP-0412").ShouldBeEmpty("no \"Atsiimti\" (owner, 2026-11-18)");
-        sidedSide.Find("#home-again-2026-11-19-XVP-0412").TextContent.ShouldBe("Paspaudę dar kartą, atsiimsite.");
-        sidedSide.Find("#home-for-2026-11-19-XVP-0412").GetAttribute("aria-describedby").ShouldBe("home-again-2026-11-19-XVP-0412");
+        // Owner, 2026-11-19: no line under the buttons on taking the side back (a later onboarding is to explain it), only the
+        // pressed button's title; and no link to the arguments: the title leads to the bill.
         sidedSide.Find("#home-for-2026-11-19-XVP-0412").GetAttribute("title").ShouldBe("Paspaudę dar kartą, atsiimsite.");
-        sidedSide.Find("#home-against-2026-11-19-XVP-0412").HasAttribute("aria-describedby").ShouldBeFalse();
-        sidedSide.Find("#home-action-2026-11-19-XVP-0412").GetAttribute("href").ShouldBe("/seimas/XVP-0412");
-        sidedSide.Find("#home-action-2026-11-19-XVP-0412").TextContent.ShouldBe(Text("Agenda.Action.Side"));
+        sidedSide.Find("#home-against-2026-11-19-XVP-0412").HasAttribute("title").ShouldBeFalse();
+        sidedSide.FindAll(".tl-ask button[aria-describedby]").ShouldBeEmpty();
+        sidedSide.Find(".tl-item__side").TextContent.ShouldNotContain("Paspaudę dar kartą");
+        sidedSide.FindAll(".tl-item__side a").ShouldBeEmpty("no \"Argumentai ir pozicijos\"");
         followedMark.Markup.ShouldContain(Text("Mine.NoSide"));
         followedSide.FindAll(".tl-ask button").Select(b => b.GetAttribute("aria-pressed")).ShouldBe(["false", "false"]);
         followedSide.FindAll(".sides__check").ShouldBeEmpty("no side yet: both filled, no check mark");
-        followedSide.FindAll("#home-action-2026-11-17-XVP-0533").ShouldBeEmpty("the link to the arguments comes with a side");
+
         otherMark.Markup.Trim().ShouldBeEmpty("not the member's bill");
         _bills.Calls.ShouldBe(["GetAsync"], "one request for the whole page");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-19 ("minimise non-essential texts"): beside the side buttons no line says nobody took part yet; a row
+    /// without them (a vote's) keeps it, unless the member's own answer has a side (the page's agenda is a minute old).
+    /// </summary>
     [Fact]
-    public void Nobody_yet_is_left_out_only_for_a_member_whose_own_answer_has_a_side()
+    public void Nobody_yet_is_left_out_beside_the_sides_and_for_a_member_whose_own_answer_has_a_side()
     {
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
 
@@ -265,10 +270,13 @@ public sealed class MyAgendaTests : BunitContext
         var sided = Side(Sided, "2026-11-19-XVP-0412");
         var followedOnly = Side(Followed, "2026-11-17-XVP-0533");
         var votedSided = Side(Sided, "voted-77", voteId: 77);
+        var votedFollowedOnly = Side(Followed, "voted-78", voteId: 78);
 
         sided.FindAll("#home-nobody-2026-11-19-XVP-0412").ShouldBeEmpty("the member's own side contradicts it");
-        followedOnly.Find("#home-nobody-2026-11-17-XVP-0533").TextContent.ShouldBe(Text("Agenda.Nobody"), "followed, but no side of their own");
+        followedOnly.FindAll("#home-nobody-2026-11-17-XVP-0533").ShouldBeEmpty("the sides stand there instead");
+        followedOnly.FindAll(".tl-ask button").Count.ShouldBe(2);
         votedSided.FindAll("#home-nobody-voted-77").ShouldBeEmpty();
+        votedFollowedOnly.Find("#home-nobody-voted-78").TextContent.ShouldBe(Text("Agenda.Nobody"), "a vote's row has no buttons: it says so");
         votedSided.FindAll(".tl-ask").ShouldBeEmpty("a vote's row offers no sides");
         votedSided.Find("a.cta").GetAttribute("href").ShouldBe("/seimas/balsavimai/77");
     }
@@ -305,7 +313,7 @@ public sealed class MyAgendaTests : BunitContext
         var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Numbers, Numbers));
         var mark = Mark(Other, "2026-11-19-XVP-0618");
         var side = Side(Other, "2026-11-19-XVP-0618");
-        side.Find("#home-nobody-2026-11-19-XVP-0618").ShouldNotBeNull("the page's copy before the press");
+        side.FindAll("#home-counts-2026-11-19-XVP-0618").ShouldBeEmpty("the page's copy before the press: nobody yet");
 
         side.Find("#home-for-2026-11-19-XVP-0618").Click();
 
@@ -317,6 +325,8 @@ public sealed class MyAgendaTests : BunitContext
         side.Find("#home-counts-2026-11-19-XVP-0618").TextContent.ShouldContain("1", customMessage: "the bill's live numbers, the member among them");
         side.FindAll("#home-nobody-2026-11-19-XVP-0618").ShouldBeEmpty();
         side.Find("[role=status]").TextContent.ShouldContain(Text("Agenda.Followed"), customMessage: "a first side follows the bill (design 8.11.2)");
+        side.Find(".tl-item__side").TextContent.ShouldNotContain("Paspaudę dar kartą", customMessage: "no line after a press either (owner, 2026-11-19)");
+        side.Find("#home-for-2026-11-19-XVP-0618").GetAttribute("title").ShouldBe("Paspaudę dar kartą, atsiimsite.");
         mark.WaitForAssertion(() => mark.Find(".tag").TextContent.ShouldBe(Text("Mine.Following")));
         mark.Find(".choice--for").ShouldNotBeNull();
         panel.WaitForAssertion(() => panel.FindAll("#my-agenda li").Select(li => li.Id).ShouldBe(["my-agenda-XVP-0412", "my-agenda-XVP-0618"]));
@@ -348,8 +358,9 @@ public sealed class MyAgendaTests : BunitContext
         _appeals.Calls.ShouldBe(["TakePositionAsync", "GetRecordAsync", "ClearPositionAsync", "GetRecordAsync"]);
         _appeals.Arguments.Select(a => a.ElementAtOrDefault(1)).OfType<PositionRequest>().Last().Side.ShouldBe("against", "the side being taken back is named: the server changes nothing if it is no longer the member's");
         side.WaitForAssertion(() => side.FindAll(".tl-ask button").Select(b => b.GetAttribute("aria-pressed")).ShouldBe(["false", "false"]));
-        side.FindAll("#home-again-2026-11-19-XVP-0412").ShouldBeEmpty();
-        side.Find("#home-nobody-2026-11-19-XVP-0412").ShouldNotBeNull("the live answer: nobody now");
+        side.FindAll(".tl-ask button[title]").ShouldBeEmpty();
+        side.FindAll("#home-counts-2026-11-19-XVP-0412").ShouldBeEmpty("the live answer: nobody now");
+        side.FindAll("#home-nobody-2026-11-19-XVP-0412").ShouldBeEmpty("beside the sides it is not said");
     }
 
     [Fact]

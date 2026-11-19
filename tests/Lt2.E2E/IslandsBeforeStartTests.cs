@@ -114,7 +114,7 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
         await PasskeyTests.RegisterAsync(member.Page, "Laukianti Pradžios");
         foreach (var path in new[]
                  {
-                     "/", "/paskyra", "/paskyra/sekimas", "/paskyra/dalyvavimas", "/paskyra/saugumas", "/seimas/XVP-0412", "/seimas/XVP-0533", "/p/jonas-petraitis", "/organizacijos/nauja", "/o/pavyzdine-mokesciu-aiskumo-asociacija",
+                     "/", "/darbotvarke", "/paskyra", "/paskyra/sekimas", "/paskyra/dalyvavimas", "/paskyra/saugumas", "/seimas/XVP-0412", "/seimas/XVP-0533", "/p/jonas-petraitis", "/organizacijos/nauja", "/o/pavyzdine-mokesciu-aiskumo-asociacija",
                      "/seimo-narys/perimti#nebandomas", "/seimo-narys/biuras#nebandomas", "/seimo-narys/projektai",
                      "/prisijungti/raktas#grizti=%2Fpaskyra", "/statistika",
                  })

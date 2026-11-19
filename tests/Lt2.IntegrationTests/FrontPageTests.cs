@@ -308,7 +308,7 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
     }
 
     /// <summary>The page's persisted component state, each entry decoded: <c>{"key": "decoded value", …}</c> as one JSON text.</summary>
-    private static string StateOf(string html)
+    internal static string StateOf(string html)
     {
         var comment = BlazorState().Match(html);
         comment.Success.ShouldBeTrue("a page with islands carries their state");

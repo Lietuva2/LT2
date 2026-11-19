@@ -81,6 +81,42 @@ public sealed class FrontPageFreshnessTests(DatabaseFixture database) : IAsyncDi
         }
     }
 
+    /// <summary>
+    /// The agenda page reads the same copy (design 8.11.1) and takes sides in its rows too (owner, 2026-11-19): a side taken
+    /// marks the copy out of date for it in the same way, so the page after two seconds shows the count the member is part of.
+    /// </summary>
+    [Fact]
+    public async Task A_side_makes_the_agenda_page_after_two_seconds_show_the_new_count()
+    {
+        await database.FreeBillAsync(Bill);
+        await database.PlanAsync(Bill, ReasonsToComeSteps.VilniusToday().AddDays(2));
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        using var visitor = Factory.NewBrowser();
+        try
+        {
+            Forget();
+            await visitor.Client.GetStringAsync("/darbotvarke");
+            var first = Cached();
+            var before = For(first);
+
+            (await member.TakeSideAsync(Bill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            await visitor.Client.GetStringAsync("/darbotvarke");
+            Cached().ShouldBeSameAs(first, "a copy younger than two seconds is served");
+
+            _clock.Advance(TimeSpan.FromSeconds(2));
+            var html = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/darbotvarke"));
+            Cached().ShouldNotBeSameAs(first, "the agenda page reads the copy again too");
+            For(Cached()).ShouldBe(before + 1);
+            html.ShouldMatch($"id=\"home-counts-[0-9-]+{Bill}\"[^>]*>\\s*<span class=\"nowrap\"><span class=\"choice choice--for\">už</span> {before + 1} ");
+        }
+        finally
+        {
+            await database.UnplanAsync(Bill);
+            Forget();
+        }
+    }
+
     [Fact]
     public async Task Without_a_side_the_copy_lives_its_minute()
     {

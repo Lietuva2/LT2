@@ -1057,7 +1057,6 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .tl-ask { display: flex; flex-direction: column; gap: var(--sp-1); width: 100%; max-width: 15rem; }
 .tl-ask__sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
 .tl-ask__sides .btn { padding-inline: var(--sp-2); }
-.tl-ask__after { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
 .tl-item__consent { grid-column: 1 / -1; min-width: 0; }
 
 /* "Jūsų projektai" (from variant C): the member's own bills, filled in the browser. */

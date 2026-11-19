@@ -727,7 +727,6 @@
   <data name="Agenda.Stance.for" xml:space="preserve"><value>už</value></data>
   <data name="Agenda.Stance.against" xml:space="preserve"><value>prieš</value></data>
   <data name="Agenda.Stance.remarks" xml:space="preserve"><value>pastabos</value></data>
-  <data name="Agenda.Action.Side" xml:space="preserve"><value>Argumentai ir pozicijos</value></data>
   <data name="Agenda.Action.Votes" xml:space="preserve"><value>Kaip balsavo Seimo nariai</value></data>
   <data name="Mine.Title" xml:space="preserve"><value>Jūsų projektai</value></data>
   <data name="Mine.Following" xml:space="preserve"><value>Sekate</value></data>

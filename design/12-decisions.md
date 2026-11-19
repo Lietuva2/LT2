@@ -616,3 +616,18 @@ Each is built as written; "no" names what changes.
 - Built so: a vote's page (`/seimas/balsavimai/{id}`) is under the tab, as a summary's date page is under "Suvestinės":
   "Projektai" is current there, no tab row, and its breadcrumb leads up to the history.
 
+**Decided by the owner on 2026-11-19: the agenda's rows are the front page's, and fewer texts beside the sides (8.7, 8.11.1, 8.12.1)**
+
+- "The front page and the agenda's rows look the same, one component": `/darbotvarke` offers "Prašau balsuoti" with "už" and
+  "prieš" in a coming bill's row, as the front page does. A visitor's are links to sign in that come back to the bill's
+  page; a member's side column and the mark under the title are islands filled in the browser (the positions consent
+  asked in the row), so the served page is the same for every member and holds nothing of anyone's own. The front page's
+  "Jūsų projektai" and greeting stay on the front page only.
+- "We should try to minimise non-essential texts": the bill's title is the way to its details. Gone from the rows: the
+  agenda page's "Nurodyti, ko prašote →" and "Ko prašo, argumentai →", the member's "Argumentai ir pozicijos", and "Niekas
+  nenurodė, ko prašo" beside the side buttons (a row without buttons, a voted bill's, keeps it; a closed bill's "Niekas
+  nedalyvavo" and the bill page's "Dėl šio projekto dar niekas nenurodė, ko prašo Seimo narių." stay).
+- The line "Paspaudę dar kartą, atsiimsite." under a pressed side button is gone, in the rows and on the bill's page:
+  "that should be a one time info or some onboarding should cover it, not every button", then "skip this now, I think
+  we'll add onboarding later and that will cover it". `aria-pressed` and the pressed button's title stay. The onboarding is
+  open (12-open).

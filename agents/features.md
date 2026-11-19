@@ -302,7 +302,8 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   sends `DELETE /bills/{n}/record/position` with `{ side }` (`IAppealsApi.ClearPositionAsync(number, PositionRequest?)`;
   the module's `ClearPositionAsync` withdraws only that side, `AppealRules.WithdrawalApplies`, so a late or stale press is a
   no-op; no body withdraws whatever side there is). No "Atsiimti" for sides (`Side.Withdraw`, `Agenda.Withdraw` removed);
-  `Side.PressAgain` under the buttons (`#my-side`, `#home-again-{place}`) describes the pressed one and is its title.
+  `Side.PressAgain` is only the pressed button's `title` (owner, 2026-11-19: no line under the buttons, after a press
+  either; a later onboarding is to explain it, design 12-open); `#my-side` on the bill's page says whose side it is.
   Disabled while a request runs (`Busy`); `SidePresses.Ignored` drops a double click's second press (`MouseEventArgs.Detail`).
   The pair (`.sides`) carries `aria-busy` while disabled for waiting (`Locked`; `MyAgendaSide.Waiting` also until its first
   read ends), which keeps the buttons in full colour (lt2.css "Waiting", owner 2026-11-18).
@@ -372,7 +373,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 **Reasons to come (design 8.11).**
 - The agenda (`/darbotvarke`, where the menu item "Projektai" leads) and the front page's "Artimiausiu metu Seime" come from one public,
   cacheable answer that holds nothing about the caller, and show both sides for every bill (a bill nobody took part in
-  says so); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
+  says so only in a row without side buttons, owner 2026-11-19); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
   counted). The front page (design 8.7, reworked 2026-11-15; mockup `design/ui/pradzia.html`) is that agenda as a
   timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#kaip-tai-veikia`) and
   links to register or sign in, never a form; a member gets "Jūsų projektai" (the bills they follow, and only those: owner,
@@ -384,17 +385,22 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   headline (the lead sentence as `h1`; the title stays "Lietuva 2.0") and the trial note under it with the invented-data
   notice's edges, the turning logo centred to their right from 54rem (across the invented-data notice too, which on this
   page is the head's first row, not the layout's), beside the headline on a phone. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
-  2026-11-15): a visitor's are `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
+  2026-11-15), on the front page and `/darbotvarke` alike (one `TimelineItem`, owner 2026-11-19): a visitor's are
+  `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
   (`MyAgendaSide`, disabled before it starts) that takes, changes (the pressed button, pressed again, withdraws) the side with the bill page's
   request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
   shows the bill's live numbers from `GET /bills/{n}/record`; the other islands follow through `MyAgendaState.Changed`.
+  The islands (`MyAgendaSide`, `MyAgendaMark`) are keyed by the row's place (`@key`), so a day opened whole in place keeps
+  each on its row. Beside the side buttons no "Niekas nenurodė, ko prašo" (`RecordFigures.HideNobody`; `MyAgendaSide.Asks`)
+  and no link but the title (owner, 2026-11-19: "minimise non-essential texts"); a voted row keeps both its line and
+  "Kaip balsavo Seimo nariai".
   The figures are one component (`Lt2.Web.Client/Agenda/RecordFigures`, with `SplitBar` in `Lt2.Web.Client/Components`),
   rendered by the server and by the island; with a side and a copy that says zero, the island reads the live numbers once on
   start. The server keeps the front page's agenda in memory for 60 s (`FrontPageAgenda`; a test removes
   `FrontPageAgenda.CacheKey` instead of waiting). A side taken, changed or withdrawn marks the copy out of date
   (`FrontPageFreshness`, marked by `TakingSides` for every API client): the first request once the copy is 2 s old reads
-  the agenda again; other changes wait for the minute. The agenda page reads the same copy (`ServerAgendaApi`); the bill's
-  page and `GET /api/v1/agenda` stay live.
+  the agenda again; other changes wait for the minute. The agenda page reads the same copy (`ServerAgendaApi`; a side marks
+  it out of date there too, `FrontPageFreshnessTests`); the bill's page and `GET /api/v1/agenda` stay live.
   **The lists' lengths (owner, 2026-11-18, real-sized parliament).** `AgendaReads` orders each day by
   `Lt2.Web.Client/Agenda/AgendaRules` (pure, `AgendaRulesTests`): activity (participants + published arguments, from
   `BillRecordState.Arguments`), then stage (adoption, consideration, presentation; the parser reads a combined stage as its
@@ -408,10 +414,12 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   enhanced navigation swaps it in with script. The front page keeps "Visa darbotvarkė" by its heading and "Ankstesni
   balsavimai →". The unknown bills are `UnknownBills` (`details.tl-unknown`) at the end of a day shown whole (on the agenda
   page also of a day whose known rows all show);
-  rows `TimelineItem Asks="false"` and `VotedItem`, heads `TimelineDate` (date in words, weekday, count via `AgendaWords`).
+  rows `TimelineItem` and `VotedItem` with `Member` and `Numbers` as on the front page (owner, 2026-11-19: the same rows;
+  `AgendaPage` renders them through `AuthorizeView`, carries `<NeedsScript />` for a member, and has no "Jūsų projektai"),
+  heads `TimelineDate` (date in words, weekday, count via `AgendaWords`).
   The agenda answer is still built and cached whole (the order needs every row's activity); only the rendering is cut.
   The islands ask `/me/bills` about
-  the shown rows only (`AgendaRules.Asked`; `MyAgendaState` splits them into requests of `MyBillsQuery.MaxNumbers`); "Jūsų projektai" (`MyAgendaPanel`,
+  the shown rows only (`AgendaRules.Asked`; `MyAgendaState` splits them into requests of `MyBillsQuery.MaxNumbers`, sent side by side); "Jūsų projektai" (`MyAgendaPanel`,
   `MyAgendaState.PanelAsync`) lists the followed bills of the whole agenda and last week from `GET /me/follows`
   (`OnTheAgenda`) and asks `/me/bills` about those not shown, 30 a request (`Requests`).
   **How a vote went (design 8.18, "The majority"; the owner asked for "Priimta", open in 12-open).** `<VoteMajorityTag>`
