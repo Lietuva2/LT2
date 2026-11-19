@@ -57,6 +57,10 @@ internal static class WebHost
         services.AddUsageModule();
         services.AddUsageCounting();
         RequireKeyEncryptionOutsideDevelopment(builder);
+        if (!SecurityTxt.IsValidContact(configuration["Site:SecurityContact"]))
+        {
+            throw new InvalidOperationException("Site:SecurityContact must be empty, a mailto: address or an https address.");
+        }
 
         // Design 3, 6.3: the administrators' Hangfire dashboard over the worker's storage; no Hangfire server runs here.
         services.AddLt2JobsDashboard();
@@ -198,6 +202,7 @@ internal static class WebHost
         app.MapOpenApi("/openapi/{documentName}.json");
         app.MapLt2Api();
         app.MapLt2JobsDashboard();
+        SecurityTxt.Map(app);
         MapOldAppealAddresses(app);
         app.MapRazorComponents<App>()
             .AddInteractiveWebAssemblyRenderMode()

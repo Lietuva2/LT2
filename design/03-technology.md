@@ -18,7 +18,7 @@
 | Identifiers | UUID v7 for our own rows; Seimas identifiers kept as natural keys; public URLs use slugs (`/p/jonas-petraitis`) and bill numbers (`/seimas/XVP-0412`) | |
 | Logging and telemetry | **Serilog**, **OpenTelemetry** traces, metrics and logs over OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set | No backend is chosen (9.4). No personal data in logs. |
 | Email | SMTP through **MailKit** behind `IEmailTransport`; MP mail on its own stream (`Email:Mp`) | The provider is not chosen; locally and on the trial Mailpit catches every email. |
-| SMS | None: registration is by email only (6.2). | |
+| SMS | None: accounts are confirmed by email (6.2). | |
 | Bot check | None | **Not built.** A self-hosted proof of work (ALTCHA) on registration and code requests. |
 | AI | One interface, `IAiAssistant`, on the **Claude API** (first-party), model the setting `Ai:DraftModel` (default `claude-sonnet-5-5`): the draft of a bill's description in a moderator's hands (8.11.4) and the AI summaries of bills (8.13). On only with `Ai:Provider` = `claude` and a key; otherwise a "not configured" implementation answers and nothing offers a draft. Pre-screening and duplicate-reason hints are rule-based: users' texts can hold personal data and this API has no EU-only processing. | No personal data is sent. Prompts are kept in the repository (`src/Modules/Lt2.Appeals/Ai/*.prompt.md`) so they can be published. |
 | Reverse proxy | **Caddy** | Automatic certificates, HTTP/3, simple configuration. |

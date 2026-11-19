@@ -1,0 +1,24 @@
+# Design 6.7: weekly update pull requests for the NuGet packages, the base images and the workflow actions. Minor and
+# patch updates of NuGet packages arrive as one pull request; a major update is its own. Few open at once.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      nuget-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /deploy
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2

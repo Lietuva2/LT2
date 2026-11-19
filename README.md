@@ -97,7 +97,7 @@ data is invented (`LT2_DEMO_DATA`, or any synthetic parliament data) unless the 
 `LT2_MODERATION_CONTACT` is the address shown to visitors who want to report (a local
 placeholder in `deploy/.env`). Feedback (design 8.10): `LT2_FEEDBACK_ISSUES_URL` (`Feedback:IssuesUrl`, the
 repository's GitHub issues, linked from the feedback panel; nothing shown when empty) and `LT2_FEEDBACK_TEAM_ADDRESS`
-(`Feedback:TeamAddress`, where the worker sends at most one notice a day of new feedback; none when empty).
+(`Feedback:TeamAddress`, where the worker sends at most one notice a day of new feedback; none when empty). `LT2_SECURITY_CONTACT` (`Site:SecurityContact`, a `mailto:` or https address for security reports, design 6.7) makes the site serve `/.well-known/security.txt` (RFC 9116: Contact, Expires 180 days ahead, Preferred-Languages, Canonical); empty (the default, also locally), the file answers 404.
 
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 account page (`/paskyra`) appears. From there you can add a passkey and see or end your sessions.
@@ -235,7 +235,7 @@ and `tests/Lt2.ArchitectureTests/ReadonlyRoleTests.cs` fails until it is on one 
 
 For a production-shaped run, override `deploy/.env`: `LT2_SITE_ADDRESS` (the domain), `LT2_TLS` (the ACME contact
 address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mailpit), the `LT2_SMTP_*` values and
-`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_MODERATION_CONTACT` (the real address), `LT2_AGENDA_BASE_ADDRESS`
+`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_MODERATION_CONTACT` (the real address), `LT2_SECURITY_CONTACT` (the address for security reports: a `mailto:` or https address; the site serves `/.well-known/security.txt` only when it is set), `LT2_AGENDA_BASE_ADDRESS`
 (the lrs.lt address, or empty), `LT2_SEIMAS_BASE_ADDRESS=` (the worker then imports from `https://apps.lrs.lt/sip/`),
 `LT2_OUTBOUND_EXTRA_HOST` (the agenda page's host when `LT2_AGENDA_BASE_ADDRESS` is set, otherwise empty: then
 `apps.lrs.lt` is the only host the worker may call; a redirect to another host is refused too), and mount real secrets.
@@ -307,6 +307,7 @@ LT2_DEMO_DATA=true
 LT2_MAIL_CAUGHT=true
 LT2_MAIL_FROM_MP=suvestines@lt2.example.org
 LT2_MODERATION_CONTACT=moderatoriai@lt2.example.org
+LT2_SECURITY_CONTACT=
 LT2_FEEDBACK_ISSUES_URL=https://github.com/Lietuva2/LT2/issues
 LT2_FEEDBACK_TEAM_ADDRESS=komanda@lt2.example.org
 LT2_AI_PROVIDER=

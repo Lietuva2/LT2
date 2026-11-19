@@ -76,8 +76,8 @@ the invented demonstration members get the consent like their others (`--demo-ap
 
 **Accounts.** Registration is by email only, by invitation during the closed trial (an MP office member's invitation counts
 as one, owner 2026-11-17, design 8.5.3), with a self-declared age of 18 or older. An account is pending until its address is proven; the display name, the age declaration and the terms of use are
-asked after the code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); phone
-verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
+asked after the code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); the EU Digital Identity Wallet
+as a further level is designed, not built (owner, 2026-11-19). Every member has one personal invitation code (replaceable; uses unlimited unless
 `Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
 code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.
 A member changes the display name with the "Profilis" form (`PUT /me/profile`, `ProfileHandlers.SaveAsync`, design

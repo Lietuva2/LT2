@@ -33,6 +33,7 @@
                 <button class="btn btn--plain btn--wide" type="button" disabled="@Locked" @onclick="SignInWithPasskeyAsync">@L["SignIn.Passkey"]</button>
                 <p class="small">@L["SignIn.PasskeyHint"]</p>
                 <p class="small">@L["SignIn.NoAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.Register)">@L[OfficeInvitation is null ? "SignIn.ToRegister" : "SignIn.ToRegisterByOffice"]</button></p>
+                <p class="small" id="verification-hint">@L["SignIn.Verification"]</p>
                 <Messages Message="@Message" Info="@Info" />
             </form>
             break;
@@ -61,6 +62,7 @@
                 }
                 <button class="btn btn--wide" type="submit" disabled="@Locked">@L["Register.Submit"]</button>
                 <p class="fine">@L["Register.Fine"]</p>
+                <p class="small" id="verification-hint">@L["SignIn.Verification"]</p>
                 <p class="small">@L["Register.HaveAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.SignIn)">@L["Register.ToSignIn"]</button></p>
                 <Messages Message="@Message" Info="@Info" />
             </form>

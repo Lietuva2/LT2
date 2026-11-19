@@ -66,6 +66,8 @@ services:
       ReverseProxy__Address: caddy
       # The site's own address, the one Caddy serves: links in emails and in the summary's text start with it (design 5.6).
       Site__Address: https://${LT2_SITE_ADDRESS:-lt2.localhost}:${LT2_HTTPS_PORT:-8443}
+      # Where security reports go (design 6.7): a mailto: or https address, served as /.well-known/security.txt; empty: no such file.
+      Site__SecurityContact: ${LT2_SECURITY_CONTACT:-}
       # Where visitors without a session may write to the moderators (design 8.3). Production sets the real address.
       Moderation__ContactAddress: ${LT2_MODERATION_CONTACT:-}
       # The repository's GitHub issues, linked from the feedback panel (design 8.10); nothing shown when empty.

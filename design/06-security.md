@@ -68,8 +68,8 @@ floor; 8.4).
   account page's part then has one line more, "Sutikote su ankstesne šio sutikimo teksto versija. Perskaitykite
   galiojančią ir patvirtinkite.", with "Skaityti galiojantį tekstą", which opens the same form in place ("Galiojantis
   sutikimo tekstas", the text, the box, "Sutinku"); accepting records the version in force and the line goes.
-- **Minimisation.** No personal code, address or document number. No phone number is collected; if phone verification
-  is added, only a keyed hash is kept. No per-person history of changed positions.
+- **Minimisation.** No personal code, address or document number. No phone number is collected. A wallet-based level (6.2, not built)
+  would keep only a pairwise pseudonymous identifier, never a personal code. No per-person history of changed positions.
 - **Deletion and export.** A person can download everything they gave us and delete the account; positions are removed
   and counts fall. Frozen digest snapshots keep their totals: they are aggregates and a record of what was sent.
 - **Encryption.** ASP.NET Core data-protection keys are stored in PostgreSQL, wrapped with a key supplied as a secret.
@@ -87,7 +87,7 @@ floor; 8.4).
 
 ## 6.6 Integrity of the numbers
 
-- One account per normalised email address (6.2); one position per account per bill. This is weaker than a phone check,
+- One account per normalised email address (6.2); one position per account per bill. This is weaker than a verified identity,
   which is why the 30-day count is always shown and why every number is described as a signal.
 - Every published count comes with the count for **accounts older than 30 days**.
 - **Surge detection:** when a large share of recent positions on a bill come from accounts created in the last days
@@ -102,8 +102,23 @@ floor; 8.4).
 Central package versions, NuGet audit in CI (warnings are errors). Containers run on chiselled .NET images with a
 read-only file system and dropped capabilities.
 
-**Not built.** Lock files, Dependabot, CodeQL, secret scanning, a container image scan, an SBOM per release, images signed
-and pulled by digest, a `security.txt` and a disclosure address. An external penetration test before the first real
+- **Lock files.** Every project has a `packages.lock.json` (`RestorePackagesWithLockFile` in `Directory.Build.props`); CI
+  and the Dockerfile restore in locked mode, so a package version that is not in the lock file fails the build. After a
+  package change, `dotnet restore --force-evaluate` rewrites the files, which are committed. The files hold the package
+  versions the SDK brings with it, so the Dockerfiles' SDK image is pinned to the version in `global.json`, and the two
+  change together. The image build's first restore (project files only) is not locked; the restore in its publish step is.
+- **Dependabot** (`.github/dependabot.yml`): weekly, for NuGet (minor and patch together, a major on its own), the base
+  images in `deploy/` and the workflow actions, with few pull requests open at once.
+- **CodeQL** (`.github/workflows/codeql.yml`): GitHub's analysis of the C# code on every push to `master`, every pull
+  request and weekly, with a manual `dotnet build`. Every action in the workflows is pinned to a full commit SHA with its
+  version in a comment; Dependabot proposes the updates.
+- **`/.well-known/security.txt`** (RFC 9116), served only when the deployment sets `Site:SecurityContact`
+  (`LT2_SECURITY_CONTACT`, a `mailto:` or https address; another value stops the start): Contact, Expires (made on each
+  request, 180 days ahead, UTC), Preferred-Languages `lt, en`, Canonical (the site address and the path); `text/plain`,
+  cached for an hour. Without the setting the path answers 404.
+
+**Not built.** Secret scanning (a repository setting the owner switches on; the repository holds no secrets), a container
+image scan, an SBOM per release, images signed and pulled by digest. An external penetration test before the first real
 summary is sent.
 
 ## 6.8 Rules held throughout
