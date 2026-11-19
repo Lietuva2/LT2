@@ -90,8 +90,9 @@ Read before changing a page, a component or an island. The rules behind it are d
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the list.
 - **Every "show more" is `<ShowMore>` (design 8.16.4, owner 2026-11-19)** (`Lt2.Web.Client/Components`; on server pages
   `<Lt2.Web.Client.Components.ShowMore …/>`): `div.row.show-more` with "Rodoma N iš M" (`Total`, status id `StatusId` or
-  `{Id}-shown`) and `a.btn.btn--plain.show-more__link` to `Href`, the same page grown by the address landing on the first
-  row added (null: every row shown, no link); further links of the list (an older page) as its child content. Never
+  `{Id}-shown`) and `a.show-more__link`, a plain text link (owner 2026-11-19: not a button's look), to `Href`, the same page
+  grown by the address landing on the first row added (null: every row shown, no link); further links of the list (an
+  older page) as its child content, plain `<a>` too. Never
   hidden rows in the page. On a server-rendered page that is all: enhanced navigation (blazor.web.js) fetches the link
   without a reload (`VoteHistory`, `BillListPaging`, `MpVotePaging`, `AnalyticsList`, `ResponsePaging`, `BallotList`, the
   member page). In an island pass `OnMore`: once the island runs the link carries `data-enhance-nav="false"` and

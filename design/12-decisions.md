@@ -597,8 +597,9 @@ Each is built as written; "no" names what changes.
 **Decided by the owner on 2026-11-19: every "show more" the same, the arguments and the comments a page at a time (8.16.4, 8.12.1, 8.23.6)**
 
 - One "show more" under every long list: "Rodoma N iš M" where the total is known and a link to the grown page, in a plain
-  button's look; without script and on server-rendered pages the link (enhanced navigation swaps the page in); in an
-  island the next page from the API, in place, the focus on the first item added.
+  button's look [a text link since later the same day, below]; without script and on server-rendered pages the link
+  (enhanced navigation swaps the page in); in an island the next page from the API, in place, the focus on the first item
+  added.
 - The arguments a page at a time: the bill's answer carries each side's first two and each side's count; "Rodyti daugiau
   argumentų" under each side adds ten (`?argumentai-uz=`, `?argumentai-pries=` without script). `?argumentai=visi` and
   "Visi argumentai: N" / "Rodyti mažiau" are gone. A linked argument and the one just published stand first in their side.
@@ -631,3 +632,12 @@ Each is built as written; "no" names what changes.
   "that should be a one time info or some onboarding should cover it, not every button", then "skip this now, I think
   we'll add onboarding later and that will cover it". `aria-pressed` and the pressed button's title stay. The onboarding is
   open (12-open).
+
+**Decided by the owner on 2026-11-19: "show more" is a link, not a button (8.16.4)**
+
+- "Show more should be just a link, not a button": in a plain button's look "Rodyti daugiau argumentų" stood above
+  "Parašyti argumentą" (and "Rodyti daugiau komentarų" above the comment box) with other left edges and widths. Every
+  `ShowMore` is a text link in the site's normal link look, on one line with "Rodoma N iš M"; the further links on that
+  line ("Senesni balsavimai →", "Tolesni projektai →") are text links too. The agenda's "Rodyti likusius" was a text
+  link already.
+

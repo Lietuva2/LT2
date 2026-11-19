@@ -700,7 +700,10 @@ fieldset.stack--tight > legend { margin-block-end: var(--sp-3); }
 .report-visitor > summary { display: inline; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
 /* "Rodyti daugiau" under a long list (owner, 2026-11-19, ShowMore.razor): one line under the list, "Rodoma N iš M" and the
-   link (a plain button's look); while an island reads the next page, the waiting cursor on it. */
+   link, a plain text link (owner, 2026-11-19: a button's look clashed with the buttons under a list) with the list's further
+   links after it. The small status and the body-size links stand on one baseline; on a phone the links wrap below the status.
+   While an island reads the next page, the waiting cursor on the link. */
+.show-more { align-items: baseline; column-gap: var(--sp-4); row-gap: var(--sp-2); }
 .show-more[aria-busy="true"] .show-more__link { cursor: progress; }
 
 /* A long member's text (design 8.2, owner 2026-11-16, LongText.razor): the beginning, "…" and "Rodyti daugiau" under it.
