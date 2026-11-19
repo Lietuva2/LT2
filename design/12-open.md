@@ -6,8 +6,7 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 
 ## Designed, not built
 
-- 3, 6.2: a bot check at registration (ALTCHA); account verification beyond email; a fresh passkey confirmation before
-  approving an urgent send of a summary.
+- 3, 6.2: a bot check at registration (ALTCHA); account verification beyond email.
 - 5.4: the `notify.email_message` table.
 - 6.2: changing the account's email address (designed 2026-11-19, with the owner's go-ahead for one address per
   account and no second one).
@@ -43,7 +42,6 @@ For the owner to decide in each case: fix the code or change the rule.
   the follow email about the vote (a first side follows the bill, 8.11.2).
 - 8.1: a record was also to close when a bill is rejected or withdrawn before adoption; the code closes a record only
   at the adoption-stage vote (8.26.2), so such a bill's record stays open (see the risk about 8.26.7).
-- 6.2: approving an urgent send of a summary needs a fresh passkey confirmation; `UrgentDigestEndpoint` asks for none.
 - 6.4: Caddy was to rate-limit per IP address; the Caddyfile has no rate limiting, only the ASP.NET policies.
 - 8.4: in an MP's summary, bills led by the MP's committee come first; the group is always empty, because lead
   committees are not imported.
@@ -271,6 +269,8 @@ for the lawyer).
 
 - 6.2: the texts of changing the email address ("El. pašto adresas", "Keisti adresą", "Kodą išsiuntėme adresu …",
   "Ne jūs? Grąžinti ankstesnį adresą" and the three emails).
+- 6.2: the urgent summary's passkey messages "Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos
+  raktu. …" and "Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. …" (`AppealUi` `Mod.Passkey.*`).
 - 6.5: the positions consent text (`UiText` `PositionConsent.Text`).
 - 8.2: the notes "Bus skaičiuojama, kai prašysite balsuoti už." and "Neskaičiuojama: jūs prašote balsuoti prieš."; the
   writing box's hint "Sąrašą rašykite eilutėmis, pradėtomis „-“ arba „1.“." (also for the owner).

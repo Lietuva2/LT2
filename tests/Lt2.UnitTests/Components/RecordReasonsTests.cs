@@ -39,6 +39,7 @@ public sealed class RecordReasonsTests : BunitContext
         Services.AddSingleton(appeals);
         Services.AddSingleton(moderation);
         Services.AddSingleton(DispatchProxy.Create<Lt2.Api.Contracts.Me.IProfilesApi, ApiFake>());
+        Services.AddSingleton(DispatchProxy.Create<Lt2.Api.Contracts.Auth.IAuthApi, ApiFake>());
         _auth = AddAuthorization();
         _auth.SetAuthorized("moderatorius@pavyzdys.test");
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));

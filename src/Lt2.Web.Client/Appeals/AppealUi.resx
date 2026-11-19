@@ -266,6 +266,8 @@
 <data name="Mod.Done.hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
 <data name="Mod.Done.release" xml:space="preserve"><value>Atlikta: siuntimas atnaujintas.</value></data>
 <data name="Mod.Done.urgent" xml:space="preserve"><value>Atlikta: skubi suvestinė sudaryta (bandymas, nesiunčiama).</value></data>
+<data name="Mod.Passkey.Unsupported" xml:space="preserve"><value>Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos raktu. Atidarykite šį puslapį naršyklėje, kurioje yra jūsų darbuotojo prieigos raktas.</value></data>
+<data name="Mod.Passkey.Cancelled" xml:space="preserve"><value>Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. Spauskite „Patvirtinti skubią suvestinę“ dar kartą ir patvirtinkite.</value></data>
 <data name="Mod.Done.merge" xml:space="preserve"><value>Atlikta: sujungta.</value></data>
 <data name="Mod.Refresh" xml:space="preserve"><value>Atnaujinti eilę</value></data>
 <data name="Date.Hint" xml:space="preserve"><value>Data skaičiais, pvz., {0}</value></data>

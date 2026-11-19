@@ -41,6 +41,17 @@ public static class StaffSteps
             new PasskeyCredentialRequest { Credential = authenticator.Get(await OptionsAsync(request)) });
     }
 
+    /// <summary>
+    /// A fresh passkey confirmation with the staff member's own passkey, asserted: before a sensitive action (design 6.2:
+    /// settings, roles, an urgent summary), so a test does not depend on how long ago the session was confirmed.
+    /// </summary>
+    public static async Task ConfirmFreshAsync(this StaffMember staff)
+    {
+        ArgumentNullException.ThrowIfNull(staff);
+        using var confirmed = await staff.Browser.ConfirmPasskeyAsync(staff.Authenticator);
+        confirmed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await confirmed.Content.ReadAsStringAsync());
+    }
+
     /// <summary>The passkey options the server gave; a refusal fails with its status and body, not later in the authenticator.</summary>
     private static async Task<string> OptionsAsync(HttpResponseMessage response)
     {

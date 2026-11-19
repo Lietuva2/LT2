@@ -2,6 +2,9 @@
 @inherits InteractiveBase<AppealUi>
 @inject IModerationApi Moderation
 @inject FluentValidation.IValidator<ModeratorDescriptionRequest> DescriptionValidator
+@inject IAuthApi Auth
+@inject IMeApi MeApi
+@inject Passkeys PasskeyBrowser
 
 @* The actions on one item (design 8.3, 8.12.3). Owner, 2026-11-17: one filled button for what the item needs most in its
    state ("Palikti" while a report or a date flag is open, "Patvirtinti aprašymą" while an AI summary nobody has read is
@@ -12,8 +15,10 @@
    merge) leaves the confirmation in place of the controls. On a bill without a record (Id null) the first action creates
    it (design 8.12.1). "Rašyti aprašymą" works on any active bill and offers the AI draft from pasted official text only
    when a provider is configured (8.11.4); without one nothing here mentions a draft. A bill's description can also be
-   confirmed (only an AI summary nobody has read) or removed (design 8.13). Every element id carries IdPrefix, so the same
-   item's actions in the panel and in the list beside it never share an id. *@
+   confirmed (only an AI summary nobody has read) or removed (design 8.13). Approving an urgent summary needs the staff
+   passkey confirmed in the last ten minutes (design 6.2): when the server asks for it, the browser's passkey prompt opens
+   on the same press, then the action is sent again, the form and its statement kept. Every element id carries IdPrefix,
+   so the same item's actions in the panel and in the list beside it never share an id. *@
 <div class="stack stack--tight" id="actions-@Key">
     @if (!_finished)
     {
@@ -358,7 +363,20 @@
             return;
         }
 
-        if (!Succeeded(await SendAsync(action), "statement", "threshold", "date", "stage", "description", "descriptionUrl"))
+        var sent = await SendAsync(action);
+        if (sent.Problem?.Code == ConfirmationRequired)
+        {
+            // Design 6.2 (an urgent summary): the staff passkey once more, then the same action again; the form stays open
+            // with what was typed if the passkey is not given.
+            if (!await ConfirmPasskeyAsync())
+            {
+                return;
+            }
+
+            sent = await SendAsync(action);
+        }
+
+        if (!Succeeded(sent, "statement", "threshold", "date", "stage", "description", "descriptionUrl"))
         {
             return;
         }
@@ -381,6 +399,37 @@
         _done = L["Mod.Done." + action];
         await OnDone.InvokeAsync(_done);
     });
+
+    /// <summary>The server's answer when the staff passkey must be confirmed again (design 6.2).</summary>
+    private const string ConfirmationRequired = "passkey.confirmation-required";
+
+    /// <summary>
+    /// The staff passkey once more, in this session (design 6.2's ten-minute rule): the browser's passkey prompt, then the
+    /// server's check. False, with the message set, when the browser cannot, the moderator cancels or the server refuses.
+    /// </summary>
+    private async Task<bool> ConfirmPasskeyAsync()
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Mod.Passkey.Unsupported"];
+            return false;
+        }
+
+        var options = await Auth.GetPasskeyRequestOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return false;
+        }
+
+        var credential = await PasskeyBrowser.GetAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Mod.Passkey.Cancelled"];
+            return false;
+        }
+
+        return Succeeded(await MeApi.ConfirmPasskeyAsync(new Lt2.Api.Contracts.Auth.PasskeyCredentialRequest { Credential = credential }));
+    }
 
     /// <summary>What the form can tell before sending: a typed date in the form yyyy-MM-dd, a chosen merge target.</summary>
     private bool Checked(string action)

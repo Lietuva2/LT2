@@ -10,7 +10,8 @@ namespace Lt2.Web.Endpoints.Admin;
 
 /// <summary>
 /// Sensitive actions need a passkey confirmation within the last ten minutes (design 6.2): changing roles, resetting an
-/// account and saving a runtime setting (design 6.9). The one check, for the endpoints and the in-process clients alike.
+/// account, saving a runtime setting (design 6.9), ending an MP's link, sending the introduction letter and approving an
+/// urgent summary. The one check, for the endpoints and the in-process clients alike.
 /// </summary>
 internal static class FreshConfirmation
 {

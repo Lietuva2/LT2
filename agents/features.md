@@ -688,7 +688,10 @@ Integration: `DemoAppealTests`, `DemoSidesTests`.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
   A bill's page links to it as `/suvestines/{day}?projektas={number}` (`DigestRoutes.PageAt`; owner, 2026-11-17): the summaries
   holding the bill first, its item first, no fragment; a day with one summary has one title, its kind and date.
-- Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
+- Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary. The
+  urgent one needs a fresh staff-passkey confirmation (design 6.2, `FreshConfirmation` in `UrgentDigestEndpoint` and
+  `ServerModerationApi.UrgentAsync`); `ModerationActions` asks for the passkey on the same press when refused with
+  `passkey.confirmation-required` and sends it again with the statement typed.
 - **Sending (design 8.19, built 2026-11-16; owner 2026-11-17).** `Digest:Sending` `off` (default: prepared and reviewed the
   same way, then dry runs, nothing for MPs in the outbox) or `automatic` (sent at its time; an urgent one at once). Two locks keep it off whatever
   the setting says (`SendingRules.State`, `MailLocks`): no introduction letter sent yet, and invented data (`Demo:Allowed`, or any synthetic parliament data: `IMpMailAddresses.HoldsInventedDataAsync`) without

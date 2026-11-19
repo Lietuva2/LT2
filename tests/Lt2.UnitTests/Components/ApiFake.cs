@@ -22,6 +22,10 @@ public class ApiFake : DispatchProxy
     public void OnEach<T>(string method, params ApiResult<T>[] answers) =>
         _answers[method] = new Queue<object>(answers.Select(a => (object)Task.FromResult(a)));
 
+    /// <summary>As the generic one, for a method that answers no value.</summary>
+    public void OnEach(string method, params ApiResult[] answers) =>
+        _answers[method] = new Queue<object>(answers.Select(a => (object)Task.FromResult(a)));
+
     /// <summary>Answers each call of <paramref name="method"/> from its arguments.</summary>
     public void OnCall<T>(string method, Func<object?[], ApiResult<T>> answer) => _answers[method] = (Func<object?[], object>)(a => Task.FromResult(answer(a)));
 

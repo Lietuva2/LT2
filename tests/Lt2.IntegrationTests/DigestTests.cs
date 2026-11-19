@@ -345,7 +345,8 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     [Fact]
     public async Task A_held_record_enters_no_summary_until_released_and_one_urgent_summary_may_exceed_the_ceiling()
     {
-        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        var staff = await ModeratorAsync();
+        var (moderator, admin) = (staff.Browser, (await AdministratorAsync()).Browser);
         await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
         await admin.SetSettingAsync("Digest:MaxPerWeek", 1);
         var monday = ReasonsToComeSteps.MondayInWeeks(6);
@@ -363,6 +364,9 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
 
             (await moderator.GetJsonAsync<Lt2.Api.Contracts.Appeals.ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.Single(a => a.Id == record.Id).Held.ShouldBeTrue();
             (await RunDueAsync(At(monday, 7, 10))).ShouldBeEmpty("a held record enters no summary");
+
+            // Design 6.2: approving an urgent summary needs the staff passkey confirmed in the last ten minutes.
+            await staff.ConfirmFreshAsync();
             using (var urgentHeld = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Skubiai." }))
             {
                 await urgentHeld.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.held");

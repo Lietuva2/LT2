@@ -2,6 +2,9 @@ using System.Reflection;
 using Bunit;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
+using Lt2.Api.Contracts.Auth;
+using Lt2.Api.Contracts.Digests;
+using Lt2.Api.Contracts.Me;
 using Lt2.Web.Client;
 using Lt2.Web.Client.Appeals;
 using Microsoft.AspNetCore.Components;
@@ -22,6 +25,7 @@ public sealed class ModerationActionsTests : BunitContext
     private static readonly Guid Item = Guid.Parse("0193a1b2-0000-7000-8000-000000000412");
 
     private readonly ApiFake _api;
+    private readonly ApiFake _me;
 
     public ModerationActionsTests()
     {
@@ -32,6 +36,15 @@ public sealed class ModerationActionsTests : BunitContext
         _api = (ApiFake)(object)api;
         _api.On("GetAiAsync", ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(false)));
         Services.AddSingleton(api);
+
+        // Design 6.2: the staff passkey confirmed again before an urgent summary, when the server asks for it.
+        var auth = DispatchProxy.Create<IAuthApi, ApiFake>();
+        ((ApiFake)(object)auth).On("GetPasskeyRequestOptionsAsync", ApiResult<string>.Ok("{\"challenge\":\"AAAA\"}"));
+        Services.AddSingleton(auth);
+        var me = DispatchProxy.Create<IMeApi, ApiFake>();
+        _me = (ApiFake)(object)me;
+        _me.On("ConfirmPasskeyAsync", ApiResult.Ok());
+        Services.AddSingleton(me);
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
     }
@@ -334,6 +347,53 @@ public sealed class ModerationActionsTests : BunitContext
         actions.FindAll("form").ShouldBeEmpty();
         actions.Markup.ShouldContain(Text("Mod.Done.hide"));
         actions.FindAll("[role=group] button").ShouldBeEmpty("a hidden item is finished");
+    }
+
+    private static ApiResult ConfirmationRequired() =>
+        ApiResult.Fail(new ApiProblem { Status = 403, Code = "passkey.confirmation-required", Detail = "Patvirtinkite veiksmą prieigos raktu." });
+
+    /// <summary>
+    /// Design 6.2: approving an urgent summary needs the staff passkey confirmed in the last ten minutes. When the server asks
+    /// for it, the same press opens the browser's passkey prompt, confirms it and sends the summary again with the statement
+    /// the moderator typed.
+    /// </summary>
+    [Fact]
+    public void An_urgent_summary_refused_for_a_stale_confirmation_asks_the_passkey_and_is_sent_again_with_the_same_statement()
+    {
+        _api.OnEach("UrgentAsync", ConfirmationRequired(), ApiResult.Ok());
+        var module = JSInterop.SetupModule("./js/passkeys.js");
+        module.Setup<bool>("isSupported").SetResult(true);
+        module.Setup<string>("get", _ => true).SetResult("{\"id\":\"staff-key\"}");
+        var actions = Render("record", "open");
+        actions.Find($"#action-urgent-{Item}").Click();
+        actions.Find($"#statement-{Item}").Input("Balsavimas perkeltas į rytojų.");
+        actions.Find("form").Submit();
+
+        actions.WaitForAssertion(() => _api.Calls.Count(c => c == "UrgentAsync").ShouldBe(2));
+        _me.Calls.ShouldBe(["ConfirmPasskeyAsync"]);
+        _api.Arguments.Where((_, i) => _api.Calls[i] == "UrgentAsync").Select(a => ((UrgentDigestRequest)a[1]!).Statement)
+            .ShouldBe(["Balsavimas perkeltas į rytojų.", "Balsavimas perkeltas į rytojų."]);
+        actions.WaitForAssertion(() => actions.Markup.ShouldContain(Text("Mod.Done.urgent")));
+    }
+
+    /// <summary>Design 6.2: without the passkey nothing is sent again; the form stays open with the statement, and says why.</summary>
+    [Fact]
+    public void Cancelling_the_passkey_prompt_sends_nothing_more_and_keeps_the_statement()
+    {
+        _api.On("UrgentAsync", ConfirmationRequired());
+        var module = JSInterop.SetupModule("./js/passkeys.js");
+        module.Setup<bool>("isSupported").SetResult(true);
+        module.Setup<string>("get", _ => true).SetException(new Microsoft.JSInterop.JSException("NotAllowedError"));
+        var actions = Render("record", "open");
+        actions.Find($"#action-urgent-{Item}").Click();
+        actions.Find($"#statement-{Item}").Input("Balsavimas perkeltas į rytojų.");
+        actions.Find("form").Submit();
+
+        actions.WaitForAssertion(() => actions.Markup.ShouldContain(Text("Mod.Passkey.Cancelled")));
+        _api.Calls.Count(c => c == "UrgentAsync").ShouldBe(1, "no second press without the confirmation");
+        _me.Calls.ShouldBeEmpty();
+        actions.Find($"#statement-{Item}").GetAttribute("value").ShouldBe("Balsavimas perkeltas į rytojų.");
+        actions.Markup.ShouldNotContain(Text("Mod.Done.urgent"));
     }
 
     [Fact]
