@@ -69,7 +69,8 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            (Parliament's OfficialAddresses, the one definition), and the MP's own account is refused as a
                            participant through MpAccounts.Refusal (SharedKernel) wherever a participant is checked.
                            Identity also owns known browsers (Application/SignIn/KnownBrowsers.cs, design 8.20.2: the
-                           __Host-lt2.device cookie, identity.known_device, the code allowance they choose).
+                           __Host-lt2.device cookie, identity.known_device, the code allowance they choose), and
+                           changing the account's address (Application/Email/EmailChangeHandlers.cs, design 6.2).
 src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageRules and Sketch (HyperLogLog) pure,
                            UsageCounter in the web host's memory, written every minute; the host feeds it from
                            Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin; its day bars are
@@ -135,8 +136,9 @@ tools/standin_overlay.py    writes every file of Recent/ (fixed seeds; --check c
   a page's components render at the same time in one scope, and one context cannot run two operations at once. In
   Identity only the flows that write through ASP.NET Core Identity's `UserManager`/`SignInManager` in the same transaction
   use the request's `IdentityDb`: registration, sign-in by code or passkey, passkeys, staff activation and sessions, an
-  MP's link changes and deleting the account (`ConcurrentReadTests` runs the module's reads at once in one scope).
-- Limits that count rows (codes per address and per known browser, known browsers per account, one current invitation
+  MP's link changes, changing the email address and deleting the account (`ConcurrentReadTests` runs the module's reads
+  at once in one scope).
+- Limits that count rows (codes per address and per known browser, codes of an address change per new address, known browsers per account, one current invitation
   code, one urgent summary a week, follows per account) are counted under a PostgreSQL advisory lock in the same
   transaction (design 6.8); Identity's are in `IdentityLocks`, Appeals' in `AdvisoryLocks`.
 - Rules are checked where the data is written (design 6.8), not only by the HTTP validators: a module service enforces

@@ -16,8 +16,11 @@ namespace Lt2.Identity.Application;
 /// </summary>
 internal sealed class SignInCodeIssuer(IdentityDb db, IOutbox outbox, ISettings settings, KnownBrowsers browsers, TimeProvider clock, ILogger<SignInCodeIssuer> logger)
 {
-    /// <summary>Must be called inside <paramref name="transaction"/>, so the code and its email commit together.</summary>
-    public async Task IssueAsync(User user, IDbContextTransaction transaction, CancellationToken cancellationToken)
+    /// <summary>
+    /// Must be called inside <paramref name="transaction"/>, so the code and its email commit together. <paramref name="purpose"/>
+    /// (<see cref="SignInCodePurposes"/>) only chooses the email's words: the code is the account's code like any other.
+    /// </summary>
+    public async Task IssueAsync(User user, IDbContextTransaction transaction, CancellationToken cancellationToken, string? purpose = null)
     {
         // The limits are counted under the account's lock, so parallel requests cannot pass them together (design 6.8).
         await IdentityLocks.SignInCodesAsync(db, user.Id, cancellationToken);
@@ -60,7 +63,7 @@ internal sealed class SignInCodeIssuer(IdentityDb db, IOutbox outbox, ISettings 
         });
         await db.SaveChangesAsync(cancellationToken);
 
-        var email = new SignInCodeEmail(user.Email!, code, (int)SignInCodeRules.Lifetime.TotalMinutes);
+        var email = new SignInCodeEmail(user.Email!, code, (int)SignInCodeRules.Lifetime.TotalMinutes, purpose);
         await outbox.EnqueueAsync(
             OutboxMessage.Create(MessageKinds.SignInCodeEmail, email),
             transaction.GetDbTransaction(),

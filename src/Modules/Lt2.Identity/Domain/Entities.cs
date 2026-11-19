@@ -298,6 +298,71 @@ internal sealed class SignInCode
 }
 
 /// <summary>
+/// <c>identity.email_change</c> (design 6.2, "Changing the email address"): a code sent to the address a member wants to move the
+/// account to, with the rules of a sign-in code (ten minutes, five attempts, single use, the newest replaces the earlier ones),
+/// stored only as a hash. A row is also written when the address belonged to another member's account and that account was
+/// told instead (no code, <see cref="CodeHash"/> null): every email of a change to one address counts against that address's
+/// limits. Deleted by the maintenance job after a day, and with the account.
+/// </summary>
+internal sealed class EmailChange
+{
+    public Guid Id { get; set; }
+
+    public Guid UserId { get; set; }
+
+    /// <summary>The new address as the member typed it; the account takes it as typed.</summary>
+    public string Email { get; set; } = "";
+
+    /// <summary>The new address's key for the one-account-per-address rule and its code limits.</summary>
+    public string NormalizedEmail { get; set; } = "";
+
+    /// <summary>The code's hash (salted with <see cref="Id"/>), or null when no code was sent (the address was taken).</summary>
+    public byte[]? CodeHash { get; set; }
+
+    /// <summary>The session that asked: the change is confirmed only from it, and it goes on under a new key.</summary>
+    public Guid? SessionId { get; set; }
+
+    /// <summary>How the member proved it was them: <c>passkey</c> or <c>code</c> (for the audit entry).</summary>
+    public string Proof { get; set; } = "";
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset ExpiresAt { get; set; }
+
+    public int FailedAttempts { get; set; }
+
+    /// <summary>Set when the code was used, replaced by a newer one, or made void by a change of the address.</summary>
+    public DateTimeOffset? ConsumedAt { get; set; }
+}
+
+/// <summary>
+/// <c>identity.email_restore</c> (design 6.2): the one-time link the old address gets when the account's address changed, good
+/// for seven days, its code stored only as a hash. It holds the old address, which it puts back; nothing else keeps an earlier
+/// address, and the row goes with the account, when used, and after its seven days (the maintenance job).
+/// </summary>
+internal sealed class EmailRestore
+{
+    public Guid Id { get; set; }
+
+    public Guid UserId { get; set; }
+
+    /// <summary>The address in use before the change, as it was on the account.</summary>
+    public string Email { get; set; } = "";
+
+    public string NormalizedEmail { get; set; } = "";
+
+    /// <summary><see cref="Lt2.SharedKernel.OneTimeCode.Hash"/> of the link's code.</summary>
+    public byte[] TokenHash { get; set; } = [];
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset ExpiresAt { get; set; }
+
+    /// <summary>Used, or made void when another of the account's links was used.</summary>
+    public DateTimeOffset? UsedAt { get; set; }
+}
+
+/// <summary>
 /// <c>identity.known_device</c> (design 6.2, 8.20.2): a browser that has signed in to the account. Holds the keyed hash of the
 /// random identifier in its <c>__Host-lt2.device</c> cookie, never the identifier. Gives no access by itself: it only chooses
 /// which code allowance and which code apply. Forgetting the row makes the browser a stranger again.

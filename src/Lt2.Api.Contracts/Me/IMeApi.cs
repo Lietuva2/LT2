@@ -42,6 +42,24 @@ public interface IMeApi
     /// </summary>
     Task<ApiResult> StartPasskeySessionAsync(Auth.PasskeyCredentialRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Design 6.2, changing the email address: a code to the address in use, for a session not signed in with a passkey. Refused
+    /// for a staff account and the MP's own account, which prove it with a passkey.
+    /// </summary>
+    Task<ApiResult> SendEmailProofCodeAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The new address with the proof (a passkey session, or the code to the address in use): a code goes to the new address. The
+    /// answer is the same whether the address is free or not.
+    /// </summary>
+    Task<ApiResult> ChangeEmailAsync(EmailChangeRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>The code from the new address: the account moves to it; its other sessions end, this one goes on.</summary>
+    Task<ApiResult<EmailChangedResponse>> ConfirmEmailChangeAsync(EmailConfirmRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>The old address's link (design 6.2): puts it back and ends every session of the account. No session needed.</summary>
+    Task<ApiResult> RestoreEmailAsync(EmailRestoreRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Gives the explicit consent to store positions (design 6.5).</summary>
     Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default);
 

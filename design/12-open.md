@@ -9,8 +9,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 - 3, 6.2: a bot check at registration (ALTCHA); account verification beyond email; a fresh passkey confirmation before
   approving an urgent send of a summary.
 - 5.4: the `notify.email_message` table.
-- 6.2: changing the account's email address (designed 2026-11-19, with the owner's go-ahead for one address per
-  account and no second one).
 - 6.4: rate limiting in Caddy (only the application's own limits exist).
 - 6.5: disk encryption, TLS to the database, encrypted backups (none of them in the repository).
 - 6.7: lock files, Dependabot, CodeQL, secret scanning, image scanning, an SBOM, signed images pulled by digest,
@@ -63,16 +61,6 @@ it is to be updated after discussion in chat.
 name alone); the change is audited without the names and no earlier names are kept; registrations invited by an MP's
 office are left out of the invitation codes' counts. Before registration opens or real summaries go: see
 "How accounts are verified" under Decisions needed.
-
-**6.2 Changing the email address.** Designed as proposed; "no" names what changes:
-1. The change starts only in a passkey session or after a code to the address in use, so a stolen session cannot move
-   the account. If no: any signed-in session.
-2. The account's other sessions end when the address changes. If no: they stay.
-3. The old address gets a one-time link for seven days that puts it back and ends every session. If no: the email says
-   to write to the moderators, and an administrator's tool puts the address back.
-4. An address held only by a pending account is not taken: the change proves it and the pending account goes. If no:
-   it is taken until the pending account is deleted after seven days.
-5. The email to the old address shows the new one in part (`r***@pavyzdys.test`). If no: it shows none.
 
 **6.5 Positions consent.** A person whose consent was given to an older text of the positions consent keeps their sides
 and marks, stored, counted and shown as theirs; taking a side back and removing a mark work; a new side or mark opens
@@ -270,7 +258,10 @@ for the lawyer).
 ## Awaiting a native speaker
 
 - 6.2: the texts of changing the email address ("El. pašto adresas", "Keisti adresą", "Kodą išsiuntėme adresu …",
-  "Ne jūs? Grąžinti ankstesnį adresą" and the three emails).
+  "Ne jūs? Grąžinti ankstesnį adresą", the rest of the part and of the page that puts the old address back: `UiText`
+  `EmailPart.*`, `EmailRestore.*`), its emails (`EmailTemplates` `EmailChange.*`: the code to the new address, to an
+  address that has an account, to the old address, when the old address was put back) and the code to the address in
+  use (`EmailProofCode.*`), and the refusals `email.same`, `email.proof-required`, `email.restore-invalid`.
 - 6.5: the positions consent text (`UiText` `PositionConsent.Text`).
 - 8.2: the notes "Bus skaičiuojama, kai prašysite balsuoti už." and "Neskaičiuojama: jūs prašote balsuoti prieš."; the
   writing box's hint "Sąrašą rašykite eilutėmis, pradėtomis „-“ arba „1.“." (also for the owner).

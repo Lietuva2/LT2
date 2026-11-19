@@ -21,6 +21,12 @@ internal static class IdentityLocks
     /// <summary>Sign-in codes for one account are counted and issued one request at a time.</summary>
     public static Task SignInCodesAsync(IdentityDb db, Guid userId, CancellationToken ct) => TakeAsync(db, "lt2.sign-in-code:" + userId.ToString("N"), ct);
 
+    /// <summary>
+    /// One normalised address (design 6.2, changing the email address): the change codes sent to it are counted and issued, and
+    /// an account takes it or gives it back, one request at a time.
+    /// </summary>
+    public static Task EmailAddressAsync(IdentityDb db, string normalizedEmail, CancellationToken ct) => TakeAsync(db, "lt2.email:" + normalizedEmail, ct);
+
     /// <summary>One account's known browsers (design 8.20.2) are added and capped one request at a time.</summary>
     public static Task KnownDevicesAsync(IdentityDb db, Guid userId, CancellationToken ct) => TakeAsync(db, "lt2.known-device:" + userId.ToString("N"), ct);
 

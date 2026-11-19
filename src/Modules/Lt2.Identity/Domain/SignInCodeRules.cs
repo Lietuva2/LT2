@@ -64,23 +64,31 @@ internal static class SignInCodeRules
     public static CodeCheck Check(SignInCode code, string input, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(code);
-        if (code.ConsumedAt is not null)
+        return Check(code.Id, code.CodeHash, code.ExpiresAt, code.FailedAttempts, code.ConsumedAt, input, now);
+    }
+
+    /// <summary>
+    /// The same check for any code kept as these rules keep one (design 6.2: a code to a new address follows the rules of a
+    /// sign-in code): a code with no hash never matches.
+    /// </summary>
+    public static CodeCheck Check(Guid id, byte[]? hash, DateTimeOffset expiresAt, int failedAttempts, DateTimeOffset? consumedAt, string input, DateTimeOffset now)
+    {
+        if (consumedAt is not null || hash is null)
         {
             return CodeCheck.AlreadyUsed;
         }
 
-        if (now >= code.ExpiresAt)
+        if (now >= expiresAt)
         {
             return CodeCheck.Expired;
         }
 
-        if (code.FailedAttempts >= MaxAttempts)
+        if (failedAttempts >= MaxAttempts)
         {
             return CodeCheck.TooManyAttempts;
         }
 
-        var expected = code.CodeHash;
-        var actual = Hash(code.Id, input ?? "");
-        return CryptographicOperations.FixedTimeEquals(expected, actual) ? CodeCheck.Valid : CodeCheck.Mismatch;
+        var actual = Hash(id, input ?? "");
+        return CryptographicOperations.FixedTimeEquals(hash, actual) ? CodeCheck.Valid : CodeCheck.Mismatch;
     }
 }

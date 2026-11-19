@@ -5,7 +5,7 @@
 @inject IAuthApi Auth
 @inject Passkeys PasskeyBrowser
 
-@* "Saugumas ir duomenys" (design 8.21): passkeys, sessions, known browsers (design 8.20.2, #zinomos-narsykles), the positions
+@* "Saugumas ir duomenys" (design 8.21): the email address (design 6.2, #el-pastas), passkeys, sessions, known browsers (design 8.20.2, #zinomos-narsykles), the positions
    consent (design 6.5: a consent about stored data, withdrawn with what it covers), the export and deleting the account
    (#my-data), signing out. *@
 @if (Me is null)
@@ -18,6 +18,9 @@ else
 
     <section class="stack" aria-labelledby="saugumas-title" id="saugumas-ir-duomenys">
         <h2 id="saugumas-title">@L["Parts.Security"]</h2>
+
+        @* Design 6.2: the address in use (read in the browser only) and "Keisti adresą"; a change ends the other sessions. *@
+        <MyEmail Changed="ReloadSessionsAsync" />
 
         <div class="pair">
             <section class="sheet sheet--cut stack" aria-labelledby="passkeys-title">
@@ -205,6 +208,12 @@ else
         Info = L["Passkeys.Added"];
         await ReloadMeAsync();
     });
+
+    private async Task ReloadSessionsAsync()
+    {
+        Sessions = await LoadSessionsAsync();
+        await ReloadMeAsync();
+    }
 
     private Task EndSessionAsync(Guid id) => RunAsync(async () =>
     {

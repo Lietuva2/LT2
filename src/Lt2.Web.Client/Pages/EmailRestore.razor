@@ -1,0 +1,70 @@
+@page "/paskyra/el-pastas/grazinti"
+@rendermode InteractiveWebAssembly
+@inherits InteractiveBase<UiText>
+@inject IMeApi MeApi
+@inject NavigationManager Navigation
+
+@* Design 6.2: "Ne jūs? Grąžinti ankstesnį adresą", the link the old address gets when the account's address changed. It works in
+   any browser, without a session and without the terms accepted. Design 6.8: the link's code is after the "#", read in the
+   browser and sent in the request body, so the page the server renders knows nothing of it; opened without it, the page asks
+   for the code the email gives beside the link. Nothing happens until the person presses the button (a mail program that
+   opens links ahead must not put an address back). Then every session of the account ends and the person signs in again. *@
+<PageTitle>@L["EmailRestore.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <h1>@L["EmailRestore.Title"]</h1>
+    <NeedsScript />
+    @if (_done)
+    {
+        <section class="sheet stack" id="email-restored">
+            <p role="status">@L["EmailRestore.Done"]</p>
+            <p><button type="button" class="btn" id="email-restored-sign-in" @onclick="SignIn">@L["EmailRestore.SignIn"]</button></p>
+        </section>
+    }
+    else if (_read && _token is null)
+    {
+        <p id="email-restore-code-lead">@L["EmailRestore.CodeLead"]</p>
+        <CodeEntry Label="@L["MpTakeover.CodeLabel"]" Entered="code => _token = code" IdPrefix="email-restore-" />
+    }
+    else
+    {
+        <section class="sheet stack" aria-labelledby="email-restore-what" id="email-restore">
+            <h2 id="email-restore-what" class="visually-hidden">@L["EmailRestore.Title"]</h2>
+            <p>@L["EmailRestore.Lead"]</p>
+            <p>@L["EmailRestore.Sessions"]</p>
+            <p><button type="button" class="btn" id="email-restore-submit" disabled="@(Locked || !_read)" @onclick="RestoreAsync">@L["EmailRestore.Submit"]</button></p>
+        </section>
+    }
+    <Messages Message="@Message" Info="@Info" />
+</div>
+
+@code {
+    private bool _read;
+    private bool _done;
+    private string? _token;
+
+    protected override void OnInitialized()
+    {
+        // Nothing until the browser has read the code: the server cannot know it.
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _token = InvitationLink.Fragment(Navigation.Uri);
+        _read = true;
+    }
+
+    private Task RestoreAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await MeApi.RestoreEmailAsync(new EmailRestoreRequest { Token = _token ?? "" })))
+        {
+            return;
+        }
+
+        _done = true;
+    });
+
+    /// <summary>Every session of the account ended: the sign-in page is loaded afresh.</summary>
+    private void SignIn() => Navigation.NavigateTo("/prisijungti", forceLoad: true);
+}

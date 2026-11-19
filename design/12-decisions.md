@@ -35,6 +35,15 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - A member may change their display name as often as they like; the account keeps no time of the change (2026-11-16).
 - Display names are not unique; only the email address is, one account per normalised address (2026-11-19).
 - A member can change the account's email address; an account has one address, no second one (6.2, 2026-11-19).
+- Changing the email address, as designed (6.2, 2026-11-19: "Yes, build it"); "no" would have changed:
+  1. The change starts only in a passkey session or after a code to the address in use, so a stolen session cannot move
+     the account. If no: any signed-in session.
+  2. The account's other sessions end when the address changes. If no: they stay.
+  3. The old address gets a one-time link for seven days that puts it back and ends every session. If no: the email says
+     to write to the moderators, and an administrator's tool puts the address back.
+  4. An address held only by a pending account is not taken: the change proves it and the pending account goes. If no:
+     it is taken until the pending account is deleted after seven days.
+  5. The email to the old address shows the new one in part (`r***@pavyzdys.test`). If no: it shows none.
 - A passkey session stays one: no renewal or security-stamp check turns it into a code session or changes what it was
   signed in as (2026-11-17).
 - "Patvirtinti prieigos raktu" in place wherever an action needs a passkey session (speaking for an MP, a linked

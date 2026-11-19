@@ -65,6 +65,30 @@ internal static class EmailAddress
 
     /// <summary>The domain part of a normalised address.</summary>
     public static string Domain(string normalized) => normalized[(normalized.LastIndexOf('@') + 1)..];
+
+    /// <summary>
+    /// Two addresses are one account's address (design 6.2): the same once normalised. An address that is no address is the same
+    /// as nothing.
+    /// </summary>
+    public static bool Same(string? one, string? other) =>
+        Normalize(one) is { } a && Normalize(other) is { } b && string.Equals(a, b, StringComparison.Ordinal);
+
+    /// <summary>
+    /// An address shown in part (design 6.2: the email to the old address says to which address the account moved): the first
+    /// character of the part before the <c>@</c>, three stars and the domain in lower case, <c>r***@pavyzdys.test</c>. A text with
+    /// no part before or after the <c>@</c> is three stars alone.
+    /// </summary>
+    public static string Mask(string? email)
+    {
+        var trimmed = email?.Trim() ?? "";
+        var at = trimmed.LastIndexOf('@');
+        if (at <= 0 || at == trimmed.Length - 1)
+        {
+            return "***";
+        }
+
+        return string.Concat(trimmed.AsSpan(0, 1), "***@", trimmed[(at + 1)..].ToLowerInvariant());
+    }
 }
 
 /// <summary>Domains of disposable mailbox services, refused at registration (design 6.2). A starting list.</summary>

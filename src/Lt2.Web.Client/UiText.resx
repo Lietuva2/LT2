@@ -288,4 +288,32 @@
   <data name="Mp.Copies.Title" xml:space="preserve"><value>Suvestinių kopijos jums</value></data>
   <data name="Mp.Copies.Lead" xml:space="preserve"><value>Seimo nario suvestinių kopijas gaunate savo paskyros adresu. Kaip dažnai – pasirenkate patys; Seimo nario pasirinkimas jų nekeičia:</value></data>
   <data name="Mp.Copies.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="EmailPart.Title" xml:space="preserve"><value>El. pašto adresas</value></data>
+  <data name="EmailPart.InUse" xml:space="preserve"><value>Paskyros adresas:</value></data>
+  <data name="EmailPart.Open" xml:space="preserve"><value>Keisti adresą</value></data>
+  <data name="EmailPart.Cancel" xml:space="preserve"><value>Atšaukti</value></data>
+  <data name="EmailPart.ProveLead" xml:space="preserve"><value>Pirmiausia patvirtinkite, kad tai jūs.</value></data>
+  <data name="EmailPart.ProvePasskey" xml:space="preserve"><value>Prieigos raktu:</value></data>
+  <data name="EmailPart.ProveCode" xml:space="preserve"><value>Arba kodu, kurį išsiųsime dabartiniu adresu:</value></data>
+  <data name="EmailPart.SendProofCode" xml:space="preserve"><value>Siųsti kodą</value></data>
+  <data name="EmailPart.StaffPasskey" xml:space="preserve"><value>Darbuotojo paskyros adresą galima keisti tik prisijungus darbuotojo prieigos raktu.</value></data>
+  <data name="EmailPart.ProofSent.Before" xml:space="preserve"><value>Kodą išsiuntėme adresu</value></data>
+  <data name="EmailPart.ProofSent.After" xml:space="preserve"><value>. Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
+  <data name="EmailPart.ProofCodeLabel" xml:space="preserve"><value>Kodas iš laiško dabartiniu adresu</value></data>
+  <data name="EmailPart.NewLabel" xml:space="preserve"><value>Kitas el. pašto adresas</value></data>
+  <data name="EmailPart.SendCode" xml:space="preserve"><value>Siųsti kodą šiuo adresu</value></data>
+  <data name="EmailPart.CodeSent.Before" xml:space="preserve"><value>Kodą išsiuntėme adresu</value></data>
+  <data name="EmailPart.CodeSent.After" xml:space="preserve"><value>. Įveskite jį čia; adresas bus pakeistas, kai kodas tiks.</value></data>
+  <data name="EmailPart.CodeHint" xml:space="preserve"><value>Kodas galioja 10 min. Jei laiško nėra, patikrinkite adresą ir pradėkite iš naujo.</value></data>
+  <data name="EmailPart.Confirm" xml:space="preserve"><value>Patvirtinti</value></data>
+  <data name="EmailPart.Again" xml:space="preserve"><value>Pradėti iš naujo</value></data>
+  <data name="EmailPart.Changed" xml:space="preserve"><value>Adresas pakeistas. Kitose naršyklėse paskyra atjungta. Ankstesniu adresu išsiuntėme laišką apie pakeitimą.</value></data>
+  <data name="EmailRestore.PageTitle" xml:space="preserve"><value>Grąžinti ankstesnį adresą · Lietuva 2.0</value></data>
+  <data name="EmailRestore.Title" xml:space="preserve"><value>Grąžinti ankstesnį el. pašto adresą</value></data>
+  <data name="EmailRestore.Lead" xml:space="preserve"><value>Paskyros el. pašto adresas buvo pakeistas, o šią nuorodą gavote ankstesniu adresu. Jei keitėte ne jūs, grąžinkite ankstesnį adresą.</value></data>
+  <data name="EmailRestore.Sessions" xml:space="preserve"><value>Visos paskyros sesijos bus baigtos: prisijungti reikės iš naujo, ankstesniu adresu.</value></data>
+  <data name="EmailRestore.Submit" xml:space="preserve"><value>Grąžinti ankstesnį adresą</value></data>
+  <data name="EmailRestore.Done" xml:space="preserve"><value>Ankstesnis adresas grąžintas, visos paskyros sesijos baigtos. Prisijunkite ankstesniu adresu.</value></data>
+  <data name="EmailRestore.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
+  <data name="EmailRestore.CodeLead" xml:space="preserve"><value>Įveskite kodą iš laiško, kurį gavote ankstesniu paskyros adresu.</value></data>
 </root>

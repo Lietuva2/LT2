@@ -1,0 +1,243 @@
+@inherits InteractiveBase<UiText>
+@inject IMeApi MeApi
+@inject IAuthApi Auth
+@inject Passkeys PasskeyBrowser
+
+@* Design 6.2, "Changing the email address", on "Saugumas ir duomenys" (#el-pastas). The address in use is read by the island in the
+   browser: the page the server renders holds nothing of it. "Keisti adresą" opens the form in place: first proving it is the
+   person (a passkey session, made here by "Patvirtinti prieigos raktu", or a code sent to the address in use, typed in the
+   same form; a staff account needs its staff passkey, confirmed in the last ten minutes, and the MP's own account a passkey
+   session), then the new address, then the code sent to it. The answer to the address is the same whether it is free or not.
+   On success the address shown is the new one and the island tells the page (Changed): the account's other sessions ended. *@
+<section class="sheet stack" aria-labelledby="email-title" id="el-pastas">
+    <h3 id="email-title">@L["EmailPart.Title"]</h3>
+    @if (_me is null)
+    {
+        <p class="small">@L["Loading"]</p>
+    }
+    else
+    {
+        <p>@L["EmailPart.InUse"] <b id="email-current">@_me.Email</b></p>
+    }
+
+    @switch (_step)
+    {
+        case Step.Closed:
+            <p><button type="button" class="btn btn--plain" id="email-change-open" disabled="@(Locked || _me is null)" @onclick="Open">@L["EmailPart.Open"]</button></p>
+            break;
+
+        case Step.Prove:
+            <div class="sheet--quiet stack" id="email-prove">
+                @if (_me!.StaffAccount)
+                {
+                    @* A staff account outside its staff-passkey session: the staff passkey first (design 6.2). *@
+                    <p class="note note--quiet" id="email-staff-passkey"><span>@L["EmailPart.StaffPasskey"]</span></p>
+                    <PasskeyStep Staff="true" Account="_me" IdPrefix="email-" Confirmed="ProvenAsync" />
+                }
+                else if (_me.Mp?.Part == "mp")
+                {
+                    <PasskeyStep IdPrefix="email-" Confirmed="ProvenAsync" />
+                }
+                else
+                {
+                    <p id="email-prove-lead">@L["EmailPart.ProveLead"]</p>
+                    @if (_me.PasskeyCount > 0)
+                    {
+                        <PasskeyStep IdPrefix="email-" Text="@L["EmailPart.ProvePasskey"]" Confirmed="ProvenAsync" />
+                    }
+                    <div class="note note--quiet note--act">
+                        <p>@L["EmailPart.ProveCode"]</p>
+                        <button type="button" class="btn" id="email-proof-send" disabled="@Locked" @onclick="SendProofCodeAsync">@L["EmailPart.SendProofCode"]</button>
+                    </div>
+                }
+                <p><button type="button" class="linkish" id="email-cancel" disabled="@Locked" @onclick="Close">@L["EmailPart.Cancel"]</button></p>
+            </div>
+            break;
+
+        case Step.Address:
+            <form class="sheet--quiet stack" id="email-change-form" @onsubmit="ChangeAsync" novalidate>
+                @if (_byCode)
+                {
+                    <p role="status" id="email-proof-sent">@L["EmailPart.ProofSent.Before"] <b>@_me!.Email</b>@L["EmailPart.ProofSent.After"]</p>
+                    <div class="field @ErrorClass("proofCode")">
+                        <label for="email-proof-code">@L["EmailPart.ProofCodeLabel"]</label>
+                        <input class="input input--code num" id="email-proof-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                               @bind="_proofCode" @bind:event="oninput" disabled="@Locked"
+                               aria-invalid="@Invalid("proofCode")" aria-describedby="@DescribedBy("proofCode", "email-proof-code")" />
+                        <FieldError Errors="Errors" Field="proofCode" For="email-proof-code" />
+                    </div>
+                }
+                <div class="field @ErrorClass("email")">
+                    <label for="email-new">@L["EmailPart.NewLabel"]</label>
+                    <input class="input" id="email-new" type="email" autocomplete="email" inputmode="email"
+                           @bind="_new" @bind:event="oninput" disabled="@Locked"
+                           aria-invalid="@Invalid("email")" aria-describedby="@DescribedBy("email", "email-new")" />
+                    <FieldError Errors="Errors" Field="email" For="email-new" />
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn" id="email-change-submit" disabled="@Locked">@L["EmailPart.SendCode"]</button>
+                    <button type="button" class="btn btn--plain" id="email-cancel" disabled="@Locked" @onclick="Close">@L["EmailPart.Cancel"]</button>
+                </div>
+            </form>
+            break;
+
+        case Step.Confirm:
+            <form class="sheet--quiet stack" id="email-confirm-form" @onsubmit="ConfirmAsync" novalidate>
+                <p role="status" id="email-code-sent">@L["EmailPart.CodeSent.Before"] <b>@_sentTo</b>@L["EmailPart.CodeSent.After"]</p>
+                <div class="field @ErrorClass("code")">
+                    <label for="email-code">@L["Code.Label"]</label>
+                    <input class="input input--code num" id="email-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                           @bind="_code" @bind:event="oninput" disabled="@Locked"
+                           aria-invalid="@Invalid("code")" aria-describedby="@DescribedBy("code", "email-code", "email-code-hint")" />
+                    <p class="field__hint" id="email-code-hint">@L["EmailPart.CodeHint"]</p>
+                    <FieldError Errors="Errors" Field="code" For="email-code" />
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn" id="email-confirm-submit" disabled="@Locked">@L["EmailPart.Confirm"]</button>
+                    <button type="button" class="btn btn--plain" id="email-again" disabled="@Locked" @onclick="Open">@L["EmailPart.Again"]</button>
+                </div>
+            </form>
+            break;
+    }
+
+    <Messages Message="@Message" Info="@Info" />
+</section>
+
+@code {
+    private enum Step { Closed, Prove, Address, Confirm }
+
+    private MeResponse? _me;
+    private Step _step = Step.Closed;
+    private bool _byCode;
+    private string _proofCode = "";
+    private string _new = "";
+    private string _code = "";
+    private string? _sentTo;
+
+    /// <summary>The account's address changed: the page reads what that ended (its sessions) again.</summary>
+    [Parameter]
+    public EventCallback Changed { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // The address only in the browser: the page the server renders holds nothing personal.
+        if (RendererInfo.IsInteractive)
+        {
+            await ReadAsync();
+        }
+    }
+
+    private async Task ReadAsync()
+    {
+        var me = await MeApi.GetAsync();
+        if (me.IsSuccess)
+        {
+            _me = me.Value;
+        }
+    }
+
+    /// <summary>"Keisti adresą" (and "Pradėti iš naujo"): the address form at once in a session that proves it, the proof otherwise.</summary>
+    private void Open()
+    {
+        ClearMessages();
+        _proofCode = "";
+        _code = "";
+        _byCode = false;
+        _step = Proven(_me!) ? Step.Address : Step.Prove;
+    }
+
+    /// <summary>
+    /// The session proves it is the person (design 6.2): a staff account's staff-passkey session (its fresh confirmation is asked
+    /// when the server wants it), or a passkey session.
+    /// </summary>
+    private static bool Proven(MeResponse me) => me.StaffAccount ? me.ActiveStaffRoles.Count > 0 : me.PasskeySession;
+
+    private void Close()
+    {
+        ClearMessages();
+        _step = Step.Closed;
+    }
+
+    /// <summary>The session became a passkey (or staff) session in place: the account is read again and the address asked.</summary>
+    private async Task ProvenAsync()
+    {
+        await ReadAsync();
+        _byCode = false;
+        _step = Step.Address;
+    }
+
+    private Task SendProofCodeAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await MeApi.SendEmailProofCodeAsync()))
+        {
+            return;
+        }
+
+        _byCode = true;
+        _step = Step.Address;
+    });
+
+    private Task ChangeAsync() => RunAsync(async () =>
+    {
+        var request = new EmailChangeRequest { Email = _new.Trim(), ProofCode = _byCode ? _proofCode.Trim() : null };
+        var sent = await MeApi.ChangeEmailAsync(request);
+        if (sent.Problem?.Code == "passkey.confirmation-required")
+        {
+            // A staff account: the staff passkey once more (the ten-minute rule), then the same press again.
+            if (!await ConfirmPasskeyAsync())
+            {
+                return;
+            }
+
+            sent = await MeApi.ChangeEmailAsync(request);
+        }
+
+        if (!Succeeded(sent, "email", "proofCode"))
+        {
+            return;
+        }
+
+        _sentTo = request.Email;
+        _code = "";
+        _step = Step.Confirm;
+    });
+
+    private Task ConfirmAsync() => RunAsync(async () =>
+    {
+        var confirmed = await MeApi.ConfirmEmailChangeAsync(new EmailConfirmRequest { Code = _code.Trim() });
+        if (!Succeeded(confirmed, "code"))
+        {
+            return;
+        }
+
+        _me = _me! with { Email = confirmed.Value!.Email };
+        _step = Step.Closed;
+        Info = L["EmailPart.Changed"];
+        await Changed.InvokeAsync();
+    });
+
+    /// <summary>The staff passkey once more in this session (design 6.2's ten-minute rule); false, with the message set, otherwise.</summary>
+    private async Task<bool> ConfirmPasskeyAsync()
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Passkey.Unsupported"];
+            return false;
+        }
+
+        var options = await Auth.GetPasskeyRequestOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return false;
+        }
+
+        var credential = await PasskeyBrowser.GetAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Passkey.Cancelled"];
+            return false;
+        }
+
+        return Succeeded(await MeApi.ConfirmPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }));
+    }
+}

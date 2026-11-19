@@ -124,6 +124,7 @@ public static class IdentityModule
         services.AddScoped<TermsHandlers>();
         services.AddScoped<PartySupportHandlers>();
         services.AddScoped<AccountDataHandlers>();
+        services.AddScoped<Application.Email.EmailChangeHandlers>();
 
         // Design 8.5: MPs on the platform (the web host composes Parliament's IMpDirectory and Appeals' IPositionErasure).
         services.AddScoped<Application.Politicians.PoliticianAccess>();
@@ -248,8 +249,21 @@ internal sealed class IdentityModuleFacade(
     PartySupportHandlers parties,
     AccountDataHandlers data,
     KnownBrowsers browsers,
+    Application.Email.EmailChangeHandlers emailChange,
     SignInManager<User> signIn) : IIdentityModule
 {
+    public Task<Result<Unit>> SendEmailProofCodeAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        emailChange.SendProofCodeAsync(user, cancellationToken);
+
+    public Task<Result<Unit>> ChangeEmailAsync(ClaimsPrincipal user, string email, string? proofCode, CancellationToken cancellationToken) =>
+        emailChange.ChangeAsync(user, email, proofCode, cancellationToken);
+
+    public Task<Result<string>> ConfirmEmailChangeAsync(ClaimsPrincipal user, string code, string? ipHash, CancellationToken cancellationToken) =>
+        emailChange.ConfirmAsync(user, code, ipHash, cancellationToken);
+
+    public Task<Result<Unit>> RestoreEmailAsync(string token, string? ipHash, CancellationToken cancellationToken) =>
+        emailChange.RestoreAsync(token, ipHash, cancellationToken);
+
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
         register.HandleAsync(registration, cancellationToken);
 

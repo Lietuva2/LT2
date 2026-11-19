@@ -85,10 +85,15 @@ public static class NotificationsModule
         services.AddSingleton<FollowTemplates>();
         services.AddSingleton<MpTemplates>();
         services.AddSingleton<DigestReviewTemplate>();
+        services.AddSingleton<EmailChangeTemplates>();
 
         // Every outbox kind and the template that renders it.
         services.AddEmail<SignInCodeEmail, SignInCodeTemplate>(MessageKinds.SignInCodeEmail, t => t.Render);
         services.AddEmail<AccountNoticeEmail, AccountNoticeTemplate>(MessageKinds.AccountNoticeEmail, t => t.Render);
+        services.AddEmail<EmailChangeCodeEmail, EmailChangeTemplates>(MessageKinds.EmailChangeCodeEmail, t => t.Code);
+        services.AddEmail<EmailChangeTakenEmail, EmailChangeTemplates>(MessageKinds.EmailChangeTakenEmail, t => t.Taken);
+        services.AddEmail<EmailChangedEmail, EmailChangeTemplates>(MessageKinds.EmailChangedEmail, t => t.Changed);
+        services.AddEmail<EmailRestoredEmail, EmailChangeTemplates>(MessageKinds.EmailRestoredEmail, t => t.Restored);
         services.AddEmail<ModerationNoticeEmail, ModerationNoticeTemplate>(MessageKinds.ModerationNoticeEmail, t => t.Render);
         services.AddEmail<ReportDecidedEmail, ReportDecidedTemplate>(MessageKinds.ReportDecidedEmail, t => t.Render);
         services.AddEmail<WritingRestrictionEmail, WritingRestrictionTemplate>(MessageKinds.WritingRestrictionEmail, t => t.Render);
