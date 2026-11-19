@@ -17,10 +17,14 @@ namespace Lt2.Identity.Application.Politicians;
 /// <summary>
 /// MPs on the platform (design 8.5.1 to 8.5.4). The official address is read through <see cref="IMpDirectory"/> only; the
 /// notices go to the MP's account's own address, which was the official address when the profile was taken over, so no
-/// address leaves the Parliament module. Nothing here logs an address, a token or who is linked to whom.
+/// address leaves the Parliament module. Nothing here logs an address, a token or who is linked to whom. The reads a page's
+/// components make (the office, the MPs taken over, who speaks for an MP) take a context of their own per call; the changes
+/// use the request's context, which the account's passkeys (<see cref="UserManager{TUser}"/>) and the account's deletion
+/// write in the same transaction.
 /// </summary>
 internal sealed class PoliticianHandlers(
     IdentityDb db,
+    IDbContextFactory<IdentityDb> contexts,
     UserManager<User> users,
     SignInManager<User> signIn,
     PoliticianAccess access,
@@ -225,7 +229,7 @@ internal sealed class PoliticianHandlers(
             var profileOff = false;
             if (await db.Profiles.FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken) is { PublicProfileId: not null } publicProfile)
             {
-                await profiles.SwitchOffAsync(publicProfile, now, transaction.GetDbTransaction(), cancellationToken);
+                await profiles.SwitchOffAsync(db, publicProfile, now, transaction.GetDbTransaction(), cancellationToken);
                 profileOff = true;
             }
 
@@ -305,8 +309,9 @@ internal sealed class PoliticianHandlers(
         }
 
         // Reading is open to a code session too (design 8.5.4: it can read everything of its own).
-        var members = await (from l in PoliticianAccess.OpenLinks(db).AsNoTracking()
-                             join p in db.Profiles.AsNoTracking() on l.UserId equals p.UserId
+        await using var reads = await contexts.CreateDbContextAsync(cancellationToken);
+        var members = await (from l in PoliticianAccess.OpenLinks(reads).AsNoTracking()
+                             join p in reads.Profiles.AsNoTracking() on l.UserId equals p.UserId
                              where l.SeimasPersonId == state.Link.SeimasPersonId && l.Part == PoliticianParts.Office
                              orderby l.CreatedAt
                              select new OfficeMember(l.Id, p.DisplayName, l.CreatedAt))
@@ -607,7 +612,8 @@ internal sealed class PoliticianHandlers(
     public async Task<IReadOnlyDictionary<long, DateTimeOffset>> TakenOverAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken)
     {
         var ids = seimasPersonIds.Distinct().ToList();
-        return await PoliticianAccess.OpenLinks(db).AsNoTracking()
+        await using var reads = await contexts.CreateDbContextAsync(cancellationToken);
+        return await PoliticianAccess.OpenLinks(reads).AsNoTracking()
             .Where(l => l.Part == PoliticianParts.Mp && ids.Contains(l.SeimasPersonId))
             .ToDictionaryAsync(l => l.SeimasPersonId, l => l.CreatedAt, cancellationToken);
     }

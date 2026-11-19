@@ -10,9 +10,9 @@ namespace Lt2.Identity.Application.Feedback;
 /// <summary>
 /// Feedback from members to the team (design 8.10). An item is linked to the account only when the member allows a reply;
 /// otherwise it has a random id, no account and only the day. Staff never see an address: replies go through the outbox.
-/// Nothing here reads sides, and no item text is logged.
+/// Nothing here reads sides, and no item text is logged. A context of its own per operation.
 /// </summary>
-internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog audit, TimeProvider clock) : IFeedback
+internal sealed class FeedbackHandlers(IDbContextFactory<IdentityDb> contexts, IOutbox outbox, IAuditLog audit, TimeProvider clock) : IFeedback
 {
     public const string StaffPath = "/moderavimas/atsiliepimai";
 
@@ -31,6 +31,7 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
         }
 
         // A member, not a pending account. A writing restriction (design 8.3) does not stop feedback.
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         if (!await db.Profiles.AsNoTracking().AnyAsync(p => p.UserId == userId && p.RegisteredAt != null, cancellationToken))
         {
             return Error.Forbidden("member.required");
@@ -53,6 +54,7 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
 
     public async Task<IReadOnlyList<FeedbackInfo>> ListAsync(string? kind, string? status, CancellationToken cancellationToken)
     {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var items = await db.Feedback.AsNoTracking()
             .Where(f => (kind == null || f.Kind == kind) && (status == null || f.Status == status))
             .OrderByDescending(f => f.CreatedOn).ThenBy(f => f.Status)
@@ -80,6 +82,7 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
             return Error.Validation("feedback.note", "note");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var item = await db.Feedback.FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
         if (item is null)
@@ -117,6 +120,7 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
             return Error.Validation("feedback.reply", "text");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var item = await db.Feedback.FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
         if (item is null)
@@ -160,6 +164,7 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
             return 0;
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var count = await db.Feedback.Where(f => !f.Noticed).ExecuteUpdateAsync(s => s.SetProperty(f => f.Noticed, true), cancellationToken);
         if (count > 0)

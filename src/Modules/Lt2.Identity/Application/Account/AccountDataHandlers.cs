@@ -17,9 +17,11 @@ namespace Lt2.Identity.Application.Account;
 /// passkeys, roles)
 /// and the unsent emails to it.
 /// Counts fall; frozen summary snapshots keep their totals. Nothing is logged or audited with the address.
+/// The download reads through a context of its own; the deletion uses the request's context, in whose transaction the MP's
+/// link and the public profile end too.
 /// </summary>
 internal sealed class AccountDataHandlers(
-    IdentityDb db, IEnumerable<IAccountData> modules, UserManager<User> users, SignInManager<User> signIn, IOutbox outbox, StaffAccess staff, Politicians.PoliticianHandlers politicians, Profiles.ProfileHandlers profiles, TimeProvider clock)
+    IdentityDb db, IDbContextFactory<IdentityDb> contexts, IEnumerable<IAccountData> modules, SignInManager<User> signIn, IOutbox outbox, StaffAccess staff, Politicians.PoliticianHandlers politicians, Profiles.ProfileHandlers profiles, TimeProvider clock)
 {
     internal static readonly Error StaffPasskeyRequired = Error.Forbidden("account.staff-passkey-required");
 
@@ -30,21 +32,25 @@ internal sealed class AccountDataHandlers(
             return Error.Unauthorized("auth.required");
         }
 
-        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        var profile = await db.Profiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+        await using var reads = await contexts.CreateDbContextAsync(cancellationToken);
+        var user = await reads.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        var profile = await reads.Profiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         if (user is null || profile is null)
         {
             return Error.Unauthorized("auth.required");
         }
 
-        var consents = await db.Consents.AsNoTracking().Where(c => c.UserId == userId)
+        var consents = await reads.Consents.AsNoTracking().Where(c => c.UserId == userId)
             .Select(c => new { c.Kind, c.TextVersion, c.GivenAt, c.WithdrawnAt }).ToListAsync(cancellationToken);
-        var party = await db.PartySupports.AsNoTracking().Where(p => p.UserId == userId).Select(p => new { p.Party, p.GivenAt }).FirstOrDefaultAsync(cancellationToken);
-        var sessions = await db.Sessions.AsNoTracking().Where(s => s.UserId == userId)
+        var party = await reads.PartySupports.AsNoTracking().Where(p => p.UserId == userId).Select(p => new { p.Party, p.GivenAt }).FirstOrDefaultAsync(cancellationToken);
+        var sessions = await reads.Sessions.AsNoTracking().Where(s => s.UserId == userId)
             .Select(s => new { s.CreatedAt, s.LastSeenAt, s.Device, s.Method }).ToListAsync(cancellationToken);
-        var passkeys = (await users.GetPasskeysAsync(user)).Select(p => new { name = p.Name, createdAt = p.CreatedAt }).ToList();
-        var roles = await (from ur in db.UserRoles.AsNoTracking()
-                           join r in db.Roles.AsNoTracking() on ur.RoleId equals r.Id
+        var passkeys = (await reads.Set<IdentityUserPasskey<Guid>>().AsNoTracking().Where(p => p.UserId == userId).ToListAsync(cancellationToken))
+            .OrderBy(p => p.Data.CreatedAt)
+            .Select(p => new { name = p.Data.Name, createdAt = p.Data.CreatedAt })
+            .ToList();
+        var roles = await (from ur in reads.UserRoles.AsNoTracking()
+                           join r in reads.Roles.AsNoTracking() on ur.RoleId equals r.Id
                            where ur.UserId == userId
                            select r.Name).ToListAsync(cancellationToken);
         var export = new Dictionary<string, object?>(StringComparer.Ordinal)
@@ -60,7 +66,7 @@ internal sealed class AccountDataHandlers(
                 // An organisation's code is not kept (design 8.14.14, stage B): only the level, as for any code.
                 invitationCode = profile.InvitationCode,
                 invitationLevel = profile.InvitationLevel,
-                myInvitation = await MyInvitationAsync(userId, cancellationToken),
+                myInvitation = await MyInvitationAsync(reads, userId, cancellationToken),
                 roles,
                 passkeys,
             },
@@ -76,7 +82,7 @@ internal sealed class AccountDataHandlers(
                 publicProfileId = profile.PublicProfileId,
                 publicSince = profile.PublicSince,
             },
-            ["profileReports"] = await db.ProfileReports.AsNoTracking().Where(r => r.ReporterUserId == userId).OrderBy(r => r.CreatedAt)
+            ["profileReports"] = await reads.ProfileReports.AsNoTracking().Where(r => r.ReporterUserId == userId).OrderBy(r => r.CreatedAt)
                 .Select(r => new { ground = r.Ground, text = r.Text, createdAt = r.CreatedAt, status = r.Status }).ToListAsync(cancellationToken),
             // Design 8.25.9: whether the party is shown on the public profile (the consent party-public is among the consents).
             ["partySupport"] = party is null ? null : new
@@ -88,19 +94,19 @@ internal sealed class AccountDataHandlers(
             },
 
             // Only the feedback linked to the account (design 8.10); unlinked items lead to nobody.
-            ["feedback"] = (await db.Feedback.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedOn).ToListAsync(cancellationToken))
+            ["feedback"] = (await reads.Feedback.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedOn).ToListAsync(cancellationToken))
                 .Select(f => new { f.Kind, f.Text, f.PagePath, f.Browser, f.CreatedOn, f.Status, replies = JsonSerializer.Deserialize<JsonElement>(f.Replies) }),
             ["sessions"] = sessions,
 
             // Design 8.20.2: the browsers known to the account; never the cookie or its hash.
-            ["knownBrowsers"] = await db.KnownDevices.AsNoTracking().Where(d => d.UserId == userId).OrderBy(d => d.FirstSeenAt)
+            ["knownBrowsers"] = await reads.KnownDevices.AsNoTracking().Where(d => d.UserId == userId).OrderBy(d => d.FirstSeenAt)
                 .Select(d => new { browser = d.Label, firstSeenAt = d.FirstSeenAt, lastSeenAt = d.LastSeenAt }).ToListAsync(cancellationToken),
 
             // Design 8.5: the account's links to an MP (as the MP or an office member) and the links and invitations it made;
             // never a token.
-            ["politicianLinks"] = await db.PoliticianLinks.AsNoTracking().Where(l => l.UserId == userId).OrderBy(l => l.CreatedAt)
+            ["politicianLinks"] = await reads.PoliticianLinks.AsNoTracking().Where(l => l.UserId == userId).OrderBy(l => l.CreatedAt)
                 .Select(l => new { l.SeimasPersonId, l.Part, l.VerifiedBy, l.CreatedAt, l.EndedAt, l.EndReason }).ToListAsync(cancellationToken),
-            ["politicianTokens"] = await db.PoliticianTokens.AsNoTracking().Where(t => t.UserId == userId).OrderBy(t => t.CreatedAt)
+            ["politicianTokens"] = await reads.PoliticianTokens.AsNoTracking().Where(t => t.UserId == userId).OrderBy(t => t.CreatedAt)
                 .Select(t => new { t.Kind, t.SeimasPersonId, t.CreatedAt, t.ExpiresAt, t.UsedAt }).ToListAsync(cancellationToken),
         };
 
@@ -114,7 +120,7 @@ internal sealed class AccountDataHandlers(
     }
 
     /// <summary>The person's own current code and how many completed registration with their codes; no names.</summary>
-    private async Task<object?> MyInvitationAsync(Guid userId, CancellationToken ct)
+    private static async Task<object?> MyInvitationAsync(IdentityDb db, Guid userId, CancellationToken ct)
     {
         var own = await db.Invitations.AsNoTracking()
             .Where(i => i.Kind == InvitationKinds.Personal && i.IssuedByUserId == userId)
@@ -167,7 +173,7 @@ internal sealed class AccountDataHandlers(
             // Design 8.25.1: a public profile's id is retired for good (410) and every follow of it ends.
             if (await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken) is { PublicProfileId: not null } profile)
             {
-                await profiles.SwitchOffAsync(profile, now, transaction.GetDbTransaction(), cancellationToken);
+                await profiles.SwitchOffAsync(db, profile, now, transaction.GetDbTransaction(), cancellationToken);
             }
 
             // The user row cascades to profile, consents, party support, sessions, known browsers, codes, passkeys, roles,

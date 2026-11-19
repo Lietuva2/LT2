@@ -195,13 +195,16 @@ public static class IdentityModule
 
     /// <summary>
     /// The module's database. Identity reads its schema version (3, with passkeys) from the application services when it
-    /// builds the model, so every host that uses the database must set it, not only the web host.
+    /// builds the model, so every host that uses the database must set it, not only the web host. A factory as well as the
+    /// scoped context: the components of a page render at the same time in one scope, so the module's services take a context
+    /// of their own per operation. The scoped context is for ASP.NET Core Identity's stores and the flows that write through
+    /// them in one transaction (registration, sign-in, passkeys, staff sessions, an MP's link changes, deleting the account).
     /// </summary>
     private static void AddIdentityDb(this IServiceCollection services)
     {
         services.Configure<IdentityOptions>(o => o.Stores.SchemaVersion = IdentitySchemaVersions.Version3);
-        services.AddDbContext<IdentityDb>((sp, options) =>
-            IdentityDb.Configure(options, sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddDbContextFactory<IdentityDb>(
+            (sp, options) => IdentityDb.Configure(options, sp.GetRequiredService<NpgsqlDataSource>()), ServiceLifetime.Scoped);
     }
 
     private static void ConfigureCookie(CookieBuilder cookie, string name)

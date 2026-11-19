@@ -12,9 +12,9 @@ namespace Lt2.Identity.Application.Consents;
 /// <summary>
 /// The explicit consent before a first position or a first "Man svarbu" (design 6.5): given against a versioned text and
 /// stored; withdrawing it (every version given) deletes the person's positions and marks in the same transaction (through
-/// <see cref="IPositionErasure"/>, owned by Appeals).
+/// <see cref="IPositionErasure"/>, owned by Appeals). A context of its own per operation.
 /// </summary>
-internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure erasure, TimeProvider clock)
+internal sealed class PositionConsentHandlers(IDbContextFactory<IdentityDb> contexts, IPositionErasure erasure, TimeProvider clock)
 {
     public async Task<Result<Unit>> GiveAsync(ClaimsPrincipal principal, string textVersion, CancellationToken cancellationToken)
     {
@@ -30,6 +30,7 @@ internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure er
         }
 
         var now = clock.GetUtcNow();
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var current = await CurrentPositionConsent.Of(db.Consents, userId).AnyAsync(cancellationToken);
         if (!current)
         {
@@ -55,6 +56,7 @@ internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure er
         }
 
         var now = clock.GetUtcNow();
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Consents
             .Where(c => c.UserId == userId && c.Kind == PositionConsent.Kind && c.WithdrawnAt == null)
@@ -70,9 +72,9 @@ internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure er
 /// explicit consent (kind <c>party-support</c>), since a party preference is a political opinion too; removing it deletes
 /// the row and withdraws the consent. Showing it on the public profile (design 8.25.9, owner 2026-11-17) is its own consent,
 /// <see cref="PartyPublicConsent"/>, given only while the profile is public; removing or changing the party, unticking the box
-/// and switching the profile off withdraw it. Audited without the party.
+/// and switching the profile off withdraw it. Audited without the party. A context of its own per operation.
 /// </summary>
-internal sealed class PartySupportHandlers(IdentityDb db, IParticipants participants, AccountEvents events, TimeProvider clock)
+internal sealed class PartySupportHandlers(IDbContextFactory<IdentityDb> contexts, IParticipants participants, AccountEvents events, TimeProvider clock)
 {
     public const string ConsentKind = "party-support";
     public const string ConsentVersion = "2026-11-13";
@@ -84,9 +86,10 @@ internal sealed class PartySupportHandlers(IdentityDb db, IParticipants particip
             return Error.Unauthorized("auth.required");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var party = await db.PartySupports.AsNoTracking().Where(p => p.UserId == userId).Select(p => p.Party).FirstOrDefaultAsync(cancellationToken);
         var profilePublic = await db.Profiles.AsNoTracking().AnyAsync(p => p.UserId == userId && p.PublicProfileId != null, cancellationToken);
-        var shown = party is not null && profilePublic && await ShownConsents(userId).AnyAsync(cancellationToken);
+        var shown = party is not null && profilePublic && await ShownConsents(db, userId).AnyAsync(cancellationToken);
         return new PartySupportState(party, shown, profilePublic, PartyPublicConsent.TextVersion);
     }
 
@@ -112,6 +115,7 @@ internal sealed class PartySupportHandlers(IdentityDb db, IParticipants particip
             return refused;
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
         // Under the profile's lock: switching the profile off at the same moment cannot leave the consent behind.
@@ -126,7 +130,7 @@ internal sealed class PartySupportHandlers(IdentityDb db, IParticipants particip
             return Error.Conflict("party.profile-off");
         }
 
-        if (!await ShownConsents(userId).AnyAsync(cancellationToken))
+        if (!await ShownConsents(db, userId).AnyAsync(cancellationToken))
         {
             var now = clock.GetUtcNow();
             db.Consents.Add(new Consent { Id = Ids.New(clock), UserId = userId, Kind = PartyPublicConsent.Kind, TextVersion = PartyPublicConsent.TextVersion, GivenAt = now });
@@ -146,26 +150,27 @@ internal sealed class PartySupportHandlers(IdentityDb db, IParticipants particip
             return Error.Unauthorized("auth.required");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await WithdrawShownAsync(userId, "box", new Actor(userId, Roles.Member, ipHash), transaction.GetDbTransaction(), cancellationToken);
+        await WithdrawShownAsync(db, userId, "box", new Actor(userId, Roles.Member, ipHash), transaction.GetDbTransaction(), cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
     }
 
     /// <summary>
-    /// Withdraws <see cref="PartyPublicConsent"/> in the caller's transaction, audited as <c>party.public-off</c> with why
+    /// Withdraws <see cref="PartyPublicConsent"/> in the caller's context and transaction, audited as <c>party.public-off</c> with why
     /// (<paramref name="reason"/>: <c>box</c>, <c>party</c>, <c>profile</c>) and never the party; nothing when none was in force.
     /// </summary>
-    public async Task WithdrawShownAsync(Guid userId, string reason, Actor actor, System.Data.Common.DbTransaction transaction, CancellationToken cancellationToken)
+    public async Task WithdrawShownAsync(IdentityDb db, Guid userId, string reason, Actor actor, System.Data.Common.DbTransaction transaction, CancellationToken cancellationToken)
     {
-        var withdrawn = await ShownConsents(userId).ExecuteUpdateAsync(s => s.SetProperty(c => c.WithdrawnAt, clock.GetUtcNow()), cancellationToken);
+        var withdrawn = await ShownConsents(db, userId).ExecuteUpdateAsync(s => s.SetProperty(c => c.WithdrawnAt, clock.GetUtcNow()), cancellationToken);
         if (withdrawn > 0)
         {
             await events.RecordAsync(transaction, "party.public-off", userId, actor, new { reason }, null, cancellationToken);
         }
     }
 
-    private IQueryable<Consent> ShownConsents(Guid userId) =>
+    private static IQueryable<Consent> ShownConsents(IdentityDb db, Guid userId) =>
         db.Consents.Where(c => c.UserId == userId && c.Kind == PartyPublicConsent.Kind && c.WithdrawnAt == null);
 
     public async Task<Result<Unit>> SetAsync(ClaimsPrincipal principal, string? party, bool consent, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken)
@@ -193,6 +198,7 @@ internal sealed class PartySupportHandlers(IdentityDb db, IParticipants particip
         }
 
         var now = clock.GetUtcNow();
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await IdentityLocks.ProfileAsync(db, userId, cancellationToken);
         var before = await db.PartySupports.AsNoTracking().Where(p => p.UserId == userId).Select(p => p.Party).FirstOrDefaultAsync(cancellationToken);
@@ -200,7 +206,7 @@ internal sealed class PartySupportHandlers(IdentityDb db, IParticipants particip
         // Design 8.25.9: the consent to show a party covers the party it was given for; removing or changing it withdraws it.
         if (before != party)
         {
-            await WithdrawShownAsync(userId, "party", new Actor(userId, Roles.Member, null), transaction.GetDbTransaction(), cancellationToken);
+            await WithdrawShownAsync(db, userId, "party", new Actor(userId, Roles.Member, null), transaction.GetDbTransaction(), cancellationToken);
         }
 
         await db.PartySupports.Where(p => p.UserId == userId).ExecuteDeleteAsync(cancellationToken);

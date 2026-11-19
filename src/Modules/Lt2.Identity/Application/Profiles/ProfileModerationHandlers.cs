@@ -10,9 +10,9 @@ namespace Lt2.Identity.Application.Profiles;
 /// <summary>
 /// Reports of a public profile and what moderators do with "Apie mane" (design 8.25.6): hide with a statement emailed to the
 /// person, "Palikti", restore while not replaced. Audited as <c>moderation.profile.*</c>, never with the text; reporters are
-/// never shown.
+/// never shown. A context of its own per operation.
 /// </summary>
-internal sealed class ProfileModerationHandlers(IdentityDb db, IParticipants participants, IOutbox outbox, IAuditLog audit, TimeProvider clock)
+internal sealed class ProfileModerationHandlers(IDbContextFactory<IdentityDb> contexts, IParticipants participants, IOutbox outbox, IAuditLog audit, TimeProvider clock)
 {
     private const string Open = "open";
 
@@ -34,6 +34,7 @@ internal sealed class ProfileModerationHandlers(IdentityDb db, IParticipants par
             return Error.NotFound("member.not-found");
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var target = await db.Profiles.AsNoTracking().Where(p => p.PublicProfileId == profileId).Select(p => (Guid?)p.UserId).FirstOrDefaultAsync(cancellationToken);
         if (target is not { } targetUserId)
         {
@@ -79,6 +80,7 @@ internal sealed class ProfileModerationHandlers(IdentityDb db, IParticipants par
 
     public async Task<IReadOnlyList<ProfileModerationItem>> QueueAsync(CancellationToken cancellationToken)
     {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var reports = await db.ProfileReports.AsNoTracking().Where(r => r.Status == Open).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
         var reported = reports.Select(r => r.TargetUserId).Distinct().ToList();
         var profiles = await db.Profiles.AsNoTracking()
@@ -145,6 +147,7 @@ internal sealed class ProfileModerationHandlers(IdentityDb db, IParticipants par
             return refused;
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await IdentityLocks.ProfileAsync(db, id, cancellationToken);
         var profile = await db.Profiles.FirstOrDefaultAsync(p => p.UserId == id, cancellationToken);

@@ -10,9 +10,9 @@ namespace Lt2.Identity.Application.Staff;
 /// <summary>
 /// Granting staff roles and resetting accounts (design 6.2). Works on the database alone, so the migrator can use it for
 /// the first administrator. The activation code is returned once and stored only as a hash; it never goes into an email,
-/// the audit log or a log line.
+/// the audit log or a log line. A context of its own per operation.
 /// </summary>
-internal sealed class RoleAdministration(IdentityDb db, AccountEvents events, TimeProvider clock) : IIdentityAdministration
+internal sealed class RoleAdministration(IDbContextFactory<IdentityDb> contexts, AccountEvents events, TimeProvider clock) : IIdentityAdministration
 {
     public async Task<Result<RoleGrant>> GrantRoleAsync(string email, string role, Actor actor, CancellationToken cancellationToken)
     {
@@ -22,7 +22,8 @@ internal sealed class RoleAdministration(IdentityDb db, AccountEvents events, Ti
             return Error.Validation("role.unknown", "role");
         }
 
-        var account = await FindAccountAsync(email, cancellationToken);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var account = await FindAccountAsync(db, email, cancellationToken);
         if (account is null)
         {
             return Error.NotFound("account.not-found");
@@ -71,7 +72,8 @@ internal sealed class RoleAdministration(IdentityDb db, AccountEvents events, Ti
     public async Task<Result<Unit>> ResetAccountAsync(string email, Actor actor, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(actor);
-        var account = await FindAccountAsync(email, cancellationToken);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var account = await FindAccountAsync(db, email, cancellationToken);
         if (account is null)
         {
             return Error.NotFound("account.not-found");
@@ -104,7 +106,7 @@ internal sealed class RoleAdministration(IdentityDb db, AccountEvents events, Ti
     }
 
     /// <summary>A completed account by address; pending accounts cannot hold roles.</summary>
-    private async Task<(Guid UserId, string Email)?> FindAccountAsync(string email, CancellationToken cancellationToken)
+    private static async Task<(Guid UserId, string Email)?> FindAccountAsync(IdentityDb db, string email, CancellationToken cancellationToken)
     {
         var normalized = EmailAddress.Normalize(email);
         if (normalized is null)

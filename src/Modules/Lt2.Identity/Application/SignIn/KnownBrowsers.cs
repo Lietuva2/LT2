@@ -10,9 +10,11 @@ namespace Lt2.Identity.Application.SignIn;
 /// Known browsers (design 6.2, 8.20.2): the <c>__Host-lt2.device</c> cookie and <c>identity.known_device</c>. The cookie is set
 /// on a successful sign-in by code or passkey of a member and at the end of registration, renewed on later sign-ins, and kept
 /// on signing out. It never authenticates, never lengthens a session and never skips a code: <see cref="RecognisedAsync"/> only
-/// tells the code rules which allowance and which codes apply. Nothing here is logged.
+/// tells the code rules which allowance and which codes apply. Nothing here is logged. The account screen's list and
+/// "Pamiršti" take a context of their own per call; recognising and remembering a browser belong to a sign-in and use its
+/// context, in its transaction when it has one.
 /// </summary>
-internal sealed class KnownBrowsers(IdentityDb db, IHttpContextAccessor accessor, DeviceKeys keys, TimeProvider clock)
+internal sealed class KnownBrowsers(IdentityDb db, IDbContextFactory<IdentityDb> contexts, IHttpContextAccessor accessor, DeviceKeys keys, TimeProvider clock)
 {
     /// <summary>The known browser of the current request for <paramref name="userId"/>, or null for a stranger to that account.</summary>
     public async Task<Guid?> RecognisedAsync(Guid userId, CancellationToken cancellationToken)
@@ -105,7 +107,8 @@ internal sealed class KnownBrowsers(IdentityDb db, IHttpContextAccessor accessor
     public async Task<IReadOnlyList<KnownBrowserSummary>> ListAsync(Guid userId, CancellationToken cancellationToken)
     {
         var hash = CurrentHash();
-        var rows = await db.KnownDevices.AsNoTracking()
+        await using var own = await contexts.CreateDbContextAsync(cancellationToken);
+        var rows = await own.KnownDevices.AsNoTracking()
             .Where(d => d.UserId == userId)
             .OrderByDescending(d => d.LastSeenAt)
             .ToListAsync(cancellationToken);
@@ -117,7 +120,8 @@ internal sealed class KnownBrowsers(IdentityDb db, IHttpContextAccessor accessor
     /// <summary>"Pamiršti": the browser becomes a stranger again; the codes it asked for go with it.</summary>
     public async Task<Result<Unit>> ForgetAsync(Guid userId, Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await db.KnownDevices.Where(d => d.Id == id && d.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        await using var own = await contexts.CreateDbContextAsync(cancellationToken);
+        var deleted = await own.KnownDevices.Where(d => d.Id == id && d.UserId == userId).ExecuteDeleteAsync(cancellationToken);
         return deleted == 1 ? Result.Ok() : Error.NotFound("known-browser.not-found");
     }
 

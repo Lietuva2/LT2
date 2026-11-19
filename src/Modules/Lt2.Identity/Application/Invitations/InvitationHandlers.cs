@@ -10,13 +10,14 @@ namespace Lt2.Identity.Application.Invitations;
 /// <summary>
 /// Personal invitation codes (design 6.2, decided 2026-11-13): one per member, made when first needed, replaceable;
 /// the member sees only their count. Administrators see numbers per day, per code and per level, never who invited
-/// whom, and switch codes off and on. Nothing here reads anything about sides.
+/// whom, and switch codes off and on. Nothing here reads anything about sides. A context of its own per operation.
 /// </summary>
-internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettings settings, TimeProvider clock) : IInvitations
+internal sealed class InvitationHandlers(IDbContextFactory<IdentityDb> contexts, IAuditLog audit, ISettings settings, TimeProvider clock) : IInvitations
 {
     public async Task<Result<MyInvitation>> MineAsync(Guid userId, CancellationToken cancellationToken)
     {
-        if (!await IsMemberAsync(userId, cancellationToken))
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        if (!await IsMemberAsync(db, userId, cancellationToken))
         {
             return Error.Forbidden("member.required");
         }
@@ -27,12 +28,13 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
         var current = await CurrentAsync(db, InvitationKinds.Personal, userId, cancellationToken)
             ?? await CreatePersonalAsync(db, clock, userId, null, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return await InfoAsync(userId, current, cancellationToken);
+        return await InfoAsync(db, userId, current, cancellationToken);
     }
 
     public async Task<Result<MyInvitation>> ReplaceAsync(Guid userId, CancellationToken cancellationToken)
     {
-        if (!await IsMemberAsync(userId, cancellationToken))
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        if (!await IsMemberAsync(db, userId, cancellationToken))
         {
             return Error.Forbidden("member.required");
         }
@@ -50,7 +52,7 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
             ? await CreatePersonalAsync(db, clock, userId, null, cancellationToken)
             : await ReplaceCurrentAsync(db, clock, current, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return await InfoAsync(userId, replacement, cancellationToken);
+        return await InfoAsync(db, userId, replacement, cancellationToken);
     }
 
     public async Task<InvitationStats> StatsAsync(int days, string? code, CancellationToken cancellationToken)
@@ -59,6 +61,7 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
         var today = VilniusTime.Today(clock);
         var from = today.AddDays(1 - days);
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var dailies = await db.InvitationDailies.AsNoTracking().Where(d => d.Day >= from).ToListAsync(cancellationToken);
         var perCode = dailies.ToDictionary(d => (d.InvitationId, d.Day), d => d.Completed);
         var perDay = dailies.GroupBy(d => d.Day).ToDictionary(g => g.Key, g => g.Sum(d => d.Completed));
@@ -110,6 +113,7 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
             return invalid;
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var invitation = await db.Invitations.FirstOrDefaultAsync(i => i.Id == invitationId, cancellationToken);
         if (invitation is null)
@@ -262,10 +266,10 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
         }
     }
 
-    private Task<bool> IsMemberAsync(Guid userId, CancellationToken ct) =>
+    private static Task<bool> IsMemberAsync(IdentityDb db, Guid userId, CancellationToken ct) =>
         db.Profiles.AsNoTracking().AnyAsync(p => p.UserId == userId && p.RegisteredAt != null, ct);
 
-    private async Task<MyInvitation> InfoAsync(Guid userId, Invitation current, CancellationToken ct)
+    private async Task<MyInvitation> InfoAsync(IdentityDb db, Guid userId, Invitation current, CancellationToken ct)
     {
         var counts = await db.Invitations.AsNoTracking()
             .Where(i => i.Kind == InvitationKinds.Personal && i.IssuedByUserId == userId)
