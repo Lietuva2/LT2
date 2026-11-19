@@ -24,6 +24,7 @@ internal static class ApiEndpoints
 
         AntiforgeryTokenEndpoint.Map(api);
         RegisterEndpoint.Map(api);
+        BotChallengeEndpoint.Map(api);
         RequestCodeEndpoint.Map(api);
         SignInEndpoint.Map(api);
         SignOutEndpoint.Map(api);

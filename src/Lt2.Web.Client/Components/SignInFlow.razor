@@ -5,6 +5,7 @@
 @inject AuthenticationStateProvider AuthenticationState
 @inject NavigationManager Navigation
 @inject Passkeys PasskeyBrowser
+@inject BotCheckBrowser BotCheckScript
 @inject IValidator<RegisterRequest> RegisterValidator
 @inject IValidator<RequestCodeRequest> CodeValidator
 @inject IValidator<SignInRequest> SignInValidator
@@ -237,6 +238,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // Design 6.4: the proof of work for the first request is made while the person types, so nobody waits at the button.
+        if (firstRender && RendererInfo.IsInteractive && _step is Step.SignIn or Step.Register or Step.Code)
+        {
+            await BotCheckScript.PrepareAsync();
+        }
+
         if (!firstRender || !RendererInfo.IsInteractive || ReturnTo is not null)
         {
             return;
@@ -405,13 +412,44 @@
         ClearMessages();
     }
 
+    /// <summary>
+    /// Design 6.4: the request that starts a code (registering, asking for one, asking again) carries a solved proof of work, made in
+    /// the background since the form was shown. If the server refuses the proof alone (it was used, or has expired), the request is
+    /// sent once more with a new one, silently; a status line shows only when the work takes longer than a moment.
+    /// </summary>
+    private async Task<ApiResult> SendCheckedAsync(Func<string?, Task<ApiResult>> send)
+    {
+        var result = await send(await SolutionAsync());
+        if (result.Problem?.Code == "bot-check.failed")
+        {
+            result = await send(await SolutionAsync());
+        }
+
+        await BotCheckScript.PrepareAsync();
+        return result;
+    }
+
+    private async Task<string?> SolutionAsync()
+    {
+        var taking = BotCheckScript.TakeAsync();
+        if (await Task.WhenAny(taking, Task.Delay(TimeSpan.FromMilliseconds(400))) != taking)
+        {
+            Info = L["BotCheck.Working"];
+            StateHasChanged();
+        }
+
+        var solution = await taking;
+        Info = null;
+        return solution;
+    }
+
     private Task RequestCodeAsync()
     {
         var request = new RequestCodeRequest { Email = _email.Trim() };
         ClearMessages();
         return !Valid(CodeValidator.Validate(request)) ? Task.CompletedTask : RunAsync(async () =>
         {
-            if (Succeeded(await Auth.RequestCodeAsync(request), FieldsOnThisStep))
+            if (Succeeded(await SendCheckedAsync(solution => Auth.RequestCodeAsync(request with { BotCheck = solution })), FieldsOnThisStep))
             {
                 _registered = false;
                 _step = Step.Code;
@@ -430,7 +468,7 @@
         ClearMessages();
         return !Valid(RegisterValidator.Validate(request)) ? Task.CompletedTask : RunAsync(async () =>
         {
-            if (Succeeded(await Auth.RegisterAsync(request), FieldsOnThisStep))
+            if (Succeeded(await SendCheckedAsync(solution => Auth.RegisterAsync(request with { BotCheck = solution })), FieldsOnThisStep))
             {
                 if (request.InvitationCode is { } code)
                 {
@@ -507,7 +545,7 @@
 
     private Task ResendAsync() => RunAsync(async () =>
     {
-        if (Succeeded(await Auth.RequestCodeAsync(new RequestCodeRequest { Email = _email.Trim() }), FieldsOnThisStep))
+        if (Succeeded(await SendCheckedAsync(solution => Auth.RequestCodeAsync(new RequestCodeRequest { Email = _email.Trim(), BotCheck = solution })), FieldsOnThisStep))
         {
             Info = L["Code.Resent"];
         }

@@ -32,7 +32,7 @@ public sealed class RateLimitTests(DatabaseFixture database) : IAsyncDisposable
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, ApiRoutes.Auth.Code)
         {
-            Content = System.Net.Http.Json.JsonContent.Create(new RequestCodeRequest { Email = TestData.Email() }),
+            Content = System.Net.Http.Json.JsonContent.Create(new RequestCodeRequest { Email = TestData.Email(), BotCheck = await browser.SolveAsync() }),
         };
         request.Headers.Add("X-Forwarded-For", forwardedFor);
         request.Headers.Add(ApiHeaders.Antiforgery, await browser.AntiforgeryTokenAsync());

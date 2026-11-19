@@ -9,7 +9,9 @@ namespace Lt2.IntegrationTests.Infrastructure;
 
 /// <summary>
 /// Behaves like the WebAssembly client: fetches an antiforgery token and sends it in the header with every
-/// state-changing call. A fresh token is fetched for each call, since a token is bound to who is signed in.
+/// state-changing call. A fresh token is fetched for each call, since a token is bound to who is signed in. A registration or a
+/// code request that carries no proof of work (`BotCheck` is `null`) gets a solved one first (design 6.4, <see cref="BotCheckSteps"/>),
+/// as the page's script does; a test of the refusal sends `BotCheck = ""` or a raw string body.
 /// </summary>
 public sealed class TestBrowser(HttpClient client, Lt2Factory factory) : IDisposable
 {
@@ -23,6 +25,7 @@ public sealed class TestBrowser(HttpClient client, Lt2Factory factory) : IDispos
 
     public async Task<HttpResponseMessage> SendAsync(HttpMethod method, string uri, object? body = null, bool antiforgery = true)
     {
+        body = await this.WithBotCheckAsync(body);
         using var request = new HttpRequestMessage(method, uri);
         if (body is not null)
         {

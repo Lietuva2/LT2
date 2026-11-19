@@ -9,6 +9,9 @@ public static class AuthRules
     public const int InvitationCodeMaxLength = 64;
     public const int DisplayNameMaxLength = 60;
 
+    /// <summary>The longest solved proof of work the server reads (design 6.4); the rule's own limit is the same.</summary>
+    public const int BotCheckMaxLength = 1024;
+
     public static IRuleBuilderOptions<T, string> ValidEmail<T>(this IRuleBuilderInitial<T, string> rule, IStringLocalizer l) =>
         rule.Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage(l["Email.Required"])
@@ -23,6 +26,7 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
         RuleFor(x => x.Email).ValidEmail(l);
         RuleFor(x => x.InvitationCode).MaximumLength(AuthRules.InvitationCodeMaxLength).WithMessage(l["Invitation.TooLong"]);
         RuleFor(x => x.OfficeInvitation).MaximumLength(AuthRules.InvitationCodeMaxLength).WithMessage(l["Invitation.TooLong"]);
+        RuleFor(x => x.BotCheck).MaximumLength(AuthRules.BotCheckMaxLength).WithMessage(l["BotCheck.TooLong"]);
     }
 }
 
@@ -31,6 +35,7 @@ public sealed class RequestCodeRequestValidator : AbstractValidator<RequestCodeR
     public RequestCodeRequestValidator(IStringLocalizer<ValidationMessages> l)
     {
         RuleFor(x => x.Email).ValidEmail(l);
+        RuleFor(x => x.BotCheck).MaximumLength(AuthRules.BotCheckMaxLength).WithMessage(l["BotCheck.TooLong"]);
     }
 }
 

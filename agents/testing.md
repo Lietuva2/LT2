@@ -67,6 +67,11 @@ Read before writing or changing a test. The commands are in [AGENTS.md](../AGENT
 - **Days are Vilnius calendar days.** "Yesterday" in a test is noon of the Vilnius day before, never `now - 24 hours` (two
   days back on the morning after the clocks go forward); a job that decides by the day is run at a time the test chose
   from the day it started on, not at the real time.
+- **The bot check (design 6.4).** Every TestBrowser.PostAsync of a `RegisterRequest` or `RequestCodeRequest` with `BotCheck` null
+  fetches a challenge and solves it first (`BotCheckSteps`, the same work as the page's script; the factory sets `Security:BotCheckKey`);
+  a test of the refusal sends `BotCheck = ""` or a raw JSON string, and one that needs the check off uses `WithSettingAsync("BotCheck:Enabled", false)`.
+  A request built by hand (`HttpRequestMessage`) takes `await browser.SolveAsync()`; end-to-end steps that post to the API take
+  `E2ESteps.BotCheckAsync(client)`. The pages' own requests carry theirs.
 - **Known browsers (design 8.20.2).** A `TestBrowser` that completed a registration or signed in to a member is known to that
   account (the test factory sets `Security:DeviceHashKey`): its later code requests use the known browser's allowance and
   codes, not the shared ones. A test about the shared limits asks from a new browser (`NewBrowser()`, `CodeSessionAsync`).

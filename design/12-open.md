@@ -6,8 +6,7 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 
 ## Designed, not built
 
-- 3, 6.2: a bot check at registration (ALTCHA); account verification by the EU Digital Identity Wallet once available in
-  Lithuania.
+- 6.2: account verification by the EU Digital Identity Wallet once available in Lithuania.
 - 5.4: the `notify.email_message` table.
 - 6.4: rate limiting in Caddy (only the application's own limits exist).
 - 6.5: disk encryption, TLS to the database, encrypted backups (none of them in the repository).
@@ -257,6 +256,10 @@ for the lawyer).
   use (`EmailProofCode.*`), and the refusals `email.same`, `email.proof-required`, `email.restore-invalid`.
 - 6.2: the line under the sign-in and registration form, "Paskyros patvirtinamos el. paštu. Kai Lietuvoje bus ES skaitmeninės
   tapatybės piniginė, ją taip pat bus galima naudoti." (`UiText` `SignIn.Verification`; no date, on purpose).
+- 6.2, 6.4: the bot check: its status line "Tikrinama, ar jūs ne robotas…" (`UiText` `BotCheck.Working`), its refusal
+  "Nepavyko patikrinti, ar jūs ne robotas. Bandykite dar kartą." (`ProblemText` `bot-check.failed`), "Patikros atsakymas
+  per ilgas." (`ValidationMessages` `BotCheck.TooLong`) and the three settings' names, help and units (`Admin.Setting`,
+  `Admin.Help`, `Admin.Unit` `BotCheck:*`).
 - 6.2: the urgent summary's passkey messages "Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos
   raktu. …" and "Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. …" (`AppealUi` `Mod.Passkey.*`).
 - 6.5: the positions consent text (`UiText` `PositionConsent.Text`); for a consent to an older text, the account page's

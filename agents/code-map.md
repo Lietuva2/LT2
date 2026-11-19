@@ -72,7 +72,10 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            participant through MpAccounts.Refusal (SharedKernel) wherever a participant is checked.
                            Identity also owns known browsers (Application/SignIn/KnownBrowsers.cs, design 8.20.2: the
                            __Host-lt2.device cookie, identity.known_device, the code allowance they choose), and
-                           changing the account's address (Application/Email/EmailChangeHandlers.cs, design 6.2).
+                           changing the account's address (Application/Email/EmailChangeHandlers.cs, design 6.2), and the bot
+                           check of registration and code requests (Application/BotCheck.cs, Domain/BotCheckRules.cs,
+                           identity.bot_check_use; the browser's side is Lt2.Web.Client/wwwroot/js/lt2-botcheck.js with
+                           BotCheckBrowser, design 6.4).
 src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageRules and Sketch (HyperLogLog) pure,
                            UsageCounter in the web host's memory, written every minute; the host feeds it from
                            Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin; its day bars are

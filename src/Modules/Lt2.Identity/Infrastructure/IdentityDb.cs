@@ -30,6 +30,8 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 
     public DbSet<SignInCode> SignInCodes => Set<SignInCode>();
 
+    public DbSet<BotCheckUse> BotCheckUses => Set<BotCheckUse>();
+
     public DbSet<KnownDevice> KnownDevices => Set<KnownDevice>();
 
     public DbSet<EmailChange> EmailChanges => Set<EmailChange>();
@@ -206,6 +208,14 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => new { x.UserId, x.CreatedAt });
             b.HasIndex(x => new { x.NormalizedEmail, x.CreatedAt });
+        });
+
+        builder.Entity<BotCheckUse>(b =>
+        {
+            b.ToTable("bot_check_use");
+            b.HasKey(x => x.Signature);
+            b.Property(x => x.Signature).HasMaxLength(64);
+            b.HasIndex(x => x.ExpiresAt);
         });
 
         builder.Entity<EmailRestore>(b =>

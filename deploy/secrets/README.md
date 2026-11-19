@@ -15,6 +15,7 @@ Local secret files for `deploy/compose.yaml`, one value per file. Created by
 | `smtp_password` | worker | SMTP password; empty locally (Mailpit). |
 | `mail_hash_key` | web, worker | Key of MP mail (design 8.19): the suppression list's keyed hashes, the MPs' link tokens and the members' stop links (design 8.24.1). Changing it breaks every link already emailed and forgets the suppressed addresses. |
 | `device_hash_key` | web | Key of the known browsers' hashes (design 8.20.2). Changing it makes every browser a stranger to its accounts again (sign-in still works). |
+| `bot_check_key` | web | Key of the proof of work's signatures on registration and code requests (design 6.4). Changing it voids the challenges in flight; a browser asks for a new one by itself. All web instances must share it. |
 | `mp_smtp_password` | worker | Password of MP mail's own SMTP account (`LT2_MP_SMTP_*`); empty while MP mail uses the common account. |
 | `ai_api_key` | web, worker | Claude API key; empty keeps the AI features off. |
 | `mailpit_ui_auth` | mailpit | Server only, with `compose.shared-proxy.yaml`: the viewer's name and bcrypt hash (README.md, "The caught emails"). Not made by `init-secrets.py`; not used locally. |

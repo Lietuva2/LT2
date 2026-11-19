@@ -86,7 +86,7 @@ public sealed partial class StackTests : E2ETest
             .Split(';')[0]["__Host-lt2.af=".Length..];
         using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/auth/code?probe={marker}")
         {
-            Content = JsonContent.Create(new { email = $"ruta.mockute.{marker}@pavyzdys.test" }),
+            Content = JsonContent.Create(new { email = $"ruta.mockute.{marker}@pavyzdys.test", botCheck = await E2ESteps.BotCheckAsync(http) }),
         };
         request.Headers.Add("X-XSRF-TOKEN", token);
         request.Headers.Add("Origin", BaseUrl);

@@ -78,6 +78,7 @@ services:
       RateLimits__Registration__PermitLimit: ${LT2_RATE_REGISTRATIONS:-20}
       RateLimits__SignIn__PermitLimit: ${LT2_RATE_SIGN_INS:-30}
       RateLimits__OneTimeCode__PermitLimit: ${LT2_RATE_ONE_TIME_CODES:-30}
+      RateLimits__BotChallenge__PermitLimit: ${LT2_RATE_BOT_CHALLENGES:-60}
       # The MP's link (design 8.19.7): its pages and token routes per client address; only the local .env raises it.
       RateLimits__MpMail__PermitLimit: ${LT2_RATE_MP_MAIL:-60}
       # Design 8.19.1: where the data is invented (Demo:Allowed), MP mail goes only when the deployment declares all its mail
@@ -101,6 +102,8 @@ services:
         target: Security__MailHashKey
       - source: device_hash_key
         target: Security__DeviceHashKey
+      - source: bot_check_key
+        target: Security__BotCheckKey
     depends_on:
       migrator:
         condition: service_completed_successfully
@@ -283,5 +286,7 @@ secrets:
     file: ${LT2_SECRETS_DIR:-./secrets}/mail_hash_key
   device_hash_key:
     file: ${LT2_SECRETS_DIR:-./secrets}/device_hash_key
+  bot_check_key:
+    file: ${LT2_SECRETS_DIR:-./secrets}/bot_check_key
   ai_api_key:
     file: ${LT2_SECRETS_DIR:-./secrets}/ai_api_key

@@ -272,6 +272,19 @@ internal static class ConsentKinds
     public const string Terms = Lt2.SharedKernel.TermsOfUse.Kind;
 }
 
+/// <summary>
+/// <c>identity.bot_check_use</c> (design 6.4, 5.2): a proof-of-work challenge that has been used, kept until its own expiry so
+/// that it cannot be used twice, also across web instances. The signature is the server's HMAC of the challenge: random, tied to
+/// no address, no browser and no account. Housekeeping deletes the rows once expired.
+/// </summary>
+internal sealed class BotCheckUse
+{
+    /// <summary>Hex HMAC-SHA-256 of the challenge, 64 characters.</summary>
+    public string Signature { get; set; } = "";
+
+    public DateTimeOffset ExpiresAt { get; set; }
+}
+
 /// <summary><c>identity.sign_in_code</c>: an emailed one-time code, stored only as a hash.</summary>
 internal sealed class SignInCode
 {

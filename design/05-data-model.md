@@ -36,7 +36,7 @@ ASP.NET Core Identity tables (`user`, `role`, claims, logins, tokens, `user_pass
 | `invitation_daily` | Per code and Vilnius day: registrations completed. For the administrators' chart; no per-person history. |
 | `feedback` | Kind (`bug`, `idea`, `unclear`, `other` or none), text (up to 2 000 characters), page path and browser (each only if the member left them in), status (`new`, `seen`, `done`), internal note, replies, the day it came, and the account **only if** the member ticked "Galite man atsakyti". An item without that tick has no account, a random id and only the day, so nothing leads back to its author. Kept `Feedback:KeepMonths` months; linked items go with the account (8.10). |
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, when it was used or replaced (`consumed_at`), and the known browser it was issued to (`known_device_id`; empty for a code any browser may use). |
-| `known_device` | Account, `identifier_hash` (HMAC-SHA-256 of the browser cookie's identifier under its own key, the secret `device_hash_key`), `label` (the browser and system as the sessions list says them, "Edge, Windows"), first and last seen. |
+| `bot_check_use` | A proof-of-work challenge that has been used (6.4): the signature (HMAC of the challenge, random, tied to no address, browser or account) and the challenge Account, `identifier_hash` (HMAC-SHA-256 of the browser cookie's identifier under its own key, the secret `device_hash_key`), `label` (the browser and system as the sessions list says them, "Edge, Windows"), first and last seen. |
 | `session` | One signed-in browser: account, the protected authentication ticket, created, last seen and expiry times, `method`, a coarse `device` description, and for a passkey session the passkey and when it was last confirmed. The cookie holds only the session's id. |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
 | `party_support` | `user_id`, `party` (the party as named by the MPs' nominating party in the open data), `given_at`. Private and optional; used only for the summaries' party group numbers, from the size `Digest:PartyGroupMinimum` (8.4), and shown on the person's public profile only by their own box and consent `party-public` (8.25.9). |
@@ -140,7 +140,10 @@ without a deploy:
 - **Surge note** (6.6): `Surge:MinimumShare` (30 %), `Surge:MinimumAccounts` (50), `Surge:WindowHours` (72).
 - **Feedback:** how long it is kept (`Feedback:KeepMonths`, 12).
 - **Security limits** ("Saugumo ribos"): sign-in codes per hour and per day (`SignIn:CodesPerHour`, 5;
-  `SignIn:CodesPerDay`, 10) and the days a pending account is kept (`Registration:PendingAccountDays`, 7; 6.2).
+  `SignIn:CodesPerDay`, 10), the days a pending account is kept (`Registration:PendingAccountDays`, 7; 6.2) and the bot
+  check (6.4): whether it is on (`BotCheck:Enabled`, on), its difficulty, the largest secret number of a challenge
+  (`BotCheck:MaxNumber`, 20 000, from 1 000 to 1 000 000) and the minutes a challenge may be used in
+  (`BotCheck:ChallengeMinutes`, 10).
 
 Each change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the
 public methodology page (`/metodika`).

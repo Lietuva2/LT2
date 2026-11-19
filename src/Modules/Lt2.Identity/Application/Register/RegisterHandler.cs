@@ -11,7 +11,7 @@ namespace Lt2.Identity.Application.Register;
 /// Registration by email and invitation code (design 6.2). It creates a <em>pending</em> account: the normalised address
 /// and the invitation code entered, no name, no declaration, no role. The invitation use is counted only when the
 /// registration is completed, so addresses nobody confirms cannot use invitations up.
-/// The response is the same in every case, and a sign-in code is emailed in every case:
+/// The proof of work (design 6.4) is checked before anything else. The response is the same in every case, and a sign-in code is emailed in every case:
 /// <list type="bullet">
 /// <item>a new address gets a pending account;</item>
 /// <item>an address that is still pending keeps its account, and the invitation code it holds is replaced;</item>
@@ -24,10 +24,17 @@ internal sealed class RegisterHandler(
     SignInCodeIssuer codes,
     ISettings settings,
     IMpDirectory mps,
+    BotCheck botCheck,
     TimeProvider clock)
 {
     public async Task<Result<Unit>> HandleAsync(Registration registration, CancellationToken cancellationToken)
     {
+        // The proof of work first (design 6.4): before anything about the address, so a refusal never depends on it.
+        if (await botCheck.CheckAsync(registration.BotCheck, cancellationToken) is { } notChecked)
+        {
+            return notChecked;
+        }
+
         var normalized = EmailAddress.Normalize(registration.Email);
         if (normalized is null)
         {

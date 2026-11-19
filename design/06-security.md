@@ -47,6 +47,26 @@ floor; 8.4).
   links of MP mail and members' stop links (those also per token, 8.19.7), and per account for writing reasons, writing
   comments (their own policy, 8.23.4), reports, registering an organisation and taking part (sides, follows, marks, the
   display name). **Not built.** A second layer per IP in Caddy.
+- **Bot check on registration and code requests** (6.2): a self-hosted proof of work in the ALTCHA protocol, written here and
+  on the browser's own `crypto.subtle`, no package and no third-party script, nothing kept in the browser (no cookie, no
+  storage key, so nothing for 8.22.1's list) and nothing for the person to do. `GET /api/v1/bot-check/challenge` (no
+  session, `no-store`, `RateLimits:BotChallenge`: 60 per 15 minutes per address, 429 beyond; 204 while the check is off)
+  answers `{algorithm: "SHA-256", challenge, maxnumber, salt, signature}`: the salt is random hex with its expiry
+  (`?expires=`, Unix seconds), `challenge` = SHA-256(salt + a secret number from 0 to `maxnumber`), `signature` = HMAC-SHA-256
+  of the challenge under the server's key, the secret `bot_check_key` (`Security:BotCheckKey`, web only; without it a web
+  instance signs with a random key of its own, which holds on that instance until it restarts, and logs a warning at start).
+  The server keeps nothing for a challenge it hands out. The browser finds the number and sends the five fields and the number
+  as base64 of JSON in the request body's `botCheck`, never in an address; `RegisterHandler` and `RequestCodeHandler`
+  (module services, so for every caller) check it before anything else (`BotCheckRules.Check`, pure): well formed and at most
+  1 024 characters, the signature the server's, not expired, the number solves it. **Used once:** the signature, with the
+  challenge's expiry, is inserted into `identity.bot_check_use` (a primary key: the first insert wins, in any web instance) and
+  housekeeping deletes it after the expiry. Every failure is the same 400 `bot-check.failed` (the reason only in a log line
+  without the solution). `BotCheck:Enabled` (on), `BotCheck:MaxNumber` and `BotCheck:ChallengeMinutes` are settings (5.6).
+  **Difficulty:** `MaxNumber` 20 000 is 10 000 tries on average and 20 000 at worst; the browser asks `crypto.subtle` for
+  256 hashes at a time: measured with the same batching on a desktop (Node's WebCrypto) about 90 ms on average and 0.2 s at worst;
+  a mid-range phone is estimated three to five times slower (0.3 to 0.5 s on average, not measured on one), all while the person types. It is a cost to a script, not a barrier: its work
+  grows with the setting, and the per-address limits above stay as they are. A request from a signed-in account (changing the
+  email address, 6.2) and passkey sign-in carry none. The Content Security Policy needs no change (own script, own origin).
 - All input validated by the shared validators on the server; user text is stored as plain text and encoded on output,
   no HTML or Markdown from users. Paragraphs, `https://` links and lists are read from the plain text by fixed rules
   (8.2, "A text's layout"), each piece encoded; nothing a person types is parsed as markup.

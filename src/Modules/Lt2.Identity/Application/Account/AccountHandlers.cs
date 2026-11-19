@@ -107,7 +107,7 @@ internal sealed class AccountHandlers(
 }
 
 /// <summary>
-/// Housekeeping: old sign-in codes and codes of an address change, used or expired links back to an old address, expired sessions, known browsers not seen for a year (design 8.20.2), and accounts
+/// Housekeeping: old sign-in codes, used proof-of-work challenges past their expiry (design 6.4) and codes of an address change, used or expired links back to an old address, expired sessions, known browsers not seen for a year (design 8.20.2), and accounts
 /// still pending after the configured number of days (design 6.2), so an address typed by a stranger is not kept, nor any unsent email to it (design 6.8).
 /// One context for the run.
 /// </summary>
@@ -125,6 +125,9 @@ internal sealed class MaintenanceHandler(IDbContextFactory<IdentityDb> contexts,
         codes += await db.EmailChanges.Where(c => c.CreatedAt < codeCutoff).ExecuteDeleteAsync(cancellationToken);
         codes += await db.EmailRestores.Where(r => r.UsedAt != null || r.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
         var sessions = await db.Sessions.Where(s => s.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
+
+        // Design 6.4: a used proof-of-work challenge is kept only until its own expiry, after which it cannot be presented anyway.
+        sessions += await db.BotCheckUses.Where(u => u.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
 
         // Design 8.20.2: a browser not seen for a year is a stranger again; its codes go with it.
         var staleBefore = KnownBrowserRules.StaleBefore(now);

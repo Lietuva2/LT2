@@ -74,6 +74,19 @@ form, `PUT /me/profile`, even when it only unticks a box). The export is a read.
 launch although the text changed while building (owner, 2026-11-17): nobody accepted an earlier one. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
 the invented demonstration members get the consent like their others (`--demo-appeal`, repeatable).
 
+**Bot check (design 6.2, 6.4).** `GET /api/v1/bot-check/challenge` (`BotChallengeEndpoint`, `ApiRoutes.BotCheck.Challenge`,
+`BotChallengeResponse` in `Lt2.Api.Contracts/Auth`) and `botCheck` on `RegisterRequest` and `RequestCodeRequest`, which
+`RegisterHandler` and `RequestCodeHandler` check first through `BotCheck.CheckAsync` (`Identity/Application/BotCheck.cs`,
+rules in `Domain/BotCheckRules.cs`); `IIdentityModule.RequestSignInCodeAsync(email, botCheck)` and `NewBotChallengeAsync`. The
+island: `SignInFlow` calls `BotCheckBrowser.PrepareAsync` when first shown (interactive, not signed in), takes the
+solution with `SendCheckedAsync` for registering, asking for a code and asking again, retries once on `bot-check.failed`
+with a new solution, shows `BotCheck.Working` only after 400 ms, and prepares the next solution after each request; the script
+is `Lt2.Web.Client/wwwroot/js/lt2-botcheck.js` (`prepare`, `take`; no worker, no storage; `crypto.subtle` in batches of 256).
+Settings `BotCheck:Enabled` / `MaxNumber` / `ChallengeMinutes` in "Saugumo ribos". Tests: `BotCheckRuleTests` (unit),
+`BotCheckTests` (HTTP), the island's in `SignInComponentTests`, `BotCheckScriptTests` (architecture); `TestBrowser.PostAsync`
+solves a challenge for a `RegisterRequest`/`RequestCodeRequest` whose `BotCheck` is null (`BotCheckSteps`), and a test of the
+refusal sends `BotCheck = ""` or a raw string body; end-to-end steps that post straight to the API use `E2ESteps.BotCheckAsync`.
+
 **Accounts.** Registration is by email only, by invitation during the closed trial (an MP office member's invitation counts
 as one, owner 2026-11-17, design 8.5.3), with a self-declared age of 18 or older. An account is pending until its address is proven; the display name, the age declaration and the terms of use are
 asked after the code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); the EU Digital Identity Wallet

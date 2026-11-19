@@ -40,6 +40,7 @@
   <data name="role.unknown" xml:space="preserve"><value>Tokio vaidmens nėra.</value></data>
   <data name="account.not-found" xml:space="preserve"><value>Tokios baigtos registruoti paskyros nėra.</value></data>
   <data name="auth.code-invalid" xml:space="preserve"><value>Kodas netinka arba nebegalioja. Paprašykite naujo.</value></data>
+  <data name="bot-check.failed" xml:space="preserve"><value>Nepavyko patikrinti, ar jūs ne robotas. Bandykite dar kartą.</value></data>
   <data name="auth.required" xml:space="preserve"><value>Reikia prisijungti.</value></data>
   <data name="passkey.not-added" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko. Prie šios paskyros jis nepridėtas, net jei naršyklė ar slaptažodžių tvarkyklė jį išsaugojo; galite bandyti dar kartą.</value></data>
   <data name="passkey.other-account" xml:space="preserve"><value>Šis prieigos raktas – kitos paskyros. Pasirinkite šios paskyros prieigos raktą.</value></data>

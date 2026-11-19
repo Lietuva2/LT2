@@ -99,6 +99,21 @@ public static class SettingKeys
     /// <summary>Sign-in codes one address may be sent in a day; bounds guessing to five tries per code (design 6.2).</summary>
     public static readonly SettingKey<int> SignInCodesPerDay = new("SignIn:CodesPerDay", 10, v => v is > 0 and <= 50);
 
+    /// <summary>
+    /// Whether registration and a sign-in code request must carry a solved proof of work (design 6.2, 6.4); on in every
+    /// deployment. Off only to stop a check that fails for real people while it is looked into.
+    /// </summary>
+    public static readonly SettingKey<bool> BotCheckEnabled = new("BotCheck:Enabled", true);
+
+    /// <summary>
+    /// The difficulty of the proof of work: the largest secret number a challenge can hide (design 6.4). The browser tries
+    /// numbers from 0 up, so half of it is the average work; SHA-256 per try.
+    /// </summary>
+    public static readonly SettingKey<int> BotCheckMaxNumber = new("BotCheck:MaxNumber", 20_000, v => v is >= 1_000 and <= 1_000_000);
+
+    /// <summary>Minutes a challenge may be solved and used in (design 6.4); a page left open longer asks for a new one itself.</summary>
+    public static readonly SettingKey<int> BotCheckChallengeMinutes = new("BotCheck:ChallengeMinutes", 10, v => v is >= 1 and <= 60);
+
     /// <summary>The threshold of every bill without its own (design 8.12.2), read whenever it is used.</summary>
     public static readonly SettingKey<int> DigestThresholdDefault = new("Digest:ThresholdDefault", 100, v => v > 0);
 
@@ -235,6 +250,9 @@ public static class SettingKeys
         PendingAccountDays,
         SignInCodesPerHour,
         SignInCodesPerDay,
+        BotCheckEnabled,
+        BotCheckMaxNumber,
+        BotCheckChallengeMinutes,
         DigestThresholdDefault,
         DigestThresholdMinimum,
         DigestWeekly,

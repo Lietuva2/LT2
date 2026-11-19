@@ -24,6 +24,7 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 100_000
 
         // Design 8.20.2: the key of the known browsers' hashes, so a browser that signed in is known to the account.
         builder.UseSetting("Security:DeviceHashKey", "test-device-hash-key");
+        builder.UseSetting("Security:BotCheckKey", "test-bot-check-key");
         builder.UseSetting("Moderation:ContactAddress", "moderatoriai@lt2.test");
         // No test calls a real AI provider, whatever the environment of the machine says (AGENTS.md); tests that need one put a fake in.
         builder.UseSetting("Ai:Provider", "");
@@ -37,6 +38,8 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 100_000
         builder.UseSetting("RateLimits:Registration:WindowSeconds", "600");
         builder.UseSetting("RateLimits:SignIn:PermitLimit", "100000");
         builder.UseSetting("RateLimits:SignIn:WindowSeconds", "600");
+        builder.UseSetting("RateLimits:BotChallenge:PermitLimit", "100000");
+        builder.UseSetting("RateLimits:BotChallenge:WindowSeconds", "600");
 
         // Design 8.19: the key of MP mail's hashes and links, and the MP link's limits high enough for a whole run from one
         // address (RateLimitTests checks them low on a factory of its own).

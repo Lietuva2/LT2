@@ -8,11 +8,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lt2.Identity.Application.SignIn;
 
-/// <summary>Requests a sign-in code. Always succeeds, so the answer never tells whether the address is registered.</summary>
-internal sealed class RequestCodeHandler(IdentityDb db, UserManager<User> users, SignInCodeIssuer codes)
+/// <summary>
+/// Requests a sign-in code. Succeeds whether or not the address is registered, so the answer never tells; the one refusal is the
+/// proof of work's (design 6.4), checked first, before the address is looked at.
+/// </summary>
+internal sealed class RequestCodeHandler(IdentityDb db, UserManager<User> users, SignInCodeIssuer codes, BotCheck botCheck)
 {
-    public async Task<Result<Unit>> HandleAsync(string email, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> HandleAsync(string email, string? solution, CancellationToken cancellationToken)
     {
+        if (await botCheck.CheckAsync(solution, cancellationToken) is { } notChecked)
+        {
+            return notChecked;
+        }
+
         var normalized = EmailAddress.Normalize(email);
         if (normalized is null)
         {

@@ -15,11 +15,17 @@ public sealed record RegisterRequest
     /// registration through the closed trial's gate while it is valid; it is not kept on the pending account.
     /// </summary>
     public string? OfficeInvitation { get; init; }
+
+    /// <summary>The solved proof of work (design 6.4), as the site's script made it; never in an address.</summary>
+    public string? BotCheck { get; init; }
 }
 
 public sealed record RequestCodeRequest
 {
     public string Email { get; init; } = "";
+
+    /// <summary>The solved proof of work (design 6.4); never in an address.</summary>
+    public string? BotCheck { get; init; }
 }
 
 public sealed record SignInRequest
@@ -49,4 +55,26 @@ public sealed record AntiforgeryTokenResponse
     public string Token { get; init; } = "";
 
     public string HeaderName { get; init; } = ApiHeaders.Antiforgery;
+}
+
+/// <summary>
+/// A proof-of-work challenge in the ALTCHA format (design 6.4). The site's own script finds the number whose SHA-256 with
+/// <see cref="Salt"/> is <see cref="Challenge"/> (0 to <see cref="MaxNumber"/>) and sends the five fields back with the number.
+/// </summary>
+public sealed record BotChallengeResponse
+{
+    [System.Text.Json.Serialization.JsonPropertyName("algorithm")]
+    public string Algorithm { get; init; } = "SHA-256";
+
+    [System.Text.Json.Serialization.JsonPropertyName("challenge")]
+    public string Challenge { get; init; } = "";
+
+    [System.Text.Json.Serialization.JsonPropertyName("maxnumber")]
+    public int MaxNumber { get; init; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("salt")]
+    public string Salt { get; init; } = "";
+
+    [System.Text.Json.Serialization.JsonPropertyName("signature")]
+    public string Signature { get; init; } = "";
 }

@@ -117,6 +117,42 @@ internal static class E2ESteps
     public static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 
     /// <summary>
+    /// A solved proof of work (design 6.4) for a registration or a code request posted straight to the API, found as the page's
+    /// script finds it; null while the check is off (204). The pages' own requests carry theirs without any step.
+    /// </summary>
+    public static async Task<string?> BotCheckAsync(HttpClient client)
+    {
+        using var response = await client.GetAsync("/api/v1/bot-check/challenge");
+        if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        var challenge = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var salt = challenge.GetProperty("salt").GetString()!;
+        var target = challenge.GetProperty("challenge").GetString()!;
+        for (var number = 0; number <= challenge.GetProperty("maxnumber").GetInt32(); number++)
+        {
+            var hash = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(salt + number.ToString(System.Globalization.CultureInfo.InvariantCulture))));
+            if (hash == target)
+            {
+                var json = JsonSerializer.Serialize(new
+                {
+                    algorithm = challenge.GetProperty("algorithm").GetString(),
+                    challenge = target,
+                    number,
+                    salt,
+                    signature = challenge.GetProperty("signature").GetString(),
+                });
+                return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
+            }
+        }
+
+        throw new InvalidOperationException("The challenge has no solution up to its maximum.");
+    }
+
+    /// <summary>
     /// A moderator's action (design 8.3, owner 2026-11-17): the filled button is pressed as it is; an action in "Kiti veiksmai"
     /// is chosen after opening that menu (the browser's popover). Waits until the island has started (the action enabled).
     /// </summary>
