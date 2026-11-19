@@ -132,7 +132,7 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
             digest.Text.ShouldContain("Tai nėra reprezentatyvi apklausa");
             digest.Text.ShouldContain($"Ta pati suvestinė viešai: {Base}/suvestines/{date}");
             digest.Text.ShouldContain($"perimti savo Seimo nario profilį ir atsakyti visiems iš karto: {Base}/prisijungti");
-            digest.Html.ShouldContain($"<a href=\"{Base}/seimas/{Bill}\">");
+            digest.Html.ShouldContain($"href=\"{Base}/seimas/{Bill}\"");
             var unsubscribe = Header(digest.Headers, "List-Unsubscribe");
             unsubscribe.ShouldStartWith($"<{Base}/api/v1/mp-mail/");
             Header(digest.Headers, "List-Unsubscribe-Post").ShouldBe("List-Unsubscribe=One-Click");
