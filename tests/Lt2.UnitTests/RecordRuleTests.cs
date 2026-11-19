@@ -51,8 +51,7 @@ public sealed class RecordRuleTests
     [InlineData(BillRecordStatuses.Open, true)]
     [InlineData(BillRecordStatuses.Closed, true)]
     [InlineData(BillRecordStatuses.Rejected, true)]
-    [InlineData(BillRecordStatuses.Superseded, false)]
-    public void Open_closed_and_hidden_rows_are_the_bills_record_old_superseded_ones_are_not(string status, bool record) =>
+    public void Open_closed_and_hidden_rows_are_the_bills_record(string status, bool record) =>
         RecordRules.IsRecord(status).ShouldBe(record);
 
     [Fact]
@@ -118,7 +117,6 @@ public sealed class RecordRuleTests
         RecordRules.SourceOfModeratorText(fromDraft: true, currentSource: null).ShouldBe(DescriptionSources.AiDraft);
         RecordRules.SourceOfModeratorText(fromDraft: false, currentSource: null).ShouldBe(DescriptionSources.Moderator);
         RecordRules.SourceOfModeratorText(fromDraft: false, currentSource: DescriptionSources.AiDraft).ShouldBe(DescriptionSources.AiDraft);
-        RecordRules.SourceOfModeratorText(fromDraft: false, currentSource: DescriptionSources.Initiator).ShouldBe(DescriptionSources.Moderator);
     }
 
     [Theory]

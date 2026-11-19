@@ -113,7 +113,7 @@ public static class ReasonFakes
 
     /// <summary>The bill's answer: each side's first two of <paramref name="reasons"/>, in their order, and each side's count.</summary>
     public static Lt2.Api.Contracts.Appeals.BillRecordResponse Record(string bill, params Lt2.Api.Contracts.Appeals.ReasonResponse[] reasons) => new(
-        Guid.NewGuid(), new Lt2.Api.Contracts.Appeals.BillRefResponse(bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
+        Guid.NewGuid(), new Lt2.Api.Contracts.Appeals.BillRefResponse(bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null,
         new Lt2.Api.Contracts.Appeals.SideCountsResponse(1, 1, 0, 0), new Lt2.Api.Contracts.Appeals.ThresholdResponse(100, "default", null, 1, false, false),
         reasons.GroupBy(r => r.Side).SelectMany(g => g.Take(Lt2.Api.Contracts.Appeals.ReasonLimits.First)).ToList(),
         ReasonTotals: new Lt2.Api.Contracts.Appeals.ReasonTotalsResponse(reasons.Count(r => r.Side == "for"), reasons.Count(r => r.Side == "against")));

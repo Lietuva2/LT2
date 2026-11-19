@@ -12,12 +12,6 @@ internal sealed class BillRecord
     /// <summary>The Seimas bill number, the natural key of a bill (design 3). One record per bill (design 8.12.1).</summary>
     public string BillNumber { get; set; } = "";
 
-    /// <summary>
-    /// Only on records from before 2026-11-14: the member whose proposal was published. Shown beside the description they
-    /// wrote ("Aprašymą parašė …") while it is theirs, and gives them no rights (design 8.12.4). Null on every new record.
-    /// </summary>
-    public Guid? InitiatorUserId { get; set; }
-
     /// <summary>What the bill is about (design 8.13); empty while no description has been made.</summary>
     public string Description { get; set; } = "";
 
@@ -98,12 +92,6 @@ internal static class BillRecordStatuses
     /// "Atkurti" (design 8.12.3).
     /// </summary>
     public const string Rejected = "rejected";
-
-    /// <summary>
-    /// Only rows from before 2026-11-14 that are no longer a bill's record: proposals that were waiting, returned or closed
-    /// when the proposals went (design 8.12.4), and older hidden appeals on a bill that has another record. Shown to nobody.
-    /// </summary>
-    public const string Superseded = "superseded";
 }
 
 /// <summary>Who set the threshold that applies to a bill (design 8.12.2).</summary>
@@ -116,14 +104,12 @@ internal static class ThresholdSetters
 }
 
 /// <summary>
-/// Who made a bill's description (design 5.3, 8.13): an initiator before 2026-11-14 (approved by a moderator), a moderator,
-/// a moderator starting from AI text, or the summary job alone. An <see cref="AiDraft"/> description keeps its label
-/// "Sukurta DI · taisė žmonės" when a moderator corrects it later; an <see cref="Ai"/> one becomes <see cref="AiDraft"/>
-/// once a moderator confirms or corrects it.
+/// Who made a bill's description (design 5.3, 8.13): a moderator, a moderator starting from AI text, or the summary job
+/// alone. An <see cref="AiDraft"/> description keeps its label "Sukurta DI · taisė žmonės" when a moderator corrects it
+/// later; an <see cref="Ai"/> one becomes <see cref="AiDraft"/> once a moderator confirms or corrects it.
 /// </summary>
 internal static class DescriptionSources
 {
-    public const string Initiator = "initiator";
     public const string Moderator = "moderator";
     public const string AiDraft = "ai-draft";
 

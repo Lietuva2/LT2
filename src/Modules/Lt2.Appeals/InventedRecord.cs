@@ -11,8 +11,8 @@ public sealed record InventedPosition(Guid UserId, string Side, DateTimeOffset M
 public sealed record InventedReason(Guid AuthorUserId, string Side, string Text, IReadOnlyList<Guid> EndorsedBy);
 
 /// <summary>
-/// A bill's record with its positions and arguments, for local demonstration data. The description is a moderator's; the
-/// record has no initiator and the default threshold (design 8.12).
+/// A bill's record with its positions and arguments, for local demonstration data. The description is a moderator's and
+/// the record has the default threshold (design 8.12).
 /// </summary>
 public sealed record InventedRecordSpec(
     string BillNumber,
@@ -26,10 +26,7 @@ public enum InventedRecordOutcome
 {
     Created,
 
-    /// <summary>
-    /// The demonstration record is already there (its first invented participant has a side on it); nothing changed except
-    /// that a description seeded as an invented initiator's becomes the moderator's.
-    /// </summary>
+    /// <summary>The demonstration record is already there (its first invented participant has a side on it); nothing changed.</summary>
     AlreadyThere,
 
     /// <summary>The bill already has a record that is not the demonstration's; nothing changed.</summary>
@@ -140,11 +137,9 @@ public static class InventedRecord
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         Guid? existingId = null;
         var ours = false;
-        var byInitiator = false;
         await using (var existing = new NpgsqlCommand(
             """
-            SELECT a.id, EXISTS (SELECT 1 FROM appeals.position p WHERE p.record_id = a.id AND p.user_id = @first),
-                   a.description_source = 'initiator' AND a.description = @description
+            SELECT a.id, EXISTS (SELECT 1 FROM appeals.position p WHERE p.record_id = a.id AND p.user_id = @first)
             FROM appeals.bill_record a WHERE a.bill_number = @b AND a.status IN ('open', 'closed', 'rejected')
             """,
             connection,
@@ -152,31 +147,16 @@ public static class InventedRecord
         {
             existing.Parameters.AddWithValue("b", spec.BillNumber);
             existing.Parameters.AddWithValue("first", spec.Positions.Count > 0 ? spec.Positions[0].UserId : Guid.Empty);
-            existing.Parameters.AddWithValue("description", spec.Description);
             await using var reader = await existing.ExecuteReaderAsync(cancellationToken);
             if (await reader.ReadAsync(cancellationToken))
             {
                 existingId = reader.GetGuid(0);
                 ours = reader.GetBoolean(1);
-                byInitiator = !reader.IsDBNull(2) && reader.GetBoolean(2);
             }
         }
 
-        if (existingId is { } found)
+        if (existingId is not null)
         {
-            if (ours && byInitiator)
-            {
-                // Seeded before 2026-11-14 16:13 (commit 95369bc) with the description as an invented initiator's. The
-                // demonstration description is a moderator's and the record has no initiator (design 8.12.4): repaired here.
-                await using var repair = new NpgsqlCommand(
-                    "UPDATE appeals.bill_record SET description_source = 'moderator', initiator_user_id = NULL, description_at = coalesce(description_at, published_at) WHERE id = @id",
-                    connection,
-                    transaction);
-                repair.Parameters.AddWithValue("id", found);
-                await repair.ExecuteNonQueryAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-            }
-
             return ours ? InventedRecordOutcome.AlreadyThere : InventedRecordOutcome.BillTaken;
         }
 

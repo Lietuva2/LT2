@@ -66,7 +66,7 @@ public sealed class SidePickerTests : BunitContext
         _appeals.OnEach("GetMineAsync", Mine(null), Mine("for"));
         _appeals.On("TakePositionAsync", ApiResult.Ok());
         _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(new BillRecordResponse(
-            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
+            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null,
             new SideCountsResponse(1, 0, 0, 0), Threshold(1), [], Surge: new SurgeResponse(100, 24))));
         _follows.OnEach("GetMineAsync", Follows(), Follows(Bill));
 
@@ -137,7 +137,7 @@ public sealed class SidePickerTests : BunitContext
         _appeals.OnEach("GetMineAsync", Mine(null), Mine("for"));
         _appeals.On("TakePositionAsync", ApiResult.Ok());
         _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(new BillRecordResponse(
-            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
+            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null,
             new SideCountsResponse(100, 0, 0, 0), new ThresholdResponse(100, "default", null, 100, true, false), [])));
         _follows.OnEach("GetMineAsync", Follows(), Follows(Bill));
         _digests.On("GetRecordNextDigestAsync", ApiResult<Lt2.Api.Contracts.Digests.RecordNextDigestResponse>.Ok(new(new DateOnly(2026, 11, 23))));
@@ -179,7 +179,7 @@ public sealed class SidePickerTests : BunitContext
         _appeals.OnEach("GetMineAsync", Mine("for"), Mine(null));
         _appeals.On("ClearPositionAsync", ApiResult.Ok());
         _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(new BillRecordResponse(
-            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
+            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null,
             new SideCountsResponse(0, 0, 0, 0), Threshold(0), [])));
         var picker = Render<SidePicker>(p => p.Add(c => c.Number, Bill));
 

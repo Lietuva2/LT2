@@ -96,7 +96,8 @@ measurements, timing) is deleted, not patched again.
 - **Counted rules are pure functions** with unit tests named as the rule (statistics, thresholds, eligibility, `GroupRules`).
 - **Runtime settings** live in `config.setting`, every change audited; never hard-code a number the design calls a setting.
 - **Imports are repeatable:** store every Seimas response raw, parse separately, upsert by Seimas identifiers.
-- A feature is one folder: contract, validator, handler, endpoint, tests.
+- A feature's parts are named alike across the solution: contract and validator in `Lt2.Api.Contracts/<Area>`, handler
+  in its module's `Application/`, endpoint in `Lt2.Web/Endpoints/<Module>`, tests in the test projects (design 4).
 - Times are UTC in the database; display and schedules use `Europe/Vilnius` through `VilniusTime`. Use `TimeProvider`,
   never `DateTime.Now`.
 - Rules are checked where the data is written (a module service, for every caller), not only by HTTP validators.

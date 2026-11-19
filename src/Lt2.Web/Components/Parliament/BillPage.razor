@@ -103,10 +103,6 @@
                                 {
                                     <span class="tag" id="ai-label">@A["What.Source." + a.DescriptionSource]</span>
                                 }
-                                else if (a.DescriptionSource == "initiator")
-                                {
-                                    @A.Format("What.Source.initiator", a.DescriptionAuthor ?? A["Anonymous"])
-                                }
                                 else
                                 {
                                     @A["What.Source.moderator"]

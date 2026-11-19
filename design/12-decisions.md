@@ -5,6 +5,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 ## 4. Solution layout
 
+- A feature's parts are named alike across the solution, not kept in one folder (section 4); `AGENTS.md` says so
+  (2026-11-19).
+
 - Product code on `master`; the concept website and the discovery notes stay on `docs` (2026-11-12).
 
 ## 6. Security and data protection
@@ -30,6 +33,7 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   at completed registration on the code and per day; members see only their own count; administrators see numbers per
   day, per code and per level, never who invited whom, and can switch codes off and on (2026-11-13).
 - A member may change their display name as often as they like; the account keeps no time of the change (2026-11-16).
+- Display names are not unique; only the email address is, one account per normalised address (2026-11-19).
 - A passkey session stays one: no renewal or security-stamp check turns it into a code session or changes what it was
   signed in as (2026-11-17).
 - "Patvirtinti prieigos raktu" in place wherever an action needs a passkey session (speaking for an MP, a linked
@@ -102,6 +106,8 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 ## 8.5 MPs on the platform
 
 - The MP's own account takes no part, and the forms it would be refused are not shown to it (8.5.4, 2026-11-17).
+- `Registration:OfficialAddressesWithoutInvitation` is on for the trial site, as on the local stack; off by default
+  elsewhere (8.5.1, 2026-11-19).
 
 ## 8.7 The front page and the lists of the agenda
 
@@ -160,6 +166,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - "Jūsų projektai" has no share line; the bill's page keeps it (8.11.5, 2026-11-19).
 
 ## 8.12 One object: every bill is open
+
+- No record has an initiator: the column `bill_record.initiator_user_id` and the description source `initiator` are gone
+  (8.12.4, 8.13, 2026-11-19).
 
 - The bill and the appeal are one object: every active bill is open on its own page, nobody starts or approves an appeal,
   and moderation acts afterwards. The list is "Projektai" at `/projektai` (2026-11-14).
@@ -308,6 +317,10 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - An opened "Aptarimas" stays in its side's column and nothing else moves; the word "Aptarimas" shows at desktop widths,
   closed and open alike (8.16.1, 8.23.6, 2026-11-17).
 
+- A comment in an organisation's name stays when its writer's account is deleted, unless the deletion closes the
+  organisation (its last representative): closing withdraws its statements and their comments with them (8.23.7,
+  2026-11-19).
+
 ## 8.24 Email rhythm
 
 - Every member chooses how often their emails come; "Iš karto" is the default and means within minutes, one email per
@@ -368,7 +381,7 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   approximate numbers are enough. Members are counted by year as well, though the year's sketch lets anyone holding the
   whole database list the accounts active that year until it ends (8.27.2, 2026-11-16).
 
-## 8.28 Getting started (designed, not built)
+## 8.28 Getting started
 
 - No guided tour: the menu says what its pages are, the front page tells a member who has not taken a side yet how to
   start, and the methodology page lists where everything is ("Kur ką rasti"); nothing is stored to show or hide any of

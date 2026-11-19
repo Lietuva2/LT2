@@ -26,7 +26,7 @@ public sealed class ReasonPagingTests
     public void A_column_from_the_bills_answer_holds_its_sides_first_ones_and_knows_where_the_next_page_starts()
     {
         var record = new BillRecordResponse(
-            Guid.NewGuid(), new BillRefResponse("XVP-0412", "Pataisa"), "open", "", null, null, new SideCountsResponse(0, 0, 0, 0),
+            Guid.NewGuid(), new BillRefResponse("XVP-0412", "Pataisa"), "open", "", null, new SideCountsResponse(0, 0, 0, 0),
             new ThresholdResponse(100, "default", null, 0, false, false), [Reason(1), Reason(2), Reason(3, side: "against")], ReasonTotals: new ReasonTotalsResponse(15, 1));
 
         var column = ReasonPaging.FromRecord(record, "for");

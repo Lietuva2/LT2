@@ -2,7 +2,7 @@ namespace Lt2.Api.Contracts.Appeals;
 
 // Design 8.8, 8.12. Codes are lower-case English words: side for | against; status open | closed | rejected (taking part
 // closed by the moderators); reason status pending | published | hidden | merged; threshold set by default | moderator;
-// description source initiator | moderator | ai-draft | ai (made by the summary job, read by nobody; design 8.13).
+// description source moderator | ai-draft | ai (made by the summary job, read by nobody; design 8.13).
 // Every active bill is open: the answers for one nobody has taken part on are the empty open state (no id, zero counts).
 // No response carries another person's position or tells who took part first: the only side of a person any answer holds
 // is the caller's own, in MyBillRecordResponse.
@@ -168,12 +168,11 @@ public static class ReasonLimits
 
 /// <summary>
 /// A bill as people take part on it (design 8.12.1). <c>Id</c> is the bill's record, null while it has none (nobody took
-/// part and no moderator acted). <c>Description</c> is empty while there is none; <c>DescriptionAuthor</c> is set only for a
-/// description an initiator wrote before 2026-11-14. A hidden record (<c>rejected</c>) carries only the moderators'
-/// <c>HiddenStatement</c>. <c>DescriptionUrl</c> is the official text the description was made from, when known, and
-/// <c>DescriptionAt</c> when its text was made or last changed (design 8.13). <c>Reasons</c> holds each side's first
-/// <see cref="ReasonLimits.First"/> arguments only, <c>ReasonTotals</c> how many each side has (owner, 2026-11-19); the rest
-/// comes a page at a time (<see cref="IAppealsApi.GetReasonsAsync"/>).
+/// part and no moderator acted). <c>Description</c> is empty while there is none. A hidden record (<c>rejected</c>) carries
+/// only the moderators' <c>HiddenStatement</c>. <c>DescriptionUrl</c> is the official text the description was made from,
+/// when known, and <c>DescriptionAt</c> when its text was made or last changed (design 8.13). <c>Reasons</c> holds each
+/// side's first <see cref="ReasonLimits.First"/> arguments only, <c>ReasonTotals</c> how many each side has (owner,
+/// 2026-11-19); the rest comes a page at a time (<see cref="IAppealsApi.GetReasonsAsync"/>).
 /// </summary>
 public sealed record BillRecordResponse(
     Guid? Id,
@@ -181,7 +180,6 @@ public sealed record BillRecordResponse(
     string Status,
     string Description,
     string? DescriptionSource,
-    string? DescriptionAuthor,
     SideCountsResponse Counts,
     ThresholdResponse Threshold,
     IReadOnlyList<ReasonResponse> Reasons,

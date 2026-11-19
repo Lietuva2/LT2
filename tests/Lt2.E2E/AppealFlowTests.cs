@@ -474,8 +474,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         // The invented accounts age day by day, so the older-account counts grow from the seeded 6 150 and 3 900.
         await Assertions.Expect(page.Locator("#count-for")).ToContainTextAsync(new Regex("\\d\\s\\d{3}\\s–\\spaskyros"));
         await Assertions.Expect(page.Locator("#count-against")).ToContainTextAsync(new Regex("\\d\\s\\d{3}\\s–\\spaskyros"));
-        // The description and its label (on a database from before 2026-11-14 the demonstration's initiator wrote it).
-        await Assertions.Expect(page.Locator("#description-source")).ToContainTextAsync(new System.Text.RegularExpressions.Regex("Parašė moderatorius|Aprašymą parašė"));
+        // The description and its label.
+        await Assertions.Expect(page.Locator("#description-source")).ToContainTextAsync("Parašė moderatorius");
         await Assertions.Expect(page.GetByText("Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Man svarbu · 1 920")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToHaveTextAsync("Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.");

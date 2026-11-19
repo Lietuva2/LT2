@@ -122,8 +122,10 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
             body.ShouldNotContain("atidarė", Case.Insensitive, route);
         }
 
-        // The record itself keeps no trace of who caused it.
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.bill_record WHERE bill_number = @b AND initiator_user_id IS NULL", ("b", AppealSteps.SecondBill))).ShouldBe(1);
+        // The record itself keeps no trace of who caused it: it has no column for a person.
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'appeals' AND table_name = 'bill_record' AND column_name LIKE '%user%'"))
+            .ShouldBe(0);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE target LIKE 'record:%' AND actor_user_id = @u", ("u", Guid.Parse(firstId)))).ShouldBe(0);
     }
     [Fact]

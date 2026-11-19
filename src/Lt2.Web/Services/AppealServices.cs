@@ -23,7 +23,7 @@ internal static class AppealMapping
     public static ReasonResponse Map(ReasonInfo r) => new(r.Id, r.Side, r.Text, r.AuthorName, r.Endorsements, r.Status, r.CreatedAt, r.AuthorProfileId) { Comments = r.Comments };
 
     public static BillRecordResponse Map(BillRecordInfo a) => new(
-        a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, a.DescriptionAuthor, Map(a.Counts), Map(a.Threshold),
+        a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, Map(a.Counts), Map(a.Threshold),
         a.Reasons.Select(Map).ToList(), Map(a.Surge), a.ClosingVoteId, a.ClosedAt, Map(a.Planned), a.HiddenStatement, a.DescriptionUrl, a.DescriptionAt,
         a.Cards?.Select(Map).ToList(), Map(a.ReasonTotals ?? ReasonTotals.None));
 
