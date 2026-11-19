@@ -75,6 +75,17 @@ public sealed class SignInComponentTests : BunitContext
     }
 
     [Fact]
+    public void The_form_says_accounts_are_confirmed_by_email_and_the_wallet_is_a_later_option_with_no_date()
+    {
+        var hint = Render<SignIn>().Find("#verification-hint").TextContent;
+
+        hint.ShouldContain("Paskyros patvirtinamos el. paštu.");
+        hint.ShouldContain("ES skaitmeninės tapatybės piniginė");
+        hint.ShouldNotContain("telefon");
+        hint.Any(char.IsDigit).ShouldBeFalse("no date is promised");
+    }
+
+    [Fact]
     public void While_only_prerendered_the_form_cannot_be_used()
     {
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));

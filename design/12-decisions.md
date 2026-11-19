@@ -23,7 +23,8 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 ## 6.2 Sign-in and accounts
 
 - Minimum age 18, self-declared (2026-11-12).
-- Registration by email only; phone verification is a later decision (2026-11-12).
+- Registration by email only (2026-11-12).
+- Accounts are confirmed by email now; the EU Digital Identity Wallet is added once Lithuania
 - An account is pending until its address is proven; the display name and the age declaration are asked after the code,
   and an invitation's use is counted then (2026-11-12).
 - A sign-in code belongs to the address and can be typed into any browser; ten codes a day per address from browsers that

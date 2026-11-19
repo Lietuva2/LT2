@@ -16,6 +16,7 @@
   <data name="SignIn.SendCode" xml:space="preserve"><value>Atsiųsti kodą</value></data>
   <data name="SignIn.Passkey" xml:space="preserve"><value>Prisijungti prieigos raktu</value></data>
   <data name="SignIn.PasskeyHint" xml:space="preserve"><value>Piršto atspaudu, veidu ar įrenginio PIN kodu – be kodo el. paštu.</value></data>
+  <data name="SignIn.Verification" xml:space="preserve"><value>Paskyros patvirtinamos el. paštu. Kai Lietuvoje bus ES skaitmeninės tapatybės piniginė, ją taip pat bus galima naudoti.</value></data>
   <data name="SignIn.NoAccount" xml:space="preserve"><value>Neturite paskyros?</value></data>
   <data name="SignIn.ToRegister" xml:space="preserve"><value>Registruokitės su kvietimo kodu.</value></data>
   <data name="SignIn.OtherAccount" xml:space="preserve"><value>Prisijungėte kaip kitas narys.</value></data>
