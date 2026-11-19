@@ -27,9 +27,10 @@ internal sealed record StaffState(
 /// <summary>
 /// Reads the staff rules from the database on every call (design 6.2), so a reset or a removed passkey takes effect at
 /// once: a staff role is active only if it was granted, its activation code was used, the account has a staff passkey,
-/// and this session was signed in with that passkey.
+/// and this session was signed in with that passkey. A context of its own per call: the moderators' panels of a page ask
+/// while other components of the same page read the scoped context.
 /// </summary>
-internal sealed class StaffAccess(IdentityDb db, TimeProvider clock)
+internal sealed class StaffAccess(IDbContextFactory<IdentityDb> contexts, TimeProvider clock)
 {
     public async Task<StaffState?> ForAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
@@ -38,6 +39,7 @@ internal sealed class StaffAccess(IdentityDb db, TimeProvider clock)
             return null;
         }
 
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var now = clock.GetUtcNow();
         Session? session = null;
         if (Guid.TryParse(principal.FindFirstValue(SessionTicketStore.SessionIdClaim), out var sessionId))
@@ -47,7 +49,7 @@ internal sealed class StaffAccess(IdentityDb db, TimeProvider clock)
         }
 
         var profile = await db.Profiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
-        var active = await ActiveRolesAsync(userId, profile, cancellationToken);
+        var active = await ActiveRolesAsync(db, userId, profile, cancellationToken);
         var staffSession = profile?.StaffPasskeyId is { } staff && session?.PasskeyId is { } used && staff.AsSpan().SequenceEqual(used);
         return new StaffState(
             userId,
@@ -59,7 +61,7 @@ internal sealed class StaffAccess(IdentityDb db, TimeProvider clock)
     }
 
     /// <summary>Granted staff roles whose activation code was used, on an account that has a staff passkey.</summary>
-    private async Task<IReadOnlyList<string>> ActiveRolesAsync(Guid userId, Profile? profile, CancellationToken cancellationToken)
+    private static async Task<IReadOnlyList<string>> ActiveRolesAsync(IdentityDb db, Guid userId, Profile? profile, CancellationToken cancellationToken)
     {
         if (profile?.StaffPasskeyId is null)
         {
