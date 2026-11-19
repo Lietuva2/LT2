@@ -56,6 +56,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         html.Headers.CacheControl?.NoCache.ShouldBe(true);
         var markup = WebUtility.HtmlDecode(await html.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         markup.ShouldContain("<h1 id=\"member-name\">Rūta Mockutė</h1>");
+        markup.ShouldContain($"<div class=\"member-head\"><span class=\"initials initials--{Lt2.Web.Client.Components.MemberBadges.Colour(id)}\" aria-hidden=\"true\">RM</span><h1", Case.Sensitive, "the badge stands beside the heading (design 8.25.4)");
         markup.ShouldContain("href=\"https://pavyzdys.test/ruta\" rel=\"nofollow ugc noopener noreferrer\" target=\"_blank\"");
         markup.ShouldNotContain("id=\"followers\"", Case.Sensitive, "nothing with no followers");
     }
@@ -320,6 +321,13 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         var page = await visitor.Client.GetStringAsync("/seimas/" + AppealSteps.TaxBill, TestContext.Current.CancellationToken);
         page.Split($"<template id=\"card-{id}\"").Length.ShouldBe(2, "the card is in the page once per person");
         page.ShouldContain($"data-card=\"card-{id}\"");
+
+        // Design 8.25.4 (owner, 2026-11-19): an initials badge beside the name that leads to the page, hidden from assistive
+        // technology, in the colour its public id gives; none beside a plain name.
+        var badge = $"<span class=\"initials initials--{Lt2.Web.Client.Components.MemberBadges.Colour(id)}\" aria-hidden=\"true\">AN</span>";
+        page.Split(badge).Length.ShouldBe(3, "one badge beside each of the member's two arguments");
+        page.ShouldNotContain(">UN</span>", Case.Sensitive, "no badge beside a member without a public profile");
+        page.Split("class=\"initials ").Length.ShouldBe(3, "no other badge on the page");
 
         // Switched off: the link and the card go at once.
         await open.SavedProfileAsync("Trumpai apie mane.", isPublic: false);

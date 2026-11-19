@@ -35,7 +35,8 @@ else if (_profile is { } p)
     <div class="cols">
         <div class="stack stack--loose">
             <section class="sheet stack" aria-labelledby="member-name" id="member">
-                <h1 id="member-name">@p.DisplayName</h1>
+                @* Design 8.25.4: the initials badge beside the heading, outside it, so the heading stays the name alone. *@
+                <div class="member-head"><MemberBadge ProfileId="@p.ProfileId" Name="@p.DisplayName" /><h1 id="member-name">@p.DisplayName</h1></div>
                 <Lt2.Web.Client.Components.NeedsScript />
                 @* Owner, 2026-11-17: "Sekti" and how many follow in one compact line under the name, as on every followed page. *@
                 <FollowButton Kind="member" Key="@p.ProfileId" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />

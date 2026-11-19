@@ -93,7 +93,7 @@
                 @foreach (var m in members)
                 {
                     <li @key="m.ProfileId">
-                        <div class="rows__main"><a href="@ProfileRoutes.Page(m.ProfileId, m.DisplayName)">@m.DisplayName</a></div>
+                        <div class="rows__main"><MemberBadge ProfileId="@m.ProfileId" Name="@m.DisplayName" /><a href="@ProfileRoutes.Page(m.ProfileId, m.DisplayName)">@m.DisplayName</a></div>
                         <div class="rows__side">
                             <button type="button" class="btn btn--plain btn--compact" disabled="@Locked" @onclick="() => UnfollowMemberAsync(m.ProfileId)">@L["Follow.Unfollow"]</button>
                         </div>

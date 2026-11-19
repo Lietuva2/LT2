@@ -392,6 +392,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The supported party is shown on the public profile by its own box "Rodyti viešame profilyje" and consent
   `party-public`, only while the profile is public; withdrawn at once with the box, the party or the profile, and not
   given back by switching the profile on again; nothing for an MP's account (8.25.9, 2026-11-17).
+- Members have no uploaded picture (a face beside political texts, moderation load, storage and parsing risk, drift
+  towards a social network); a member with a public profile has a round badge with their initials beside the name that
+  leads to the profile, in one of eight neutral colours chosen from the profile's public id (8.25.4, 2026-11-19).
 
 ## 8.26 Analytics
 
