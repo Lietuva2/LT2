@@ -117,6 +117,16 @@ public sealed class MenuTests : E2ETest
             await page.Keyboard.PressAsync("Escape");
         }
 
+        // Design 8.28.4: "Kur ką rasti" under the steps of /metodika, for the owner's look.
+        foreach (var width in new[] { 390, 1280 })
+        {
+            await page.SetViewportSizeAsync(width, 900);
+            await page.GotoAsync(E2ESteps.Base + "/metodika#kur-ka-rasti");
+            await Assertions.Expect(page.Locator("#kur-ka-rasti dd")).ToHaveCountAsync(14);
+            await E2ESteps.NoSidewaysScrollAsync(page, $"/metodika at {width} px");
+            await page.Locator("#kur-ka-rasti").ScreenshotAsync(new() { Path = Path.Combine(Shots, $"where-{width}.png") });
+        }
+
         // Without script the dropdown still opens and shows the same lines.
         await using var context = await page.Context.Browser!.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = false });
         var plain = await context.NewPageAsync();
