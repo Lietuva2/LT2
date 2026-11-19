@@ -131,6 +131,11 @@ internal sealed class DigestItem
 
     public int? SurgeWindowHours { get; set; }
 
+    /// <summary>How many published arguments each side had when the summary was made or went (design 8.4); null in a snapshot from before it was kept.</summary>
+    public int? ForReasonCount { get; set; }
+
+    public int? AgainstReasonCount { get; set; }
+
     /// <summary>The arguments as JSON: side, text, "Man svarbu" count; no author.</summary>
     public string Reasons { get; set; } = "[]";
 }

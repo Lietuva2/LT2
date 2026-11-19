@@ -59,7 +59,9 @@ public sealed record DigestItemInfo(
     int AgainstOlderThan30Days,
     int? SurgeSharePercent,
     int? SurgeWindowHours,
-    IReadOnlyList<Lt2.SharedKernel.DigestReason> Reasons);
+    IReadOnlyList<Lt2.SharedKernel.DigestReason> Reasons,
+    int? ForReasonCount = null,
+    int? AgainstReasonCount = null);
 
 /// <summary>A summary run (design 8.7, 8.19) as its public copy shows it: without MP-specific figures and never which MPs.</summary>
 /// <param name="Status">
@@ -119,7 +121,9 @@ public sealed record DigestReviewItem(
     int? SurgeWindowHours,
     bool Held,
     bool Gone,
-    IReadOnlyList<DigestReviewReason> Reasons);
+    IReadOnlyList<DigestReviewReason> Reasons,
+    int? ForReasonCount = null,
+    int? AgainstReasonCount = null);
 
 /// <summary>
 /// A summary as the moderators' screen shows it (design 8.19.2, owner 2026-11-17): the common text once, as MPs read it. A

@@ -23,7 +23,8 @@ public sealed class MpMailTemplateTests
     private static MpDigestBill Bill(string number, MpStance? response = null) => new(
         new DigestItemInfo(
             number, "Gyventojų pajamų mokesčio įstatymo pataisa", "adoption", Monday.AddDays(3), 6800, 6150, 4280, 3900, null, null,
-            [new DigestReason("for", "Gynyba finansuojama nekeliant PVM.", 1310), new DigestReason("against", "Skatina keisti rezidavimo vietą.", 970)]),
+            [new DigestReason("for", "Gynyba finansuojama nekeliant PVM.", 1310), new DigestReason("against", "Skatina keisti rezidavimo vietą.", 970)],
+            ForReasonCount: 14, AgainstReasonCount: 9),
         new DeliveryParty(number, "Reformų partija", 410, 520),
         response);
 
@@ -54,10 +55,55 @@ public sealed class MpMailTemplateTests
         email.TextBody.ShouldContain("Iš nurodžiusių, kad palaiko Reformų partija: 410 prašo balsuoti už.");
         email.TextBody.ShouldContain("· Gynyba finansuojama nekeliant PVM. (1 310)");
         email.TextBody.ShouldContain("· Skatina keisti rezidavimo vietą. (970)");
+        email.TextBody.ShouldContain("Dažniausi argumentai už (iš 14):");
+        email.TextBody.ShouldContain("Dažniausi argumentai prieš (iš 9):");
         email.HtmlBody.ShouldNotBeNull();
         email.HtmlBody.ShouldContain("Prašo balsuoti prieš: 4 280");
         email.Stream.ShouldBe("mp", "MP mail has its own stream");
     }
+
+    [Theory]
+    [InlineData(0, 0, "Argumentų už dar nėra.")]
+    [InlineData(1, 1, "Dažniausi argumentai už:")]
+    [InlineData(2, 2, "Dažniausi argumentai už:")]
+    [InlineData(3, 2, "Dažniausi argumentai už (iš 3):")]
+    [InlineData(14, 2, "Dažniausi argumentai už (iš 14):")]
+    [InlineData(1400, 2, "Dažniausi argumentai už (iš 1 400):")]
+    public void The_heading_of_a_side_says_how_many_published_arguments_it_has_only_when_the_ones_shown_are_not_all(int published, int shown, string heading)
+    {
+        var plain = Bill("XVP-0412");
+        var reasons = Enumerable.Range(1, shown).Select(i => new DigestReason("for", "Argumentas " + i + ".", 10 - i)).ToList();
+        var bill = plain with { Item = plain.Item with { Reasons = reasons, ForReasonCount = published, AgainstReasonCount = 0 } };
+        var text = Templates().Digest(Email() with { Bills = [bill] }).TextBody;
+
+        text.ShouldContain(heading);
+        if (!heading.Contains("(iš ", StringComparison.Ordinal))
+        {
+            text.ShouldNotContain("argumentai už (iš ");
+        }
+    }
+
+    [Fact]
+    public void A_snapshot_from_before_the_number_was_kept_shows_no_number()
+    {
+        var plain = Bill("XVP-0412");
+        var bill = plain with { Item = plain.Item with { ForReasonCount = null, AgainstReasonCount = null } };
+        var text = Templates().Digest(Email() with { Bills = [bill] }).TextBody;
+
+        text.ShouldContain("Dažniausi argumentai už:");
+        text.ShouldContain("Dažniausi argumentai prieš:");
+        text.ShouldNotContain("(iš 1");
+    }
+
+    [Theory]
+    [InlineData(null, 2, null)]
+    [InlineData(0, 0, null)]
+    [InlineData(1, 1, null)]
+    [InlineData(2, 2, null)]
+    [InlineData(3, 2, 3)]
+    [InlineData(14, 2, 14)]
+    public void A_sides_published_count_is_shown_only_when_the_shown_arguments_are_not_all_of_them(int? published, int shown, int? expected) =>
+        DigestReasonCount.Shown(published, shown).ShouldBe(expected);
 
     [Fact]
     public void A_long_argument_is_shortened_like_the_page_with_a_link_to_the_whole_one_on_the_public_copy()

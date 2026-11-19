@@ -820,6 +820,12 @@ Integration: `DemoAppealTests`, `DemoSidesTests`.
   role) sees the box `#digest-review-notice` on every page while one is prepared and neither approved nor declined:
   `MainLayout` holds the same hidden markup for everyone, `js/lt2-account.js` fills it from `GET /me`'s `digestReview` (staff
   accounts only; `ServerMeApi` leaves it out), as the MP offer notice.
+- A side with more than two published arguments is headed "… (iš N)" (owner, 2026-11-20): N is the published arguments in the
+  pool the two are chosen from (`Published` in `DigestService`), read when it goes and stored in `digest_item.for_reason_count` /
+  `against_reason_count` (null in an older snapshot: no number). `DigestReasonCount.Shown` (SharedKernel) is the rule, used by
+  `MpMailTemplates` (`Digest.ReasonsOf.*`), `DigestMapping` (`ForReasonsOf`/`AgainstReasonsOf` on `DigestItemResponse` and
+  `DigestReviewItemResponse`, so the public copy and the moderators' screen show it); `DigestItemInfo.ForReasonCount` carries the raw one.
+  No total of marks. Tests: `MpMailTemplateTests` (rule, headings for 0, 1, 2, 3, 14), `DigestReviewTests`, `MpSendingTests`.
 - Always both sides, always with the count for accounts older than 30 days, with the most endorsed published reasons,
   without their authors' names (email, public copy and snapshot alike). A reason longer than about 300
   characters is shortened in the email by `TextExcerpt`, with "Visas argumentas: {link}" to it on the

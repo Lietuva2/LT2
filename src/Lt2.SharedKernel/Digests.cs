@@ -4,6 +4,17 @@ namespace Lt2.SharedKernel;
 public sealed record DigestReason(string Side, string Text, int Endorsements);
 
 /// <summary>
+/// The rule for "(iš N)" beside a side's arguments in a summary (design 8.4, owner 2026-11-20): the number of published
+/// arguments on that side is shown only when the arguments shown are not all of them, so the reader can tell the top of many
+/// from all there are. Null (no number) for a side whose shown arguments are all of its arguments, and for a snapshot made
+/// before the number was kept. Marks are never totalled: the same people would be counted more than once.
+/// </summary>
+public static class DigestReasonCount
+{
+    public static int? Shown(int? published, int shown) => published is { } n && n > shown ? n : null;
+}
+
+/// <summary>
 /// A record as the summaries see it now (design 8.4): both sides with the counts for accounts older than 30 days, the
 /// threshold, the surge note and the planned date. Its arguments come from <see cref="IDigestSource.ReasonPoolAsync"/>.
 /// </summary>

@@ -371,9 +371,11 @@ internal sealed class DigestService(
                             .ToList();
                         return c is null
                             ? new DigestReviewItem(i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.ForCount, i.ForOlderThan30Days, i.AgainstCount,
-                                i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, Held: false, Gone: true, reasons)
+                                i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, Held: false, Gone: true, reasons,
+                                Published(pool, i.RecordId, "for"), Published(pool, i.RecordId, "against"))
                             : new DigestReviewItem(i.RecordId, c.BillNumber, c.BillTitle, c.Planned?.Stage ?? i.Stage, c.Planned?.Date ?? i.PlannedDate, c.For,
-                                c.ForOlderThan30Days, c.Against, c.AgainstOlderThan30Days, c.SurgeSharePercent, c.SurgeWindowHours, c.Held, Gone: false, reasons);
+                                c.ForOlderThan30Days, c.Against, c.AgainstOlderThan30Days, c.SurgeSharePercent, c.SurgeWindowHours, c.Held, Gone: false, reasons,
+                                Published(pool, i.RecordId, "for"), Published(pool, i.RecordId, "against"));
                     }).ToList()));
             }
         }
@@ -391,7 +393,8 @@ internal sealed class DigestService(
                 goneItems.Where(i => i.RunId == run.Id).Select(i => new DigestReviewItem(
                     i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.ForCount, i.ForOlderThan30Days, i.AgainstCount,
                     i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, false, false,
-                    Snapshot(i).Select(r => new DigestReviewReason(null, r.Side, r.Text, r.Endorsements, false)).ToList())).ToList()));
+                    Snapshot(i).Select(r => new DigestReviewReason(null, r.Side, r.Text, r.Endorsements, false)).ToList(),
+                    i.ForReasonCount, i.AgainstReasonCount)).ToList()));
         }
 
         return result;
@@ -422,6 +425,9 @@ internal sealed class DigestService(
             locks.MailCaught);
 
     private static string[] Sides() => ["for", "against"];
+
+    /// <summary>How many published arguments a side of a record has in the pool: the set the shown ones are chosen from (design 8.4).</summary>
+    private static int Published(IReadOnlyList<DigestPoolReason> pool, Guid recordId, string side) => pool.Count(r => r.RecordId == recordId && r.Side == side);
 
     /// <summary>
     /// Prepares one summary under the summaries' lock (design 8.19.2): <paramref name="stillDue"/> is asked again under it
@@ -476,6 +482,8 @@ internal sealed class DigestService(
                 AgainstOlderThan30Days = c.AgainstOlderThan30Days,
                 SurgeSharePercent = c.SurgeSharePercent,
                 SurgeWindowHours = c.SurgeWindowHours,
+                ForReasonCount = Published(pool, c.RecordId, "for"),
+                AgainstReasonCount = Published(pool, c.RecordId, "against"),
             });
         }
 
@@ -592,6 +600,8 @@ internal sealed class DigestService(
             item.AgainstOlderThan30Days = c.AgainstOlderThan30Days;
             item.SurgeSharePercent = c.SurgeSharePercent;
             item.SurgeWindowHours = c.SurgeWindowHours;
+            item.ForReasonCount = Published(pool, item.RecordId, "for");
+            item.AgainstReasonCount = Published(pool, item.RecordId, "against");
 
             // In the order chosen, not sorted again by marks (owner, 2026-11-17); the count beside each is read now.
             item.Reasons = JsonSerializer.Serialize(
@@ -973,7 +983,9 @@ internal sealed class DigestService(
                     i.AgainstOlderThan30Days,
                     i.SurgeSharePercent,
                     i.SurgeWindowHours,
-                    Snapshot(i))).ToList(),
+                    Snapshot(i),
+                    i.ForReasonCount,
+                    i.AgainstReasonCount)).ToList(),
                 r.SentCount,
                 r.SentAt,
                 r.DueAt,

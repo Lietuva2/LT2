@@ -93,7 +93,7 @@ else
                     {
                         var reasons = item.Reasons.Where(r => r.Side == side).ToList();
                         <div class="stack stack--tight">
-                            <h4><span class="choice choice--@side">@L["DigMod.Reasons." + side]</span></h4>
+                            <h4><span class="choice choice--@side">@L["DigMod.Reasons." + side]</span>@if ((side == "for" ? item.ForReasonsOf : item.AgainstReasonsOf) is { } of) { <text> </text><span class="small num">@L.Format("DigMod.OfSide", Display.Number(of))</span> }</h4>
                             @if (reasons.Count == 0)
                             {
                                 <p class="small">@L["DigMod.NoReasons"]</p>

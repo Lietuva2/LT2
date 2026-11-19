@@ -141,6 +141,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   summaries made after it. The owner's reason: taking part is private and no list ties a side to a person, so a small
   group number reveals little from within the system (5.6, 6.3, 8.2, 2026-11-17). It does not change the analytics
   sample of 20 (8.26), organisations (no group numbers) or follower numbers (exact from 1).
+- Each bill in a summary shows, beside the two most endorsed published arguments of a side, how many published arguments
+  that side has ("Dažniausi argumentai už (iš 14):"), only when it has more than two. No total of "Man svarbu" marks:
+  summing marks counts the same people more than once (8.4, 8.19.3, 2026-11-20).
 
 ## 8.5 MPs on the platform
 

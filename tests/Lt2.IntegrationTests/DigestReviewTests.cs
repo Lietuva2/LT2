@@ -150,4 +150,57 @@ public sealed class DigestReviewTests(DatabaseFixture database) : ApiTest(databa
             await Database.FreeBillAsync(AppealSteps.SecondBill);
         }
     }
+
+    [Fact]
+    public async Task A_side_with_more_published_arguments_than_shown_says_how_many_it_has_on_the_screen_and_the_public_copy_and_keeps_the_number()
+    {
+        await Database.ForgetPreparedAsync();
+        var (moderator, admin) = await StaffAsync();
+        await admin.Browser.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(47);
+        try
+        {
+            var (initiator, _) = await Factory.MemberAsync();
+            using var _i = initiator;
+            await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
+            var (writer, _) = await Factory.MemberAsync();
+            using var _w = writer;
+            await WriteAsync(writer, First);
+            await WriteAsync(writer, Second);
+            var third = await WriteAsync(writer, Third);
+            var hidden = await WriteAsync(writer, Late);
+            (await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.HideReason, hidden), new StatementRequest { Statement = "Pažeidžia taisykles." }))
+                .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            await Database.PlanAsync(AppealSteps.ThirdBill, monday.AddDays(3));
+
+            var prepared = (await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(-1), 7, 5))).Single();
+            async Task<DigestReviewItemResponse> ItemOfAsync(Guid run) =>
+                (await moderator.Browser.GetJsonAsync<DigestModerationResponse>(DigestRoutes.Moderation)).Runs.Single(r => r.Id == run).Items.Single(i => i.BillNumber == AppealSteps.ThirdBill);
+            var review = await ItemOfAsync(prepared.Id);
+            review.Reasons.Count(r => r.Side == "for").ShouldBe(2, "the two most endorsed are shown");
+            (review.ForReasonsOf, review.AgainstReasonsOf).ShouldBe((3, null), "three published (the hidden one does not count); one against needs no number");
+
+            var gone = (await Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5))).Single();
+            var item = gone.Items.Single(i => i.BillNumber == AppealSteps.ThirdBill);
+            (item.ForReasonCount, item.AgainstReasonCount).ShouldBe((3, 1), "the stored number is the real one; the rule decides whether it is shown");
+            (await Database.ScalarAsync<int?>("SELECT for_reason_count FROM notify.digest_item WHERE run_id = @r AND bill_number = @b", ("r", gone.Id), ("b", AppealSteps.ThirdBill))).ShouldBe(3);
+            (await Database.ScalarAsync<int?>("SELECT against_reason_count FROM notify.digest_item WHERE run_id = @r AND bill_number = @b", ("r", gone.Id), ("b", AppealSteps.ThirdBill))).ShouldBe(1);
+
+            // The public copy shows the same number as the email would (the email carries the stored one), and it stays after the argument is hidden.
+            (await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.HideReason, third), new StatementRequest { Statement = "Pažeidžia taisykles." }))
+                .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            using var stranger = NewBrowser();
+            var copy = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync(DigestRoutes.PageOf(monday)));
+            copy.ShouldContain("(iš 3)");
+            copy.ShouldNotContain("(iš 1)");
+            (await ItemOfAsync(gone.Id)).ForReasonsOf.ShouldBe(3, "the snapshot keeps the number");
+        }
+        finally
+        {
+            await Database.ForgetPreparedAsync();
+            await admin.Browser.ResetSettingAsync("Digest:ThresholdMinimum");
+            await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
+            await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        }
+    }
 }

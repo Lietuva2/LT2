@@ -146,7 +146,8 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             var reasons = item.Reasons.Where(r => r.Side == side).ToList();
             if (reasons.Count > 0)
             {
-                text.Append('\n').Append(l["Digest.Reasons." + side]);
+                var of = DigestReasonCount.Shown(side == "for" ? item.ForReasonCount : item.AgainstReasonCount, reasons.Count);
+                text.Append('\n').Append(of is { } total ? l.Format("Digest.ReasonsOf." + side, N(total)) : l["Digest.Reasons." + side]);
                 for (var i = 0; i < reasons.Count; i++)
                 {
                     text.Append('\n').Append(Reason(reasons[i], ReasonLink(model, item.BillNumber, side, i + 1)));

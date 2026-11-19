@@ -9,6 +9,10 @@ namespace Lt2.Api.Contracts.Digests;
 
 public sealed record DigestReasonResponse(string Side, string Text, int Endorsements);
 
+/// <remarks>
+/// <c>ForReasonsOf</c> and <c>AgainstReasonsOf</c> (design 8.4, owner 2026-11-20): the published arguments a side has, set only when the
+/// arguments listed are not all of them (the heading reads "(iš N)"); null otherwise, and in a snapshot made before it was kept.
+/// </remarks>
 public sealed record DigestItemResponse(
     string BillNumber,
     string BillTitle,
@@ -20,7 +24,9 @@ public sealed record DigestItemResponse(
     int AgainstOlderThan30Days,
     int? SurgeSharePercent,
     int? SurgeWindowHours,
-    IReadOnlyList<DigestReasonResponse> Reasons);
+    IReadOnlyList<DigestReasonResponse> Reasons,
+    int? ForReasonsOf = null,
+    int? AgainstReasonsOf = null);
 
 /// <summary>
 /// A summary as its public copy shows it. <paramref name="CreatedAt"/>: when it was prepared; <paramref name="MpCount"/>: MPs it
@@ -74,7 +80,9 @@ public sealed record DigestReviewItemResponse(
     int? SurgeWindowHours,
     bool Held,
     bool Gone,
-    IReadOnlyList<DigestReviewReasonResponse> Reasons);
+    IReadOnlyList<DigestReviewReasonResponse> Reasons,
+    int? ForReasonsOf = null,
+    int? AgainstReasonsOf = null);
 
 /// <summary>
 /// A summary on the moderators' screen (design 8.19.2, owner 2026-11-17): its common text once, as MPs read it. Status

@@ -48,6 +48,7 @@
 <data name="Digests.NoReasons" xml:space="preserve"><value>Argumentų dar nėra.</value></data>
 <data name="Digests.Side.for" xml:space="preserve"><value>Už</value></data>
 <data name="Digests.Side.against" xml:space="preserve"><value>Prieš</value></data>
+<data name="Digests.OfSide" xml:space="preserve"><value>(iš {0})</value></data>
 <data name="Digests.Endorsed" xml:space="preserve"><value>Man svarbu · {0}</value></data>
 <data name="Digests.Who" xml:space="preserve"><value>Kas gautų</value></data>
 <data name="Digests.WhoValue" xml:space="preserve"><value>visi Seimo nariai, kurių oficialus adresas yra atviruosiuose duomenyse, vienodai</value></data>
