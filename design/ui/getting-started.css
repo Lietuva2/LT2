@@ -1,0 +1,49 @@
+/* Design 8.28 (designed 2026-11-19, not built): what the two mock-ups pradzia-naujas-narys.html and
+   metodika-kur-ka-rasti.html add to the site's own lt2.css. The rules below the mock-up helpers are the ones to port. */
+
+/* Mock-up only: marks what 8.28 adds, as the dashed frames of pradzia-narys.html mark what the browser fills. */
+.mk-private { outline: 2px dashed #b0306a; outline-offset: 10px; position: relative; margin-top: 1.5rem; }
+.mk-private::before { content: attr(data-mk); position: absolute; top: calc(-1.6rem - 4px); left: -10px;
+  font: 600 11px/1.5 ui-monospace, Consolas, monospace; color: #fff; background: #b0306a; padding: 0 6px; max-width: calc(100% + 20px); }
+
+/* 8.28.2: each entry of the "Projektai" dropdown carries one line that says what the page is. */
+.drop__panel--desc { inline-size: 21rem; max-inline-size: min(21rem, 100vw - 2rem); padding-block: var(--sp-3); }
+.drop__panel--desc .drop__links { gap: var(--sp-2); }
+.drop__label { display: block; }
+.drop__desc { display: block; font-weight: 400; font-size: var(--fs-0); line-height: 1.35; color: var(--ink-2); margin-block-start: 2px; }
+.top__nav .drop__panel--desc .drop__links a:hover { text-decoration: none; }
+.top__nav .drop__panel--desc .drop__links a:hover .drop__label { text-decoration: underline; }
+.top__nav .drop__panel--desc .drop__links a[aria-current="page"] { text-decoration: none; }
+.top__nav .drop__panel--desc .drop__links a[aria-current="page"] .drop__label {
+  text-decoration: underline; text-decoration-color: var(--leaf); text-decoration-thickness: 3px; text-underline-offset: 0.3em; }
+/* On a phone the panel is as wide as the page, not hung from the item, so the lines have room. */
+@media (max-width: 32rem) {
+  .top { position: relative; }
+  .drop--desc { position: static; }
+  .drop--desc .drop__panel { inset-inline: 1rem; inset-block-start: 100%; inline-size: auto; max-inline-size: none; }
+}
+
+/* 8.28.3: the start for a member who has not taken a side yet. From 54rem the visitor's numbered steps (.intro-steps);
+   under it one line a step, so the agenda's heading stays on a phone's first screen. Both are in the page; the width
+   chooses. */
+.starter { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
+.starter__short { display: none; flex-direction: column; gap: var(--sp-2); list-style: none; margin: 0; padding: 0; counter-reset: step; font-weight: 600; }
+.starter__short > li { display: flex; align-items: flex-start; gap: var(--sp-2); }
+.starter__short > li::before { counter-increment: step; content: counter(step); font: 800 var(--fs-2)/1 var(--font-display);
+  width: 1.75rem; height: 1.75rem; flex: none; display: grid; place-items: center; background: var(--brand-deep); color: #fff;
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%); }
+@media (max-width: 54rem) {
+  .starter { gap: var(--sp-3); padding-top: var(--sp-4); }
+  .starter h2 { font-size: var(--fs-3); }
+  .starter .starter__full { display: none; }
+  .starter__short { display: flex; }
+}
+
+/* 8.28.4: "Kur ką rasti" on the methodology page: the menu's own list with the same lines. */
+.where { display: grid; grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr); gap: var(--sp-2) var(--sp-5); margin: 0; }
+.where dt { font-weight: 700; }
+.where dd { margin: 0; }
+.where .where__group { grid-column: 1 / -1; margin-block-start: var(--sp-3); }
+.where .where__sub { padding-inline-start: var(--sp-4); font-weight: 600; }
+@media (max-width: 36rem) { .where { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .where dd { margin-block-end: var(--sp-3); } .where .where__group { margin-block-end: var(--sp-2); } }

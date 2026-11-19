@@ -1,0 +1,95 @@
+<!doctype html>
+<!-- Design 8.28 (designed 2026-11-19, not built): the front page as a member sees it before taking a first side: the title "Sveiki prisijungę", four steps (the fourth: Seimo nariai sužino), the full steps on a wide screen and one line a step on a phone, no sentence on what is private. The dropdown of "Projektai" holds its four tabs (8.21), each with its line (8.28.2). Add ?meniu to the address to open "Projektai". Open over HTTP from the repository root, as pradzia.html. The stylesheet is the site's own; getting-started.css holds what 8.28 adds. The dashed magenta frame and its label exist only in this mock-up. The Lithuanian is a draft for the native reader. -->
+<html lang="lt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>8.28 · pradžia · naujas narys</title>
+<link rel="stylesheet" href="fonts/fonts.css"><link rel="stylesheet" href="../../src/Lt2.Web/wwwroot/css/lt2.css">
+<link rel="stylesheet" href="getting-started.css">
+<script src="lt2-theme.js"></script>
+</head>
+<body>
+<header class="page top">
+  <a class="top__brand" href="#"><svg viewBox="28 44 604 474" aria-hidden="true" class="logo"><g stroke-width="10" stroke-linejoin="round">
+    <path class="logo-slate" d="M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z"/>
+    <path class="logo-leaf" d="M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z"/>
+    <path class="logo-brand" d="M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z"/></g></svg><span class="top__name">Lietuva 2.0</span></a>
+  <nav class="top__nav" aria-label="Pagrindinis meniu">
+    <details class="drop drop--desc" id="projects-menu">
+      <summary class="drop__toggle" id="nav-projects">Projektai</summary>
+      <div class="drop__panel drop__panel--start drop__panel--desc">
+        <ul class="drop__links">
+          <li><a href="#"><span class="drop__label">Darbotvarkė</span><span class="drop__desc">Ką Seimas planuoja svarstyti artimiausiomis dienomis.</span></a></li>
+          <li><a href="#"><span class="drop__label">Projektai</span><span class="drop__desc">Visi projektai, kurių Seimas dar nebaigė svarstyti.</span></a></li>
+          <li><a href="#"><span class="drop__label">Balsavimai</span><span class="drop__desc">Kaip Seimas balsavo: visi balsavimai nuo naujausio.</span></a></li>
+          <li><a href="#"><span class="drop__label">Suvestinės</span><span class="drop__desc">Ką apie dalyvių prašymus sužino Seimo nariai.</span></a></li>
+        </ul>
+      </div>
+    </details>
+    <a href="#">Seimo nariai</a>
+    <a href="#">Statistika</a>
+    <details class="account" id="account-menu">
+      <summary class="account__toggle">Paskyra</summary>
+      <div class="account__panel">
+        <ul class="account__links"><li><a href="#">Mano paskyra</a></li><li><a href="#">Atsijungti</a></li></ul>
+      </div>
+    </details>
+  </nav>
+</header>
+<div class="page"><p class="note" role="note" id="invented-data">Seimo narių ir balsavimų duomenys čia išgalvoti – tai tik bandymas.</p></div>
+<main class="page stack stack--loose">
+
+<div class="stack stack--tight">
+  <h1 class="home-h1-s">Sveiki prisijungę</h1>
+</div>
+
+<section class="stack starter mk-private" data-mk="Maketas: mato tik narys, dar nenurodęs, ko prašo · įkeliama naršyklėje" aria-labelledby="h-starter">
+  <h2 id="h-starter">Pradėkite nuo vieno projekto</h2>
+  <ol class="intro-steps starter__full">
+    <li><h3>Pasirinkite projektą</h3><p>Žemiau – ką Seimas planuoja svarstyti artimiausiomis dienomis. Pavadinimas veda į projekto puslapį.</p></li>
+    <li><h3>Nurodykite, ko prašote</h3><p>Prie „Prašau balsuoti“ paspauskite „už“ arba „prieš“. Paspaudę dar kartą, atsiimsite.</p></li>
+    <li><h3>Paaiškinkite kodėl</h3><p>Projekto puslapyje parašykite argumentą arba pažymėkite „Man svarbu“ prie kitų.</p></li>
+    <li><h3>Seimo nariai sužino</h3><p>Kai dalyvių skaičius pasiekia ribą, projektas patenka į suvestinę Seimo nariams: abi pusės ir svarbiausi argumentai. Kol vyksta bandymas, suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</p></li>
+  </ol>
+  <ol class="starter__short">
+    <li>Pasirinkite projektą žemiau.</li>
+    <li>Paspauskite „už“ arba „prieš“; paspaudę dar kartą, atsiimsite.</li>
+    <li>Projekto puslapyje paaiškinkite kodėl.</li>
+    <li>Pasiekus ribą, projektas patenka į suvestinę Seimo nariams.</li>
+  </ol>
+  <p><a href="metodika-kur-ka-rasti.html">Kaip tai veikia →</a></p>
+</section>
+
+<section class="sheet stack home-agenda" aria-labelledby="h-home-coming">
+  <div class="row"><h2 id="h-home-coming">Artimiausiu metu Seime</h2><a href="#">Visa darbotvarkė →</a></div>
+  <p class="small">Darbotvarkių projektai dažnai keičiasi, todėl datos gali pasislinkti. Paskutinį kartą perskaityta 2026-11-19 07:24.</p>
+  <section class="tl-day" aria-label="Planuojama lapkričio 24 d."><div class="tl-date"><span class="label">Planuojama</span><b>lapkričio 24 d.</b><span class="small">antradienis</span></div>
+    <ul class="tl-items">
+      <li class="tl-item"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0412</a><span class="tag">Priėmimas</span></span><a class="tl-item__title" href="#">Gyventojų pajamų mokesčio įstatymo pataisa</a></div>
+        <div class="tl-item__side"><span class="small num"><span class="choice choice--for">už</span> 6 800 (6 182) · <span class="choice choice--against">prieš</span> 4 280 (3 912)</span><svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="6 800 už, 4 280 prieš"><rect class="splitbar__for" x="0" y="0" width="613.7" height="10"/><rect class="splitbar__against" x="613.7" y="0" width="386.3" height="10"/></svg><span class="small num"><b>11 080</b> dalyvių · riba 100 · riba pasiekta</span>
+          <div class="tl-ask"><span class="small">Prašau balsuoti</span><div class="tl-ask__sides"><button type="button" class="btn btn--for cta" aria-pressed="false">už</button><button type="button" class="btn btn--against cta" aria-pressed="false">prieš</button></div></div></div></li>
+      <li class="tl-item"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0533</a><span class="tag">Svarstymas</span></span><a class="tl-item__title" href="#">Vietinių rinkliavų įstatymo pataisa</a></div>
+        <div class="tl-item__side"><span class="small">Dar niekas nenurodė, ko prašo</span>
+          <div class="tl-ask"><span class="small">Prašau balsuoti</span><div class="tl-ask__sides"><button type="button" class="btn btn--for cta" aria-pressed="false">už</button><button type="button" class="btn btn--against cta" aria-pressed="false">prieš</button></div></div></div></li>
+    </ul></section>
+  <section class="tl-day" aria-label="Planuojama lapkričio 26 d."><div class="tl-date"><span class="label">Planuojama</span><b>lapkričio 26 d.</b><span class="small">ketvirtadienis</span></div>
+    <ul class="tl-items">
+      <li class="tl-item"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0618</a><span class="tag">Pateikimas</span></span><a class="tl-item__title" href="#">Atliekų tvarkymo įstatymo pataisa</a></div>
+        <div class="tl-item__side"><span class="small">Dar niekas nenurodė, ko prašo</span>
+          <div class="tl-ask"><span class="small">Prašau balsuoti</span><div class="tl-ask__sides"><button type="button" class="btn btn--for cta" aria-pressed="false">už</button><button type="button" class="btn btn--against cta" aria-pressed="false">prieš</button></div></div></div></li>
+    </ul></section>
+  <p class="small">Skliaustuose – kiek iš jų paskyrų senesnės nei 30 d.</p>
+  <p class="note note--quiet">Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</p>
+</section>
+
+<p class="note">Vyksta uždaras bandymas: suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</p>
+</main>
+<footer class="page foot stack">
+  <nav class="foot__groups" aria-label="Kitos nuorodos">
+    <section class="foot__group"><h2 class="label">Naršyti</h2><ul><li><a href="#">Darbotvarkė</a></li><li><a href="#">Projektai</a></li><li><a href="#">Balsavimai</a></li><li><a href="#">Suvestinės</a></li><li><a href="#">Seimo nariai</a></li><li><a href="#">Statistika</a></li></ul></section>
+    <section class="foot__group"><h2 class="label">Apie</h2><ul><li><a href="metodika-kur-ka-rasti.html">Metodika</a></li><li><a href="#">Moderavimo taisyklės</a></li><li><a href="#">Naudojimo taisyklės</a></li><li><a href="#">Privatumas</a></li></ul></section>
+    <section class="foot__group"><h2 class="label">Dalyvauti</h2><ul><li><a href="#">Organizacijos</a></li><li><a href="#">Atsiliepimai</a></li></ul></section>
+  </nav>
+  <p>Lietuva 2.0 · uždaras bandymas</p>
+</footer>
+<script>if (location.search.includes("meniu")) { document.getElementById("projects-menu").open = true; }</script>
+</body></html>
