@@ -1158,8 +1158,26 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   content: ""; inline-size: 0.45em; block-size: 0.45em; margin-block-start: -0.25em;
   border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
-.account[open] > .account__toggle::after, .drop[open] > .drop__toggle::after { margin-block-start: 0.2em; transform: rotate(-135deg); }
-.account__toggle:hover, .account[open] > .account__toggle, .drop__toggle:hover, .drop[open] > .drop__toggle { border-bottom-color: var(--slate); }
+.account[open] > .account__toggle::after, .drop__touch[open] > .drop__toggle::after { margin-block-start: 0.2em; transform: rotate(-135deg); }
+.account__toggle:hover, .account[open] > .account__toggle, .drop__toggle:hover, .drop__touch[open] > .drop__toggle { border-bottom-color: var(--slate); }
+/* "Projektai" (owner, 2026-11-19): on a touch screen a disclosure, its panel shown while the <details> beside it is open; where
+   the device can hover, a link to the agenda whose panel shows on hover (after a moment, and stays a moment after the pointer
+   leaves, so it can cross the gap) and while the keyboard's focus is inside the item. Escape hides it (data-dismissed,
+   js/lt2-account.js). The panel is one element either way. */
+.drop > .drop__panel { display: none; }
+.drop__link { display: none; }
+.drop__touch[open] ~ .drop__panel { display: block; }
+@media (hover: hover) and (pointer: fine) {
+  .drop__touch { display: none; }
+  .drop__link { display: inline-flex; }
+  .drop > .drop__panel { display: block; visibility: hidden; opacity: 0; transition: opacity 0.12s ease 0.25s, visibility 0s linear 0.37s; }
+  .drop:hover > .drop__panel, .drop:has(:focus-visible) > .drop__panel { visibility: visible; opacity: 1; transition: opacity 0.12s ease 0.1s, visibility 0s linear 0.1s; }
+  .drop[data-dismissed] > .drop__panel { visibility: hidden; opacity: 0; transition: none; }
+  /* A bridge over the gap between the item and its panel, so the pointer does not leave the item on its way down. */
+  .drop > .drop__panel::before { content: ""; position: absolute; inset-inline: 0; inset-block-end: 100%; block-size: calc(var(--sp-2) + 2px); }
+  .drop:hover > .drop__link::after, .drop:has(:focus-visible) > .drop__link::after { margin-block-start: 0.2em; transform: rotate(-135deg); }
+  .drop[data-dismissed] > .drop__link::after { margin-block-start: -0.25em; transform: rotate(45deg); }
+}
 .drop__panel {
   position: absolute; inset-inline-start: 0; inset-block-start: calc(100% + var(--sp-2)); z-index: 30;
   inline-size: max-content; min-inline-size: 12rem; max-inline-size: min(20rem, 100vw - 2rem);
@@ -1185,6 +1203,7 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   .top { position: relative; }
   .drop--desc { position: static; }
   .drop--desc .drop__panel { inset-inline: 1rem; inset-block-start: 100%; inline-size: auto; max-inline-size: none; }
+  .drop--desc > .drop__panel::before { block-size: var(--sp-5); }
 }
 .account__panel {
   position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + var(--sp-2)); z-index: 30;

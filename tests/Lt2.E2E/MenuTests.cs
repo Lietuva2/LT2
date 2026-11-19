@@ -73,14 +73,75 @@ public sealed class MenuTests : E2ETest
         await Assertions.Expect(nav.Locator("> a")).ToHaveTextAsync(["Seimo nariai", "Statistika", "Prisijungti"]);
         await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", "true", new() { Timeout = E2ESteps.Slow });
 
-        // Owner, 2026-11-17: "Projektai" opens a dropdown with its tabs (2026-11-19: four, "Balsavimai" again); Escape closes it.
-        await page.Locator("#nav-projects").ClickAsync();
-        await Assertions.Expect(page.Locator("#projects-menu")).ToHaveAttributeAsync("open", "");
-        await Assertions.Expect(page.Locator("#projects-menu .drop__label")).ToHaveTextAsync(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės"]);
+        // Owner, 2026-11-19: with a mouse, "Projektai" shows its dropdown on hover (its four tabs, "Balsavimai" again) and
+        // Escape hides it; the keyboard reaches it by focus; a press on "Projektai" opens the agenda.
+        await page.GotoAsync(E2ESteps.Base + "/metodika");
+        var panel = page.Locator("#projects-panel");
+        await Assertions.Expect(panel).ToBeHiddenAsync();
+        await page.Locator("#nav-projects").HoverAsync();
+        await Assertions.Expect(panel).ToBeVisibleAsync();
+        await Assertions.Expect(panel.Locator(".drop__label")).ToHaveTextAsync(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės"]);
+        await page.Locator("#nav-tab-seimas-balsavimai").HoverAsync();
+        await Assertions.Expect(panel).ToBeVisibleAsync();
         await page.Keyboard.PressAsync("Escape");
-        await Assertions.Expect(page.Locator("#projects-menu")).Not.ToHaveAttributeAsync("open", "");
+        await Assertions.Expect(panel).ToBeHiddenAsync();
+        await page.Locator("main h1").HoverAsync();
+        await Assertions.Expect(panel).ToBeHiddenAsync();
+        await page.Locator(".top__brand").FocusAsync();
+        await page.Keyboard.PressAsync("Tab");
+        await Assertions.Expect(page.Locator("#nav-projects")).ToBeFocusedAsync();
+        await Assertions.Expect(panel).ToBeVisibleAsync();
+        await page.Keyboard.PressAsync("Tab");
+        await Assertions.Expect(page.Locator("#nav-tab-darbotvarke")).ToBeFocusedAsync();
+        await page.Keyboard.PressAsync("Escape");
+        await Assertions.Expect(panel).ToBeHiddenAsync();
+        await Assertions.Expect(page.Locator("#nav-projects")).ToBeFocusedAsync();
+        await page.Locator("#nav-projects").ClickAsync();
+        await page.WaitForURLAsync(new Regex("/darbotvarke$"), new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#nav-projects-touch")).ToBeHiddenAsync();
         visitor.ConsoleErrors.ShouldBeEmpty();
     }
+
+    /// <summary>
+    /// Owner, 2026-11-19: on a touch screen "Projektai" stays a disclosure, opened by a press (also without script), closed by
+    /// a press outside; it never leads to a page by itself.
+    /// </summary>
+    [Fact]
+    public async Task On_a_touch_screen_Projektai_opens_its_dropdown_by_a_press()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var visitor = await PasskeyBrowser.StartAsync("native", 1280, 900);
+        foreach (var script in new[] { true, false })
+        {
+            await using var context = await TouchAsync(visitor.Page, 390, script);
+            var page = await context.NewPageAsync();
+            await page.GotoAsync(E2ESteps.Base + "/metodika");
+            await Assertions.Expect(page.Locator("#nav-projects")).ToBeHiddenAsync();
+            await page.Locator("#nav-projects-touch").TapAsync();
+            await Assertions.Expect(page.Locator("#projects-panel")).ToBeVisibleAsync();
+            page.Url.ShouldEndWith("/metodika", customMessage: "a press opens the dropdown, not a page");
+            await Assertions.Expect(page.Locator("#projects-panel .drop__label")).ToHaveTextAsync(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės"]);
+            if (script)
+            {
+                await page.Locator("footer .foot__groups").TapAsync();
+                await Assertions.Expect(page.Locator("#projects-panel")).ToBeHiddenAsync();
+                await page.Locator("#nav-projects-touch").TapAsync();
+            }
+
+            await page.Locator("#nav-tab-projektai").TapAsync();
+            await page.WaitForURLAsync(new Regex("/projektai$"), new() { Timeout = E2ESteps.Slow });
+        }
+
+        visitor.ConsoleErrors.ShouldBeEmpty();
+    }
+
+    /// <summary>A touch phone's context (no hover, a coarse pointer), with or without script.</summary>
+    private static Task<IBrowserContext> TouchAsync(IPage page, int width, bool script = true) =>
+        page.Context.Browser!.NewContextAsync(new()
+        {
+            IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = script, HasTouch = true, IsMobile = true,
+            ViewportSize = new() { Width = width, Height = 780 },
+        });
 
     /// <summary>
     /// Design 8.28.2, 8.28.7: the dropdown of "Projektai" shows its four entries, each with its line, opens without script,
@@ -100,22 +161,37 @@ public sealed class MenuTests : E2ETest
             "Kaip Seimas balsavo: visi balsavimai nuo naujausio.",
             "Ką apie dalyvių prašymus sužino Seimo nariai.",
         ];
-        foreach (var width in new[] { 340, 360, 390, 1280 })
+        // On a touch phone (a press) at 340, 360 and 390 px, and with a mouse (hover) at 1280 and 390 px.
+        foreach (var (width, touch) in new[] { (340, true), (360, true), (390, true), (1280, false), (390, false) })
         {
-            await page.SetViewportSizeAsync(width, width == 1280 ? 900 : 780);
-            await page.GotoAsync(E2ESteps.Base + "/darbotvarke");
-            (await MenuProblemAsync(page)).ShouldBeNull($"the menu at {width} px");
-            await page.Locator("#nav-projects").ClickAsync();
-            var panel = page.Locator("#projects-menu .drop__panel");
+            await using var context = touch ? await TouchAsync(page, width) : null;
+            var shown = context is null ? page : await context.NewPageAsync();
+            await shown.SetViewportSizeAsync(width, width == 1280 ? 900 : 780);
+            await shown.GotoAsync(E2ESteps.Base + "/darbotvarke");
+            (await MenuProblemAsync(shown)).ShouldBeNull($"the menu at {width} px");
+            if (touch)
+            {
+                await shown.Locator("#nav-projects-touch").TapAsync();
+            }
+            else
+            {
+                await shown.Locator("#nav-projects").HoverAsync();
+            }
+
+            var panel = shown.Locator("#projects-panel");
             await Assertions.Expect(panel).ToBeVisibleAsync();
             await Assertions.Expect(panel.Locator(".drop__desc")).ToHaveTextAsync(lines);
+            await Assertions.Expect(panel).ToHaveCSSAsync("opacity", "1");
             var box = await panel.BoundingBoxAsync();
             box!.X.ShouldBeGreaterThanOrEqualTo(0, $"the panel's left edge at {width} px");
             (box.X + box.Width).ShouldBeLessThanOrEqualTo(width, $"the panel's right edge at {width} px");
-            await E2ESteps.NoSidewaysScrollAsync(page, $"the open dropdown at {width} px");
-            await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"dropdown-{width}.png") });
-            await page.Keyboard.PressAsync("Escape");
+            await E2ESteps.NoSidewaysScrollAsync(shown, $"the open dropdown at {width} px");
+            await shown.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"dropdown-{width}-{(touch ? "touch" : "mouse")}.png") });
+            await shown.Keyboard.PressAsync("Escape");
+            await Assertions.Expect(panel).ToBeHiddenAsync();
         }
+
+        await page.SetViewportSizeAsync(1280, 900);
 
         // Design 8.28.4: "Kur ką rasti" under the steps of /metodika, for the owner's look.
         foreach (var width in new[] { 390, 1280 })
@@ -127,13 +203,13 @@ public sealed class MenuTests : E2ETest
             await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"where-{width}.png"), FullPage = true });
         }
 
-        // Without script the dropdown still opens and shows the same lines.
-        await using var context = await page.Context.Browser!.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = false });
-        var plain = await context.NewPageAsync();
-        await plain.SetViewportSizeAsync(390, 780);
+        // Without script the dropdown still shows on hover, with the same lines.
+        await using var noScript = await page.Context.Browser!.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = false });
+        var plain = await noScript.NewPageAsync();
+        await plain.SetViewportSizeAsync(1280, 900);
         await plain.GotoAsync(E2ESteps.Base + "/darbotvarke");
-        await plain.Locator("#nav-projects").ClickAsync();
-        await Assertions.Expect(plain.Locator("#projects-menu .drop__desc")).ToHaveTextAsync(lines);
+        await plain.Locator("#nav-projects").HoverAsync();
+        await Assertions.Expect(plain.Locator("#projects-panel .drop__desc")).ToHaveTextAsync(lines);
         visitor.ConsoleErrors.ShouldBeEmpty();
     }
 
@@ -164,7 +240,7 @@ public sealed class MenuTests : E2ETest
 
         // From the menu item's dropdown to the agenda, then from every tab to every other by its link.
         await page.GotoAsync(E2ESteps.Base + "/metodika");
-        await page.Locator("#nav-projects").ClickAsync();
+        await page.Locator("#nav-projects").HoverAsync();
         await page.Locator("#nav-tab-darbotvarke").ClickAsync();
         await page.WaitForURLAsync(new Regex("/darbotvarke$"), new() { Timeout = E2ESteps.Slow });
         foreach (var from in tabs)

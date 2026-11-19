@@ -39,8 +39,11 @@ from it; element ids are `nav-{Slug}`, `{Slug}` (tab row), `foot-{Slug}`, `where
 without a name or a line. Each dropdown entry shows its line under its name (`.drop__label`, `.drop__desc`; `.drop--desc`, the
 panel as wide as the page under 32rem); the menu's line, the tab row and the footer show names only. The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
 (`/statistika`, design 8.26) and "Prisijungti" or the account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" is
-a `<details>` dropdown (`#projects-menu`, links `#nav-tab-…` with their lines, closed by `js/lt2-account.js` like the account item) holding its four
-tabs and is current (`aria-current` on its summary) on them and everything under them (`MenuSections`); the four tabs ("Darbotvarkė",
+one item `div.drop#projects-menu` (owner, 2026-11-19): where the device can hover (`@media (hover: hover) and (pointer: fine)`) the
+link `#nav-projects` to `/darbotvarke` and the panel `#projects-panel` on `:hover` and `:has(:focus-visible)` (Escape sets
+`data-dismissed`, `js/lt2-account.js`); on a touch screen the `<details>` `#projects-touch` (`#nav-projects-touch`) whose open
+state shows the panel beside it (`.drop__touch[open] ~ .drop__panel`), closed by `js/lt2-account.js` like the account item.
+The panel holds its four tabs (links `#nav-tab-…` with their lines) and is current (`aria-current` on its summary) on them and everything under them (`MenuSections`); the four tabs ("Darbotvarkė",
 "Projektai", "Balsavimai", "Suvestinės") are also `<ProjectTabs>` (`#tab-…`) under the heading of `/darbotvarke`, `/projektai`,
 `/seimas/balsavimai`, `/suvestines`. "Balsavimai" is a tab again (owner, 2026-11-19; out from 2026-11-16); the link under the
 agenda's voted list to it stays. A page under a tab (a vote, a summary's date page) has no tab row and no marked dropdown item,

@@ -101,9 +101,6 @@
   <data name="KnownBrowsers.None" xml:space="preserve"><value>Žinomų naršyklių nėra.</value></data>
   <data name="KnownBrowsers.Forgotten" xml:space="preserve"><value>Naršyklė pamiršta.</value></data>
   <data name="SignOut" xml:space="preserve"><value>Atsijungti</value></data>
-<data name="Staff.Nav" xml:space="preserve"><value>Darbuotojo darbai</value></data>
-<data name="Staff.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
-<data name="Staff.Settings" xml:space="preserve"><value>Nustatymai</value></data>
 <data name="PositionConsent.Title" xml:space="preserve"><value>Sutikimas saugoti pozicijas ir žymas</value></data>
 <data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų ir tai, kuriuos argumentus pažymite „Man svarbu“. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai ir komentarai liks. „Man svarbu“ privatus, o „Sutinku“ prie komentaro viešas su jūsų vardu ir jūsų pusės neparodo.</value></data>
 <data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas bei žymas</value></data>

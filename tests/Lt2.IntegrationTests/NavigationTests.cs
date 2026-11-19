@@ -89,8 +89,13 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         // Owner, 2026-11-17: "Projektai" is a dropdown of its tabs, a disclosure that opens without script; 2026-11-19:
         // "Balsavimai" is one of them again, the third. Design 8.28.2: each entry shows its line under its name, for everyone.
         var agenda = HeaderOf(await visitor.Client.GetStringAsync("/darbotvarke"));
-        agenda.ShouldContain("<details class=\"drop drop--desc\" id=\"projects-menu\" data-nav-menu>");
-        agenda.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
+        // Owner, 2026-11-19: where the device can hover, "Projektai" is a link to the agenda with the panel on hover; on a touch
+        // screen a disclosure beside the same panel (CSS chooses).
+        agenda.ShouldContain("<div class=\"drop drop--desc\" id=\"projects-menu\" data-nav-hover>");
+        agenda.ShouldContain("<details class=\"drop__touch\" id=\"projects-touch\" data-nav-menu>");
+        agenda.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects-touch\" aria-current=\"true\">Projektai</summary>");
+        agenda.ShouldContain("<div class=\"drop__panel drop__panel--start drop__panel--desc\" id=\"projects-panel\">");
+        agenda.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>");
         var entries = WebUtility.HtmlDecode(agenda);
         entries.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-darbotvarke\" aria-current=\"page\"><span class=\"drop__label\">Darbotvarkė</span><span class=\"drop__desc\">Ką Seimas planuoja svarstyti artimiausiomis dienomis.</span></a>");
         entries.ShouldContain("<a href=\"/projektai\" id=\"nav-tab-projektai\"><span class=\"drop__label\">Projektai</span><span class=\"drop__desc\">Visi projektai, kurių Seimas dar nebaigė svarstyti.</span></a>");
@@ -101,21 +106,21 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         agenda.ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\">Seimo nariai</a>");
         agenda.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\">Statistika</a>");
         agenda.ShouldContain("<a href=\"/prisijungti\" id=\"nav-sign-in\">Prisijungti</a>");
-        Regex.Count(agenda, "<a ").ShouldBe(8, "the logo, the four tabs in the dropdown and three items");
+        Regex.Count(agenda, "<a ").ShouldBe(9, "the logo, Projektai, the four tabs in the dropdown and three items");
         agenda.ShouldNotContain("Kaip skaičiuojama");
         agenda.ShouldNotContain("data-theme-switch", customMessage: "the theme switch is in the footer");
 
         HeaderOf(await visitor.Client.GetStringAsync("/seimas/XVP-0412"))
-            .ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
+            .ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>");
         var votes = HeaderOf(await visitor.Client.GetStringAsync("/seimas/balsavimai"));
-        votes.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
+        votes.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>");
         votes.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\" aria-current=\"page\"><span class=\"drop__label\">Balsavimai</span>");
         Regex.Count(votes, "aria-current=\"page\"").ShouldBe(1);
         HeaderOf(await visitor.Client.GetStringAsync("/seimo-nariai"))
             .ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\" aria-current=\"page\">Seimo nariai</a>");
         var statistics = HeaderOf(await visitor.Client.GetStringAsync("/statistika"));
         statistics.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\" aria-current=\"page\">Statistika</a>");
-        statistics.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\">Projektai</summary>");
+        statistics.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\">Projektai</a>");
         var methodology = HeaderOf(await visitor.Client.GetStringAsync("/metodika"));
         methodology.ShouldNotContain("aria-current");
     }

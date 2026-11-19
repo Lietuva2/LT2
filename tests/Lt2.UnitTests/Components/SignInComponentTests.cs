@@ -538,11 +538,11 @@ public sealed class SignInComponentTests : BunitContext
     }
 
     /// <summary>
-    /// Design 6.2 (owner, 2026-11-16, 2026-11-17): where the staff links stand, a code session on a staff account gets its staff
-    /// passkey, in place.
+    /// Design 6.2 (owner, 2026-11-16, 2026-11-17): a code session on a staff account gets its staff passkey on "Dalyvavimas",
+    /// in place. The staff screens are reached from the account item only (owner, 2026-11-19): no staff links here.
     /// </summary>
     [Fact]
-    public void A_staff_account_in_a_code_session_is_offered_its_staff_passkey_where_the_staff_links_stand()
+    public void A_staff_account_in_a_code_session_is_offered_its_staff_passkey_and_no_staff_links()
     {
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
         var codeSession = Render<AccountTaking>();
@@ -553,7 +553,9 @@ public sealed class SignInComponentTests : BunitContext
 
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true, ActiveStaffRoles = ["moderator"] });
         var staffSession = Render<AccountTaking>();
-        staffSession.Find("#dalyvavimas #staff-links").ShouldNotBeNull();
+        staffSession.FindAll("#staff-links").ShouldBeEmpty("owner, 2026-11-19: from the account item only");
+        staffSession.FindAll("#dalyvavimas a[href='/moderavimas']").ShouldBeEmpty();
+        staffSession.FindAll("#dalyvavimas a[href='/administravimas/nustatymai']").ShouldBeEmpty();
         staffSession.FindAll("#staff-key-note").ShouldBeEmpty();
 
         SignedIn(FakeMeApi.Member);

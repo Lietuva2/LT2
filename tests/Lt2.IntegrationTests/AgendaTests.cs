@@ -521,13 +521,14 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     [Fact]
     public async Task The_first_menu_item_Projektai_opens_the_agenda()
     {
-        // Design 8.21: "Projektai" is first; its dropdown's first tab is /darbotvarke (owner, 2026-11-17).
+        // Design 8.21: "Projektai" is first; its dropdown's first tab is /darbotvarke (owner, 2026-11-17); where the device can
+        // hover, the item itself is a link to it (owner, 2026-11-19).
         using var visitor = NewBrowser();
         var html = await visitor.Client.GetStringAsync("/seimo-nariai");
         var nav = html[html.IndexOf("top__nav", StringComparison.Ordinal)..];
-        nav.IndexOf("<summary class=\"drop__toggle\" id=\"nav-projects\">Projektai</summary>", StringComparison.Ordinal).ShouldBeGreaterThan(0);
-        nav.IndexOf("id=\"nav-projects\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/darbotvarke\"", StringComparison.Ordinal));
-        nav.IndexOf("href=\"/darbotvarke\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/seimo-nariai\"", StringComparison.Ordinal));
+        nav.IndexOf("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\">Projektai</a>", StringComparison.Ordinal).ShouldBeGreaterThan(0);
+        nav.IndexOf("id=\"nav-projects\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("id=\"nav-tab-darbotvarke\"", StringComparison.Ordinal));
+        nav.IndexOf("id=\"nav-tab-darbotvarke\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/seimo-nariai\"", StringComparison.Ordinal));
     }
 
     /// <summary>The agenda page reads the front page's copy, kept a minute (owner, 2026-11-18): read afresh.</summary>

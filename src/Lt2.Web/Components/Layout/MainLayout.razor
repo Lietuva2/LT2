@@ -12,12 +12,18 @@
 <header class="page top">
     <a class="top__brand" href="/"><Logo /><span class="top__name">Lietuva 2.0</span></a>
     <nav class="top__nav" aria-label="@T["Nav.Label"]">
-        @* Like the account item: a disclosure that opens without script; js/lt2-account.js closes it on Escape, a press
-           outside and focus leaving. *@
-        @* Design 8.28.2: every entry shows its line under its name, for everyone; under 32rem the panel is as wide as the page. *@
-        <details class="drop drop--desc" id="projects-menu" data-nav-menu>
-            <summary class="drop__toggle" id="nav-projects" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</summary>
-            <div class="drop__panel drop__panel--start drop__panel--desc">
+        @* Design 8.21 (owner, 2026-11-19): "Projektai" is two things in one place, and CSS chooses by the device, with no script.
+           Where the device can hover (a mouse), it is a link to the agenda (ProjectsHome) and its panel shows on hover and while
+           focus is inside it, so the keyboard reaches the entries; js/lt2-account.js lets Escape close it. Where it cannot (a
+           touch screen), it is a disclosure like the account item, opened by a press; the script closes it on Escape, a press
+           outside and focus leaving. The one panel follows either. Design 8.28.2: every entry shows its line under its name,
+           for everyone; under 32rem the panel is as wide as the page. *@
+        <div class="drop drop--desc" id="projects-menu" data-nav-hover>
+            <a class="drop__toggle drop__link" href="@MenuSections.ProjectsHome" id="nav-projects" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</a>
+            <details class="drop__touch" id="projects-touch" data-nav-menu>
+                <summary class="drop__toggle" id="nav-projects-touch" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</summary>
+            </details>
+            <div class="drop__panel drop__panel--start drop__panel--desc" id="projects-panel">
                 <ul class="drop__links">
                     @foreach (var item in MenuSections.Tabs)
                     {
@@ -25,7 +31,7 @@
                     }
                 </ul>
             </div>
-        </details>
+        </div>
         @* The menu's one line shows no lines (it stays one line from 340 px); they are read in "Kur ką rasti". *@
         @foreach (var item in MenuSections.In(MenuPlace.Menu))
         {

@@ -419,7 +419,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
             // Design 8.21: a vote is under the tab "Balsavimai", as a summary's date page is under "Suvestinės": the menu item
             // "Projektai" is current, the dropdown marks no page of its own, and there is no tab row.
             var header = html[..html.IndexOf("</header>", StringComparison.Ordinal)];
-            header.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>", customMessage: path);
+            header.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>", customMessage: path);
             header.ShouldNotContain("aria-current=\"page\"", customMessage: path);
             html.ShouldNotContain("id=\"project-tabs\"", customMessage: path);
         }
