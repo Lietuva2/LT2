@@ -15,7 +15,8 @@ src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per f
                            link's #kodas= on any page, 8.11.5) and the terms and privacy pages
                            (Components/Pages/Terms, Privacy, LegalText.resx); Jobs/JobsDashboard.cs: the Hangfire dashboard
                            "Foniniai darbai" at /administravimas/darbai (design 3, 6.3; agents/security.md), over the worker's
-                           storage through the web host's own pool, no Hangfire server
+                           storage through the web host's own pool, no Hangfire server; Endpoints/SecurityTxt.cs: /.well-known/security.txt,
+                           only when Site:SecurityContact is set (design 6.7)
 src/Lt2.Jobs               the Hangfire job classes (import, agenda watcher, aggregates, summaries, follows, AI summaries,
                            clean-ups): the worker runs them, the web host only loads their types so the dashboard can
                            enqueue a recurring job; each takes a CancellationToken (the import's jobs also Hangfire's
@@ -106,7 +107,8 @@ tests/Lt2.E2E              Playwright and stack checks against a running compose
 tests/Shared/TestOrder.cs  the order tests run in, from LT2_TEST_ORDER (compiled into every test project)
 tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumptions (Seimas/ASSUMPTIONS.md), import against
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
-deploy/                    Dockerfile (restore layer first; .dockerignore at the root), compose.yaml, Caddyfile, .env (local defaults), init-secrets.py (optional target
+.github/                  workflows/ci.yml (build, test, audit, e2e; locked restore), workflows/codeql.yml, dependabot.yml (design 6.7); actions pinned by commit SHA
+deploy/                    Dockerfile (restore layer first, from the csproj and packages.lock.json files, in locked mode; .dockerignore at the root), compose.yaml, Caddyfile, .env (local defaults), init-secrets.py (optional target
                            directory; as root on Linux gives each secret to the container user reading it), secrets/;
                            compose.shared-proxy.yaml and shared-proxy.Caddyfile: behind a server's existing Caddy, with
                            the Mailpit viewer on its own hostname behind Mailpit's password file (design 9.2,

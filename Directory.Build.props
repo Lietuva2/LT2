@@ -15,6 +15,8 @@
     <NuGetAudit>true</NuGetAudit>
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>low</NuGetAuditLevel>
+    <!-- Design 6.7: every project records the exact package graph in packages.lock.json; CI and the Dockerfile restore in locked mode. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <Authors>Lietuva 2.0</Authors>
     <Product>Lietuva 2.0</Product>
   </PropertyGroup>

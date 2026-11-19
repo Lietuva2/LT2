@@ -6,12 +6,13 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 
 ## Designed, not built
 
-- 3, 6.2: a bot check at registration (ALTCHA); account verification beyond email.
+- 3, 6.2: a bot check at registration (ALTCHA); account verification by the EU Digital Identity Wallet once available in
+  Lithuania.
 - 5.4: the `notify.email_message` table.
 - 6.4: rate limiting in Caddy (only the application's own limits exist).
 - 6.5: disk encryption, TLS to the database, encrypted backups (none of them in the repository).
-- 6.7: lock files, Dependabot, CodeQL, secret scanning, image scanning, an SBOM, signed images pulled by digest,
-  `security.txt` and a disclosure address, a penetration test.
+- 6.7: secret scanning (a repository setting for the owner), image scanning, an SBOM, signed images pulled by digest, a
+  penetration test. Lock files, Dependabot, CodeQL and `security.txt` are built.
 - 7.2: a moderator correcting a vote's classification.
 - 7.3: "appeals in progress" on an MP's profile (the profile shows only the MP's responses); the line was taken out of
   7.3, so whether it stays designed is for the owner.
@@ -56,9 +57,11 @@ it is to be updated after discussion in chat.
 
 **6.2 Sign-in.** Built as proposed: a writing restriction also blocks changing the display name (or it could leave the
 name alone); the change is audited without the names and no earlier names are kept; registrations invited by an MP's
-office are left out of the invitation codes' counts. Before registration opens or real summaries go: see
-"How accounts are verified" under Decisions needed.
+office are left out of the invitation codes' counts.
 
+**6.7 Supply chain.** The address for security reports (`LT2_SECURITY_CONTACT`, a `mailto:` or https address): until it is
+set the site serves no `/.well-known/security.txt`. Secret scanning (with push protection) is a repository setting for
+the owner to switch on; Dependabot and CodeQL start once the workflow files are pushed to GitHub.
 
 **6.8 Rules held throughout.** The agenda watcher keeps its items when a parse comes back empty, until the owner
 decides otherwise. One-time codes are limited per address, not per code.
@@ -252,6 +255,8 @@ for the lawyer).
   `EmailPart.*`, `EmailRestore.*`), its emails (`EmailTemplates` `EmailChange.*`: the code to the new address, to an
   address that has an account, to the old address, when the old address was put back) and the code to the address in
   use (`EmailProofCode.*`), and the refusals `email.same`, `email.proof-required`, `email.restore-invalid`.
+- 6.2: the line under the sign-in and registration form, "Paskyros patvirtinamos el. paštu. Kai Lietuvoje bus ES skaitmeninės
+  tapatybės piniginė, ją taip pat bus galima naudoti." (`UiText` `SignIn.Verification`; no date, on purpose).
 - 6.2: the urgent summary's passkey messages "Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos
   raktu. …" and "Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. …" (`AppealUi` `Mod.Passkey.*`).
 - 6.5: the positions consent text (`UiText` `PositionConsent.Text`); for a consent to an older text, the account page's
@@ -348,7 +353,6 @@ them all once, before going live.
 |---|---|---|
 | Email provider | An EU-owned service (for example Brevo or Scaleway) or Amazon SES in an EU region. Compare deliverability to `lrs.lt`, price, processor terms. Locally and on the trial Mailpit catches every email. | Before going live |
 | Telemetry backend | A hosted free tier with EU storage, or self-hosted. | Before going live |
-| How accounts are verified once registration is open | **Stay with email** and label numbers as email-confirmed accounts; or add **phone verification** (an EU provider such as Infobip or Sinch, or a Lithuanian bulk-SMS service; paid per message; Lithuanian numbers only would exclude people abroad); or **Lithuanian e-identity** (Smart-ID, Mobile-ID, a bank's login, the e-signature) through a paid broker or the state e-services gateway, as an optional "verified person" level that also proves the age, storing only a salted hash of the personal code to keep one account per person, never the code (the designer's proposal of 2026-11-19); or wait for the EU Digital Identity Wallet. Sign-in through Google, Apple or Facebook is not proposed: each sign-in would tell the provider that the person uses a political site, passkeys already sign in with one press, and such accounts prove no more than an email address. The public pages promise one account per confirmed phone number, so staying with email also means rewording them. | Before registration opens or real summaries go |
 | CDN and DDoS protection | Bunny (EU) or Cloudflare. | Before the first public campaign |
 | MP photos | Use the Seimas photos if their terms allow; the profile shows initials. | Any time |
 | AI provider for pre-screening | Pre-screening of users' texts by AI needs an EU-region route first: the first-party Claude API has no EU-only processing. Pre-screening is rule-based. | Before any AI pre-screening |
@@ -361,7 +365,7 @@ them all once, before going live.
 | Risk | Mitigation |
 |---|---|
 | MPs' mail system filters the summaries, or MPs see them as spam | Introduction letter, low and capped frequency, both sides in every email, one-click stop, no tracking, discussions with offices before the first send. |
-| A campaign registers many accounts to inflate one side. With email-only registration this costs nothing, so it is the main weakness of the numbers | Registration by invitation (`Registration:RequireInvitation`), one account per normalised address, disposable domains refused, the 30-day count beside every number, surge note, moderator hold; phone verification stays available as an upgrade. The numbers stay a signal, and say so. |
+| A campaign registers many accounts to inflate one side. With email-only registration this costs nothing, so it is the main weakness of the numbers | Registration by invitation (`Registration:RequireInvitation`), one account per normalised address, disposable domains refused, the 30-day count beside every number, surge note, moderator hold; the wallet level (6.2) is the planned upgrade. The numbers stay a signal, and say so. |
 | The upcoming-agenda page changes layout or is late | Watcher alerts, moderator-entered dates, "Planuojama …" wording, no extra emails when dates move. |
 | Open-data service outages | Raw responses stored, retries, pages show the last import time, imports resume. |
 | Someone who knows a person's address uses up its daily codes | A known browser (8.20.2) keeps its own five codes an hour and ten a day, counted separately, and a code only it can use; a passkey is not affected. What stays possible: keeping a person from signing in by code from a browser they have never signed in with, and keeping a new address from finishing its registration (a pending account has no known browser). Nothing leaks either way. |
