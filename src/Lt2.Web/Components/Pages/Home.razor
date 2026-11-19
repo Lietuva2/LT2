@@ -138,7 +138,7 @@
         var voted = AgendaPaging.Read(Voted);
         // Owner, 2026-11-18: the next two sitting days and the last two voting days, five rows of each in the agenda's order
         // (AgendaRules); the rows not shown are not rendered. Owner, 2026-11-19: under a longer day the shared "Rodyti
-        // daugiau" adds ten in place by the address (AgendaPaging.Front, ?diena=2026-11-24:15), as on the agenda page. A
+        // daugiau" adds 50 in place by the address (AgendaPaging.Front, ?diena=2026-11-24:55), as on the agenda page. A
         // bill the open data does not know yet is counted in its day and listed (one folded line) once every known row shows.
         _coming = _agenda.Days.Take(AgendaRules.FrontDays)
             .Select(d => (d.Date, Cut(d.Items, i => i.Title is not null, planned.GetValueOrDefault(d.Date))))

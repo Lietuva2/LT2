@@ -90,7 +90,7 @@
     /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint beside the list.</summary>
     private int? _threshold;
 
-    /// <summary>The planned days shown grown, with the known rows each shows (<c>?diena=2026-11-24:20</c>), for the links.</summary>
+    /// <summary>The planned days shown grown, with the known rows each shows (<c>?diena=2026-11-24:60</c>), for the links.</summary>
     private IReadOnlyDictionary<DateOnly, int> _planned = new Dictionary<DateOnly, int>();
 
     /// <summary>The voted days shown grown (<c>?balsuota=</c>).</summary>
@@ -120,8 +120,8 @@
         _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
 
         // Owner, 2026-11-18: one block per sitting day with its date, weekday and count; the first ten rows of a day in the
-        // agenda's order (AgendaRules). Owner, 2026-11-19: then the shared "Rodyti daugiau", ten more a click by the address
-        // (AgendaPaging, ?diena=2026-11-24:20), landing on the first row added: the served page holds only the rows it shows.
+        // agenda's order (AgendaRules). Owner, 2026-11-19: then the shared "Rodyti daugiau", 50 more a click by the address
+        // (AgendaPaging, ?diena=2026-11-24:60), landing on the first row added: the served page holds only the rows it shows.
         _coming = (_agenda?.Days ?? [])
             .Select(d => (d.Date, Cut(d.Items, i => i.Title is not null, planned.GetValueOrDefault(d.Date))))
             .ToList();

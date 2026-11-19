@@ -6,7 +6,7 @@ namespace Lt2.UnitTests;
 /// <summary>
 /// Design 8.11.1, "Days and their length", and 8.7 (owner, 2026-11-19: one way for every list): the agenda page and the front
 /// page show the first rows of a day, and the shared "Rodyti daugiau" grows that day by the address
-/// (<c>?diena=2026-11-24:20</c>), landing on the first row added; the days already grown stay so; a value the page would not
+/// (<c>?diena=2026-11-24:60</c>: the first 10 and 50 more, owner 2026-11-19), landing on the first row added; the days already grown stay so; a value the page would not
 /// make is left out.
 /// </summary>
 public sealed class AgendaPagingTests
@@ -18,28 +18,28 @@ public sealed class AgendaPagingTests
 
     [Fact]
     public void Rodyti_daugiau_grows_that_planned_day_by_the_address_landing_on_the_first_row_added() =>
-        AgendaPaging.MorePlanned(AgendaPaging.Agenda, None, None, Tuesday, 20, AgendaPaging.PlannedRowId(Tuesday, "XVP-0412"))
-            .ShouldBe("/darbotvarke?diena=2026-11-24:20#agenda-2026-11-24-XVP-0412");
+        AgendaPaging.MorePlanned(AgendaPaging.Agenda, None, None, Tuesday, 60, AgendaPaging.PlannedRowId(Tuesday, "XVP-0412"))
+            .ShouldBe("/darbotvarke?diena=2026-11-24:60#agenda-2026-11-24-XVP-0412");
 
     [Fact]
     public void Rodyti_daugiau_under_a_voted_day_grows_that_voting_day() =>
-        AgendaPaging.MoreVoted(AgendaPaging.Agenda, None, None, Voted, 20, AgendaPaging.VotedRowId(5123))
-            .ShouldBe("/darbotvarke?balsuota=2026-11-17:20#recent-5123");
+        AgendaPaging.MoreVoted(AgendaPaging.Agenda, None, None, Voted, 60, AgendaPaging.VotedRowId(5123))
+            .ShouldBe("/darbotvarke?balsuota=2026-11-17:60#recent-5123");
 
     [Fact]
     public void The_front_page_grows_its_days_in_place_by_the_same_address()
     {
-        AgendaPaging.MorePlanned(AgendaPaging.Front, None, None, Tuesday, 15, "agenda-2026-11-24-XVP-0412")
-            .ShouldBe("/?diena=2026-11-24:15#agenda-2026-11-24-XVP-0412");
-        AgendaPaging.MoreVoted(AgendaPaging.Front, None, None, Voted, 15, "recent-5123").ShouldBe("/?balsuota=2026-11-17:15#recent-5123");
+        AgendaPaging.MorePlanned(AgendaPaging.Front, None, None, Tuesday, 55, "agenda-2026-11-24-XVP-0412")
+            .ShouldBe("/?diena=2026-11-24:55#agenda-2026-11-24-XVP-0412");
+        AgendaPaging.MoreVoted(AgendaPaging.Front, None, None, Voted, 55, "recent-5123").ShouldBe("/?balsuota=2026-11-17:55#recent-5123");
     }
 
     [Fact]
     public void The_days_already_grown_stay_so_and_the_grown_day_takes_its_new_number() =>
         AgendaPaging.MorePlanned(
-                AgendaPaging.Agenda, new Dictionary<DateOnly, int> { [Thursday] = 20, [Tuesday] = 20 }, new Dictionary<DateOnly, int> { [Voted] = 30 },
-                Tuesday, 30, "agenda-2026-11-24-XVP-0412")
-            .ShouldBe("/darbotvarke?diena=2026-11-24:30&diena=2026-11-26:20&balsuota=2026-11-17:30#agenda-2026-11-24-XVP-0412");
+                AgendaPaging.Agenda, new Dictionary<DateOnly, int> { [Thursday] = 60, [Tuesday] = 60 }, new Dictionary<DateOnly, int> { [Voted] = 110 },
+                Tuesday, 110, "agenda-2026-11-24-XVP-0412")
+            .ShouldBe("/darbotvarke?diena=2026-11-24:110&diena=2026-11-26:60&balsuota=2026-11-17:110#agenda-2026-11-24-XVP-0412");
 
     [Fact]
     public void Without_days_the_address_is_the_page() => AgendaPaging.Address(AgendaPaging.Front, None, None).ShouldBe("/");

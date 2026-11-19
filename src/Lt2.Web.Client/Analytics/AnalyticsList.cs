@@ -61,7 +61,8 @@ public static class AnalyticsList
 
     public const int First = 10;
 
-    public const int Step = 20;
+    /// <summary>The bills "Rodyti daugiau" adds (owner, 2026-11-19: a list of rows, 50 a press; the last before the cap fewer).</summary>
+    public const int Step = Lt2.Api.Contracts.ListPaging.RowStep;
 
     public const int Cap = AnalyticsBillQuery.MaxLimit;
 
@@ -189,7 +190,7 @@ public static class AnalyticsList
             return null;
         }
 
-        return Address(state with { Shown = Math.Min(state.Shown + Step, Cap) }, nextInPlot ? Row(next) : Anchor);
+        return Address(state with { Shown = Lt2.Api.Contracts.ListPaging.Next(state.Shown, Step, Cap) }, nextInPlot ? Row(next) : Anchor);
     }
 
     /// <summary>The id of a bill's row in the plot, where "Rodyti daugiau" lands.</summary>

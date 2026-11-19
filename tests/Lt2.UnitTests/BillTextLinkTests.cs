@@ -4,8 +4,8 @@ using Lt2.Web.Client.Comments;
 namespace Lt2.UnitTests;
 
 /// <summary>
-/// Design 8.23.6 (the designer's proposal of 2026-11-17): a link to a comment shows the whole discussion through it, rounded up
-/// to the next step of 10; every link to a comment or an argument is made in one place, the same in the contracts and the modules.
+/// Design 8.23.6 (the designer's proposal of 2026-11-17): a link to a comment shows the whole discussion through it, on the
+/// thread's own pages (the first 10, then 20 a step, owner 2026-11-19); every link to a comment or an argument is made in one place, the same in the contracts and the modules.
 /// </summary>
 public sealed class BillTextLinkTests
 {
@@ -16,12 +16,14 @@ public sealed class BillTextLinkTests
     [InlineData(1, 10)]
     [InlineData(9, 10)]
     [InlineData(10, 10)]
-    [InlineData(11, 20)]
+    [InlineData(11, 30)]
     [InlineData(25, 30)]
     [InlineData(30, 30)]
-    [InlineData(31, 40)]
+    [InlineData(31, 50)]
+    [InlineData(50, 50)]
+    [InlineData(51, 70)]
     [InlineData(0, 10)]
-    public void A_linked_comment_shows_everything_through_it_rounded_up_to_the_next_ten(int position, int shown) =>
+    public void A_linked_comment_shows_everything_through_it_on_the_threads_own_pages(int position, int shown) =>
         BillTextLinks.ShownThrough(position).ShouldBe(shown);
 
     [Fact]

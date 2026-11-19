@@ -107,16 +107,19 @@ public sealed class AgendaRulesTests
         AgendaRules.ShownKnown(first, asked, known).ShouldBe(shown);
 
     [Theory]
-    [InlineData(10, 40, 20)]
-    [InlineData(5, 40, 15)]
-    [InlineData(35, 40, 45)]
+    [InlineData(10, 100, 60)]
+    [InlineData(5, 100, 55)]
+    [InlineData(60, 100, 110)]
+    [InlineData(10, 40, 60)]
+    [InlineData(35, 40, 85)]
     [InlineData(40, 40, null)]
     [InlineData(3, 3, null)]
-    public void Rodyti_daugiau_asks_for_ten_more_rows_until_every_known_row_shows(int shown, int known, int? next) =>
+    [InlineData(990, 2000, AgendaRules.MaxAsked)]
+    public void Rodyti_daugiau_asks_for_fifty_more_rows_until_every_known_row_shows(int shown, int known, int? next) =>
         AgendaRules.NextAsked(shown, known).ShouldBe(next);
 
     [Fact]
-    public void Rodyti_daugiau_adds_ten_rows_a_click_on_both_pages() => AgendaRules.MorePerDay.ShouldBe(10);
+    public void Rodyti_daugiau_adds_fifty_rows_a_click_on_both_pages() => AgendaRules.MorePerDay.ShouldBe(50);
 
     [Theory]
     [InlineData(10, 40, true)]

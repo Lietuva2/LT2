@@ -16,8 +16,8 @@ public sealed record AgendaPagingPage(string Path, string PlannedPrefix, string 
 /// The days of the agenda page and the front page and how a day grows (design 8.11.1, "Days and their length", and 8.7;
 /// owner, 2026-11-19: one way for every list). Each day shows its first rows (<see cref="AgendaRules.PagePerDay"/>, on the
 /// front page <see cref="AgendaRules.FrontPerDay"/>), and the shared "Rodyti daugiau" (ShowMore, "Rodoma N iš M") leads to
-/// the same page with that day grown by <see cref="AgendaRules.MorePerDay"/>, by the address: <c>?diena=2026-11-24:20</c> for
-/// a planned day, <c>?balsuota=2026-11-17:20</c> for a voted one (the day, a colon, how many of its known rows to show),
+/// the same page with that day grown by <see cref="AgendaRules.MorePerDay"/>, by the address: <c>?diena=2026-11-24:60</c> for
+/// a planned day, <c>?balsuota=2026-11-17:60</c> for a voted one (the day, a colon, how many of its known rows to show),
 /// landing on the first row added (its own id, <see cref="PlannedRowId"/>, <see cref="VotedRowId"/>). The served page holds
 /// only the rows it shows. The days already grown stay so (the parameter repeats), so nothing the reader saw goes away; a
 /// value the page would not make is left out, never an error.

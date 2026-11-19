@@ -149,15 +149,15 @@ public static class ReasonLimits
     /// <summary>Each side's arguments shown first.</summary>
     public const int First = 2;
 
-    /// <summary>The arguments "Rodyti daugiau" adds under a side.</summary>
-    public const int Step = 10;
+    /// <summary>The arguments "Rodyti daugiau argumentų" adds under a side (owner, 2026-11-19: a list of texts, 20 a press).</summary>
+    public const int Step = ListPaging.TextStep;
 
     /// <summary>The most one answer holds.</summary>
     public const int Max = 100;
 
     /// <summary>
     /// The page's address parameters (owner, 2026-11-19): how many of a side's arguments the page shows, so it grows without
-    /// script (<c>?argumentai-uz=12</c>); the other side's, the responses' and the comments' parameters stay as they were.
+    /// script (<c>?argumentai-uz=22</c>); the other side's, the responses' and the comments' parameters stay as they were.
     /// </summary>
     public static string Parameter(string side) => side == "for" ? ForParameter : AgainstParameter;
 

@@ -65,11 +65,11 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
 
     /// <summary>
     /// Owner, 2026-11-19 ("Rodyti daugiau" doesn't work on phone nor desktop): with more than ten comments, once the island runs,
-    /// "Rodyti daugiau komentarų" reads the next ten in place on a phone: no navigation, no reload, the focus on the first one
+    /// "Rodyti daugiau komentarų" reads the next twenty in place on a phone: no navigation, no reload, the focus on the first one
     /// added. Until then the running island let enhanced navigation fetch the grown page and kept its own ten.
     /// </summary>
     [Fact]
-    public async Task Rodyti_daugiau_komentaru_reads_the_next_ten_in_place_on_a_phone()
+    public async Task Rodyti_daugiau_komentaru_reads_the_next_twenty_in_place_on_a_phone()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var writer = await PasskeyBrowser.StartAsync("native", 390, 844);

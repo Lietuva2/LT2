@@ -44,7 +44,9 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and
                            staff actor (StaffActor) and staff statements (StaffStatements), the outbound allowlist
                            (Http/: hosts from Outbound:AllowedHosts plus AddOutboundHost; redirects followed only within
                            it), TextExcerpt, TextLayout and TextDiff (also compiled into Lt2.Web.Client), BillTextLinks (every link to a comment or an
-                           argument, also compiled into Lt2.Api.Contracts); no clock of its own (TimeProvider is used)
+                           argument, also compiled into Lt2.Api.Contracts), ListPaging (how much every "show more"
+                           adds: rows 50, texts 20, design 8.16.4; also compiled into Lt2.Api.Contracts); no clock of
+                           its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written

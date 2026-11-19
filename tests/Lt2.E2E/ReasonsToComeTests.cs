@@ -53,33 +53,33 @@ public sealed partial class ReasonsToComeTests : E2ETest
         var page = await context.NewPageAsync();
 
         // The stand-in's sitting days hold about forty bills each: ten show, and the shared "Rodyti daugiau" (owner,
-        // 2026-11-19) grows the day by ten by the address (the hidden rows are not in the page), landing on the first row added.
+        // 2026-11-19) grows the day by fifty by the address (the hidden rows are not in the page), landing on the first row added.
         await page.GotoAsync(Base + "/darbotvarke");
         var dayMore = page.Locator("#agenda-coming section.tl-day a.show-more__link").First;
         await Assertions.Expect(dayMore).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(dayMore).ToHaveTextAsync("Rodyti daugiau");
         var href = (await dayMore.GetAttributeAsync("href"))!;
-        var link = Regex.Match(href, @"^/darbotvarke\?diena=(\d{4}-\d{2}-\d{2}):20#(agenda-\1-.+)$");
+        var link = Regex.Match(href, @"^/darbotvarke\?diena=(\d{4}-\d{2}-\d{2}):60#(agenda-\1-.+)$");
         link.Success.ShouldBeTrue(href);
         var dayId = "diena-" + link.Groups[1].Value;
         var dayRows = page.Locator($"#{dayId} li.tl-item");
         (await dayRows.CountAsync()).ShouldBe(10, "ten rows of a long day, and no more in the page");
         await Assertions.Expect(page.Locator($"#{dayId}-shown")).ToHaveTextAsync(new Regex(@"^Rodoma 10 iš \d+$"));
         await dayMore.ClickAsync();
-        await page.WaitForURLAsync(new Regex("diena=.*:20#agenda-"), new() { Timeout = E2ESteps.Slow });
+        await page.WaitForURLAsync(new Regex("diena=.*:60#agenda-"), new() { Timeout = E2ESteps.Slow });
         (await dayRows.CountAsync()).ShouldBeGreaterThan(10, "the day grown");
-        (await dayRows.CountAsync()).ShouldBeLessThanOrEqualTo(20, "by ten");
+        (await dayRows.CountAsync()).ShouldBeLessThanOrEqualTo(60, "by fifty");
         await Assertions.Expect(page.Locator("#" + link.Groups[2].Value)).ToBeInViewportAsync();
         await E2ESteps.NoSidewaysScrollAsync(page, "/darbotvarke grown at 390");
 
-        // "/projektai": twenty, then "Rodyti daugiau" by the address, landing on the first bill added.
+        // "/projektai": twenty, then "Rodyti daugiau" adding fifty by the address, landing on the first bill added.
         await page.GotoAsync(Base + "/projektai");
         var rows = page.Locator("#appeals > li");
         await Assertions.Expect(rows).ToHaveCountAsync(20, new() { Timeout = E2ESteps.Slow });
         var added = (await page.Locator("#more").GetAttributeAsync("href"))!;
-        added.ShouldStartWith("/projektai?rodyti=40#bill-");
+        added.ShouldStartWith("/projektai?rodyti=70#bill-");
         await page.Locator("#more").ClickAsync();
-        await page.WaitForURLAsync(new Regex("rodyti=40#bill-"), new() { Timeout = E2ESteps.Slow });
+        await page.WaitForURLAsync(new Regex("rodyti=70#bill-"), new() { Timeout = E2ESteps.Slow });
         (await rows.CountAsync()).ShouldBeGreaterThan(20);
         await Assertions.Expect(page.Locator("#" + added.Split('#')[1])).ToBeInViewportAsync();
 
@@ -92,9 +92,9 @@ public sealed partial class ReasonsToComeTests : E2ETest
             var side = (await more.GetAttributeAsync("id"))!["reasons-more-".Length..];
             var shown = await page.Locator($"#reasons-{side} .said").CountAsync();
             var to = (await more.GetAttributeAsync("href"))!;
-            to.ShouldMatch(@"^/seimas/XVP-0412\?argumentai-(uz|pries)=12#argumentai-(uz|pries)-3$");
+            to.ShouldMatch(@"^/seimas/XVP-0412\?argumentai-(uz|pries)=22#argumentai-(uz|pries)-3$");
             await more.ClickAsync();
-            await page.WaitForURLAsync(new Regex("argumentai-(uz|pries)=12"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("argumentai-(uz|pries)=22"), new() { Timeout = E2ESteps.Slow });
             (await page.Locator($"#reasons-{side} .said").CountAsync()).ShouldBeGreaterThan(shown);
             await Assertions.Expect(page.Locator("#" + to.Split('#')[1])).ToBeInViewportAsync();
         }

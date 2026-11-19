@@ -659,3 +659,19 @@ Each is built as written; "no" names what changes.
 - "Jūsų projektai" has no share line ("Pakvieskite kitus savo kvietimo nuoroda:" and its copy button): "the button
   should go from start page, inside the details that's enough, now it's taking too much space". The bill's page keeps it
   (8.11.5); the front page no longer reads the member's invitation.
+
+**Decided by the owner on 2026-11-19: with "show more" the first page stays small and each further page is larger: rows +50, texts +20 (8.16.4, 8.5.6, 8.7, 8.11.1, 8.12.1, 8.12.5, 8.17, 8.18, 8.23.6, 8.25.2, 8.26.1)**
+
+- "Like for the agenda the initial page would still be 10, but pressing show more would load 50 more entries." The first
+  page of every list is unchanged, light for most readers, who never press; whoever presses wants more, so a press
+  brings a larger page. A list of rows adds 50: the agenda's days (10 first, then 60, 110, …), the front page's (5, 55,
+  …), `/projektai` (20, 70, …, at most 200 a page), the history of votes (30, 80, …, at most 300), a vote's ballots (20,
+  70, 120, 141), an MP's votes (50, 100, …, as before), a member's texts (10, 60, …), `/statistika`'s bills (10, 60, …, at
+  most 300). A list of members' long texts adds 20: the arguments (2 a side, then 22, 42, …), the comments (10, 30, …),
+  the MPs' responses (10, 30, …). Until then each list added its own step, mostly its first page's size (10, 20, 30, 40).
+- The designer's choices: the caps stay (300 votes, 200 bills, 300 statistics bills; the last press before one adds what
+  is left); the API's maximum `limit`s already allow a grown page (`/appeals` 200, `/votes` and `/mps/{slug}/votes` 300,
+  the statistics 300, an argument page 100, a discussion unbounded by `limit` as before, its re-reads ask for everything
+  shown); a later page of arguments or comments asked without a `limit` is one step (20); a link to one comment shows its
+  discussion on the thread's own pages (10, 30, 50, …: the 25th still shows 30). One place holds the two numbers
+  (`ListPaging`), not settings.

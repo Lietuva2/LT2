@@ -16,7 +16,8 @@ public static class MpVotePaging
 {
     public const int First = 50;
 
-    public const int Step = 50;
+    /// <summary>The votes "Rodyti daugiau" adds (owner, 2026-11-19: a list of rows, 50 a press).</summary>
+    public const int Step = Lt2.Api.Contracts.ListPaging.RowStep;
 
     /// <summary>The most one page shows (the API's <c>limit</c> at most).</summary>
     public const int Cap = MpVoteLimits.Max;
@@ -26,7 +27,7 @@ public static class MpVotePaging
         int.TryParse(rodyti, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
 
     /// <summary>"Rodyti daugiau": the next value of <c>rodyti</c>; null when the API has no more or the page is full.</summary>
-    public static int? More(int shown, bool hasMore) => hasMore && shown < Cap ? Math.Min(shown + Step, Cap) : null;
+    public static int? More(int shown, bool hasMore) => hasMore && shown < Cap ? Lt2.Api.Contracts.ListPaging.Next(shown, Step, Cap) : null;
 
     /// <summary>"Ankstesni balsavimai": the next page's cursor once this one is full and the API has more.</summary>
     public static string? Older(int shown, string? nextCursor) => shown >= Cap ? nextCursor : null;

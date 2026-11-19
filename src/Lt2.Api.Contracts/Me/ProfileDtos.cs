@@ -75,14 +75,20 @@ public static class ProfileLimits
     /// <summary>The general report grounds and "Apsimeta kitu asmeniu ar pareigūnu" (design 8.25.6).</summary>
     public static readonly IReadOnlyList<string> ReportGrounds = ["impersonation", .. AppealLimits.ReportGrounds];
 
-    /// <summary>The shown arguments on a member's page at first, and each "Rodyti daugiau" (design 8.25.2).</summary>
+    /// <summary>The texts a member's page shows at first (design 8.25.2).</summary>
     public const int Page = 10;
+
+    /// <summary>The texts each "Rodyti daugiau" adds (owner, 2026-11-19: a list of rows, 50 a press).</summary>
+    public const int Step = ListPaging.RowStep;
 
     /// <summary>The most a page's address may ask for at once.</summary>
     public const int MaxShown = 500;
 
     /// <summary>The shown count a page's address asks for (<c>?rodyti=</c>), within 10 and <see cref="MaxShown"/>.</summary>
     public static int Shown(int? asked) => Math.Clamp(asked ?? Page, Page, MaxShown);
+
+    /// <summary>What "Rodyti daugiau" asks for: as many as shown and <see cref="Step"/> more, at most <see cref="MaxShown"/>.</summary>
+    public static int More(int? asked) => ListPaging.Next(Shown(asked), Step, MaxShown);
 }
 
 public static class ProfileRoutes

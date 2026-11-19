@@ -284,7 +284,7 @@ public sealed class CommentThreadTests : BunitContext
     }
 
     /// <summary>
-    /// Owner, 2026-11-19 ("doesn't work on phone nor desktop"): once the island runs, "Rodyti daugiau komentarų" reads the next ten
+    /// Owner, 2026-11-19 ("doesn't work on phone nor desktop"): once the island runs, "Rodyti daugiau komentarų" reads the next 20
     /// from the API, from where the shown ones end, adds them in place and gives the first one added the focus; the link is taken
     /// from enhanced navigation (which fetched the page while the island kept its own list) and points to the grown address.
     /// </summary>
@@ -297,23 +297,23 @@ public sealed class CommentThreadTests : BunitContext
             Guid.Parse($"0193a1b2-0000-7000-8000-0000000001{i:D2}"), new CommentAuthorResponse("person", "Narys " + i, null, null, null), "Komentaras " + i, DateTimeOffset.UnixEpoch.AddMinutes(i), []);
         var first = Enumerable.Range(1, 10).Select(Comment).ToList();
         var thread = Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill)
-            .Add(c => c.Thread, new CommentThreadResponse("reason", Target, Bill, 23, true, true, first, null, "10")).Add(c => c.Count, 23)
+            .Add(c => c.Thread, new CommentThreadResponse("reason", Target, Bill, 45, true, true, first, null, "10")).Add(c => c.Count, 45)
             .Add(c => c.PagePath, "/seimas/" + Bill));
         thread.Find($"#comments-more-{Target:N}").GetAttribute("data-enhance-nav").ShouldBe("false");
 
         _comments.On("GetThreadAsync", ApiResult<CommentThreadResponse>.Ok(
-            new CommentThreadResponse("reason", Target, Bill, 23, true, true, Enumerable.Range(10, 11).Select(Comment).ToList(), null, "20")));
+            new CommentThreadResponse("reason", Target, Bill, 45, true, true, Enumerable.Range(10, 21).Select(Comment).ToList(), null, "30")));
         thread.Find($"#comments-more-{Target:N}").Click();
 
-        thread.WaitForAssertion(() => thread.FindAll($"#comments-{Target:N} > li").Count.ShouldBe(20, "the tenth came again and is not added twice"));
+        thread.WaitForAssertion(() => thread.FindAll($"#comments-{Target:N} > li").Count.ShouldBe(30, "the tenth came again and is not added twice"));
         var asked = _comments.Arguments[_comments.Calls.LastIndexOf("GetThreadAsync")];
         asked[1].ShouldBe(Target);
-        asked[2].ShouldBe(CommentLimits.Step);
+        asked[2].ShouldBe(20, "owner, 2026-11-19: a list of texts grows by 20");
         asked[3].ShouldBe("10", "from where the shown ones end");
         thread.Find($"#{CommentLimits.ElementId(Comment(11).Id)}").GetAttribute("tabindex").ShouldBe("-1");
         JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal), "the first one added takes the focus");
-        thread.Find($"#comments-shown-{Target:N}").TextContent.ShouldBe("Rodoma 20 iš 23");
-        thread.Find($"#comments-more-{Target:N}").GetAttribute("href").ShouldBe($"/seimas/{Bill}?komentarai={Target:N}-23#{CommentPaging.PositionAnchor(Target, 21)}");
+        thread.Find($"#comments-shown-{Target:N}").TextContent.ShouldBe("Rodoma 30 iš 45");
+        thread.Find($"#comments-more-{Target:N}").GetAttribute("href").ShouldBe($"/seimas/{Bill}?komentarai={Target:N}-45#{CommentPaging.PositionAnchor(Target, 31)}");
     }
 
     /// <summary>Design 8.23.7: under a withdrawn response the discussion is read-only: no "Sutinku", no deleting, for anyone.</summary>
