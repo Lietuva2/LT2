@@ -67,8 +67,8 @@ public sealed class GatheredEmailTests
     public void Every_line_says_its_day_and_links_to_its_page_with_the_full_address()
     {
         var text = Templates().Render(Everything("weekly")).TextBody;
-        text.ShouldContain("Planuojama 2026-11-19 (priėmimas). https://lietuva2.test/seimas/XVP-0412");
-        text.ShouldContain("– 2026-11-13 XVP-0412 · " + Title + " (svarstymas). Rezultatas: už 74, prieš 44, susilaikė 10. https://lietuva2.test/seimas/balsavimai/99100006");
+        text.ShouldContain("Planuojama 2026-11-19 (priėmimas).\n  Projektas: https://lietuva2.test/seimas/XVP-0412");
+        text.ShouldContain("– 2026-11-13 XVP-0412 · " + Title + " (svarstymas). Rezultatas: už 74, prieš 44, susilaikė 10.\n  Balsavimo rezultatai: https://lietuva2.test/seimas/balsavimai/99100006");
         text.ShouldContain("Ona Jonaitienė: už");
         text.ShouldContain("– 2026-11-14 „Pavyzdžių asociacija“ (patvirtinta per el. pašto adresą @pavyzdys.test)");
         text.ShouldContain("– 2026-11-15 XVP-0412 · " + Title + ": https://lietuva2.test/seimas/XVP-0412#atsakymai");
@@ -136,7 +136,7 @@ public sealed class GatheredEmailTests
         members.ShouldBeGreaterThan(answers);
         comments.ShouldBeGreaterThan(members);
         text.IndexOf("Nauji komentarai", comments + 1, StringComparison.Ordinal).ShouldBe(-1, "one part for the comments");
-        text.ShouldContain("– argumentas dėl XVP-0412 · " + Title + ". Paskelbė: Rūta Mockutė. https://lietuva2.test/seimas/XVP-0412#reason-b");
+        text.ShouldContain("– argumentas dėl XVP-0412 · " + Title + ". Paskelbė: Rūta Mockutė.\n  Projektas: https://lietuva2.test/seimas/XVP-0412#reason-b");
         text.ShouldContain("– XVP-0412 · " + Title + ": https://lietuva2.test/seimas/XVP-0412#reason-a");
         text.ShouldContain("– XVP-0533 · Kita pataisa: https://lietuva2.test/seimas/XVP-0533#reason-c");
         text.ShouldNotContain("Sutinku", Case.Insensitive);

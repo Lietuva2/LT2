@@ -28,7 +28,8 @@ namespace Lt2.Migrator;
 /// refusing unless every import so far came from the Seimas stand-in), <c>--local-code-limits</c> (local stack only: the code limits per address raised to the settings' highest values, refusing unless <c>Demo:Allowed</c> is set), <c>--official-addresses-without-invitation</c> (a stack whose MPs are invented, refusing unless <c>Demo:Allowed</c> is set: design 8.5.1's setting switched on), <c>--demo-appeal</c> (local demonstration data:
 /// invented participants on XVP-0412 and the invented closed bills, refusing unless <c>Demo:Allowed</c> is set and the
 /// parliament data is invented), <c>--demo-sides-for ADDRESS|-</c> (one existing account's random sides on the invented
-/// closed bills, under the same refusals and only with that account's positions consent; the address is never logged).</item>
+/// closed bills, under the same refusals and only with that account's positions consent; the address is never logged),
+/// <c>--demo-emails</c> (one email of every outbox kind and variant, invented, to <c>NAME@pavyzdys.test</c>, so Mailpit shows how each looks; refusing unless <c>Demo:Allowed</c> and <c>Email:Caught</c> are set; writes outbox rows only).</item>
 /// </list>
 /// </summary>
 public static class MigrationRunner
@@ -182,6 +183,10 @@ public static class MigrationRunner
                     Log.Information(
                         "Demonstration sides for the named account: {For} for, {Against} against, given now on the invented closed bills",
                         sides.For, sides.Against);
+                    break;
+                case "--demo-emails":
+                    var queued = await DemoEmails.EnqueueAsync(configuration, connectionString, TimeProvider.System, cancellationToken);
+                    Log.Information("Demonstration emails queued: {Count}, to NAME@{Domain}; the worker sends them to Mailpit", queued, DemoEmails.Domain);
                     break;
                 case "--local-code-limits":
                     var raised = await LocalCodeLimits.RunAsync(configuration, connectionString, cancellationToken);

@@ -84,3 +84,20 @@ Read before writing or changing a test. The commands are in [AGENTS.md](../AGENT
   events the test placed in that week.
 - **Waits:** no fixed sleeps. In end-to-end tests a step after a navigation or a sign-in waits up to `E2ESteps.Slow`
   (60 s); Playwright's default of 5 s failed when an integration run shared the machine.
+
+## Looking at every email
+
+An email's look is checked by eye, on all of them, whenever a template or `EmailLayout` changes (owner, 2026-11-20).
+
+1. `migrator --demo-emails` (README: refuses unless `LT2_DEMO_DATA` and `LT2_MAIL_CAUGHT` are true) queues one email of every
+   outbox kind and variant from invented data, to `NAME@pavyzdys.test`; the worker sends them and Mailpit lists them by name.
+   `DemoEmails` (Notifications) builds them with the same payload types and `OutboxMessage.Create` as the code that sends each
+   kind. `DemoEmailTests` fails until a new kind in `EmailStreams` has a demonstration, renders every one through the real
+   renderers, and checks the first things an eye finds: no address of over 40 characters printed in the HTML part (the pages a
+   letter says to type are the one exception), every address the HTML links to also in the plain part, no placeholder or
+   resource key left in the text. The same test writes the rendered emails to `output/email-samples/demo/` without a stack.
+2. Read each message from Mailpit's API (`/api/v1/messages`, then `/api/v1/message/{ID}` for `HTML` and `Text`), save the HTML,
+   and take a headless Chromium screenshot (`chrome --headless=new --hide-scrollbars --window-size=800,1600
+   --screenshot=x.png file:///x.html`); for a phone, show the file in an iframe 390 px wide. A page of four iframes side by side
+   shows four emails in one picture. Look at every one: order, a sign-off, an empty line, a link printed bare, characters.
+3. Fix in the renderer or the template, run again, look again; each kind gets a line in a review file until all are good.

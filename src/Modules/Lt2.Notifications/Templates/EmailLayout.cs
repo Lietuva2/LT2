@@ -173,7 +173,10 @@ internal static class EmailLayout
     /// links take the footer's small grey type, as every link there does; only the body's are bold green.
     /// </summary>
     internal static string LinkedHtml(string paragraph, bool footer = false) =>
-        string.Join("<br>", paragraph.ReplaceLineEndings("\n").Split('\n').Select(line => LinkLineHtml(line, footer)));
+        string.Join("<br>", paragraph.ReplaceLineEndings("\n").Split('\n').Select(line => IndentHtml(line) + LinkLineHtml(line.TrimStart(' '), footer)));
+
+    /// <summary>A line's indent (a part's sub-lines: the followed MPs under a vote, the link under a bill) as no-break spaces, which HTML keeps.</summary>
+    private static string IndentHtml(string line) => string.Concat(Enumerable.Repeat("&nbsp;", line.Length - line.TrimStart(' ').Length));
 
     /// <summary>
     /// One line of an email as HTML: "…sentence. Link text: https://…" becomes the earlier sentences as text, then the
