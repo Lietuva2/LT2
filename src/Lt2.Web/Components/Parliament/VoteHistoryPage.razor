@@ -90,7 +90,7 @@
         <Lt2.Web.Client.Components.ShowMore Id="votes-more" StatusId="votes-shown" Shown="_items.Count" Total="_total" Href="@VoteHistory.More(_state, _items.Count, _total)">
             @if (VoteHistory.Older(_state, _items, _total) is { } older)
             {
-                <a class="btn btn--plain" href="@older" id="votes-older">@F.T["Votes.Older"]</a>
+                <a href="@older" id="votes-older">@F.T["Votes.Older"]</a>
             }
         </Lt2.Web.Client.Components.ShowMore>
         @* Design 8.15, 8.18 "The majority": what the rows' chip means, once beside the list. *@

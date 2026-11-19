@@ -149,7 +149,7 @@
                 Href="@(BillListPaging.More(_shown, _offset, page.Total) is { } more && page.Items.Count > _shown ? Link(From, Sort, Planned, more) + "#bill-" + page.Items[_shown].Bill.Number : null)">
                 @if (BillListPaging.Further(_shown, _offset, page.Total) is { } further)
                 {
-                    <a class="btn btn--plain" href="@Link(further.ToString(System.Globalization.CultureInfo.InvariantCulture), Sort, Planned)" id="further">@T["List.Further"]</a>
+                    <a href="@Link(further.ToString(System.Globalization.CultureInfo.InvariantCulture), Sort, Planned)" id="further">@T["List.Further"]</a>
                 }
             </Lt2.Web.Client.Components.ShowMore>
         }

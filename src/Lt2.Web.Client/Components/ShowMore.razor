@@ -1,7 +1,8 @@
 @inject IStringLocalizer<UiText> T
 
 @* "Rodyti daugiau" under a long list (owner, 2026-11-19: every "show more" looks and works the same): one line under the list,
-   "Rodoma N iš M" where the total is known, then the link. It is always a link (<a>) whose address is the same page with the list
+   "Rodoma N iš M" where the total is known, then the link, a plain text link (owner, 2026-11-19: not a button's look, which
+   clashed with the buttons under a list, such as "Parašyti argumentą"). It is always a link (<a>) whose address is the same page with the list
    grown, landing on the first row added, so it works without JavaScript; on a server-rendered page the site's enhanced
    navigation (blazor.web.js) fetches it and swaps the page in without a reload. In an island that passes OnMore, once the island
    runs, the island fetches the next page from the API instead and adds it in place (the host moves the focus to the first item
@@ -17,12 +18,12 @@
     {
         @if (OnMore.HasDelegate && RendererInfo.IsInteractive)
         {
-            <a class="btn btn--plain show-more__link" href="@href" id="@Id" data-enhance-nav="false" aria-controls="@Controls"
+            <a class="show-more__link" href="@href" id="@Id" data-enhance-nav="false" aria-controls="@Controls"
                @onclick="MoreAsync" @onclick:preventDefault="true">@(Text ?? T["Text.ShowMore"])</a>
         }
         else
         {
-            <a class="btn btn--plain show-more__link" href="@href" id="@Id">@(Text ?? T["Text.ShowMore"])</a>
+            <a class="show-more__link" href="@href" id="@Id">@(Text ?? T["Text.ShowMore"])</a>
         }
     }
     @ChildContent
