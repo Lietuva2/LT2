@@ -25,7 +25,7 @@ internal static class AppealMapping
     public static BillRecordResponse Map(BillRecordInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, Map(a.Counts), Map(a.Threshold),
         a.Reasons.Select(Map).ToList(), Map(a.Surge), a.ClosingVoteId, a.ClosedAt, Map(a.Planned), a.HiddenStatement, a.DescriptionUrl, a.DescriptionAt,
-        a.Cards?.Select(Map).ToList(), Map(a.ReasonTotals ?? ReasonTotals.None));
+        a.Cards?.Select(Map).ToList(), Map(a.ReasonTotals ?? ReasonTotals.None), a.ClosedReason, a.ClosedDecidedOn, a.ClosedSourceUrl);
 
     public static AuthorCardResponse Map(AuthorCard c) => new(c.ProfileId, c.Name, c.About);
 
@@ -54,7 +54,7 @@ internal static class AppealMapping
 
     public static ModerationBillResponse Map(ModerationBillState s) =>
         new(s.Id, s.BillNumber, s.Status, s.Description, s.DescriptionSource, s.Threshold, s.ThresholdSetBy, s.Held, Map(s.Planned), s.HasOpenItems,
-            s.Reasons.Select(Map).ToList(), s.DescriptionUrl, s.DescriptionReports.Select(Map).ToList());
+            s.Reasons.Select(Map).ToList(), s.DescriptionUrl, s.DescriptionReports.Select(Map).ToList(), s.ClosedReason);
 
     public static QueueReasonResponse Map(QueueReason r) => new(
         r.Id, r.RecordId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
@@ -79,6 +79,8 @@ internal static class AppealMapping
     public static NewReport ToModule(ReportRequest r) => new(r.TargetKind, r.TargetId, r.Ground, r.Text);
 
     public static ModeratorDescription ToModule(ModeratorDescriptionRequest r) => new(r.Description, r.Statement, r.FromDraft, r.DescriptionUrl);
+
+    public static RecordClosure ToModule(CloseRecordRequest r) => new(r.Reason, r.DecidedOn, r.SourceUrl, r.Statement);
 
 
     public static MyRestrictionResponse Map(MyRestriction? r) => r is null ? new(false, null, null) : new(true, r.Until, r.Statement);
@@ -240,6 +242,12 @@ internal sealed class ServerModerationApi(
 
     public Task<ApiResult> HideRecordAsync(Guid recordId, StatementRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.HideRecordAsync(recordId, request.Statement, m, cancellationToken));
+
+    public Task<ApiResult> CloseRecordAsync(Guid recordId, CloseRecordRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.CloseRecordAsync(recordId, AppealMapping.ToModule(request), m, cancellationToken));
+
+    public Task<ApiResult> ReopenRecordAsync(Guid recordId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.ReopenRecordAsync(recordId, request.Statement, m, cancellationToken));
 
     public async Task<ApiResult<ModerationBillResponse>> GetBillAsync(string number, CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()

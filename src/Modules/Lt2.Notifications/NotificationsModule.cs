@@ -54,6 +54,7 @@ public static class NotificationsModule
         services.AddScoped<Rhythm.NoticeDelivery>();
         services.AddScoped<Rhythm.IMemberNoticeKind, Follows.PlannedNotices>();
         services.AddScoped<Rhythm.IMemberNoticeKind, Follows.VotedNotices>();
+        services.AddScoped<Rhythm.IMemberNoticeKind, Follows.ClosedNotices>();
         services.AddScoped<Rhythm.IMemberNoticeKind, Follows.StatementNotices>();
         services.AddScoped<Rhythm.IMemberNoticeKind, Follows.ResponseNotices>();
         services.AddScoped<Rhythm.IMemberNoticeKind, Follows.MemberNotices>();
@@ -99,6 +100,7 @@ public static class NotificationsModule
         services.AddEmail<OrganisationNoticeEmail, OrganisationTemplates>(MessageKinds.OrganisationNoticeEmail, t => t.Render);
         services.AddEmail<FollowPlannedEmail, FollowTemplates>(MessageKinds.FollowPlannedEmail, t => t.Planned);
         services.AddEmail<FollowVotedEmail, FollowTemplates>(MessageKinds.FollowVotedEmail, t => t.Voted);
+        services.AddEmail<FollowClosedEmail, FollowTemplates>(MessageKinds.FollowClosedEmail, t => t.Closed);
         services.AddEmail<FollowStatementEmail, FollowTemplates>(MessageKinds.FollowStatementEmail, t => t.Statement);
         services.AddEmail<FollowResponsesEmail, FollowTemplates>(MessageKinds.FollowResponsesEmail, t => t.Responses);
         services.AddEmail<FollowMemberEmail, FollowTemplates>(MessageKinds.FollowMemberEmail, t => t.Member);
@@ -109,6 +111,7 @@ public static class NotificationsModule
         services.AddEmail<GatheredNoticesEmail, GatheredTemplates>(MessageKinds.GatheredNoticesEmail, t => t.Render);
         services.AddNoticePart<FollowPlannedEmail, FollowTemplates>(MessageKinds.FollowPlannedEmail, 10, t => t.PlannedPart);
         services.AddNoticePart<FollowVotedEmail, FollowTemplates>(MessageKinds.FollowVotedEmail, 20, t => t.VotedPart);
+        services.AddNoticePart<FollowClosedEmail, FollowTemplates>(MessageKinds.FollowClosedEmail, 25, t => t.ClosedPart);
         services.AddNoticePart<FollowStatementEmail, FollowTemplates>(MessageKinds.FollowStatementEmail, 30, t => t.StatementPart);
         services.AddNoticePart<FollowResponsesEmail, FollowTemplates>(MessageKinds.FollowResponsesEmail, 40, t => t.ResponsesPart);
         services.AddNoticePart<FollowMemberEmail, FollowTemplates>(MessageKinds.FollowMemberEmail, 50, t => t.MemberPart);
@@ -131,7 +134,7 @@ public static class NotificationsModule
 
     /// <summary>
     /// A kind's part of the gathered email (design 8.24): <paramref name="kind"/> is the outbox kind of the email the thing is
-    /// alone, <paramref name="order"/> its place among the parts (the switches' order: 10 planned, 20 voted, 30 statements,
+    /// alone, <paramref name="order"/> its place among the parts (the switches' order: 10 planned, 20 voted, 25 closed without a vote (the voted switch), 30 statements,
     /// 40 answers, 50 followed members, 60 comments under one's own arguments), and <paramref name="part"/> writes the part (heading and lines) from the things of that kind.
     /// </summary>
     internal static IServiceCollection AddNoticePart<TModel, TTemplate>(

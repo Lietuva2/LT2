@@ -69,6 +69,8 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(a => a.Sending).HasMaxLength(20);
             e.Property(a => a.ThresholdSetBy).HasMaxLength(20);
             e.Property(a => a.ThresholdNote).HasMaxLength(1000);
+            e.Property(a => a.ClosedReason).HasMaxLength(20);
+            e.Property(a => a.ClosedSourceUrl).HasMaxLength(RecordRules.ClosingUrlMaxLength);
 
             // One record per bill (design 8.12.1): two people arriving together make one row.
             e.HasIndex(a => a.BillNumber).IsUnique().HasFilter("status IN ('open', 'closed', 'rejected')").HasDatabaseName("ix_bill_record_bill_number");

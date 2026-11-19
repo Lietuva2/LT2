@@ -74,7 +74,7 @@ public sealed class ModerationMenuTests : BunitContext
         Trigger(menu).TextContent.Trim().ShouldBe("Kiti veiksmai");
         MenuItems(menu).ShouldBe([
             "Aprašymas: describe", "Aprašymas: undescribe",
-            "Seime: planned", "Seime: threshold",
+            "Seime: planned", "Seime: threshold", "Seime: close",
             "Suvestinės: hold", "Suvestinės: urgent",
             "—", "hide",
         ]);

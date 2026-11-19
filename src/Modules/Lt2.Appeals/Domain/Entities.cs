@@ -41,8 +41,20 @@ internal sealed class BillRecord
 
     public DateTimeOffset? ClosedAt { get; set; }
 
-    /// <summary>The final Seimas vote that closed it.</summary>
+    /// <summary>The final Seimas vote that closed it; null when a moderator closed it (design 8.1 step 6).</summary>
     public long? ClosingVoteId { get; set; }
+
+    /// <summary>Why it closed: one of <see cref="ClosedReasons"/>; null while open.</summary>
+    public string? ClosedReason { get; set; }
+
+    /// <summary>
+    /// For a record a moderator closed (<see cref="ClosedReasons.Rejected"/> or <see cref="ClosedReasons.Withdrawn"/>): the day
+    /// the Seimas rejected the bill or its initiators withdrew it; null otherwise.
+    /// </summary>
+    public DateOnly? ClosedDecidedOn { get; set; }
+
+    /// <summary>For a record a moderator closed: the source on lrs.lt that says so (https, at most 500 characters); null otherwise.</summary>
+    public string? ClosedSourceUrl { get; set; }
 
     /// <summary>The counts frozen when the record closed (design 8.1); null while open.</summary>
     public int? ClosedFor { get; set; }
@@ -84,7 +96,10 @@ internal static class BillRecordStatuses
     /// <summary>People can take a side, write and mark arguments.</summary>
     public const string Open = "open";
 
-    /// <summary>The Seimas took the final vote: the counts are frozen (design 8.1).</summary>
+    /// <summary>
+    /// The Seimas finished the bill: the final vote, or a moderator recorded that it was rejected or withdrawn; the counts are
+    /// frozen (design 8.1). Why is <see cref="BillRecord.ClosedReason"/>.
+    /// </summary>
     public const string Closed = "closed";
 
     /// <summary>
@@ -92,6 +107,21 @@ internal static class BillRecordStatuses
     /// "Atkurti" (design 8.12.3).
     /// </summary>
     public const string Rejected = "rejected";
+}
+
+/// <summary>
+/// Why a record closed (design 8.1 step 6, owner 2026-11-19): the Seimas's final vote (the closing job), or a moderator's record
+/// that the Seimas rejected the bill or its initiators withdrew it, with the day and the source. Not to be confused with the
+/// status <see cref="BillRecordStatuses.Rejected"/>, which is a record hidden by a moderator.
+/// </summary>
+internal static class ClosedReasons
+{
+    public const string Vote = "vote";
+    public const string Rejected = "rejected";
+    public const string Withdrawn = "withdrawn";
+
+    /// <summary>The reasons a moderator closes a record for (and may reopen it from).</summary>
+    public static readonly IReadOnlyList<string> ByModerator = [Rejected, Withdrawn];
 }
 
 /// <summary>Who set the threshold that applies to a bill (design 8.12.2).</summary>

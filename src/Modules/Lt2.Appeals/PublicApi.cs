@@ -76,6 +76,11 @@ public sealed record ReasonOnBill(string BillNumber, ReasonInfo Reason, IReadOnl
 /// <param name="HiddenStatement">For a hidden record: the moderators' statement; nothing else of it is shown.</param>
 /// <param name="Reasons">The first page of each side's arguments (<see cref="ReasonPages.First"/> each, design 8.12.1); the rest by <see cref="IAppealsModule.ReasonsAsync"/>.</param>
 /// <param name="ReasonTotals">How many published arguments each side has.</param>
+/// <param name="ClosedReason">
+/// Why a closed record closed (design 8.1 step 6): <c>vote</c> (the final vote, <paramref name="ClosingVoteId"/>), <c>rejected</c>
+/// or <c>withdrawn</c> (a moderator recorded that the Seimas rejected the bill or its initiators withdrew it, on
+/// <paramref name="ClosedDecidedOn"/>, as <paramref name="ClosedSourceUrl"/> on lrs.lt says); null while open.
+/// </param>
 public sealed record BillRecordInfo(
     Guid? Id,
     BillFacts Bill,
@@ -93,7 +98,10 @@ public sealed record BillRecordInfo(
     PlannedDate? Planned,
     string? HiddenStatement,
     IReadOnlyList<AuthorCard>? Cards = null,
-    ReasonTotals? ReasonTotals = null);
+    ReasonTotals? ReasonTotals = null,
+    string? ClosedReason = null,
+    DateOnly? ClosedDecidedOn = null,
+    string? ClosedSourceUrl = null);
 
 /// <summary>The arguments' pages (design 8.12.1, owner 2026-11-19): the record carries the first of each side, the rest come a page at a time.</summary>
 public static class ReasonPages
@@ -246,7 +254,8 @@ public sealed record QueueRecord(
 /// </summary>
 public sealed record ModerationBillState(
     Guid? Id, string BillNumber, string Status, string Description, string? DescriptionSource, int Threshold, string ThresholdSetBy, bool Held,
-    PlannedDate? Planned, bool HasOpenItems, IReadOnlyList<QueueReason> Reasons, string? DescriptionUrl, IReadOnlyList<QueueReport> DescriptionReports);
+    PlannedDate? Planned, bool HasOpenItems, IReadOnlyList<QueueReason> Reasons, string? DescriptionUrl, IReadOnlyList<QueueReport> DescriptionReports,
+    string? ClosedReason = null);
 
 /// <summary>
 /// A participant's flag about the planned date (design 8.4), with the date they say is right when they gave one (owner,
@@ -396,6 +405,12 @@ public interface IAppealsModule
     Task<string> ClosedRecordsVersionAsync(CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// A moderator's close of a record (design 8.1 step 6): <paramref name="Reason"/> <c>rejected</c> or <c>withdrawn</c>, the day of
+/// that decision (not in the future), the source on lrs.lt and the statement.
+/// </summary>
+public sealed record RecordClosure(string Reason, DateOnly DecidedOn, string SourceUrl, string Statement);
+
 /// <summary>A closed record as the analytics page compares it (design 8.26.2): the vote that closed it and its frozen counts.</summary>
 public sealed record ClosedRecordFacts(string BillNumber, long ClosingVoteId, DateTimeOffset ClosedAt, SideCounts Counts);
 
@@ -412,6 +427,20 @@ public interface IAppealsModeration
 
     /// <summary>Hides a bill's record: taking part on the bill closes; sides and arguments are kept unseen (design 8.12.3).</summary>
     Task<Result<Unit>> HideRecordAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Closes an open record because the Seimas rejected the bill or its initiators withdrew it (design 8.1 step 6, owner
+    /// 2026-11-19): under the bill's lock, the counts frozen, the reason, the day and the lrs.lt source kept and shown; audited
+    /// <c>record.closed</c>. Followers hear of it through the follow emails. <c>moderation.wrong-state</c> on a record that is not
+    /// open or whose bill's final vote is recorded.
+    /// </summary>
+    Task<Result<Unit>> CloseRecordAsync(Guid recordId, RecordClosure closure, StaffActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Undoes a moderator's close (design 8.1 step 6): the record is open again with its live counts; never one closed by a
+    /// vote (<c>moderation.wrong-state</c>). Audited <c>record.reopened</c>; nobody is told.
+    /// </summary>
+    Task<Result<Unit>> ReopenRecordAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>
     /// Writes or corrects the description of an active bill (design 8.12.3, 8.13), creating the bill's record if needed:

@@ -60,6 +60,7 @@ public static class AppealsModule
 
         // Design 8.20.1: the responses the followers' daily email tells about (Notifications reads them through this).
         services.AddScoped<IMpResponseFeed, MpResponseFeed>();
+        services.AddScoped<IRecordClosureFeed, RecordClosureFeed>();
 
         // Design 8.25: a member's published arguments, for their public page and the follow emails about them.
         services.AddScoped<IMemberTexts, MemberTexts>();

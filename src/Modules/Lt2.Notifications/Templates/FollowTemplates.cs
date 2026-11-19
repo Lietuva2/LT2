@@ -65,6 +65,27 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     }
 
     /// <summary>
+    /// A followed bill was rejected by the Seimas or withdrawn by its initiators, as a moderator recorded (design 8.1 step 6, 8.6):
+    /// the voted email's counterpart where there is no vote. The bill, what happened and on which day, that taking part has
+    /// closed, the source on lrs.lt and the bill's page. Never the counts, the person's side or anyone else.
+    /// </summary>
+    public EmailMessage Closed(FollowClosedEmail model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        var reason = ClosedReason(model.Reason);
+        var paragraphs = new List<string>
+        {
+            l[EmailText.Greeting],
+            Format("Follow.Closed.Body." + reason, $"{model.BillNumber} · {model.BillTitle}", Day(model.Day)),
+            l["Follow.Closed.Ended"],
+            Format("Follow.Closed.Source", model.SourceUrl),
+            Format("Follow.BillLink", Link(model.BillPath)),
+            l[EmailText.Signature],
+        };
+        return Message(model.To, Format("Follow.Closed.Subject." + reason, model.BillNumber), paragraphs, l["Follow.Reason"], model.AccountPath, model.StopToken);
+    }
+
+    /// <summary>
     /// An organisation the person follows made its statement on a bill public (design 8.14.14, stage B): the organisation
     /// with its label, the bill, the stance and a link to the bill's page. Never the statement's text, a side or a count.
     /// </summary>
@@ -181,6 +202,18 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         return l["Gathered.Voted.Title"] + "\n" + string.Join("\n", lines);
     }
 
+    /// <summary>
+    /// The part of bills the Seimas no longer considers (design 8.1 step 6): a line per bill with the day, what happened and the
+    /// bill's page, and the source under it. Right after the votes, under the same switch.
+    /// </summary>
+    public string ClosedPart(IReadOnlyList<FollowClosedEmail> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        var lines = items.Select(m => Format("Gathered.Closed.Line." + ClosedReason(m.Reason), Day(m.Day), $"{m.BillNumber} · {m.BillTitle}", Link(m.BillPath))
+            + "\n  " + Format("Follow.Closed.Source", m.SourceUrl));
+        return l["Gathered.Closed.Title"] + "\n" + string.Join("\n", lines);
+    }
+
     /// <summary>The statements' part: a line per statement with the day it became public, the organisation and its label, and the stance.</summary>
     public string StatementPart(IReadOnlyList<FollowStatementEmail> items)
     {
@@ -229,6 +262,9 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             .Select(a => "– " + CommentLine(a));
         return l["Gathered.Comments.Title"] + "\n" + string.Join("\n", lines);
     }
+
+    /// <summary>Why a record a moderator closed closed: <c>withdrawn</c>, or <c>rejected</c> (also for anything unknown).</summary>
+    private static string ClosedReason(string? reason) => reason == "withdrawn" ? "withdrawn" : "rejected";
 
     /// <summary>A followed member's text: a comment, or an argument (also for anything unknown).</summary>
     private static string What(string? what) => what == MemberTextKinds.Comment ? MemberTextKinds.Comment : MemberTextKinds.Argument;

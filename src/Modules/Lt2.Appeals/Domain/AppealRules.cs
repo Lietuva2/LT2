@@ -239,11 +239,52 @@ internal static class GroupRules
     }
 }
 
-/// <summary>Design 8.1: a record closes when the Seimas takes the final vote on its bill; the counts are frozen then.</summary>
+/// <summary>
+/// Design 8.1 step 6: a record closes when the Seimas takes the final vote on its bill, or when a moderator records that the
+/// Seimas rejected it or its initiators withdrew it (owner, 2026-11-19); the counts are frozen then.
+/// </summary>
 internal static class ClosingRules
 {
     /// <summary>Only an open record closes, and only on a final vote; a hidden one stays hidden.</summary>
     public static bool ShouldClose(string status, long? finalVoteId) => status == BillRecordStatuses.Open && finalVoteId is not null;
+
+    /// <summary>
+    /// Closes the record with its counts frozen as <paramref name="counts"/> (all four), why, and for a moderator's close the day
+    /// and the source; nothing can be taken or changed afterwards and the page shows these numbers.
+    /// </summary>
+    public static void Close(BillRecord record, SideCounts counts, DateTimeOffset now, string reason, long? closingVoteId, DateOnly? decidedOn, string? sourceUrl)
+    {
+        record.Status = BillRecordStatuses.Closed;
+        record.ClosedAt = now;
+        record.ChangedAt = now;
+        record.ClosingVoteId = closingVoteId;
+        record.ClosedReason = reason;
+        record.ClosedDecidedOn = decidedOn;
+        record.ClosedSourceUrl = sourceUrl;
+        record.ClosedFor = counts.For;
+        record.ClosedForOlderThan30Days = counts.ForOlderThan30Days;
+        record.ClosedAgainst = counts.Against;
+        record.ClosedAgainstOlderThan30Days = counts.AgainstOlderThan30Days;
+    }
+
+    /// <summary>
+    /// Undoes a moderator's close (design 8.1 step 6): open again, everything of the close cleared; the positions were kept, so
+    /// the live counts come back as they are.
+    /// </summary>
+    public static void Reopen(BillRecord record, DateTimeOffset now)
+    {
+        record.Status = BillRecordStatuses.Open;
+        record.ClosedAt = null;
+        record.ChangedAt = now;
+        record.ClosingVoteId = null;
+        record.ClosedReason = null;
+        record.ClosedDecidedOn = null;
+        record.ClosedSourceUrl = null;
+        record.ClosedFor = null;
+        record.ClosedForOlderThan30Days = null;
+        record.ClosedAgainst = null;
+        record.ClosedAgainstOlderThan30Days = null;
+    }
 
     /// <summary>The counts shown: frozen ones once closed, live ones before.</summary>
     public static SideCounts Shown(SideCounts live, int? closedFor, int? closedForOlder, int? closedAgainst, int? closedAgainstOlder) =>
@@ -294,6 +335,9 @@ internal static class RuleErrors
         "reason.empty" or "reason.too-long" => Error.Validation(code, "text"),
         "description.empty" or "description.too-long" => Error.Validation(code, "description"),
         "threshold.below-minimum" => Error.Validation(code, "threshold"),
+        "closing.reason" => Error.Validation(code, "reason"),
+        "closing.date-required" or "closing.date-future" => Error.Validation(code, "decidedOn"),
+        "closing-url.invalid" => Error.Validation(code, "sourceUrl"),
         _ => Error.Validation(code),
     };
 }

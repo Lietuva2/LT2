@@ -106,6 +106,15 @@ public interface IModerationApi
     /// <summary>Hides a bill's record: taking part on the bill closes, with the statement shown on its page (design 8.12.3).</summary>
     Task<ApiResult> HideRecordAsync(Guid recordId, StatementRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// "Uždaryti: projektas atmestas ar atsiimtas" (design 8.1 step 6): closes an open record with the reason, the day, the lrs.lt
+    /// source and a statement; the counts freeze and followers are told.
+    /// </summary>
+    Task<ApiResult> CloseRecordAsync(Guid recordId, CloseRecordRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>"Atšaukti uždarymą" (design 8.1 step 6): reopens a record a moderator closed; statement required.</summary>
+    Task<ApiResult> ReopenRecordAsync(Guid recordId, StatementRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Hidden appeals and reasons, with who hid them, when and why (design 8.3).</summary>
     Task<ApiResult<HiddenItemsResponse>> GetHiddenAsync(CancellationToken cancellationToken = default);
 

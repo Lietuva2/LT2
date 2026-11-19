@@ -134,6 +134,12 @@ internal static class BillEventKinds
     public const string Member = "member";
 
     /// <summary>
+    /// A moderator closed the bill's record because the Seimas rejected it or its initiators withdrew it (design 8.1 step 6, 8.6;
+    /// key: <see cref="FollowRules.ClosedKey"/>, the moment it closed). No person.
+    /// </summary>
+    public const string Closed = "closed";
+
+    /// <summary>
     /// An argument on the bill got comments and its author was told (design 8.23.9, 8.23.14; key: the argument's id and the run's
     /// moment). No person and no text; the latest one's <see cref="BillEvent.FirstSeen"/> is where the next run starts reading.
     /// </summary>

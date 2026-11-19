@@ -103,6 +103,24 @@ public sealed class ModeratorDescriptionRequestValidator : AbstractValidator<Mod
     }
 }
 
+/// <summary>
+/// A moderator's close of a record (design 8.1 step 6): the reason, the day, the source (required, the official text's rule) and
+/// the statement. Whether the day is in the future is checked where it is stored, against the Vilnius day of the server's clock.
+/// </summary>
+public sealed class CloseRecordRequestValidator : AbstractValidator<CloseRecordRequest>
+{
+    public CloseRecordRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Reason).Must(r => ClosingReasons.ByModerator.Contains(r)).WithMessage(l["Closing.Reason"]).OverridePropertyName("reason");
+        RuleFor(x => x.DecidedOn).NotEqual(default(DateOnly)).WithMessage(l["Closing.Date"]).OverridePropertyName("decidedOn");
+        RuleFor(x => x.SourceUrl)
+            .Must(u => OfficialTextAddress.Normalise(u) is not null && OfficialTextAddress.IsAcceptable(u))
+            .WithMessage(l["Closing.Url"])
+            .OverridePropertyName("sourceUrl");
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+    }
+}
+
 public sealed class MergeReasonRequestValidator : AbstractValidator<MergeReasonRequest>
 {
     public MergeReasonRequestValidator(IStringLocalizer<ValidationMessages> l)

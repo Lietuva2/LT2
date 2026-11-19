@@ -22,9 +22,13 @@ internal sealed class ModerationRecorder(IAuditLog audit, ReportNotices notices,
     /// <param name="bill">The bill the action is about, when there is one.</param>
     /// <param name="details">Further details for the audit entry, or null.</param>
     /// <param name="answersReports">The action answers the open reports on its target, which then close.</param>
+    /// <param name="auditAction">
+    /// The audit entry's action when it is not <c>moderation.{kind}.{action}</c>: a moderator's close and reopening of a record
+    /// are <c>record.closed</c> and <c>record.reopened</c>, as the closing job's close is (design 8.1 step 6).
+    /// </param>
     public async Task RecordAsync(
         AppealsDb db, IDbContextTransaction transaction, string kind, Guid targetId, string action, string? statement, StaffActor moderator,
-        DateTimeOffset now, string? bill, object? details, bool answersReports, CancellationToken ct)
+        DateTimeOffset now, string? bill, object? details, bool answersReports, CancellationToken ct, string? auditAction = null)
     {
         db.ModerationActions.Add(new ModerationAction
         {
@@ -45,7 +49,7 @@ internal sealed class ModerationRecorder(IAuditLog audit, ReportNotices notices,
 
         await audit.WriteAsync(
             new AuditEntry(
-                $"moderation.{kind}.{action}", moderator.UserId, moderator.Role, $"{kind}:{targetId}",
+                auditAction ?? $"moderation.{kind}.{action}", moderator.UserId, moderator.Role, $"{kind}:{targetId}",
                 JsonSerializer.SerializeToElement(new { bill, statement, extra = details }, Details), moderator.IpHash),
             transaction.GetDbTransaction(),
             ct);

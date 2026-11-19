@@ -179,6 +179,12 @@ public static class AppealRoutes
     public const string LiftRestriction = ApiRoutes.Prefix + "/moderation/restrictions/{id:guid}/lift";
     public const string KeepRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/keep";
     public const string HideRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/hide";
+
+    /// <summary><c>POST</c>: a moderator closes an open record because the bill was rejected or withdrawn (design 8.1 step 6).</summary>
+    public const string CloseRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/close";
+
+    /// <summary><c>POST</c>: a moderator undoes such a close; never one made by the Seimas's vote (design 8.1 step 6).</summary>
+    public const string ReopenRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/reopen";
     public const string Hidden = ApiRoutes.Prefix + "/moderation/hidden";
     public const string RestoreRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/restore";
     public const string RestoreReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/restore";

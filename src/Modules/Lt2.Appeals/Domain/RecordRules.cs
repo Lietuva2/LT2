@@ -104,6 +104,72 @@ internal static class RecordRules
         return host.Equals("lrs.lt", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".lrs.lt", StringComparison.OrdinalIgnoreCase) ? null : "description-url.invalid";
     }
 
+    /// <summary>The longest source address of a moderator's close (<c>record.closed_source_url</c>): the description's rule.</summary>
+    public const int ClosingUrlMaxLength = DescriptionUrlMaxLength;
+
+    /// <summary>
+    /// The source a moderator gives when closing a record (design 8.1 step 6, owner 2026-11-19): required, and the rule of the
+    /// description's official text (<see cref="CheckDescriptionUrl"/>): an <c>https</c> address on <c>lrs.lt</c> or a host under
+    /// it, no user name or password, at most 500 characters.
+    /// </summary>
+    public static string? CheckClosingUrl(string? value) =>
+        NormaliseDescriptionUrl(value) is not null && CheckDescriptionUrl(value) is null ? null : "closing-url.invalid";
+
+    /// <summary>
+    /// A moderator closes a record because the Seimas rejected the bill or its initiators withdrew it (design 8.1 step 6, owner
+    /// 2026-11-19): a required statement, the reason (<c>rejected</c> or <c>withdrawn</c>), the day of that decision (not after
+    /// <paramref name="today"/>, Vilnius) and the source; then only an open record of a bill whose final vote is not recorded
+    /// (that one the closing job closes by the vote).
+    /// </summary>
+    public static string? CheckClose(
+        string recordStatus, bool billFinished, string? reason, DateOnly decidedOn, DateOnly today, string? sourceUrl, string? statement)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return "statement.required";
+        }
+
+        if (reason is null || !ClosedReasons.ByModerator.Contains(reason))
+        {
+            return "closing.reason";
+        }
+
+        if (decidedOn == default)
+        {
+            return "closing.date-required";
+        }
+
+        if (decidedOn > today)
+        {
+            return "closing.date-future";
+        }
+
+        if (CheckClosingUrl(sourceUrl) is { } badUrl)
+        {
+            return badUrl;
+        }
+
+        return recordStatus == BillRecordStatuses.Open && !billFinished ? null : "moderation.wrong-state";
+    }
+
+    /// <summary>
+    /// A moderator undoes a wrong close (design 8.1 step 6): only of a record a moderator closed (rejected or withdrawn), never
+    /// one closed by the Seimas's vote, with a required statement.
+    /// </summary>
+    public static string? CheckReopen(string recordStatus, string? closedReason, string? statement)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return "statement.required";
+        }
+
+        return MayReopen(recordStatus, closedReason) ? null : "moderation.wrong-state";
+    }
+
+    /// <summary>Whether "Atšaukti uždarymą" applies: a closed record whose reason is a moderator's (rejected or withdrawn).</summary>
+    public static bool MayReopen(string recordStatus, string? closedReason) =>
+        recordStatus == BillRecordStatuses.Closed && closedReason is not null && ClosedReasons.ByModerator.Contains(closedReason);
+
     /// <summary>
     /// The source a moderator's description gets: <c>ai-draft</c> when it started from a draft, and it stays <c>ai-draft</c>
     /// when a moderator corrects such a description later (design 8.11.4: the label is for the description's whole life).

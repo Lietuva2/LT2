@@ -33,6 +33,15 @@ internal static class FollowRules
 
     public static string VotedKey(long voteId) => voteId.ToString(CultureInfo.InvariantCulture);
 
+    /// <summary>
+    /// The key of a moderator's close as an event (design 8.1 step 6): the moment the record closed, so a close undone and made
+    /// again is a new event.
+    /// </summary>
+    public static string ClosedKey(DateTimeOffset closedAt) => closedAt.UtcTicks.ToString(CultureInfo.InvariantCulture);
+
+    /// <summary>A close the job first sees more than three days after it was made is recorded and never sent, as a vote.</summary>
+    public static bool ClosedIsSendable(DateTimeOffset closedAt, DateTimeOffset firstSeen) => firstSeen - closedAt <= VoteSendWindow;
+
     /// <summary>The key of an MP's follow: the Seimas person id, stable across terms.</summary>
     public static string MpKey(long seimasPersonId) => seimasPersonId.ToString(CultureInfo.InvariantCulture);
 

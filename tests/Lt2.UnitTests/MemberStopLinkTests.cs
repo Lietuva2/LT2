@@ -33,6 +33,7 @@ public sealed class MemberStopLinkTests
     [
         "Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.",
         "Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.",
+        "Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.",
         "Šį laišką gavote, nes sekate šią organizaciją Lietuva 2.0.",
         "Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.",
         "Šį laišką gavote, nes sekate šį narį Lietuva 2.0.",
@@ -55,6 +56,7 @@ public sealed class MemberStopLinkTests
         var follow = Follow();
         yield return follow.Planned(Planned(token));
         yield return follow.Voted(new FollowVotedEmail(To, Bill, Title, null, new DateOnly(2026, 11, 13), true, null, null, null, null, "/seimas/balsavimai/1", [], Account, token));
+        yield return follow.Closed(new FollowClosedEmail(To, Bill, Title, "rejected", new DateOnly(2026, 11, 17), "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas", "/seimas/XVP-0412", Account, token));
         yield return follow.Statement(new FollowStatementEmail(To, "Pavyzdžių asociacija", null, null, Bill, Title, "for", "/seimas/XVP-0412", Account, null, token));
         yield return follow.Responses(new FollowResponsesEmail(To, Bill, Title, new DateOnly(2026, 11, 15), [new FollowedResponse("Jonas Petraitis", null, "against")], "/seimas/XVP-0412#atsakymai", Account, token));
         yield return follow.Member(new FollowMemberEmail(To, "Rūta Mockutė", Bill, Title, "/seimas/XVP-0412", "/nariai/ruta-mockute-abcdefghij", Account, StopToken: token));

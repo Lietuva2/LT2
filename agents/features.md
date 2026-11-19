@@ -277,7 +277,8 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 - The code calls that row the bill's record (design 8.12, owner 2026-11-15): the entity `BillRecord`, columns `record_id`,
   error codes `record.*`, the stored kind `record`. "Appeal" in the singular names no object in the code; the module,
   its schema `appeals`, the `Appeals:` settings and the word *kreipimasis* stay.
-- One position per person per bill, private, changeable until the bill closes at the final Seimas vote.
+- One position per person per bill, private, changeable until the record closes (the final Seimas vote, or a
+  moderator's close of a rejected or withdrawn bill, below).
 - Reasons: plain text, public with the author's display name, for either side, whatever the
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
   a reason is on its author's side. The author can withdraw their own reason while the bill is open. Writing a reason
@@ -402,12 +403,35 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   moderators-only answer `GET /moderation/bills/{number}`; nobody else sees a control or anything from it.
 - **After the final vote** (design 6.9, owner 2026-11-15): a report about an argument or the description of a closed
   record reaches the queue. On a closed record a moderator can only hide and restore an argument, correct or remove the
-  description and answer a report with "Palikti" (and hide the whole record, as before); each with a statement, audited,
+  description and answer a report with "Palikti" (and hide the whole record, as before, or undo a moderator's close,
+  below); each with a statement, audited,
   the author told. The frozen counts and summaries already made never change. Everything else (threshold, holds,
   urgent summaries, merging, publishing a waiting argument, confirming a description) stays refused; the rules live in
   `RecordRules.CheckRecordAction` / `CheckReasonAction`, and the queue offers exactly them. The bill's page asks
-  whether the caller is a moderator only on an open record (`BillPage.razor`), so a closed record's page shows no
-  moderators' panel and no "Moderuoti": it is moderated from the queue (design 8.3).
+  whether the caller is a moderator on an open and on a closed record (`BillPage.razor`; owner, 2026-11-19), so a closed
+  record's page shows the "Moderavimas" panel and "Moderuoti" with only those actions (design 8.3).
+- **Closing a rejected or withdrawn bill (design 8.1 step 6, owner 2026-11-19).** The open data has no such status, so
+  a moderator closes the open record: "Uždaryti: projektas atmestas ar atsiimtas" under "Seime" in the record's menu
+  (`ModerationActions`, `ClosingReasons` in the contracts), `POST /api/v1/moderation/records/{id}/close`
+  (`CloseRecordEndpoint`, `CloseRecordRequest` + `CloseRecordRequestValidator`: `reason` `rejected`|`withdrawn`,
+  `decidedOn`, `sourceUrl` by `OfficialTextAddress` and required, `statement`; `IModerationApi.CloseRecordAsync`).
+  `ModerationService.CloseRecordAsync` checks `RecordRules.CheckClose` (the day not after today in Vilnius,
+  `closing.date-future`; `closing.reason`, `closing-url.invalid`; `moderation.wrong-state` unless open and the final vote
+  not recorded) under the bill's lock and freezes the counts with `ClosingRules.Close` as `CloseFinishedAsync` does
+  (which sets `closed_reason` `vote`); audited `record.closed` (moderator, reason, day, source, statement) through
+  `ModerationRecorder`'s `auditAction`, a `moderation_action` row `close`. Columns `closed_reason`, `closed_decided_on`,
+  `closed_source_url` (migration `RecordClosedReason`); `BillRecordResponse.ClosedReason|ClosedDecidedOn|ClosedSourceUrl`,
+  `ModerationBillResponse.ClosedReason`. The page (`BillPage`, `#seimas-result`) shows "Seimas projektą atmetė {data}."
+  or "Iniciatoriai projektą atsiėmė {data}." (`#closed-decision`) with "Šaltinis" (`#closed-source`, `rel="external
+  noopener"`) and the frozen counts "Skaičiai užfiksuoti …" (`Closed.Frozen.Ended`); no ballots. "Atšaukti uždarymą"
+  (`POST …/reopen`, `ReopenRecordEndpoint`, `StatementRequest`; `RecordRules.CheckReopen`, never `vote`;
+  `ClosingRules.Reopen` clears everything of the close; audited `record.reopened`; nobody told). Analytics and
+  `MyClosedSides` keep to records with a `ClosingVoteId`; summaries take open records only (`DigestSource`). Followers
+  are told by the follow kind `ClosedNotices` (Notifications; `bill_event` kind `closed`, key `FollowRules.ClosedKey`,
+  the moment it closed; read through `IRecordClosureFeed`, Appeals' `RecordClosureFeed`; switch `voted`; a close undone
+  before the email is dropped), outbox kind `email.follow-closed` (`FollowClosedEmail`, `FollowTemplates.Closed`, part
+  `ClosedPart` "Seimas nebesvarsto:", order 25). Tests: `RecordCloseTests` (integration), `RecordCloseRuleTests` and
+  `ModerationActionsTests` (unit). Closing on the open data's word is designed, not built (design 12-open).
 
 **Reasons to come (design 8.11).**
 - The agenda (`/darbotvarke`, where the menu item "Projektai" leads) and the front page's "Artimiausiu metu Seime" come from one public,
