@@ -23,7 +23,7 @@ public sealed class EmailFooterTests
 
         email.TextBody.TrimEnd().ShouldEndWith(Footer);
         email.HtmlBody.ShouldNotBeNull().ShouldContain(
-            "font-size:13px;color:#64748b\"><a href=\"https://lt2.test/privatumas\" style=\"color:#64748b;text-decoration:underline\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p>");
+            "line-height:1.5;color:#64748b\"><a href=\"https://lt2.test/privatumas\" style=\"color:#64748b;text-decoration:underline\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></div>");
         email.HtmlBody!.IndexOf("privatumas", StringComparison.Ordinal).ShouldBeGreaterThan(email.HtmlBody.IndexOf("482915", StringComparison.Ordinal), "at the end");
 
         // Only the emails of the member's rhythm carry "Keisti periodiškumą arba atsisakyti laiškų" (design 8.24.1).
@@ -38,7 +38,7 @@ public sealed class EmailFooterTests
         var email = EmailLayout.BuildMp("ona.jonaitiene@lrs.test", "Tema", ["Laba diena,", "Lietuva 2.0"], EmailLayout.Footer(Texts, "https://lt2.test"), null);
         email.TextBody.TrimEnd().ShouldEndWith(Footer);
         email.HtmlBody.ShouldNotBeNull().ShouldContain(
-            "<a href=\"https://lt2.test/privatumas\" style=\"color:#64748b;text-decoration:underline\">https://lt2.test/privatumas</a></p>");
+            "<a href=\"https://lt2.test/privatumas\" style=\"color:#64748b;text-decoration:underline\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></div>");
     }
 
     [Fact]

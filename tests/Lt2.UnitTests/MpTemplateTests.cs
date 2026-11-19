@@ -52,7 +52,7 @@ public sealed class MpTemplateTests
         email.TextBody.ShouldContain("kito kvietimo nereikia", customMessage: "the office invitation counts as the invitation");
         email.TextBody.ShouldContain("https://lt2.test/privatumas", customMessage: "design 8.22.3: every email has the footer");
         email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/biuras#ABCD-EFGH-JKMN\" style=\"font-weight:600;color:#1f6b3a\">Priimti kvietimą</a></p>");
-        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/biuras\">https://lt2.test/seimo-narys/biuras</a>");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/biuras\" style=\"color:#1f6b3a;overflow-wrap:anywhere;word-break:break-word\">https://lt2.test/seimo-narys/biuras</a>");
         email.HtmlBody!.ShouldNotContain("<img", customMessage: "no tracking pixel");
     }
 

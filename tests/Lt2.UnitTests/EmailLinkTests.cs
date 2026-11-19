@@ -36,7 +36,7 @@ public sealed class EmailLinkTests
     [Fact]
     public void An_address_inside_a_sentence_is_a_plain_link() =>
         EmailLayout.LinkLineHtml("Juos rasite " + Url + " (reikia rakto).")
-            .ShouldBe($"Juos rasite <a href=\"{Url}\">{Url}</a> (reikia rakto).");
+            .ShouldBe($"Juos rasite <a href=\"{Url}\" style=\"color:#1f6b3a;overflow-wrap:anywhere;word-break:break-word\">{Url}</a> (reikia rakto).");
 
     [Fact]
     public void Text_is_encoded_and_a_line_without_an_address_stays_text() =>
@@ -54,8 +54,8 @@ public sealed class EmailLinkTests
     {
         var email = EmailLayout.Build("a@pavyzdys.test", "S", ["Laba diena,", "Projektas: " + Url], "Privatumas: https://lt2.test/privatumas");
         email.TextBody.ShouldBe("Laba diena,\n\nProjektas: " + Url + "\n\nPrivatumas: https://lt2.test/privatumas\n");
-        email.HtmlBody!.ShouldContain("<p>" + Link("Projektas") + "</p>");
-        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/privatumas\" style=\"color:#64748b;text-decoration:underline\">Privatumas</a></p>", Case.Sensitive, "the footer's links are its grey, underlined");
+        email.HtmlBody!.ShouldContain("<p style=\"margin:0 0 16px\">" + Link("Projektas") + "</p>");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/privatumas\" style=\"color:#64748b;text-decoration:underline\">Privatumas</a></div>", Case.Sensitive, "the footer's links are its grey, underlined");
         email.HtmlBody!.ShouldNotContain(">" + Url, Case.Sensitive, "no address printed as text");
     }
 }

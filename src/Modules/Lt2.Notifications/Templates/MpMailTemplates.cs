@@ -23,26 +23,28 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     public EmailMessage Digest(MpDigestEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        var (subject, paragraphs) = Text(model);
-        return EmailLayout.BuildMp(model.To, subject, paragraphs, EmailLayout.Footer(l, site.Value.Address), Headers(model.UnsubscribePath, model.CopyStopPath));
+        var (subject, blocks) = Blocks(model);
+        return EmailLayout.BuildMp(model.To, subject, blocks, EmailLayout.Footer(l, site.Value.Address), Headers(model.UnsubscribePath, model.CopyStopPath));
     }
 
     public EmailMessage Introduction(MpIntroductionEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        var paragraphs = new List<string>();
+        var blocks = new List<EmailBlock>();
         if (model.Test)
         {
-            paragraphs.Add(l["Intro.Test"]);
+            blocks.Add(l["Intro.Test"].Value);
         }
 
         // The letter as the administrator typed it (design 8.2, "A text's layout"): the plain part keeps it so, the HTML part
-        // shows its paragraphs and lists.
-        var typed = paragraphs.Count;
-        paragraphs.Add(model.Text.ReplaceLineEndings("\n").Trim());
-        paragraphs.Add(model.SignerName.Trim() + "\n" + model.SignerRole.Trim());
-        paragraphs.AddRange(Closing(model.PreferencesPath ?? (model.Test ? MpMailPaths.Preferences("…") : null), null));
-        return EmailLayout.BuildMp(model.To, (model.Test ? l["Intro.TestSubject"] + " " : "") + model.Subject.Trim(), paragraphs, EmailLayout.Footer(l, site.Value.Address), Headers(model.UnsubscribePath, null), typed);
+        // shows its paragraphs and lists. The signer is the signature: the name in semibold, the role muted below it.
+        var letter = model.Text.ReplaceLineEndings("\n").Trim();
+        blocks.Add(new EmailBlock(letter, EmailLayout.TypedHtml(letter)));
+        var name = model.SignerName.Trim();
+        var role = model.SignerRole.Trim();
+        blocks.Add(new EmailBlock(name + "\n" + role, EmailLayout.SignatureHtml(name, role)));
+        blocks.AddRange(Closing(model.PreferencesPath ?? (model.Test ? MpMailPaths.Preferences("…") : null), null));
+        return EmailLayout.BuildMp(model.To, (model.Test ? l["Intro.TestSubject"] + " " : "") + model.Subject.Trim(), blocks, EmailLayout.Footer(l, site.Value.Address), Headers(model.UnsubscribePath, null));
     }
 
     public EmailMessage Notice(MpMailNoticeEmail model)
@@ -54,140 +56,244 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         }
 
         var link = model.Path is { } path ? Link(path) : "";
-        var paragraphs = new List<string>
+        var blocks = new List<EmailBlock>
         {
-            l[EmailText.Greeting],
+            l[EmailText.Greeting].Value,
             l.Format($"MpMail.{model.Notice}.Body", model.MpName, model.ExtraAddress ?? "", link, model.ValidHours?.ToString(CultureInfo.InvariantCulture) ?? ""),
         };
         if (model.Notice == MpMailNotices.Changed && model.Frequency is { } frequency)
         {
-            paragraphs.Add(l.Format("MpMail.Now", l["MpMail.Frequency." + frequency]));
+            blocks.Add(l.Format("MpMail.Now", l["MpMail.Frequency." + frequency]));
             if (frequency == Frequencies.Stopped)
             {
-                paragraphs.Add(l["MpMail.StoppedNote"]);
+                blocks.Add(l["MpMail.StoppedNote"].Value);
             }
         }
 
         if (model.Notice is MpMailNotices.Changed or MpMailNotices.ExtraConfirmed or MpMailNotices.ExtraRemoved)
         {
-            paragraphs.Add(l.Format("MpMail.NotYou", link));
+            blocks.Add(l.Format("MpMail.NotYou", link));
         }
 
-        paragraphs.Add(l[EmailText.Signature]);
-        return EmailLayout.BuildMp(model.To, l[$"MpMail.{model.Notice}.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address), null);
+        blocks.Add(Signature());
+        return EmailLayout.BuildMp(model.To, l[$"MpMail.{model.Notice}.Subject"], blocks, EmailLayout.Footer(l, site.Value.Address), null);
     }
 
     /// <summary>The subject and paragraphs of one MP's summary: the email's text part.</summary>
     public (string Subject, IReadOnlyList<string> Paragraphs) Text(MpDigestEmail model)
+    {
+        var (subject, blocks) = Blocks(model);
+        return (subject, blocks.Select(b => b.Text).ToList());
+    }
+
+    /// <summary>One MP's summary as blocks: each with its text and, where its HTML has a shape of its own, that HTML.</summary>
+    private (string Subject, List<EmailBlock> Blocks) Blocks(MpDigestEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
         // A copy: to the MP's confirmed extra recipient, or to an office member (design 8.19.3, owner 2026-11-17).
         var office = model.Recipient == Recipients.Office;
         var copy = office || model.Recipient == Recipients.Extra;
         var day = model.RunDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var paragraphs = new List<string> { l[EmailText.Greeting] };
+        var blocks = new List<EmailBlock> { l[EmailText.Greeting].Value };
         if (copy)
         {
-            paragraphs.Add(office
+            blocks.Add(office
                 ? l.Format("Digest.CopyOfOffice", model.MpName, Link(AccountScreens.Taking))
                 : l.Format("Digest.CopyOf", model.MpName));
         }
 
-        paragraphs.Add(l.Format("Digest.Intro", model.Bills.Count));
+        blocks.Add(l.Format("Digest.Intro", model.Bills.Count));
         foreach (var bill in model.Bills)
         {
-            paragraphs.Add(Bill(bill, copy, model));
+            blocks.Add(Bill(bill, copy, model));
         }
 
-        paragraphs.AddRange(Closing(copy ? null : model.PreferencesPath, copy ? model.CopyStopPath : null, model.PublicCopyPath));
-        return (l.Format(copy ? "Digest.CopySubject" : "Digest.Subject", day), paragraphs);
+        blocks.AddRange(Closing(copy ? null : model.PreferencesPath, copy ? model.CopyStopPath : null, model.PublicCopyPath));
+        return (l.Format(copy ? "Digest.CopySubject" : "Digest.Subject", day), blocks);
     }
 
-    private string Bill(MpDigestBill bill, bool copy, MpDigestEmail model)
+    private const string ForColour = "#1b6034";
+    private const string AgainstColour = "#85322f";
+
+    /// <summary>
+    /// One bill (appendix A) as text and as a card modelled on the public copy (<c>DigestPage.razor</c>): the number muted
+    /// before the title, which links to the bill's page; the stage and planned day as one muted line; the two counts large in the
+    /// side's colour with a proportion bar and the "older than 30 days" figure as a small note; the party lines; each side's
+    /// arguments under its heading; then one action: the MP's own response with its link, or the button to answer. The text part
+    /// has the same lines, each address once.
+    /// </summary>
+    private EmailBlock Bill(MpDigestBill bill, bool copy, MpDigestEmail model)
     {
         var lt = CultureInfo.GetCultureInfo("lt-LT");
         var item = bill.Item;
+        var billLink = Link("/seimas/" + Uri.EscapeDataString(item.BillNumber));
         var text = new StringBuilder();
+        var html = new StringBuilder("<div style=\"margin:0 0 20px;padding:16px;border:1px solid #e2e8f0;border-radius:8px;background-color:#f8fafc;color:#1e293b\">");
+        void Line(string line) => text.Append('\n').Append(line);
+
         text.Append(CultureInfo.InvariantCulture, $"{item.BillNumber} · {item.BillTitle}");
+        html.Append("<h3 style=\"margin:0 0 4px;font-size:18px;line-height:1.35;font-weight:700\"><span style=\"color:#64748b;font-weight:600\">")
+            .Append(EmailLayout.Encode(item.BillNumber)).Append("</span> <a href=\"").Append(System.Net.WebUtility.HtmlEncode(billLink))
+            .Append("\" style=\"color:#1e293b\">").Append(EmailLayout.Encode(item.BillTitle)).Append("</a></h3>");
+
         var stage = item.Stage is { } s && l["Stage." + s] is { ResourceNotFound: false } name ? Capital(name.Value) : null;
+        string? when = null;
         if (item.PlannedDate is { } planned)
         {
-            text.Append('\n').Append(stage is null
+            when = stage is null
                 ? l.Format("Digest.Planned", planned.ToString("MMMM d", lt))
-                : l.Format("Digest.StagePlanned", stage, planned.ToString("MMMM d", lt)));
+                : l.Format("Digest.StagePlanned", stage, planned.ToString("MMMM d", lt));
         }
         else if (stage is not null)
         {
-            text.Append('\n').Append(stage);
+            when = stage;
         }
 
-        text.Append('\n').Append(l.Format("Digest.For", N(item.For), N(item.ForOlderThan30Days)));
-        text.Append('\n').Append(l.Format("Digest.Against", N(item.Against), N(item.AgainstOlderThan30Days)));
+        if (when is not null)
+        {
+            Line(when);
+            html.Append("<p style=\"margin:0 0 14px;font-size:14px;color:#64748b\">").Append(EmailLayout.Encode(when)).Append("</p>");
+        }
+        else
+        {
+            html.Append("<div style=\"margin:0 0 10px\"></div>");
+        }
+
+        Line(l.Format("Digest.For", N(item.For), N(item.ForOlderThan30Days)));
+        Line(l.Format("Digest.Against", N(item.Against), N(item.AgainstOlderThan30Days)));
+        html.Append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:100%;margin:0 0 10px\"><tr>")
+            .Append(Figure(l["Digest.ForLabel"], item.For, item.ForOlderThan30Days, ForColour, "0 8px 0 0"))
+            .Append(Figure(l["Digest.AgainstLabel"], item.Against, item.AgainstOlderThan30Days, AgainstColour, "0 0 0 8px"))
+            .Append("</tr></table>").Append(Bar(item.For, item.Against));
+
+        var party = new List<string>();
         if (bill.Party is { } mine)
         {
             if (mine.For is { } f)
             {
-                text.Append('\n').Append(l.Format("Digest.PartyFor", mine.Party, N(f)));
+                party.Add(l.Format("Digest.PartyFor", mine.Party, N(f)));
             }
 
             if (mine.Against is { } a)
             {
-                text.Append('\n').Append(l.Format("Digest.PartyAgainst", mine.Party, N(a)));
+                party.Add(l.Format("Digest.PartyAgainst", mine.Party, N(a)));
             }
+        }
+
+        foreach (var line in party)
+        {
+            Line(line);
+            html.Append("<p style=\"margin:0 0 2px;font-size:13px;color:#64748b\">").Append(EmailLayout.Encode(line.Trim())).Append("</p>");
         }
 
         if (item.SurgeSharePercent is { } share)
         {
-            text.Append('\n').Append(l.Format("Digest.Surge", item.SurgeWindowHours, share));
+            var surge = l.Format("Digest.Surge", item.SurgeWindowHours, share);
+            Line(surge);
+            html.Append("<p style=\"margin:10px 0 0;padding:8px 10px;border-left:3px solid #94a3b8;font-size:13px;line-height:1.5;color:#475569\">").Append(EmailLayout.Encode(surge.Trim())).Append("</p>");
         }
 
         foreach (var side in new[] { "for", "against" })
         {
+            var colour = side == "for" ? ForColour : AgainstColour;
             var reasons = item.Reasons.Where(r => r.Side == side).ToList();
-            if (reasons.Count > 0)
-            {
-                var of = DigestReasonCount.Shown(side == "for" ? item.ForReasonCount : item.AgainstReasonCount, reasons.Count);
-                text.Append('\n').Append(of is { } total ? l.Format("Digest.ReasonsOf." + side, N(total)) : l["Digest.Reasons." + side]);
-                for (var i = 0; i < reasons.Count; i++)
-                {
-                    text.Append('\n').Append(Reason(reasons[i], ReasonLink(model, item.BillNumber, side, i + 1)));
-                }
-            }
-            else
+            if (reasons.Count == 0)
             {
                 // A side may have no published argument (design 8.1: records open without arguments).
-                text.Append('\n').Append(l["Digest.NoReasons." + side]);
+                var none = l["Digest.NoReasons." + side].Value;
+                Line(none);
+                html.Append(SideHeading(none.Trim(), colour, muted: true));
+                continue;
+            }
+
+            var of = DigestReasonCount.Shown(side == "for" ? item.ForReasonCount : item.AgainstReasonCount, reasons.Count);
+            var heading = of is { } total ? l.Format("Digest.ReasonsOf." + side, N(total)) : l["Digest.Reasons." + side].Value;
+            Line(heading);
+            html.Append(SideHeading(heading.Trim(), colour, muted: false));
+            for (var i = 0; i < reasons.Count; i++)
+            {
+                var url = ReasonLink(model, item.BillNumber, side, i + 1);
+                var (body, count, cut) = Reason(reasons[i]);
+                Line($"  · {body} ({count})");
+                html.Append("<div style=\"margin:0 0 8px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;background-color:#ffffff;font-size:15px;line-height:1.5\">")
+                    .Append(EmailLayout.Encode(body)).Append(" <span style=\"color:#64748b;white-space:nowrap\">(").Append(EmailLayout.Encode(count)).Append(")</span>");
+                if (cut)
+                {
+                    Line("    " + l.Format("Digest.WholeReason", url));
+                    html.Append("<br><span style=\"font-size:14px\">").Append(EmailLayout.ActionAnchor(url, l["Digest.WholeReasonLabel"])).Append("</span>");
+                }
+
+                html.Append("</div>");
             }
         }
 
-        var billLink = Link("/seimas/" + Uri.EscapeDataString(item.BillNumber));
+        // One action: the response with the way to change it, or the button to answer. The bill's page is linked once in the
+        // text part, as the line's address (the heading carries it in the HTML part too).
         if (bill.Response is { } response)
         {
             var stance = l["Digest.Stance." + response.Stance];
-            var when = VilniusTime.DateOf(response.WrittenAt).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-            text.Append('\n').Append(copy ? l.Format("Digest.ResponseCopy", stance, when) : l.Format("Digest.Response", stance, when, billLink));
+            var day = VilniusTime.DateOf(response.WrittenAt).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            if (copy)
+            {
+                var line = l.Format("Digest.ResponseCopy", stance, day);
+                Line(line);
+                html.Append("<p style=\"margin:14px 0 0;font-size:15px\">").Append(EmailLayout.Encode(line.Trim())).Append("</p>");
+                Line(l.Format("Digest.AllNumbers", billLink));
+            }
+            else
+            {
+                var line = l.Format("Digest.Response", stance, day, billLink);
+                Line(line);
+                html.Append("<p style=\"margin:14px 0 0;font-size:15px\">").Append(EmailLayout.LinkLineHtml(line.Trim())).Append("</p>");
+            }
         }
         else
         {
-            text.Append('\n').Append(l.Format("Digest.Answer", billLink));
+            Line(l.Format("Digest.Answer", billLink));
+            html.Append("<div style=\"margin:14px 0 0\">").Append(EmailLayout.ButtonHtml(billLink, l["Digest.AnswerButton"], "0")).Append("</div>");
         }
 
-        text.Append('\n').Append(l.Format("Digest.AllNumbers", billLink));
-        return text.ToString();
+        return new EmailBlock(text.ToString(), html.Append("</div>").ToString());
     }
+
+    /// <summary>One side's figure in the pair (as the page's <c>figure</c>): the label, the number large in the side's colour, the older-than-30-days figure as a small note.</summary>
+    private string Figure(string label, int count, int older, string colour, string padding) =>
+        $"<td width=\"50%\" valign=\"top\" style=\"width:50%;padding:{padding}\">"
+        + $"<div style=\"font-size:13px;line-height:1.3;color:#475569\">{EmailLayout.Encode(label)}</div>"
+        + $"<div style=\"font-size:30px;line-height:1.2;font-weight:700;color:{colour}\">{EmailLayout.Encode(N(count))}</div>"
+        + $"<div style=\"font-size:12px;line-height:1.4;color:#64748b\">{EmailLayout.Encode(l.Format("Digest.Older", N(older)))}</div></td>";
+
+    /// <summary>The proportion bar (the page's <c>SplitBar</c>): a table whose two cells have the shares of the two sides; none when nobody has taken a side.</summary>
+    private static string Bar(int forCount, int againstCount)
+    {
+        if (forCount + againstCount == 0)
+        {
+            return "";
+        }
+
+        var forShare = forCount == 0 ? 0 : againstCount == 0 ? 100 : Math.Clamp((int)Math.Round(forCount * 100.0 / (forCount + againstCount)), 1, 99);
+        static string Cell(int share, string colour) => share == 0
+            ? ""
+            : $"<td width=\"{share}%\" height=\"8\" style=\"width:{share}%;height:8px;background-color:{colour};font-size:0;line-height:0\">&nbsp;</td>";
+        return "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:100%;margin:0 0 10px\"><tr>"
+            + Cell(forShare, ForColour) + Cell(100 - forShare, AgainstColour) + "</tr></table>";
+    }
+
+    private static string SideHeading(string text, string colour, bool muted) =>
+        $"<div style=\"margin:16px 0 8px;padding-left:10px;border-left:4px solid {colour};font-size:15px;line-height:1.4;font-weight:{(muted ? "400" : "600")};color:{(muted ? "#64748b" : "#1e293b")}\">{EmailLayout.Encode(text)}</div>";
 
     /// <summary>
     /// One argument in the email (design 8.19.3, owner 2026-11-16): its beginning by the same rule as the page
-    /// (<see cref="TextExcerpt"/>, about 300 characters) with "…" and the "Man svarbu" count, and when it was cut a plain
-    /// line "Visas argumentas: {link}" to it on the summary's public copy, which shows the snapshot's whole text. The
-    /// snapshot itself keeps the whole text.
+    /// (<see cref="TextExcerpt"/>, about 300 characters) with "…", the "Man svarbu" count, and whether it was cut: then the text
+    /// part adds a plain line "Visas argumentas: {link}" and the HTML part the link "Skaityti visą", to it on the summary's public
+    /// copy, which shows the snapshot's whole text. The snapshot itself keeps the whole text.
     /// </summary>
-    private string Reason(DigestReason reason, string link)
+    private static (string Body, string Count, bool Cut) Reason(DigestReason reason)
     {
         var excerpt = TextExcerpt.Of(reason.Text, TextExcerpt.ArgumentShown, TextExcerpt.ArgumentMargin);
         return excerpt.Rest is null
-            ? string.Create(CultureInfo.InvariantCulture, $"  · {reason.Text} ({N(reason.Endorsements)})")
-            : string.Create(CultureInfo.InvariantCulture, $"  · {excerpt.Shown}… ({N(reason.Endorsements)})") + "\n    " + l.Format("Digest.WholeReason", link);
+            ? (reason.Text, N(reason.Endorsements), false)
+            : (excerpt.Shown + "…", N(reason.Endorsements), true);
     }
 
     /// <summary>The argument on the public copy: at its own place when the run is known, else the copy's page.</summary>
@@ -195,28 +301,40 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         ? MpMailPaths.ReasonOnPublicCopy(model.RunDate, run, number, side, place)
         : model.PublicCopyPath);
 
+    /// <summary>The sign-off of a summary and a notice: "Lietuva 2.0", in semibold with room above.</summary>
+    private EmailBlock Signature() => new(l[EmailText.Signature], EmailLayout.SignatureHtml(l[EmailText.Signature]));
+
     /// <summary>
     /// What ends every MP email (design 8.19.3, 8.19.5): what the numbers are and are not and the public copy (summaries only),
-    /// then the preferences link and the sentence on taking over the profile (the MP's own address), or a copy's own stop link.
+    /// then what the system adds, set apart by a rule: the sentence on taking over the profile (the MP's own address) as a short
+    /// lead line and a button, and the preferences link as a quiet link, or a copy's own stop link.
     /// </summary>
-    private IEnumerable<string> Closing(string? preferencesPath, string? copyStopPath, string? publicCopyPath = null)
+    private IEnumerable<EmailBlock> Closing(string? preferencesPath, string? copyStopPath, string? publicCopyPath = null)
     {
         if (publicCopyPath is not null)
         {
-            yield return l["Digest.NotAPoll"] + "\n" + l.Format("Digest.PublicCopy", Link(publicCopyPath));
+            var publicCopy = l.Format("Digest.PublicCopy", Link(publicCopyPath));
+            yield return new EmailBlock(
+                l["Digest.NotAPoll"] + "\n" + publicCopy,
+                $"<div style=\"margin:0 0 12px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:6px;background-color:#f8fafc;font-size:14px;line-height:1.5;color:#475569\">{EmailLayout.Encode(l["Digest.NotAPoll"])}</div>"
+                + $"<p style=\"{EmailLayout.ParagraphStyle}\">{EmailLayout.ActionAnchor(Link(publicCopyPath), l["Digest.PublicCopyLabel"])}</p>");
         }
 
         if (preferencesPath is not null)
         {
-            yield return l.Format("Digest.Preferences", Link(preferencesPath)) + "\n" + l.Format("Digest.Takeover", Link(MpMailPaths.SignIn));
+            var preferences = l.Format("Digest.Preferences", Link(preferencesPath));
+            yield return new EmailBlock(
+                preferences + "\n" + l.Format("Digest.Takeover", Link(MpMailPaths.SignIn)),
+                EmailLayout.SystemHtml(l["Digest.TakeoverLead"], l["Digest.TakeoverButton"], Link(MpMailPaths.SignIn), preferences));
         }
 
         if (copyStopPath is not null)
         {
-            yield return l.Format("Digest.CopyStop", Link(copyStopPath));
+            var stop = l.Format("Digest.CopyStop", Link(copyStopPath));
+            yield return new EmailBlock(stop, EmailLayout.SystemHtml(null, null, null, stop));
         }
 
-        yield return l[EmailText.Signature];
+        yield return Signature();
     }
 
     /// <summary>
