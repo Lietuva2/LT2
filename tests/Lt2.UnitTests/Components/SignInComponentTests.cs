@@ -398,6 +398,66 @@ public sealed class SignInComponentTests : BunitContext
         }
     }
 
+    /// <summary>
+    /// Design 6.5 (owner, 2026-11-19): a consent to an older text is shown with its withdrawal like the one in force, with one
+    /// line more; the text in force opens in place, the same form a first side asks, and accepting it records that version.
+    /// </summary>
+    [Fact]
+    public void A_consent_to_an_older_text_shows_its_part_with_a_line_and_the_text_in_force_is_accepted_in_place()
+    {
+        SignedIn(FakeMeApi.Member with { PositionConsentOutdated = true });
+        var page = Render<AccountSecurity>();
+
+        page.Find("#positions-consent #consent-title").TextContent.ShouldBe(Text("PositionConsent.Title"));
+        page.Find("#positions-consent #consent-outdated").TextContent.ShouldBe(Text("PositionConsent.Outdated"));
+        page.Find("#positions-consent #withdraw-consent").TextContent.ShouldBe(Text("PositionConsent.Withdraw"));
+        page.FindAll("#account-consent").ShouldBeEmpty("the text in force opens only when asked for");
+
+        page.Find("#read-consent").Click();
+        var appeal = Services.GetRequiredService<IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi>>();
+        page.Find("#positions-consent #account-consent h4#account-consent-title").TextContent.ShouldBe(appeal["Consent.Title.account"].Value);
+        page.Find("#account-consent").TextContent.ShouldContain(appeal["Consent.Text"].Value);
+        page.Find("#account-consent-submit").TextContent.ShouldBe("Sutinku");
+        page.Find("#account-consent-submit").HasAttribute("disabled").ShouldBeTrue("not before the box is checked");
+        page.Find("#account-consent-check").Change(true);
+        page.Find("#account-consent-submit").Click();
+
+        _me.ConsentsGiven.Select(c => c.TextVersion).ShouldBe([PositionConsentText.Version]);
+        page.WaitForAssertion(() => page.FindAll("#consent-outdated").ShouldBeEmpty());
+        page.FindAll("#account-consent").ShouldBeEmpty();
+        page.FindAll("#positions-consent #withdraw-consent").ShouldHaveSingleItem("the consent in force, withdrawn as before");
+        page.Markup.ShouldContain(Text("PositionConsent.Accepted"));
+    }
+
+    /// <summary>Design 6.5: a consent to an older text is withdrawn in one step, as the one in force, and the part goes.</summary>
+    [Fact]
+    public void A_consent_to_an_older_text_is_withdrawn_in_one_step()
+    {
+        SignedIn(FakeMeApi.Member with { PositionConsentOutdated = true });
+        var page = Render<AccountSecurity>();
+
+        page.Find("#withdraw-consent").Click();
+
+        _me.Withdrawals.ShouldBe(1);
+        _me.ConsentsGiven.ShouldBeEmpty();
+        page.WaitForAssertion(() => page.FindAll("#positions-consent").ShouldBeEmpty());
+        page.Markup.ShouldContain(Text("PositionConsent.Withdrawn"));
+    }
+
+    /// <summary>Design 6.5: the consent in force shows no line about versions; without any consent there is no part.</summary>
+    [Fact]
+    public void The_consent_in_force_has_no_line_about_versions_and_no_consent_no_part()
+    {
+        SignedIn(FakeMeApi.Member with { HasPositionConsent = true });
+        var current = Render<AccountSecurity>();
+        current.FindAll("#positions-consent #withdraw-consent").ShouldHaveSingleItem();
+        current.FindAll("#consent-outdated").ShouldBeEmpty();
+        current.FindAll("#read-consent").ShouldBeEmpty();
+
+        SignedIn(FakeMeApi.Member);
+        Render<AccountSecurity>().FindAll("#positions-consent").ShouldBeEmpty();
+    }
+
     /// <summary>Design 8.21: the screens' addresses and the anchors emails and legal texts link to are one list.</summary>
     [Fact]
     public void The_anchors_emails_and_texts_link_to_live_on_their_screens()
@@ -920,8 +980,18 @@ public sealed class SignInComponentTests : BunitContext
             return Activate(request);
         }
 
-        public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult.Ok());
+        /// <summary>The positions consents given, in order; each makes the account's consent the one in force.</summary>
+        public List<PositionConsentRequest> ConsentsGiven { get; } = [];
+
+        /// <summary>How many times the positions consent was withdrawn; each leaves the account without one.</summary>
+        public int Withdrawals { get; private set; }
+
+        public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default)
+        {
+            ConsentsGiven.Add(request);
+            Account = Account is { } account ? account with { HasPositionConsent = true, PositionConsentOutdated = false } : null;
+            return Task.FromResult(ApiResult.Ok());
+        }
 
         public List<TermsAcceptanceRequest> Acceptances { get; } = [];
 
@@ -931,8 +1001,12 @@ public sealed class SignInComponentTests : BunitContext
             return Task.FromResult(ApiResult.Ok());
         }
 
-        public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult.Ok());
+        public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default)
+        {
+            Withdrawals++;
+            Account = Account is { } account ? account with { HasPositionConsent = false, PositionConsentOutdated = false } : null;
+            return Task.FromResult(ApiResult.Ok());
+        }
 
         public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 

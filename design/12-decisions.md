@@ -16,6 +16,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The positions consent covers both a person's side on bills and the arguments they mark "Man svarbu"; its text is
   version 2026-11-18. A consent to an earlier text is not the one in force: the person is asked again before a new side or
   mark, and nothing of theirs is deleted (6.5, 2026-11-18).
+- The account page shows the positions consent and its withdrawal for any consent not withdrawn, whatever text it was
+  given to ("show any live consent"); a consent to an older text has one line more, with the text in force to read and
+  accept there (6.5, 2026-11-19).
 
 ## 6.2 Sign-in and accounts
 

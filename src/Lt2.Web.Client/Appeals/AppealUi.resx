@@ -22,6 +22,8 @@
 <data name="Consent.Check" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano pozicijas dėl įstatymų projektų ir „Man svarbu“ žymas taip, kaip aprašyta.</value></data>
 <data name="Consent.Submit.for" xml:space="preserve"><value>Sutinku ir prašau balsuoti už</value></data>
 <data name="Consent.Submit.against" xml:space="preserve"><value>Sutinku ir prašau balsuoti prieš</value></data>
+<data name="Consent.Title.account" xml:space="preserve"><value>Galiojantis sutikimo tekstas</value></data>
+<data name="Consent.Submit.account" xml:space="preserve"><value>Sutinku</value></data>
 <data name="Reasons.Title" xml:space="preserve"><value>Kodėl</value></data>
 <data name="Reasons.for" xml:space="preserve"><value>Už</value></data>
 <data name="Reasons.against" xml:space="preserve"><value>Prieš</value></data>

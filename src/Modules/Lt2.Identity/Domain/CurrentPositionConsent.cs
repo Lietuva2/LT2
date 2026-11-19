@@ -15,6 +15,13 @@ internal static class CurrentPositionConsent
     public static IQueryable<Consent> Of(IQueryable<Consent> consents, Guid userId) =>
         consents.Where(c => c.UserId == userId && c.Kind == PositionConsent.Kind && c.TextVersion == PositionConsent.TextVersion && c.WithdrawnAt == null);
 
+    /// <summary>
+    /// Every positions consent of the person not withdrawn, whatever its text version: what withdrawing ends, and what the
+    /// account page offers to withdraw (design 6.5, owner 2026-11-19). Not the consent that counts: that is <see cref="Of"/>.
+    /// </summary>
+    public static IQueryable<Consent> Live(IQueryable<Consent> consents, Guid userId) =>
+        consents.Where(c => c.UserId == userId && c.Kind == PositionConsent.Kind && c.WithdrawnAt == null);
+
     public static void AddParameters(Npgsql.NpgsqlCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);

@@ -58,8 +58,7 @@ internal sealed class PositionConsentHandlers(IDbContextFactory<IdentityDb> cont
         var now = clock.GetUtcNow();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await db.Consents
-            .Where(c => c.UserId == userId && c.Kind == PositionConsent.Kind && c.WithdrawnAt == null)
+        await CurrentPositionConsent.Live(db.Consents, userId)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.WithdrawnAt, now), cancellationToken);
         await erasure.EraseAsync(userId, transaction.GetDbTransaction(), cancellationToken);
         await transaction.CommitAsync(cancellationToken);

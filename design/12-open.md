@@ -72,14 +72,6 @@ office are left out of the invitation codes' counts. Before registration opens o
    it is taken until the pending account is deleted after seven days.
 5. The email to the old address shows the new one in part (`r***@pavyzdys.test`). If no: it shows none.
 
-**6.5 Positions consent.** A person whose consent was given to an older text of the positions consent keeps their sides
-and marks, stored, counted and shown as theirs; taking a side back and removing a mark work; a new side or mark opens
-the consent form in place. But the account page shows "Sutikimas saugoti pozicijas ir žymas" and its withdrawal only
-for the consent in force, so until the person consents again the page offers no way to withdraw the older consent and
-delete what it covered (the API, `DELETE /me/consents/positions`, withdraws every version). Not built. Options: show the
-part and its withdrawal for any consent not withdrawn, with a line asking to read the new text; or ask for the new text
-on the account page itself. Needed before the first change of the consent text after going live.
-
 **6.8 Rules held throughout.** The agenda watcher keeps its items when a parse comes back empty, until the owner
 decides otherwise. One-time codes are limited per address, not per code.
 
@@ -271,7 +263,11 @@ for the lawyer).
   "Ne jūs? Grąžinti ankstesnį adresą" and the three emails).
 - 6.2: the urgent summary's passkey messages "Skubi suvestinė nepatvirtinta: ši naršyklė negali patvirtinti prieigos
   raktu. …" and "Skubi suvestinė nepatvirtinta, nes prieigos raktu nepatvirtinote. …" (`AppealUi` `Mod.Passkey.*`).
-- 6.5: the positions consent text (`UiText` `PositionConsent.Text`).
+- 6.5: the positions consent text (`UiText` `PositionConsent.Text`); for a consent to an older text, the account page's
+  line "Sutikote su ankstesne šio sutikimo teksto versija. Perskaitykite galiojančią ir patvirtinkite.", "Skaityti
+  galiojantį tekstą", "Sutikimas su galiojančiu tekstu išsaugotas." (`UiText` `PositionConsent.Outdated`, `.Read`,
+  `.Accepted`) and the form's "Galiojantis sutikimo tekstas" and "Sutinku" (`AppealUi` `Consent.Title.account`,
+  `Consent.Submit.account`).
 - 8.2: the notes "Bus skaičiuojama, kai prašysite balsuoti už." and "Neskaičiuojama: jūs prašote balsuoti prieš."; the
   writing box's hint "Sąrašą rašykite eilutėmis, pradėtomis „-“ arba „1.“." (also for the owner).
 - 8.7, 8.12.1: "Paspaudę dar kartą, atsiimsite." (`AppealUi` `Side.PressAgain`), the pressed button's title.

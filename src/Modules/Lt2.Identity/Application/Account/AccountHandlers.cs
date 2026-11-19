@@ -46,6 +46,10 @@ internal sealed class AccountHandlers(
 
         // Design 8.5.1, 8.5.4: the offer to take over a profile, or the link, only in the account's own answer.
         var (offer, link) = profile.IsPending ? (null, null) : await politicians.MineAsync(principal, user, cancellationToken);
+
+        // Design 6.5 (owner, 2026-11-19): the consent in force, and whether a consent to an older text is all the person has.
+        var positionConsent = await CurrentPositionConsent.Of(db.Consents, user.Id).AnyAsync(cancellationToken);
+        var olderPositionConsent = !positionConsent && await CurrentPositionConsent.Live(db.Consents, user.Id).AnyAsync(cancellationToken);
         return new AccountSummary(
             user.Id,
             user.Email!,
@@ -57,12 +61,13 @@ internal sealed class AccountHandlers(
             !profile.IsPending,
             session.ActiveRoles,
             awaitingActivation,
-            await CurrentPositionConsent.Of(db.Consents, user.Id).AnyAsync(cancellationToken),
+            positionConsent,
             state?.AccountHasActiveStaffRole == true,
             offer,
             link,
             !profile.IsPending && await Consents.TermsHandlers.RequiredAsync(db, user.Id, cancellationToken),
-            (await sessions.ForAsync(principal, cancellationToken))?.PasskeySession == true);
+            (await sessions.ForAsync(principal, cancellationToken))?.PasskeySession == true,
+            olderPositionConsent);
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)

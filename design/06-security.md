@@ -61,9 +61,13 @@ floor; 8.4).
   person's side on bills and which arguments they mark "Man svarbu" are their political opinion, kept only with this
   consent and shown to nobody, and that withdrawing deletes both; the box is "Sutinku, kad Lietuva 2.0 saugotų mano
   pozicijas dėl įstatymų projektų ir „Man svarbu“ žymas taip, kaip aprašyta." (version 2026-11-18). The account page's
-  part is "Sutikimas saugoti pozicijas ir žymas". A consent to an older text is not the consent in force: the form is
-  asked again, in place, before the next new side or mark; meanwhile nothing is deleted, the person's sides and marks
-  stay stored and counted, and taking a side back or removing a mark works.
+  part is "Sutikimas saugoti pozicijas ir žymas", shown for any positions consent not withdrawn, whatever text it was
+  given to; its withdrawal is one step and ends every version, deleting what they covered. A consent to an older text is
+  not the consent in force: the form is asked again, in place, before the next new side or mark; meanwhile nothing is
+  deleted, the person's sides and marks stay stored and counted, and taking a side back or removing a mark works. The
+  account page's part then has one line more, "Sutikote su ankstesne šio sutikimo teksto versija. Perskaitykite
+  galiojančią ir patvirtinkite.", with "Skaityti galiojantį tekstą", which opens the same form in place ("Galiojantis
+  sutikimo tekstas", the text, the box, "Sutinku"); accepting records the version in force and the line goes.
 - **Minimisation.** No personal code, address or document number. No phone number is collected; if phone verification
   is added, only a keyed hash is kept. No per-person history of changed positions.
 - **Deletion and export.** A person can download everything they gave us and delete the account; positions are removed
