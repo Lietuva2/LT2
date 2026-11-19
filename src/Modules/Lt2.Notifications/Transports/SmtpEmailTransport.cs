@@ -2,6 +2,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using Lt2.Notifications.Outbox;
 
 namespace Lt2.Notifications.Transports;
 
@@ -42,51 +43,71 @@ internal sealed class MpStreamOptions
 }
 
 /// <summary>
-/// Sends email over SMTP with MailKit. Locally this delivers to the Mailpit container. A batch shares one connection per
-/// stream, made when its first message is sent and made again if the server dropped it; MP mail goes on its own stream
-/// (design 8.19.3), so a refusal or an outage there does not stop sign-in codes on the common one.
+/// The notices stream (design 8.19.3): everything to members and the team that is not a code or an account-security email, from
+/// its own sender address (<c>Email:Notices:FromAddress</c>) and, when <c>Email:Notices:Smtp:Host</c> is set, its own SMTP account
+/// (<c>Email:Notices:Smtp</c>); otherwise the common account. A flood of notices then cannot stop sign-in codes.
 /// </summary>
-internal sealed class SmtpEmailTransport(IOptions<SmtpOptions> options, IOptions<MpStreamOptions> mp) : IEmailTransport
+internal sealed class NoticesStreamOptions
+{
+    public const string Section = "Email:Notices";
+
+    public string FromAddress { get; set; } = "pranesimai@lt2.localhost";
+
+    public string FromName { get; set; } = "Lietuva 2.0";
+
+    public SmtpOptions? Smtp { get; set; }
+}
+
+/// <summary>
+/// Sends email over SMTP with MailKit. Locally this delivers to the Mailpit container. A batch shares one connection per
+/// stream, made when its first message is sent and made again if the server dropped it; notices and MP mail go on their own
+/// streams (design 8.19.3), so a refusal, a quota or an outage there does not stop sign-in codes on the common one.
+/// </summary>
+internal sealed class SmtpEmailTransport(IOptions<SmtpOptions> options, IOptions<MpStreamOptions> mp, IOptions<NoticesStreamOptions> notices) : IEmailTransport
 {
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
-        await using var connection = new StreamConnections(options.Value, mp.Value);
+        await using var connection = new StreamConnections(options.Value, mp.Value, notices.Value);
         await connection.SendAsync(message, cancellationToken);
     }
 
     public Task<IEmailConnection> ConnectAsync(CancellationToken cancellationToken) =>
-        Task.FromResult<IEmailConnection>(new StreamConnections(options.Value, mp.Value));
+        Task.FromResult<IEmailConnection>(new StreamConnections(options.Value, mp.Value, notices.Value));
 
-    /// <summary>The common stream's connection and, for MP mail, its own: each made on first use.</summary>
-    private sealed class StreamConnections(SmtpOptions common, MpStreamOptions mp) : IEmailConnection
+    /// <summary>The codes stream's connection (the common account) and, for notices and MP mail, their own: each made on first use.</summary>
+    private sealed class StreamConnections(SmtpOptions common, MpStreamOptions mp, NoticesStreamOptions notices) : IEmailConnection
     {
         private SmtpConnection? _common;
+        private SmtpConnection? _notices;
         private SmtpConnection? _mp;
 
         public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(message);
-            if (message.Stream != MpMail.MpMailKinds.Stream)
+            switch (message.Stream)
             {
-                return (_common ??= new SmtpConnection(common)).SendAsync(message, common.FromName, common.FromAddress, cancellationToken);
+                case EmailStreams.Mp:
+                    return (_mp ??= new SmtpConnection(Account(mp.Smtp))).SendAsync(message, mp.FromName, mp.FromAddress, cancellationToken);
+                case EmailStreams.Notices:
+                    return (_notices ??= new SmtpConnection(Account(notices.Smtp))).SendAsync(message, notices.FromName, notices.FromAddress, cancellationToken);
+                default:
+                    return (_common ??= new SmtpConnection(common)).SendAsync(message, common.FromName, common.FromAddress, cancellationToken);
             }
-
-            var account = string.IsNullOrWhiteSpace(mp.Smtp?.Host) ? common : mp.Smtp!;
-            return (_mp ??= new SmtpConnection(account)).SendAsync(message, mp.FromName, mp.FromAddress, cancellationToken);
         }
 
         public async ValueTask DisposeAsync()
         {
-            if (_common is not null)
+            foreach (var connection in new[] { _common, _notices, _mp })
             {
-                await _common.DisposeAsync();
-            }
-
-            if (_mp is not null)
-            {
-                await _mp.DisposeAsync();
+                if (connection is not null)
+                {
+                    await connection.DisposeAsync();
+                }
             }
         }
+
+        /// <summary>A stream's own SMTP account when its host is set, else the common one.</summary>
+        private SmtpOptions Account(SmtpOptions? own) => string.IsNullOrWhiteSpace(own?.Host) ? common : own;
     }
 
     private sealed class SmtpConnection(SmtpOptions settings) : IAsyncDisposable

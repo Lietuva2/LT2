@@ -241,6 +241,18 @@ address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mail
 `LT2_OUTBOUND_EXTRA_HOST` (the agenda page's host when `LT2_AGENDA_BASE_ADDRESS` is set, otherwise empty: then
 `apps.lrs.lt` is the only host the worker may call; a redirect to another host is refused too), and mount real secrets.
 
+The email provider is plain SMTP (design 9, 8.19.3): for now a Hostinger mailbox per stream (`smtp.hostinger.com`, port 587 with
+`StartTls`, or 465 with `SslOnConnect`), configurable like any other host. Email goes on three streams, each with its own sender
+address, optionally its own SMTP account and its own daily ceiling (runtime settings `Email:CeilingCodesPerDay`,
+`Email:CeilingNoticesPerDay`, `Email:CeilingMpPerDay`, 0 = none, on the settings screen). `LT2_SMTP_*` and `LT2_MAIL_FROM` are the
+common account and the sender of the **codes** stream (sign-in codes and every account-security email); the **notices** stream
+(everything else to members and the team) adds:
+
+| Variable | Meaning |
+|---|---|
+| `LT2_MAIL_FROM_NOTICES` | `Email:Notices:FromAddress`: the sender of members' and the team's emails, an address of the sending domain. |
+| `LT2_NOTICES_SMTP_HOST`, `LT2_NOTICES_SMTP_PORT`, `LT2_NOTICES_SMTP_SECURITY`, `LT2_NOTICES_SMTP_USERNAME` | `Email:Notices:Smtp`: the notices' own SMTP account (port 587 and `StartTls` by default); with the host empty notices use the common account (`LT2_SMTP_*`). Its password is the secret `notices_smtp_password`. |
+
 MP mail (design 8.19) adds:
 
 | Variable | Meaning |
@@ -251,11 +263,11 @@ MP mail (design 8.19) adds:
 | `LT2_RATE_MP_MAIL` | Requests per client address to an MP's link pages and token routes in 15 minutes (default 60); only the local `.env` raises it. |
 | `LT2_RATE_BOT_CHALLENGES` | Proof-of-work challenges per client address in 15 minutes (design 6.4; default 60); only the local `.env` raises it. |
 
-and two secrets, `mail_hash_key` (web and worker: the suppression list's keyed hashes, the MPs' link tokens and the members' stop links of design 8.24.1; changing
-it breaks every link already emailed and forgets the suppressed addresses) and `mp_smtp_password` (worker; empty while
-MP mail uses the common account). **On an existing deployment, run `init-secrets.py` again (with the same directory, as
-root on Linux) before using the new compose file:** it creates the two missing files and keeps the others; without them
-compose refuses to start.
+and three secrets, `mail_hash_key` (web and worker: the suppression list's keyed hashes, the MPs' link tokens and the members' stop links of design 8.24.1; changing
+it breaks every link already emailed and forgets the suppressed addresses), `mp_smtp_password` (worker; empty while
+MP mail uses the common account) and `notices_smtp_password` (worker; empty while notices use the common account). **On an
+existing deployment, run `init-secrets.py` again (with the same directory, as root on Linux) before using the new compose
+file:** it creates the missing files and keeps the others; without them compose refuses to start.
 
 ### Behind a server's existing Caddy
 
@@ -271,7 +283,7 @@ Caddy's global log options could drop them, and they belong to the other project
 link token. Real hostnames, addresses and paths live only on the server, never in this repository.
 
 On a server set up before MP mail (design 8.19), run `sudo python3 deploy/init-secrets.py $LT2_HOME/secrets` once more
-before the first deploy of the new compose file: it adds `mail_hash_key` and `mp_smtp_password` and keeps the rest. The same
+before the first deploy of the new compose file: it adds `mail_hash_key` and `mp_smtp_password` (and, since the notices stream, `notices_smtp_password`) and keeps the rest. The same
 again on a server set up before known browsers (design 8.20.2): it adds `device_hash_key` (web); and before the bot check (design 6.4): it adds `bot_check_key` (web).
 
 What survives a redeploy lives outside the application tree, here `$LT2_HOME` (for example a directory under `/srv`,
@@ -307,6 +319,7 @@ LT2_OUTBOUND_EXTRA_HOST=seimas-standin
 LT2_AGENDA_BASE_ADDRESS=http://seimas-standin:8080/
 LT2_DEMO_DATA=true
 LT2_MAIL_CAUGHT=true
+LT2_MAIL_FROM_NOTICES=pranesimai@lt2.example.org
 LT2_MAIL_FROM_MP=suvestines@lt2.example.org
 LT2_MODERATION_CONTACT=moderatoriai@lt2.example.org
 LT2_SECURITY_CONTACT=

@@ -109,3 +109,19 @@ Static files (the WebAssembly runtime, styles, scripts, images) are answered str
 authentication, so a signed-in browser's start (dozens of parallel downloads) never looks up the session in the
 database. Pages and the API still check the session on every request, so an ended session stops working at once. A
 server error is sent with `Cache-Control: no-store`, so no browser or proxy keeps it; Caddy caches nothing.
+
+## 9.6 Email
+
+The provider is **plain SMTP**, for now `smtp.hostinger.com` (owner, 2026-11-19), configured like any host (`LT2_SMTP_*`,
+`LT2_NOTICES_SMTP_*`, `LT2_MP_SMTP_*`; README). There are **three mailboxes**, one per stream (8.19.3): `codes` (the common
+account: sign-in codes and account security), `notices` (members' and the team's emails) and `mp` (MP mail), each with its own
+sender address and password (secrets `smtp_password`, `notices_smtp_password`, `mp_smtp_password`). A stream with no account of
+its own uses the common one, as on the local stack, where Mailpit takes all three.
+
+The provider caps each mailbox, at about 1 000 (Business Starter) or 3 000 (Premium) emails in a rolling 24 hours, and asks
+that bulk mail not go through it. So each stream has a **daily ceiling** that the owner sets a little under the cap
+(`Email:CeilingCodesPerDay`, `Email:CeilingNoticesPerDay`, `Email:CeilingMpPerDay`, settings, 0 = none): at the ceiling its
+messages wait in the outbox and the other streams go on. If the provider refuses for its own limit before the ceiling is
+reached, the stream pauses for an hour and nobody's address is suppressed (8.19.6). Plain SMTP gives no reports of later
+bounces or complaints (8.19.6, not built). The size of this service is a risk for a campaign (12, "Risks"): it suits the trial and
+a first small launch, and sign-in codes move to a transactional provider before a public campaign.

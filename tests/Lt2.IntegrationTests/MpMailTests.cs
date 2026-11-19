@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Digests;
+using Lt2.Audit;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Notifications;
 using Lt2.SharedKernel;
@@ -435,6 +436,7 @@ public sealed partial class MpMailTests(DatabaseFixture database) : ApiTest(data
         services.AddSingleton(NpgsqlDataSource.Create(Database.WorkerConnectionString));
         services.AddNotificationsModule(configuration);
         services.AddNotificationsDispatcher(configuration);
+        services.AddAuditModule();
         services.AddSingleton(transport);
         return services.BuildServiceProvider();
     }

@@ -1,3 +1,4 @@
+using Lt2.Audit;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Migrator;
 using Lt2.Notifications;
@@ -196,6 +197,7 @@ public sealed class DatabaseTests(DatabaseFixture database)
         services.AddSingleton(NpgsqlDataSource.Create(database.WorkerConnectionString));
         services.AddNotificationsModule(configuration);
         services.AddNotificationsDispatcher(configuration);
+        services.AddAuditModule();
         services.AddSingleton<IEmailTransport>(transport);
         return services.BuildServiceProvider();
     }

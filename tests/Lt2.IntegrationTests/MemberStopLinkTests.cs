@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Follows;
+using Lt2.Audit;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Notifications;
 using Lt2.Notifications.MpMail;
@@ -59,6 +60,7 @@ public sealed partial class MemberStopLinkTests(DatabaseFixture database) : ApiT
         services.AddLogging();
         services.AddNotificationsModule(configuration);
         services.AddNotificationsDispatcher(configuration);
+        services.AddAuditModule();
         using var provider = services.BuildServiceProvider();
         return provider.GetServices<Lt2.Notifications.Outbox.IEmailRenderer>().Single(r => r.Kind == kind).Render(payload);
     }

@@ -17,8 +17,11 @@ public interface INotificationsDispatcher
 
 /// <summary>An email ready to send: plain text always, light HTML optionally.</summary>
 /// <param name="Stream">
-/// <c>null</c> for the common stream; <c>mp</c> for MP mail (design 8.19.3), sent from <c>Email:Mp:FromAddress</c> and, when
-/// configured, over <c>Email:Mp:Smtp</c>, so trouble with it cannot block sign-in codes.
+/// The email stream (design 8.19.3), set by the dispatcher from the outbox kind (<c>EmailStreams</c>): <c>codes</c> (or
+/// <c>null</c>, as a template leaves it) for sign-in codes and account security, from <c>Email:Smtp:FromAddress</c> over
+/// <c>Email:Smtp</c>; <c>notices</c>, from <c>Email:Notices:FromAddress</c> and, when configured, over <c>Email:Notices:Smtp</c>;
+/// <c>mp</c> for MP mail, from <c>Email:Mp:FromAddress</c> and, when configured, over <c>Email:Mp:Smtp</c>. So trouble on one
+/// cannot block the others.
 /// </param>
 /// <param name="Headers">Extra headers, for example <c>List-Unsubscribe</c> and <c>List-Unsubscribe-Post</c>.</param>
 public sealed record EmailMessage(
