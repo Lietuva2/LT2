@@ -20,7 +20,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
   service confirms which field of `p2b.ad_sp_klausimo_svarstymo_eiga` (or the vote's wording) states it, the import
   closes the record with that reason and the date, a moderator can reopen a wrong close; "returned to the initiators for
   improvement" is not a rejection. Until then a moderator closes such a record (owner, 2026-11-19).
-- 8.3: a full lock of an account that also stops signing in.
 - 8.4, 8.19.6: a sending subdomain with SPF, DKIM and DMARC; complaint and bounce reports from an email provider.
 - 8.5.2: a screen for the administrator's end of an MP's link (there is an API route only).
 - 9.1: a second web instance, the backup container (pgBackRest), the telemetry collector, host hardening, CDN and DDoS
@@ -270,6 +269,10 @@ for the lawyer).
   (`EmailTemplates` `Follow.Closed.*`, `Gathered.Closed.*`); the refusals (`ProblemText` `closing.*`,
   `closing-url.invalid`; `ValidationMessages` `Closing.*`); the methodology's "kol dalyvauti dėl projekto galima"
   (`AppealText` `Method.Privacy.1`, also for the lawyer).
+- 8.3: the full lock: the "Paskyros" screen (`AppealUi` `Acc.*`, `PageText` `Nav.Accounts`), the two emails ("Lietuva 2.0: paskyra
+  užrakinta" and "…atrakinta" with their bodies and the line on writing to the team and on erasure, `EmailTemplates`
+  `Notice.account-locked.*`, `Notice.account-unlocked.*`) and the refusals (`ProblemText` `account.lock-self`,
+  `account.lock-staff`, `account.locked`, `account.not-locked`).
 - 8.7, 8.12.1: "Paspaudę dar kartą, atsiimsite." (`AppealUi` `Side.PressAgain`), the pressed button's title.
 - 8.10: the feedback texts.
 - 8.12.2: the reached threshold, "Riba pasiekta – …" (`AppealUi` `Threshold.Reached.*`, `Threshold.ReachedClosed.*`)

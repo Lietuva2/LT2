@@ -165,6 +165,18 @@ public interface IIdentityAdministration
 
     /// <summary>Removes the account's passkeys; its staff roles stay inactive until a new activation code is used.</summary>
     Task<Result<Unit>> ResetAccountAsync(string email, Actor actor, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.3, the full lock: in one transaction every session of the account ends and no sign-in works until it is unlocked,
+    /// its public profile is not shown and its follows send nothing; its texts stay. Audited with the statement (no address); the
+    /// person gets one email with it and <paramref name="contact"/>. The caller checks the administrator and the fresh confirmation.
+    /// <c>statement.required</c>, <c>account.not-found</c>, <c>account.lock-self</c>, <c>account.lock-staff</c> (it holds an active staff
+    /// role: remove the role first), <c>account.locked</c> (already).
+    /// </summary>
+    Task<Result<Unit>> LockAccountAsync(string email, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>Unlocks the account, with a statement; audited; one email. <c>account.not-locked</c> when it is not locked.</summary>
+    Task<Result<Unit>> UnlockAccountAsync(string email, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken);
 }
 
 /// <summary>One signed-in browser.</summary>

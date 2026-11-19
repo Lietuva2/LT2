@@ -49,6 +49,7 @@
       show(details, "moderation", administrator || staff.includes("moderator"));
       show(details, "settings", administrator);
       show(details, "invitations", administrator);
+      show(details, "accounts", administrator);
       show(details, "usage", administrator);
       show(details, "jobs", administrator);
       show(details, "mp", me.mp !== null && me.mp !== undefined);

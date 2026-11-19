@@ -22,7 +22,7 @@ internal sealed class PublicProfileDirectory(NpgsqlDataSource dataSource) : IPub
         }
 
         await using var command = dataSource.CreateCommand(
-            $"SELECT {Columns} FROM identity.profile p WHERE p.user_id = ANY(@ids) AND p.public_profile_id IS NOT NULL AND p.display_name IS NOT NULL");
+            $"SELECT {Columns} FROM identity.profile p WHERE p.user_id = ANY(@ids) AND p.public_profile_id IS NOT NULL AND p.display_name IS NOT NULL AND p.locked_at IS NULL");
         command.Parameters.AddWithValue("ids", userIds.Distinct().ToArray());
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
@@ -44,7 +44,7 @@ internal sealed class PublicProfileDirectory(NpgsqlDataSource dataSource) : IPub
         }
 
         await using var command = dataSource.CreateCommand(
-            $"SELECT {Columns} FROM identity.profile p WHERE p.public_profile_id = ANY(@ids) AND p.display_name IS NOT NULL");
+            $"SELECT {Columns} FROM identity.profile p WHERE p.public_profile_id = ANY(@ids) AND p.display_name IS NOT NULL AND p.locked_at IS NULL");
         command.Parameters.AddWithValue("ids", ids);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         while (await reader.ReadAsync(cancellationToken))
@@ -64,7 +64,7 @@ internal sealed class PublicProfileDirectory(NpgsqlDataSource dataSource) : IPub
         }
 
         await using (var command = dataSource.CreateCommand(
-            $"SELECT {Columns} FROM identity.profile p WHERE p.public_profile_id = @id AND p.display_name IS NOT NULL"))
+            $"SELECT {Columns} FROM identity.profile p WHERE p.public_profile_id = @id AND p.display_name IS NOT NULL AND p.locked_at IS NULL"))
         {
             command.Parameters.AddWithValue("id", profileId);
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -74,7 +74,12 @@ internal sealed class PublicProfileDirectory(NpgsqlDataSource dataSource) : IPub
             }
         }
 
-        await using var retired = dataSource.CreateCommand("SELECT EXISTS (SELECT 1 FROM identity.retired_profile_id WHERE id = @id)");
+        // Design 8.3: a locked account's profile answers as one switched off (gone), whatever its id.
+        await using var retired = dataSource.CreateCommand(
+            """
+            SELECT EXISTS (SELECT 1 FROM identity.retired_profile_id WHERE id = @id)
+                OR EXISTS (SELECT 1 FROM identity.profile p WHERE p.public_profile_id = @id AND p.locked_at IS NOT NULL)
+            """);
         retired.Parameters.AddWithValue("id", profileId);
         return (await retired.ExecuteScalarAsync(cancellationToken) is true ? ProfileIdState.Retired : ProfileIdState.Unknown, null);
     }
@@ -90,7 +95,7 @@ internal sealed class PublicProfileDirectory(NpgsqlDataSource dataSource) : IPub
         await using var command = dataSource.CreateCommand(
             """
             SELECT s.party FROM identity.profile p JOIN identity.party_support s ON s.user_id = p.user_id
-            WHERE p.public_profile_id = @id AND p.display_name IS NOT NULL
+            WHERE p.public_profile_id = @id AND p.display_name IS NOT NULL AND p.locked_at IS NULL
               AND EXISTS (SELECT 1 FROM identity.consent c WHERE c.user_id = p.user_id AND c.kind = @kind AND c.withdrawn_at IS NULL)
             """);
         command.Parameters.AddWithValue("id", profileId);

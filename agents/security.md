@@ -48,6 +48,12 @@ code review.
   wrong code are the same whether the address has an account and whether the browser is known. The account page lists
   "Žinomos naršyklės" beside the sessions with "Pamiršti" (`GET|DELETE /me/known-browsers`), at most 20 per account, deleted
   after a year unseen, exported and deleted with the account; `identity.known_device` is withheld from `lt2_readonly`.
+- **A locked account (design 8.3, owner 2026-11-19).** An administrator's full lock (`POST /admin/accounts/lock`, a staff-passkey
+  session with a fresh confirmation, a statement) ends every session and the open codes in the same transaction and sets
+  `identity.profile.locked_at`. No sign-in then works, and no answer differs from that for an address nobody holds: the code request
+  answers 202 and sends nothing (`SignInCodeIssuer`), a typed code is `auth.code-invalid`, a passkey `passkey.invalid`; the public profile
+  is 410 as if switched off; follow emails are skipped (`ParticipantFacts.IsLocked`). A staff account holding an active role and the
+  administrator's own account are never locked. The audit entry and the notice email hold the statement and no address.
 - **Changing the email address (design 6.2).** Only a passkey session or a code to the address in use starts it (a staff
   account: its staff passkey, freshly confirmed; the MP's account: a passkey session; `EmailChangeRules.Proof`); the answer to an
   address is the same whether an account has it (that account is told instead, no code); the code to the new address follows

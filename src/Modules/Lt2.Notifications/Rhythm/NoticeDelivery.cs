@@ -108,7 +108,8 @@ internal sealed class NoticeDelivery(
         var written = 0;
         foreach (var person in due.GroupBy(d => d.Notice.UserId))
         {
-            if (members.GetValueOrDefault(person.Key) is not { } member)
+            // Design 8.3: a locked account's follows send nothing.
+            if (members.GetValueOrDefault(person.Key) is not { IsLocked: false } member)
             {
                 continue;
             }

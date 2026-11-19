@@ -15,7 +15,8 @@ namespace Lt2.SharedKernel;
 /// The account is an MP's own linked account (design 8.5.4: the MP's part of a <c>politician_link</c>, not an office
 /// member's), read from the database on every call, so ending a link works at once. See <see cref="MpAccounts"/>.
 /// </param>
-public sealed record ParticipantFacts(Guid UserId, string? DisplayName, string Email, DateTimeOffset MemberSince, bool HasPositionConsent, bool IsMpAccount = false);
+/// <param name="IsLocked">An administrator locked the account (design 8.3): its follows send nothing.</param>
+public sealed record ParticipantFacts(Guid UserId, string? DisplayName, string Email, DateTimeOffset MemberSince, bool HasPositionConsent, bool IsMpAccount = false, bool IsLocked = false);
 
 /// <summary>
 /// Design 8.5.4 <b>[decided by the owner, 2026-11-17]</b>: the MP's own linked account takes no part as a

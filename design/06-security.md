@@ -20,7 +20,7 @@ Policy-based, with resource handlers where ownership matters.
 | Member (confirmed email; invited while registration needs an invitation, 6.2) | Take a side, write and endorse reasons, report content; comment under arguments, statements and responses and mark a comment "Sutinku" (8.23). |
 | Verified MP / office member (`politician_link`) | Publish and edit that MP's response; manage that MP's email preferences; comment as the MP under that MP's own response, in a passkey session (8.23.2). |
 | Moderator | Review bills' records and reasons, merge, hide (reported comments too, 8.23.8), correct planned dates, hold a send, approve an urgent send, restrict an account from writing and lift that. |
-| Administrator | Roles, resetting an account, ending an MP's link, runtime settings, invitation codes, usage statistics, the MP sending screens, and the jobs dashboard ("Foniniai darbai", `/administravimas/darbai`: the recurring jobs, their runs and failures, "Trigger now"); every moderator action, restricting an account from writing and lifting that included. Cannot read individual positions through any screen. |
+| Administrator | Roles, resetting an account, locking and unlocking an account (8.3), ending an MP's link, runtime settings, invitation codes, usage statistics, the MP sending screens, and the jobs dashboard ("Foniniai darbai", `/administravimas/darbai`: the recurring jobs, their runs and failures, "Trigger now"); every moderator action, restricting an account from writing and lifting that included. Cannot read individual positions through any screen. |
 
 No screen and no API returns another person's position. Group numbers (the supporters of the MP's party on a side, in a
 summary) are published only for groups of at least the runtime setting `Digest:PartyGroupMinimum` (default 10, 0 = no
@@ -202,6 +202,9 @@ summary is sent.
   deleted only from a session signed in with its staff passkey; a session from an email code is told so. A role granted
   but never activated, or an account an administrator has reset, has no staff passkey to sign in with and is deleted
   like an ordinary account. Ordinary accounts and the data export are unaffected.
+- **Locking an account asks for the passkey again and is the administrators' (8.3).** Like changing roles it needs a
+  staff-passkey session with a fresh confirmation, and never a moderator's; a staff account is locked only after its
+  roles are inactive (reset), and no administrator locks their own account.
 - **Changing a setting asks for the passkey again (6.2).** Saving a runtime setting needs the same fresh passkey
   confirmation as changing roles. Switching an invitation code off or on does not.
 - **Feedback handling is audited (8.10).** A change of a feedback item's status or note leaves an audit entry with

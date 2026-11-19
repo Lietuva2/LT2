@@ -161,6 +161,13 @@ internal sealed class PasskeyHandlers(
             return InvalidPasskey;
         }
 
+        // Design 8.3: a locked account's passkey is refused as any failed assertion is.
+        if (await AccountLocks.IsLockedAsync(db, assertion.User.Id, CancellationToken.None))
+        {
+            logger.LogInformation("Passkey assertion failed: {Reason}", "locked");
+            return InvalidPasskey;
+        }
+
         // Store the new signature counter and backup state.
         var updated = await users.AddOrUpdatePasskeyAsync(assertion.User, assertion.Passkey);
         if (!updated.Succeeded)

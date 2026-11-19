@@ -35,7 +35,7 @@ internal sealed class ProfileModerationHandlers(IDbContextFactory<IdentityDb> co
         }
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var target = await db.Profiles.AsNoTracking().Where(p => p.PublicProfileId == profileId).Select(p => (Guid?)p.UserId).FirstOrDefaultAsync(cancellationToken);
+        var target = await db.Profiles.AsNoTracking().Where(p => p.PublicProfileId == profileId && p.LockedAt == null).Select(p => (Guid?)p.UserId).FirstOrDefaultAsync(cancellationToken);
         if (target is not { } targetUserId)
         {
             return Error.NotFound("member.not-found");

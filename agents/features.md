@@ -128,6 +128,29 @@ part shows the new address and the page reads its sessions again (no reload). Th
 to `/prisijungti`). Tests: `EmailChangeTests` (integration, E2E), `EmailChangeRuleTests`, `EmailChangeTemplateTests`,
 `MyEmailTests` (bUnit).
 
+**A full lock of an account (design 8.3; the owner, 2026-11-19: administrators lock, the recommendations as written).**
+`POST /admin/accounts/lock` and `/unlock` (`AccountLockEndpoints`, `Policies.Administrator`, `FreshConfirmation`,
+`AccountLockRequest`: `email`, `statement`, validator in `Lt2.Api.Contracts/Admin/RoleDtos.cs`; the in-process `ServerAdminApi`
+checks the same) call `IIdentityAdministration.LockAccountAsync|UnlockAccountAsync` (`RoleAdministration.SetLockAsync`,
+Identity): `StaffStatements.Check`, the account by address (`account.not-found`), not oneself (`account.lock-self`), no active
+staff role by `StaffAccess.ActiveRolesAsync` (`account.lock-staff`: reset it first), then in one transaction `identity.profile.locked_at`
+set by a conditional update (`account.locked` / `account.not-locked` when it changed nothing), the account's sessions deleted and
+its open codes used up, audit `account.locked` (`statement`, `sessionsEnded`) or `account.unlocked` (target the id, no address),
+and an `AccountNoticeEmail` (`AccountNotices.AccountLocked|AccountUnlocked` with `Statement` and `Contact` = `Moderation:ContactAddress`;
+`AccountNoticeTemplate`: the lock's text says to write to the team and that erasure is asked for by writing, no "was it you"
+line). The lock is read where the account would sign in or be sent a code: `AccountLocks.IsLockedAsync` in `SignInCodeIssuer.IssueAsync`
+(code request, registration of an existing address, email-change code: nothing sent, same answer), `CodeSignInHandler` (`auth.code-invalid`)
+and `PasskeyHandlers.SignInAsync` (`passkey.invalid`); public profiles by `PublicProfileDirectory` (`locked_at IS NULL` in every
+query, `FindAsync` answers `Retired` so the page and `GET /members/{id}` say 410) and `ProfileModerationHandlers.ReportAsync`;
+follow emails by `ParticipantFacts.IsLocked` (`ParticipantDirectory`), skipped in `NoticeDelivery.WriteAsync`. Statements of reasons
+and report notices still reach a locked account (they use `IParticipants.FindAsync`, not the follow path). The screen is
+`AccountsAdmin` (`/administravimas/paskyros`, `Nav.Accounts` in the account item, `data-account-link="accounts"` in
+`js/lt2-account.js`): it asks `GET /me` for an active administrator role (`Administrator` persistent state), else `#accounts-refused`
+and the staff `PasskeyStep`; address and statement, "Užrakinti paskyrą" / "Atrakinti paskyrą", the staff passkey asked on the same press
+when `passkey.confirmation-required`, the fields kept until the action goes through and then cleared (the address is never shown
+again). Tests: `AccountLockTests` (integration), `EmailRhythmTests.A_locked_accounts_follows_send_nothing`, `AccountsAdminPageTests`
+(bUnit), `NotificationTests` (the lock's email).
+
 **The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
 parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, change it"; `/sveiki` is gone, no redirect).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:

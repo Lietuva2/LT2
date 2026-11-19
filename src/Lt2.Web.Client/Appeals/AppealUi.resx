@@ -1077,4 +1077,20 @@
   <data name="Start.4.Short" xml:space="preserve"><value>Pasiekus ribą, projektas patenka į suvestinę Seimo nariams.</value></data>
   <data name="Start.How" xml:space="preserve"><value>Kaip tai veikia →</value></data>
   <data name="Start.Saved" xml:space="preserve"><value>Profilis išsaugotas.</value></data>
+  <data name="Acc.PageTitle" xml:space="preserve"><value>Paskyros · Administravimas · Lietuva 2.0</value></data>
+  <data name="Acc.Title" xml:space="preserve"><value>Paskyros</value></data>
+  <data name="Acc.Lead" xml:space="preserve"><value>Čia administratorius užrakina paskyrą, kai kitaip piktnaudžiavimo sustabdyti nepavyksta, ir ją atrakina.</value></data>
+  <data name="Acc.Refused" xml:space="preserve"><value>Šį puslapį gali matyti tik administratorius, prisijungęs darbuotojo prieigos raktu, kai vaidmuo aktyvintas.</value></data>
+  <data name="Acc.Lock.Title" xml:space="preserve"><value>Paskyros užrakinimas</value></data>
+  <data name="Acc.Lock.Sentence" xml:space="preserve"><value>Užrakinta paskyra negali prisijungti: jos sesijos baigiamos, viešas profilis nerodomas, sekimo laiškai nesiunčiami. Parašyti tekstai lieka, jų slėpimas yra moderatorių veiksmas. Žmogus gauna laišką su jūsų paaiškinimu. Paskyros su aktyviu darbuotojo vaidmeniu užrakinti negalima: pirma ją reikia iš naujo nustatyti.</value></data>
+  <data name="Acc.Lock.Address" xml:space="preserve"><value>Paskyros el. pašto adresas</value></data>
+  <data name="Acc.Lock.AddressHint" xml:space="preserve"><value>Adresas niekur neįrašomas, tik naudojamas paskyrai surasti.</value></data>
+  <data name="Acc.Lock.Statement" xml:space="preserve"><value>Paaiškinimas (privalomas)</value></data>
+  <data name="Acc.Lock.StatementHint" xml:space="preserve"><value>Jį el. paštu gaus žmogus, jis taip pat įrašomas veiksmų žurnale.</value></data>
+  <data name="Acc.Lock.Lock" xml:space="preserve"><value>Užrakinti paskyrą</value></data>
+  <data name="Acc.Lock.Unlock" xml:space="preserve"><value>Atrakinti paskyrą</value></data>
+  <data name="Acc.Lock.Locked" xml:space="preserve"><value>Paskyra užrakinta.</value></data>
+  <data name="Acc.Lock.Unlocked" xml:space="preserve"><value>Paskyra atrakinta.</value></data>
+  <data name="Acc.Passkey.Unsupported" xml:space="preserve"><value>Veiksmas neatliktas: ši naršyklė negali patvirtinti prieigos raktu. Atidarykite šį puslapį naršyklėje, kurioje yra jūsų darbuotojo prieigos raktas.</value></data>
+  <data name="Acc.Passkey.Cancelled" xml:space="preserve"><value>Veiksmas neatliktas, nes prieigos raktu nepatvirtinote. Spauskite mygtuką dar kartą ir patvirtinkite.</value></data>
 </root>

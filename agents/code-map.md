@@ -71,7 +71,9 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            participant through MpAccounts.Refusal (SharedKernel) wherever a participant is checked.
                            Identity also owns known browsers (Application/SignIn/KnownBrowsers.cs, design 8.20.2: the
                            __Host-lt2.device cookie, identity.known_device, the code allowance they choose), and
-                           changing the account's address (Application/Email/EmailChangeHandlers.cs, design 6.2).
+                           changing the account's address (Application/Email/EmailChangeHandlers.cs, design 6.2), and an
+                           administrator's full lock of an account (Application/Staff/RoleAdministration.SetLockAsync,
+                           AccountLocks read where a code or a passkey signs in, design 8.3; the screen Pages/AccountsAdmin).
 src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageRules and Sketch (HyperLogLog) pure,
                            UsageCounter in the web host's memory, written every minute; the host feeds it from
                            Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin; its day bars are

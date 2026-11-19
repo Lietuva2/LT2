@@ -526,8 +526,9 @@ public sealed record EmailRestoredEmail(string To, DateTimeOffset RestoredAt);
 /// <param name="Role">The staff role concerned, for role notices.</param>
 /// <param name="PasskeysRemoved">How many passkeys were removed, where that applies.</param>
 /// <param name="MpName">For the notices about an MP's profile (design 8.5.2, 8.5.3): the MP's first and last name.</param>
-/// <param name="Statement">An administrator's statement of reasons, where one was given (ending a link, design 8.5.2).</param>
-public sealed record AccountNoticeEmail(string To, string Notice, string? Role = null, int PasskeysRemoved = 0, string? MpName = null, string? Statement = null);
+/// <param name="Statement">An administrator's statement of reasons, where one was given (ending a link, design 8.5.2; a lock, 8.3).</param>
+/// <param name="Contact">The team's contact address for a lock's notice (design 8.3), when configured.</param>
+public sealed record AccountNoticeEmail(string To, string Notice, string? Role = null, int PasskeysRemoved = 0, string? MpName = null, string? Statement = null, string? Contact = null);
 
 /// <summary>
 /// The account changes a person is told about by email (design 6.2), and what happens to an MP's profile, told to the
@@ -539,6 +540,12 @@ public static class AccountNotices
     public const string RoleGranted = "role-granted";
     public const string RoleActivated = "role-activated";
     public const string AccountReset = "account-reset";
+
+    /// <summary>An administrator locked the account: no sign-in until it is unlocked (design 8.3), with the statement.</summary>
+    public const string AccountLocked = "account-locked";
+
+    /// <summary>An administrator unlocked the account (design 8.3), with the statement.</summary>
+    public const string AccountUnlocked = "account-unlocked";
 
     /// <summary>The profile was taken over (or a lost passkey replaced) with the link and a new passkey.</summary>
     public const string MpLinked = "mp-linked";
@@ -558,7 +565,7 @@ public static class AccountNotices
     public const string MpOfficeLeft = "mp-office-left";
 
     public static readonly IReadOnlyList<string> All =
-        [PasskeyAdded, RoleGranted, RoleActivated, AccountReset, MpLinked, MpGivenUp, MpLinkEnded, MpOfficeAdded, MpOfficeRemoved, MpOfficeLeft];
+        [PasskeyAdded, RoleGranted, RoleActivated, AccountReset, AccountLocked, AccountUnlocked, MpLinked, MpGivenUp, MpLinkEnded, MpOfficeAdded, MpOfficeRemoved, MpOfficeLeft];
 }
 
 /// <summary>Payload of <see cref="MessageKinds.FeedbackReplyEmail"/>: the team's reply to a member's feedback (design 8.10).</summary>

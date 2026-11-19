@@ -216,7 +216,8 @@ internal sealed class ParticipantDirectory(NpgsqlDataSource dataSource) : IParti
         await using var command = dataSource.CreateCommand(
             $"""
             SELECT p.user_id, p.display_name, u.email, p.registered_at, {CurrentPositionConsent.ExistsSql},
-                   EXISTS (SELECT 1 FROM identity.politician_link l WHERE l.user_id = p.user_id AND l.part = 'mp' AND l.ended_at IS NULL)
+                   EXISTS (SELECT 1 FROM identity.politician_link l WHERE l.user_id = p.user_id AND l.part = 'mp' AND l.ended_at IS NULL),
+                   p.locked_at IS NOT NULL
             FROM identity.profile p JOIN identity."user" u ON u.id = p.user_id
             WHERE p.user_id = ANY(@ids) AND p.registered_at IS NOT NULL
             """);
@@ -233,7 +234,8 @@ internal sealed class ParticipantDirectory(NpgsqlDataSource dataSource) : IParti
                 reader.GetString(2),
                 reader.GetFieldValue<DateTimeOffset>(3),
                 reader.GetBoolean(4),
-                reader.GetBoolean(5));
+                reader.GetBoolean(5),
+                reader.GetBoolean(6));
         }
 
         return result;

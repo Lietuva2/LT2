@@ -73,6 +73,26 @@ public sealed class NotificationTests
             .ShouldContain("Pašalinta prieigos raktų: 2.");
 
     [Fact]
+    public void The_lock_notice_gives_the_statement_and_how_to_write_to_the_team_and_asks_nothing_about_who_did_it()
+    {
+        var withContact = NoticeTemplate().Render(
+            new AccountNoticeEmail("ruta@pavyzdys.test", AccountNotices.AccountLocked, Statement: "Pakartotinis piktnaudžiavimas.", Contact: "komanda@pavyzdys.test"));
+        withContact.Subject.ShouldBe("Lietuva 2.0: paskyra užrakinta");
+        withContact.TextBody.ShouldContain("administratorius užrakino jūsų paskyrą");
+        withContact.TextBody.ShouldContain("Administratoriaus paaiškinimas: Pakartotinis piktnaudžiavimas.");
+        withContact.TextBody.ShouldContain("parašykite komandai: komanda@pavyzdys.test");
+        withContact.TextBody.ShouldContain("ištrynimo prašymą galite pateikti tik laišku");
+        withContact.TextBody.ShouldNotContain("Jei to nedarėte jūs");
+
+        var withoutContact = NoticeTemplate().Render(new AccountNoticeEmail("ruta@pavyzdys.test", AccountNotices.AccountLocked, Statement: "Priežastis."));
+        withoutContact.TextBody.ShouldContain("parašykite Lietuva 2.0 komandai");
+
+        var unlocked = NoticeTemplate().Render(new AccountNoticeEmail("ruta@pavyzdys.test", AccountNotices.AccountUnlocked, Statement: "Klaida ištaisyta."));
+        unlocked.Subject.ShouldBe("Lietuva 2.0: paskyra atrakinta");
+        unlocked.TextBody.ShouldContain("Klaida ištaisyta.");
+    }
+
+    [Fact]
     public void Failed_messages_are_retried_with_growing_delays_up_to_an_hour()
     {
         OutboxDispatcher.Backoff(1).ShouldBe(TimeSpan.FromSeconds(10));

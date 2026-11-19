@@ -18,6 +18,12 @@
   <data name="Notice.role-activated.Body" xml:space="preserve"><value>jūsų {0} vaidmuo aktyvintas. Jis veikia tik prisijungus tuo prieigos raktu, kuriuo jį aktyvinote.</value></data>
   <data name="Notice.account-reset.Subject" xml:space="preserve"><value>Lietuva 2.0: paskyros prieigos raktai pašalinti</value></data>
   <data name="Notice.account-reset.Body" xml:space="preserve"><value>administratorius iš naujo nustatė jūsų paskyrą. Darbuotojo vaidmuo neveiks, kol įvesite naują aktyvinimo kodą.</value></data>
+  <data name="Notice.account-locked.Subject" xml:space="preserve"><value>Lietuva 2.0: paskyra užrakinta</value></data>
+  <data name="Notice.account-locked.Body" xml:space="preserve"><value>administratorius užrakino jūsų paskyrą. Prie jos prisijungti negalima, kol ji neatrakinta; jūsų viešas profilis nerodomas ir sekimo laiškai nesiunčiami. Jūsų parašyti tekstai lieka kaip buvo, jų slėpimas yra atskiras moderatorių sprendimas.</value></data>
+  <data name="Notice.account-locked.Write" xml:space="preserve"><value>Jei nesutinkate arba norite, kad paskyra ir jos duomenys būtų ištrinti, parašykite Lietuva 2.0 komandai. Prisijungti negalite, todėl duomenų ištrynimo prašymą galite pateikti tik laišku.</value></data>
+  <data name="Notice.account-locked.WriteTo" xml:space="preserve"><value>Jei nesutinkate arba norite, kad paskyra ir jos duomenys būtų ištrinti, parašykite komandai: {0}. Prisijungti negalite, todėl duomenų ištrynimo prašymą galite pateikti tik laišku.</value></data>
+  <data name="Notice.account-unlocked.Subject" xml:space="preserve"><value>Lietuva 2.0: paskyra atrakinta</value></data>
+  <data name="Notice.account-unlocked.Body" xml:space="preserve"><value>administratorius atrakino jūsų paskyrą. Prie jos galite prisijungti kaip įprastai; jei viešas profilis buvo įjungtas, jis vėl rodomas.</value></data>
   <data name="Notice.PasskeysRemoved" xml:space="preserve"><value>Pašalinta prieigos raktų: {0}.</value></data>
   <data name="Notice.NotYou" xml:space="preserve"><value>Jei to nedarėte jūs, nedelsdami praneškite Lietuva 2.0 komandai.</value></data>
   <data name="Role.moderator" xml:space="preserve"><value>moderatoriaus</value></data>

@@ -101,7 +101,12 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 - A moderator can restrict an account from writing, until a date or until lifted, with a statement emailed to the person;
   it is not public, touches no side, mark or count, and goes with the account; no hash of the address is kept. A full
-  lock that stops sign-in is left for later (2026-11-13).
+  lock that stops sign-in was left for later (2026-11-13) and is built (2026-11-19, below).
+- A full lock that stops signing in is an administrator's action, never a moderator's, with a required statement and a fresh
+  passkey confirmation (2026-11-19, "go ahead with the designer's recommendations"): sessions end, no sign-in works and the
+  answers reveal nothing, the public profile is not shown and the follows send nothing, texts stay as they are; the person
+  gets one email with the statement and how to write to the team, erasure being asked for by writing (a locked person cannot
+  sign in to delete); unlocking likewise; a staff account with an active role and the administrator's own are not locked.
 - Moderators can restore a hidden record or argument, with a statement, audited, the author told (2026-11-13).
 - The sides taken on a hidden record are kept, to be looked at again (2026-11-13).
 - A moderator's actions are one filled button for what the item needs most in its state and "Kiti veiksmai" opening the

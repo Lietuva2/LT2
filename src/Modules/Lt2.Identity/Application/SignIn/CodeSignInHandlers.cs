@@ -97,7 +97,9 @@ internal sealed class CodeSignInHandler(
             return InvalidCode;
         }
 
-        if (!await SignInCodeUse.ConsumeAsync(db, browsers, profile.UserId, code, clock.GetUtcNow(), cancellationToken))
+        // Design 8.3: a locked account's code is refused as any wrong code is.
+        if (profile.LockedAt is not null
+            || !await SignInCodeUse.ConsumeAsync(db, browsers, profile.UserId, code, clock.GetUtcNow(), cancellationToken))
         {
             return InvalidCode;
         }
