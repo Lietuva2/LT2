@@ -1,13 +1,14 @@
 @using Lt2.Api.Contracts.Agenda
 @inject IStringLocalizer<AppealUi> L
 
-@* A bill's public numbers in the front page's timeline (design 8.7): both sides with the count for accounts older than 30
-   days in brackets, the bar and the threshold; a bill nobody took part in says so. A line breaks only after a "·", never
-   inside a part ("The row lines up"). The page explains the brackets and
-   says the numbers are not a representative poll right under the timeline. Plain markup, no island of its own: the server
-   renders it in every row, and the member's island of a row (MyAgendaSide) renders the same component, with the bill's
-   live numbers after the member's own action. "Nobody yet" is left out only where the island says so (the page's agenda
-   is up to a minute old, so a member who has just taken a side must not read that nobody has). *@
+@* A bill's public numbers in a row of the timeline (design 8.7, 8.11.1): both sides with the count for accounts older than
+   30 days in brackets, the bar and the threshold; a bill nobody took part in says so, unless the row offers the sides
+   (owner, 2026-11-19: "minimise non-essential texts"; the buttons stand there instead) or the member's own answer has a
+   side (the page's agenda is up to a minute old, so a member who has just taken a side must not read that nobody has); a
+   closed one always says "Niekas nedalyvavo". A line breaks only after a "·", never inside a part ("The row lines up").
+   The page explains the brackets and says the numbers are not a representative poll right under the timeline. Plain
+   markup, no island of its own: the server renders it in every row, and the member's island of a row (MyAgendaSide)
+   renders the same component, with the bill's live numbers after the member's own action. *@
 @if (Record.Counts.For + Record.Counts.Against == 0)
 {
     @if (!HideNobody)
@@ -37,7 +38,9 @@ else
 @code {
     [Parameter, EditorRequired] public AgendaRecordResponse Record { get; set; } = default!;
 
-    /// <summary>Leaves out "Niekas nenurodė, ko prašo": the member's own answer says they have a side on the bill.</summary>
+    /// <summary>
+    /// Leaves out "Niekas nenurodė, ko prašo": the row offers the sides, or the member's own answer says they have one.
+    /// </summary>
     [Parameter] public bool HideNobody { get; set; }
 
     /// <summary>The row's place (see MyAgendaSide), for the ids of the line "nobody yet" and the counts; none when not given.</summary>

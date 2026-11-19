@@ -5,24 +5,29 @@
 @inject IAppealsApi Appeals
 @inject IMeApi MeApi
 
-@* A member's side column in a row of the front page's timeline (design 8.7, "Taking a side in the row"), for a bill whose
-   record is open. Under the bill's numbers a coming bill offers "Prašau balsuoti" with "už" and "prieš": one press saves
-   the side with the same request and rules as the bill's page; the pressed button shows the member's side and, pressed
-   again, takes it back (owner, 2026-11-18: no "Atsiimti"); the other one changes it; with a side the row says so and links
-   to "Argumentai ir pozicijos". The first side ever asks
+@* A member's side column in a row of the timeline, on the front page and the agenda page alike (design 8.7, "Taking a side
+   in the row"; 8.11.1, owner 2026-11-19), for a bill whose record is open. Under the bill's numbers a coming bill offers
+   "Prašau balsuoti" with "už" and "prieš": one press saves the side with the same request and rules as the bill's page;
+   the pressed button shows the member's side and, pressed again, takes it back (owner, 2026-11-18: no "Atsiimti"); the
+   other one changes it; aria-pressed says the state and the pressed button's title how to take it back, with no line
+   under the buttons (owner, 2026-11-19: a later onboarding is to explain it). Beside the buttons no line says nobody took
+   part yet, and no link leads to the
+   arguments: the title is the way to the bill (owner, 2026-11-19: "minimise non-essential texts"); a row without buttons
+   (a vote's, the MP's own account) keeps "nobody yet". The first side ever asks
    for the positions consent across the row's whole width (PositionConsentForm, the bill page's form); nothing is saved
    before it. A first side also follows the bill (design 8.11.2, on the server); "Sekate" then shows in the row's mark and
-   the panel, which read the shared answer again (MyAgendaState.Changed). After the member's own action the row shows the
+   the panel, which read the shared answer again (MyAgendaState.Changed), and no line under the buttons says so (owner,
+   2026-11-19: "No need, if the label 'Sekate' lights up anyway"). After the member's own action the row shows the
    bill's live numbers from its public answer, not the page's copy that may be a minute old; so does it once on start when
    that copy says nobody took part but the member's own answer has a side. A row of the last week's
    votes (VoteId) offers no sides, only "Kaip balsavo Seimo nariai"; nor does a row for an MP's own account (design 8.5.4,
    known from the browser's answer), which keeps the numbers only.
 
    Rendered straight into the row (the side column and, while asked, the consent as the row's last part). While the server
-   prerenders and before the island has started the numbers are the page's, "nobody yet" reads as for anyone and the
-   buttons are disabled: the same HTML for every member, nothing of the member's own in it. *@
+   prerenders and before the island has started the numbers are the page's and the buttons are disabled: the same HTML
+   for every member, nothing of the member's own in it. *@
 <div class="tl-item__side" id="home-side-@Place">
-    <RecordFigures Record="Shown" HideNobody="@(_mine?.Side is not null)" Id="@Place" />
+    <RecordFigures Record="Shown" HideNobody="@(Asks || _mine?.Side is not null)" Id="@Place" />
     @if (VoteId is { } vote)
     {
         <a class="btn btn--plain cta" href="/seimas/balsavimai/@vote">@L["Agenda.Action.Votes"]</a>
@@ -41,7 +46,7 @@
                     var chosen = _mine?.Side == side;
                     <button type="button" class="btn btn--@side cta" id="home-@side-@Place" aria-pressed="@(chosen ? "true" : "false")"
                             aria-label="@L.Format("Agenda.Ask." + side, Number)" title="@(chosen ? L["Side.PressAgain"].Value : null)"
-                            aria-describedby="@(chosen ? $"home-again-{Place}" : null)" disabled="@(Locked || _answer is null)"
+                            disabled="@(Locked || _answer is null)"
                             @onclick="e => ChooseAsync(side, e)">@if (chosen)
                         {
                             <span class="sides__check" aria-hidden="true">✓</span>
@@ -49,15 +54,7 @@
                 }
             </div>
         </div>
-        @if (_mine?.Side is not null)
-        {
-            @* Owner, 2026-11-18: no "Atsiimti": the pressed button takes the side back; this line says so. *@
-            <p class="small tl-ask__after">
-                <span id="home-again-@Place">@L["Side.PressAgain"]</span>
-                <a href="@BillPath" id="home-action-@Place">@L["Agenda.Action.Side"]</a>
-            </p>
-        }
-        <Messages Message="@Message" Info="@Info" />
+        <Messages Message="@Message" />
     }
 </div>
 @if (_consentFor is { } wanted)
@@ -100,7 +97,11 @@
     /// </summary>
     private bool Waiting => Locked || (_answer is null && _reading);
 
-    private string BillPath => "/seimas/" + Uri.EscapeDataString(Number);
+    /// <summary>
+    /// The row offers the sides (a coming bill, not the MP's own account): no "nobody yet" beside them (owner, 2026-11-19).
+    /// Before the answer is read it is a member's row like any other.
+    /// </summary>
+    private bool Asks => VoteId is null && _answer is not { MpAccount: true };
 
     protected override async Task OnInitializedAsync()
     {
@@ -185,7 +186,6 @@
 
     private async Task TakeAsync(string side)
     {
-        var wasFollowing = _mine?.Following == true;
         var result = await Appeals.TakePositionAsync(Number, new PositionRequest { Side = side });
         if (result.Problem?.Code == "consent.required")
         {
@@ -202,11 +202,9 @@
             return;
         }
 
+        // A first side also follows the bill (design 8.11.2): the row's mark shows "Sekate" once the shared answer is read
+        // again, and nothing else says so (owner, 2026-11-19: no "Dabar sekate šį projektą.").
         await AfterChangeAsync();
-        if (!wasFollowing && _mine?.Following == true)
-        {
-            Info = L["Agenda.Followed"];
-        }
     }
 
     /// <summary>Takes the side back, naming it: nothing changes on the server when the member no longer has it.</summary>

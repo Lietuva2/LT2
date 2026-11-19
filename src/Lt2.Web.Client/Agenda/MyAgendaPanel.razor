@@ -5,9 +5,10 @@
 @* "Jūsų projektai" at the top of the front page for a member (design 8.7, from variant C): the bills on the agenda or voted
    in the last week that the member follows (owner, 2026-11-17: "followed only"; a side alone puts no bill here, it shows in
    the bill's own row), whichever of them the timeline shows (owner, 2026-11-18: the timeline shows a few rows a day), each
-   with its planned date, their own side or "Dar nenurodėte, ko prašote", the last vote's result, and the share link when
-   they have taken a side. Everything comes from the member's own answers (their follows, with each bill's planned date and
-   last vote, and their sides), asked only in the browser, so nothing shows until they have loaded and nothing of them is
+   with its planned date, their own side or "Dar nenurodėte, ko prašote", the last vote's result and what is new on it
+   (design 8.11.8); no share link (owner, 2026-11-19: it took too much room; the bill's page keeps it). Everything comes
+   from the member's own answers (their follows, with each bill's planned date and last vote, and their sides), asked
+   only in the browser, so nothing shows until they have loaded and nothing of them is
    in the page's HTML. When the member takes, changes or withdraws a side in a row of the timeline, the panel follows
    without a reload (MyAgendaState.Changed). *@
 @if (_rows is { } rows)
@@ -52,13 +53,6 @@
                             @* Design 8.11.8: what was written on a followed bill since the member last opened its page. *@
                             <a class="small num" href="@BillPath(bill.Number)" id="my-agenda-new-@bill.Number">@NewsLine.Of(L, news)</a>
                         }
-                        @if (ownSide is not null && _shareCode is { } shareCode)
-                        {
-                            <div class="stack stack--tight">
-                                <span class="small">@L["Mine.Share"]</span>
-                                <CopyLink Link="@LandingPath.ShareLink(shareCode, BillPath(bill.Number))" ButtonId="@($"my-agenda-share-{bill.Number}")" />
-                            </div>
-                        }
                     </li>
                 }
             </ul>
@@ -77,8 +71,6 @@ else if (Message is not null)
 
 @code {
     private IReadOnlyList<MyAgendaRow>? _rows;
-    /// <summary>The member's invitation code while it lets a registration through (design 8.11.5: the share link is the bill's address with it after the "#").</summary>
-    private string? _shareCode;
 
     /// <summary>When the panel was read: a vote since then less the agenda's week is "the last week's".</summary>
     private DateTimeOffset Since { get; set; }
@@ -115,10 +107,6 @@ else if (Message is not null)
         Message = null;
         Since = Clock.GetUtcNow().AddDays(-MyAgendaState.RecentDays);
         _rows = rows;
-        if (_shareCode is null && rows.Any(r => r.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
-        {
-            _shareCode = invitation.Code;
-        }
     }
 
     private void OnChanged() => _ = InvokeAsync(async () =>

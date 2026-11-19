@@ -27,7 +27,17 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     private static partial Regex AntiforgeryValue();
 
     private static readonly string[] FooterLinks =
-        ["/metodika", "/moderavimo-taisykles", "/taisykles", "/privatumas", "/organizacijos", "/atsiliepimai"];
+    [
+        "/darbotvarke", "/projektai", "/seimas/balsavimai", "/suvestines", "/seimo-nariai", "/statistika",
+        "/metodika", "/moderavimo-taisykles", "/taisykles", "/privatumas", "/organizacijos", "/atsiliepimai",
+    ];
+
+    private static string FooterOf(string html)
+    {
+        var footer = Footer().Match(html);
+        footer.Success.ShouldBeTrue("the page has the footer");
+        return WebUtility.HtmlDecode(footer.Value);
+    }
 
     private static string HeaderOf(string html)
     {
@@ -168,6 +178,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
                 footer.ShouldContain($"href=\"{link}\"", customMessage: $"{where}: {link}");
             }
 
+            footer.ShouldContain(">Naršyti</h2>");
             footer.ShouldContain(">Apie</h2>");
             footer.ShouldContain(">Dalyvauti</h2>");
             footer.ShouldContain(">Naudojimo taisyklės</a>");
@@ -175,6 +186,52 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
             footer.ShouldContain("data-theme-switch data-permanent hidden", customMessage: $"{where}: the theme switch, hidden until its script runs");
             footer.ShouldContain("Lietuva 2.0 · uždaras bandymas");
         }
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-19: the footer repeats the menu's sections, so the end of a long page needs no scrolling back to the
+    /// top: its first group lists the tabs of "Projektai", "Seimo nariai" and "Statistika" in the menu's order, with the
+    /// menu's words, as plain links that mark nothing current (the menu does). The front page lost its row of links for it.
+    /// </summary>
+    [Fact]
+    public async Task The_footer_repeats_the_menus_sections_in_the_menus_order_on_the_front_page_a_tab_and_a_members_page()
+    {
+        using var visitor = NewBrowser();
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+
+        foreach (var (where, html) in new[]
+                 {
+                     ("front page", await visitor.Client.GetStringAsync("/")),
+                     ("agenda", await visitor.Client.GetStringAsync("/darbotvarke")),
+                     ("statistics", await visitor.Client.GetStringAsync("/statistika")),
+                     ("member", await member.Client.GetStringAsync("/paskyra")),
+                 })
+        {
+            var footer = FooterOf(html);
+            var group = Regex.Match(footer, "<section class=\"foot__group\" aria-labelledby=\"foot-browse\">.*?</section>", RegexOptions.Singleline);
+            group.Success.ShouldBeTrue($"{where}: the group of the menu's sections");
+            footer.IndexOf("id=\"foot-browse\"", StringComparison.Ordinal).ShouldBeLessThan(footer.IndexOf("id=\"foot-about\"", StringComparison.Ordinal), $"{where}: the first group");
+            group.Value.ShouldContain("<h2 class=\"label\" id=\"foot-browse\">Naršyti</h2>");
+            Regex.Matches(group.Value, "<li><a href=\"([^\"]+)\" id=\"([^\"]+)\">([^<]+)</a></li>")
+                .Select(m => (m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value))
+                .ShouldBe(
+                [
+                    ("/darbotvarke", "foot-tab-darbotvarke", "Darbotvarkė"),
+                    ("/projektai", "foot-tab-projektai", "Projektai"),
+                    ("/seimas/balsavimai", "foot-tab-seimas-balsavimai", "Balsavimai"),
+                    ("/suvestines", "foot-tab-suvestines", "Suvestinės"),
+                    ("/seimo-nariai", "foot-mps", "Seimo nariai"),
+                    ("/statistika", "foot-statistics", "Statistika"),
+                ],
+                $"{where}: the menu's items in its order");
+            footer.ShouldNotContain("aria-current", customMessage: $"{where}: the menu marks the current page, the footer does not");
+        }
+
+        // The menu holds the same sections in the same order (the dropdown's tabs, then the two items).
+        var header = WebUtility.HtmlDecode(HeaderOf(await visitor.Client.GetStringAsync("/metodika")));
+        Regex.Matches(header, "<a href=\"(/[^\"]+)\" id=\"nav-(?:tab-[a-z-]+|mps|statistics)\"").Select(m => m.Groups[1].Value)
+            .ShouldBe(["/darbotvarke", "/projektai", "/seimas/balsavimai", "/suvestines", "/seimo-nariai", "/statistika"]);
     }
 
     [Theory]

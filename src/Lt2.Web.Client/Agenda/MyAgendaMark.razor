@@ -2,7 +2,9 @@
 @implements IDisposable
 @inject MyAgendaState State
 
-@* A member's own mark under a title in the front page's timeline (design 8.7): "Sekate" and their own side. Filled only in
+@* A member's own mark under a title in the timeline, on the front page and the agenda page (design 8.7, 8.11.1): "Sekate",
+   their own side and, on a followed bill, what is new there since they last opened its page as a small link to it, the
+   same line as "Jūsų projektai" (design 8.11.8; owner, 2026-11-19: "the same like start page"). Filled only in
    the browser from the member's own answer (MyAgendaState, one request for the whole page), and read again when the member
    acts in a row (a first side also follows the bill, design 8.11.2): while the server prerenders, the mark is empty, so
    the page's HTML is the same for every member. *@
@@ -20,6 +22,10 @@
         else
         {
             @L["Mine.NoSide"]
+        }
+        @if (mine is { Following: true, New: { } news })
+        {
+            <a class="num" href="@("/seimas/" + Uri.EscapeDataString(Number))" id="home-new-@Place">@NewsLine.Of(L, news)</a>
         }
     </p>
 }

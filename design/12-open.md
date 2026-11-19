@@ -8,13 +8,27 @@ Nothing is built for these; the local stack and the trial show them as they are.
 
 1. About four in ten upcoming agenda rows are bills to be presented, which the open data does not know before their first
    sitting. Since 2026-11-18 (owner) they come last in their day, folded into one line "Dar N projektų, kurių
-   atviruosiuose Seimo duomenyse dar nėra" that opens to their numbers and the agenda source (on the agenda page at the
-   end of a day shown whole, or of a day whose known bills all show); the front page counts
-   them in the day and lists them only in a day opened whole (design 8.11.1, 8.7). Still open: the lrs.lt page names each bill's title in its row;
+   atviruosiuose Seimo duomenyse dar nėra" that opens to their numbers and the agenda source, after the day's last known
+   row once every known row shows, on both pages (since 2026-11-19, when the days grow by "Rodyti daugiau"); they are
+   counted in the day's head and in "Rodoma N iš M" (design 8.11.1, 8.7). Still open: the lrs.lt page names each bill's title in its row;
    the watcher could keep it for such rows until the open data has the bill, and they would then rank as other bills.
    If no: as now.
 2. [Decided by the owner on 2026-11-18, 12-decisions: the front page shows two voting days of five votes each, with
    links to the rest.]
+
+**Onboarding: how a side is taken back (raised by the owner on 2026-11-19, not designed)**
+
+The line "Paspaudę dar kartą, atsiimsite." under a pressed side button went on 2026-11-19 (12-decisions; 8.7, 8.12.1):
+"I think we'll add onboarding later and that will cover it". Until then only the pressed button's title and
+`aria-pressed` say that pressing it again takes the side back. Open: what the onboarding is (when it shows, to whom, how
+it is dismissed, what else it explains), and where it keeps that it was seen, since nothing non-essential is kept in the
+browser (a new cookie or storage key is a design change). Nothing is built.
+
+**Proposed by the designer while repeating the menu in the footer (8.21), 2026-11-19, awaiting the owner**
+
+The footer's new first group, the menu's sections, is headed "Naršyti" (`PageText` `Footer.Browse`), a proposal for a
+native read, one short word in the style of "Apie" and "Dalyvauti". If no: "Puslapiai", "Skyriai"
+or "Lietuva 2.0" (the last repeats the footer's own line).
 
 **The outcome of a vote: [Decided by the owner on 2026-11-18, 12-decisions: keep the majority words (choice 1).]**
 
@@ -200,7 +214,7 @@ search engine's copy outlives switching the profile off. With follower numbers b
 | Public profile: no cache, 410 and 404 marked `noindex` (8.25.2) | **Proposed (built so):** the page is `no-cache` for everyone so switching off is at once; the 410 and 404 answers carry `X-Robots-Tag: noindex`. Or: ordinary caching. | Before going live |
 | A comment in an organisation's name when its last representative's account is deleted (8.23.7, 8.14.14) | Open, found while connecting comments and profiles: 8.23.7 says a comment written in an organisation's name stays when its writer's account is deleted (as statements do), but deleting the last representative's account closes the organisation (8.14.14), which withdraws its statements, and a withdrawn statement takes its comments with it (8.23.7). The code does both as written; since an organisation comments only under its own statement (8.23.2), the comments of the last representative go with the statements when the account is deleted, and the rule "stays" holds only while another representative remains. Either: keep it so (the closing decides); or keep a closed organisation's statements and their comments; or move the comment's rule to "stays unless its organisation is closed". | Before going live |
 | The action row under a text (8.16.1) | **Decided by the owner, 2026-11-17 (built):** one row under every argument, statement, MP's response and comment, never wrapping from 360 px: "Man svarbu · n", "Aptarimas (n)", "Sutinku", then "⋯" (the browser's popover) with "Pranešti", one's own "Atsiimti"/"Ištrinti" and a moderator's "Moderuoti"; a chosen action opens directly under the row, an open discussion below it; small inline icons beside the words; the arguments at the page's full width, so the word "Aptarimas" shows at desktop widths and the sides stay side by side with a discussion open (only a phone under about 390 px keeps the word for screen readers). | Done |
-| A link to a comment or an argument (8.23.6, 8.23.14 point 8) | **Proposed (built so, 2026-11-17):** `?komentaras={id}` / `?argumentas={id}` with the element's own fragment, resolved by the server: the target shown even behind "show all" or the responses' paging, its "Aptarimas" open through the linked comment rounded up to the next ten, the linked one marked; a comment not shown changes nothing (one 404 for hidden and unknown). Or: the fragment alone with a script that opens the thread (no help without script, and none for a comment not rendered). | Before going live |
+| A link to a comment or an argument (8.23.6, 8.23.14 point 8) | **Proposed (built so, 2026-11-17):** `?komentaras={id}` / `?argumentas={id}` with the element's own fragment, resolved by the server: the target shown even behind "show all" or the responses' paging, its "Aptarimas" open through the linked comment on the thread's own pages (10, then 20 a step, since 2026-11-19), the linked one marked; a comment not shown changes nothing (one 404 for hidden and unknown). Or: the fragment alone with a script that opens the thread (no help without script, and none for a comment not rendered). | Before going live |
 | Public profile: the party shown (8.25.9) – the texts | Built 2026-11-17 (the row above). The box's sentence (`UiText` `Party.PublicText`, version 2026-11-17), the page's line ("Palaikoma partija: …"), `Party.Text`, and the privacy notice's `Privacy.Data.Fact7.Value`, `Privacy.Data.Fact12.Value`, `Privacy.Rights.Fact3.Value`, the terms' `Terms.Publish.6` and the methodology's `Method.Privacy.Follow` go to the native reader and the lawyer's one reading with the others. | Before going live |
 
 **Risks**

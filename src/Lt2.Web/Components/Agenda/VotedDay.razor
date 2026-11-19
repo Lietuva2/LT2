@@ -1,0 +1,54 @@
+@using Lt2.Api.Contracts.Agenda
+@using Lt2.Web.Client.Agenda
+@inject IStringLocalizer<PageText> T
+@inject Formats F
+
+@* One voting day of the timeline, on the front page and the agenda page alike (design 8.7, 8.11.1): its head (date, weekday,
+   how many stage votes the day holds), the votes the page shows, and under a day longer than its first page the shared
+   "show more" (owner, 2026-11-19), as a sitting day's (PlannedDay): ?balsuota=2026-11-17:60, landing on the first vote added. *@
+<section class="tl-day tl-past" aria-label="@($"{T["Agenda.Voted"]} {F.DayMonth(Day)}")" id="@Id">
+    <TimelineDate Label="@T["Agenda.Voted"]" Day="Day" Count="@AgendaWords.Votes(T, View.Count)" />
+    <div class="tl-rows">
+        <ul class="tl-items">
+            @foreach (var v in View.Shown)
+            {
+                <VotedItem Vote="v" Member="Member" Numbers="Numbers" />
+            }
+        </ul>
+        @if (AgendaRules.Paged(First, View.Known))
+        {
+            <Lt2.Web.Client.Components.ShowMore Id="@($"{Id}-more")" StatusId="@($"{Id}-shown")" Shown="View.ShownCount" Total="View.Count" Href="@More" />
+        }
+    </div>
+</section>
+
+@code {
+    /// <summary>The page the day is on: its path and its blocks' ids.</summary>
+    [Parameter, EditorRequired] public AgendaPagingPage Page { get; set; } = default!;
+
+    [Parameter, EditorRequired] public DateOnly Day { get; set; }
+
+    /// <summary>The day's votes as the page cuts them (every vote is known).</summary>
+    [Parameter, EditorRequired] public AgendaDayView<AgendaVoteResponse> View { get; set; } = default!;
+
+    /// <summary>How many votes the page shows of a day at first (the front page five, the agenda page ten).</summary>
+    [Parameter, EditorRequired] public int First { get; set; }
+
+    /// <summary>The planned days the page shows grown, for the link (<see cref="AgendaPaging.Grown"/>).</summary>
+    [Parameter, EditorRequired] public IReadOnlyDictionary<DateOnly, int> Planned { get; set; } = default!;
+
+    /// <summary>The voted days the page shows grown.</summary>
+    [Parameter, EditorRequired] public IReadOnlyDictionary<DateOnly, int> Voted { get; set; } = default!;
+
+    /// <summary>Rendered for a signed-in member: the rows' islands. The same HTML for every member.</summary>
+    [Parameter] public bool Member { get; set; }
+
+    /// <summary>Every bill the page shows, for the members' islands to ask about.</summary>
+    [Parameter] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    private string Id => Page.VotedDayId(Day);
+
+    private string? More => AgendaRules.NextAsked(View.Shown.Count, View.Known) is { } asked
+        ? AgendaPaging.MoreVoted(Page, Planned, Voted, Day, asked, AgendaPaging.VotedRowId(View.Rest[0].VoteId))
+        : null;
+}

@@ -26,6 +26,9 @@ public static class MenuSections
     /// <summary>The first of the tabs: what is coming (design 8.21, the designer's proposal: the most useful first view).</summary>
     public const string ProjectsHome = "/darbotvarke";
 
+    /// <summary>The list of MPs, "Seimo nariai" in the main menu (and in the footer's first group, as every item here).</summary>
+    public const string Mps = "/seimo-nariai";
+
     /// <summary>The statistics page, "Statistika" in the main menu (design 8.26; owner, 2026-11-17, was <c>/seimas/analitika</c>).</summary>
     public const string Statistics = "/statistika";
 

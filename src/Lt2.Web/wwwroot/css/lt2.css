@@ -700,7 +700,10 @@ fieldset.stack--tight > legend { margin-block-end: var(--sp-3); }
 .report-visitor > summary { display: inline; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
 /* "Rodyti daugiau" under a long list (owner, 2026-11-19, ShowMore.razor): one line under the list, "Rodoma N iš M" and the
-   link (a plain button's look); while an island reads the next page, the waiting cursor on it. */
+   link, a plain text link (owner, 2026-11-19: a button's look clashed with the buttons under a list) with the list's further
+   links after it. The small status and the body-size links stand on one baseline; on a phone the links wrap below the status.
+   While an island reads the next page, the waiting cursor on the link. */
+.show-more { align-items: baseline; column-gap: var(--sp-4); row-gap: var(--sp-2); }
 .show-more[aria-busy="true"] .show-more__link { cursor: progress; }
 
 /* A long member's text (design 8.2, owner 2026-11-16, LongText.razor): the beginning, "…" and "Rodyti daugiau" under it.
@@ -1026,14 +1029,11 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* A vote's majority chip and its numbers on one line (design 8.18, "The majority"). */
 .result-line { gap: var(--sp-1) var(--sp-2); }
 
-/* A day's column (owner, 2026-11-18): its first rows, then "Rodyti likusius" (a link to the page with the day whole) or,
-   on a day shown whole, the rest as a second list that continues the first one, where that link lands; the bills the
-   open data does not know yet folded into one line, and on the front page the link to the whole day. Each under the
-   rows, at the rows' left edge. */
+/* A day's column (owner, 2026-11-18; 2026-11-19): the rows it shows, then, once every known row shows, the bills the open
+   data does not know yet folded into one line, then the shared "Rodoma N iš M · Rodyti daugiau" (ShowMore), each under the
+   rows, at the rows' left edge. The link lands on the first row added, a little below the top of the screen. */
 .tl-rows { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
-.tl-all { margin: 0; }
-.tl-items + .tl-items { margin-block-start: calc(-1 * var(--sp-3)); scroll-margin-top: var(--sp-4); }
-.tl-items + .tl-items > .tl-item:first-child { border-top: 0; }
+.tl-items > .tl-item { scroll-margin-top: var(--sp-4); }
 .tl-unknown > summary { padding-block: var(--sp-1); }
 .tl-unknown__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .tl-unknown__list > li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
@@ -1057,7 +1057,6 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .tl-ask { display: flex; flex-direction: column; gap: var(--sp-1); width: 100%; max-width: 15rem; }
 .tl-ask__sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
 .tl-ask__sides .btn { padding-inline: var(--sp-2); }
-.tl-ask__after { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
 .tl-item__consent { grid-column: 1 / -1; min-width: 0; }
 
 /* "Jūsų projektai" (from variant C): the member's own bills, filled in the browser. */
@@ -1171,7 +1170,7 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .top__nav .account__links a:hover, .account__links .top__signout button:hover { text-decoration: underline; border: 0; }
 .account__links .top__signout { display: block; }
 
-/* The footer: two short groups of links, then the theme switch and the line about the trial, on the ground. */
+/* The footer: three short groups of links (the menu's sections first, design 8.21), wrapping on a phone, then the theme switch and the line about the trial, on the ground. */
 .foot { display: flex; flex-direction: column; gap: var(--sp-5); }
 .foot__groups { display: flex; flex-wrap: wrap; gap: var(--sp-5) var(--sp-7); }
 .foot__group { display: flex; flex-direction: column; gap: var(--sp-2); }

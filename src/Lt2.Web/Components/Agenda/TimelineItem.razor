@@ -7,17 +7,19 @@
 @inject IStringLocalizer<AppealUi> U
 @inject Formats F
 
-@* One planned bill in the front page's timeline (design 8.7) and the agenda page's (8.11.1, without "Prašau balsuoti":
-   Asks): number, stage and title; both sides with the counts for
-   accounts older than 30 days, the bar and the threshold, or "Niekas nenurodė, ko prašo"; the organisations with a
-   public statement on it as names with their stance (an unconfirmed one keeps "Nepatvirtinta"; the full label is on the
-   bill's page and the profile), ordered as on the bill's page and never counted; and, on a bill whose record is open,
-   "Prašau balsuoti" with "už" and "prieš" ("Taking a side in the row"). A visitor's two are links to sign in that come back
-   to the bill's page; a member's side column is an island (MyAgendaSide) that takes the side in the row, and the mark under
-   the title is another (MyAgendaMark), both filled in the browser; everything here is public and the same for everyone. A
-   closed or hidden record and a bill the open data does not know yet have no sides to take; the last shows what the
-   agenda says and its source. *@
-<li class="tl-item" id="agenda-@Display.Day(Day)-@Item.Number">
+@* One planned bill in the front page's timeline (design 8.7) and the agenda page's (8.11.1): the same row on both (owner,
+   2026-11-19: "the front page and the agenda's rows look the same, one component"). Number, stage and title (the way to
+   the bill's details); both sides with the counts for accounts older than 30 days, the bar and the threshold; the
+   organisations with a public statement on it as names with their stance (an unconfirmed one keeps "Nepatvirtinta"; the
+   full label is on the bill's page and the profile), ordered as on the bill's page and never counted; and, on a bill whose
+   record is open, "Prašau balsuoti" with "už" and "prieš" ("Taking a side in the row"), with no line saying nobody took
+   part yet beside them (owner, 2026-11-19: "minimise non-essential texts"). A visitor's two are links to sign in that come
+   back to the bill's page; a member's side column is an island (MyAgendaSide) that takes the side in the row, and the mark
+   under the title is another (MyAgendaMark), both filled in the browser and keyed by the row's place, so a day grown
+   in place ("Rodyti daugiau") keeps each island on its own row and starts those of the rows added; everything here is public and the same for everyone. A closed record
+   says "Niekas nedalyvavo" when nobody did; a closed or hidden record and a bill the open data does not know yet have no
+   sides to take; the last shows what the agenda says and its source. *@
+<li class="tl-item" id="@Lt2.Web.Client.Agenda.AgendaPaging.PlannedRowId(Day, Item.Number)">
     <div class="tl-item__main">
         <span class="row">
             @if (Item.Title is not null)
@@ -60,12 +62,12 @@
         }
         @if (Member && Item.Title is not null)
         {
-            <MyAgendaMark Number="@Item.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
+            <MyAgendaMark @key="Place" Number="@Item.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
         }
     </div>
     @if (Member && Item.Record is { Status: "open" } open)
     {
-        <MyAgendaSide Number="@Item.Number" Numbers="Numbers" Place="@Place" Record="open" @rendermode="InteractiveWebAssembly" />
+        <MyAgendaSide @key="Place" Number="@Item.Number" Numbers="Numbers" Place="@Place" Record="open" @rendermode="InteractiveWebAssembly" />
     }
     else
     {
@@ -84,15 +86,10 @@
             }
             else
             {
-                <RecordFigures Record="record" Id="@Place" />
+                <RecordFigures Record="record" HideNobody="@(record.Status == "open")" Id="@Place" />
                 @if (record.Status == "closed")
                 {
                     <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
-                }
-                else if (!Asks)
-                {
-                    @* The agenda page (design 8.11.1): the same for everyone, with no island, so the side is taken on the bill's page. *@
-                    <a class="small" href="@BillPath">@T[record.Counts.For + record.Counts.Against == 0 ? "Agenda.TakePart" : "Agenda.ToAppeal"]</a>
                 }
                 else
                 {
@@ -118,17 +115,12 @@
     /// <summary>The sitting day the row is under: part of its id, since a bill may be planned on more than one day.</summary>
     [Parameter, EditorRequired] public DateOnly Day { get; set; }
 
-    /// <summary>Rendered for a signed-in member: the mark and the side column become islands. The same for every member.</summary>
+    /// <summary>Rendered for a signed-in member: the mark and the side column become islands. The same HTML for every member.</summary>
     [Parameter] public bool Member { get; set; }
 
     /// <summary>Every bill the page shows, for the members' islands to ask about in one request.</summary>
     [Parameter] public IReadOnlyList<string> Numbers { get; set; } = [];
 
-    /// <summary>
-    /// The front page's "Prašau balsuoti" in the row (design 8.7); false on the agenda page (8.11.1), whose rows link to the
-    /// bill's page instead and carry no island.
-    /// </summary>
-    [Parameter] public bool Asks { get; set; } = true;
 
     private string BillPath => "/seimas/" + Uri.EscapeDataString(Item.Number);
 

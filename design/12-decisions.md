@@ -597,8 +597,9 @@ Each is built as written; "no" names what changes.
 **Decided by the owner on 2026-11-19: every "show more" the same, the arguments and the comments a page at a time (8.16.4, 8.12.1, 8.23.6)**
 
 - One "show more" under every long list: "Rodoma N iš M" where the total is known and a link to the grown page, in a plain
-  button's look; without script and on server-rendered pages the link (enhanced navigation swaps the page in); in an
-  island the next page from the API, in place, the focus on the first item added.
+  button's look [a text link since later the same day, below]; without script and on server-rendered pages the link
+  (enhanced navigation swaps the page in); in an island the next page from the API, in place, the focus on the first item
+  added.
 - The arguments a page at a time: the bill's answer carries each side's first two and each side's count; "Rodyti daugiau
   argumentų" under each side adds ten (`?argumentai-uz=`, `?argumentai-pries=` without script). `?argumentai=visi` and
   "Visi argumentai: N" / "Rodyti mažiau" are gone. A linked argument and the one just published stand first in their side.
@@ -616,3 +617,69 @@ Each is built as written; "no" names what changes.
 - Built so: a vote's page (`/seimas/balsavimai/{id}`) is under the tab, as a summary's date page is under "Suvestinės":
   "Projektai" is current there, no tab row, and its breadcrumb leads up to the history.
 
+**Decided by the owner on 2026-11-19: the agenda's rows are the front page's, and fewer texts beside the sides (8.7, 8.11.1, 8.12.1)**
+
+- "The front page and the agenda's rows look the same, one component": `/darbotvarke` offers "Prašau balsuoti" with "už" and
+  "prieš" in a coming bill's row, as the front page does. A visitor's are links to sign in that come back to the bill's
+  page; a member's side column and the mark under the title are islands filled in the browser (the positions consent
+  asked in the row), so the served page is the same for every member and holds nothing of anyone's own. The front page's
+  "Jūsų projektai" and greeting stay on the front page only.
+- "We should try to minimise non-essential texts": the bill's title is the way to its details. Gone from the rows: the
+  agenda page's "Nurodyti, ko prašote →" and "Ko prašo, argumentai →", the member's "Argumentai ir pozicijos", and "Niekas
+  nenurodė, ko prašo" beside the side buttons (a row without buttons, a voted bill's, keeps it; a closed bill's "Niekas
+  nedalyvavo" and the bill page's "Dėl šio projekto dar niekas nenurodė, ko prašo Seimo narių." stay).
+- The line "Paspaudę dar kartą, atsiimsite." under a pressed side button is gone, in the rows and on the bill's page:
+  "that should be a one time info or some onboarding should cover it, not every button", then "skip this now, I think
+  we'll add onboarding later and that will cover it". `aria-pressed` and the pressed button's title stay. The onboarding is
+  open (12-open).
+
+**Decided by the owner on 2026-11-19: "show more" is a link, not a button (8.16.4)**
+
+- "Show more should be just a link, not a button": in a plain button's look "Rodyti daugiau argumentų" stood above
+  "Parašyti argumentą" (and "Rodyti daugiau komentarų" above the comment box) with other left edges and widths. Every
+  `ShowMore` is a text link in the site's normal link look, on one line with "Rodoma N iš M"; the further links on that
+  line ("Senesni balsavimai →", "Tolesni projektai →") are text links too. The agenda's "Rodyti likusius" was a text
+  link already.
+
+**Decided by the owner on 2026-11-19: the agenda's days grow by the one "show more", no "Dabar sekate", the news in the rows, no share link in "Jūsų projektai" (8.7, 8.11.1, 8.11.2, 8.11.5, 8.11.8, 8.16.4)**
+
+- "Rodyti likusius" unified with the shared "show more": one way for every list, a page at a time, showing how much is
+  loaded. Under a longer day of `/darbotvarke` (ten first) and of the front page (five first) stands "Rodoma N iš M ·
+  Rodyti daugiau", ten more a press, by the address: `?diena=2026-11-24:20` (`?balsuota=…` a voted day; the parameter
+  repeats for every day grown), landing on the first row added (its own id). A bare day, a word or a number not above
+  the first rows is left out, never an error; a number beyond the day shows the day. M is the day's head count; the
+  bills the open data does not know yet are folded into one line after the last known row once every known row shows,
+  and count as shown from then ("Rodoma 40 iš 40" on the last page, no link). A day whose rows all fit has no such
+  line; on the front page too, its unknown bills then show at once (until now only in a day opened whole there).
+- "Dabar sekate šį projektą." after a first side in a row is gone: "No need, if the label 'Sekate' lights up anyway".
+  It showed only in the timeline's rows, where the mark's "Sekate" lights up; the bill's page never had it.
+- The member's mark in the timeline's rows (front page and `/darbotvarke`) says what is new on a followed bill, as
+  "Jūsų projektai" does ("It should be the same like start page"): a small link to the bill, from the same answer; a
+  bill in both shows it twice, the panel being the summary.
+- "Jūsų projektai" has no share line ("Pakvieskite kitus savo kvietimo nuoroda:" and its copy button): "the button
+  should go from start page, inside the details that's enough, now it's taking too much space". The bill's page keeps it
+  (8.11.5); the front page no longer reads the member's invitation.
+
+**Decided by the owner on 2026-11-19: the front page's row of links goes, the footer repeats the menu (8.7, 8.21)**
+
+- "These should go, either out, or the menu could be repeated in the footer to not require the scroll back to top", of
+  "Visi projektai", "Suvestinės Seimo nariams" and "Seimo nariai" under the front page's agenda. Both: the row is gone,
+  and the footer, on every page, has a first group with the menu's sections in the menu's order and words (the four
+  tabs of "Projektai", then "Seimo nariai" and "Statistika"), plain links marking nothing current. Its heading,
+  "Naršyti", is the designer's proposal and awaits a native speaker.
+
+**Decided by the owner on 2026-11-19: with "show more" the first page stays small and each further page is larger: rows +50, texts +20 (8.16.4, 8.5.6, 8.7, 8.11.1, 8.12.1, 8.12.5, 8.17, 8.18, 8.23.6, 8.25.2, 8.26.1)**
+
+- "Like for the agenda the initial page would still be 10, but pressing show more would load 50 more entries." The first
+  page of every list is unchanged, light for most readers, who never press; whoever presses wants more, so a press
+  brings a larger page. A list of rows adds 50: the agenda's days (10 first, then 60, 110, …), the front page's (5, 55,
+  …), `/projektai` (20, 70, …, at most 200 a page), the history of votes (30, 80, …, at most 300), a vote's ballots (20,
+  70, 120, 141), an MP's votes (50, 100, …, as before), a member's texts (10, 60, …), `/statistika`'s bills (10, 60, …, at
+  most 300). A list of members' long texts adds 20: the arguments (2 a side, then 22, 42, …), the comments (10, 30, …),
+  the MPs' responses (10, 30, …). Until then each list added its own step, mostly its first page's size (10, 20, 30, 40).
+- The designer's choices: the caps stay (300 votes, 200 bills, 300 statistics bills; the last press before one adds what
+  is left); the API's maximum `limit`s already allow a grown page (`/appeals` 200, `/votes` and `/mps/{slug}/votes` 300,
+  the statistics 300, an argument page 100, a discussion unbounded by `limit` as before, its re-reads ask for everything
+  shown); a later page of arguments or comments asked without a `limit` is one step (20); a link to one comment shows its
+  discussion on the thread's own pages (10, 30, 50, …: the 25th still shows 30). One place holds the two numbers
+  (`ListPaging`), not settings.

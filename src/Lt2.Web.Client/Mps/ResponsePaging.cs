@@ -4,9 +4,10 @@ using Lt2.Api.Contracts.Mps;
 namespace Lt2.Web.Client.Mps;
 
 /// <summary>
-/// Design 8.5.6: a list of MPs' responses (on the bill's page and on the profile) shows the first 10, and "Rodyti daugiau"
-/// adds more by the page's own address (<c>?atsakymai=</c>), landing on the first new item, as the ballot list does (8.17), so it
-/// works without JavaScript. A value the page would not make falls back to the default, never to an error.
+/// Design 8.5.6: a list of MPs' responses (on the bill's page and on the profile) shows the first 10, and "Rodyti daugiau
+/// atsakymų" adds 20 (owner, 2026-11-19, <see cref="MpResponseLimits.Step"/>) by the page's own address (<c>?atsakymai=</c>),
+/// landing on the first new item, as the ballot list does (8.17), so it works without JavaScript. A value the page would not
+/// make falls back to the default, never to an error.
 /// </summary>
 public static class ResponsePaging
 {

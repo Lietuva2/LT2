@@ -83,8 +83,8 @@ public static class CommentLimits
     /// <summary>The comments a thread shows first.</summary>
     public const int First = 10;
 
-    /// <summary>The comments "Rodyti daugiau komentarų" adds.</summary>
-    public const int Step = 10;
+    /// <summary>The comments "Rodyti daugiau komentarų" adds (owner, 2026-11-19: a list of texts, 20 a press).</summary>
+    public const int Step = ListPaging.TextStep;
 
     /// <summary>The page's address parameter: the target's id (32 hexadecimal digits), a hyphen, how many to show.</summary>
     public const string ShowParameter = "komentarai";

@@ -43,14 +43,14 @@ public sealed class BallotListTests
         BallotList.Apply(ballots, Factions, query, faction, ballot, show);
 
     [Fact]
-    public void The_first_20_are_shown_and_each_more_adds_40_up_to_all()
+    public void The_first_20_are_shown_and_each_more_adds_50_up_to_all()
     {
         var ballots = Vote();
 
         var first = Apply(ballots);
         first.Shown.Count.ShouldBe(20);
         first.Matched.ShouldBe(141);
-        first.More.ShouldBe(60);
+        first.More.ShouldBe(70);
 
         var steps = new List<int>();
         for (var view = first; view.More is { } more; view = Apply(ballots, show: more.ToString(CultureInfo.InvariantCulture)))
@@ -58,7 +58,7 @@ public sealed class BallotListTests
             steps.Add(more);
         }
 
-        steps.ShouldBe([60, 100, 140, 141]);
+        steps.ShouldBe([70, 120, 141]);
         var all = Apply(ballots, show: "141");
         all.Shown.Count.ShouldBe(141);
         all.More.ShouldBeNull();
@@ -275,7 +275,7 @@ public sealed class BallotListTests
         BallotList.Address(99100002, null, null, null, null, "balsai").ShouldBe("/seimas/balsavimai/99100002#balsai");
         BallotList.Address(99100002, " Žolynaitė ", Psf, "abstain", 20, "balsai")
             .ShouldBe("/seimas/balsavimai/99100002?q=%C5%BDolynait%C4%97&frakcija=pilietines-sajungos-frakcija&balsas=susilaike#balsai");
-        BallotList.Address(99100002, null, null, "did-not-vote", 60, "balsas-21").ShouldBe("/seimas/balsavimai/99100002?balsas=nebalsavo&rodyti=60#balsas-21");
+        BallotList.Address(99100002, null, null, "did-not-vote", 70, "balsas-21").ShouldBe("/seimas/balsavimai/99100002?balsas=nebalsavo&rodyti=70#balsas-21");
     }
 
     [Fact]

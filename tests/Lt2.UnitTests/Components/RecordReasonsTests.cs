@@ -452,68 +452,68 @@ public sealed class RecordReasonsTests : BunitContext
     }
 
     /// <summary>
-    /// Owner, 2026-11-19: each side is read a page at a time. Under each column "Rodoma 2 iš 15" and "Rodyti daugiau argumentų", a
-    /// link to the page with that side grown by ten (every other parameter kept), landing on the first one added; once the island
-    /// runs it reads the next ten from the API in place, gives the first one added the focus, and the link then points further.
+    /// Owner, 2026-11-19: each side is read a page at a time. Under each column "Rodoma 2 iš 30" and "Rodyti daugiau argumentų", a
+    /// link to the page with that side grown by 20 (every other parameter kept), landing on the first one added; once the island
+    /// runs it reads the next 20 from the API in place, gives the first one added the focus, and the link then points further.
     /// </summary>
     [Fact]
     public void Rodyti_daugiau_argumentu_reads_the_sides_next_page_in_place_and_points_to_the_grown_address()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.GetRequiredService<NavigationManager>().NavigateTo($"/seimas/{Bill}?atsakymai=20");
-        var many = Enumerable.Range(1, 15).Select(i => Reason(Guid.Parse($"0193a1b2-0000-7000-8000-0000000003{i:D2}"), 20 - i)).ToArray();
+        var many = Enumerable.Range(1, 30).Select(i => Reason(Guid.Parse($"0193a1b2-0000-7000-8000-0000000003{i:D2}"), 40 - i)).ToArray();
         var against = Reason(Guid.Parse("0193a1b2-0000-7000-8000-000000000401"), 1) with { Side = "against" };
         Arguments([.. many, against]);
         var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
 
         reasons.FindAll("#reasons-for .said").Count.ShouldBe(2);
-        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 2 iš 15");
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 2 iš 30");
         var more = reasons.Find("#reasons #reasons-for #reasons-more-for");
         more.TextContent.ShouldBe("Rodyti daugiau argumentų");
-        more.GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=12#argumentai-uz-3");
+        more.GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=22#argumentai-uz-3");
         reasons.FindAll("#reasons-more-against").ShouldBeEmpty("one argument against: nothing more to show");
 
         more.Click();
 
-        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Count.ShouldBe(12));
+        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Count.ShouldBe(22));
         var asked = _appeals.Arguments[_appeals.Calls.LastIndexOf("GetReasonsAsync")];
         asked[1].ShouldBe("for");
         asked[2].ShouldBe("2", "from where the first page ends");
-        asked[3].ShouldBe(ReasonLimits.Step);
+        asked[3].ShouldBe(20, "owner, 2026-11-19: a list of texts grows by 20");
         reasons.Find($"#reason-{many[2].Id}").GetAttribute("tabindex").ShouldBe("-1", "the first one added");
         reasons.Find($"#reason-{many[2].Id} > .said__by").Id.ShouldBe("argumentai-uz-3");
         JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal));
-        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 12 iš 15");
-        reasons.Find("#reasons-more-for").GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=22#argumentai-uz-13");
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 22 iš 30");
+        reasons.Find("#reasons-more-for").GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=42#argumentai-uz-23");
 
         reasons.Find("#reasons-more-for").Click();
-        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Count.ShouldBe(15));
+        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Count.ShouldBe(30));
         reasons.FindAll("#reasons-more-for").ShouldBeEmpty("every argument of the side is shown");
-        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 15 iš 15");
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 30 iš 30");
     }
 
     /// <summary>
-    /// Owner, 2026-11-19: without script the address grows the side (<c>?argumentai-uz=12</c>), and the server renders as many,
+    /// Owner, 2026-11-19: without script the address grows the side (<c>?argumentai-uz=22</c>), and the server renders as many,
     /// with their discussions; a linked argument its pages would put further on stands first in its side, marked.
     /// </summary>
     [Fact]
     public void The_address_grows_a_side_and_a_linked_argument_beyond_its_pages_stands_first_without_script()
     {
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));
-        var many = Enumerable.Range(1, 15).Select(i => Reason(Guid.Parse($"0193a1b2-0000-7000-8000-0000000003{i:D2}"), 20 - i)).ToArray();
+        var many = Enumerable.Range(1, 30).Select(i => Reason(Guid.Parse($"0193a1b2-0000-7000-8000-0000000003{i:D2}"), 40 - i)).ToArray();
         Arguments(many);
-        var linked = many[14].Id;
-        Services.GetRequiredService<NavigationManager>().NavigateTo($"/seimas/{Bill}?argumentai-uz=12");
+        var linked = many[29].Id;
+        Services.GetRequiredService<NavigationManager>().NavigateTo($"/seimas/{Bill}?argumentai-uz=22");
         var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill).Add(c => c.LinkedReason, linked));
 
         var shown = reasons.FindAll("#reasons-for .said").Select(s => s.Id).ToList();
-        shown.Count.ShouldBe(13, "twelve as the address asks, and the linked one");
+        shown.Count.ShouldBe(23, "22 as the address asks, and the linked one");
         shown[0].ShouldBe($"reason-{linked}");
         reasons.Find($"#reason-{linked}").ClassList.ShouldContain("said--linked");
-        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 13 iš 15");
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 23 iš 30");
         var more = reasons.Find("#reasons-more-for");
         more.HasAttribute("data-enhance-nav").ShouldBeFalse("a plain link without script");
-        more.GetAttribute("href")!.ShouldContain("argumentai-uz=22");
+        more.GetAttribute("href")!.ShouldContain("argumentai-uz=42");
         _appeals.Calls.ShouldContain("GetReasonAsync");
     }
 

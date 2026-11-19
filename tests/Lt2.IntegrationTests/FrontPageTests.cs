@@ -238,6 +238,14 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         html.IndexOf("Kaip tai veikia", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal));
         html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"not-a-poll\"", StringComparison.Ordinal));
 
+        // Owner, 2026-11-19: no row of links under the agenda ("Visi projektai", the summaries, the MPs); the footer repeats
+        // the menu's sections instead (design 8.21, NavigationTests).
+        html.ShouldNotContain("id=\"home-more\"");
+        html.ShouldNotContain("Visi projektai");
+        html.ShouldNotContain("Suvestinės Seimo nariams");
+        var main = html[html.IndexOf("<main", StringComparison.Ordinal)..html.IndexOf("</main>", StringComparison.Ordinal)];
+        main.ShouldNotContain("href=\"/suvestines\"", customMessage: "the summaries are reached from the menu and the footer");
+
         // Design 8.15: "Kas yra riba?" once, beside the note under the timeline, with the number that holds now; none per row.
         Regex.Count(html, "class=\"hint__trigger\" id=\"threshold-what\"").ShouldBe(1);
         html.ShouldContain("Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – ");
@@ -308,7 +316,7 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
     }
 
     /// <summary>The page's persisted component state, each entry decoded: <c>{"key": "decoded value", …}</c> as one JSON text.</summary>
-    private static string StateOf(string html)
+    internal static string StateOf(string html)
     {
         var comment = BlazorState().Match(html);
         comment.Success.ShouldBeTrue("a page with islands carries their state");

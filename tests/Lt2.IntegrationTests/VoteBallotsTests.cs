@@ -6,7 +6,7 @@ namespace Lt2.IntegrationTests;
 
 /// <summary>
 /// Design 8.17: the list of the MPs' ballots on a vote's page as the server renders it: searchable, by faction and ballot, 20 at first
-/// and 40 more each time, all in the address, without JavaScript. A vote with 141 ballots is invented for each test: the
+/// and 50 more each time (owner, 2026-11-19), all in the address, without JavaScript. A vote with 141 ballots is invented for each test: the
 /// 13 MPs of the invented parliament, 127 more (every tenth without a faction) and "Indrė Žolynaitė" (RPF, did not vote),
 /// found without diacritics; its faction positions are vote 99100002's, so the factions have their names.
 /// </summary>
@@ -73,7 +73,7 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
     }
 
     [Fact]
-    public async Task A_vote_with_141_ballots_shows_20_on_a_sheet_and_grows_by_40_landing_on_the_first_row_added()
+    public async Task A_vote_with_141_ballots_shows_20_on_a_sheet_and_grows_by_50_landing_on_the_first_row_added()
     {
         var html = await OkAsync(Page);
         html.ShouldContain("<section class=\"sheet stack\" id=\"balsai\"");
@@ -81,13 +81,13 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
 
         Row().Count(list).ShouldBe(20);
         list.ShouldContain("Rodoma 20 iš 141");
-        list.ShouldContain("href=\"/seimas/balsavimai/99199701?rodyti=60#balsas-21\"");
+        list.ShouldContain("href=\"/seimas/balsavimai/99199701?rodyti=70#balsas-21\"");
 
-        var more = List(await OkAsync(Page + "?rodyti=60"));
-        Row().Count(more).ShouldBe(60);
+        var more = List(await OkAsync(Page + "?rodyti=70"));
+        Row().Count(more).ShouldBe(70);
         more.ShouldContain("id=\"balsas-21\"");
-        more.ShouldContain("Rodoma 60 iš 141");
-        more.ShouldContain("?rodyti=100#balsas-61");
+        more.ShouldContain("Rodoma 70 iš 141");
+        more.ShouldContain("?rodyti=120#balsas-71");
 
         var all = List(await OkAsync(Page + "?rodyti=141"));
         Row().Count(all).ShouldBe(141);
@@ -233,7 +233,10 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
         otherFaction.ShouldContain("Nerasta nė vieno Seimo nario.");
 
         var more = List(await OkAsync(Page + "?frakcija=reformu-partijos-frakcija"));
-        more.ShouldContain("href=\"/seimas/balsavimai/99199701?frakcija=reformu-partijos-frakcija&rodyti=60#balsas-21\"");
+        var inFaction = await Database.ScalarAsync<long>("SELECT count(*) FROM parliament.ballot WHERE vote_id = @v AND faction_label = 'RPF'", ("v", Vote));
+        inFaction.ShouldBeGreaterThan(20, "the faction's list is longer than its first page");
+        more.ShouldContain($"href=\"/seimas/balsavimai/99199701?frakcija=reformu-partijos-frakcija&rodyti={Math.Min(70, inFaction)}#balsas-21\"",
+            customMessage: "50 more, or the rest of the faction");
     }
 
     [Theory]

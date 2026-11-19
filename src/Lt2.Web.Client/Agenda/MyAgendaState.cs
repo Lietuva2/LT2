@@ -10,21 +10,22 @@ namespace Lt2.Web.Client.Agenda;
 public sealed record MyAgendaRow(FollowedBillResponse Bill, string? Side);
 
 /// <summary>
-/// The member's own answer for the front page: their rows by bill number, and whether they have given the positions
+/// The member's own answer for a page of the timeline: their rows by bill number, and whether they have given the positions
 /// consent (design 6.5), so a row knows whether to ask for it before a first side; and whether the caller is an MP's own
 /// account (design 8.5.4, owner 2026-11-17), whose rows offer no sides.
 /// </summary>
 public sealed record MyAgendaAnswer(IReadOnlyDictionary<string, MyBillResponse> Bills, bool HasPositionConsent, bool MpAccount = false);
 
 /// <summary>
-/// The member's own answers for the front page (design 8.7), asked once in the browser and shared by its islands (the panel
-/// "Jūsų projektai", the marks under the titles and the side columns of the timeline's rows): <c>/me/bills</c> for all the
-/// bills shown (one request; one per <see cref="MyBillsQuery.MaxNumbers"/> with a day opened whole), the member's follows for the panel, and
-/// the invitation answer for the share link. Never asked while the server prerenders, so nothing of it is in the page's
+/// The member's own answers for the front page (design 8.7) and the agenda page (8.11.1, owner 2026-11-19: the same rows),
+/// asked once in the browser and shared by the page's islands (the front page's panel "Jūsų projektai", the marks under the
+/// titles and the side columns of the timeline's rows): <c>/me/bills</c> for all the bills shown (one request per
+/// <see cref="MyBillsQuery.MaxNumbers"/>, side by side) and the member's follows for the panel (owner, 2026-11-19: the panel
+/// has no share link; the bill's page keeps it). Never asked while the server prerenders, so nothing of it is in the page's
 /// HTML. A failed answer is not kept, so the next island asks again. After a member's own action in a row the answers are
 /// read again (<see cref="RefreshAsync"/>) and <see cref="Changed"/> tells every island.
 /// </summary>
-public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, IMeApi me, TimeProvider clock)
+public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, TimeProvider clock)
 {
     /// <summary>"Voted on in the last week": the agenda's recent votes reach this far back (design 8.11.1).</summary>
     public const int RecentDays = 7;
@@ -33,7 +34,6 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, IMeApi
     private string? _key;
     private Task<MyAgendaAnswer?>? _mine;
     private Task<IReadOnlyList<MyAgendaRow>?>? _panel;
-    private Task<MyInvitationResponse?>? _invitation;
 
     /// <summary>The member's own answer changed (a side taken, changed or withdrawn): read it again.</summary>
     public event Action? Changed;
@@ -168,17 +168,6 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, IMeApi
         }
     }
 
-    /// <summary>The caller's own invitation answer, for the share link.</summary>
-    public Task<MyInvitationResponse?> InvitationAsync()
-    {
-        if (_invitation is null || _invitation.IsFaulted || (_invitation.IsCompletedSuccessfully && _invitation.Result is null))
-        {
-            _invitation = InvitationFetchAsync();
-        }
-
-        return _invitation;
-    }
-
     private async Task<MyAgendaAnswer?> FetchAsync(IReadOnlyList<string> numbers)
     {
         if (numbers.Count == 0)
@@ -186,26 +175,24 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, IMeApi
             return new MyAgendaAnswer(new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase), false);
         }
 
-        // The page asks about the rows it shows (design 8.7: twenty, more with a day opened whole), within the API's limit a
-        // request.
+        // The page asks about the rows it shows (design 8.7: twenty on the front page, 8.11.1: ten a day on the agenda page;
+        // 50 more a day with each "Rodyti daugiau"), within the API's limit a request, the requests side by side.
+        var answers = await Task.WhenAll(Requests(numbers).Select(part => bills.GetAsync(new MyBillsQuery { Numbers = part })));
         var all = new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase);
-        MyBillsResponse? first = null;
-        foreach (var part in Requests(numbers))
+        foreach (var answer in answers)
         {
-            if ((await bills.GetAsync(new MyBillsQuery { Numbers = part })).Value is not { } value)
+            if (answer.Value is not { } value)
             {
                 return null;
             }
 
-            first ??= value;
             foreach (var bill in value.Bills)
             {
                 all[bill.Number] = bill;
             }
         }
 
-        return new MyAgendaAnswer(all, first!.HasPositionConsent, first.MpAccount);
+        var first = answers[0].Value!;
+        return new MyAgendaAnswer(all, first.HasPositionConsent, first.MpAccount);
     }
-
-    private async Task<MyInvitationResponse?> InvitationFetchAsync() => (await me.GetInvitationAsync()).Value;
 }

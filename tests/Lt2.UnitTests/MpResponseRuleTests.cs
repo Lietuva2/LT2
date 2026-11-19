@@ -97,10 +97,10 @@ public sealed class MpResponseRuleTests
     [Fact]
     public void Rodyti_daugiau_adds_10_and_lands_on_the_first_new_item()
     {
-        ResponsePaging.More(10, 25).ShouldBe(20);
-        ResponsePaging.More(20, 25).ShouldBe(25);
-        ResponsePaging.More(25, 25).ShouldBeNull();
-        ResponsePaging.Address("/seimas/XVP-0412", 20, ResponsePaging.ItemId(11)).ShouldBe("/seimas/XVP-0412?atsakymai=20#atsakymas-11");
+        ResponsePaging.More(10, 45).ShouldBe(30, "owner, 2026-11-19: a list of texts grows by 20");
+        ResponsePaging.More(30, 45).ShouldBe(45);
+        ResponsePaging.More(45, 45).ShouldBeNull();
+        ResponsePaging.Address("/seimas/XVP-0412", 30, ResponsePaging.ItemId(11)).ShouldBe("/seimas/XVP-0412?atsakymai=30#atsakymas-11");
         ResponsePaging.Address("/p/jonas-petraitis", 10, "atsakymai").ShouldBe("/p/jonas-petraitis#atsakymai");
     }
 

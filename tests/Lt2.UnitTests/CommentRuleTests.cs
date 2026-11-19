@@ -138,23 +138,23 @@ public sealed class CommentRuleTests
     }
 
     [Fact]
-    public void A_thread_shows_the_first_ten_and_ten_more_at_a_time()
+    public void A_thread_shows_the_first_ten_and_twenty_more_at_a_time()
     {
         CommentPaging.Shown(null, 25).ShouldBe(10);
         CommentPaging.Shown(20, 25).ShouldBe(20);
         CommentPaging.Shown(3, 25).ShouldBe(10, "never fewer than the first ten");
         CommentPaging.Shown(null, 4).ShouldBe(4);
-        CommentPaging.More(10, 25).ShouldBe(20);
-        CommentPaging.More(20, 25).ShouldBe(25);
-        CommentPaging.More(25, 25).ShouldBeNull();
+        CommentPaging.More(10, 45).ShouldBe(30, "owner, 2026-11-19: a list of texts grows by 20");
+        CommentPaging.More(30, 45).ShouldBe(45);
+        CommentPaging.More(45, 45).ShouldBeNull();
     }
 
     [Fact]
     public void The_pages_address_asks_for_more_of_one_target_and_lands_on_the_first_new_comment()
     {
-        // Ten shown, ten more asked: the link lands on the eleventh, the first new one (its own id is not known yet).
-        var address = CommentPaging.Address("/seimas/XVP-0412", Target, 20, CommentPaging.PositionAnchor(Target, 11));
-        address.ShouldBe($"/seimas/XVP-0412?komentarai={Target:N}-20#komentaras-{Target:N}-11");
+        // Ten shown, twenty more asked: the link lands on the eleventh, the first new one (its own id is not known yet).
+        var address = CommentPaging.Address("/seimas/XVP-0412", Target, 30, CommentPaging.PositionAnchor(Target, 11));
+        address.ShouldBe($"/seimas/XVP-0412?komentarai={Target:N}-30#komentaras-{Target:N}-11");
         CommentPaging.PagePath("XVP-0412", "20").ShouldBe("/seimas/XVP-0412?atsakymai=20", "the responses' page is kept");
         CommentPaging.PagePath("XVP-0412", null).ShouldBe("/seimas/XVP-0412");
         CommentPaging.Address("/seimas/XVP-0412?atsakymai=20", Target, 20, "a").ShouldStartWith("/seimas/XVP-0412?atsakymai=20&komentarai=");

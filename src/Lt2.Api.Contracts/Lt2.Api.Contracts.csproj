@@ -9,6 +9,8 @@
     <Compile Include="..\Lt2.SharedKernel\AddressSlugs.cs" Link="AddressSlugs.cs" />
     <!-- Every link to a comment or an argument on a bill's page (design 8.23.6), also in Lt2.SharedKernel. -->
     <Compile Include="..\Lt2.SharedKernel\BillTextLinks.cs" Link="Comments\BillTextLinks.cs" />
+    <!-- How every long list grows by "Rodyti daugiau" (design 8.16.4), also in Lt2.SharedKernel for the modules' pages. -->
+    <Compile Include="..\Lt2.SharedKernel\ListPaging.cs" Link="ListPaging.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />

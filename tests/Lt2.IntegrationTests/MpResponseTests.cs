@@ -456,7 +456,7 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
     }
 
     [Fact]
-    public async Task The_bills_page_lists_10_and_grows_by_10_in_the_order_for_against_undecided_by_last_name_without_javascript()
+    public async Task The_bills_page_lists_10_and_grows_by_20_in_the_order_for_against_undecided_by_last_name_without_javascript()
     {
         const string Listed = AppealSteps.SecondBill;
         await Database.FreeBillAsync(Listed);
@@ -464,34 +464,35 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
         await Database.ExecuteAsync(
             """
             INSERT INTO parliament.person (id, seimas_person_id, first_name, last_name, slug, gender)
-            SELECT gen_random_uuid(), 99700000 + n, 'Vardas' || n, 'Atsakantis' || lpad((26 - n)::text, 2, '0'), 'atsakantis-' || n, NULL
-            FROM generate_series(1, 25) AS n;
+            SELECT gen_random_uuid(), 99700000 + n, 'Vardas' || n, 'Atsakantis' || lpad((50 - n)::text, 2, '0'), 'atsakantis-' || n, NULL
+            FROM generate_series(1, 45) AS n;
             INSERT INTO appeals.mp_response (id, bill_number, seimas_person_id, stance, text, status, screening_flags, published_at)
             SELECT gen_random_uuid(), @b, 99700000 + n, (ARRAY['for', 'against', 'undecided'])[(n % 3) + 1], 'Atsakymas nr. ' || n || '.', 'published', '{}', now() - make_interval(mins => n)
-            FROM generate_series(1, 25) AS n;
+            FROM generate_series(1, 45) AS n;
             """,
             ("b", Listed));
         try
         {
             using var visitor = NewBrowser();
             var view = await visitor.ResponsesAsync(Listed);
-            view.Items.Count.ShouldBe(25);
-            view.Counts.ShouldBe(new MpResponseCountsResponse(25, 8, 9, 8));
+            view.Items.Count.ShouldBe(45);
+            view.Counts.ShouldBe(new MpResponseCountsResponse(45, 15, 15, 15));
             var order = view.Items.Select(i => (i.Response.Stance, i.Mp.LastName)).ToList();
             order.ShouldBe(order.OrderBy(o => o.Stance switch { "for" => 0, "against" => 1, _ => 2 }).ThenBy(o => o.LastName, StringComparer.Ordinal).ToList());
 
             var page = await PartAsync(visitor, "/seimas/" + Listed);
             page.ShouldContain("<section class=\"sheet stack\" id=\"atsakymai\"", Case.Sensitive, "its own sheet (design 8.16)");
-            page.ShouldContain("Atsakė Seimo narių: 25. Balsuos už: 8 · prieš: 9 · dar neapsisprendė: 8.");
+            page.ShouldContain("Atsakė Seimo narių: 45. Balsuos už: 15 · prieš: 15 · dar neapsisprendė: 15.");
             Shown(page).ShouldBe(10);
-            page.ShouldContain("Rodoma 10 iš 25");
-            page.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=20#atsakymas-11\"");
+            page.ShouldContain("Rodoma 10 iš 45");
+            page.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=30#atsakymas-11\"", customMessage: "owner, 2026-11-19: 20 more a press");
 
-            var more = await PartAsync(visitor, $"/seimas/{Listed}?atsakymai=20");
-            Shown(more).ShouldBe(20);
-            more.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=25#atsakymas-21\"");
-            var all = await PartAsync(visitor, $"/seimas/{Listed}?atsakymai=25");
-            Shown(all).ShouldBe(25);
+            var more = await PartAsync(visitor, $"/seimas/{Listed}?atsakymai=30");
+            Shown(more).ShouldBe(30);
+            more.ShouldContain("Rodoma 30 iš 45");
+            more.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=45#atsakymas-31\"");
+            var all = await PartAsync(visitor, $"/seimas/{Listed}?atsakymai=45");
+            Shown(all).ShouldBe(45);
             all.ShouldNotContain("id=\"responses-more\"");
             foreach (var bad in new[] { "abc", "999", "5", "-1", "20.5" })
             {
@@ -681,8 +682,8 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
 
     private async Task RemoveSeededAsync()
     {
-        await Database.ExecuteAsync("DELETE FROM appeals.mp_response WHERE seimas_person_id BETWEEN 99700001 AND 99700025");
-        await Database.ExecuteAsync("DELETE FROM parliament.person WHERE seimas_person_id BETWEEN 99700001 AND 99700025");
+        await Database.ExecuteAsync("DELETE FROM appeals.mp_response WHERE seimas_person_id BETWEEN 99700001 AND 99700045");
+        await Database.ExecuteAsync("DELETE FROM parliament.person WHERE seimas_person_id BETWEEN 99700001 AND 99700045");
     }
 
     /// <summary>A page without the markers Blazor writes for its islands, which carry a new id on every request.</summary>

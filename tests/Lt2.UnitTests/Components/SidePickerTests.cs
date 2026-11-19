@@ -80,6 +80,8 @@ public sealed class SidePickerTests : BunitContext
         picker.Find("#side-for").Click();
 
         picker.WaitForAssertion(() => picker.Find("#side-for").GetAttribute("aria-pressed").ShouldBe("true"));
+        picker.Find("#my-side").TextContent.ShouldBe("Jūs prašote balsuoti už. Tai matote tik jūs.", "no line on taking it back, after a press either (owner, 2026-11-19)");
+        picker.Find("#side-for").GetAttribute("title").ShouldBe("Paspaudę dar kartą, atsiimsite.");
         figures.WaitForAssertion(() => figures.Find("#count-for .figure__num").TextContent.ShouldBe("1"));
         figures.FindAll("#nobody-yet").ShouldBeEmpty();
         figures.Find("#surge-note").TextContent.ShouldStartWith("Per paskutines 24 valandas 100 %");
@@ -167,8 +169,9 @@ public sealed class SidePickerTests : BunitContext
 
     /// <summary>
     /// Design 8.7, owner 2026-11-18: no "Atsiimti". The pressed button takes the side back, naming it (the server changes
-    /// nothing if the person no longer has it); it is described by the line saying so, and its title says it too. The second
-    /// click of a double click does nothing, so a side just taken is not taken back by the same gesture.
+    /// nothing if the person no longer has it); it is described by the line whose side it is, and its title says how to take
+    /// it back (owner, 2026-11-19: the line under the buttons saying so went, after a press too; a later onboarding is to
+    /// explain it). The second click of a double click does nothing, so a side just taken is not taken back by the same gesture.
     /// </summary>
     [Fact]
     public void Pressing_ones_own_side_again_takes_it_back_and_a_double_clicks_second_press_does_nothing()
@@ -181,7 +184,8 @@ public sealed class SidePickerTests : BunitContext
         var picker = Render<SidePicker>(p => p.Add(c => c.Number, Bill));
 
         picker.Markup.ShouldNotContain("Atsiimti");
-        picker.Find("#my-side").TextContent.ShouldBe("Jūs prašote balsuoti už. Tai matote tik jūs. Paspaudę dar kartą, atsiimsite.");
+        picker.Find("#my-side").TextContent.ShouldBe("Jūs prašote balsuoti už. Tai matote tik jūs.");
+        picker.Markup.ShouldNotContain(">Paspaudę dar kartą", customMessage: "only the pressed button's title says it");
         picker.Find("#side-for").GetAttribute("aria-describedby").ShouldBe("my-side");
         picker.Find("#side-for").GetAttribute("title").ShouldBe("Paspaudę dar kartą, atsiimsite.");
         picker.Find("#side-against").HasAttribute("aria-describedby").ShouldBeFalse();

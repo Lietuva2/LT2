@@ -28,7 +28,8 @@ public sealed class ShowMoreTests : BunitContext
         more.Find("#votes-more-line").ClassList.ShouldContain("show-more");
         more.Find("#votes-more-shown").TextContent.ShouldBe("Rodoma 30 iš 1 234");
         var link = more.Find("a#votes-more");
-        (link.TextContent, link.GetAttribute("href"), link.ClassName).ShouldBe(("Rodyti daugiau", "/seimas/balsavimai?rodyti=60#balsavimas-31", "btn btn--plain show-more__link"));
+        // Owner, 2026-11-19: a plain text link, not a button's look (it clashed with the buttons under a list).
+        (link.TextContent, link.GetAttribute("href"), link.ClassName).ShouldBe(("Rodyti daugiau", "/seimas/balsavimai?rodyti=60#balsavimas-31", "show-more__link"));
         link.HasAttribute("data-enhance-nav").ShouldBeFalse("enhanced navigation fetches it");
     }
 
@@ -41,6 +42,7 @@ public sealed class ShowMoreTests : BunitContext
             .Add(c => c.Href, "/seimas/XVP-0412?komentarai=x-20#k").Add(c => c.Text, "Rodyti daugiau komentarų").Add(c => c.OnMore, () => pressed++));
         var link = more.Find("a#comments-more");
         link.GetAttribute("data-enhance-nav").ShouldBe("false");
+        link.ClassName.ShouldBe("show-more__link", "the same plain link once the island runs");
         link.Click();
         pressed.ShouldBe(1);
 

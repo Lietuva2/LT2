@@ -9,8 +9,12 @@
 
 @* The agenda (design 8.11.1): public, server-rendered, readable without JavaScript. What the Seimas plans to consider, by
    day, earliest first, from the lrs.lt agenda (10–12 days ahead, changes often: "Planuojama …", never a countdown), and
-   the stage votes of the last seven days. Each bill shows both sides, or says nobody took part yet (design 8.12.5). Read
-   from the front page's copy, kept a minute (FrontPageAgenda through IAgendaApi). *@
+   the stage votes of the last seven days. The rows are the front page's (TimelineItem, VotedItem; owner, 2026-11-19: they
+   look the same, one component): a coming bill offers "Prašau balsuoti" in its row, a visitor's sides lead to signing in
+   and back to the bill, a member's mark and side column are islands filled in the browser from their own answer
+   (MyAgendaState), so the server renders the same page for every member and nothing per person is in it. Without the
+   front page's "Jūsų projektai" and greeting. Read from the front page's copy, kept a minute (FrontPageAgenda through
+   IAgendaApi). *@
 <PageTitle>@T["Agenda.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@T["Agenda.Title"]" Description="@T["Preview.Agenda"]" />
 
@@ -18,6 +22,11 @@
     <h1>@T["Agenda.Title"]</h1>
     <ProjectTabs Current="ProjectTab.Agenda" />
     <p class="lead">@T["Agenda.Lead"]</p>
+    <AuthorizeView>
+        <Authorized>
+            <Lt2.Web.Client.Components.NeedsScript />
+        </Authorized>
+    </AuthorizeView>
 </div>
 
 <section class="sheet stack" aria-labelledby="h-coming" id="agenda-coming">
@@ -44,48 +53,10 @@
     }
     else
     {
-        @* Owner, 2026-11-18: one block per sitting day with its date, weekday and count; the first ten rows of a day in the
-           agenda's order (AgendaRules), then "Rodyti likusius", a link to this page with the day whole (AgendaPaging,
-           ?diena=), landing on the first row added: the served page holds only the rows it shows. The bills the open data
-           does not know yet are folded into one line at the end of a day shown whole (or of a day whose known rows all
-           show). *@
-        @foreach (var day in _agenda.Days)
-        {
-            var whole = _planned.Contains(day.Date);
-            var view = AgendaRules.Day(day.Items, i => i.Title is not null, AgendaRules.PagePerDay);
-            var id = AgendaPaging.Agenda.PlannedDayId(day.Date);
-            <section class="tl-day" aria-label="@($"{T["Agenda.Planned"]} {F.DayMonth(day.Date)}")" id="@id">
-                <TimelineDate Label="@T["Agenda.Planned"]" Day="day.Date" Count="@AgendaWords.Bills(T, view.Count)" />
-                <div class="tl-rows">
-                    @if (view.Shown.Count > 0)
-                    {
-                        <ul class="tl-items">
-                            @foreach (var item in view.Shown)
-                            {
-                                <TimelineItem Item="item" Day="day.Date" Asks="false" />
-                            }
-                        </ul>
-                    }
-                    @if (whole && view.Rest.Count > 0)
-                    {
-                        <ul class="tl-items" id="@AgendaPaging.RestId(id)">
-                            @foreach (var item in view.Rest)
-                            {
-                                <TimelineItem Item="item" Day="day.Date" Asks="false" />
-                            }
-                        </ul>
-                    }
-                    @if (!whole && view.Rest.Count > 0)
-                    {
-                        <p class="tl-all"><a href="@AgendaPaging.RestOfPlanned(AgendaPaging.Agenda, _planned, _voted, day.Date)" id="@($"{id}-rodyti")">@T["Agenda.ShowRest"]</a></p>
-                    }
-                    else if (view.Unknown.Count > 0)
-                    {
-                        <UnknownBills Items="view.Unknown" Day="day.Date" Id="@($"{id}-nezinomi")" />
-                    }
-                </div>
-            </section>
-        }
+        <AuthorizeView>
+            <Authorized>@Coming(true)</Authorized>
+            <NotAuthorized>@Coming(false)</NotAuthorized>
+        </AuthorizeView>
     }
 </section>
 
@@ -97,37 +68,10 @@
     }
     else
     {
-        @* By day, newest first, each in the agenda's order: ten, then "Rodyti likusius" (?balsuota=) as the planned days. *@
-        @foreach (var day in _agenda.RecentVotes.GroupBy(v => Display.DayOf(v.HeldAt)))
-        {
-            var whole = _voted.Contains(day.Key);
-            var view = AgendaRules.Day(day.ToList(), _ => true, AgendaRules.PagePerDay);
-            var id = AgendaPaging.Agenda.VotedDayId(day.Key);
-            <section class="tl-day tl-past" aria-label="@($"{T["Agenda.Voted"]} {F.DayMonth(day.Key)}")" id="@id">
-                <TimelineDate Label="@T["Agenda.Voted"]" Day="day.Key" Count="@AgendaWords.Votes(T, view.Count)" />
-                <div class="tl-rows">
-                    <ul class="tl-items">
-                        @foreach (var v in view.Shown)
-                        {
-                            <VotedItem Vote="v" />
-                        }
-                    </ul>
-                    @if (whole && view.Rest.Count > 0)
-                    {
-                        <ul class="tl-items" id="@AgendaPaging.RestId(id)">
-                            @foreach (var v in view.Rest)
-                            {
-                                <VotedItem Vote="v" />
-                            }
-                        </ul>
-                    }
-                    else if (view.Rest.Count > 0)
-                    {
-                        <p class="tl-all"><a href="@AgendaPaging.RestOfVoted(AgendaPaging.Agenda, _planned, _voted, day.Key)" id="@($"{id}-rodyti")">@T["Agenda.ShowRest"]</a></p>
-                    }
-                </div>
-            </section>
-        }
+        <AuthorizeView>
+            <Authorized>@Recent(true)</Authorized>
+            <NotAuthorized>@Recent(false)</NotAuthorized>
+        </AuthorizeView>
     }
     @* Design 8.18: the long form of this list, also when the last seven days had no vote. *@
     <p class="tl-older" id="agenda-votes-older"><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path">@T["Agenda.Older"]</a></p>
@@ -146,11 +90,23 @@
     /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint beside the list.</summary>
     private int? _threshold;
 
-    /// <summary>The planned days shown whole (<c>?diena=</c>).</summary>
-    private IReadOnlySet<DateOnly> _planned = new HashSet<DateOnly>();
+    /// <summary>The planned days shown grown, with the known rows each shows (<c>?diena=2026-11-24:60</c>), for the links.</summary>
+    private IReadOnlyDictionary<DateOnly, int> _planned = new Dictionary<DateOnly, int>();
 
-    /// <summary>The voted days shown whole (<c>?balsuota=</c>).</summary>
-    private IReadOnlySet<DateOnly> _voted = new HashSet<DateOnly>();
+    /// <summary>The voted days shown grown (<c>?balsuota=</c>).</summary>
+    private IReadOnlyDictionary<DateOnly, int> _voted = new Dictionary<DateOnly, int>();
+
+    /// <summary>Each planned day with its rows as the page cuts them.</summary>
+    private List<(DateOnly Day, AgendaDayView<AgendaItemResponse> View)> _coming = [];
+
+    /// <summary>Each voted day, newest first, with its rows as the page cuts them.</summary>
+    private List<(DateOnly Day, AgendaDayView<AgendaVoteResponse> View)> _recent = [];
+
+    /// <summary>
+    /// The bills of the rows shown, each once, for a member's islands to ask about (<c>/me/bills</c>, in requests of
+    /// <see cref="Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers"/>; more with a day grown).
+    /// </summary>
+    private IReadOnlyList<string> _numbers = [];
 
     [SupplyParameterFromQuery(Name = AgendaPaging.PlannedParameter)] public string[]? Planned { get; set; }
 
@@ -158,9 +114,44 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _planned = AgendaPaging.Read(Planned);
-        _voted = AgendaPaging.Read(Voted);
+        var planned = AgendaPaging.Read(Planned);
+        var voted = AgendaPaging.Read(Voted);
         _agenda = (await Api.GetAgendaAsync()).Value;
         _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
+
+        // Owner, 2026-11-18: one block per sitting day with its date, weekday and count; the first ten rows of a day in the
+        // agenda's order (AgendaRules). Owner, 2026-11-19: then the shared "Rodyti daugiau", 50 more a click by the address
+        // (AgendaPaging, ?diena=2026-11-24:60), landing on the first row added: the served page holds only the rows it shows.
+        _coming = (_agenda?.Days ?? [])
+            .Select(d => (d.Date, Cut(d.Items, i => i.Title is not null, planned.GetValueOrDefault(d.Date))))
+            .ToList();
+        _recent = (_agenda?.RecentVotes ?? []).GroupBy(v => Display.DayOf(v.HeldAt))
+            .Select(g => (g.Key, Cut(g.ToList(), _ => true, voted.GetValueOrDefault(g.Key))))
+            .ToList();
+        _planned = AgendaPaging.Grown(_coming.Select(d => (d.Day, d.View.Shown.Count)), AgendaRules.PagePerDay);
+        _voted = AgendaPaging.Grown(_recent.Select(d => (d.Day, d.View.Shown.Count)), AgendaRules.PagePerDay);
+        _numbers = AgendaRules.Asked(
+            _coming.SelectMany(d => d.View.Shown.Select(i => i.Number)).Concat(_recent.SelectMany(d => d.View.Shown.Select(v => v.Number))));
     }
+
+    /// <summary>A day cut for this page: its first ten known rows, or as many as the address asks.</summary>
+    private static AgendaDayView<TRow> Cut<TRow>(IReadOnlyList<TRow> rows, Func<TRow, bool> known, int asked) =>
+        AgendaRules.Day(rows, known, AgendaRules.ShownKnown(AgendaRules.PagePerDay, asked, rows.Count(known)));
+
+    private RenderFragment Coming(bool member) => __builder =>
+    {
+        foreach (var (day, view) in _coming)
+        {
+            <PlannedDay Page="AgendaPaging.Agenda" Day="day" View="view" First="AgendaRules.PagePerDay" Planned="_planned" Voted="_voted" Member="member" Numbers="_numbers" />
+        }
+    };
+
+    private RenderFragment Recent(bool member) => __builder =>
+    {
+        // By day, newest first, each in the agenda's order, grown as the planned days.
+        foreach (var (day, view) in _recent)
+        {
+            <VotedDay Page="AgendaPaging.Agenda" Day="day" View="view" First="AgendaRules.PagePerDay" Planned="_planned" Voted="_voted" Member="member" Numbers="_numbers" />
+        }
+    };
 }

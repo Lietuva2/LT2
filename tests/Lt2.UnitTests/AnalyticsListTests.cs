@@ -64,12 +64,12 @@ public sealed class AnalyticsListTests
     [Fact]
     public void Rodyti_daugiau_adds_twenty_and_lands_on_the_first_row_added()
     {
-        AnalyticsList.More(Read(q: "XVP"), found: 25, next: "XVP-0711").ShouldBe("/statistika?q=XVP&rodyti=30#projektas-XVP-0711");
+        AnalyticsList.More(Read(q: "XVP"), found: 25, next: "XVP-0711").ShouldBe("/statistika?q=XVP&rodyti=60#projektas-XVP-0711");
         AnalyticsList.More(Read(rodyti: "30"), found: 25, next: null).ShouldBeNull("every bill found is shown");
         AnalyticsList.More(Read(rodyti: "300"), found: 400, next: "XVP-0999").ShouldBeNull("the list holds as many as it may");
-        AnalyticsList.More(Read(rodyti: "290"), found: 400, next: "XVP-0999")!.ShouldStartWith("/statistika?rodyti=300#");
+        AnalyticsList.More(Read(rodyti: "260"), found: 400, next: "XVP-0999")!.ShouldStartWith("/statistika?rodyti=300#", Case.Sensitive, "the last press before the cap adds fewer");
         AnalyticsList.More(Read(q: "XVP"), found: 25, next: "XVP-0711", nextInPlot: false)
-            .ShouldBe("/statistika?q=XVP&rodyti=30#palyginimas", "a bill without a place in the plot: the part itself, the table stays closed");
+            .ShouldBe("/statistika?q=XVP&rodyti=60#palyginimas", "a bill without a place in the plot: the part itself, the table stays closed");
     }
 
     [Fact]

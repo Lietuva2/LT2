@@ -9,7 +9,7 @@
 
 @* A member's public page (design 8.25.2), by the member's own choice ("Viešas profilis"), server-rendered and readable
    without script: the name, "Apie mane", the number of followers, "Sekti" and "Pranešti", and the member's published
-   arguments and own-voice comments, newest first, 10 and "Rodyti daugiau" by the page's address (?rodyti=). Indexed: no
+   arguments and own-voice comments, newest first, 10 and "Rodyti daugiau" adding 50 by the page's address (?rodyti=; owner, 2026-11-19). Indexed: no
    noindex. The supported party only by its own box and consent (design 8.25.9). Never the person's sides, "Man svarbu",
    "Sutinku", follows, invitations, organisations, counts of their texts or who follows them. A retired id
    answers 410 with one line, an id never issued the site's 404; both are marked noindex. Asked again each time (no-cache),
@@ -112,7 +112,7 @@ else if (_profile is { } p)
 
     private string? Contact => Configuration.ModeratorContact();
 
-    private string MoreLink => $"{_profile?.Address}?rodyti={ProfileLimits.Shown(Shown) + ProfileLimits.Page}#argumentai";
+    private string MoreLink => $"{_profile?.Address}?rodyti={ProfileLimits.More(Shown)}#argumentai";
 
     protected override async Task OnInitializedAsync()
     {

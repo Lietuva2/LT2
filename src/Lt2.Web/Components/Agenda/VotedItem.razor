@@ -4,20 +4,21 @@
 
 @* One stage vote of the last seven days in a timeline: the front page's "Balsuota" (design 8.7) and the agenda page's
    recently voted (8.11.1). The vote's main column (VotedItemMain), and beside it the bill's public numbers and "Kaip balsavo
-   Seimo nariai". On the front page a member's row also carries the mark under the title and, on a bill nobody took part in
-   yet, the side to take (islands filled in the browser); the agenda page has none. *@
-<li class="tl-item" id="recent-@Vote.VoteId">
+   Seimo nariai". A member's row, on both pages (owner, 2026-11-19: the rows look the same), also carries the mark under the
+   title and, on a bill nobody took part in yet, the side column that leaves out "nobody yet" for a member with a side of
+   their own (islands filled in the browser, keyed by the row's place). *@
+<li class="tl-item" id="@Lt2.Web.Client.Agenda.AgendaPaging.VotedRowId(Vote.VoteId)">
     <VotedItemMain Number="@Vote.Number" Title="@Vote.Title" Stage="@Vote.Stage" IsConsensus="Vote.IsConsensus" Totals="Vote.Totals" OfficialNote="@Vote.OfficialNote">
         @if (Member)
         {
-            <MyAgendaMark Number="@Vote.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
+            <MyAgendaMark @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
         }
     </VotedItemMain>
     @if (Member && Vote.Record is { Status: "open", Counts: { For: 0, Against: 0 } } nobodyYet)
     {
         @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's agenda is up to a minute
            old); the votes' rows offer no sides (design 8.7). *@
-        <MyAgendaSide Number="@Vote.Number" Numbers="Numbers" Place="@Place" Record="nobodyYet" VoteId="Vote.VoteId" @rendermode="InteractiveWebAssembly" />
+        <MyAgendaSide @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" Record="nobodyYet" VoteId="Vote.VoteId" @rendermode="InteractiveWebAssembly" />
     }
     else
     {
@@ -34,7 +35,7 @@
 @code {
     [Parameter, EditorRequired] public AgendaVoteResponse Vote { get; set; } = default!;
 
-    /// <summary>The front page for a signed-in member: the mark and the side become islands. The same for every member.</summary>
+    /// <summary>Rendered for a signed-in member: the mark and the side become islands. The same HTML for every member.</summary>
     [Parameter] public bool Member { get; set; }
 
     /// <summary>Every bill the page shows, for the members' islands to ask about in one request.</summary>

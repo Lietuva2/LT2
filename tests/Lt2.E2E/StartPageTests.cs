@@ -104,6 +104,7 @@ public sealed partial class StartPageTests : E2ETest
         var number = (await row.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
         var expected = "/prisijungti#tikslas=" + Uri.EscapeDataString("/seimas/" + number);
         await Assertions.Expect(row.Locator(".tl-ask")).ToContainTextAsync("Prašau balsuoti");
+        (await page.Locator(AskRows).AllInnerTextsAsync()).ShouldAllBe(t => !t.Contains("Niekas nenurodė"), "no \"nobody yet\" beside the sides (owner, 2026-11-19)");
         foreach (var (side, word) in new[] { ("for", "už"), ("against", "prieš") })
         {
             var link = row.Locator($".tl-ask a.btn--{side}");
@@ -164,9 +165,15 @@ public sealed partial class StartPageTests : E2ETest
             await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate");
             await Assertions.Expect(row.Locator(".mine .choice--for")).ToBeVisibleAsync();
             await Assertions.Expect(page.Locator($"#my-agenda-{number}")).ToBeVisibleAsync();
-            await Assertions.Expect(page.Locator($"#home-action-{place}")).ToHaveTextAsync("Argumentai ir pozicijos");
-            await Assertions.Expect(page.Locator($"#home-action-{place}")).ToHaveAttributeAsync("href", "/seimas/" + number);
-            await Assertions.Expect(row.Locator("[role=status]")).ToContainTextAsync("Dabar sekate šį projektą.");
+            // Owner, 2026-11-19: "Sekate" lighting up is enough: no line says the bill is followed now.
+            (await row.InnerTextAsync()).ShouldNotContain("Dabar sekate");
+
+            // Owner, 2026-11-19 ("minimise non-essential texts"): no link to the arguments (the title leads to the bill), and no
+            // line on taking the side back, after the press either; the pressed button's title says it.
+            await Assertions.Expect(row.Locator(".tl-item__side a")).ToHaveCountAsync(0);
+            await Assertions.Expect(forButton).ToHaveAttributeAsync("title", "Paspaudę dar kartą, atsiimsite.");
+            (await row.InnerTextAsync()).ShouldNotContain("Paspaudę dar kartą");
+            (await row.InnerTextAsync()).ShouldNotContain("Argumentai ir pozicijos");
 
             // Owner, 2026-11-17 ("followed only"): unfollowed, the bill leaves "Jūsų projektai"; the side stays in its row.
             var (unfollowed, unfollowedBody) = await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/follow");
@@ -201,11 +208,11 @@ public sealed partial class StartPageTests : E2ETest
             await Assertions.Expect(row.Locator(".mine .choice--against")).ToBeVisibleAsync();
 
             // Pressing the pressed button again takes the side back (owner, 2026-11-18: no "Atsiimti"); the follow stays.
-            await Assertions.Expect(page.Locator($"#home-again-{place}")).ToHaveTextAsync("Paspaudę dar kartą, atsiimsite.");
+            await Assertions.Expect(againstButton).ToHaveAttributeAsync("title", "Paspaudę dar kartą, atsiimsite.");
             await Assertions.Expect(page.Locator($"#home-withdraw-{place}")).ToHaveCountAsync(0);
             await againstButton.ClickAsync();
             await Assertions.Expect(againstButton).ToHaveAttributeAsync("aria-pressed", "false", new() { Timeout = E2ESteps.Slow });
-            await Assertions.Expect(page.Locator($"#home-again-{place}")).ToHaveCountAsync(0);
+            await Assertions.Expect(row.Locator(".tl-ask button[title]")).ToHaveCountAsync(0);
             (await MySideAsync(page, number)).ShouldBeNull();
             await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate");
             await E2ESteps.NoSidewaysScrollAsync(page, "/ after taking a side in a row");
@@ -259,11 +266,12 @@ public sealed partial class StartPageTests : E2ETest
                 var mine = page.Locator($"#my-agenda-{number}");
                 await Assertions.Expect(mine).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
                 await Assertions.Expect(mine.Locator(".choice--for")).ToHaveTextAsync("už");
-                await Assertions.Expect(mine.Locator($"#my-agenda-share-{number}")).ToBeVisibleAsync();
+                // Owner, 2026-11-19: no share link in the panel (the bill's page keeps it).
+                await Assertions.Expect(mine.Locator("button")).ToHaveCountAsync(0);
                 var row = page.Locator($"#agenda-{place}");
                 await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate", new() { Timeout = E2ESteps.Slow });
                 await Assertions.Expect(page.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "true");
-                await Assertions.Expect(page.Locator($"#home-action-{place}")).ToHaveTextAsync("Argumentai ir pozicijos");
+                (await row.InnerTextAsync()).ShouldNotContain("Argumentai ir pozicijos");
                 await SidesFitSideBySideAsync(row);
                 await RowLinesUpAsync(row, $"a member's row at {width}");
 
@@ -311,7 +319,7 @@ public sealed partial class StartPageTests : E2ETest
             (await plain.Locator("main").InnerTextAsync()).ShouldNotContain("Jūs prašote balsuoti");
             await Assertions.Expect(plain.Locator($"#home-for-{place}")).ToBeDisabledAsync();
             await Assertions.Expect(plain.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "false");
-            await Assertions.Expect(plain.Locator($"#home-again-{place}")).ToHaveCountAsync(0);
+            await Assertions.Expect(plain.Locator($"#home-for-{place}")).Not.ToHaveAttributeAsync("title", new Regex("."));
         }
         finally
         {
@@ -320,6 +328,101 @@ public sealed partial class StartPageTests : E2ETest
             await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/record/position");
             await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/follow");
         }
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-19: the agenda page's rows are the front page's (one component). A member takes a side in a row of
+    /// <c>/darbotvarke</c> after the consent asked in the row, changes it and takes it back by pressing it again; a day grown
+    /// in place ("Rodyti daugiau", owner 2026-11-19) brings rows whose buttons work too. A visitor's sides there are links to sign in.
+    /// </summary>
+    [Fact]
+    public async Task On_the_agenda_page_a_member_takes_a_side_in_a_row_and_in_a_row_of_a_day_grown_in_place()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var member = await PasskeyBrowser.StartAsync("native", 1280, 900);
+        var page = member.Page;
+        await PasskeyTests.RegisterAsync(page, "Darbotvarkės Narė");
+        await page.GotoAsync(Base + "/darbotvarke");
+        const string Rows = "#agenda-coming li.tl-item:has(.tl-ask)";
+        var row = page.Locator(Rows).First;
+        await Assertions.Expect(row).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+        var number = (await row.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
+        var place = (await row.GetAttributeAsync("id"))!["agenda-".Length..];
+        var forButton = page.Locator($"#home-for-{place}");
+        var againstButton = page.Locator($"#home-against-{place}");
+        string? addedNumber = null;
+        try
+        {
+            await Assertions.Expect(forButton).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator("#my-agenda")).ToHaveCountAsync(0, new() { Timeout = 1000 });
+            await Assertions.Expect(page.Locator("#home-title")).ToHaveCountAsync(0);
+
+            // The first side ever: the consent in the row; then the side, changed, and taken back by pressing it again.
+            await forButton.ClickAsync();
+            await Assertions.Expect(page.Locator($"#home-consent-{place}")).ToBeVisibleAsync();
+            (await MySideAsync(page, number)).ShouldBeNull("nothing saved before the consent");
+            await page.Locator($"#home-{place}-consent-check").CheckAsync();
+            await page.Locator($"#home-{place}-consent-submit").ClickAsync();
+            await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
+            (await MySideAsync(page, number)).ShouldBe("for");
+            await Assertions.Expect(page.Locator($"#home-counts-{place}")).ToBeVisibleAsync();
+            await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate");
+            await Assertions.Expect(row.Locator(".tl-item__side a")).ToHaveCountAsync(0);
+            (await row.InnerTextAsync()).ShouldNotContain("Paspaudę dar kartą");
+            await againstButton.ClickAsync();
+            await Assertions.Expect(againstButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
+            (await MySideAsync(page, number)).ShouldBe("against");
+            await againstButton.ClickAsync();
+            await Assertions.Expect(againstButton).ToHaveAttributeAsync("aria-pressed", "false", new() { Timeout = E2ESteps.Slow });
+            (await MySideAsync(page, number)).ShouldBeNull();
+            await forButton.ClickAsync();
+            await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
+
+            // A day grown in place by "Rodyti daugiau": the rows added carry islands that start and take a side, and the rows
+            // already shown keep theirs (each island is keyed by its row). The link lands on the first row added.
+            var more = page.Locator("#agenda-coming section.tl-day a.show-more__link").First;
+            await Assertions.Expect(more).ToHaveCountAsync(1);
+            var landing = (await more.GetAttributeAsync("href"))!.Split('#')[1];
+            var day = page.Locator("#diena-" + Regex.Match(landing, @"^agenda-(\d{4}-\d{2}-\d{2})-").Groups[1].Value);
+            await Assertions.Expect(day.Locator("li.tl-item")).ToHaveCountAsync(10);
+            await more.ClickAsync();
+            await page.WaitForURLAsync(new Regex("diena=.*:60#agenda-"), new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator("#" + landing)).ToBeInViewportAsync(new() { Timeout = E2ESteps.Slow });
+            var added = day.Locator("li.tl-item:has(.tl-ask)").Last;
+            await Assertions.Expect(added).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+            addedNumber = (await added.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
+            var addedPlace = (await added.GetAttributeAsync("id"))!["agenda-".Length..];
+            var addedFor = page.Locator($"#home-for-{addedPlace}");
+            await Assertions.Expect(addedFor).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
+            await addedFor.ClickAsync();
+            await Assertions.Expect(addedFor).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
+            (await MySideAsync(page, addedNumber)).ShouldBe("for", "the consent is given: one press");
+            await Assertions.Expect(page.Locator($"#home-consent-{addedPlace}")).ToHaveCountAsync(0);
+            await addedFor.ClickAsync();
+            await Assertions.Expect(addedFor).ToHaveAttributeAsync("aria-pressed", "false", new() { Timeout = E2ESteps.Slow });
+            (await MySideAsync(page, addedNumber)).ShouldBeNull();
+            await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "true");
+            (await MySideAsync(page, number)).ShouldBe("for");
+            member.ConsoleErrors.ShouldBeEmpty();
+        }
+        finally
+        {
+            foreach (var bill in new[] { number, addedNumber }.OfType<string>())
+            {
+                await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{bill}/record/position");
+                await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{bill}/follow");
+            }
+        }
+
+        // A visitor's sides on the agenda page are links to sign in that come back to the bill's page, without script.
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
+        await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = false });
+        var visitor = await context.NewPageAsync();
+        await visitor.GotoAsync(Base + "/darbotvarke");
+        var visitorRow = visitor.Locator($"#agenda-{place}");
+        await Assertions.Expect(visitorRow.Locator(".tl-ask a.btn--for")).ToHaveAttributeAsync("href", "/prisijungti#tikslas=" + Uri.EscapeDataString("/seimas/" + number));
+        await Assertions.Expect(visitor.Locator("#agenda-coming .tl-ask button")).ToHaveCountAsync(0);
     }
 
     [Fact]

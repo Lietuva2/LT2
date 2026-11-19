@@ -212,8 +212,8 @@
                     {
                         @* Owner, 2026-11-19: under each side's own column (on a phone the columns stack, so one link under both
                            would add to a column far above the reader), the shared "show more" (ShowMore): "Rodoma 2 iš 15" and
-                           "Rodyti daugiau argumentų", a link to this page with the side grown (?argumentai-uz=12), which the
-                           island takes over once it runs: the next ten from the API, in place, the focus on the first added. *@
+                           "Rodyti daugiau argumentų", a link to this page with the side grown (?argumentai-uz=22), which the
+                           island takes over once it runs: the next 20 from the API, in place, the focus on the first added. *@
                         <ShowMore Id="@($"reasons-more-{side}")" Shown="column.Items.Count" Total="column.Total" Text="@L["Reasons.More"]" Controls="@($"reasons-{side}")"
                                   Href="@(ReasonPaging.More(column) ? MoreAddress(side, column) : null)" OnMore="() => MoreAsync(side)" />
                     }

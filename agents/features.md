@@ -43,8 +43,11 @@ account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "At
 staff account whose session is not a staff session, "Prisijungti darbuotojo prieigos raktu" to `StaffSessionPage` with the
 page to come back to after the `#`) from `GET /me` when it opens and closes it on Escape, a press outside and focus
 leaving. **No served page holds a member's name or role links**: the header is the same for every member apart from the antiforgery token (`NavigationTests`). The footer, on
-every page (token pages from emails included), holds "Apie" (Metodika, Moderavimo taisyklės, Naudojimo taisyklės,
-Privatumas), "Dalyvauti" (Organizacijos, Atsiliepimai), the theme switch and the trial line. `/metodika` is called "Metodika".
+every page (token pages from emails included), holds "Naršyti" (the menu's sections in its order, from `MenuSections.Tabs`,
+`MenuSections.Mps` and `MenuSections.Statistics` with the menu's strings, ids `foot-tab-…`, `foot-mps`, `foot-statistics`,
+nothing marked current; owner, 2026-11-19: no scrolling back to the top; the heading awaits a native read), "Apie"
+(Metodika, Moderavimo taisyklės, Naudojimo taisyklės, Privatumas), "Dalyvauti" (Organizacijos, Atsiliepimai), the theme
+switch and the trial line. `/metodika` is called "Metodika".
 
 **Terms of use (design 8.22.2).** `/taisykles` and `/privatumas` are static pages from `LegalText.resx` (drafts for the lawyer;
 "[bus įrašyta]" marks what the owner has not given). Registration has the required box "Sutinku su naudojimo taisyklėmis"
@@ -107,7 +110,7 @@ registration just completed lands on "Profilis", the MP's take-over on "Dalyvavi
   nowhere until the person writes another.
 - The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
   name, "Apie mane", the follower number and the member's texts (`IMemberTexts`, Appeals): published arguments and the
-  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, invitations,
+  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" +50 by `?rodyti=` (`ProfileLimits.More`, no script). Never sides, "Man svarbu", follows, invitations,
   organisations, anything written as an organisation or MP, "Sutinku" (the designer's proposal), counts of the person's
   texts, or who follows.
 - **The party on the page (design 8.25.9, owner 2026-11-17).** The party already on "Profilis" (`identity.party_support`,
@@ -137,10 +140,10 @@ and their count shown). No expenses, rankings or scorecards. An MP takes over a 
 official `@lrs.lt` address from open data; the link is tied to the Seimas person id (details below). Each MP's ballot on a vote is listed
 in one place, the vote's page (`/seimas/balsavimai/{id}#balsai`, design 8.17: `VoteBallots`, filtered by `BallotList` in
 Lt2.Web.Client): a name search without case or diacritics, a faction dropdown (with "Be frakcijos"), the ballot, 20 rows
-then 40 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) with no script; a closed bill's page only
+then 50 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) with no script; a closed bill's page only
 links to it. The history of votes (`/seimas/balsavimai`, design 8.18: `VoteHistoryPage`, its address state in
 `VoteHistory` in Lt2.Web.Client, `GET /api/v1/votes` read and counted in the database a part at a time) groups votes by
-Vilnius day, 30 then 30 more up to 300, with no participants' numbers; its rows share `VotedItemMain` with the start
+Vilnius day, 30 then 50 more up to 300, with no participants' numbers; its rows share `VotedItemMain` with the start
 page's "Balsuota".
 
 **The Seimas import's jobs (design 7.2; owner 2026-11-18).** The scheduled `parliament-import` (`ParliamentImportJob`,
@@ -217,7 +220,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 - Where it shows (8.5.6): the bill's page part `BillResponses` (its own sheet, the first of the texts at the page's full width
   before the organisations and the arguments, and only when an MP answered (owner, 2026-11-17); server-rendered and the
   same for everyone; the counts line; "už", "prieš", "neapsisprendė", by last name, then withdrawn and hidden ones) and the
-  profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau atsakymų" (`<ShowMore>`) by `?atsakymai=` landing
+  profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau atsakymų" (`<ShowMore>`, +20, `MpResponseLimits.Step`) by `?atsakymai=` landing
   on `#atsakymas-{n}` (`ResponsePaging`). Each item is `MpResponseItem` with the one mark "Seimo narys arba jo biuras". The
   linked account's form is the island `MyMpResponse`, filled in the browser only (on an open bill nobody answered yet it
   stands alone with `Section`, bringing the part's sheet and heading for a linked account); reports are `ReportResponse` islands.
@@ -302,7 +305,8 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   sends `DELETE /bills/{n}/record/position` with `{ side }` (`IAppealsApi.ClearPositionAsync(number, PositionRequest?)`;
   the module's `ClearPositionAsync` withdraws only that side, `AppealRules.WithdrawalApplies`, so a late or stale press is a
   no-op; no body withdraws whatever side there is). No "Atsiimti" for sides (`Side.Withdraw`, `Agenda.Withdraw` removed);
-  `Side.PressAgain` under the buttons (`#my-side`, `#home-again-{place}`) describes the pressed one and is its title.
+  `Side.PressAgain` is only the pressed button's `title` (owner, 2026-11-19: no line under the buttons, after a press
+  either; a later onboarding is to explain it, design 12-open); `#my-side` on the bill's page says whose side it is.
   Disabled while a request runs (`Busy`); `SidePresses.Ignored` drops a double click's second press (`MouseEventArgs.Detail`).
   The pair (`.sides`) carries `aria-busy` while disabled for waiting (`Locked`; `MyAgendaSide.Waiting` also until its first
   read ends), which keeps the buttons in full colour (lt2.css "Waiting", owner 2026-11-18).
@@ -314,7 +318,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `ReasonPaging`, unit-tested): the address asks how many (`?argumentai-uz=` / `?argumentai-pries=`, `ReasonLimits.Parameter`,
   read on the server, and in the browser up to it should enhanced navigation have grown it before the island started);
   "Rodyti daugiau argumentų" under each column is `<ShowMore>` (`#reasons-more-{side}`, status `#reasons-more-{side}-shown`),
-  the island's `MoreAsync` reads ten more in place and focuses the first added; the name line carries
+  the island's `MoreAsync` reads 20 more (`ReasonLimits.Step`) in place and focuses the first added; the name line carries
   `#argumentai-uz-{n}` where the link lands without script. The linked argument (`?argumentas=`), one a comment link or
   `?komentarai=` names, and the one just published are pinned first in their side (`ReasonPaging.Pin`), read alone when
   their pages would not bring them; "Rodyti tik naujus" reads the new ones the pages lack (`NewTexts.Reasons`) and adds them
@@ -372,7 +376,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 **Reasons to come (design 8.11).**
 - The agenda (`/darbotvarke`, where the menu item "Projektai" leads) and the front page's "Artimiausiu metu Seime" come from one public,
   cacheable answer that holds nothing about the caller, and show both sides for every bill (a bill nobody took part in
-  says so); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
+  says so only in a row without side buttons, owner 2026-11-19); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
   counted). The front page (design 8.7, reworked 2026-11-15; mockup `design/ui/pradzia.html`) is that agenda as a
   timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#kaip-tai-veikia`) and
   links to register or sign in, never a form; a member gets "Jūsų projektai" (the bills they follow, and only those: owner,
@@ -380,38 +384,57 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
   consent), so the HTML is the same for every member. The timeline is on a `.sheet` (design 8.16); the page has no
   "Organizacijos" block and the introduction no paragraph on following (owner, 2026-11-16: the footer links to
-  organisations, the account page registers one, "Sekti" says what it sends); the visitor's head (owner, 2026-11-17) is the
+  organisations, the account page registers one, "Sekti" says what it sends), and no row of links under the agenda (owner,
+  2026-11-19: the footer repeats the menu's sections); the visitor's head (owner, 2026-11-17) is the
   headline (the lead sentence as `h1`; the title stays "Lietuva 2.0") and the trial note under it with the invented-data
   notice's edges, the turning logo centred to their right from 54rem (across the invented-data notice too, which on this
   page is the head's first row, not the layout's), beside the headline on a phone. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
-  2026-11-15): a visitor's are `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
+  2026-11-15), on the front page and `/darbotvarke` alike (one `TimelineItem`, owner 2026-11-19): a visitor's are
+  `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
   (`MyAgendaSide`, disabled before it starts) that takes, changes (the pressed button, pressed again, withdraws) the side with the bill page's
   request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
   shows the bill's live numbers from `GET /bills/{n}/record`; the other islands follow through `MyAgendaState.Changed`.
+  The islands (`MyAgendaSide`, `MyAgendaMark`) are keyed by the row's place (`@key`), so a day grown in place keeps
+  each on its row and starts the rows added. A first side follows the bill and the mark's "Sekate" lights up; no status line
+  says so (owner, 2026-11-19: "Dabar sekate šį projektą." gone, `Agenda.Followed` removed). The mark (`MyAgendaMark`) also
+  says what is new on a followed bill (`NewsLine`, `#home-new-{place}`, a link to the bill; design 8.11.8, owner
+  2026-11-19: "the same like start page"), from the same `/me/bills` answer. "Jūsų projektai" has no share line (owner,
+  2026-11-19: `Mine.Share`, its `CopyLink` and `MyAgendaState.InvitationAsync` removed; the bill page's `ShareLine` stays). Beside the side buttons no "Niekas nenurodė, ko prašo" (`RecordFigures.HideNobody`; `MyAgendaSide.Asks`)
+  and no link but the title (owner, 2026-11-19: "minimise non-essential texts"); a voted row keeps both its line and
+  "Kaip balsavo Seimo nariai".
   The figures are one component (`Lt2.Web.Client/Agenda/RecordFigures`, with `SplitBar` in `Lt2.Web.Client/Components`),
   rendered by the server and by the island; with a side and a copy that says zero, the island reads the live numbers once on
   start. The server keeps the front page's agenda in memory for 60 s (`FrontPageAgenda`; a test removes
   `FrontPageAgenda.CacheKey` instead of waiting). A side taken, changed or withdrawn marks the copy out of date
   (`FrontPageFreshness`, marked by `TakingSides` for every API client): the first request once the copy is 2 s old reads
-  the agenda again; other changes wait for the minute. The agenda page reads the same copy (`ServerAgendaApi`); the bill's
-  page and `GET /api/v1/agenda` stay live.
+  the agenda again; other changes wait for the minute. The agenda page reads the same copy (`ServerAgendaApi`; a side marks
+  it out of date there too, `FrontPageFreshnessTests`); the bill's page and `GET /api/v1/agenda` stay live.
   **The lists' lengths (owner, 2026-11-18, real-sized parliament).** `AgendaReads` orders each day by
   `Lt2.Web.Client/Agenda/AgendaRules` (pure, `AgendaRulesTests`): activity (participants + published arguments, from
   `BillRecordState.Arguments`), then stage (adoption, consideration, presentation; the parser reads a combined stage as its
   furthest, `AgendaParser.StageOf`), then number, bills without a title last; the votes by Vilnius day, newest first, each
   day the same way. `AgendaRules.Day` cuts a day: the front page (`Home.razor`) shows `FrontDays` (2) planned and voted
   days of `FrontPerDay` (5) and `/darbotvarke` `PagePerDay` (10), and only those (owner, 2026-11-18: the hidden rows are
-  not in the HTML): "Rodyti likusius" (`#…-rodyti`) is a link from `AgendaPaging.RestOfPlanned` / `RestOfVoted` (pages
-  `AgendaPaging.Agenda`, `#diena-…`/`#balsuota-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`) to the same page
-  with the day whole (`?diena=`, `?balsuota=`, repeating for every day opened; `AgendaPaging.Read` drops malformed values),
-  landing on the second list `ul#…-likusieji` (on the front page a day whose known rows all show lands on `#…-nezinomi`);
-  enhanced navigation swaps it in with script. The front page keeps "Visa darbotvarkė" by its heading and "Ankstesni
-  balsavimai →". The unknown bills are `UnknownBills` (`details.tl-unknown`) at the end of a day shown whole (on the agenda
-  page also of a day whose known rows all show);
-  rows `TimelineItem Asks="false"` and `VotedItem`, heads `TimelineDate` (date in words, weekday, count via `AgendaWords`).
+  not in the HTML). A day grows by the shared `<ShowMore>` (owner, 2026-11-19, design 8.16.4; "Rodyti likusius" and
+  `Agenda.ShowRest` gone): one day is `PlannedDay` / `VotedDay` (`Lt2.Web/Components/Agenda`, used by both pages), whose
+  line `#{day}-more` (status `#{day}-shown`, "Rodoma N iš M") stands under a day with more known rows than its first page
+  (`AgendaRules.Paged`) and links to `AgendaPaging.MorePlanned` / `MoreVoted`: the same page with the day grown by
+  `AgendaRules.MorePerDay` (50, `ListPaging.RowStep`; `NextAsked`), `?diena=2026-11-24:60` / `?balsuota=2026-11-17:60` (pages `AgendaPaging.Agenda`,
+  blocks `#diena-…`/`#balsuota-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`; the parameter repeats for every
+  day grown, `AgendaPaging.Grown` carrying on only days shown beyond their first rows), landing on the first row added by its
+  own id (`AgendaPaging.PlannedRowId` `#agenda-{day}-{number}`, `VotedRowId` `#recent-{vote}`). `AgendaPaging.Read` takes
+  `day:N` only (a bare day, a word, a number ≤ 0 dropped); `AgendaRules.ShownKnown` ignores a number not above the first
+  rows and caps at the day (and `MaxAsked`). N is `AgendaDayView.ShownCount`: the known rows shown, plus the unknown bills
+  once their line shows; M is the head's count; the last page has the status and no link. Enhanced navigation swaps it in
+  with script. The front page keeps "Visa darbotvarkė" by its heading and "Ankstesni balsavimai →". The unknown bills are
+  `UnknownBills` (`details.tl-unknown`) after the last known row once every known row shows (`AgendaDayView.UnknownShown`),
+  on both pages;
+  rows `TimelineItem` and `VotedItem` with `Member` and `Numbers` as on the front page (owner, 2026-11-19: the same rows;
+  `AgendaPage` renders them through `AuthorizeView`, carries `<NeedsScript />` for a member, and has no "Jūsų projektai"),
+  heads `TimelineDate` (date in words, weekday, count via `AgendaWords`).
   The agenda answer is still built and cached whole (the order needs every row's activity); only the rendering is cut.
   The islands ask `/me/bills` about
-  the shown rows only (`AgendaRules.Asked`; `MyAgendaState` splits them into requests of `MyBillsQuery.MaxNumbers`); "Jūsų projektai" (`MyAgendaPanel`,
+  the shown rows only (`AgendaRules.Asked`; `MyAgendaState` splits them into requests of `MyBillsQuery.MaxNumbers`, sent side by side); "Jūsų projektai" (`MyAgendaPanel`,
   `MyAgendaState.PanelAsync`) lists the followed bills of the whole agenda and last week from `GET /me/follows`
   (`OnTheAgenda`) and asks `/me/bills` about those not shown, 30 a request (`Requests`).
   **How a vote went (design 8.18, "The majority"; the owner asked for "Priimta", open in 12-open).** `<VoteMajorityTag>`
@@ -430,11 +453,12 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `appeals.bill_record.last_activity_at`, set by `RecordActivity` (Appeals) in the same transaction as a side taken, changed or
   withdrawn, an argument published, a comment written, an organisation's statement or an MP's response made public or
   changed; never who acted. The page shows 20 and grows in place by `?rodyti=` (`Lt2.Web.Client/Appeals/BillListPaging`:
-  +20, landing on `#bill-{next}`, which it knows by asking one more; at most 200, then "Tolesni projektai" `?nuo=`); the API's
+  +50, landing on `#bill-{next}`, which it knows by asking one more; at most 200, then "Tolesni projektai" `?nuo=`); the API's
   `limit` (`BillListLimits`, 20, 1–200). The list is composed in memory (`AppealsService.ListAsync`): the bills are the
   Parliament module's, the activity the Appeals module's. An MP's votes (`/p/{slug}/balsavimai`, `MpVotePaging`) are by day,
   50 then +50 by `?rodyti=` (rows `#balsavimas-{n}`), at most 300, then `?nuo=`; `GET /mps/{slug}/votes` takes `limit`
-  (`MpVoteLimits`). Every "show more" is `<ShowMore>` (design 8.16.4, below). Every moderators' list keeps its hundred
+  (`MpVoteLimits`). Every "show more" is `<ShowMore>` (design 8.16.4, below); a press adds 50 rows or 20 texts (`ListPaging`,
+  `ListPagingTests`). Every moderators' list keeps its hundred
   and carries its total (`ModerationQueueResponse.RecordsTotal` etc.); `<QueueCut>` says "Rodoma 100 iš N".
 - Following a bill, an MP, an organisation or a member is private: who follows is shown to nobody (the followed party and
   staff included), never combined with sides or invitations (the person's own `/me/bills` gives them both), in the export,
@@ -539,7 +563,7 @@ The closed bills are one dot plot (`#compare-plot`: rows `li.dotplot__row#projek
 number and the title cut by CSS, a per-row SVG track on one shared axis) and "Rodyti lentelę" (`#compare-table`, rows `row-{nr}`,
 title column) over the same bills (owner, 2026-11-19, back from the rows of 2026-11-18), with their own GET form in
 `details#compare-filters-box` ("Filtrai (n)", `AnalyticsListState.Active`; open while a field is set) (`nuo`, `iki`, `q`,
-`rezultatas`, `dauguma`, `rikiuoti`, `rodyti`; `AnalyticsList` in `Lt2.Web.Client/Analytics` reads the address, the API
+`rezultatas`, `dauguma`, `rikiuoti`, `rodyti`: 10, then +50 up to 300; `AnalyticsList` in `Lt2.Web.Client/Analytics` reads the address, the API
 reads `AnalyticsBillQuery`); `AnalyticsReads.Select` filters, orders and cuts the kept copy in memory; the figures and
 factions follow only `metai`/`paskyros`. Tests: `AnalyticsTests` (integration, the filters over HTTP and on the page),
 `ComparedBillListRuleTests`, `AnalyticsListTests`, `AnalyticsShareFormatTests` (unit).
@@ -693,12 +717,12 @@ A link to a comment or an argument (design 8.23.6, the designer's proposal of 20
 `?argumentas={id}#reason-{id}`. `BillPage` resolves the comment once (`GET /comments/{id}/place`, public, one 404
 `comment.not-found` for hidden and unknown) and hands `Linked` to `RecordReasons`, `OrganisationPositions` and
 `BillResponses` as a parameter (so an island starts in the same state): the target is shown even beyond its side's first
-page (first in its side's column) or the responses' paging, its "Aptarimas" open through the linked one rounded up to the next ten (`BillTextLinks.ShownThrough`,
+page (first in its side's column) or the responses' paging, its "Aptarimas" open through the linked one on the thread's own pages, 10 then +20 (`BillTextLinks.ShownThrough`,
 `CommentPaging.Asked(…, linked)`), the comment marked `comment--linked` (an argument `said--linked`); anything not shown
-changes nothing. The thread's API pages by `limit` and `cursor` (`CommentRules.Limit`, the first page at least ten; the answer's
+changes nothing. The thread's API pages by `limit` and `cursor` (`CommentRules.Limit`, the first page at least ten, a later one 20 when not asked; the answer's
 `NextCursor`); "Rodyti daugiau komentarų" is `<ShowMore>` (`#comments-more-{target}`, `#comments-shown-{target}`): by the
 address (`?komentarai=`, `CommentPaging`) without script and before the island runs, and once it runs `CommentThread.MoreAsync`
-reads the next ten in place and focuses the first added (owner, 2026-11-19: the running island had let enhanced navigation
+reads the next 20 (`CommentLimits.Step`) in place and focuses the first added (owner, 2026-11-19: the running island had let enhanced navigation
 fetch the page and kept its own list, so nothing changed).
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.

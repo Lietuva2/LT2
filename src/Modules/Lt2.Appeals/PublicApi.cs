@@ -103,11 +103,14 @@ public static class ReasonPages
     /// <summary>Each side's arguments shown first, carried in the bill's answer.</summary>
     public const int First = 2;
 
+    /// <summary>The arguments "Rodyti daugiau argumentų" adds (owner, 2026-11-19: a list of texts, 20 a press).</summary>
+    public const int Step = Lt2.SharedKernel.ListPaging.TextStep;
+
     /// <summary>The most one page holds.</summary>
     public const int Max = 100;
 
-    /// <summary>A page's size: as asked, from 1 to <see cref="Max"/>; 10 when not asked.</summary>
-    public static int Limit(int? asked) => asked is { } n ? Math.Clamp(n, 1, Max) : 10;
+    /// <summary>A page's size: as asked, from 1 to <see cref="Max"/>; a <see cref="Step"/> when not asked.</summary>
+    public static int Limit(int? asked) => asked is { } n ? Math.Clamp(n, 1, Max) : Step;
 
     /// <summary>Where a page starts: the cursor is the number of arguments before it; anything else starts at the first.</summary>
     public static int Offset(string? cursor) =>

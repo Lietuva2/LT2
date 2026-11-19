@@ -82,8 +82,6 @@
     <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 </section>
 
-<p class="row" id="home-more"><a href="/projektai">@T["Home.AllAppeals"]</a> <a href="/suvestines">@T["Home.Digests"]</a> <a href="/seimo-nariai">@T["Nav.Mps"]</a></p>
-
 @if (_sending == "off")
 {
     @* Design 8.15, 8.19.1: "nothing is sent" stays inline while it is true. *@
@@ -103,11 +101,11 @@
     /// <summary>The last voting days the page shows, each cut to its first rows.</summary>
     private List<(DateOnly Day, AgendaDayView<AgendaVoteResponse> View)> _voted = [];
 
-    /// <summary>The planned days shown whole (<c>?diena=</c>, "Rodyti likusius").</summary>
-    private IReadOnlySet<DateOnly> _wholePlanned = new HashSet<DateOnly>();
+    /// <summary>The planned days shown grown, with the known rows each shows (<c>?diena=2026-11-24:15</c>), for the links.</summary>
+    private IReadOnlyDictionary<DateOnly, int> _grownPlanned = new Dictionary<DateOnly, int>();
 
-    /// <summary>The voted days shown whole (<c>?balsuota=</c>).</summary>
-    private IReadOnlySet<DateOnly> _wholeVoted = new HashSet<DateOnly>();
+    /// <summary>The voted days shown grown (<c>?balsuota=</c>).</summary>
+    private IReadOnlyDictionary<DateOnly, int> _grownVoted = new Dictionary<DateOnly, int>();
 
     /// <summary>The bills of the rows shown, for the members' islands to ask about (each once; in requests of thirty).</summary>
     private IReadOnlyList<string> _numbers = [];
@@ -134,94 +132,38 @@
         var rules = (await Digests.GetRulesAsync()).Value;
         _threshold = rules?.ThresholdDefault;
         _sending = rules?.Sending ?? "off";
-        _wholePlanned = AgendaPaging.Read(Planned);
-        _wholeVoted = AgendaPaging.Read(Voted);
+        var planned = AgendaPaging.Read(Planned);
+        var voted = AgendaPaging.Read(Voted);
         // Owner, 2026-11-18: the next two sitting days and the last two voting days, five rows of each in the agenda's order
-        // (AgendaRules); "Rodyti likusius" opens a day whole by the address (AgendaPaging.Front), the rows not shown are not
-        // rendered. A bill the open data does not know yet is counted in its day and listed only in a day shown whole.
+        // (AgendaRules); the rows not shown are not rendered. Owner, 2026-11-19: under a longer day the shared "Rodyti
+        // daugiau" adds 50 in place by the address (AgendaPaging.Front, ?diena=2026-11-24:55), as on the agenda page. A
+        // bill the open data does not know yet is counted in its day and listed (one folded line) once every known row shows.
         _coming = _agenda.Days.Take(AgendaRules.FrontDays)
-            .Select(d => (d.Date, AgendaRules.Day(d.Items, i => i.Title is not null, AgendaRules.FrontPerDay)))
+            .Select(d => (d.Date, Cut(d.Items, i => i.Title is not null, planned.GetValueOrDefault(d.Date))))
             .ToList();
         _voted = _agenda.RecentVotes.GroupBy(v => Display.DayOf(v.HeldAt)).OrderByDescending(g => g.Key).Take(AgendaRules.FrontDays)
-            .Select(g => (g.Key, AgendaRules.Day(g.ToList(), _ => true, AgendaRules.FrontPerDay)))
+            .Select(g => (g.Key, Cut(g.ToList(), _ => true, voted.GetValueOrDefault(g.Key))))
             .ToList();
+        _grownPlanned = AgendaPaging.Grown(_coming.Select(d => (d.Day, d.View.Shown.Count)), AgendaRules.FrontPerDay);
+        _grownVoted = AgendaPaging.Grown(_voted.Select(d => (d.Day, d.View.Shown.Count)), AgendaRules.FrontPerDay);
         _numbers = AgendaRules.Asked(
-            _coming.SelectMany(d => Rows(d.View, _wholePlanned.Contains(d.Day)).Select(i => i.Number))
-                .Concat(_voted.SelectMany(d => Rows(d.View, _wholeVoted.Contains(d.Day)).Select(v => v.Number))));
+            _coming.SelectMany(d => d.View.Shown.Select(i => i.Number)).Concat(_voted.SelectMany(d => d.View.Shown.Select(v => v.Number))));
     }
 
-    /// <summary>The known rows a day shows: its first ones, or all when it is shown whole.</summary>
-    private static IEnumerable<T> Rows<T>(AgendaDayView<T> view, bool whole) => whole ? view.Shown.Concat(view.Rest) : view.Shown;
+    /// <summary>A day cut for the front page: its first five known rows, or as many as the address asks.</summary>
+    private static AgendaDayView<TRow> Cut<TRow>(IReadOnlyList<TRow> rows, Func<TRow, bool> known, int asked) =>
+        AgendaRules.Day(rows, known, AgendaRules.ShownKnown(AgendaRules.FrontPerDay, asked, rows.Count(known)));
 
     private RenderFragment Timeline(bool member) => __builder =>
     {
         foreach (var (day, view) in _coming)
         {
-            var whole = _wholePlanned.Contains(day);
-            var id = AgendaPaging.Front.PlannedDayId(day);
-            <section class="tl-day" aria-label="@($"{T["Agenda.Planned"]} {F.DayMonth(day)}")" id="@id">
-                <TimelineDate Label="@T["Agenda.Planned"]" Day="day" Count="@AgendaWords.Bills(T, view.Count)" />
-                <div class="tl-rows">
-                    @if (view.Shown.Count > 0)
-                    {
-                        <ul class="tl-items">
-                            @foreach (var item in view.Shown)
-                            {
-                                <TimelineItem Item="item" Day="day" Member="member" Numbers="_numbers" />
-                            }
-                        </ul>
-                    }
-                    @if (whole && view.Rest.Count > 0)
-                    {
-                        <ul class="tl-items" id="@AgendaPaging.RestId(id)">
-                            @foreach (var item in view.Rest)
-                            {
-                                <TimelineItem Item="item" Day="day" Member="member" Numbers="_numbers" />
-                            }
-                        </ul>
-                    }
-                    @if (whole && view.Unknown.Count > 0)
-                    {
-                        <UnknownBills Items="view.Unknown" Day="day" Id="@($"{id}-nezinomi")" />
-                    }
-                    @if (!whole && view.Count > view.Shown.Count)
-                    {
-                        @* Owner, 2026-11-18: the rest of the day in place, by the address (no number: the head counts the day). A day
-                           whose known bills all show opens on its line of bills the open data does not know yet. *@
-                        <p class="tl-all"><a href="@AgendaPaging.Address(AgendaPaging.Front, _wholePlanned.Append(day), _wholeVoted, view.Rest.Count > 0 ? AgendaPaging.RestId(id) : id + "-nezinomi")" id="@($"{id}-rodyti")">@T["Agenda.ShowRest"]</a></p>
-                    }
-                </div>
-            </section>
+            <PlannedDay Page="AgendaPaging.Front" Day="day" View="view" First="AgendaRules.FrontPerDay" Planned="_grownPlanned" Voted="_grownVoted" Member="member" Numbers="_numbers" />
         }
 
         foreach (var (day, view) in _voted)
         {
-            var whole = _wholeVoted.Contains(day);
-            var id = AgendaPaging.Front.VotedDayId(day);
-            <section class="tl-day tl-past" aria-label="@($"{T["Agenda.Voted"]} {F.DayMonth(day)}")" id="@id">
-                <TimelineDate Label="@T["Agenda.Voted"]" Day="day" Count="@AgendaWords.Votes(T, view.Count)" />
-                <div class="tl-rows">
-                    <ul class="tl-items">
-                        @foreach (var v in view.Shown)
-                        {
-                            <VotedItem Vote="v" Member="member" Numbers="_numbers" />
-                        }
-                    </ul>
-                    @if (whole && view.Rest.Count > 0)
-                    {
-                        <ul class="tl-items" id="@AgendaPaging.RestId(id)">
-                            @foreach (var v in view.Rest)
-                            {
-                                <VotedItem Vote="v" Member="member" Numbers="_numbers" />
-                            }
-                        </ul>
-                    }
-                    else if (view.Rest.Count > 0)
-                    {
-                        <p class="tl-all"><a href="@AgendaPaging.RestOfVoted(AgendaPaging.Front, _wholePlanned, _wholeVoted, day)" id="@($"{id}-rodyti")">@T["Agenda.ShowRest"]</a></p>
-                    }
-                </div>
-            </section>
+            <VotedDay Page="AgendaPaging.Front" Day="day" View="view" First="AgendaRules.FrontPerDay" Planned="_grownPlanned" Voted="_grownVoted" Member="member" Numbers="_numbers" />
         }
 
         // Design 8.18: the long form of "Balsuota", under the last voted day, also when the last seven days had none.

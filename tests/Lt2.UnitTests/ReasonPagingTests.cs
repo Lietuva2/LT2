@@ -43,7 +43,8 @@ public sealed class ReasonPagingTests
         var grown = ReasonPaging.Append(column, Column(5, null, Reason(2), Reason(3), Reason(4), Reason(5)));
         grown.Items.Select(r => r.Text).ShouldBe(["Argumentas 1", "Argumentas 2", "Argumentas 3", "Argumentas 4", "Argumentas 5"]);
         ReasonPaging.More(grown).ShouldBeFalse();
-        ReasonPaging.NextAsked(Column(15, "12")).ShouldBe(22);
+        ReasonPaging.NextAsked(Column(15, "2")).ShouldBe(22, "owner, 2026-11-19: two first, then 20 a press");
+        ReasonPaging.NextAsked(Column(45, "22")).ShouldBe(42);
     }
 
     [Fact]

@@ -35,7 +35,7 @@ Read before changing a page, a component or an island. The rules behind it are d
   `ProfileModerationView` use it; E2E tests choose an action with `E2ESteps.ChooseAsync`. Icons are `<Icon>` (inline SVG, currentColor). A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side or a first "Man svarbu" is `<PositionConsentForm>` (`ForMark`); the bill page's islands
-  share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
+  share the caller's answers through `MyBillState`, the timeline's (the front page's and `/darbotvarke`'s) through `MyAgendaState` (its `Changed` event tells
   the others after a member's action). **An action never reloads the page (owner, 2026-11-17):** on a bill's page the island
   that acted calls `MyBillState.Announce` (`byModerator` for a moderator's action) and the others read their part again
   (`Changed`); what is new to the reader (design 8.11.8) is `MyBillState.News`/`NewSince`, set once per page by `WhatsNew`,
@@ -85,16 +85,20 @@ Read before changing a page, a component or an island. The rules behind it are d
   list page.
 - **A list by day is the timeline's day blocks (owner, 2026-11-18):** `section.tl-day` (`tl-past` for votes) with
   `<TimelineDate>` (label, the date in words, the weekday and the day's count) and the rows in `div.tl-rows`; on a narrow
-  screen the head is a band of its own. The rest of one day grows by the address ("Rodyti likusius" on `/darbotvarke` and
-  `/`, `AgendaPaging`: `?diena=`, landing on the day's second list). A vote's majority beside its numbers is
+  screen the head is a band of its own (`PlannedDay`, `VotedDay`). A longer day grows by `<ShowMore>` like every list
+  (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press, landing on the first row added). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the list.
 - **Every "show more" is `<ShowMore>` (design 8.16.4, owner 2026-11-19)** (`Lt2.Web.Client/Components`; on server pages
   `<Lt2.Web.Client.Components.ShowMore …/>`): `div.row.show-more` with "Rodoma N iš M" (`Total`, status id `StatusId` or
-  `{Id}-shown`) and `a.btn.btn--plain.show-more__link` to `Href`, the same page grown by the address landing on the first
-  row added (null: every row shown, no link); further links of the list (an older page) as its child content. Never
+  `{Id}-shown`) and `a.show-more__link`, a plain text link (owner 2026-11-19: not a button's look), to `Href`, the same page
+  grown by the address landing on the first row added (null: every row shown, no link). How much a press adds is one rule
+  (design 8.16.4, owner 2026-11-19): the first page as each list states it, then a list of rows +50
+  (`ListPaging.RowStep`), a list of members' long texts +20 (`ListPaging.TextStep`; `Lt2.SharedKernel/ListPaging.cs`, linked
+  into the contracts as `BillTextLinks` is); a list's own `Step` constant names one of the two, never a literal. Further links of the list (an
+  older page) as its child content, plain `<a>` too. Never
   hidden rows in the page. On a server-rendered page that is all: enhanced navigation (blazor.web.js) fetches the link
   without a reload (`VoteHistory`, `BillListPaging`, `MpVotePaging`, `AnalyticsList`, `ResponsePaging`, `BallotList`, the
-  member page). In an island pass `OnMore`: once the island runs the link carries `data-enhance-nav="false"` and
+  member page, the agenda's and the front page's days through `AgendaPaging`). In an island pass `OnMore`: once the island runs the link carries `data-enhance-nav="false"` and
   `@onclick:preventDefault`, and the island reads the next page from the API (`limit`, `cursor`), adds it in place and
   focuses the first item added (tabindex -1, `FocusAsync`), the `Href` still the grown address (`RecordReasons`,
   `CommentThread`). A link inside a running island must never be left to enhanced navigation: the island keeps its own
