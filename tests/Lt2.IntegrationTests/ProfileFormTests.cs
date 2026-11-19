@@ -141,9 +141,9 @@ public sealed class ProfileFormTests(DatabaseFixture database) : ApiTest(databas
         var errors = (await refused.ProblemAsync()).GetProperty("errors");
         errors.GetProperty("displayName")[0].GetString().ShouldBe("Vardas per ilgas: ne daugiau kaip 60 ženklų.");
         errors.GetProperty("about")[0].GetString()!.ShouldContain("asmens kodas");
-        errors.GetProperty("public")[0].GetString()!.ShouldContain("Sutikimo tekstas pasikeitė");
+        errors.GetProperty("public")[0].GetString()!.ShouldContain("Galioja kitas sutikimo tekstas");
         errors.GetProperty("party")[0].GetString().ShouldBe("Tokios partijos sąraše nėra.");
-        errors.GetProperty("partyPublic")[0].GetString()!.ShouldContain("Sutikimo tekstas pasikeitė");
+        errors.GetProperty("partyPublic")[0].GetString()!.ShouldContain("Galioja kitas sutikimo tekstas");
 
         var after = await member.MyProfileAsync();
         (after.DisplayName, after.About, after.ProfileId, after.Party).ShouldBe(((string?)null, (string?)null, (string?)null, (string?)null));

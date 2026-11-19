@@ -1,4 +1,5 @@
 using FluentValidation;
+using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Auth;
 using Microsoft.Extensions.Localization;
 
@@ -27,6 +28,26 @@ public sealed record GrantRoleResponse
 public sealed record ResetAccountRequest
 {
     public string Email { get; init; } = "";
+}
+
+/// <summary>
+/// Locks or unlocks the account with this address (design 8.3): a locked account cannot sign in; the statement is required, audited
+/// and emailed to the person.
+/// </summary>
+public sealed record AccountLockRequest
+{
+    public string Email { get; init; } = "";
+
+    public string Statement { get; init; } = "";
+}
+
+public sealed class AccountLockRequestValidator : AbstractValidator<AccountLockRequest>
+{
+    public AccountLockRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Email).ValidEmail(l);
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+    }
 }
 
 public sealed class GrantRoleRequestValidator : AbstractValidator<GrantRoleRequest>

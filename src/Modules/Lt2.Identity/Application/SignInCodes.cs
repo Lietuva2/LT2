@@ -22,6 +22,12 @@ internal sealed class SignInCodeIssuer(IdentityDb db, IOutbox outbox, ISettings 
     /// </summary>
     public async Task IssueAsync(User user, IDbContextTransaction transaction, CancellationToken cancellationToken, string? purpose = null)
     {
+        // Design 8.3: a locked account is sent nothing, whoever asks and whatever the answer says.
+        if (await Staff.AccountLocks.IsLockedAsync(db, user.Id, cancellationToken))
+        {
+            return;
+        }
+
         // The limits are counted under the account's lock, so parallel requests cannot pass them together (design 6.8).
         await IdentityLocks.SignInCodesAsync(db, user.Id, cancellationToken);
         var now = clock.GetUtcNow();

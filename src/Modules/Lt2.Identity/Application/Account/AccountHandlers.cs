@@ -50,6 +50,9 @@ internal sealed class AccountHandlers(
         // Design 6.5 (owner, 2026-11-19): the consent in force, and whether a consent to an older text is all the person has.
         var positionConsent = await CurrentPositionConsent.Of(db.Consents, user.Id).AnyAsync(cancellationToken);
         var olderPositionConsent = !positionConsent && await CurrentPositionConsent.Live(db.Consents, user.Id).AnyAsync(cancellationToken);
+
+        // Design 8.25.1 (owner, 2026-11-19): a profile on under an earlier consent text stays on; its person is asked on the account page.
+        var olderProfileConsent = profile.PublicProfileId is not null && !await Profiles.PublicProfileConsents.CurrentAsync(db, user.Id, cancellationToken);
         return new AccountSummary(
             user.Id,
             user.Email!,
@@ -67,7 +70,8 @@ internal sealed class AccountHandlers(
             link,
             !profile.IsPending && await Consents.TermsHandlers.RequiredAsync(db, user.Id, cancellationToken),
             (await sessions.ForAsync(principal, cancellationToken))?.PasskeySession == true,
-            olderPositionConsent);
+            olderPositionConsent,
+            olderProfileConsent);
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)

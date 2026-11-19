@@ -176,4 +176,16 @@ public interface IAdminApi
 
     /// <summary>Switches a code off or on again, with a statement; audited.</summary>
     Task<ApiResult> SwitchInvitationAsync(Guid invitationId, bool on, Appeals.StatementRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Design 8.5.2: the MPs whose profile is taken over, oldest first; nothing of the accounts.</summary>
+    Task<ApiResult<IReadOnlyList<Mps.AdminMpLinkResponse>>> GetMpLinksAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Design 8.5.2: ends an MP's link with a statement; a fresh passkey confirmation (<c>passkey.confirmation-required</c>).</summary>
+    Task<ApiResult> EndMpLinkAsync(string slug, Appeals.StatementRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Design 8.3: locks the account with this address (no sign-in until unlocked), with a statement; a fresh passkey confirmation.</summary>
+    Task<ApiResult> LockAccountAsync(Admin.AccountLockRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Design 8.3: unlocks the account with this address, with a statement; a fresh passkey confirmation.</summary>
+    Task<ApiResult> UnlockAccountAsync(Admin.AccountLockRequest request, CancellationToken cancellationToken = default);
 }

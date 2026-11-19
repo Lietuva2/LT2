@@ -31,7 +31,7 @@ else
         <MyMpLine />
 
         @* Design 8.28.5: the name, "Apie mane", "Viešas profilis", the party and its box, one form saved whole. *@
-        <MyProfile NameChanged="NameChanged" />
+        <MyProfile NameChanged="NameChanged" ConsentOutdated="Me.PublicProfileConsentOutdated" ConsentAccepted="ReloadMeAsync" />
     </section>
 }
 

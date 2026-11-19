@@ -58,6 +58,12 @@ code review.
   is `identity.bot_check_use` (primary key = the signature, until the challenge's expiry; withheld from `lt2_readonly`),
   deleted by `MaintenanceHandler`. The script `js/lt2-botcheck.js` keeps nothing in the browser and loads nothing from
   elsewhere (`BotCheckScriptTests`). Logs say only the outcome name, never the solution.
+- **A locked account (design 8.3, owner 2026-11-19).** An administrator's full lock (`POST /admin/accounts/lock`, a staff-passkey
+  session with a fresh confirmation, a statement) ends every session and the open codes in the same transaction and sets
+  `identity.profile.locked_at`. No sign-in then works, and no answer differs from that for an address nobody holds: the code request
+  answers 202 and sends nothing (`SignInCodeIssuer`), a typed code is `auth.code-invalid`, a passkey `passkey.invalid`; the public profile
+  is 410 as if switched off; follow emails are skipped (`ParticipantFacts.IsLocked`). A staff account holding an active role and the
+  administrator's own account are never locked. The audit entry and the notice email hold the statement and no address.
 - **Changing the email address (design 6.2).** Only a passkey session or a code to the address in use starts it (a staff
   account: its staff passkey, freshly confirmed; the MP's account: a passkey session; `EmailChangeRules.Proof`); the answer to an
   address is the same whether an account has it (that account is told instead, no code); the code to the new address follows

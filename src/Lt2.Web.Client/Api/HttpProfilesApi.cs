@@ -10,6 +10,9 @@ internal sealed class HttpProfilesApi(ApiHttp http) : IProfilesApi
     public Task<ApiResult<MyProfileResponse>> GetMineAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<MyProfileResponse>(HttpMethod.Get, ProfileRoutes.Mine, null, cancellationToken);
 
+    public Task<ApiResult> AcceptConsentAsync(ProfileConsentRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, ProfileRoutes.MineConsent, request, cancellationToken);
+
     public Task<ApiResult<MyProfileResponse>> SaveAsync(ProfileRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<MyProfileResponse>(HttpMethod.Put, ProfileRoutes.Mine, request, cancellationToken);
 

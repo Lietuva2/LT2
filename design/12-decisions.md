@@ -19,6 +19,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The account page shows the positions consent and its withdrawal for any consent not withdrawn, whatever text it was
   given to ("show any live consent"); a consent to an older text has one line more, with the text in force to read and
   accept there (6.5, 2026-11-19).
+- A public profile switched on under an earlier consent text stays on (the earlier consent covered it); the person is asked
+  once, on the account page where the switch is, by one line and a way to read the text in force and accept it; switching the
+  profile off stays one step; no email, no banner elsewhere (8.25.1, 2026-11-19, "go ahead with the designer's recommendations").
 
 ## 6.2 Sign-in and accounts
 
@@ -102,7 +105,14 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 - A moderator can restrict an account from writing, until a date or until lifted, with a statement emailed to the person;
   it is not public, touches no side, mark or count, and goes with the account; no hash of the address is kept. A full
-  lock that stops sign-in is left for later (2026-11-13).
+  lock that stops sign-in was left for later (2026-11-13) and is built (2026-11-19, below).
+- The administrator's end of an MP's link has its screen: the first section of "Paskyros", a list of the MPs whose profile is
+  taken over with "Baigti ryšį" opening the statement field in place (8.5.2, 2026-11-19).
+- A full lock that stops signing in is an administrator's action, never a moderator's, with a required statement and a fresh
+  passkey confirmation (2026-11-19, "go ahead with the designer's recommendations"): sessions end, no sign-in works and the
+  answers reveal nothing, the public profile is not shown and the follows send nothing, texts stay as they are; the person
+  gets one email with the statement and how to write to the team, erasure being asked for by writing (a locked person cannot
+  sign in to delete); unlocking likewise; a staff account with an active role and the administrator's own are not locked.
 - Moderators can restore a hidden record or argument, with a statement, audited, the author told (2026-11-13).
 - The sides taken on a hidden record are kept, to be looked at again (2026-11-13).
 - A moderator's actions are one filled button for what the item needs most in its state and "Kiti veiksmai" opening the

@@ -22,6 +22,8 @@ public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAd
 /// this session is), so deleting it needs a session signed in with its staff passkey (design 6.9).
 /// <paramref name="HasPositionConsent"/>: the positions consent to the text in force; <paramref name="OlderPositionConsent"/>:
 /// none to that text, but one to an older text not withdrawn (design 6.5, owner 2026-11-19).
+/// <paramref name="OlderPublicProfileConsent"/>: the public profile is on and no consent to the text in force stands for it, so the
+/// profile (switched on under an earlier text) stays on and the person is asked on the account page (design 8.25.1, owner 2026-11-19).
 /// </summary>
 public sealed record AccountSummary(
     Guid Id,
@@ -40,7 +42,8 @@ public sealed record AccountSummary(
     MpLinkState? Mp = null,
     bool TermsRequired = false,
     bool PasskeySession = false,
-    bool OlderPositionConsent = false);
+    bool OlderPositionConsent = false,
+    bool OlderPublicProfileConsent = false);
 
 /// <summary>
 /// A sign-in's outcome: <paramref name="AccountChanged"/> when the browser was signed in to another account, whose session
@@ -59,6 +62,9 @@ public sealed record MpOffer(string Slug, string FirstName, string LastName);
 /// speak for the MP (a passkey session).
 /// </summary>
 public sealed record MpLinkState(string Slug, string FirstName, string LastName, string Part, bool MayWrite);
+
+/// <summary>An MP whose profile is taken over (design 8.5.2), as the administrators' list holds one: the Seimas person number and since when.</summary>
+public sealed record LinkedMp(long SeimasPersonId, DateTimeOffset Since);
 
 /// <summary>An office member as the MP's account sees them (design 8.5.3): the display name and since when. Nobody else does.</summary>
 public sealed record OfficeMember(Guid Id, string? DisplayName, DateTimeOffset Since);
@@ -118,6 +124,12 @@ public interface IPoliticians
     /// <summary>An administrator ends an MP's link with a statement (the caller checks the fresh confirmation).</summary>
     Task<Result<Unit>> EndByAdministratorAsync(string slug, string statement, StaffActor administrator, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// The administrators' list (design 8.5.2): every MP whose profile is taken over now (an open MP link), with the Seimas person number
+    /// and since when, oldest first. Nothing of the account.
+    /// </summary>
+    Task<IReadOnlyList<LinkedMp>> LinkedAsync(CancellationToken cancellationToken);
+
     /// <summary>The public trace (design 8.5.2): of the given MPs, those whose profile is taken over, and since when.</summary>
     Task<IReadOnlyDictionary<long, DateTimeOffset>> TakenOverAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
 
@@ -172,6 +184,18 @@ public interface IIdentityAdministration
 
     /// <summary>Removes the account's passkeys; its staff roles stay inactive until a new activation code is used.</summary>
     Task<Result<Unit>> ResetAccountAsync(string email, Actor actor, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.3, the full lock: in one transaction every session of the account ends and no sign-in works until it is unlocked,
+    /// its public profile is not shown and its follows send nothing; its texts stay. Audited with the statement (no address); the
+    /// person gets one email with it and <paramref name="contact"/>. The caller checks the administrator and the fresh confirmation.
+    /// <c>statement.required</c>, <c>account.not-found</c>, <c>account.lock-self</c>, <c>account.lock-staff</c> (it holds an active staff
+    /// role: remove the role first), <c>account.locked</c> (already).
+    /// </summary>
+    Task<Result<Unit>> LockAccountAsync(string email, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>Unlocks the account, with a statement; audited; one email. <c>account.not-locked</c> when it is not locked.</summary>
+    Task<Result<Unit>> UnlockAccountAsync(string email, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken);
 }
 
 /// <summary>One signed-in browser.</summary>
@@ -455,6 +479,14 @@ public interface IMemberProfiles
     /// <c>party.profile-off</c>, <c>mp.takes-no-part</c>. An unchanged part is not checked, written or audited.
     /// </summary>
     Task<Result<MyProfileState>> SaveAsync(ClaimsPrincipal user, ProfileForm form, IReadOnlyCollection<string> parties, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.25.1 (owner, 2026-11-19): a person whose profile is on under an earlier consent text accepts the text in force
+    /// (<paramref name="textVersion"/> must be it, <c>profile.consent-outdated</c> otherwise): their earlier consents end and a
+    /// <c>public-profile</c> consent to that version is recorded, audited; nothing else changes. <c>profile.not-public</c> while the
+    /// profile is off; accepting what is accepted already changes nothing.
+    /// </summary>
+    Task<Result<Unit>> AcceptConsentAsync(ClaimsPrincipal user, string textVersion, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>"Viešas profilis" off and nothing else (design 8.25.1): open behind the terms (8.22.2) and under a writing restriction.</summary>
     Task<Result<MyProfileState>> SwitchOffAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);

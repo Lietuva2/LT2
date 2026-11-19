@@ -140,6 +140,9 @@ public static class ProfileRoutes
 
     /// <summary><c>DELETE</c>: "Viešas profilis" off, nothing else changed (design 8.25.1; open behind the terms, 8.22.2).</summary>
     public const string MinePublic = Mine + "/public";
+
+    /// <summary><c>PUT</c>: the consent text in force accepted by a person whose profile is on under an earlier text (design 8.25.1).</summary>
+    public const string MineConsent = Mine + "/consent";
     public const string Member = ApiRoutes.Prefix + "/members/{id}";
     public const string Texts = ApiRoutes.Prefix + "/members/{id}/texts";
     public const string Follow = ApiRoutes.Prefix + "/members/{id}/follow";
@@ -172,6 +175,12 @@ public static class ProfileRoutes
 /// </summary>
 public interface IProfilesApi
 {
+    /// <summary>
+    /// Design 8.25.1: accepts the public-profile consent text in force (<c>profile.consent-outdated</c> for another version,
+    /// <c>profile.not-public</c> while the profile is off); nothing else changes.
+    /// </summary>
+    Task<ApiResult> AcceptConsentAsync(ProfileConsentRequest request, CancellationToken cancellationToken = default);
+
     Task<ApiResult<MyProfileResponse>> GetMineAsync(CancellationToken cancellationToken = default);
 
     Task<ApiResult<MyProfileResponse>> SaveAsync(ProfileRequest request, CancellationToken cancellationToken = default);
@@ -207,6 +216,18 @@ public sealed class ProfileRequestValidator : AbstractValidator<ProfileRequest>
         RuleFor(x => x.PublicConsentVersion).MaximumLength(50).WithMessage(l["Consent.Required"]);
         RuleFor(x => x.PartyPublicConsentVersion).MaximumLength(50).WithMessage(l["Consent.Required"]);
     }
+}
+
+/// <summary>The version of the public-profile consent text the person read; it must be the one in force (design 8.25.1).</summary>
+public sealed record ProfileConsentRequest
+{
+    public string TextVersion { get; init; } = "";
+}
+
+public sealed class ProfileConsentRequestValidator : AbstractValidator<ProfileConsentRequest>
+{
+    public ProfileConsentRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.TextVersion).NotEmpty().WithMessage(l["Consent.Required"]).MaximumLength(50).WithMessage(l["Consent.Required"]);
 }
 
 public sealed class MemberReportRequestValidator : AbstractValidator<MemberReportRequest>

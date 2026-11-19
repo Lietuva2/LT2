@@ -20,9 +20,7 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
   service confirms which field of `p2b.ad_sp_klausimo_svarstymo_eiga` (or the vote's wording) states it, the import
   closes the record with that reason and the date, a moderator can reopen a wrong close; "returned to the initiators for
   improvement" is not a rejection. Until then a moderator closes such a record (owner, 2026-11-19).
-- 8.3: a full lock of an account that also stops signing in.
 - 8.4, 8.19.6: a sending subdomain with SPF, DKIM and DMARC; complaint and bounce reports from an email provider.
-- 8.5.2: a screen for the administrator's end of an MP's link (there is an API route only).
 - 9.1: a second web instance, the backup container (pgBackRest), the telemetry collector, host hardening, CDN and DDoS
   protection, a rehearsed recovery. 9.2: separate staging and production. 9.3: an image per commit in a registry, an
   approved deploy, expand-then-contract migrations. 9.4: an external uptime check, a telemetry backend, dashboards,
@@ -34,7 +32,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
   summary job runs and makes nothing; the AI provider is off until configured.
 - 8.14.4: organisations named in the summaries to MPs. 8.14.9: "keep out of summaries" and the automatic check of an
   organisation's website.
-- 8.25.1: asking members again when the public-profile consent text gets a new version.
 
 ## Where the code does not do what a rule says
 
@@ -250,6 +247,8 @@ for the lawyer).
 ## Awaiting a native speaker
 
 - 8.19.3: the settings screen's group "Laiškų siuntimo ribos" and the three daily ceilings of the email streams (`AppealUi` `Admin.Group.email`, `Admin.Setting.Email:Ceiling*PerDay`, `Admin.Help.Email:Ceiling*PerDay`, `Admin.Unit.Email:Ceiling*PerDay`).
+- 6.5, 8.4, 8.25.1: the refusals when a consent text in force is not the one the form showed, "Galioja kitas sutikimo
+  tekstas. …" (`ProblemText` `consent.outdated`, `party.consent-outdated`, `profile.consent-outdated`).
 - 6.2: the texts of changing the email address ("El. pašto adresas", "Keisti adresą", "Kodą išsiuntėme adresu …",
   "Ne jūs? Grąžinti ankstesnį adresą", the rest of the part and of the page that puts the old address back: `UiText`
   `EmailPart.*`, `EmailRestore.*`), its emails (`EmailTemplates` `EmailChange.*`: the code to the new address, to an
@@ -279,6 +278,12 @@ for the lawyer).
   (`EmailTemplates` `Follow.Closed.*`, `Gathered.Closed.*`); the refusals (`ProblemText` `closing.*`,
   `closing-url.invalid`; `ValidationMessages` `Closing.*`); the methodology's "kol dalyvauti dėl projekto galima"
   (`AppealText` `Method.Privacy.1`, also for the lawyer).
+- 8.3: the full lock: the "Paskyros" screen (`AppealUi` `Acc.*`, `PageText` `Nav.Accounts`), the two emails ("Lietuva 2.0: paskyra
+  užrakinta" and "…atrakinta" with their bodies and the line on writing to the team and on erasure, `EmailTemplates`
+  `Notice.account-locked.*`, `Notice.account-unlocked.*`) and the refusals (`ProblemText` `account.lock-self`,
+  `account.lock-staff`, `account.locked`, `account.not-locked`).
+- 8.5.2: the MPs' section of "Paskyros": "Seimo narių profiliai", its lead, "Perimtas {0}", "Baigti ryšį", the sentence and
+  "Ryšys baigtas. Seimo narys: {0}." (`AppealUi` `Acc.Mps.*`).
 - 8.7, 8.12.1: "Paspaudę dar kartą, atsiimsite." (`AppealUi` `Side.PressAgain`), the pressed button's title.
 - 8.10: the feedback texts.
 - 8.12.2: the reached threshold, "Riba pasiekta – …" (`AppealUi` `Threshold.Reached.*`, `Threshold.ReachedClosed.*`)
@@ -299,7 +304,12 @@ for the lawyer).
 - 8.22.5, 8.11.5: the link-preview and share-link texts.
 - 8.23.1: the terms "Aptarimas" and "komentaras".
 - 8.24.1: the stop page's texts ("Nebegauti laiškų", its sentence, button and confirmation).
-- 8.25.1: the public-profile consent text (`UiText` `PublicProfile.Consent`).
+- 8.25.1: the public-profile consent text (`UiText` `PublicProfile.Consent`); for a profile on under an earlier text, the
+  account page's line "Sutikote su ankstesne šio teksto versija. Perskaitykite galiojančią ir patvirtinkite.", "Skaityti
+  galiojantį tekstą", "Galiojantis sutikimo tekstas", "Perskaičiau šį tekstą ir sutinku", "Sutinku" and "Sutikimas su
+  galiojančiu tekstu išsaugotas." (`UiText` `PublicProfile.Consent{Outdated,Read,Title,Check,Accept,Accepted}`), and the refusal
+  `profile.not-public`. The consent text's last sentence ("Išsaugodami įjungtą profilį sutinkate su tuo.") reads oddly beside
+  "Sutinku"; for the reader to word.
 - 8.25.9: the party box's sentence (`UiText` `Party.PublicText`), the page's line "Palaikoma partija: …", `Party.Text`.
 - 8.28: the lines' and the steps' texts, "Išsaugoti ir tęsti", "Profilis išsaugotas." (8.28.2, 8.28.3, 8.28.5); "Kur ką
   rasti"'s group names "Meniu" and "Puslapio apačioje" and the line under "Projektai" ("Keturi puslapiai apie tai, ką

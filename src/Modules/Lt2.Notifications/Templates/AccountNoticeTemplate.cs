@@ -32,7 +32,16 @@ internal sealed class AccountNoticeTemplate(IStringLocalizer<EmailTemplates> l, 
             paragraphs.Add(l.Format("Notice.PasskeysRemoved", model.PasskeysRemoved));
         }
 
-        paragraphs.Add(l["Notice.NotYou"]);
+        if (model.Notice == AccountNotices.AccountLocked)
+        {
+            // Design 8.3: how to write to the team, and that erasure is asked for by writing; no "was it you" line, the person did nothing.
+            paragraphs.Add(string.IsNullOrWhiteSpace(model.Contact) ? l["Notice.account-locked.Write"] : l.Format("Notice.account-locked.WriteTo", model.Contact));
+        }
+        else if (model.Notice != AccountNotices.AccountUnlocked)
+        {
+            paragraphs.Add(l["Notice.NotYou"]);
+        }
+
         paragraphs.Add(l[EmailText.Signature]);
         return EmailLayout.Build(model.To, l[$"Notice.{model.Notice}.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address));
     }

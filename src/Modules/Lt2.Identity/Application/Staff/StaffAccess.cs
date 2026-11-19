@@ -61,7 +61,7 @@ internal sealed class StaffAccess(IDbContextFactory<IdentityDb> contexts, TimePr
     }
 
     /// <summary>Granted staff roles whose activation code was used, on an account that has a staff passkey.</summary>
-    private static async Task<IReadOnlyList<string>> ActiveRolesAsync(IdentityDb db, Guid userId, Profile? profile, CancellationToken cancellationToken)
+    internal static async Task<IReadOnlyList<string>> ActiveRolesAsync(IdentityDb db, Guid userId, Profile? profile, CancellationToken cancellationToken)
     {
         if (profile?.StaffPasskeyId is null)
         {

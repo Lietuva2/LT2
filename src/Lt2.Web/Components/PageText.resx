@@ -13,6 +13,7 @@
   <data name="Nav.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
   <data name="Nav.Settings" xml:space="preserve"><value>Nustatymai</value></data>
   <data name="Nav.Invitations" xml:space="preserve"><value>Kvietimai</value></data>
+  <data name="Nav.Accounts" xml:space="preserve"><value>Paskyros</value></data>
   <data name="Nav.Usage" xml:space="preserve"><value>Lankomumas</value></data>
   <data name="Nav.Jobs" xml:space="preserve"><value>Foniniai darbai</value></data>
   <data name="Nav.StaffKey" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>

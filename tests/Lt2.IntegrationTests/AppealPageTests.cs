@@ -399,6 +399,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     [Theory]
     [InlineData("/moderavimas")]
     [InlineData("/administravimas/nustatymai")]
+    [InlineData("/administravimas/paskyros")]
     public async Task Staff_pages_send_visitors_to_sign_in(string path)
     {
         using var stranger = NewBrowser();

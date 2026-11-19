@@ -321,4 +321,11 @@
   <data name="EmailRestore.Done" xml:space="preserve"><value>Ankstesnis adresas grąžintas, visos paskyros sesijos baigtos. Prisijunkite ankstesniu adresu.</value></data>
   <data name="EmailRestore.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
   <data name="EmailRestore.CodeLead" xml:space="preserve"><value>Įveskite kodą iš laiško, kurį gavote ankstesniu paskyros adresu.</value></data>
+  <data name="PublicProfile.ConsentOutdated" xml:space="preserve"><value>Sutikote su ankstesne šio teksto versija. Perskaitykite galiojančią ir patvirtinkite.</value></data>
+  <data name="PublicProfile.ConsentRead" xml:space="preserve"><value>Skaityti galiojantį tekstą</value></data>
+  <data name="PublicProfile.ConsentTitle" xml:space="preserve"><value>Galiojantis sutikimo tekstas</value></data>
+  <data name="PublicProfile.ConsentCheck" xml:space="preserve"><value>Perskaičiau šį tekstą ir sutinku</value></data>
+  <data name="PublicProfile.ConsentAccept" xml:space="preserve"><value>Sutinku</value></data>
+  <data name="PublicProfile.ConsentCancel" xml:space="preserve"><value>Atšaukti</value></data>
+  <data name="PublicProfile.ConsentAccepted" xml:space="preserve"><value>Sutikimas su galiojančiu tekstu išsaugotas.</value></data>
 </root>

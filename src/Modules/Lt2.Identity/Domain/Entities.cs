@@ -75,6 +75,12 @@ internal sealed class Profile
     public string? PublicProfileId { get; set; }
 
     public DateTimeOffset? PublicSince { get; set; }
+
+    /// <summary>
+    /// An administrator locked the account (design 8.3): no sign-in, no public profile, no follow emails until it is unlocked.
+    /// The statement is in the audit log and the email, not here.
+    /// </summary>
+    public DateTimeOffset? LockedAt { get; set; }
 }
 
 /// <summary>

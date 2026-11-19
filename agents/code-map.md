@@ -75,7 +75,8 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            changing the account's address (Application/Email/EmailChangeHandlers.cs, design 6.2), and the bot
                            check of registration and code requests (Application/BotCheck.cs, Domain/BotCheckRules.cs,
                            identity.bot_check_use; the browser's side is Lt2.Web.Client/wwwroot/js/lt2-botcheck.js with
-                           BotCheckBrowser, design 6.4).
+                           BotCheckBrowser, design 6.4), and an administrator's full lock of an account (Application/Staff/RoleAdministration.SetLockAsync,
+                           AccountLocks read where a code or a passkey signs in, design 8.3; the screen Pages/AccountsAdmin).
 src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageRules and Sketch (HyperLogLog) pure,
                            UsageCounter in the web host's memory, written every minute; the host feeds it from
                            Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin; its day bars are

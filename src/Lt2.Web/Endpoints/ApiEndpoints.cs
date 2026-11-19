@@ -54,6 +54,7 @@ internal static class ApiEndpoints
         UpdateSettingEndpoint.Map(api);
         GrantRoleEndpoint.Map(api);
         ResetAccountEndpoint.Map(api);
+        AccountLockEndpoints.Map(api);
 
         GetCurrentTermEndpoint.Map(api);
         GetMpsEndpoint.Map(api);

@@ -373,7 +373,9 @@ internal static class ServerStaff
 }
 
 /// <summary>Server-side <see cref="IAdminApi"/>, for the prerendered settings page.</summary>
-internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IOrganisations organisations) : IAdminApi
+internal sealed class ServerAdminApi(
+    ISettingsAdministration settings, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IOrganisations organisations,
+    IIdentityAdministration administration, IConfiguration configuration, IPoliticians politicians, IMpDirectory mps) : IAdminApi
 {
     public async Task<ApiResult<IReadOnlyList<SettingResponse>>> GetSettingsAsync(CancellationToken cancellationToken = default) =>
         await IsAdministratorAsync()
@@ -411,6 +413,54 @@ internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpCont
 
         var http = accessor.HttpContext!;
         return errors.ToApiResult(await invitations.SwitchAsync(invitationId, on, request.Statement, http.User.UserId()!.Value, Roles.Administrator, ipHasher.Hash(http), cancellationToken));
+    }
+
+    public async Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Mps.AdminMpLinkResponse>>> GetMpLinksAsync(CancellationToken cancellationToken = default) =>
+        await IsAdministratorAsync()
+            ? ApiResult<IReadOnlyList<Lt2.Api.Contracts.Mps.AdminMpLinkResponse>>.Ok(await MpLinkList.ReadAsync(politicians, mps, cancellationToken))
+            : ApiResult<IReadOnlyList<Lt2.Api.Contracts.Mps.AdminMpLinkResponse>>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public async Task<ApiResult> EndMpLinkAsync(string slug, StatementRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!await IsAdministratorAsync())
+        {
+            return ApiResult.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+        }
+
+        var http = accessor.HttpContext!;
+        if (await Endpoints.Admin.FreshConfirmation.MissingAsync(http.RequestServices.GetRequiredService<IIdentityModule>(), http.User, cancellationToken) is { } missing)
+        {
+            return ApiResult.Fail(errors.ToProblem(missing));
+        }
+
+        return errors.ToApiResult(await politicians.EndByAdministratorAsync(
+            slug, request.Statement, new StaffActor(http.User.UserId()!.Value, Roles.Administrator, ipHasher.Hash(http)), cancellationToken));
+    }
+
+    public Task<ApiResult> LockAccountAsync(Lt2.Api.Contracts.Admin.AccountLockRequest request, CancellationToken cancellationToken = default) =>
+        SetLockAsync(request, locked: true, cancellationToken);
+
+    public Task<ApiResult> UnlockAccountAsync(Lt2.Api.Contracts.Admin.AccountLockRequest request, CancellationToken cancellationToken = default) =>
+        SetLockAsync(request, locked: false, cancellationToken);
+
+    private async Task<ApiResult> SetLockAsync(Lt2.Api.Contracts.Admin.AccountLockRequest request, bool locked, CancellationToken cancellationToken)
+    {
+        if (!await IsAdministratorAsync())
+        {
+            return ApiResult.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+        }
+
+        var http = accessor.HttpContext!;
+        if (await Endpoints.Admin.FreshConfirmation.MissingAsync(http.RequestServices.GetRequiredService<IIdentityModule>(), http.User, cancellationToken) is { } missing)
+        {
+            return ApiResult.Fail(errors.ToProblem(missing));
+        }
+
+        var administrator = new StaffActor(http.User.UserId()!.Value, Roles.Administrator, ipHasher.Hash(http));
+        var contact = AppealMapping.Contact(configuration);
+        return errors.ToApiResult(locked
+            ? await administration.LockAccountAsync(request.Email, request.Statement, administrator, contact, cancellationToken)
+            : await administration.UnlockAccountAsync(request.Email, request.Statement, administrator, contact, cancellationToken));
     }
 
     private Task<bool> IsAdministratorAsync() => ServerStaff.IsAllowedAsync(accessor, Policies.Administrator);

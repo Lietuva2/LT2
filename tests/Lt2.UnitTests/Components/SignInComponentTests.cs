@@ -688,6 +688,93 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#hello-title").TextContent.ShouldContain("Rūta Mockutė", Case.Sensitive, "the greeting follows the saved name");
     }
 
+    /// <summary>The "Profilis" form's state of a member whose public profile is on.</summary>
+    private static readonly MyProfileResponse PublicForm = Form with { ProfileId = "abcdefgh23", Address = "/nariai/ruta-m-abcdefgh23", PublicSince = DateTimeOffset.UnixEpoch };
+
+    /// <summary>
+    /// Design 8.25.1 (owner, 2026-11-19): a profile switched on under an earlier consent text stays on; "Profilis" says so in one
+    /// line, the text in force is read in place and accepted with its version, and the line goes.
+    /// </summary>
+    [Fact]
+    public void A_profile_on_under_an_older_text_shows_one_line_and_the_text_in_force_is_accepted_in_place()
+    {
+        var older = FakeMeApi.Member with { PublicProfileConsentOutdated = true };
+        SignedIn(older);
+        Profile(PublicForm);
+        _profiles.On("AcceptConsentAsync", ApiResult.Ok());
+        var page = Render<Hello>();
+
+        page.Find("#viesas-profilis #profile-consent-outdated").TextContent.ShouldBe(Text("PublicProfile.ConsentOutdated"));
+        page.Find("#profile-public").TextContent.ShouldContain(Text("PublicProfile.IsPublic"), Case.Sensitive, "the profile stays on");
+        page.FindAll("#profile-consent").ShouldBeEmpty("the text in force opens only when asked for");
+
+        page.Find("#profile-consent-read").Click();
+        page.Find("#profile-consent h4#profile-consent-title").TextContent.ShouldBe(Text("PublicProfile.ConsentTitle"));
+        page.Find("#profile-consent-now").TextContent.ShouldBe(Text("PublicProfile.Consent"));
+        page.Find("#profile-consent-submit").HasAttribute("disabled").ShouldBeTrue("not before the box is checked");
+        page.Find("#profile-consent-check").Change(true);
+
+        SignedIn(older with { PublicProfileConsentOutdated = false });
+        page.Find("#profile-consent-submit").Click();
+
+        _profiles.Calls.Count(c => c == "AcceptConsentAsync").ShouldBe(1);
+        ((ProfileConsentRequest)_profiles.Arguments[_profiles.Calls.IndexOf("AcceptConsentAsync")][0]!).TextVersion.ShouldBe(ProfileLimits.ConsentVersion);
+        page.WaitForAssertion(() => page.FindAll("#profile-consent-outdated").ShouldBeEmpty());
+        page.FindAll("#profile-consent").ShouldBeEmpty();
+        page.Markup.ShouldContain(Text("PublicProfile.ConsentAccepted"));
+        _profiles.Calls.ShouldNotContain("SaveAsync", "nothing else was saved");
+    }
+
+    /// <summary>Design 8.25.1: the text can be left unread; cancelling closes it and sends nothing.</summary>
+    [Fact]
+    public void Cancelling_the_text_in_force_closes_it_and_sends_nothing()
+    {
+        SignedIn(FakeMeApi.Member with { PublicProfileConsentOutdated = true });
+        Profile(PublicForm);
+        var page = Render<Hello>();
+
+        page.Find("#profile-consent-read").Click();
+        page.Find("#profile-consent-cancel").Click();
+
+        page.FindAll("#profile-consent").ShouldBeEmpty();
+        page.FindAll("#profile-consent-outdated").ShouldHaveSingleItem("still asked");
+        _profiles.Calls.ShouldNotContain("AcceptConsentAsync");
+    }
+
+    /// <summary>Design 8.25.1: a current consent, or no public profile at all, has no line.</summary>
+    [Fact]
+    public void A_current_consent_and_a_profile_that_is_off_show_no_line_about_versions()
+    {
+        SignedIn(FakeMeApi.Member);
+        Profile(PublicForm);
+        var current = Render<Hello>();
+        current.FindAll("#profile-consent-outdated").ShouldBeEmpty();
+        current.FindAll("#profile-consent-read").ShouldBeEmpty();
+
+        SignedIn(FakeMeApi.Member with { PublicProfileConsentOutdated = true });
+        Profile(Form);
+        Render<Hello>().FindAll("#profile-consent-outdated").ShouldBeEmpty("a profile that is off has no consent to ask about");
+    }
+
+    /// <summary>Design 8.25.1: switching the profile off stays one step, with the line showing; saving it off takes the line away.</summary>
+    [Fact]
+    public void Switching_the_profile_off_still_takes_one_step_while_the_line_shows()
+    {
+        SignedIn(FakeMeApi.Member with { PublicProfileConsentOutdated = true });
+        Profile(PublicForm);
+        _profiles.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(Form));
+        var page = Render<Hello>();
+        page.FindAll("#profile-consent-outdated").ShouldHaveSingleItem();
+
+        page.Find("#profile-public-switch").Change(false);
+        page.Find("#profile-form").Submit();
+
+        page.WaitForAssertion(() => _profiles.Calls.ShouldContain("SaveAsync"));
+        Sent().Public.ShouldBeFalse();
+        page.WaitForAssertion(() => page.FindAll("#profile-consent-outdated").ShouldBeEmpty());
+        _profiles.Calls.ShouldNotContain("AcceptConsentAsync");
+    }
+
     /// <summary>
     /// Design 8.25.9 (owner, 2026-11-17), 8.28.5: "Rodyti viešame profilyje" is offered under a party only while the form has the
     /// profile public, says what it covers before the consent is sent, and goes unticked to withdraw it.

@@ -38,6 +38,11 @@
   <data name="passkey.staff-required" xml:space="preserve"><value>Šiam veiksmui reikia prisijungti darbuotojo prieigos raktu.</value></data>
   <data name="passkey.confirmation-required" xml:space="preserve"><value>Patvirtinkite veiksmą prieigos raktu.</value></data>
   <data name="role.unknown" xml:space="preserve"><value>Tokio vaidmens nėra.</value></data>
+  <data name="account.lock-self" xml:space="preserve"><value>Savo paskyros užrakinti negalima.</value></data>
+  <data name="account.lock-staff" xml:space="preserve"><value>Paskyra turi aktyvų darbuotojo vaidmenį. Pirma iš naujo nustatykite paskyrą, tada ją užrakinkite.</value></data>
+  <data name="account.locked" xml:space="preserve"><value>Ši paskyra jau užrakinta.</value></data>
+  <data name="account.not-locked" xml:space="preserve"><value>Ši paskyra neužrakinta.</value></data>
+  <data name="profile.not-public" xml:space="preserve"><value>Viešas profilis neįjungtas.</value></data>
   <data name="account.not-found" xml:space="preserve"><value>Tokios baigtos registruoti paskyros nėra.</value></data>
   <data name="auth.code-invalid" xml:space="preserve"><value>Kodas netinka arba nebegalioja. Paprašykite naujo.</value></data>
   <data name="bot-check.failed" xml:space="preserve"><value>Nepavyko patikrinti, ar jūs ne robotas. Bandykite dar kartą.</value></data>
@@ -62,7 +67,7 @@
 <data name="bill.not-found" xml:space="preserve"><value>Tokio projekto nėra.</value></data>
 <data name="member.required" xml:space="preserve"><value>Pirmiausia baikite registraciją.</value></data>
 <data name="consent.required" xml:space="preserve"><value>Kad galėtume išsaugoti jūsų poziciją ar „Man svarbu“ žymą, reikia jūsų aiškaus sutikimo.</value></data>
-<data name="consent.outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perkraukite puslapį ir perskaitykite naująjį.</value></data>
+<data name="consent.outdated" xml:space="preserve"><value>Galioja kitas sutikimo tekstas. Perkraukite puslapį ir perskaitykite jį.</value></data>
 <data name="terms.required" xml:space="preserve"><value>Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis, atšaukti duotus sutikimus (ir išjungti viešą profilį), ištrinti paskyrą ir atsijungti.</value></data>
 <data name="terms.outdated" xml:space="preserve"><value>Rodoma ne ta naudojimo taisyklių versija. Perkraukite puslapį ir perskaitykite galiojančias.</value></data>
 <data name="terms.not-accepted" xml:space="preserve"><value>Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.</value></data>
@@ -101,7 +106,7 @@
 <data name="digest.urgent-already" xml:space="preserve"><value>Šią savaitę skubi suvestinė šiam projektui jau patvirtinta.</value></data>
 <data name="party.unknown" xml:space="preserve"><value>Tokios partijos sąraše nėra.</value></data>
 <data name="party.consent-required" xml:space="preserve"><value>Kad galėtume išsaugoti, kurią partiją palaikote, reikia jūsų aiškaus sutikimo.</value></data>
-<data name="party.consent-outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perskaitykite jį ir pažymėkite dar kartą.</value></data>
+<data name="party.consent-outdated" xml:space="preserve"><value>Galioja kitas sutikimo tekstas. Perskaitykite jį ir pažymėkite dar kartą.</value></data>
 <data name="party.none" xml:space="preserve"><value>Pirmiausia pasirinkite, kurią partiją palaikote.</value></data>
 <data name="party.profile-off" xml:space="preserve"><value>Partiją rodyti galima tik įjungus viešą profilį.</value></data>
 <data name="display-name.too-long" xml:space="preserve"><value>Vardas per ilgas: ne daugiau kaip 60 ženklų.</value></data>
@@ -194,7 +199,7 @@
   <data name="member.gone" xml:space="preserve"><value>Šio profilio nebėra: narys jį išjungė arba ištrynė paskyrą.</value></data>
   <data name="about.too-long" xml:space="preserve"><value>Tekstas „Apie mane“ per ilgas: ne daugiau kaip {0} ženklų.</value></data>
   <data name="about.personal-code" xml:space="preserve"><value>Tekste „Apie mane“ yra asmens kodas. Jo skelbti negalima – ištrinkite jį.</value></data>
-  <data name="profile.consent-outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perskaitykite jį ir įjunkite profilį dar kartą.</value></data>
+  <data name="profile.consent-outdated" xml:space="preserve"><value>Galioja kitas sutikimo tekstas. Perskaitykite jį ir įjunkite profilį dar kartą.</value></data>
   <data name="profile.name-required" xml:space="preserve"><value>Viešam profiliui reikia vardo. Įrašykite vardą ir tada įjunkite profilį.</value></data>
   <data name="notices.frequency-invalid" xml:space="preserve"><value>Pasirinkite, kaip dažnai siųsti laiškus: iš karto, kartą per dieną arba kartą per savaitę.</value></data>
   <data name="comment.empty" xml:space="preserve"><value>Parašykite komentarą.</value></data>

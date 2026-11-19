@@ -76,6 +76,34 @@
                         }
                         <FieldError Errors="Errors" Field="public" For="profile-public-switch" />
                     </div>
+
+                    @if (Outdated && mine.ProfileId is not null)
+                    {
+                        @* Design 8.25.1 (owner, 2026-11-19): switched on under an earlier consent text, the profile stays on; one line
+                           says so, with a way to read the text in force and accept it here. Switching the profile off stays one step. *@
+                        <div class="stack stack--tight" id="profile-consent-outdated-part">
+                            <p class="note note--quiet" id="profile-consent-outdated">@L["PublicProfile.ConsentOutdated"]</p>
+                            @if (_readConsent)
+                            {
+                                <div class="sheet sheet--quiet stack stack--tight" role="group" aria-labelledby="profile-consent-title" id="profile-consent">
+                                    <h4 id="profile-consent-title">@L["PublicProfile.ConsentTitle"]</h4>
+                                    <p id="profile-consent-now">@L["PublicProfile.Consent"]</p>
+                                    <label class="check">
+                                        <input type="checkbox" id="profile-consent-check" @bind="_consentChecked" disabled="@Locked" />
+                                        <span>@L["PublicProfile.ConsentCheck"]</span>
+                                    </label>
+                                    <div class="row">
+                                        <button type="button" class="btn" id="profile-consent-submit" disabled="@(Locked || !_consentChecked)" @onclick="AcceptConsentAsync">@L["PublicProfile.ConsentAccept"]</button>
+                                        <button type="button" class="btn btn--plain" id="profile-consent-cancel" disabled="@Locked" @onclick="CloseConsent">@L["PublicProfile.ConsentCancel"]</button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <p><button type="button" class="btn btn--plain" id="profile-consent-read" disabled="@Locked" @onclick="() => _readConsent = true">@L["PublicProfile.ConsentRead"]</button></p>
+                            }
+                        </div>
+                    }
                 </div>
             }
 
@@ -152,11 +180,26 @@
     private bool _show;
     private bool _mpAccount;
     private bool _afterRegistration;
+    private bool _readConsent;
+    private bool _consentChecked;
+    private bool _consentSettled;
 
     /// <summary>Told the stored display name after a save, so the page's greeting follows.</summary>
     [Parameter] public EventCallback<string?> NameChanged { get; set; }
 
+    /// <summary>
+    /// Design 8.25.1 (owner, 2026-11-19): the profile is on under an earlier consent text (the person's own <c>GET /me</c>); the form
+    /// asks once, in place, whether they accept the text in force.
+    /// </summary>
+    [Parameter] public bool ConsentOutdated { get; set; }
+
+    /// <summary>After the text in force is accepted: the page reads the account's own answer again, so the line goes.</summary>
+    [Parameter] public EventCallback ConsentAccepted { get; set; }
+
     [PersistentState] public MyProfileResponse? Mine { get; set; }
+
+    /// <summary>The line shows while the account says so and a save of this form has not switched the profile on or off since.</summary>
+    private bool Outdated => ConsentOutdated && !_consentSettled;
 
     private bool PartyChosen => !string.IsNullOrEmpty(_party);
 
@@ -180,6 +223,26 @@
         _partyConsent = false;
         _show = mine?.PartyPublic ?? false;
     }
+
+    private void CloseConsent()
+    {
+        _readConsent = false;
+        _consentChecked = false;
+    }
+
+    /// <summary>The text in force accepted on its own (design 8.25.1): recorded as the form records it; nothing else changes.</summary>
+    private Task AcceptConsentAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await Profiles.AcceptConsentAsync(new ProfileConsentRequest { TextVersion = ProfileLimits.ConsentVersion })))
+        {
+            return;
+        }
+
+        _readConsent = false;
+        _consentChecked = false;
+        Info = L["PublicProfile.ConsentAccepted"];
+        await ConsentAccepted.InvokeAsync();
+    });
 
     private Task SaveAsync() => RunAsync(async () =>
     {
@@ -212,6 +275,14 @@
 
         Mine = saved.Value!;
         Take(Mine);
+
+        // Switching on records the text in force; switching off withdraws the consent: either way nothing is outdated any more.
+        if ((was.ProfileId is null) != (Mine.ProfileId is null))
+        {
+            _consentSettled = true;
+            _readConsent = false;
+        }
+
         if (Mine.DisplayName != was.DisplayName)
         {
             await NameChanged.InvokeAsync(Mine.DisplayName);

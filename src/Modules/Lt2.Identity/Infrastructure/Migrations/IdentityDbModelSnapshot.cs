@@ -628,6 +628,10 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("invitation_level");
 
+                    b.Property<DateTimeOffset?>("LockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_at");
+
                     b.Property<string>("NormalizedEmail")
                         .IsRequired()
                         .HasMaxLength(256)

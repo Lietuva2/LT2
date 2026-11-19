@@ -105,6 +105,82 @@ internal sealed class RoleAdministration(IDbContextFactory<IdentityDb> contexts,
         return Result.Ok();
     }
 
+    public Task<Result<Unit>> LockAccountAsync(string email, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken) =>
+        SetLockAsync(email, statement, administrator, contact, locked: true, cancellationToken);
+
+    public Task<Result<Unit>> UnlockAccountAsync(string email, string statement, StaffActor administrator, string? contact, CancellationToken cancellationToken) =>
+        SetLockAsync(email, statement, administrator, contact, locked: false, cancellationToken);
+
+    /// <summary>
+    /// Design 8.3: locking ends every session and the open sign-in codes in the same transaction as the mark, so no sign-in works
+    /// afterwards (<see cref="AccountLocks"/> is checked where a code or a passkey is used). The statement is kept in the audit
+    /// entry and the email only.
+    /// </summary>
+    private async Task<Result<Unit>> SetLockAsync(
+        string email, string statement, StaffActor administrator, string? contact, bool locked, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(administrator);
+        if (StaffStatements.Check(statement) is { } broken)
+        {
+            return broken;
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var account = await FindAccountAsync(db, email, cancellationToken);
+        if (account is null)
+        {
+            return Error.NotFound("account.not-found");
+        }
+
+        var userId = account.Value.UserId;
+        if (locked)
+        {
+            if (userId == administrator.UserId)
+            {
+                return Error.Forbidden("account.lock-self");
+            }
+
+            var profile = await db.Profiles.AsNoTracking().FirstAsync(p => p.UserId == userId, cancellationToken);
+            if ((await StaffAccess.ActiveRolesAsync(db, userId, profile, cancellationToken)).Count > 0)
+            {
+                return Error.Conflict("account.lock-staff");
+            }
+        }
+
+        var now = clock.GetUtcNow();
+        var text = statement.Trim();
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var changed = locked
+            ? await db.Profiles.Where(p => p.UserId == userId && p.LockedAt == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.LockedAt, now), cancellationToken)
+            : await db.Profiles.Where(p => p.UserId == userId && p.LockedAt != null)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.LockedAt, (DateTimeOffset?)null), cancellationToken);
+        if (changed == 0)
+        {
+            return Error.Conflict(locked ? "account.locked" : "account.not-locked");
+        }
+
+        var sessionsEnded = 0;
+        if (locked)
+        {
+            sessionsEnded = await db.Sessions.Where(s => s.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+            await db.SignInCodes.Where(c => c.UserId == userId && c.ConsumedAt == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.ConsumedAt, now), cancellationToken);
+        }
+
+        await events.RecordAsync(
+            transaction.GetDbTransaction(),
+            locked ? "account.locked" : "account.unlocked",
+            userId,
+            new Actor(administrator.UserId, administrator.Role, administrator.IpHash),
+            locked ? new { statement = text, sessionsEnded } : new { statement = text },
+            new AccountNoticeEmail(
+                account.Value.Email, locked ? AccountNotices.AccountLocked : AccountNotices.AccountUnlocked, Statement: text, Contact: contact),
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
+    }
+
     /// <summary>A completed account by address; pending accounts cannot hold roles.</summary>
     private static async Task<(Guid UserId, string Email)?> FindAccountAsync(IdentityDb db, string email, CancellationToken cancellationToken)
     {

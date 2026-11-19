@@ -152,6 +152,30 @@ public sealed class EmailRhythmTests(DatabaseFixture database) : ApiTest(databas
     }
 
     [Fact]
+    public async Task A_locked_accounts_follows_send_nothing()
+    {
+        // Design 8.3: a full lock stops the follow emails.
+        var vote = await SetUpAsync(Monday.AddDays(10));
+        try
+        {
+            var (locked, lockedEmail) = await FollowerAsync();
+            var (open, openEmail) = await FollowerAsync();
+            using var _l = locked;
+            using var _o = open;
+            await Database.ExecuteAsync(
+                "UPDATE identity.profile SET locked_at = now() WHERE user_id = (SELECT id FROM identity.\"user\" WHERE email = @e)", ("e", lockedEmail));
+            await RunAtAsync(Seen);
+
+            (await FollowMailAsync(lockedEmail)).ShouldBeEmpty("a locked account is sent nothing");
+            (await FollowMailAsync(openEmail)).ShouldHaveSingleItem("an account that is not locked still is");
+        }
+        finally
+        {
+            await TearDownAsync(vote);
+        }
+    }
+
+    [Fact]
     public async Task Is_karto_gathers_a_runs_events_into_one_email_and_tells_each_once()
     {
         var vote = await SetUpAsync(Monday.AddDays(10));

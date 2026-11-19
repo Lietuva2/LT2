@@ -97,6 +97,12 @@ public static class ApiRoutes
         public const string Roles = Prefix + "/admin/roles";
         public const string ResetAccount = Prefix + "/admin/accounts/reset";
 
+        /// <summary>Design 8.3, <c>POST</c>, administrators: the full lock of an account, with a statement and a fresh passkey confirmation.</summary>
+        public const string LockAccount = Prefix + "/admin/accounts/lock";
+
+        /// <summary>Design 8.3, <c>POST</c>, administrators: unlocks an account, with a statement and a fresh passkey confirmation.</summary>
+        public const string UnlockAccount = Prefix + "/admin/accounts/unlock";
+
         public static string SettingByKey(string key) => $"{Settings}/{Uri.EscapeDataString(key)}";
 
         public const string Invitations = Prefix + "/admin/invitations";

@@ -23,6 +23,9 @@ public static class MpRoutes
     /// <summary><c>POST</c>, administrators: ends an MP's link with a statement and a fresh passkey confirmation.</summary>
     public const string EndLink = ApiRoutes.Prefix + "/admin/mps/{slug}/link/end";
 
+    /// <summary><c>GET</c>, administrators: the MPs whose profile is taken over, for the screen that ends a link (design 8.5.2).</summary>
+    public const string AdminLinks = ApiRoutes.Prefix + "/admin/mps/links";
+
     /// <summary>The page the take-over link opens; the token follows the <c>#</c> (design 6.8).</summary>
     public const string TakeoverPage = "/seimo-narys/perimti";
 
@@ -78,6 +81,11 @@ public sealed record MpOfficeAcceptanceRequest
 }
 
 /// <summary>An office member as the MP's account sees them (design 8.5.3). Nobody else sees who they are.</summary>
+/// <summary>
+/// One MP whose profile is taken over, in the administrators' list (design 8.5.2): the MP and since when; nothing of the account.
+/// </summary>
+public sealed record AdminMpLinkResponse(string Slug, string FirstName, string LastName, DateTimeOffset Since);
+
 public sealed record MpOfficeMemberResponse(Guid Id, string? DisplayName, DateTimeOffset Since);
 
 /// <summary>The MP's office: its members and how many it may have.</summary>

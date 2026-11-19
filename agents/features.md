@@ -158,6 +158,33 @@ part shows the new address and the page reads its sessions again (no reload). Th
 to `/prisijungti`). Tests: `EmailChangeTests` (integration, E2E), `EmailChangeRuleTests`, `EmailChangeTemplateTests`,
 `MyEmailTests` (bUnit).
 
+**A full lock of an account (design 8.3; the owner, 2026-11-19: administrators lock, the recommendations as written).**
+`POST /admin/accounts/lock` and `/unlock` (`AccountLockEndpoints`, `Policies.Administrator`, `FreshConfirmation`,
+`AccountLockRequest`: `email`, `statement`, validator in `Lt2.Api.Contracts/Admin/RoleDtos.cs`; the in-process `ServerAdminApi`
+checks the same) call `IIdentityAdministration.LockAccountAsync|UnlockAccountAsync` (`RoleAdministration.SetLockAsync`,
+Identity): `StaffStatements.Check`, the account by address (`account.not-found`), not oneself (`account.lock-self`), no active
+staff role by `StaffAccess.ActiveRolesAsync` (`account.lock-staff`: reset it first), then in one transaction `identity.profile.locked_at`
+set by a conditional update (`account.locked` / `account.not-locked` when it changed nothing), the account's sessions deleted and
+its open codes used up, audit `account.locked` (`statement`, `sessionsEnded`) or `account.unlocked` (target the id, no address),
+and an `AccountNoticeEmail` (`AccountNotices.AccountLocked|AccountUnlocked` with `Statement` and `Contact` = `Moderation:ContactAddress`;
+`AccountNoticeTemplate`: the lock's text says to write to the team and that erasure is asked for by writing, no "was it you"
+line). The lock is read where the account would sign in or be sent a code: `AccountLocks.IsLockedAsync` in `SignInCodeIssuer.IssueAsync`
+(code request, registration of an existing address, email-change code: nothing sent, same answer), `CodeSignInHandler` (`auth.code-invalid`)
+and `PasskeyHandlers.SignInAsync` (`passkey.invalid`); public profiles by `PublicProfileDirectory` (`locked_at IS NULL` in every
+query, `FindAsync` answers `Retired` so the page and `GET /members/{id}` say 410) and `ProfileModerationHandlers.ReportAsync`;
+follow emails by `ParticipantFacts.IsLocked` (`ParticipantDirectory`), skipped in `NoticeDelivery.WriteAsync`. Statements of reasons
+and report notices still reach a locked account (they use `IParticipants.FindAsync`, not the follow path). The screen is
+`AccountsAdmin` (`/administravimas/paskyros`; its first section ends an MP's link, design 8.5.2: `GET /admin/mps/links`
+(`EndMpLinkEndpoint`, `MpLinkList` joins `IPoliticians.LinkedAsync` with `IMpDirectory.MpsAsync`, `AdminMpLinkResponse`: slug, name,
+since, nothing of the account) fills `Links`; "Baigti ryšį" opens one statement form at a time under its MP (`_ending`), `EndMpLinkAsync`
+with the same passkey dance, then the list is read again; `MpLinksScreenTests` (integration), `AccountsAdminPageTests`);
+`Nav.Accounts` in the account item, `data-account-link="accounts"` in
+`js/lt2-account.js`): it asks `GET /me` for an active administrator role (`Administrator` persistent state), else `#accounts-refused`
+and the staff `PasskeyStep`; address and statement, "Užrakinti paskyrą" / "Atrakinti paskyrą", the staff passkey asked on the same press
+when `passkey.confirmation-required`, the fields kept until the action goes through and then cleared (the address is never shown
+again). Tests: `AccountLockTests` (integration), `EmailRhythmTests.A_locked_accounts_follows_send_nothing`, `AccountsAdminPageTests`
+(bUnit), `NotificationTests` (the lock's email).
+
 **The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
 parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, change it"; `/sveiki` is gone, no redirect).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
@@ -196,6 +223,16 @@ included, navigates to `AccountScreens.ProfileSavedHome` (`/#profilis-issaugotas
 (integration) cover the whole form.
 
 **Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
+- A profile on under an earlier consent text stays on (owner, 2026-11-19; design 8.25.1): `AccountHandlers.MineAsync` sets
+  `AccountSummary.OlderPublicProfileConsent` (the profile is on and `PublicProfileConsents.CurrentAsync` finds no live consent to the
+  text in force), `MeResponse.PublicProfileConsentOutdated` carries it to the person alone, `Hello` hands it to `MyProfile`
+  (`ConsentOutdated`, `ConsentAccepted` re-reads `GET /me`), which shows `#profile-consent-outdated`, "Skaityti galiojantį tekstą"
+  (`#profile-consent-read`) and in place the text, a box and "Sutinku" (`#profile-consent`); a save that switches the profile on or off
+  settles it locally. `PUT /me/profile/consent` (`ProfileConsentRequest`, `MemberEndpoints`, `IMemberProfiles.AcceptConsentAsync`,
+  `ProfileHandlers.AcceptConsentOwnAsync`, behind the terms like any write) refuses another version (`profile.consent-outdated`) and a
+  profile that is off (`profile.not-public`); otherwise under `IdentityLocks.ProfileAsync` it ends the earlier `public-profile`
+  consents, records one to `PublicProfileConsent.TextVersion` and audits `profile.consent-accepted` (no details); accepting twice
+  changes nothing. Tests: `ProfileConsentVersionTests` (integration), `SignInComponentTests` (bUnit).
 - Only by the member's box "Viešas profilis" in the "Profilis" form (`PUT /me/profile`), which is the consent `public-profile`
   (`PublicProfileConsent.TextVersion`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{name-slug}-{id}`
   (a random ten-character id, `ProfileRules.NewId`; the name part from the current display name by `AddressSlugs.Of`,
@@ -291,7 +328,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   sends `NewPasskey` (made now) or `Passkey` (an assertion) with the token in `POST /me/mp/office/acceptance`, checked before
   anything is stored, and the session becomes a passkey session under a new key (`SessionRotation`); `GET /me` says
   `passkeySession`. Giving the profile up (`DELETE /me/mp`), an administrator's end
-  (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; no screen yet) and deleting the account end the
+  (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; the screen is the first section of `AccountsAdmin`, below) and deleting the account end the
   link and the office with it. An office member gets copies of the MP's summaries by their own choice (owner, 2026-11-17; see
   "Copies for the MP's office" under Summaries to MPs); any end of the office link ends them. Every change is audited and told to the MP's account's own address (`AccountNotices.Mp*`),
   never naming an office member.
@@ -383,7 +420,8 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `AppealUi`, `PositionConsent.*` in `UiText`; a consent to an older text counts as none: `CurrentPositionConsent.Of`;
   the account page shows any not withdrawn, `CurrentPositionConsent.Live`, with its withdrawal, and for an older text
   (`MeResponse.PositionConsentOutdated`, owner 2026-11-19) the line `#consent-outdated` and the text in force in place,
-  `PositionConsentForm ForAccount`, accepted through `PUT /me/consents/positions`)
+  `PositionConsentForm ForAccount`, accepted through `PUT /me/consents/positions`; the public-profile consent is asked the same way,
+  below)
   (owner, 2026-11-18; 2026-11-17 for one's own: `AppealRules.CheckEndorsement`, `endorsement.own-reason`,
   `consent.required`; the island disables it on one's own argument from the never-cached answer and asks for the consent in
   place, `PositionConsentForm ForMark`, before a first mark; a merge drops a mark that would land on its giver's own
