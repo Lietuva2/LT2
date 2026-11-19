@@ -247,6 +247,16 @@ public sealed class EmailLookTests
     }
 
     [Fact]
+    public void A_line_of_a_gathered_part_leads_on_by_its_label_on_its_own_indented_line_not_by_a_bare_address()
+    {
+        var email = Gathered();
+
+        email.TextBody.ShouldContain("Planuojama 2026-11-19 (priėmimas).\n  Projektas: https://lietuva2.test/seimas/XVP-0412");
+        email.HtmlBody!.ShouldContain("&nbsp;&nbsp;<a href=\"https://lietuva2.test/seimas/XVP-0412\" style=\"font-weight:600;color:#1f6b3a\">Projektas</a>");
+        email.HtmlBody!.ShouldNotContain(">https://lietuva2.test/seimas/XVP-0412<", Case.Sensitive);
+    }
+
+    [Fact]
     public void The_code_stays_large_and_every_member_email_keeps_its_stop_less_footer()
     {
         var html = Code().HtmlBody!;

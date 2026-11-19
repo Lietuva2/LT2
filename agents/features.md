@@ -50,6 +50,12 @@ Voting with delegation is not designed; do not build towards it.
   5.7.x, reply text about a limit, quota or rate) or `Other`: only `Mailbox` on an MP kind suppresses; `Sender` leaves the row
   due and untried and pauses that stream for `SmtpRefusals.StreamPause` (one hour, in the worker's memory) while the others
   go on. Tests: `EmailStreamTests` (unit), `EmailStreamDispatchTests` (integration, fake transport).
+- **Demonstration emails (owner, 2026-11-20).** `migrator --demo-emails` (`DemoEmails`, Notifications/Outbox) queues one email of every
+  outbox kind in `EmailStreams`, and of each variant a kind has, from invented data to `NAME@pavyzdys.test`, written with the real
+  payload types and `OutboxMessage.Create` through `OutboxWriter`, so the worker renders them with the real renderers and Mailpit
+  lists them by name. Refuses unless `Demo:Allowed` and `Email:Caught` are both true (the migrator gets `Email__Caught` from
+  `LT2_MAIL_CAUGHT`); writes outbox rows only. `DemoEmailTests` fails for a kind without a demonstration, renders every one and
+  checks no bare long address, every linked address also in the plain part, no placeholder left. How to look: `agents/testing.md`.
 
 
 **Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17, 2026-11-19; 8.28.2).** **One list,** `MenuSections.Items`

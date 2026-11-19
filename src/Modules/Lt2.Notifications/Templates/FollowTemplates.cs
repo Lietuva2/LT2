@@ -172,8 +172,8 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         var lines = items.Select(m => Format(
             "Gathered.Planned.Line",
             $"{m.BillNumber} · {m.BillTitle}",
-            m.Stage is { } stage ? Format("Gathered.Planned.DateStage", Day(m.Date), l["Stage." + stage]) : Day(m.Date),
-            Link(m.BillPath)));
+            m.Stage is { } stage ? Format("Gathered.Planned.DateStage", Day(m.Date), l["Stage." + stage]) : Day(m.Date))
+            + BillLinkLine(m.BillPath));
         return l["Gathered.Planned.Title"] + "\n" + string.Join("\n", lines) + "\n" + l["Follow.Planned.Moves"];
     }
 
@@ -188,8 +188,8 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
                 "Gathered.Voted.Line",
                 Day(m.Day),
                 $"{m.BillNumber} · {m.BillTitle}" + (m.Stage is { } stage ? " (" + l["Stage." + stage] + ")" : ""),
-                result,
-                Link(m.VotePath));
+                result)
+                + "\n  " + Format("Follow.VoteLink", Link(m.VotePath));
             if (!string.IsNullOrWhiteSpace(m.OfficialNote))
             {
                 line += "\n  " + Format("Follow.Voted.Note", m.OfficialNote);
@@ -209,8 +209,8 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     public string ClosedPart(IReadOnlyList<FollowClosedEmail> items)
     {
         ArgumentNullException.ThrowIfNull(items);
-        var lines = items.Select(m => Format("Gathered.Closed.Line." + ClosedReason(m.Reason), Day(m.Day), $"{m.BillNumber} · {m.BillTitle}", Link(m.BillPath))
-            + "\n  " + Format("Follow.Closed.Source", m.SourceUrl));
+        var lines = items.Select(m => Format("Gathered.Closed.Line." + ClosedReason(m.Reason), Day(m.Day), $"{m.BillNumber} · {m.BillTitle}")
+            + BillLinkLine(m.BillPath) + "\n  " + Format("Follow.Closed.Source", m.SourceUrl));
         return l["Gathered.Closed.Title"] + "\n" + string.Join("\n", lines);
     }
 
@@ -224,8 +224,8 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             m.OrganisationName,
             Label(m.ConfirmedBy, m.ConfirmedDomain),
             $"{m.BillNumber} · {m.BillTitle}",
-            l["Follow.Stance." + m.Stance],
-            Link(m.BillPath)).TrimStart());
+            l["Follow.Stance." + m.Stance]).TrimStart()
+            + BillLinkLine(m.BillPath));
         return l["Gathered.Statement.Title"] + "\n" + string.Join("\n", lines);
     }
 
@@ -244,7 +244,8 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     public string MemberPart(IReadOnlyList<FollowMemberEmail> items)
     {
         ArgumentNullException.ThrowIfNull(items);
-        var lines = items.Select(m => Format("Gathered.Member.Line." + What(m.What), m.MemberName, $"{m.BillNumber} · {m.BillTitle}", Link(m.TextPath), m.Day is { } day ? Day(day) : "").Replace("–  ", "– ", StringComparison.Ordinal));
+        var lines = items.Select(m => Format("Gathered.Member.Line." + What(m.What), m.MemberName, $"{m.BillNumber} · {m.BillTitle}", m.Day is { } day ? Day(day) : "").Replace("–  ", "– ", StringComparison.Ordinal)
+            + BillLinkLine(m.TextPath));
         return l["Gathered.Member.Title"] + "\n" + string.Join("\n", lines);
     }
 
@@ -299,6 +300,12 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string Number(int? value) => value?.ToString(CultureInfo.InvariantCulture) ?? "–";
+
+    /// <summary>
+    /// A part's line leads somewhere on its own indented line, "Projektas: https://…" (design 8.24): the HTML part then shows
+    /// the label as the link, as every other email does, and no long address is printed after a sentence.
+    /// </summary>
+    private string BillLinkLine(string path) => "\n  " + Format("Follow.BillLink", Link(path));
 
     private string Link(string path) => SiteLinks.Absolute(site.Value.Address, path);
 

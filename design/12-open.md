@@ -315,6 +315,15 @@ for the lawyer).
 - 8.21: the footer heading "Naršyti" (`PageText` `Footer.Browse`). If no: "Puslapiai", "Skyriai" or "Lietuva 2.0".
 - 8.22.5, 8.11.5: the link-preview and share-link texts.
 - 8.23.1: the terms "Aptarimas" and "komentaras".
+- 8.4, 8.24, 8.19.4 (looking at every email in Mailpit, 2026-11-20): wording moved, none added. The gathered email's
+  parts (`Gathered.*.Line`) no longer end a line with a bare address: the address goes on its own indented line under
+  the label that the single email uses ("Projektas: …", "Balsavimo rezultatai: …", "Šaltinis: …"), so a followed
+  member's argument or comment is also linked as "Projektas" (`Gathered.Member.Line.*`). The feedback notice reads
+  "Naujų atsiliepimų: {0}. Juos rasite (reikia darbuotojo prieigos rakto): {1}" (`Feedback.Notice.Body`; the address was
+  inside the sentence). The MP's change, extra-recipient and new-link emails put the sentence that follows the link on a
+  new line (`MpMail.NotYou`, `MpMail.extra-confirm.Body`). Existing wording the look turned up, not changed, against the
+  rule that nothing is worded as new: "nuo šiol" in `MpMail.extra-confirmed.Body` and
+  `Organisation.confirmation-withdrawn.Body`, "dabar" in `Notice.mp-linked.Body`.
 - 8.24.1: the stop page's texts ("Nebegauti laiškų", its sentence, button and confirmation).
 - 8.25.1: the public-profile consent text (`UiText` `PublicProfile.Consent`); for a profile on under an earlier text, the
   account page's line "Sutikote su ankstesne šio teksto versija. Perskaitykite galiojančią ir patvirtinkite.", "Skaityti

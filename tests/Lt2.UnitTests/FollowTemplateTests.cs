@@ -69,7 +69,7 @@ public sealed class FollowTemplateTests
 
         var part = templates.ClosedPart([model]);
         part.ShouldStartWith("Seimas nebesvarsto:");
-        part.ShouldContain($"– 2026-11-17 XVP-0618 · Pataisa. {line} https://lt2.pavyzdys.test/seimas/XVP-0618");
+        part.ShouldContain($"– 2026-11-17 XVP-0618 · Pataisa. {line}\n  Projektas: https://lt2.pavyzdys.test/seimas/XVP-0618\n  Šaltinis: " + Source);
         part.ShouldContain("Šaltinis: " + Source);
     }
 

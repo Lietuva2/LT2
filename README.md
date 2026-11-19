@@ -87,6 +87,19 @@ stays out of the command line; running it again changes nothing:
 printf '%s\n' 'vardas@pavyzdys.test' | docker compose -f deploy/compose.yaml run --rm -T --no-deps migrator --demo-sides-for -
 ```
 
+To see how every email looks, the migrator can queue one of every outbox kind (and of each variant a kind has: every account
+notice, every moderation outcome, the three summary copies, the gathered email in each rhythm) with invented data and
+addresses `NAME@pavyzdys.test`, so Mailpit lists them by name and the worker renders them through the real renderers. It
+writes outbox rows only (no account, no delivery row), refuses unless `LT2_DEMO_DATA=true` **and** `LT2_MAIL_CAUGHT=true`
+(every email of the stack lands in Mailpit; both are set in `deploy/.env`, and the migrator now receives the second), and
+sends everything again each time it runs. A unit test fails until each kind of the stream table has a demonstration;
+`dotnet test --project tests/Lt2.UnitTests --filter-class "*DemoEmailTests"` also writes them to `output/email-samples/demo/`
+without a stack. How to look at them: `agents/testing.md`.
+
+```bash
+docker compose -f deploy/compose.yaml run --rm --no-deps migrator --demo-emails
+```
+
 Planned dates come from the lrs.lt upcoming-agenda pages, not the open data. Locally the worker reads the stand-in's
 INVENTED page (`LT2_AGENDA_BASE_ADDRESS` in `deploy/.env`); production sets the real address and adds its host to the
 outbound allowlist; empty means off. The parser's assumptions are in `tests/Lt2.Parliament.ImportTests/Agenda/ASSUMPTIONS.md`;

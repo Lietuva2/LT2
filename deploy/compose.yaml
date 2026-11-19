@@ -191,6 +191,8 @@ services:
       # Local only: --demo-appeal may write invented participants (it also refuses unless the parliament data is the
       # stand-in's). Production leaves LT2_DEMO_DATA unset.
       Demo__Allowed: ${LT2_DEMO_DATA:-false}
+      # Local only: --demo-emails also needs every email of this stack to be caught (design 8.19.1). Production leaves it unset.
+      Email__Caught: ${LT2_MAIL_CAUGHT:-false}
     secrets:
       - source: postgres_password
         target: Database__AdminPassword
