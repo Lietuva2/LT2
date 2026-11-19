@@ -65,7 +65,7 @@
                                 @if (reason.AuthorProfileId is { } profileId)
                                 {
                                     @* Design 8.25.4: a member with a public profile: the name leads to their page, with a card. *@
-                                    <a class="said__name" href="@ProfileRoutes.Page(profileId, reason.AuthorName)" data-card="card-@profileId">@(reason.AuthorName ?? L["Reasons.Anonymous"])</a>
+                                    <MemberBadge ProfileId="@profileId" Name="@reason.AuthorName" /><a class="said__name" href="@ProfileRoutes.Page(profileId, reason.AuthorName)" data-card="card-@profileId">@(reason.AuthorName ?? L["Reasons.Anonymous"])</a>
                                 }
                                 else
                                 {

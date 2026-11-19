@@ -91,6 +91,12 @@ Read before changing a page, a component or an island. The rules behind it are d
   screen the head is a band of its own (`PlannedDay`, `VotedDay`). A longer day grows by `<ShowMore>` like every list
   (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press, landing on the first row added). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the list.
+- **A member's name that links to a public profile has `<MemberBadge ProfileId="…" Name="…" />` before it** (design 8.25.4;
+  `Lt2.Web.Client/Components`; on server pages `<Lt2.Web.Client.Components.MemberBadge …/>`): a round `span.initials` with the
+  initials, `aria-hidden="true"`, colour class `initials--0…7` from the profile's public id, the `--badge-n-bg|ink` tokens in
+  `lt2.css` (light and dark, letters at least 4.5:1). Pass `ProfileId` only for a member with a public profile (null renders
+  nothing); never for an organisation or an MP. Put it before the link, not inside it, so the link's text stays the name. Size
+  is relative to the text (1.6em); it is inline, so it wraps with the name.
 - **Every "show more" is `<ShowMore>` (design 8.16.4, owner 2026-11-19)** (`Lt2.Web.Client/Components`; on server pages
   `<Lt2.Web.Client.Components.ShowMore …/>`): `div.row.show-more` with "Rodoma N iš M" (`Total`, status id `StatusId` or
   `{Id}-shown`) and `a.show-more__link`, a plain text link (owner 2026-11-19: not a button's look), to `Href`, the same page

@@ -65,6 +65,17 @@
   --error: #b3261e;
   --focus: #ffb000;
 
+  /* Initials badges (design 8.25.4): eight neutral colour pairs, none a party colour or a red, green or amber state; the
+     letters are at least 4.5:1 against their background in both themes. */
+  --badge-0-bg: #d9e5f6; --badge-0-ink: #1b3b69;
+  --badge-1-bg: #e1e2f6; --badge-1-ink: #2d317c;
+  --badge-2-bg: #eadff5; --badge-2-ink: #4f2877;
+  --badge-3-bg: #f1dff0; --badge-3-ink: #652a60;
+  --badge-4-bg: #d3edf1; --badge-4-ink: #0e4a57;
+  --badge-5-bg: #dde3ea; --badge-5-ink: #313f4d;
+  --badge-6-bg: #e8e1d6; --badge-6-ink: #4a3f2f;
+  --badge-7-bg: #e3e3e3; --badge-7-ink: #383838;
+
   /* Type */
   --font-text: "Sofia Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Sofia Sans Extra Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -109,6 +120,15 @@
     --for: #217740; --for-tint: #23462d; --against: #b4433f; --against-tint: #59302d;
     --abstain: #7a857f; --absent: #38433d;
     --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
+
+    --badge-0-bg: #233a5a; --badge-0-ink: #cfe0fa;
+    --badge-1-bg: #2b2e5c; --badge-1-ink: #d3d5f7;
+    --badge-2-bg: #40285f; --badge-2-ink: #e6d9f6;
+    --badge-3-bg: #52294d; --badge-3-ink: #f3d9f0;
+    --badge-4-bg: #164552; --badge-4-ink: #c4eaf1;
+    --badge-5-bg: #34414f; --badge-5-ink: #d6dee7;
+    --badge-6-bg: #473d2e; --badge-6-ink: #e9dfce;
+    --badge-7-bg: #3d3d3d; --badge-7-ink: #e4e4e4;
     color-scheme: dark;
   }
 }
@@ -123,6 +143,15 @@
   --for: #217740; --for-tint: #23462d; --against: #b4433f; --against-tint: #59302d;
   --abstain: #7a857f; --absent: #38433d;
   --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
+
+  --badge-0-bg: #233a5a; --badge-0-ink: #cfe0fa;
+  --badge-1-bg: #2b2e5c; --badge-1-ink: #d3d5f7;
+  --badge-2-bg: #40285f; --badge-2-ink: #e6d9f6;
+  --badge-3-bg: #52294d; --badge-3-ink: #f3d9f0;
+  --badge-4-bg: #164552; --badge-4-ink: #c4eaf1;
+  --badge-5-bg: #34414f; --badge-5-ink: #d6dee7;
+  --badge-6-bg: #473d2e; --badge-6-ink: #e9dfce;
+  --badge-7-bg: #3d3d3d; --badge-7-ink: #e4e4e4;
   color-scheme: dark;
 }
 
@@ -1300,6 +1329,28 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .card-pop:popover-open { display: flex; flex-direction: column; gap: var(--sp-2); }
 .card-pop p { margin: 0; }
 a.said__name { color: inherit; font-weight: 700; }
+
+/* Design 8.25.4: the initials badge beside a public profile's name; sized by the text around it (the circle is 1.6em of it, the letters 0.75em), inline so it wraps with the
+   name and never widens a line (390 px). The colour pairs are the --badge-n tokens. */
+.initials {
+  display: inline-flex; align-items: center; justify-content: center; flex: none; vertical-align: middle;
+  font-size: 0.75em; inline-size: 2.15em; block-size: 2.15em; margin-inline-end: 0.5em; border-radius: 50%;
+  font-weight: 700; line-height: 1; letter-spacing: 0; user-select: none;
+}
+
+.initials--0 { background: var(--badge-0-bg); color: var(--badge-0-ink); }
+.initials--1 { background: var(--badge-1-bg); color: var(--badge-1-ink); }
+.initials--2 { background: var(--badge-2-bg); color: var(--badge-2-ink); }
+.initials--3 { background: var(--badge-3-bg); color: var(--badge-3-ink); }
+.initials--4 { background: var(--badge-4-bg); color: var(--badge-4-ink); }
+.initials--5 { background: var(--badge-5-bg); color: var(--badge-5-ink); }
+.initials--6 { background: var(--badge-6-bg); color: var(--badge-6-ink); }
+.initials--7 { background: var(--badge-7-bg); color: var(--badge-7-ink); }
+
+/* The heading of a member's page: the badge (larger than in a line, as the heading is) and the name, wrapping together. */
+.member-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); }
+.member-head .initials { font-size: 1.1rem; margin-inline-end: 0; }
+.member-head h1 { margin: 0; min-inline-size: 0; overflow-wrap: anywhere; }
 
 /* Design 8.25.2: a member's argument on their page, and the follower line (design 8.11.2). */
 .rows > li.member-text { display: flex; flex-direction: column; gap: var(--sp-2); }

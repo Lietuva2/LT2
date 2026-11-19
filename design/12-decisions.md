@@ -27,7 +27,13 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 - Minimum age 18, self-declared (2026-11-12).
 - Registration by email only (2026-11-12).
-- Accounts are confirmed by email now; the EU Digital Identity Wallet is added once Lithuania
+- Accounts are confirmed by email now; the EU Digital Identity Wallet is added once Lithuania has one, optional and
+  gating nothing a member does today. Its uses: counts of confirmed persons beside the totals (8.4, 8.12, 8.26), a
+  requirement for roles that act for others (a delegate, an organisation's representative, with a transition period for
+  existing representatives), the mark "Patvirtintas asmuo" on a public profile, proof of age instead of the declaration,
+  looser limits, and no 30-day wait for a confirmed person's positions. It stores only the fact, its date, the age proof
+  and a pairwise pseudonymous identifier (or its keyed hash) under a unique index; never a name, a personal code or a
+  document number (6.2, 2026-11-19).
 - An account is pending until its address is proven; the display name and the age declaration are asked after the code,
   and an invitation's use is counted then (2026-11-12).
 - A sign-in code belongs to the address and can be typed into any browser; ten codes a day per address from browsers that
@@ -386,6 +392,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The supported party is shown on the public profile by its own box "Rodyti viešame profilyje" and consent
   `party-public`, only while the profile is public; withdrawn at once with the box, the party or the profile, and not
   given back by switching the profile on again; nothing for an MP's account (8.25.9, 2026-11-17).
+- Members have no uploaded picture (a face beside political texts, moderation load, storage and parsing risk, drift
+  towards a social network); a member with a public profile has a round badge with their initials beside the name that
+  leads to the profile, in one of eight neutral colours chosen from the profile's public id (8.25.4, 2026-11-19).
 
 ## 8.26 Analytics
 

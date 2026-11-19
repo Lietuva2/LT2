@@ -467,7 +467,7 @@
     {
         if (a.ProfileId is { } profileId)
         {
-            <a href="@ProfileRoutes.Page(profileId, a.Name)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
+            <MemberBadge ProfileId="@profileId" Name="@a.Name" /><a href="@ProfileRoutes.Page(profileId, a.Name)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
         }
         else
         {
@@ -510,7 +510,7 @@
                 if (a.ProfileId is { } profileId)
                 {
                     @* Design 8.25.4: a member with a public profile: the name leads to their page, with a card. *@
-                    <a class="comment__name" href="@ProfileRoutes.Page(profileId, a.Name)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
+                    <MemberBadge ProfileId="@profileId" Name="@a.Name" /><a class="comment__name" href="@ProfileRoutes.Page(profileId, a.Name)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
                 }
                 else
                 {

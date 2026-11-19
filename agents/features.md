@@ -251,6 +251,11 @@ included, navigates to `AccountScreens.ProfileSavedHome` (`/#profilis-issaugotas
   `DELETE /me/profile/public` (`ProfileHandlers.SwitchOffOwnAsync`); taking over an MP's profile switches it off too. Reported on the page (`POST /members/{id}/report`, `identity.profile_report`); a moderator hides it with a statement
   emailed to the person, keeps it or restores it (`/moderation/profiles…`, `ProfileModerationView`); a hidden text shows
   nowhere until the person writes another.
+- The initials badge (design 8.25.4, owner 2026-11-19): `<MemberBadge ProfileId Name />` (`Lt2.Web.Client/Components`; pure rules `MemberBadges.Initials`
+  and `MemberBadges.Colour`, tests `MemberBadgesTests`, `MemberBadgeTests`) stands before every name that links to a profile: an argument (`RecordReasons`),
+  a comment's author and the "Sutinka" names (`CommentThread`), the follows list (`FollowList`) and beside the page's heading (`MemberPage`, `div.member-head`).
+  It renders only for a non-null profile id and a name with a letter; colour from the profile's public id (not the account id); no picture, no column, no
+  API field. Not in the hover card, the moderators' queue, or beside organisations and MPs. Members have no uploaded picture.
 - The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
   name, "Apie mane", the follower number and the member's texts (`IMemberTexts`, Appeals): published arguments and the
   comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" +50 by `?rodyti=` (`ProfileLimits.More`, no script). Never sides, "Man svarbu", follows, invitations,

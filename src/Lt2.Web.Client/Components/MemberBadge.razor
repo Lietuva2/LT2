@@ -1,0 +1,14 @@
+@* Design 8.25.4: a small round badge with the member's initials beside a name that leads to a public profile. Shown only
+   for a member with a public profile (a null ProfileId gives nothing, so a caller passes what the answer carries), and
+   nothing when the name has no letter. No picture, no script: the name beside it is the text, so the badge is hidden from
+   assistive technology. Server-rendered and in islands alike; its size is relative to the text around it (lt2.css). *@
+@if (ProfileId is { Length: > 0 } id && MemberBadges.Initials(Name) is { } initials)
+{<span class="initials initials--@MemberBadges.Colour(id)" aria-hidden="true">@initials</span>}
+
+@code {
+    /// <summary>The profile's public id (design 8.25.2) of a member whose profile is on; null for anyone else.</summary>
+    [Parameter] public string? ProfileId { get; set; }
+
+    /// <summary>The display name shown beside the badge.</summary>
+    [Parameter] public string? Name { get; set; }
+}
