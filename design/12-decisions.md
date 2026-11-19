@@ -593,3 +593,16 @@ Each is built as written; "no" names what changes.
   pointer's "wait" cursor, and a slow dark sheen across them (none with reduced motion). Without script, where they
   never start, the dimmed look stays beside the "needs JavaScript" note.
 - On hover a side's button darkens its fill only; the filter that darkened its white words too is gone.
+
+**Decided by the owner on 2026-11-19: every "show more" the same, the arguments and the comments a page at a time (8.16.4, 8.12.1, 8.23.6)**
+
+- One "show more" under every long list: "Rodoma N iš M" where the total is known and a link to the grown page, in a plain
+  button's look; without script and on server-rendered pages the link (enhanced navigation swaps the page in); in an
+  island the next page from the API, in place, the focus on the first item added.
+- The arguments a page at a time: the bill's answer carries each side's first two and each side's count; "Rodyti daugiau
+  argumentų" under each side adds ten (`?argumentai-uz=`, `?argumentai-pries=` without script). `?argumentai=visi` and
+  "Visi argumentai: N" / "Rodyti mažiau" are gone. A linked argument and the one just published stand first in their side.
+- The comments' "Rodyti daugiau komentarų" reads the next ten from the API once the island runs (it did nothing while the
+  island ran: enhanced navigation fetched the grown page, but the island kept its own list).
+- The MPs' responses' link reads "Rodyti daugiau atsakymų". The agenda's "Rodyti likusius" stays (the rest of one day).
+

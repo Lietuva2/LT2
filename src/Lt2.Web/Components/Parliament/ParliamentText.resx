@@ -135,8 +135,6 @@
   <data name="Ballots.ByChoice" xml:space="preserve"><value>Pagal balsą:</value></data>
   <data name="Ballots.All" xml:space="preserve"><value>Visi</value></data>
   <data name="Ballots.None" xml:space="preserve"><value>Nerasta nė vieno Seimo nario.</value></data>
-  <data name="Ballots.Shown" xml:space="preserve"><value>Rodoma {0} iš {1}</value></data>
-  <data name="Ballots.More" xml:space="preserve"><value>Rodyti daugiau</value></data>
   <data name="Method.Title" xml:space="preserve"><value>Metodika</value></data>
   <data name="Method.Lead" xml:space="preserve"><value>Čia aprašyta, iš kur imami duomenys, kaip skaičiuojami Seimo narių rodikliai ir kaip veikia dalyvavimas dėl projektų: suvestinės, argumentai, aprašymai ir organizacijos.</value></data>
   <data name="Method.Source" xml:space="preserve"><value>Iš kur duomenys</value></data>
@@ -209,6 +207,5 @@
   <data name="Responses.VersionWithdrawn" xml:space="preserve"><value>parašyta {0}, atsiimta {1}</value></data>
   <data name="Responses.VersionCurrent" xml:space="preserve"><value>dabartinė versija, parašyta {0}</value></data>
   <data name="Responses.Withdrawal" xml:space="preserve"><value>atsakymas atsiimtas {0}</value></data>
-  <data name="Responses.Shown" xml:space="preserve"><value>Rodoma {0} iš {1}</value></data>
-  <data name="Responses.More" xml:space="preserve"><value>Rodyti daugiau</value></data>
+  <data name="Responses.More" xml:space="preserve"><value>Rodyti daugiau atsakymų</value></data>
 </root>

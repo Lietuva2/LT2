@@ -136,6 +136,7 @@
 <data name="Hint.More" xml:space="preserve"><value>Plačiau</value></data>
 <data name="Text.ShowMore" xml:space="preserve"><value>Rodyti daugiau</value></data>
 <data name="Text.ShowLess" xml:space="preserve"><value>Rodyti mažiau</value></data>
+<data name="List.Shown" xml:space="preserve"><value>Rodoma {0} iš {1}</value></data>
 <data name="Text.Before" xml:space="preserve"><value>Rodyti tekstą prieš pakeitimą</value></data>
 <data name="Text.Inserted" xml:space="preserve"><value>pridėta:</value></data>
 <data name="Text.Removed" xml:space="preserve"><value>pašalinta:</value></data>

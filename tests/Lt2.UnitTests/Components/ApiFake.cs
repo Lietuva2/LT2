@@ -22,12 +22,17 @@ public class ApiFake : DispatchProxy
     public void OnEach<T>(string method, params ApiResult<T>[] answers) =>
         _answers[method] = new Queue<object>(answers.Select(a => (object)Task.FromResult(a)));
 
+    /// <summary>Answers each call of <paramref name="method"/> from its arguments.</summary>
+    public void OnCall<T>(string method, Func<object?[], ApiResult<T>> answer) => _answers[method] = (Func<object?[], object>)(a => Task.FromResult(answer(a)));
+
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
     {
         Calls.Add(targetMethod!.Name);
         Arguments.Add(args ?? []);
         return _answers.TryGetValue(targetMethod.Name, out var answer)
-            ? answer is Queue<object> queue ? (queue.Count > 1 ? queue.Dequeue() : queue.Peek()) : answer
+            ? answer is Queue<object> queue ? (queue.Count > 1 ? queue.Dequeue() : queue.Peek())
+            : answer is Func<object?[], object> call ? call(args ?? [])
+            : answer
             : throw new NotSupportedException($"{targetMethod.DeclaringType?.Name}.{targetMethod.Name} was not expected here.");
     }
 }
@@ -80,4 +85,36 @@ public static class MeFakes
         Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton(services, me);
         return fake;
     }
+}
+
+/// <summary>
+/// A bill's arguments as the API answers them (design 8.12.1, owner 2026-11-19): the bill's answer with each side's first two and
+/// the totals, a side's pages from the given order (cursor and limit as the API takes them), and one argument by its id.
+/// </summary>
+public static class ReasonFakes
+{
+    public static void Serve(ApiFake appeals, string bill, params Lt2.Api.Contracts.Appeals.ReasonResponse[] all)
+    {
+        ArgumentNullException.ThrowIfNull(appeals);
+        appeals.On("GetRecordAsync", ApiResult<Lt2.Api.Contracts.Appeals.BillRecordResponse>.Ok(Record(bill, all)));
+        appeals.OnCall("GetReasonsAsync", a =>
+        {
+            var side = (string)a[1]!;
+            var ofSide = all.Where(r => r.Side == side).ToList();
+            var offset = int.TryParse(a[2] as string, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var o) ? o : 0;
+            var items = ofSide.Skip(offset).Take((int?)a[3] ?? Lt2.Api.Contracts.Appeals.ReasonLimits.Step).ToList();
+            var next = offset + items.Count < ofSide.Count ? (offset + items.Count).ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
+            return ApiResult<Lt2.Api.Contracts.Appeals.ReasonPageResponse>.Ok(new(side, items, ofSide.Count, next, []));
+        });
+        appeals.OnCall("GetReasonAsync", a => all.FirstOrDefault(r => r.Id == (Guid)a[0]!) is { } found
+            ? ApiResult<Lt2.Api.Contracts.Appeals.ReasonOnBillResponse>.Ok(new(bill, found, []))
+            : ApiResult<Lt2.Api.Contracts.Appeals.ReasonOnBillResponse>.Fail(new ApiProblem { Status = 404, Code = "reason.not-found" }));
+    }
+
+    /// <summary>The bill's answer: each side's first two of <paramref name="reasons"/>, in their order, and each side's count.</summary>
+    public static Lt2.Api.Contracts.Appeals.BillRecordResponse Record(string bill, params Lt2.Api.Contracts.Appeals.ReasonResponse[] reasons) => new(
+        Guid.NewGuid(), new Lt2.Api.Contracts.Appeals.BillRefResponse(bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
+        new Lt2.Api.Contracts.Appeals.SideCountsResponse(1, 1, 0, 0), new Lt2.Api.Contracts.Appeals.ThresholdResponse(100, "default", null, 1, false, false),
+        reasons.GroupBy(r => r.Side).SelectMany(g => g.Take(Lt2.Api.Contracts.Appeals.ReasonLimits.First)).ToList(),
+        ReasonTotals: new Lt2.Api.Contracts.Appeals.ReasonTotalsResponse(reasons.Count(r => r.Side == "for"), reasons.Count(r => r.Side == "against")));
 }

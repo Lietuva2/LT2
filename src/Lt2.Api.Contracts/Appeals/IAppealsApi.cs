@@ -34,6 +34,15 @@ public interface IAppealsApi
     /// <summary>The bill as people take part on it; an active bill nobody took part in answers the empty open state.</summary>
     Task<ApiResult<BillRecordResponse>> GetRecordAsync(string number, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Public: one page of a side's published arguments (design 8.12.1, owner 2026-11-19), <paramref name="limit"/> of them
+    /// (<see cref="ReasonLimits"/>) from <paramref name="cursor"/> on, in the page's order.
+    /// </summary>
+    Task<ApiResult<ReasonPageResponse>> GetReasonsAsync(string number, string side, string? cursor = null, int? limit = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Public: one published argument and its bill (a link to it, <c>?argumentas=</c>); 404 <c>reason.not-found</c> for any other.</summary>
+    Task<ApiResult<ReasonOnBillResponse>> GetReasonAsync(Guid reasonId, CancellationToken cancellationToken = default);
+
     /// <summary>The caller's own side, marks and arguments on this bill.</summary>
     Task<ApiResult<MyBillRecordResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default);
 

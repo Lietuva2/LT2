@@ -41,7 +41,8 @@
                     var moderated = Moderated(c.Id);
                     var deletable = _signedIn && _mine?.Deletable.Contains(c.Id) == true && thread.BillOpen;
                     var editable = MayEdit(thread, c.Id);
-                    <li class="comment stack stack--tight @(Marked == c.Id ? "comment--linked" : null)" id="@id" @key="c.Id">
+                    <li class="comment stack stack--tight @(Marked == c.Id ? "comment--linked" : null)" id="@id" @key="c.Id"
+                        tabindex="@(_focusable.Contains(c.Id) ? "-1" : null)" @ref="_items[c.Id]">
                         @* Design 8.16.3 (owner, 2026-11-18): the line right above the bubble is the name, where its tail points;
                            the voice's mark ("Organizacija" with the label, "Seimo narys arba jo biuras") and the time stand under
                            the bubble. *@
@@ -180,10 +181,13 @@
         }
         @if (thread.Count > thread.Items.Count && CommentPaging.More(thread.Items.Count, thread.Count) is { } more)
         {
-            <div class="row">
-                <p class="small num" role="status">@L.Format("Comments.Shown", Display.Number(thread.Items.Count), Display.Number(thread.Count))</p>
-                <a class="btn btn--plain" id="comments-more-@Key" href="@CommentPaging.Address(PagePath, TargetId, more, CommentPaging.PositionAnchor(TargetId, thread.Items.Count + 1))">@L["Comments.More"]</a>
-            </div>
+            @* The shared "show more" (owner, 2026-11-19): without script, and before the island runs, a link to this page with ten
+               more of this discussion (?komentarai=); once the island runs it reads the next ten from the API and adds them in
+               place, the focus on the first added (until 2026-11-19 the running island let enhanced navigation fetch the page and
+               kept its own list, so nothing changed). "Rodyti daugiau komentarų": a long comment has its own "Rodyti daugiau". *@
+            <ShowMore Id="@($"comments-more-{Key}")" StatusId="@($"comments-shown-{Key}")" Shown="thread.Items.Count" Total="thread.Count" Text="@L["Comments.More"]"
+                      Controls="@($"comments-{Key}")" Href="@CommentPaging.Address(PagePath, TargetId, more, CommentPaging.PositionAnchor(TargetId, thread.Items.Count + 1))"
+                      OnMore="MoreAsync" />
         }
         @if (!thread.BillOpen)
         {
@@ -358,6 +362,65 @@
         _loading = true;
         await RunAsync(async () => _thread = (await Comments.GetThreadAsync(Kind, TargetId, Asked)).Value);
         _loading = false;
+    }
+
+    /// <summary>Each shown comment, to give the first one a page added the focus.</summary>
+    private readonly Dictionary<Guid, ElementReference> _items = [];
+
+    /// <summary>The first comment of each page added in place: it can take the focus (tabindex -1).</summary>
+    private readonly HashSet<Guid> _focusable = [];
+
+    /// <summary>The comment to give the focus to after the render that shows it.</summary>
+    private Guid? _focusAdded;
+
+    /// <summary>
+    /// "Rodyti daugiau komentarų" once the island runs (owner, 2026-11-19): the next ten from the API, from where the shown ones end,
+    /// added in place (a comment shown already is not added twice); the focus moves to the first one added. Nothing reloads.
+    /// </summary>
+    private Task MoreAsync() => RunAsync(async () =>
+    {
+        if (_thread is not { } shown)
+        {
+            return;
+        }
+
+        var cursor = shown.NextCursor ?? shown.Items.Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var page = await Comments.GetThreadAsync(Kind, TargetId, CommentLimits.Step, cursor);
+        if (!Succeeded(page))
+        {
+            return;
+        }
+
+        var next = page.Value!;
+        var known = shown.Items.Select(i => i.Id).ToHashSet();
+        var added = next.Items.Where(i => known.Add(i.Id)).ToList();
+        _thread = next with
+        {
+            Items = [.. shown.Items, .. added],
+            Cards = (shown.Cards ?? []).Concat(next.Cards ?? []).DistinctBy(c => c.ProfileId).ToList(),
+        };
+        if (added.FirstOrDefault() is { } first)
+        {
+            _focusable.Add(first.Id);
+            _focusAdded = first.Id;
+        }
+    });
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (_focusAdded is { } id && !Busy && _items.TryGetValue(id, out var item))
+        {
+            _focusAdded = null;
+            try
+            {
+                await item.FocusAsync();
+            }
+            catch (Microsoft.JSInterop.JSException)
+            {
+                // Gone meanwhile (deleted): nothing to focus.
+            }
+        }
     }
 
     private QueueCommentResponse? Moderated(Guid id) => _moderation?.FirstOrDefault(q => q.Id == id);

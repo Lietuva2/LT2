@@ -28,8 +28,7 @@
 <data name="Reasons.None" xml:space="preserve"><value>Argumentų dar nėra.</value></data>
 <data name="Reasons.Endorse" xml:space="preserve"><value>Man svarbu · {0}</value></data>
 <data name="Reasons.Anonymous" xml:space="preserve"><value>Lietuva 2.0 naudotojas</value></data>
-<data name="Reasons.All" xml:space="preserve"><value>Visi argumentai: {0}</value></data>
-<data name="Reasons.Fewer" xml:space="preserve"><value>Rodyti mažiau</value></data>
+<data name="Reasons.More" xml:space="preserve"><value>Rodyti daugiau argumentų</value></data>
 <data name="Reasons.Write" xml:space="preserve"><value>Parašyti argumentą</value></data>
 <data name="Reasons.WriteTitle" xml:space="preserve"><value>Jūsų argumentas</value></data>
 <data name="Reasons.SideLegend" xml:space="preserve"><value>Argumentas</value></data>
@@ -900,7 +899,6 @@
   <data name="Member.CommentOn.statement" xml:space="preserve"><value>komentaras po organizacijos pozicija</value></data>
   <data name="Member.CommentOn.response" xml:space="preserve"><value>komentaras po Seimo nario atsakymu</value></data>
   <data name="Member.ReadOnBill" xml:space="preserve"><value>Skaityti projekto puslapyje</value></data>
-  <data name="Member.More" xml:space="preserve"><value>Rodyti daugiau</value></data>
   <data name="Member.Note" xml:space="preserve"><value>Šį puslapį narys įsijungė pats. Čia matyti tik tai, ką jis paskelbė viešai.</value></data>
   <data name="Member.Report" xml:space="preserve"><value>Pranešti apie profilį</value></data>
   <data name="Card.Open" xml:space="preserve"><value>Profilis</value></data>
@@ -945,7 +943,6 @@
   <data name="Comments.DeleteConfirm" xml:space="preserve"><value>Ištrinti komentarą visam laikui? Kartu dings ir „Sutinku“ prie jo.</value></data>
   <data name="Comments.DeleteYes" xml:space="preserve"><value>Taip, ištrinti</value></data>
   <data name="Comments.Deleted" xml:space="preserve"><value>Komentaras ištrintas.</value></data>
-  <data name="Comments.Shown" xml:space="preserve"><value>Rodoma {0} iš {1}.</value></data>
   <data name="Comments.More" xml:space="preserve"><value>Rodyti daugiau komentarų</value></data>
   <data name="Comments.Frozen" xml:space="preserve"><value>Seimas dėl projekto jau balsavo: aptarimas tik skaitomas.</value></data>
   <data name="Comments.SignIn" xml:space="preserve"><value>Prisijunkite, kad galėtumėte komentuoti</value></data>

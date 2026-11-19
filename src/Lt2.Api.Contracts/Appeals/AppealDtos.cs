@@ -123,12 +123,57 @@ public sealed record ReasonResponse(Guid Id, string Side, string Text, string? A
 /// <summary>The card beside a public profile's name (design 8.25.4): once per person in a bill's answer; no follower number.</summary>
 public sealed record AuthorCardResponse(string ProfileId, string Name, string? About);
 
+/// <summary>How many published arguments each side has (design 8.12.1): what a side's "Rodoma 2 iš 15" counts.</summary>
+public sealed record ReasonTotalsResponse(int For, int Against)
+{
+    public int Of(string side) => side == "for" ? For : Against;
+}
+
+/// <summary>
+/// One page of a side's published arguments (design 8.12.1, owner 2026-11-19), in the page's order: the counted "Man svarbu"
+/// marks, most first, then the oldest first. <c>Total</c> is the side's count, <c>NextCursor</c> where the next page starts
+/// (null after the last), <c>Cards</c> the public profiles among this page's names (design 8.25.4).
+/// </summary>
+public sealed record ReasonPageResponse(string Side, IReadOnlyList<ReasonResponse> Items, int Total, string? NextCursor, IReadOnlyList<AuthorCardResponse>? Cards = null);
+
+/// <summary>One published argument and its bill (a link to it, <c>?argumentas=</c>, design 8.12.1), with its author's card.</summary>
+public sealed record ReasonOnBillResponse(string BillNumber, ReasonResponse Reason, IReadOnlyList<AuthorCardResponse>? Cards = null);
+
+/// <summary>
+/// The arguments' pages (design 8.12.1, owner 2026-11-19): the bill's answer carries each side's first <see cref="First"/>, and
+/// <c>GET …/record/reasons?side=&amp;cursor=&amp;limit=</c> the rest, <see cref="Step"/> at a time on the page. A value the
+/// API would not take falls back to the nearest one allowed, never to an error.
+/// </summary>
+public static class ReasonLimits
+{
+    /// <summary>Each side's arguments shown first.</summary>
+    public const int First = 2;
+
+    /// <summary>The arguments "Rodyti daugiau" adds under a side.</summary>
+    public const int Step = 10;
+
+    /// <summary>The most one answer holds.</summary>
+    public const int Max = 100;
+
+    /// <summary>
+    /// The page's address parameters (owner, 2026-11-19): how many of a side's arguments the page shows, so it grows without
+    /// script (<c>?argumentai-uz=12</c>); the other side's, the responses' and the comments' parameters stay as they were.
+    /// </summary>
+    public static string Parameter(string side) => side == "for" ? ForParameter : AgainstParameter;
+
+    public const string ForParameter = "argumentai-uz";
+
+    public const string AgainstParameter = "argumentai-pries";
+}
+
 /// <summary>
 /// A bill as people take part on it (design 8.12.1). <c>Id</c> is the bill's record, null while it has none (nobody took
 /// part and no moderator acted). <c>Description</c> is empty while there is none; <c>DescriptionAuthor</c> is set only for a
 /// description an initiator wrote before 2026-11-14. A hidden record (<c>rejected</c>) carries only the moderators'
 /// <c>HiddenStatement</c>. <c>DescriptionUrl</c> is the official text the description was made from, when known, and
-/// <c>DescriptionAt</c> when its text was made or last changed (design 8.13).
+/// <c>DescriptionAt</c> when its text was made or last changed (design 8.13). <c>Reasons</c> holds each side's first
+/// <see cref="ReasonLimits.First"/> arguments only, <c>ReasonTotals</c> how many each side has (owner, 2026-11-19); the rest
+/// comes a page at a time (<see cref="IAppealsApi.GetReasonsAsync"/>).
 /// </summary>
 public sealed record BillRecordResponse(
     Guid? Id,
@@ -147,7 +192,8 @@ public sealed record BillRecordResponse(
     string? HiddenStatement = null,
     string? DescriptionUrl = null,
     DateTimeOffset? DescriptionAt = null,
-    IReadOnlyList<AuthorCardResponse>? Cards = null);
+    IReadOnlyList<AuthorCardResponse>? Cards = null,
+    ReasonTotalsResponse? ReasonTotals = null);
 
 /// <summary>The bill's planned date on the Seimas agenda (design 8.4): shown as "Planuojama …", never a countdown.</summary>
 public sealed record PlannedDateResponse(DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator);

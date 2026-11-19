@@ -1,0 +1,78 @@
+@inject IStringLocalizer<UiText> T
+
+@* "Rodyti daugiau" under a long list (owner, 2026-11-19: every "show more" looks and works the same): one line under the list,
+   "Rodoma N iš M" where the total is known, then the link. It is always a link (<a>) whose address is the same page with the list
+   grown, landing on the first row added, so it works without JavaScript; on a server-rendered page the site's enhanced
+   navigation (blazor.web.js) fetches it and swaps the page in without a reload. In an island that passes OnMore, once the island
+   runs, the island fetches the next page from the API instead and adds it in place (the host moves the focus to the first item
+   added): the click is taken from the browser and from enhanced navigation (data-enhance-nav="false" as well, so nothing but
+   the island acts on it), and the address stays where it would lead without script. Before the island runs it is the plain
+   link, as without script. Further links of the list (an older page) go in ChildContent, after it. *@
+<div class="row show-more" id="@(Id + "-line")" aria-busy="@(_busy ? "true" : null)">
+    @if (Total is { } total)
+    {
+        <p class="small num" role="status" id="@(StatusId ?? Id + "-shown")">@T.Format("List.Shown", Display.Number(Shown), Display.Number(total))</p>
+    }
+    @if (Href is { } href)
+    {
+        @if (OnMore.HasDelegate && RendererInfo.IsInteractive)
+        {
+            <a class="btn btn--plain show-more__link" href="@href" id="@Id" data-enhance-nav="false" aria-controls="@Controls"
+               @onclick="MoreAsync" @onclick:preventDefault="true">@(Text ?? T["Text.ShowMore"])</a>
+        }
+        else
+        {
+            <a class="btn btn--plain show-more__link" href="@href" id="@Id">@(Text ?? T["Text.ShowMore"])</a>
+        }
+    }
+    @ChildContent
+</div>
+
+@code {
+    private bool _busy;
+
+    /// <summary>The link's id; the line is <c>{Id}-line</c>, the status <c>{Id}-shown</c> unless <see cref="StatusId"/> names it.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    /// <summary>The same page with the list grown, landing on the first row added; null when every row is shown (no link).</summary>
+    [Parameter] public string? Href { get; set; }
+
+    /// <summary>How many rows the list shows now, for "Rodoma N iš M".</summary>
+    [Parameter] public int Shown { get; set; }
+
+    /// <summary>How many rows the list has in all; null when not known (no status line).</summary>
+    [Parameter] public int? Total { get; set; }
+
+    /// <summary>The status line's id, where a page has long had its own.</summary>
+    [Parameter] public string? StatusId { get; set; }
+
+    /// <summary>The link's words: "Rodyti daugiau", or a list's own where one long text's "Rodyti daugiau" stands among its rows.</summary>
+    [Parameter] public string? Text { get; set; }
+
+    /// <summary>The list the link grows, for assistive technology.</summary>
+    [Parameter] public string? Controls { get; set; }
+
+    /// <summary>An island's own fetch of the next page; without it the link is followed.</summary>
+    [Parameter] public EventCallback OnMore { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task MoreAsync()
+    {
+        // One page at a time: a second press while the first page is on its way adds nothing.
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await OnMore.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

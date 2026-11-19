@@ -34,7 +34,7 @@ internal sealed class CommentsService(
     private const string Kind = "comment";
     private const int ListLimit = 100;
 
-    public async Task<Result<CommentThread>> ThreadAsync(string kind, Guid targetId, int? shown, CancellationToken cancellationToken)
+    public async Task<Result<CommentThread>> ThreadAsync(string kind, Guid targetId, string? cursor, int? limit, CancellationToken cancellationToken)
     {
         if (!CommentKinds.All.Contains(kind))
         {
@@ -49,15 +49,20 @@ internal sealed class CommentsService(
             return Error.NotFound("comment.target-not-found");
         }
 
-        var rows = await db.Comments.AsNoTracking()
-            .Where(c => c.TargetKind == kind && c.TargetId == targetId && c.Status == CommentStatuses.Published)
-            .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
+        // One page in the database's order (oldest first, then by id), so the next page starts exactly where this one ends.
+        var shown = db.Comments.AsNoTracking()
+            .Where(c => c.TargetKind == kind && c.TargetId == targetId && c.Status == CommentStatuses.Published);
+        var count = await shown.CountAsync(cancellationToken);
+        var offset = CommentRules.Offset(cursor);
+        var taken = await shown.OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
+            .Skip(offset).Take(CommentRules.Limit(limit, offset))
             .ToListAsync(cancellationToken);
-        var taken = rows.Take(CommentRules.Shown(shown, rows.Count)).ToList();
         var (views, cards) = await ViewsAsync(db, taken, cancellationToken);
         var on = await SwitchAsync(kind, cancellationToken);
         // Read-only on a closed bill and under a withdrawn response (design 8.23.7): no new comment, no "Sutinku", no deleting.
-        return new CommentThread(kind, targetId, bill.Bill.Number, rows.Count, bill.Open && on && target.Writable, bill.Open && target.Writable, views, cards);
+        return new CommentThread(
+            kind, targetId, bill.Bill.Number, count, bill.Open && on && target.Writable, bill.Open && target.Writable, views, cards,
+            CommentRules.NextCursor(offset, taken.Count, count));
     }
 
     public async Task<Result<CommentPlace>> PlaceAsync(Guid commentId, CancellationToken cancellationToken)

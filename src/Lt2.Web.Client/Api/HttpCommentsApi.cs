@@ -7,8 +7,8 @@ namespace Lt2.Web.Client.Api;
 /// <summary>The browser's <see cref="ICommentsApi"/> (design 8.23.11): plain calls to <c>/api/v1</c>.</summary>
 internal sealed class HttpCommentsApi(ApiHttp http) : ICommentsApi
 {
-    public Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? shown = null, CancellationToken cancellationToken = default) =>
-        http.SendAsync<CommentThreadResponse>(HttpMethod.Get, CommentRoutes.ThreadOf(kind, targetId, shown), null, cancellationToken);
+    public Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? limit = null, string? cursor = null, CancellationToken cancellationToken = default) =>
+        http.SendAsync<CommentThreadResponse>(HttpMethod.Get, CommentRoutes.ThreadOf(kind, targetId, limit, cursor), null, cancellationToken);
 
     public Task<ApiResult<CommentPlaceResponse>> GetPlaceAsync(Guid commentId, CancellationToken cancellationToken = default) =>
         http.SendAsync<CommentPlaceResponse>(HttpMethod.Get, CommentRoutes.PlaceOf(commentId), null, cancellationToken);

@@ -38,7 +38,7 @@ public sealed partial class ReasonsToComeTests : E2ETest
     /// <summary>
     /// Owner, 2026-11-18: with a real-sized parliament the lists are cut, and every way to the rest works without script: a
     /// day of the agenda fetches its other rows by the address (<c>?diena=</c>), <c>/projektai</c> grows by the address landing on the first bill
-    /// added, and the bill's "Visi argumentai" is a link to the page with every argument.
+    /// added, and a bill's side of arguments grows by the address (<c>?argumentai-uz=</c>).
     /// </summary>
     [Fact]
     public async Task Without_javascript_a_long_day_and_the_lists_grow_by_the_address()
@@ -81,16 +81,20 @@ public sealed partial class ReasonsToComeTests : E2ETest
         (await rows.CountAsync()).ShouldBeGreaterThan(20);
         await Assertions.Expect(page.Locator("#" + added.Split('#')[1])).ToBeInViewportAsync();
 
-        // The bill's arguments: "Visi argumentai" leads to the page with every argument when a side has more than two.
+        // The bill's arguments (owner, 2026-11-19): two a side, then "Rodyti daugiau argumentų" under a side with more grows that
+        // side by the address, landing on the first argument added.
         await page.GotoAsync(Base + "/seimas/XVP-0412");
-        var all = page.Locator("a#reasons-all");
-        if (await all.CountAsync() > 0)
+        var more = page.Locator("a[id^='reasons-more-']").First;
+        if (await more.CountAsync() > 0)
         {
-            var shown = await page.Locator("#reasons .said").CountAsync();
-            await all.ClickAsync();
-            await page.WaitForURLAsync(new Regex("argumentai=visi"), new() { Timeout = E2ESteps.Slow });
-            (await page.Locator("#reasons .said").CountAsync()).ShouldBeGreaterThan(shown);
-            await Assertions.Expect(page.Locator("a#reasons-all")).ToContainTextAsync("Rodyti mažiau");
+            var side = (await more.GetAttributeAsync("id"))!["reasons-more-".Length..];
+            var shown = await page.Locator($"#reasons-{side} .said").CountAsync();
+            var to = (await more.GetAttributeAsync("href"))!;
+            to.ShouldMatch(@"^/seimas/XVP-0412\?argumentai-(uz|pries)=12#argumentai-(uz|pries)-3$");
+            await more.ClickAsync();
+            await page.WaitForURLAsync(new Regex("argumentai-(uz|pries)=12"), new() { Timeout = E2ESteps.Slow });
+            (await page.Locator($"#reasons-{side} .said").CountAsync()).ShouldBeGreaterThan(shown);
+            await Assertions.Expect(page.Locator("#" + to.Split('#')[1])).ToBeInViewportAsync();
         }
     }
 

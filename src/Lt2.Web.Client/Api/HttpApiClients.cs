@@ -112,6 +112,12 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
     public Task<ApiResult<IReadOnlyList<DescriptionRevisionResponse>>> GetHistoryAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<DescriptionRevisionResponse>>(HttpMethod.Get, AppealRoutes.HistoryOf(number), null, cancellationToken);
 
+    public Task<ApiResult<ReasonPageResponse>> GetReasonsAsync(string number, string side, string? cursor = null, int? limit = null, CancellationToken cancellationToken = default) =>
+        http.SendAsync<ReasonPageResponse>(HttpMethod.Get, AppealRoutes.ReasonPageOf(number, side, cursor, limit), null, cancellationToken);
+
+    public Task<ApiResult<ReasonOnBillResponse>> GetReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
+        http.SendAsync<ReasonOnBillResponse>(HttpMethod.Get, AppealRoutes.ReasonOf(reasonId), null, cancellationToken);
+
     public Task<ApiResult<MyBillRecordResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<MyBillRecordResponse>(HttpMethod.Get, AppealRoutes.MineOf(number), null, cancellationToken);
 

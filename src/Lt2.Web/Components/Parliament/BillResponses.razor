@@ -51,13 +51,9 @@ else if (_view is { Items.Count: > 0 } view)
         </ol>
         @if (view.Items.Count > MpResponseLimits.First)
         {
-            <div class="row">
-                <p class="small num" role="status" id="responses-shown">@F.T.Format("Responses.Shown", Display.Number(_shown), Display.Number(view.Items.Count))</p>
-                @if (ResponsePaging.More(_shown, view.Items.Count) is { } more)
-                {
-                    <a class="btn btn--plain" id="responses-more" href="@ResponsePaging.Address(Path, more, ResponsePaging.ItemId(_shown + 1))">@F.T["Responses.More"]</a>
-                }
-            </div>
+            @* The shared "show more" (owner, 2026-11-19): "Rodyti daugiau atsakymų", a long response having its own "Rodyti daugiau". *@
+            <Lt2.Web.Client.Components.ShowMore Id="responses-more" StatusId="responses-shown" Shown="_shown" Total="view.Items.Count" Text="@F.T["Responses.More"]"
+                Href="@(ResponsePaging.More(_shown, view.Items.Count) is { } more ? ResponsePaging.Address(Path, more, ResponsePaging.ItemId(_shown + 1)) : null)" />
         }
         @if (view.Open)
         {

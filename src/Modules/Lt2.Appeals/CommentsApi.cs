@@ -34,7 +34,8 @@ public sealed record CommentView(Guid Id, CommentAuthor Author, string Text, Dat
 /// profile among the names shown (authors and those who agreed, design 8.25.4).
 /// </summary>
 public sealed record CommentThread(
-    string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentView> Items, IReadOnlyList<AuthorCard> Cards);
+    string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentView> Items, IReadOnlyList<AuthorCard> Cards,
+    string? NextCursor = null);
 
 /// <summary>In whose name the caller writes under one target, where it is not as a person, or why they cannot write there.</summary>
 public sealed record CommentTargetVoice(string Kind, Guid TargetId, string? Voice, string? Refusal);
@@ -103,8 +104,11 @@ public sealed record CommentModerationItems(IReadOnlyList<QueueComment> Reported
 /// </summary>
 public interface IComments
 {
-    /// <summary>The shown comments of a target, the first <paramref name="shown"/> (at least 10); not found when the target is not shown.</summary>
-    Task<Result<CommentThread>> ThreadAsync(string kind, Guid targetId, int? shown, CancellationToken cancellationToken);
+    /// <summary>
+    /// The shown comments of a target, oldest first, <paramref name="limit"/> of them from <paramref name="cursor"/> on (the first
+    /// page at least 10, design 8.23.6); not found when the target is not shown.
+    /// </summary>
+    Task<Result<CommentThread>> ThreadAsync(string kind, Guid targetId, string? cursor, int? limit, CancellationToken cancellationToken);
 
     /// <summary>
     /// Where a shown comment stands, for a link to it (design 8.23.6): its target, its bill and its place among the target's

@@ -981,21 +981,15 @@ internal sealed class AppealsService(
         }
 
         var counts = (await reads.ShownCountsAsync(db, [record], ct))[record.Id];
-        var reasons = await db.Reasons.AsNoTracking()
-            .Where(r => r.RecordId == record.Id && r.Status == ReasonStatuses.Published)
-            .ToListAsync(ct);
-        var endorsements = await AppealReads.EndorsementCountsAsync(db, reasons.Select(r => r.Id).ToList(), ct);
+
+        // Owner, 2026-11-19: the answer carries each side's first page only (two, design 8.12.1) and how many each side has; the
+        // rest is read a page at a time (ReasonsAsync), so a bill with many arguments is not sent whole.
+        var forPage = await ReasonPageAsync(db, record.Id, "for", 0, ReasonPages.First, ct);
+        var againstPage = await ReasonPageAsync(db, record.Id, "against", 0, ReasonPages.First, ct);
 
         // An initiator's name only beside a description they wrote, before 2026-11-14 (design 8.12.4).
         var author = record.DescriptionSource == DescriptionSources.Initiator && record.InitiatorUserId is { } initiator ? initiator : (Guid?)null;
-        var names = await reads.NamesAsync(reasons.Select(r => r.AuthorUserId).Concat(author is { } a ? [a] : []), ct);
-        var profiles = await reads.ProfilesAsync(reasons.Select(r => r.AuthorUserId), ct);
-        var comments = await CommentCascade.CountsAsync(db, CommentKinds.Reason, reasons.Select(r => r.Id).ToList(), ct);
-        var ordered = reasons
-            .OrderByDescending(r => endorsements.GetValueOrDefault(r.Id))
-            .ThenBy(r => r.CreatedAt)
-            .Select(r => AppealReads.ToInfo(r, names, endorsements, profiles) with { Comments = comments.GetValueOrDefault(r.Id) })
-            .ToList();
+        var names = author is { } a ? await reads.NamesAsync([a], ct) : new Dictionary<Guid, string?>();
         return new BillRecordInfo(
             record.Id,
             bill,
@@ -1007,13 +1001,93 @@ internal sealed class AppealsService(
             record.Description.Length == 0 ? null : record.DescriptionAt,
             counts,
             AppealReads.Threshold(record, counts, threshold),
-            ordered,
+            [.. forPage.Items, .. againstPage.Items],
             record.Status == BillRecordStatuses.Open ? await reads.SurgeAsync(db, record.Id, ct) : null,
             record.ClosingVoteId,
             record.ClosedAt,
             record.Status == BillRecordStatuses.Closed ? null : (await agenda.ForBillsAsync([record.BillNumber], ct)).GetValueOrDefault(record.BillNumber),
             null,
-            profiles.Values.OrderBy(p => p.ProfileId, StringComparer.Ordinal).Select(p => new AuthorCard(p.ProfileId, p.DisplayName, p.About)).ToList());
+            forPage.Cards.Concat(againstPage.Cards).DistinctBy(c => c.ProfileId).OrderBy(c => c.ProfileId, StringComparer.Ordinal).ToList(),
+            new ReasonTotals(forPage.Total, againstPage.Total));
+    }
+
+    public async Task<Result<ReasonPage>> ReasonsAsync(string billNumber, string side, string? cursor, int? limit, CancellationToken cancellationToken)
+    {
+        if (!Sides.IsSide(side))
+        {
+            return Error.Validation("side.invalid", "side");
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+
+        // Only a shown record's arguments (a hidden one shows nothing of itself, design 8.12.3); a bill nobody took part in has none.
+        if (await AppealReads.FindRecordAsync(db, billNumber, tracking: false, cancellationToken) is not { } record || record.Status == BillRecordStatuses.Rejected)
+        {
+            return Error.NotFound("record.not-found");
+        }
+
+        return await ReasonPageAsync(db, record.Id, side, ReasonPages.Offset(cursor), ReasonPages.Limit(limit), cancellationToken);
+    }
+
+    public async Task<Result<ReasonOnBill>> ReasonAsync(Guid reasonId, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var found = await (from r in db.Reasons.AsNoTracking()
+                           join a in db.BillRecords.AsNoTracking().Records() on r.RecordId equals a.Id
+                           where r.Id == reasonId && r.Status == ReasonStatuses.Published && a.Status != BillRecordStatuses.Rejected
+                           select new { Reason = r, a.BillNumber })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (found is null)
+        {
+            // The same answer for a hidden, waiting, withdrawn and unknown argument, and one on a hidden record.
+            return Error.NotFound("reason.not-found");
+        }
+
+        var (items, cards) = await ReasonInfosAsync(db, [found.Reason], cancellationToken);
+        return new ReasonOnBill(found.BillNumber, items[0], cards);
+    }
+
+    /// <summary>
+    /// One page of a side's published arguments, ordered in the database (owner, 2026-11-19): the counted "Man svarbu" marks
+    /// (as <see cref="AppealReads.EndorsementCountsAsync"/> counts them: the giver's current side is the argument's), most
+    /// first, then the oldest first, then by id, so pages follow on without a gap while nothing changes.
+    /// </summary>
+    private async Task<ReasonPage> ReasonPageAsync(AppealsDb db, Guid recordId, string side, int offset, int limit, CancellationToken ct)
+    {
+        var shown = db.Reasons.AsNoTracking().Where(r => r.RecordId == recordId && r.Status == ReasonStatuses.Published && r.Side == side);
+        var total = await shown.CountAsync(ct);
+        List<Reason> page = total <= offset
+            ? []
+            : await shown
+                .OrderByDescending(r => (from e in db.Endorsements
+                                         join p in db.Positions on new { e.RecordId, e.UserId } equals new { p.RecordId, p.UserId }
+                                         where e.ReasonId == r.Id && p.Side == r.Side
+                                         select e).Count())
+                .ThenBy(r => r.CreatedAt)
+                .ThenBy(r => r.Id)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync(ct);
+        var (items, cards) = await ReasonInfosAsync(db, page, ct);
+        return new ReasonPage(side, items, total, ReasonPages.NextCursor(offset, page.Count, total), cards);
+    }
+
+    /// <summary>The arguments as the public answers show them, in the given order, with their marks, comments, names and cards.</summary>
+    private async Task<(IReadOnlyList<ReasonInfo> Items, IReadOnlyList<AuthorCard> Cards)> ReasonInfosAsync(AppealsDb db, List<Reason> reasons, CancellationToken ct)
+    {
+        if (reasons.Count == 0)
+        {
+            return ([], []);
+        }
+
+        var ids = reasons.Select(r => r.Id).ToList();
+        var endorsements = await AppealReads.EndorsementCountsAsync(db, ids, ct);
+        var names = await reads.NamesAsync(reasons.Select(r => r.AuthorUserId), ct);
+        var profiles = await reads.ProfilesAsync(reasons.Select(r => r.AuthorUserId), ct);
+        var comments = await CommentCascade.CountsAsync(db, CommentKinds.Reason, ids, ct);
+        var items = reasons.Select(r => AppealReads.ToInfo(r, names, endorsements, profiles) with { Comments = comments.GetValueOrDefault(r.Id) }).ToList();
+        var cards = profiles.Values.OrderBy(p => p.ProfileId, StringComparer.Ordinal).Select(p => new AuthorCard(p.ProfileId, p.DisplayName, p.About)).ToList();
+        return (items, cards);
     }
 
     public async Task<IReadOnlyDictionary<string, BillRecordState>> BillStatesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)

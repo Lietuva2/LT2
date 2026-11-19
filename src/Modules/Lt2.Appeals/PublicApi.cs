@@ -46,6 +46,24 @@ public sealed record ReasonInfo(Guid Id, string Side, string Text, string? Autho
 /// <summary>The card beside the name of a member with a public profile (design 8.25.4): once per person per bill's answer.</summary>
 public sealed record AuthorCard(string ProfileId, string Name, string? About);
 
+/// <summary>How many published arguments each side of a bill's record has (design 8.12.1): what "Rodoma 2 iš 15" counts.</summary>
+public sealed record ReasonTotals(int For, int Against)
+{
+    public static readonly ReasonTotals None = new(0, 0);
+
+    public int Of(string side) => side == "for" ? For : Against;
+}
+
+/// <summary>
+/// One page of a side's published arguments (design 8.12.1, owner 2026-11-19), in the page's order: the counted "Man svarbu"
+/// marks, most first, then the oldest first. <paramref name="Total"/> is the side's count, <paramref name="NextCursor"/> where
+/// the next page starts (null after the last), <paramref name="Cards"/> the profiles among this page's names.
+/// </summary>
+public sealed record ReasonPage(string Side, IReadOnlyList<ReasonInfo> Items, int Total, string? NextCursor, IReadOnlyList<AuthorCard> Cards);
+
+/// <summary>One published argument with its bill (a link to it, design 8.12.1), and its author's card when they have a profile.</summary>
+public sealed record ReasonOnBill(string BillNumber, ReasonInfo Reason, IReadOnlyList<AuthorCard> Cards);
+
 /// <summary>
 /// A bill as people take part on it (design 8.12.1), the same for everyone. <paramref name="Id"/> is null while the bill
 /// has no record (nobody has taken part and no moderator has acted); the counts are then zero.
@@ -57,6 +75,8 @@ public sealed record AuthorCard(string ProfileId, string Name, string? About);
 /// <param name="DescriptionUrl">The official text the description was made from, when known (design 8.13).</param>
 /// <param name="DescriptionAt">When the description's text was made or last changed; null without one or when unknown.</param>
 /// <param name="HiddenStatement">For a hidden record: the moderators' statement; nothing else of it is shown.</param>
+/// <param name="Reasons">The first page of each side's arguments (<see cref="ReasonPages.First"/> each, design 8.12.1); the rest by <see cref="IAppealsModule.ReasonsAsync"/>.</param>
+/// <param name="ReasonTotals">How many published arguments each side has.</param>
 public sealed record BillRecordInfo(
     Guid? Id,
     BillFacts Bill,
@@ -74,7 +94,29 @@ public sealed record BillRecordInfo(
     DateTimeOffset? ClosedAt,
     PlannedDate? Planned,
     string? HiddenStatement,
-    IReadOnlyList<AuthorCard>? Cards = null);
+    IReadOnlyList<AuthorCard>? Cards = null,
+    ReasonTotals? ReasonTotals = null);
+
+/// <summary>The arguments' pages (design 8.12.1, owner 2026-11-19): the record carries the first of each side, the rest come a page at a time.</summary>
+public static class ReasonPages
+{
+    /// <summary>Each side's arguments shown first, carried in the bill's answer.</summary>
+    public const int First = 2;
+
+    /// <summary>The most one page holds.</summary>
+    public const int Max = 100;
+
+    /// <summary>A page's size: as asked, from 1 to <see cref="Max"/>; 10 when not asked.</summary>
+    public static int Limit(int? asked) => asked is { } n ? Math.Clamp(n, 1, Max) : 10;
+
+    /// <summary>Where a page starts: the cursor is the number of arguments before it; anything else starts at the first.</summary>
+    public static int Offset(string? cursor) =>
+        int.TryParse(cursor, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : 0;
+
+    /// <summary>The next page's cursor, or null when the page holds the side's last argument.</summary>
+    public static string? NextCursor(int offset, int taken, int total) =>
+        offset + taken < total ? (offset + taken).ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
+}
 
 /// <summary>
 /// A bill as the agenda shows it (design 8.12.5): its record's public numbers, or zeros for an active bill nobody took
@@ -271,6 +313,15 @@ public interface IAppealsModule
     /// part in (the page shows the bill only).
     /// </summary>
     Task<Result<BillRecordInfo>> GetAsync(string billNumber, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// One page of a side's published arguments (design 8.12.1, owner 2026-11-19), public and the same for everyone, in the
+    /// page's order; <c>side.invalid</c> for another side, <c>record.not-found</c> for a bill without a shown record.
+    /// </summary>
+    Task<Result<ReasonPage>> ReasonsAsync(string billNumber, string side, string? cursor, int? limit, CancellationToken cancellationToken);
+
+    /// <summary>One published argument of a shown record (a link to it); <c>reason.not-found</c> for any other, the same for all.</summary>
+    Task<Result<ReasonOnBill>> ReasonAsync(Guid reasonId, CancellationToken cancellationToken);
 
     Task<Result<MyBillRecord>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
 

@@ -85,10 +85,8 @@ else if (_profile is { } p)
                             </li>
                         }
                     </ol>
-                    @if (texts.More)
-                    {
-                        <p><a href="@MoreLink" id="member-more">@L["Member.More"]</a></p>
-                    }
+                    @* The shared "show more" (owner, 2026-11-19); the answer says only whether more follow, so no "Rodoma N iš M". *@
+                    <Lt2.Web.Client.Components.ShowMore Id="member-more" Shown="texts.Items.Count" Href="@(texts.More ? MoreLink : null)" />
                 }
             </section>
         </div>

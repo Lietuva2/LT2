@@ -25,7 +25,15 @@ internal static class AppealMapping
     public static BillRecordResponse Map(BillRecordInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, a.DescriptionAuthor, Map(a.Counts), Map(a.Threshold),
         a.Reasons.Select(Map).ToList(), Map(a.Surge), a.ClosingVoteId, a.ClosedAt, Map(a.Planned), a.HiddenStatement, a.DescriptionUrl, a.DescriptionAt,
-        a.Cards?.Select(c => new AuthorCardResponse(c.ProfileId, c.Name, c.About)).ToList());
+        a.Cards?.Select(Map).ToList(), Map(a.ReasonTotals ?? ReasonTotals.None));
+
+    public static AuthorCardResponse Map(AuthorCard c) => new(c.ProfileId, c.Name, c.About);
+
+    public static ReasonTotalsResponse Map(ReasonTotals t) => new(t.For, t.Against);
+
+    public static ReasonPageResponse Map(ReasonPage p) => new(p.Side, p.Items.Select(Map).ToList(), p.Total, p.NextCursor, p.Cards.Select(Map).ToList());
+
+    public static ReasonOnBillResponse Map(ReasonOnBill r) => new(r.BillNumber, Map(r.Reason), r.Cards.Select(Map).ToList());
 
     public static PlannedDateResponse? Map(PlannedDate? p) => p is null ? null : new(p.Date, p.Stage, p.SourceUrl, p.SetByModerator);
 
@@ -117,6 +125,12 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, TakingSides sides
         errors.ToApiResult(
             await appeals.HistoryAsync(number, cancellationToken),
             rows => (IReadOnlyList<DescriptionRevisionResponse>)rows.Select(r => new DescriptionRevisionResponse(r.ChangedAt, r.OldText, r.NewText)).ToList());
+
+    public async Task<ApiResult<ReasonPageResponse>> GetReasonsAsync(string number, string side, string? cursor = null, int? limit = null, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await appeals.ReasonsAsync(number, side, cursor, limit, cancellationToken), AppealMapping.Map);
+
+    public async Task<ApiResult<ReasonOnBillResponse>> GetReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await appeals.ReasonAsync(reasonId, cancellationToken), AppealMapping.Map);
 
     public async Task<ApiResult<MyBillRecordResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
         UserId is { } id

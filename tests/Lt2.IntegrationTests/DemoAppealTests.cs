@@ -207,7 +207,9 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         record.Counts.ShouldBe(new SideCountsResponse(6800, 6150, 4280, 3900));
         record.Threshold.ShouldBe(new ThresholdResponse(100, "default", null, 11080, true, false));
         record.Surge.ShouldBeNull("the invented sides are spread over the record's life, not a surge of new accounts");
+        // Owner, 2026-11-19: each side's first two, "už" then "prieš", each by its counted marks.
         record.Reasons.Select(r => (r.AuthorName, r.Endorsements)).ShouldBe(
-            [("Giedrė L.", 1920), ("Rūta Mockutė", 1480), ("Mindaugas R.", 1310), ("Aistė Kazlaitė", 970)]);
+            [("Giedrė L.", 1920), ("Mindaugas R.", 1310), ("Rūta Mockutė", 1480), ("Aistė Kazlaitė", 970)]);
+        record.ReasonTotals.ShouldBe(new ReasonTotalsResponse(2, 2));
     }
 }

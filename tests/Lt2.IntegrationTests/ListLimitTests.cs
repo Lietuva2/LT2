@@ -14,7 +14,7 @@ namespace Lt2.IntegrationTests;
 
 /// <summary>
 /// The lists' lengths with a real-sized parliament (owner, 2026-11-18) over HTTP: <c>/projektai</c> and an MP's votes grow in
-/// place by the address, the arguments' "show all" works without script, and every moderators' queue says how many wait.
+/// place by the address, the arguments come a page at a time and grow without script, and every moderators' queue says how many wait.
 /// </summary>
 public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(database)
 {
@@ -101,37 +101,101 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
     }
 
     /// <summary>
-    /// Owner, 2026-11-18: the bill's page shows two arguments a side; "Visi argumentai" works without script as a link to the
-    /// page with every argument (<c>?argumentai=visi</c>), rendered by the server, with the discussions of all of them.
+    /// Owner, 2026-11-19: the arguments a page at a time. The bill's answer carries each side's first two and how many each side
+    /// has; <c>GET …/record/reasons?side=&amp;cursor=&amp;limit=</c> gives the rest in the page's order, and <c>GET /reasons/{id}</c>
+    /// one published argument (404 for any other). The page shows two a side, "Rodoma 2 iš 3" and "Rodyti daugiau argumentų", a
+    /// link to the page with that side grown (<c>?argumentai-uz=12</c>), which the server renders with the discussions of all of
+    /// them; a linked argument beyond the first two stands first in its side.
     /// </summary>
     [Fact]
-    public async Task Every_argument_shows_without_script_by_the_address()
+    public async Task The_arguments_come_a_page_at_a_time_and_grow_without_script_by_the_address()
     {
         const string Bill = AppealSteps.ThirdBill;
         var moderator = (await ModeratorAsync()).Browser;
         var (first, _) = await Factory.MemberAsync("Pirmoji Rašytoja");
         using var _f = first;
+        var (last, _) = await Factory.MemberAsync("Trečioji Rašytoja");
+        using var _l = last;
         try
         {
             await Database.PrepareBillAsync(first, moderator, Bill, "for");
-            foreach (var (name, text) in new[] { ("Antrasis Rašytojas", "Antras argumentas už: mažesnė našta dirbantiems."), ("Trečioji Rašytoja", "Trečias argumentas už: paprastesnė deklaracija.") })
+            var (second, _) = await Factory.MemberAsync("Antrasis Rašytojas");
+            using (second)
             {
-                var (writer, _) = await Factory.MemberAsync(name);
-                using var _w = writer;
-                using var written = await writer.WriteReasonAsync(Bill, "for", text);
+                using var written = await second.WriteReasonAsync(Bill, "for", "Antras argumentas už: mažesnė našta dirbantiems.");
+                written.StatusCode.ShouldBe(HttpStatusCode.Created, await written.Content.ReadAsStringAsync());
+            }
+
+            using (var written = await last.WriteReasonAsync(Bill, "for", "Trečias argumentas už: paprastesnė deklaracija."))
+            {
                 written.StatusCode.ShouldBe(HttpStatusCode.Created, await written.Content.ReadAsStringAsync());
             }
 
             using var visitor = NewBrowser();
-            var third = (await visitor.RecordAsync(Bill)).Reasons.Where(r => r.Side == "for").ToList()[2].Id;
-            var plain = await PageAsync("/seimas/" + Bill);
-            plain.ShouldNotContain($"id=\"{BillTextLinks.ReasonElement(third)}\"", Case.Sensitive, "the third of its side waits behind \"show all\"");
-            plain.ShouldMatch($"<a class=\"linkish\" id=\"reasons-all\" href=\"/seimas/{Bill}\\?argumentai=visi#reasons\">\\s*Visi argumentai: 3\\s*</a>");
+            var record = await visitor.RecordAsync(Bill);
+            record.Reasons.Count(r => r.Side == "for").ShouldBe(ReasonLimits.First, "the bill's answer carries each side's first two only");
+            record.ReasonTotals.ShouldBe(new ReasonTotalsResponse(3, 0));
 
-            var all = await PageAsync($"/seimas/{Bill}?argumentai=visi");
-            all.ShouldContain($"id=\"{BillTextLinks.ReasonElement(third)}\"", Case.Sensitive);
-            all.ShouldContain($"id=\"aptarimas-panel-{third:N}\"", Case.Sensitive);
-            all.ShouldMatch($"<a class=\"linkish\" id=\"reasons-all\" href=\"/seimas/{Bill}#reasons\">\\s*Rodyti mažiau\\s*</a>");
+            var page = await visitor.GetJsonAsync<ReasonPageResponse>(AppealRoutes.ReasonPageOf(Bill, "for", null, 2));
+            (page.Side, page.Total, page.NextCursor).ShouldBe(("for", 3, "2"));
+            page.Items.Select(r => r.Id).ShouldBe(record.Reasons.Where(r => r.Side == "for").Select(r => r.Id), "the same order as the bill's answer");
+            var rest = await visitor.GetJsonAsync<ReasonPageResponse>(AppealRoutes.ReasonPageOf(Bill, "for", "2", ReasonLimits.Step));
+            rest.NextCursor.ShouldBeNull();
+            var third = rest.Items.ShouldHaveSingleItem();
+            third.Text.ShouldBe("Trečias argumentas už: paprastesnė deklaracija.");
+            (await visitor.GetJsonAsync<ReasonPageResponse>(AppealRoutes.ReasonPageOf(Bill, "against"))).Items.ShouldBeEmpty();
+            foreach (var asked in new[] { "0", "abc", "100000" })
+            {
+                var answer = await visitor.GetJsonAsync<ReasonPageResponse>(AppealRoutes.ReasonsOf(Bill) + "?side=for&limit=" + asked);
+                answer.Items.Count.ShouldBe(asked == "0" ? 1 : 3, $"limit={asked} falls back, never an error");
+            }
+
+            using (var sideways = await visitor.Client.GetAsync(AppealRoutes.ReasonPageOf(Bill, "kitaip"), TestContext.Current.CancellationToken))
+            {
+                await sideways.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "side.invalid");
+            }
+
+            using (var unknown = await visitor.Client.GetAsync(AppealRoutes.ReasonPageOf("XVP-NERA", "for"), TestContext.Current.CancellationToken))
+            {
+                await unknown.ShouldBeProblemAsync(HttpStatusCode.NotFound, "record.not-found");
+            }
+
+            var one = await visitor.GetJsonAsync<ReasonOnBillResponse>(AppealRoutes.ReasonOf(third.Id));
+            (one.BillNumber, one.Reason.Id, one.Reason.Text).ShouldBe((Bill, third.Id, third.Text));
+            using (var none = await visitor.Client.GetAsync(AppealRoutes.ReasonOf(Guid.NewGuid()), TestContext.Current.CancellationToken))
+            {
+                await none.ShouldBeProblemAsync(HttpStatusCode.NotFound, "reason.not-found");
+            }
+
+            // Without script: two a side, the side's count, and the link to the grown page landing on the first one added.
+            var plain = await PageAsync("/seimas/" + Bill);
+            plain.ShouldNotContain($"id=\"{BillTextLinks.ReasonElement(third.Id)}\"", Case.Sensitive, "the third of its side waits for \"Rodyti daugiau argumentų\"");
+            plain.ShouldContain("id=\"reasons-more-for-shown\">Rodoma 2 iš 3</p>", Case.Sensitive);
+            plain.ShouldContain($"href=\"/seimas/{Bill}?argumentai-uz=12#argumentai-uz-3\" id=\"reasons-more-for\">Rodyti daugiau argumentų</a>", Case.Sensitive);
+            plain.ShouldNotContain("id=\"reasons-more-against", Case.Sensitive, "no arguments against: nothing to grow");
+
+            var grown = await PageAsync($"/seimas/{Bill}?argumentai-uz=12");
+            grown.ShouldContain($"id=\"{BillTextLinks.ReasonElement(third.Id)}\"", Case.Sensitive);
+            grown.ShouldContain("id=\"argumentai-uz-3\"", Case.Sensitive, "the first one added carries the place the link lands on");
+            grown.ShouldContain($"id=\"aptarimas-panel-{third.Id:N}\"", Case.Sensitive);
+            grown.ShouldContain("id=\"reasons-more-for-shown\">Rodoma 3 iš 3</p>", Case.Sensitive);
+            grown.ShouldNotContain("id=\"reasons-more-for\"", Case.Sensitive, "every argument of the side is shown");
+
+            var linked = await PageAsync(BillTextLinks.ToReason(Bill, third.Id).Split('#')[0]);
+            var at = linked.IndexOf($"id=\"{BillTextLinks.ReasonElement(third.Id)}\"", StringComparison.Ordinal);
+            at.ShouldBeGreaterThan(0);
+            at.ShouldBeLessThan(linked.IndexOf("Antras argumentas už", StringComparison.Ordinal), "a linked argument stands first in its side");
+
+            // Withdrawn, it is no longer one to show: the same 404 as an unknown one.
+            using (var withdrawn = await last.SendAsync(HttpMethod.Delete, AppealRoutes.ReasonOf(third.Id)))
+            {
+                withdrawn.StatusCode.ShouldBe(HttpStatusCode.NoContent, await withdrawn.Content.ReadAsStringAsync());
+            }
+
+            using (var gone = await visitor.Client.GetAsync(AppealRoutes.ReasonOf(third.Id), TestContext.Current.CancellationToken))
+            {
+                await gone.ShouldBeProblemAsync(HttpStatusCode.NotFound, "reason.not-found");
+            }
         }
         finally
         {

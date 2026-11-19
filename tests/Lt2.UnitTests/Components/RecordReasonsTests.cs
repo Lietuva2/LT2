@@ -43,7 +43,7 @@ public sealed class RecordReasonsTests : BunitContext
         _auth.SetAuthorized("moderatorius@pavyzdys.test");
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
 
-        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), Reason(Second, 2))));
+        Arguments(Reason(First, 3), Reason(Second, 2));
         _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse("for", [], null, [], null, true)));
         _appeals.On("GetMyRestrictionAsync", ApiResult<MyRestrictionResponse>.Ok(new MyRestrictionResponse(false, null, null)));
         ((ApiFake)(object)moderation).On("GetBillAsync", ApiResult<ModerationBillResponse>.Ok(new ModerationBillResponse(
@@ -66,7 +66,7 @@ public sealed class RecordReasonsTests : BunitContext
 
         // The second argument gets a mark; the server's answer now lists it first.
         _appeals.On("EndorseAsync", ApiResult.Ok());
-        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(Second, 4), Reason(First, 3))));
+        Arguments(Reason(Second, 4), Reason(First, 3));
         reasons.Find($"#mark-{Second}").Click();
 
         reasons.WaitForAssertion(() => reasons.Find($"#mark-{Second}").TextContent.ShouldContain("4"));
@@ -138,16 +138,6 @@ public sealed class RecordReasonsTests : BunitContext
 
         reasons.Find($"#mark-{First}").TagName.ShouldBe("BUTTON");
         _me.Calls.ShouldBeEmpty("the account's own answer is asked only in the browser");
-    }
-
-    [Fact]
-    public void A_reread_record_keeps_the_shown_order_and_puts_a_new_argument_last()
-    {
-        var third = Guid.NewGuid();
-        var shown = BillRecord(Reason(First, 3), Reason(Second, 2));
-        var fresh = BillRecord(Reason(third, 9), Reason(Second, 5), Reason(First, 3));
-        RecordReasons.StableOrder(fresh, shown)!.Reasons.Select(r => r.Id).ShouldBe([First, Second, third]);
-        RecordReasons.StableOrder(fresh, null).ShouldBe(fresh);
     }
 
     /// <summary>
@@ -262,9 +252,9 @@ public sealed class RecordReasonsTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         var third = Guid.Parse("0193a1b2-0000-7000-8000-00000000000c");
         var written = Guid.Parse("0193a1b2-0000-7000-8000-00000000000d");
-        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), Reason(Second, 2), Reason(third, 1))));
+        Arguments(Reason(First, 3), Reason(Second, 2), Reason(third, 1));
         var reasons = WriteAnArgument(new ReasonCreatedResponse(written, "published"),
-            BillRecord(Reason(First, 3), Reason(Second, 2), Reason(third, 1), Reason(written, 0)));
+            Reason(First, 3), Reason(Second, 2), Reason(third, 1), Reason(written, 0));
 
         reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Select(s => s.Id)
             .ShouldBe([$"reason-{written}", $"reason-{First}", $"reason-{Second}"], "the new one first, the two shown stay"));
@@ -273,7 +263,7 @@ public sealed class RecordReasonsTests : BunitContext
         shown.ClassList.ShouldContain("said--linked");
         shown.GetAttribute("tabindex").ShouldBe("-1");
         reasons.FindAll($"#reason-{third}").ShouldBeEmpty("the list stays collapsed");
-        reasons.Find("#reasons > .row button.linkish").TextContent.Trim().ShouldBe("Visi argumentai: 4");
+        reasons.Find("#reasons-more-for-shown").TextContent.Trim().ShouldBe("Rodoma 3 iš 4", "owner, 2026-11-19: the side's own count");
         JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal), "brought into view");
     }
 
@@ -283,7 +273,7 @@ public sealed class RecordReasonsTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         var waiting = Guid.Parse("0193a1b2-0000-7000-8000-00000000000e");
-        var reasons = WriteAnArgument(new ReasonCreatedResponse(waiting, "pending"), BillRecord(Reason(First, 3), Reason(Second, 2)));
+        var reasons = WriteAnArgument(new ReasonCreatedResponse(waiting, "pending"), Reason(First, 3), Reason(Second, 2));
 
         reasons.WaitForAssertion(() => reasons.Markup.ShouldContain("Argumentą pirma peržiūrės moderatorius."));
         reasons.FindAll($"#reason-{waiting}").ShouldBeEmpty();
@@ -301,7 +291,7 @@ public sealed class RecordReasonsTests : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         var third = Guid.Parse("0193a1b2-0000-7000-8000-00000000000f");
-        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), Reason(Second, 0), Reason(third, 1))));
+        Arguments(Reason(First, 3), Reason(Second, 0), Reason(third, 1));
         _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(
             new MyBillRecordResponse("for", [], null, [Reason(Second, 0), Reason(third, 1)], null, true) { Editable = [Second] }));
         _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
@@ -309,7 +299,8 @@ public sealed class RecordReasonsTests : BunitContext
 
         reasons.Find($"#more-reason-{Second}-menu #edit-{Second}").TextContent.ShouldBe("Redaguoti");
         reasons.FindAll($"#edit-{First}").ShouldBeEmpty("not one's own");
-        reasons.Find("#reasons > .row button.linkish").Click();
+        reasons.Find("#reasons-more-for").Click();
+        reasons.WaitForAssertion(() => reasons.FindAll($"#reason-{third}").ShouldNotBeEmpty("the next page, in place"));
         reasons.FindAll($"#edit-{third}").ShouldBeEmpty("someone reacted: not shown, not disabled");
         reasons.FindAll($"#withdraw-{third}").ShouldNotBeEmpty("withdrawing stays");
 
@@ -393,7 +384,7 @@ public sealed class RecordReasonsTests : BunitContext
     public void Man_svarbu_works_on_either_side_and_an_uncounted_own_mark_carries_a_short_note()
     {
         var against = Reason(Second, 0) with { Side = "against" };
-        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), against)));
+        Arguments(Reason(First, 3), against);
         _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse(null, [First], null, [], null, true) { Uncounted = [First] }));
         var noSide = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
 
@@ -460,8 +451,74 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.Find($"#similar-{Second} > .act #similar-mark-{Second}").TextContent.ShouldBe("Man svarbu · 2");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-19: each side is read a page at a time. Under each column "Rodoma 2 iš 15" and "Rodyti daugiau argumentų", a
+    /// link to the page with that side grown by ten (every other parameter kept), landing on the first one added; once the island
+    /// runs it reads the next ten from the API in place, gives the first one added the focus, and the link then points further.
+    /// </summary>
+    [Fact]
+    public void Rodyti_daugiau_argumentu_reads_the_sides_next_page_in_place_and_points_to_the_grown_address()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        Services.GetRequiredService<NavigationManager>().NavigateTo($"/seimas/{Bill}?atsakymai=20");
+        var many = Enumerable.Range(1, 15).Select(i => Reason(Guid.Parse($"0193a1b2-0000-7000-8000-0000000003{i:D2}"), 20 - i)).ToArray();
+        var against = Reason(Guid.Parse("0193a1b2-0000-7000-8000-000000000401"), 1) with { Side = "against" };
+        Arguments([.. many, against]);
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        reasons.FindAll("#reasons-for .said").Count.ShouldBe(2);
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 2 iš 15");
+        var more = reasons.Find("#reasons #reasons-for #reasons-more-for");
+        more.TextContent.ShouldBe("Rodyti daugiau argumentų");
+        more.GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=12#argumentai-uz-3");
+        reasons.FindAll("#reasons-more-against").ShouldBeEmpty("one argument against: nothing more to show");
+
+        more.Click();
+
+        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Count.ShouldBe(12));
+        var asked = _appeals.Arguments[_appeals.Calls.LastIndexOf("GetReasonsAsync")];
+        asked[1].ShouldBe("for");
+        asked[2].ShouldBe("2", "from where the first page ends");
+        asked[3].ShouldBe(ReasonLimits.Step);
+        reasons.Find($"#reason-{many[2].Id}").GetAttribute("tabindex").ShouldBe("-1", "the first one added");
+        reasons.Find($"#reason-{many[2].Id} > .said__by").Id.ShouldBe("argumentai-uz-3");
+        JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal));
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 12 iš 15");
+        reasons.Find("#reasons-more-for").GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=22#argumentai-uz-13");
+
+        reasons.Find("#reasons-more-for").Click();
+        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Count.ShouldBe(15));
+        reasons.FindAll("#reasons-more-for").ShouldBeEmpty("every argument of the side is shown");
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 15 iš 15");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-19: without script the address grows the side (<c>?argumentai-uz=12</c>), and the server renders as many,
+    /// with their discussions; a linked argument its pages would put further on stands first in its side, marked.
+    /// </summary>
+    [Fact]
+    public void The_address_grows_a_side_and_a_linked_argument_beyond_its_pages_stands_first_without_script()
+    {
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        var many = Enumerable.Range(1, 15).Select(i => Reason(Guid.Parse($"0193a1b2-0000-7000-8000-0000000003{i:D2}"), 20 - i)).ToArray();
+        Arguments(many);
+        var linked = many[14].Id;
+        Services.GetRequiredService<NavigationManager>().NavigateTo($"/seimas/{Bill}?argumentai-uz=12");
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill).Add(c => c.LinkedReason, linked));
+
+        var shown = reasons.FindAll("#reasons-for .said").Select(s => s.Id).ToList();
+        shown.Count.ShouldBe(13, "twelve as the address asks, and the linked one");
+        shown[0].ShouldBe($"reason-{linked}");
+        reasons.Find($"#reason-{linked}").ClassList.ShouldContain("said--linked");
+        reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 13 iš 15");
+        var more = reasons.Find("#reasons-more-for");
+        more.HasAttribute("data-enhance-nav").ShouldBeFalse("a plain link without script");
+        more.GetAttribute("href")!.ShouldContain("argumentai-uz=22");
+        _appeals.Calls.ShouldContain("GetReasonAsync");
+    }
+
     /// <summary>Opens the writing box, writes an argument for "už" and publishes it; the record is then read as <paramref name="after"/>.</summary>
-    private IRenderedComponent<RecordReasons> WriteAnArgument(ReasonCreatedResponse created, BillRecordResponse after)
+    private IRenderedComponent<RecordReasons> WriteAnArgument(ReasonCreatedResponse created, params ReasonResponse[] after)
     {
         _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
         _appeals.On("FindSimilarAsync", ApiResult<IReadOnlyList<ReasonResponse>>.Ok([]));
@@ -469,7 +526,7 @@ public sealed class RecordReasonsTests : BunitContext
         var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
         reasons.Find("#add-reason").Click();
         reasons.Find("#reason-text").Input("Mokesčiai turi būti paprastesni.");
-        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(after));
+        Arguments(after);
         reasons.Find("#write-reason").Submit();
         return reasons;
     }
@@ -479,7 +536,6 @@ public sealed class RecordReasonsTests : BunitContext
     private static QueueReasonResponse Queued(Guid id) =>
         new(id, Guid.NewGuid(), new BillRefResponse(Bill, "Pataisa"), "for", "Argumentas", "Rūta Mockutė", "published", true, [], [], [], DateTimeOffset.UnixEpoch);
 
-    private static BillRecordResponse BillRecord(params ReasonResponse[] reasons) => new(
-        Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
-        new SideCountsResponse(1, 1, 0, 0), new ThresholdResponse(100, "default", null, 1, false, false), reasons);
+    private void Arguments(params ReasonResponse[] all) => ReasonFakes.Serve(_appeals, Bill, all);
+
 }

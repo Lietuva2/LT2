@@ -73,14 +73,10 @@
                 </li>
             }
         </ul>
-        <div class="row">
-            <p class="small num" role="status" id="ballots-shown">@F.T.Format("Ballots.Shown", Display.Number(_view.Shown.Count), Display.Number(_view.Matched))</p>
-            @if (_view.More is { } more)
-            {
-                @* Lands on the first row added, not on the top of the list, so the reader goes on where they stopped. *@
-                <a class="btn btn--plain" href="@BallotList.Address(VoteId, _view.Query, _view.Faction, _view.Choice, more, "balsas-" + (_view.Shown.Count + 1))" id="ballots-more">@F.T["Ballots.More"]</a>
-            }
-        </div>
+        @* The shared "show more" (owner, 2026-11-19): lands on the first row added, not on the top of the list, so the reader goes on
+           where they stopped. *@
+        <Lt2.Web.Client.Components.ShowMore Id="ballots-more" StatusId="ballots-shown" Shown="_view.Shown.Count" Total="_view.Matched"
+            Href="@(_view.More is { } more ? BallotList.Address(VoteId, _view.Query, _view.Faction, _view.Choice, more, "balsas-" + (_view.Shown.Count + 1)) : null)" />
     }
 </section>
 
