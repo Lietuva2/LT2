@@ -260,7 +260,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         await Database.FreeBillAsync(AppealSteps.ThirdBill);
     }
 
-    /// <summary>Design 8.25.2: only published arguments on bills whose record is not hidden; 10, then more by the address.</summary>
+    /// <summary>Design 8.25.2: only published arguments on bills whose record is not hidden; 10, then 50 more by the address (owner, 2026-11-19).</summary>
     [Fact]
     public async Task The_page_lists_published_arguments_newest_first_ten_then_more_and_never_waiting_hidden_or_withdrawn_ones()
     {
@@ -278,8 +278,8 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         first.More.ShouldBeTrue();
         first.Items[0].Text.ShouldContain("numeris 11");
         var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id, "Rūta Mockutė"), TestContext.Current.CancellationToken));
-        page.ShouldContain($"href=\"/nariai/ruta-mockute-{id}?rodyti=20#argumentai\"");
-        (await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(id, 20))).Items.Count.ShouldBe(11);
+        page.ShouldContain($"href=\"/nariai/ruta-mockute-{id}?rodyti=60#argumentai\"");
+        (await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(id, 60))).Items.Count.ShouldBe(11);
 
         // A waiting (flagged) argument and a withdrawn one are not listed.
         (await member.WriteReasonAsync(AppealSteps.TaxBill, "for", "Rašykite man: laukiantis@pavyzdys.test")).StatusCode.ShouldBe(HttpStatusCode.Created);

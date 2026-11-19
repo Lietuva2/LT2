@@ -9,7 +9,8 @@ namespace Lt2.IntegrationTests;
 /// <summary>
 /// Design 8.23.6, 8.12.1 (the designer's proposal of 2026-11-17): a link to a comment (<c>?komentaras=</c>) or an argument
 /// (<c>?argumentas=</c>) lands on it in the served HTML, without script: the argument shown even beyond the first two of its
-/// side, its "Aptarimas" rendered open with the comments through the linked one rounded up to the next 10, the linked one
+/// side, its "Aptarimas" rendered open with the comments through the linked one on the thread's own pages (10, then 20 a
+/// step), the linked one
 /// marked; a hidden, unknown or garbled one changes nothing and reveals nothing.
 /// </summary>
 public sealed partial class CommentLinkTests(DatabaseFixture database) : ApiTest(database)
@@ -129,8 +130,10 @@ public sealed partial class CommentLinkTests(DatabaseFixture database) : ApiTest
             (await visitor.GetJsonAsync<CommentThreadResponse>(CommentRoutes.ThreadOf("reason", reason, 3))).Items.Count.ShouldBe(CommentLimits.First, "the first page never fewer than ten");
 
             var next = await visitor.GetJsonAsync<CommentThreadResponse>(CommentRoutes.ThreadOf("reason", reason, CommentLimits.Step, first.NextCursor));
-            (next.Count, next.NextCursor).ShouldBe((32, "20"));
-            next.Items.Select(i => i.Id).ShouldBe(comments.Skip(10).Take(10));
+            (next.Count, next.NextCursor).ShouldBe((32, "30"), "owner, 2026-11-19: 20 more a press");
+            next.Items.Select(i => i.Id).ShouldBe(comments.Skip(10).Take(20));
+            (await visitor.GetJsonAsync<CommentThreadResponse>(CommentRoutes.ThreadOf("reason", reason, null, "10"))).Items.Select(i => i.Id)
+                .ShouldBe(comments.Skip(10).Take(20), "a later page without a limit is one step");
             var last = await visitor.GetJsonAsync<CommentThreadResponse>(CommentRoutes.ThreadOf("reason", reason, 5, "30"));
             last.Items.Select(i => i.Id).ShouldBe(comments.Skip(30));
             last.NextCursor.ShouldBeNull("the last page");

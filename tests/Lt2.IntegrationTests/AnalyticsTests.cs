@@ -520,8 +520,8 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             Regex.Matches(page, "<li class=\"dotplot__row\" id=\"projektas-([^\"]+)\"").Select(m => m.Groups[1].Value)
                 .ShouldBe(Regex.Matches(page, "<tr id=\"row-([^\"]+)\"").Select(m => m.Groups[1].Value), "the plot and the table hold the same bills in the same order");
             Regex.IsMatch(page, @"id=""compare-shown"">Rodoma\s10\siš\s12<").ShouldBeTrue();
-            page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=30#projektas-XVP-T011\" id=\"compare-more\"");
-            var more = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rodyti=30"));
+            page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=60#projektas-XVP-T011\" id=\"compare-more\"");
+            var more = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rodyti=60"));
             Regex.Count(more, "<li class=\"dotplot__row\" id=\"projektas-").ShouldBe(12);
             Regex.Count(more, "<tr id=\"row-").ShouldBe(12);
             more.ShouldNotContain("id=\"compare-more\"");

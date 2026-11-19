@@ -32,10 +32,11 @@ public static class VoteHistory
 {
     public const string Path = "/seimas/balsavimai";
 
-    /// <summary>The votes shown first, and how many "Rodyti daugiau" adds.</summary>
+    /// <summary>The votes shown first.</summary>
     public const int First = 30;
 
-    public const int Step = 30;
+    /// <summary>The votes "Rodyti daugiau" adds (owner, 2026-11-19: a list of rows, 50 a press; the last before the cap fewer).</summary>
+    public const int Step = Lt2.Api.Contracts.ListPaging.RowStep;
 
     /// <summary>The most one page shows; after it the link is "Senesni balsavimai".</summary>
     public const int Cap = VoteListQuery.MaxLimit;
@@ -110,7 +111,7 @@ public static class VoteHistory
     }
 
     /// <summary>
-    /// "Rodyti daugiau": the same list with 30 more, landing on the first row added; null when every vote found is shown
+    /// "Rodyti daugiau": the same list with <see cref="Step"/> more (at most 300), landing on the first row added; null when every vote found is shown
     /// or the page holds as many as it may.
     /// </summary>
     public static string? More(VoteHistoryState state, int shown, int total)
@@ -121,7 +122,7 @@ public static class VoteHistory
             return null;
         }
 
-        return Address(state with { Shown = Math.Min(state.Shown + Step, Cap) }, Row(shown + 1));
+        return Address(state with { Shown = Lt2.Api.Contracts.ListPaging.Next(state.Shown, Step, Cap) }, Row(shown + 1));
     }
 
     /// <summary>

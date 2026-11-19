@@ -119,7 +119,8 @@ internal static class CommentRules
 
     /// <summary>
     /// How many comments one page of a thread holds (design 8.23.6): the first page <paramref name="asked"/> but never fewer
-    /// than 10 (10 when not asked); a later page, from <paramref name="offset"/> on, as many as asked (10 when not asked).
+    /// than 10 (10 when not asked); a later page, from <paramref name="offset"/> on, as many as asked (20 when not asked,
+    /// <see cref="Step"/>).
     /// </summary>
     public static int Limit(int? asked, int offset) =>
         offset == 0 ? Math.Max(asked ?? First, First) : Math.Max(asked ?? Step, 1);
@@ -135,6 +136,6 @@ internal static class CommentRules
     /// <summary>The comments a thread shows first.</summary>
     public const int First = 10;
 
-    /// <summary>The comments "Rodyti daugiau komentarų" adds.</summary>
-    public const int Step = 10;
+    /// <summary>The comments "Rodyti daugiau komentarų" adds (owner, 2026-11-19: a list of texts, 20 a press).</summary>
+    public const int Step = Lt2.SharedKernel.ListPaging.TextStep;
 }

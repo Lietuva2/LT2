@@ -94,7 +94,7 @@ public static class CommentPaging
     /// <summary>
     /// How many comments of <paramref name="targetId"/> to show, from the page's address: "Rodyti daugiau komentarų"
     /// (<c>?komentarai=</c>) and a link to one comment (<c>?komentaras=</c>, resolved by the server into
-    /// <paramref name="linked"/>: through the linked one, rounded up to the next 10, design 8.23.6), the more of the two; null
+    /// <paramref name="linked"/>: through the linked one, on the thread's own pages, 10 then 20 a step, design 8.23.6), the more of the two; null
     /// when neither names this target, and the thread then stays closed.
     /// </summary>
     public static int? Asked(string? value, Guid targetId, CommentPlaceResponse? linked)

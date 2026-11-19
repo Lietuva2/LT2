@@ -86,12 +86,15 @@ Read before changing a page, a component or an island. The rules behind it are d
 - **A list by day is the timeline's day blocks (owner, 2026-11-18):** `section.tl-day` (`tl-past` for votes) with
   `<TimelineDate>` (label, the date in words, the weekday and the day's count) and the rows in `div.tl-rows`; on a narrow
   screen the head is a band of its own (`PlannedDay`, `VotedDay`). A longer day grows by `<ShowMore>` like every list
-  (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:20`, ten more a press, landing on the first row added). A vote's majority beside its numbers is
+  (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press, landing on the first row added). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the list.
 - **Every "show more" is `<ShowMore>` (design 8.16.4, owner 2026-11-19)** (`Lt2.Web.Client/Components`; on server pages
   `<Lt2.Web.Client.Components.ShowMore …/>`): `div.row.show-more` with "Rodoma N iš M" (`Total`, status id `StatusId` or
   `{Id}-shown`) and `a.show-more__link`, a plain text link (owner 2026-11-19: not a button's look), to `Href`, the same page
-  grown by the address landing on the first row added (null: every row shown, no link); further links of the list (an
+  grown by the address landing on the first row added (null: every row shown, no link). How much a press adds is one rule
+  (design 8.16.4, owner 2026-11-19): the first page as each list states it, then a list of rows +50
+  (`ListPaging.RowStep`), a list of members' long texts +20 (`ListPaging.TextStep`; `Lt2.SharedKernel/ListPaging.cs`, linked
+  into the contracts as `BillTextLinks` is); a list's own `Step` constant names one of the two, never a literal. Further links of the list (an
   older page) as its child content, plain `<a>` too. Never
   hidden rows in the page. On a server-rendered page that is all: enhanced navigation (blazor.web.js) fetches the link
   without a reload (`VoteHistory`, `BillListPaging`, `MpVotePaging`, `AnalyticsList`, `ResponsePaging`, `BallotList`, the

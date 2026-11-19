@@ -39,8 +39,8 @@ public static class BallotList
     /// <summary>The rows shown first.</summary>
     public const int First = 20;
 
-    /// <summary>The rows "Rodyti daugiau" adds.</summary>
-    public const int Step = 40;
+    /// <summary>The rows "Rodyti daugiau" adds (owner, 2026-11-19: a list of rows, 50 a press; it was 40).</summary>
+    public const int Step = Lt2.Api.Contracts.ListPaging.RowStep;
 
     /// <summary>A longer search is not one the field makes; it is ignored.</summary>
     public const int MaxQueryLength = 100;

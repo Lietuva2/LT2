@@ -110,7 +110,7 @@ registration just completed lands on "Profilis", the MP's take-over on "Dalyvavi
   nowhere until the person writes another.
 - The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
   name, "Apie mane", the follower number and the member's texts (`IMemberTexts`, Appeals): published arguments and the
-  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, invitations,
+  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" +50 by `?rodyti=` (`ProfileLimits.More`, no script). Never sides, "Man svarbu", follows, invitations,
   organisations, anything written as an organisation or MP, "Sutinku" (the designer's proposal), counts of the person's
   texts, or who follows.
 - **The party on the page (design 8.25.9, owner 2026-11-17).** The party already on "Profilis" (`identity.party_support`,
@@ -140,10 +140,10 @@ and their count shown). No expenses, rankings or scorecards. An MP takes over a 
 official `@lrs.lt` address from open data; the link is tied to the Seimas person id (details below). Each MP's ballot on a vote is listed
 in one place, the vote's page (`/seimas/balsavimai/{id}#balsai`, design 8.17: `VoteBallots`, filtered by `BallotList` in
 Lt2.Web.Client): a name search without case or diacritics, a faction dropdown (with "Be frakcijos"), the ballot, 20 rows
-then 40 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) with no script; a closed bill's page only
+then 50 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) with no script; a closed bill's page only
 links to it. The history of votes (`/seimas/balsavimai`, design 8.18: `VoteHistoryPage`, its address state in
 `VoteHistory` in Lt2.Web.Client, `GET /api/v1/votes` read and counted in the database a part at a time) groups votes by
-Vilnius day, 30 then 30 more up to 300, with no participants' numbers; its rows share `VotedItemMain` with the start
+Vilnius day, 30 then 50 more up to 300, with no participants' numbers; its rows share `VotedItemMain` with the start
 page's "Balsuota".
 
 **The Seimas import's jobs (design 7.2; owner 2026-11-18).** The scheduled `parliament-import` (`ParliamentImportJob`,
@@ -220,7 +220,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 - Where it shows (8.5.6): the bill's page part `BillResponses` (its own sheet, the first of the texts at the page's full width
   before the organisations and the arguments, and only when an MP answered (owner, 2026-11-17); server-rendered and the
   same for everyone; the counts line; "už", "prieš", "neapsisprendė", by last name, then withdrawn and hidden ones) and the
-  profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau atsakymų" (`<ShowMore>`) by `?atsakymai=` landing
+  profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau atsakymų" (`<ShowMore>`, +20, `MpResponseLimits.Step`) by `?atsakymai=` landing
   on `#atsakymas-{n}` (`ResponsePaging`). Each item is `MpResponseItem` with the one mark "Seimo narys arba jo biuras". The
   linked account's form is the island `MyMpResponse`, filled in the browser only (on an open bill nobody answered yet it
   stands alone with `Section`, bringing the part's sheet and heading for a linked account); reports are `ReportResponse` islands.
@@ -318,7 +318,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `ReasonPaging`, unit-tested): the address asks how many (`?argumentai-uz=` / `?argumentai-pries=`, `ReasonLimits.Parameter`,
   read on the server, and in the browser up to it should enhanced navigation have grown it before the island started);
   "Rodyti daugiau argumentų" under each column is `<ShowMore>` (`#reasons-more-{side}`, status `#reasons-more-{side}-shown`),
-  the island's `MoreAsync` reads ten more in place and focuses the first added; the name line carries
+  the island's `MoreAsync` reads 20 more (`ReasonLimits.Step`) in place and focuses the first added; the name line carries
   `#argumentai-uz-{n}` where the link lands without script. The linked argument (`?argumentas=`), one a comment link or
   `?komentarai=` names, and the one just published are pinned first in their side (`ReasonPaging.Pin`), read alone when
   their pages would not bring them; "Rodyti tik naujus" reads the new ones the pages lack (`NewTexts.Reasons`) and adds them
@@ -419,7 +419,7 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `Agenda.ShowRest` gone): one day is `PlannedDay` / `VotedDay` (`Lt2.Web/Components/Agenda`, used by both pages), whose
   line `#{day}-more` (status `#{day}-shown`, "Rodoma N iš M") stands under a day with more known rows than its first page
   (`AgendaRules.Paged`) and links to `AgendaPaging.MorePlanned` / `MoreVoted`: the same page with the day grown by
-  `AgendaRules.MorePerDay` (10; `NextAsked`), `?diena=2026-11-24:20` / `?balsuota=2026-11-17:20` (pages `AgendaPaging.Agenda`,
+  `AgendaRules.MorePerDay` (50, `ListPaging.RowStep`; `NextAsked`), `?diena=2026-11-24:60` / `?balsuota=2026-11-17:60` (pages `AgendaPaging.Agenda`,
   blocks `#diena-…`/`#balsuota-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`; the parameter repeats for every
   day grown, `AgendaPaging.Grown` carrying on only days shown beyond their first rows), landing on the first row added by its
   own id (`AgendaPaging.PlannedRowId` `#agenda-{day}-{number}`, `VotedRowId` `#recent-{vote}`). `AgendaPaging.Read` takes
@@ -453,11 +453,12 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
   `appeals.bill_record.last_activity_at`, set by `RecordActivity` (Appeals) in the same transaction as a side taken, changed or
   withdrawn, an argument published, a comment written, an organisation's statement or an MP's response made public or
   changed; never who acted. The page shows 20 and grows in place by `?rodyti=` (`Lt2.Web.Client/Appeals/BillListPaging`:
-  +20, landing on `#bill-{next}`, which it knows by asking one more; at most 200, then "Tolesni projektai" `?nuo=`); the API's
+  +50, landing on `#bill-{next}`, which it knows by asking one more; at most 200, then "Tolesni projektai" `?nuo=`); the API's
   `limit` (`BillListLimits`, 20, 1–200). The list is composed in memory (`AppealsService.ListAsync`): the bills are the
   Parliament module's, the activity the Appeals module's. An MP's votes (`/p/{slug}/balsavimai`, `MpVotePaging`) are by day,
   50 then +50 by `?rodyti=` (rows `#balsavimas-{n}`), at most 300, then `?nuo=`; `GET /mps/{slug}/votes` takes `limit`
-  (`MpVoteLimits`). Every "show more" is `<ShowMore>` (design 8.16.4, below). Every moderators' list keeps its hundred
+  (`MpVoteLimits`). Every "show more" is `<ShowMore>` (design 8.16.4, below); a press adds 50 rows or 20 texts (`ListPaging`,
+  `ListPagingTests`). Every moderators' list keeps its hundred
   and carries its total (`ModerationQueueResponse.RecordsTotal` etc.); `<QueueCut>` says "Rodoma 100 iš N".
 - Following a bill, an MP, an organisation or a member is private: who follows is shown to nobody (the followed party and
   staff included), never combined with sides or invitations (the person's own `/me/bills` gives them both), in the export,
@@ -562,7 +563,7 @@ The closed bills are one dot plot (`#compare-plot`: rows `li.dotplot__row#projek
 number and the title cut by CSS, a per-row SVG track on one shared axis) and "Rodyti lentelę" (`#compare-table`, rows `row-{nr}`,
 title column) over the same bills (owner, 2026-11-19, back from the rows of 2026-11-18), with their own GET form in
 `details#compare-filters-box` ("Filtrai (n)", `AnalyticsListState.Active`; open while a field is set) (`nuo`, `iki`, `q`,
-`rezultatas`, `dauguma`, `rikiuoti`, `rodyti`; `AnalyticsList` in `Lt2.Web.Client/Analytics` reads the address, the API
+`rezultatas`, `dauguma`, `rikiuoti`, `rodyti`: 10, then +50 up to 300; `AnalyticsList` in `Lt2.Web.Client/Analytics` reads the address, the API
 reads `AnalyticsBillQuery`); `AnalyticsReads.Select` filters, orders and cuts the kept copy in memory; the figures and
 factions follow only `metai`/`paskyros`. Tests: `AnalyticsTests` (integration, the filters over HTTP and on the page),
 `ComparedBillListRuleTests`, `AnalyticsListTests`, `AnalyticsShareFormatTests` (unit).
@@ -716,12 +717,12 @@ A link to a comment or an argument (design 8.23.6, the designer's proposal of 20
 `?argumentas={id}#reason-{id}`. `BillPage` resolves the comment once (`GET /comments/{id}/place`, public, one 404
 `comment.not-found` for hidden and unknown) and hands `Linked` to `RecordReasons`, `OrganisationPositions` and
 `BillResponses` as a parameter (so an island starts in the same state): the target is shown even beyond its side's first
-page (first in its side's column) or the responses' paging, its "Aptarimas" open through the linked one rounded up to the next ten (`BillTextLinks.ShownThrough`,
+page (first in its side's column) or the responses' paging, its "Aptarimas" open through the linked one on the thread's own pages, 10 then +20 (`BillTextLinks.ShownThrough`,
 `CommentPaging.Asked(…, linked)`), the comment marked `comment--linked` (an argument `said--linked`); anything not shown
-changes nothing. The thread's API pages by `limit` and `cursor` (`CommentRules.Limit`, the first page at least ten; the answer's
+changes nothing. The thread's API pages by `limit` and `cursor` (`CommentRules.Limit`, the first page at least ten, a later one 20 when not asked; the answer's
 `NextCursor`); "Rodyti daugiau komentarų" is `<ShowMore>` (`#comments-more-{target}`, `#comments-shown-{target}`): by the
 address (`?komentarai=`, `CommentPaging`) without script and before the island runs, and once it runs `CommentThread.MoreAsync`
-reads the next ten in place and focuses the first added (owner, 2026-11-19: the running island had let enhanced navigation
+reads the next 20 (`CommentLimits.Step`) in place and focuses the first added (owner, 2026-11-19: the running island had let enhanced navigation
 fetch the page and kept its own list, so nothing changed).
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.

@@ -1,3 +1,5 @@
+using Lt2.Api.Contracts;
+
 namespace Lt2.Web.Client.Agenda;
 
 /// <summary>
@@ -43,8 +45,11 @@ public static class AgendaRules
     /// <summary>The agenda page shows this many rows of each day before "Rodyti daugiau".</summary>
     public const int PagePerDay = 10;
 
-    /// <summary>"Rodyti daugiau" under a day adds this many rows, on both pages (owner, 2026-11-19: a page at a time).</summary>
-    public const int MorePerDay = PagePerDay;
+    /// <summary>
+    /// "Rodyti daugiau" under a day adds this many rows, on both pages (owner, 2026-11-19: a page at a time, the first small and
+    /// each further one 50 rows, <see cref="ListPaging.RowStep"/>).
+    /// </summary>
+    public const int MorePerDay = ListPaging.RowStep;
 
     /// <summary>The most known rows of a day an address asks for (a larger number shows this many).</summary>
     public const int MaxAsked = 1000;

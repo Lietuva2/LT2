@@ -6,7 +6,7 @@ namespace Lt2.Web.Client.Appeals;
 /// <summary>
 /// The arguments a page at a time (design 8.12.1, owner 2026-11-19). Each side is a column: the bill's answer brings its first
 /// <see cref="ReasonLimits.First"/>, and "Rodyti daugiau argumentų" under the column adds <see cref="ReasonLimits.Step"/> more
-/// from the API, in place, or without script by the page's address (<c>?argumentai-uz=12</c>, <see cref="ReasonLimits.Parameter"/>).
+/// from the API, in place, or without script by the page's address (<c>?argumentai-uz=22</c>, <see cref="ReasonLimits.Parameter"/>).
 /// A column is kept as a <see cref="ReasonPageResponse"/>: its <c>Items</c> in the order shown, its side's <c>Total</c>, and its
 /// <c>NextCursor</c>, where the next page of the server's order starts. An argument shown out of that order (a linked one, one just
 /// published, a new one under "Rodyti tik naujus") is "pinned": it stands where it was put and a later page that brings it again

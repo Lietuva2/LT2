@@ -176,7 +176,7 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, TimePr
         }
 
         // The page asks about the rows it shows (design 8.7: twenty on the front page, 8.11.1: ten a day on the agenda page;
-        // ten more a day with each "Rodyti daugiau"), within the API's limit a request, the requests side by side.
+        // 50 more a day with each "Rodyti daugiau"), within the API's limit a request, the requests side by side.
         var answers = await Task.WhenAll(Requests(numbers).Select(part => bills.GetAsync(new MyBillsQuery { Numbers = part })));
         var all = new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase);
         foreach (var answer in answers)

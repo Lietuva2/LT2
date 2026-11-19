@@ -59,15 +59,23 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
         html.ShouldNotContain("?nuo=", customMessage: "the list grows in place by ?rodyti=, no next page under the cap");
         if (all.Total > BillListPaging.First)
         {
-            html.ShouldContain($"href=\"/projektai?rodyti=40#bill-{all.Items[BillListPaging.First].Bill.Number}\" id=\"more\">Rodyti daugiau</a>", customMessage: "lands on the first bill added");
+            html.ShouldContain($"href=\"/projektai?rodyti=70#bill-{all.Items[BillListPaging.First].Bill.Number}\" id=\"more\">Rodyti daugiau</a>", customMessage: "20, then 50 more (owner, 2026-11-19), landing on the first bill added");
         }
         else
         {
             html.ShouldNotContain("id=\"more\"", customMessage: "every bill is shown");
         }
 
-        var longer = await PageAsync("/projektai?rodyti=40");
-        Regex.Count(longer, "<li id=\"bill-").ShouldBe(Math.Min(all.Total, 40));
+        var longer = await PageAsync("/projektai?rodyti=70");
+        Regex.Count(longer, "<li id=\"bill-").ShouldBe(Math.Min(all.Total, 70));
+        longer.ShouldContain($"id=\"shown\">Rodoma {Math.Min(all.Total, 70)} iš {all.Total}</p>");
+        if (all.Total > 70)
+        {
+            longer.ShouldContain($"href=\"/projektai?rodyti=120#bill-{all.Items[70].Bill.Number}\" id=\"more\">", customMessage: "50 more again");
+        }
+
+        (await visitor.GetJsonAsync<BillListResponse>(AppealRoutes.AppealsList(null, false, false, null, limit: 71))).Items.Count
+            .ShouldBe(Math.Min(all.Total, 71), "a grown page and the one bill the link lands on fit the API's limit");
         (await PageAsync("/projektai?rodyti=nesąmonė")).ShouldContain("id=\"shown\">Rodoma " + Math.Min(all.Total, BillListPaging.First), customMessage: "a value the page would not make is the default");
     }
 
@@ -104,7 +112,7 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
     /// Owner, 2026-11-19: the arguments a page at a time. The bill's answer carries each side's first two and how many each side
     /// has; <c>GET …/record/reasons?side=&amp;cursor=&amp;limit=</c> gives the rest in the page's order, and <c>GET /reasons/{id}</c>
     /// one published argument (404 for any other). The page shows two a side, "Rodoma 2 iš 3" and "Rodyti daugiau argumentų", a
-    /// link to the page with that side grown (<c>?argumentai-uz=12</c>), which the server renders with the discussions of all of
+    /// link to the page with that side grown by 20 (<c>?argumentai-uz=22</c>, owner 2026-11-19), which the server renders with the discussions of all of
     /// them; a linked argument beyond the first two stands first in its side.
     /// </summary>
     [Fact]
@@ -144,10 +152,10 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
             var third = rest.Items.ShouldHaveSingleItem();
             third.Text.ShouldBe("Trečias argumentas už: paprastesnė deklaracija.");
             (await visitor.GetJsonAsync<ReasonPageResponse>(AppealRoutes.ReasonPageOf(Bill, "against"))).Items.ShouldBeEmpty();
-            foreach (var asked in new[] { "0", "abc", "100000" })
+            foreach (var asked in new[] { "0", "abc", "20", "100", "101", "100000" })
             {
                 var answer = await visitor.GetJsonAsync<ReasonPageResponse>(AppealRoutes.ReasonsOf(Bill) + "?side=for&limit=" + asked);
-                answer.Items.Count.ShouldBe(asked == "0" ? 1 : 3, $"limit={asked} falls back, never an error");
+                answer.Items.Count.ShouldBe(asked == "0" ? 1 : 3, $"limit={asked} is taken or falls back, never an error");
             }
 
             using (var sideways = await visitor.Client.GetAsync(AppealRoutes.ReasonPageOf(Bill, "kitaip"), TestContext.Current.CancellationToken))
@@ -171,10 +179,10 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
             var plain = await PageAsync("/seimas/" + Bill);
             plain.ShouldNotContain($"id=\"{BillTextLinks.ReasonElement(third.Id)}\"", Case.Sensitive, "the third of its side waits for \"Rodyti daugiau argumentų\"");
             plain.ShouldContain("id=\"reasons-more-for-shown\">Rodoma 2 iš 3</p>", Case.Sensitive);
-            plain.ShouldContain($"href=\"/seimas/{Bill}?argumentai-uz=12#argumentai-uz-3\" id=\"reasons-more-for\">Rodyti daugiau argumentų</a>", Case.Sensitive);
+            plain.ShouldContain($"href=\"/seimas/{Bill}?argumentai-uz=22#argumentai-uz-3\" id=\"reasons-more-for\">Rodyti daugiau argumentų</a>", Case.Sensitive);
             plain.ShouldNotContain("id=\"reasons-more-against", Case.Sensitive, "no arguments against: nothing to grow");
 
-            var grown = await PageAsync($"/seimas/{Bill}?argumentai-uz=12");
+            var grown = await PageAsync($"/seimas/{Bill}?argumentai-uz=22");
             grown.ShouldContain($"id=\"{BillTextLinks.ReasonElement(third.Id)}\"", Case.Sensitive);
             grown.ShouldContain("id=\"argumentai-uz-3\"", Case.Sensitive, "the first one added carries the place the link lands on");
             grown.ShouldContain($"id=\"aptarimas-panel-{third.Id:N}\"", Case.Sensitive);

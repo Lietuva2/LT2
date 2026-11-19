@@ -51,8 +51,8 @@ public static class MpResponseLimits
     /// <summary>The responses a list shows first, on the bill's page and on the profile.</summary>
     public const int First = 10;
 
-    /// <summary>The responses "Rodyti daugiau" adds.</summary>
-    public const int Step = 10;
+    /// <summary>The responses "Rodyti daugiau atsakymų" adds (owner, 2026-11-19: a list of texts, 20 a press).</summary>
+    public const int Step = ListPaging.TextStep;
 
     /// <summary>The page's address parameter of the list's length (<c>?atsakymai=</c>).</summary>
     public const string ShowParameter = "atsakymai";

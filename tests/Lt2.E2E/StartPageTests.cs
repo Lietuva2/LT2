@@ -386,7 +386,7 @@ public sealed partial class StartPageTests : E2ETest
             var day = page.Locator("#diena-" + Regex.Match(landing, @"^agenda-(\d{4}-\d{2}-\d{2})-").Groups[1].Value);
             await Assertions.Expect(day.Locator("li.tl-item")).ToHaveCountAsync(10);
             await more.ClickAsync();
-            await page.WaitForURLAsync(new Regex("diena=.*:20#agenda-"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("diena=.*:60#agenda-"), new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(page.Locator("#" + landing)).ToBeInViewportAsync(new() { Timeout = E2ESteps.Slow });
             var added = day.Locator("li.tl-item:has(.tl-ask)").Last;
             await Assertions.Expect(added).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });

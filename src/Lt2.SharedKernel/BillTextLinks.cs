@@ -24,8 +24,8 @@ public static class BillTextLinks
     /// <summary>The page's parameter naming the linked argument.</summary>
     public const string ReasonParameter = "argumentas";
 
-    /// <summary>The comments a thread shows first and adds each step (design 8.23.6: 10 and 10).</summary>
-    public const int Step = 10;
+    /// <summary>The comments a thread shows first (design 8.23.6: 10, then 20 a step, <see cref="ListPaging.TextStep"/>).</summary>
+    public const int First = 10;
 
     /// <summary>The element id of a comment on the page: its stable anchor (design 8.23.6).</summary>
     public static string CommentElement(Guid commentId) => "komentaras-" + commentId.ToString("N", CultureInfo.InvariantCulture);
@@ -47,9 +47,10 @@ public static class BillTextLinks
 
     /// <summary>
     /// How many comments a thread shows so the linked one is among them, in context (design 8.23.6): everything from the first
-    /// through the linked one, rounded up to the next step of 10, never fewer than the first 10. The 25th shows 30.
+    /// through the linked one, on the thread's own pages: the first 10, then steps of 20 (owner, 2026-11-19, 8.16.4). The 25th
+    /// shows 30, the 31st 50.
     /// </summary>
-    public static int ShownThrough(int position) => Math.Max(Step, (Math.Max(position, 1) + Step - 1) / Step * Step);
+    public static int ShownThrough(int position) => ListPaging.Through(position, First, ListPaging.TextStep);
 
     private static string Page(string billNumber) => "/seimas/" + Uri.EscapeDataString(billNumber);
 }
