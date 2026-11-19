@@ -73,6 +73,30 @@ public abstract class StaffFixture(string role, string displayName) : IAsyncLife
         return page;
     }
 
+    /// <summary>
+    /// Design 6.2: a fresh confirmation of the staff passkey in the fixture's session, as a staff screen asks for it (the
+    /// virtual authenticator gives the passkey), before an API call that needs one from the last ten minutes (an urgent
+    /// summary); the class may have been signed in longer ago than that.
+    /// </summary>
+    public async Task ConfirmFreshAsync()
+    {
+        var page = await PageAsync();
+        var answer = await page.EvaluateAsync<string[]>(
+            """
+            async () => {
+              const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
+              const headers = { 'X-XSRF-TOKEN': token, 'Content-Type': 'application/json' };
+              const options = await fetch('/api/v1/auth/passkeys/request-options', { method: 'POST', headers });
+              if (!options.ok) return [String(options.status), await options.text()];
+              const passkeys = await import('/js/passkeys.js');
+              const credential = await passkeys.get(await options.text());
+              const r = await fetch('/api/v1/me/passkey-confirmation', { method: 'POST', headers, body: JSON.stringify({ credential }) });
+              return [String(r.status), await r.text()];
+            }
+            """);
+        answer[0].ShouldBe("204", $"the {role} fixture confirms its staff passkey: {answer[1]}");
+    }
+
     public ValueTask InitializeAsync() => ValueTask.CompletedTask;
 
     public async ValueTask DisposeAsync()

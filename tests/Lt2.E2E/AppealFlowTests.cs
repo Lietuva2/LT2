@@ -509,6 +509,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         var (record, recordBody) = await E2ESteps.ApiAsync(mod, "GET", "/api/v1/bills/XVP-0412/record");
         record.ShouldBe(200, recordBody);
         var recordId = JsonDocument.Parse(recordBody).RootElement.GetProperty("id").GetString();
+        await moderator.ConfirmFreshAsync();
         var (status, body) = await E2ESteps.ApiAsync(mod, "POST", $"/api/v1/moderation/records/{recordId}/urgent", new { statement = "Demonstracinė suvestinė." });
         status.ShouldBeOneOf([201, 409], body);
         var made = status == 201 ? JsonDocument.Parse(body).RootElement.GetProperty("id").GetString() : null;
