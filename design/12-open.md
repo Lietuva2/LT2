@@ -6,7 +6,10 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 
 ## Designed, not built
 
-- 6.2: account verification by the EU Digital Identity Wallet once available in Lithuania.
+- 6.2: account confirmation by the EU Digital Identity Wallet once available in Lithuania: counts of confirmed persons
+  beside the totals (8.4, 8.12, 8.26), required for a delegate and an organisation's representative (transition period
+  for existing ones, its length for the owner to set), the mark "Patvirtintas asmuo" on a public profile, proof of age,
+  looser limits and no 30-day wait; stores only the fact, its date, age and a pairwise pseudonym.
 - 5.4: the `notify.email_message` table.
 - 6.4: rate limiting in Caddy (only the application's own limits exist).
 - 6.5: disk encryption, TLS to the database, encrypted backups (none of them in the repository).

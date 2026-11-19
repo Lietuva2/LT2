@@ -27,7 +27,13 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 - Minimum age 18, self-declared (2026-11-12).
 - Registration by email only (2026-11-12).
-- Accounts are confirmed by email now; the EU Digital Identity Wallet is added once Lithuania
+- Accounts are confirmed by email now; the EU Digital Identity Wallet is added once Lithuania has one, optional and
+  gating nothing a member does today. Its uses: counts of confirmed persons beside the totals (8.4, 8.12, 8.26), a
+  requirement for roles that act for others (a delegate, an organisation's representative, with a transition period for
+  existing representatives), the mark "Patvirtintas asmuo" on a public profile, proof of age instead of the declaration,
+  looser limits, and no 30-day wait for a confirmed person's positions. It stores only the fact, its date, the age proof
+  and a pairwise pseudonymous identifier (or its keyed hash) under a unique index; never a name, a personal code or a
+  document number (6.2, 2026-11-19).
 - An account is pending until its address is proven; the display name and the age declaration are asked after the code,
   and an invitation's use is counted then (2026-11-12).
 - A sign-in code belongs to the address and can be typed into any browser; ten codes a day per address from browsers that
