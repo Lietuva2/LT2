@@ -13,6 +13,7 @@ once the real components exist.
 | `suvestines.html` | The public copy of a summary sent to MPs: frozen numbers and reasons per bill, earlier summaries. |
 | `prisijungimas.html` | Sign-in by emailed code, with the code, error and registration states, and the step after the first code. |
 | `pradzia.html`, `pradzia-narys.html` | The front page as chosen on 2026-11-15 (design 8.7, variant A): a visitor's and a member's view. They use the site's own stylesheet (`src/Lt2.Web/wwwroot/css/lt2.css`), so open them from the repository root over HTTP; the dashed frames mark what the site fills in the browser. |
+| `pradzia-naujas-narys.html`, `metodika-kur-ka-rasti.html`, `getting-started.css` | Getting started (design 8.28, designed 2026-11-19, not built): the front page of a member who has not taken a side yet, with the dropdown of "Projektai" carrying a line per entry (`?meniu` opens it), and "Kur ką rasti" on the methodology page. On the site's own stylesheet, opened like the two above; the stylesheet beside them holds what 8.28 adds. |
 | `lt2-theme.js` | The theme switch (system, light, dark) used by every page. |
 | `fonts/` | The three font families as `woff2`, their `@font-face` rules (`fonts.css`) and licence texts. |
 | `lt2-logo-spin.js` | The turning logo, copied unchanged from the `docs` branch (`docs/lt2-logo-spin.js`). |

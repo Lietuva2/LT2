@@ -683,3 +683,21 @@ Each is built as written; "no" names what changes.
   shown); a later page of arguments or comments asked without a `limit` is one step (20); a link to one comment shows its
   discussion on the thread's own pages (10, 30, 50, …: the 25th still shows 30). One place holds the two numbers
   (`ListPaging`), not settings.
+
+**Decided by the owner on 2026-11-19: getting started (8.28); designed, not built**
+
+- No guided tour: the menu says what its pages are, the front page tells a member who has not taken a side yet how to
+  start, and the methodology page lists where everything is ("Kur ką rasti"); nothing is stored to show or hide any of
+  it (8.28.1, 8.28.2, 8.28.4).
+- The start shows its full steps on a wide screen and one line a step on a phone, the short form under 54rem (8.28.3).
+- The start does not say that a person's side is shown to nobody: "it's everywhere anyway" (8.28.3).
+- A new member's front page is titled "Sveiki prisijungę"; the served title is "Sveiki", completed in the browser
+  (8.28.3).
+- The start has a fourth step, that MPs learn of it through the summaries: "that is the whole purpose for doing
+  anything". The short step 4 leaves the trial's sentence to the note at the page's foot (8.28.3).
+- A member who withdraws the positions consent sees the start again; while the start shows and the member follows
+  nothing on the agenda, "Jūsų projektai" is left out (8.28.3).
+- A registration just completed still lands on "Profilis", "to fill it out" (8.11, 8.28.5).
+- "Profilis" is one form with one "Išsaugoti", one request to one endpoint (`PUT /me/profile`): "if anything is
+  refused, the form shows validation and stays open, unsaved". On the visit that follows the registration the button
+  reads "Išsaugoti ir tęsti" and opens the front page, which says once that the profile was saved (8.28.5).

@@ -55,6 +55,7 @@ that starts with it. Read the files a change touches, not the whole design.
 | [08.25-public-profiles.md](08.25-public-profiles.md) | Public profiles, "Apie mane", following a member, the party on the profile |
 | [08.26-analytics.md](08.26-analytics.md) | Analytics ("Statistika") |
 | [08.27-usage.md](08.27-usage.md) | Usage statistics: the team's own counting |
+| [08.28-getting-started.md](08.28-getting-started.md) | Getting started: the menu's lines, the new member's start on the front page, "Kur ką rasti", the profile's one form (designed, not built) |
 | [09-hosting.md](09-hosting.md) | Hosting and operations: layout, environments, delivery, monitoring, connections |
 | [10-quality.md](10-quality.md) | Quality |
 | [11-milestones.md](11-milestones.md) | Milestones |

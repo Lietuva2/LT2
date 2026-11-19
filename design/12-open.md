@@ -2,6 +2,24 @@
 
 What the owner decided is in [12-decisions.md](12-decisions.md). Do not decide an open item in code.
 
+**Getting started (8.28): designed on 2026-11-19, not built; the designer's points awaiting the owner**
+
+Each is designed as written; "no" names what changes.
+
+1. Step 2 of the start says that pressing the pressed side again takes it back ("Paspaudę dar kartą, atsiimsite."),
+   which is the onboarding the owner left that sentence to on 2026-11-19 (8.28.3). It is read before the first side and
+   not after: the start goes when the side is taken. If no: a hint beside "Prašau balsuoti", for everyone.
+2. The profile's three withdrawals stay requests of their own beside the one `PUT /me/profile` (`DELETE
+   /me/profile/public`, `/me/party-support`, `/me/party-support/public`), because an account that has not accepted the
+   terms may withdraw but not save (8.22.2, 8.28.5). If no: only the one endpoint, exempt from the terms when a request
+   does nothing but withdraw.
+3. A part of the profile's form that did not change is not checked, refused or audited (8.28.5): a member under a
+   writing restriction can still save a party or a box. If no: the whole form is refused under a restriction.
+4. The visit that follows the registration, and the notice "Profilis išsaugotas.", are each carried by a mark after `#`
+   in the address, not stored (8.28.5). If no: the notice is left out.
+5. The lines' and the steps' Lithuanian texts and "Išsaugoti ir tęsti", "Profilis išsaugotas." (8.28.2, 8.28.3, 8.28.5),
+   to be read by a native speaker.
+
 **Found with the stand-in's real-sized parliament (141 MPs, about 45 bills a sitting day), 2026-11-18, awaiting the owner**
 
 Nothing is built for these; the local stack and the trial show them as they are.
@@ -16,13 +34,12 @@ Nothing is built for these; the local stack and the trial show them as they are.
 2. [Decided by the owner on 2026-11-18, 12-decisions: the front page shows two voting days of five votes each, with
    links to the rest.]
 
-**Onboarding: how a side is taken back (raised by the owner on 2026-11-19, not designed)**
+**Onboarding: how a side is taken back (raised by the owner on 2026-11-19; designed in 8.28, not built)**
 
 The line "Paspaudę dar kartą, atsiimsite." under a pressed side button went on 2026-11-19 (12-decisions; 8.7, 8.12.1):
-"I think we'll add onboarding later and that will cover it". Until then only the pressed button's title and
-`aria-pressed` say that pressing it again takes the side back. Open: what the onboarding is (when it shows, to whom, how
-it is dismissed, what else it explains), and where it keeps that it was seen, since nothing non-essential is kept in the
-browser (a new cookie or storage key is a design change). Nothing is built.
+"I think we'll add onboarding later and that will cover it". The onboarding is 8.28: nothing is dismissed and nothing
+is kept to say it was seen, and its start says the sentence in step 2 (the first point above). Until 8.28 is built only
+the pressed button's title and `aria-pressed` say it.
 
 **Proposed by the designer while repeating the menu in the footer (8.21), 2026-11-19, awaiting the owner**
 
