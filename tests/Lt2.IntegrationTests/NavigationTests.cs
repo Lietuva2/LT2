@@ -76,23 +76,29 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     {
         using var visitor = NewBrowser();
 
-        // Owner, 2026-11-17: "Projektai" is a dropdown of its three tabs, a disclosure that opens without script.
+        // Owner, 2026-11-17: "Projektai" is a dropdown of its tabs, a disclosure that opens without script; 2026-11-19:
+        // "Balsavimai" is one of them again, the third.
         var agenda = HeaderOf(await visitor.Client.GetStringAsync("/darbotvarke"));
         agenda.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
         WebUtility.HtmlDecode(agenda).ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-darbotvarke\" aria-current=\"page\">Darbotvarkė</a>");
         agenda.ShouldContain("<a href=\"/projektai\" id=\"nav-tab-projektai\">Projektai</a>");
+        agenda.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\">Balsavimai</a>");
         WebUtility.HtmlDecode(agenda).ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-suvestines\">Suvestinės</a>");
+        Regex.Matches(agenda, "id=\"nav-tab-([a-z-]+)\"").Select(m => m.Groups[1].Value)
+            .ShouldBe(["darbotvarke", "projektai", "seimas-balsavimai", "suvestines"]);
         agenda.ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\">Seimo nariai</a>");
         agenda.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\">Statistika</a>");
         agenda.ShouldContain("<a href=\"/prisijungti\" id=\"nav-sign-in\">Prisijungti</a>");
-        Regex.Count(agenda, "<a ").ShouldBe(7, "the logo, the three tabs in the dropdown and three items");
+        Regex.Count(agenda, "<a ").ShouldBe(8, "the logo, the four tabs in the dropdown and three items");
         agenda.ShouldNotContain("Kaip skaičiuojama");
         agenda.ShouldNotContain("data-theme-switch", customMessage: "the theme switch is in the footer");
 
         HeaderOf(await visitor.Client.GetStringAsync("/seimas/XVP-0412"))
             .ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
-        HeaderOf(await visitor.Client.GetStringAsync("/seimas/balsavimai"))
-            .ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
+        var votes = HeaderOf(await visitor.Client.GetStringAsync("/seimas/balsavimai"));
+        votes.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
+        votes.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\" aria-current=\"page\">Balsavimai</a>");
+        Regex.Count(votes, "aria-current=\"page\"").ShouldBe(1);
         HeaderOf(await visitor.Client.GetStringAsync("/seimo-nariai"))
             .ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\" aria-current=\"page\">Seimo nariai</a>");
         var statistics = HeaderOf(await visitor.Client.GetStringAsync("/statistika"));
@@ -105,16 +111,17 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     [Theory]
     [InlineData("/darbotvarke", "tab-darbotvarke")]
     [InlineData("/projektai", "tab-projektai")]
+    [InlineData("/seimas/balsavimai", "tab-seimas-balsavimai")]
     [InlineData("/suvestines", "tab-suvestines")]
-    public async Task Each_of_the_three_pages_has_the_tab_row_with_its_own_tab_marked(string path, string tab)
+    public async Task Each_of_the_four_pages_has_the_tab_row_with_its_own_tab_marked(string path, string tab)
     {
         using var visitor = NewBrowser();
         var html = await visitor.Client.GetStringAsync(path);
 
         var row = Regex.Match(html, "<nav class=\"row tabs project-tabs\".*?</nav>", RegexOptions.Singleline);
         row.Success.ShouldBeTrue();
-        Regex.Count(row.Value, "<a ").ShouldBe(3);
-        row.Value.ShouldNotContain("/seimas/balsavimai", customMessage: "the history of votes is no tab");
+        Regex.Matches(row.Value, "href=\"([^\"]+)\"").Select(m => m.Groups[1].Value)
+            .ShouldBe(["/darbotvarke", "/projektai", "/seimas/balsavimai", "/suvestines"], "owner, 2026-11-19: Balsavimai is the third tab again");
         row.Value.ShouldNotContain("/statistika", customMessage: "the statistics page is a menu item of its own (owner, 2026-11-17)");
         Regex.Count(row.Value, "aria-current=\"page\"").ShouldBe(1);
         row.Value.ShouldContain($"id=\"{tab}\" aria-current=\"page\"");

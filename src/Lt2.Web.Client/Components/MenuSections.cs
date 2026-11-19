@@ -1,24 +1,25 @@
 namespace Lt2.Web.Client.Components;
 
 /// <summary>
-/// Design 8.21: which menu item a page belongs to, and which of the three tabs under "Projektai" it is. The menu item
-/// "Projektai" opens a dropdown with the three tabs (owner, 2026-11-17) and is current on the three pages and on everything
-/// under them (the history of votes, a bill and its history, a vote, a summary's date page, the introduction letter's public
-/// page); "Seimo nariai" on the list, a profile and its votes, a faction and a committee; "Statistika" on the statistics page
+/// Design 8.21: which menu item a page belongs to, and which of the four tabs under "Projektai" it is. The menu item
+/// "Projektai" opens a dropdown with the four tabs (owner, 2026-11-17; "Balsavimai" back as a tab, owner 2026-11-19) and is
+/// current on the four pages and on everything under them (a bill and its history, a vote, a summary's date page, the
+/// introduction letter's public page); "Seimo nariai" on the list, a profile and its votes, a faction and a committee; "Statistika" on the statistics page
 /// (design 8.26; owner, 2026-11-17: in the main menu, no longer a fourth tab). Paths are site paths with or without the
 /// leading <c>/</c>, query and fragment ignored.
 /// </summary>
 public static class MenuSections
 {
     /// <summary>
-    /// The three tabs, in their order: the address and the resource key of each. They are the dropdown of the menu item
-    /// "Projektai" and the row under the three pages' headings. The history of votes is no tab (the owner, 2026-11-16): it is
-    /// reached by the link under the agenda's voted list and leads back by a breadcrumb.
+    /// The four tabs, in their order: the address and the resource key of each. They are the dropdown of the menu item
+    /// "Projektai" and the row under the four pages' headings. The history of votes is a tab again (the owner, 2026-11-19:
+    /// the agenda grew large and the link under its voted list was too hard to reach); that link stays.
     /// </summary>
     public static readonly IReadOnlyList<(ProjectTab Tab, string Path, string Key)> Tabs =
     [
         (ProjectTab.Agenda, "/darbotvarke", "Tabs.Agenda"),
         (ProjectTab.Bills, "/projektai", "Tabs.Bills"),
+        (ProjectTab.Votes, "/seimas/balsavimai", "Tabs.Votes"),
         (ProjectTab.Digests, "/suvestines", "Tabs.Digests"),
     ];
 
@@ -31,7 +32,7 @@ public static class MenuSections
     /// <summary>The page is the statistics page.</summary>
     public static bool InStatistics(string? path) => Normalise(path) == Statistics.TrimStart('/');
 
-    /// <summary>The page is one of the three tabs, under one of them, or the history of votes.</summary>
+    /// <summary>The page is one of the four tabs or under one of them.</summary>
     public static bool InProjects(string? path)
     {
         var p = Normalise(path);
@@ -74,10 +75,11 @@ public static class MenuSections
     }
 }
 
-/// <summary>The three tabs under "Projektai" (design 8.21).</summary>
+/// <summary>The four tabs under "Projektai" (design 8.21).</summary>
 public enum ProjectTab
 {
     Agenda,
     Bills,
+    Votes,
     Digests,
 }
