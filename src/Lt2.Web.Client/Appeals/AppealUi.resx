@@ -1149,4 +1149,22 @@
   <data name="Acc.Locked.Since" xml:space="preserve"><value>Užrakinta {0}</value></data>
   <data name="Acc.Locked.Unlock" xml:space="preserve"><value>Atrakinti</value></data>
   <data name="Acc.Locked.Sentence" xml:space="preserve"><value>Atrakinta paskyra vėl gali prisijungti, viešas profilis ir sekimo laiškai grįžta. Žmogus gauna laišką su jūsų paaiškinimu.</value></data>
+  <data name="VoteMod.Now" xml:space="preserve"><value>Klasifikacija: {0}.</value></data>
+  <data name="VoteMod.ByRules" xml:space="preserve"><value>Nustatė taisyklės pagal balsavimo formuluotę.</value></data>
+  <data name="VoteMod.Corrected" xml:space="preserve"><value>Pataisė moderatorius {0}: {1}</value></data>
+  <data name="VoteMod.Rules" xml:space="preserve"><value>Taisyklių klasifikacija: {0}.</value></data>
+  <data name="VoteMod.Closing" xml:space="preserve"><value>Šiuo balsavimu uždarytas projekto kreipimasis, todėl balsavimo klasifikacijos taisyti negalima: balsavimu uždarytas kreipimasis iš naujo neatveriamas.</value></data>
+  <data name="VoteMod.Action.reclassify" xml:space="preserve"><value>Pataisyti klasifikaciją</value></data>
+  <data name="VoteMod.Action.reset" xml:space="preserve"><value>Grąžinti taisyklių klasifikaciją</value></data>
+  <data name="VoteMod.Sentence.reclassify" xml:space="preserve"><value>Nurodykite, koks tai balsavimas. Pataisyta klasifikacija rodoma visur, kur rodomas šis balsavimas, ir išlieka, kai Seimo duomenys perskaitomi iš naujo; balsavimo puslapyje parašyta, kad ją pataisė moderatoriai.</value></data>
+  <data name="VoteMod.Sentence.reset" xml:space="preserve"><value>Vėl galios taisyklių klasifikacija: {0}.</value></data>
+  <data name="VoteMod.Closes" xml:space="preserve"><value>Priėmimo stadijos balsavimas uždaro projekto kreipimąsi: tai padarys artimiausias kas valandą veikiantis darbas, ir balsavimo klasifikacijos taisyti nebebus galima.</value></data>
+  <data name="VoteMod.Kind" xml:space="preserve"><value>Koks tai balsavimas</value></data>
+  <data name="VoteMod.Kind.stage-result" xml:space="preserve"><value>Stadijos balsavimas</value></data>
+  <data name="VoteMod.Kind.amendment" xml:space="preserve"><value>Dėl pasiūlymo</value></data>
+  <data name="VoteMod.Kind.procedural" xml:space="preserve"><value>Procedūrinis balsavimas</value></data>
+  <data name="VoteMod.Kind.other" xml:space="preserve"><value>Kitas balsavimas</value></data>
+  <data name="VoteMod.Stage" xml:space="preserve"><value>Projekto stadija</value></data>
+  <data name="VoteMod.Done.reclassify" xml:space="preserve"><value>Klasifikacija pataisyta.</value></data>
+  <data name="VoteMod.Done.reset" xml:space="preserve"><value>Grąžinta taisyklių klasifikacija.</value></data>
 </root>

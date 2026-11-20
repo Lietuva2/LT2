@@ -5,6 +5,7 @@ using Lt2.Api.Contracts.Meta;
 using Lt2.Api.Contracts.Parliament;
 using Lt2.Parliament;
 using Lt2.SharedKernel;
+using Lt2.Web.Security;
 using Microsoft.Extensions.Options;
 
 namespace Lt2.Web.Services;
@@ -112,7 +113,8 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
                 v.SittingStartsAt,
                 v.AgendaItemTitle,
                 v.Factions.Select(Map).ToList(),
-                v.Ballots.Select(b => new BallotResponse(Map(b.Mp), b.FactionLabel, b.Choice)).ToList())
+                v.Ballots.Select(b => new BallotResponse(Map(b.Mp), b.FactionLabel, b.Choice)).ToList(),
+                v.ClassificationCorrected)
             : NotFound;
 
     public async Task<Result<ImportsResponse>> ImportsAsync(CancellationToken ct)
@@ -120,6 +122,10 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
         var info = await queries.ImportsAsync(ct);
         return new ImportsResponse([new ImportSourceResponse(ImportSource, info.LastSuccessAt, info.LastRunAt, info.LastRunStatus)], info.ParliamentDataInvented);
     }
+
+    /// <summary>Design 7.2: a vote's classification as the moderators see it.</summary>
+    public static VoteClassificationResponse Map(VoteClassificationState s) =>
+        new(s.VoteId, s.Kind, s.Stage, s.RulesKind, s.RulesStage, s.Corrected, s.CorrectedAt, s.Statement, s.ClosesRecord);
 
     private static string? Blank(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
 
@@ -184,6 +190,25 @@ internal sealed class ServerParliamentApi(ParliamentReads reads, ErrorMapper err
 
     public async Task<ApiResult<VoteResponse>> GetVoteAsync(long id, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.VoteAsync(id, cancellationToken), x => x);
+}
+
+/// <summary>
+/// Server-side <see cref="IVoteModerationApi"/> (design 7.2), for the vote page prerendered for a moderator: the same policy
+/// as the endpoints, applied to the current request, and the action run as that moderator.
+/// </summary>
+internal sealed class ServerVoteModerationApi(
+    IVoteClassifications classifications, Lt2.Identity.IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IVoteModerationApi
+{
+    public async Task<ApiResult<VoteClassificationResponse>> GetClassificationAsync(long voteId, CancellationToken cancellationToken = default) =>
+        await ServerStaff.IsAllowedAsync(accessor, Lt2.Web.Security.Policies.Moderator)
+            ? errors.ToApiResult(await classifications.StateAsync(voteId, cancellationToken), ParliamentReads.Map)
+            : ApiResult<VoteClassificationResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public Task<ApiResult> CorrectClassificationAsync(long voteId, VoteClassificationRequest request, CancellationToken cancellationToken = default) =>
+        ServerStaff.ActAsync(accessor, identity, ipHasher, errors, m => classifications.CorrectAsync(voteId, request.Kind, request.Stage, request.Statement, m, cancellationToken));
+
+    public Task<ApiResult> ResetClassificationAsync(long voteId, VoteClassificationResetRequest request, CancellationToken cancellationToken = default) =>
+        ServerStaff.ActAsync(accessor, identity, ipHasher, errors, m => classifications.ResetAsync(voteId, request.Statement, m, cancellationToken));
 }
 
 /// <summary>Server-side <see cref="IMetaApi"/>. A failure to read it must not take the page down with it.</summary>

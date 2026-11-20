@@ -490,15 +490,17 @@ internal sealed class ParliamentImporter(
                 db.Votes.Add(vote);
             }
 
+            // Design 7.2: a moderator's correction wins over the rules on every re-parse; the import never touches it.
             var (kind, stage) = VoteRules.Classify(v.Wording, VoteRules.Stage(item.Stage));
+            var effective = VoteClassification.Effective(new Classification(kind, stage), VoteClassification.CorrectionOf(vote.KindOverride, vote.StageOverride));
             vote.AgendaItemId = item.Id;
             vote.BillId = item.BillId;
             vote.HeldAt = v.HeldAt;
             vote.Wording = v.Wording;
             vote.Type = v.Type;
             vote.IsConsensus = v.IsConsensus;
-            vote.Kind = kind;
-            vote.Stage = stage;
+            vote.Kind = effective.Kind;
+            vote.Stage = effective.Stage;
         }
     }
 

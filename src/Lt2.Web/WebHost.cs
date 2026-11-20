@@ -95,6 +95,7 @@ internal static class WebHost
         services.AddScoped<ParliamentReads>();
         services.AddScoped<IMetaApi, ServerMetaApi>();
         services.AddScoped<IParliamentApi, ServerParliamentApi>();
+        services.AddScoped<IVoteModerationApi, ServerVoteModerationApi>();
         services.AddScoped<IAppealsApi, ServerAppealsApi>();
         services.AddScoped<IModerationApi, ServerModerationApi>();
         services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationsApi, ServerOrganisationsApi>();

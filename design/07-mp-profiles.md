@@ -60,7 +60,38 @@ stands only on the profile, orders no list and is never added up per faction or 
 - **Vote classification.** One agenda item can have many votes (amendments, procedure, the stage result). A rule set over
   the vote wording (`VoteRules.Classify`) marks each vote a stage result, an amendment, a procedural vote or "other";
   anything the rules cannot classify is "other" and shown without a stage. The rules are tested against recorded real
-  items. **Not built:** a moderator correcting a classification.
+  items.
+- **A moderator corrects a classification** (owner, 2026-11-20). A moderator or an administrator in a staff-passkey
+  session sees, on the vote's page (`/seimas/balsavimai/{id}`), a "Moderavimas" part: the classification in force
+  ("Klasifikacija: Stadijos balsavimas · Priėmimas."), and either "Nustatė taisyklės pagal balsavimo formuluotę." or
+  "Pataisė moderatorius {yyyy-MM-dd HH:mm}: {statement}" with the rules' own classification under it; never who. Nothing
+  waits on a vote, so there is no filled button (8.3): "Veiksmai" holds "Pataisyti klasifikaciją" (the kind as radios:
+  stage result, amendment, procedural, other; the stage as radios, shown only for a stage result; a required statement)
+  and, on a corrected vote, "Grąžinti taisyklių klasifikaciją" (a required statement). Only the kind and a stage result's
+  stage are corrected: an amendment takes its agenda item's stage, as the rules place one, and a procedural or other vote
+  none; the totals, the ballots and the wording are Seimas data and stay as imported. A correction to what the vote has
+  already (`vote-classification.unchanged`) or to the rules' own classification (`vote-classification.rules`: that is
+  the return) is refused, so "corrected" always differs from the rules. Each action is audited (`vote.reclassified`,
+  `vote.classification-reset`: the classification before and after and the statement, nothing about any person). The
+  moderators' queue lists no votes.
+- **The correction survives imports.** It is kept apart from the rules' result (`vote.kind_override`, `stage_override`,
+  `overridden_at`, `overridden_by`, `override_statement`). One pure function (`VoteClassification.Effective`: the
+  correction when there is one, otherwise the rules') writes the classification in force to `vote.kind` and `stage`, on
+  every parse of the proceedings and on every moderator's action; re-parsing and re-importing run the rules again and
+  never touch the correction. Every reader reads `kind` and `stage`: the vote, a bill's votes and stages, an MP's votes,
+  a faction's votes, the history of votes and its filters (8.18), the agenda's recently voted, the follow emails, the
+  bill's final vote (closing, MPs' responses) and through it the analytics (8.26).
+- **The effects follow the classification in force.** A vote corrected into the adoption-stage result is the bill's
+  final vote: the hourly job closes the bill's record at its next run (8.1 step 6). A record closed by the vote is never
+  reopened, so a vote corrected out of the adoption stage could leave a closed record without its final vote; instead,
+  the closing vote of a record (closed, or hidden after it closed) stays the adoption-stage result: a correction or a
+  return to rules that classify it otherwise is refused (`vote-classification.closing-vote`, 409, whose text says why),
+  and the moderators' part says so in place of the actions. Whether a vote closed a record is the Appeals module's answer
+  (`IClosingVotes`).
+- **Readers know.** The vote's page says "Klasifikaciją pataisė moderatoriai" beside the stage: a hint (8.15) whose
+  answer says the rules classify a vote by its wording and that the moderators corrected this one, "Plačiau" to the
+  methodology (`/metodika#stadijos`, which says moderators correct a wrong classification and that the correction
+  survives re-reading the data). Never who or why. The API's vote answer carries `classificationCorrected`.
 - Data quirks are first-class: consensus votes are stored with `is_consensus` and no ballots; the official "per-MP votes
   do not match the protocol" note is stored and shown next to the result.
 - A run the service fails is marked failed and logged as an error for the alerting (9.4); the next period retries, and
@@ -110,6 +141,9 @@ GET /api/v1/votes?q=&kind=&until=&limit=&cursor=   the history of votes, newest 
 GET /api/v1/votes/{id}                      totals, wording, notes, faction positions, every ballot
 GET /api/v1/meta/imports                    last successful import per source
 ```
+
+A moderator's (7.2): `GET`, `PUT` (kind, stage, statement) and `DELETE` (statement)
+`/api/v1/moderation/votes/{id}/classification`, never cached.
 
 ## 7.5 Done when
 

@@ -710,9 +710,27 @@ namespace Lt2.Parliament.Infrastructure.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("kind");
 
+                    b.Property<string>("KindOverride")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind_override");
+
                     b.Property<string>("OfficialNote")
                         .HasColumnType("text")
                         .HasColumnName("official_note");
+
+                    b.Property<DateTimeOffset?>("OverriddenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("overridden_at");
+
+                    b.Property<Guid?>("OverriddenBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("overridden_by");
+
+                    b.Property<string>("OverrideStatement")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("override_statement");
 
                     b.Property<int?>("Seats")
                         .HasColumnType("integer")
@@ -722,6 +740,11 @@ namespace Lt2.Parliament.Infrastructure.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("stage");
+
+                    b.Property<string>("StageOverride")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("stage_override");
 
                     b.Property<string>("Type")
                         .HasColumnType("text")

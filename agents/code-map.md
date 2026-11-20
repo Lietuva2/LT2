@@ -56,7 +56,8 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and
                            both copies imports Lt2.Api.Contracts/CodeAliases.props); no clock of its own (TimeProvider
                            is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
-                           import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
+                           import, statistics, a moderator's correction of a vote's classification: Domain/VoteClassification,
+                           Application/VoteCorrections, design 7.2); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
                            by moderators, the AI draft in Ai/ with its public prompt file, the AI summary job
                            (Application/DescriptionSummaries.cs), the "unavailable" IBillTextSource, and organisations
@@ -72,6 +73,7 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            DigestOrganisationRules, design 8.14.4),
                            IOrganisationDirectory, IOrganisationCodeSwitch, IMpLinks, IMpResponseFeed,
                            IRecordClosureFeed (moderators' closes of rejected or withdrawn bills, for the follow emails),
+                           IClosingVotes (whether a vote closed a bill's record, for correcting its classification),
                            IWritingRestrictions, IStaffAddresses). The host
                            composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
                            Identity also owns MPs' links (Application/Politicians: politician_link, politician_token,

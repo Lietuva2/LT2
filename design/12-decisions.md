@@ -76,6 +76,14 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   votes); the scheduled job triggered when not due says so in the log and on its dashboard page (7.2, 2026-11-18).
 - A bill's number and title are one link in an MP's list of bills and in the follow list, as on a member's page
   (2026-11-17).
+- A moderator corrects a vote's classification (7.2, 2026-11-20: "build it"). The designer's choices as built: a moderator
+  or an administrator in a staff-passkey session, on the vote's page under "Moderavimas", with a required statement,
+  audited (`vote.reclassified`, `vote.classification-reset`), undone by "Grąžinti taisyklių klasifikaciją"; only the kind
+  and a stage result's stage are corrected (the existing codes), never the totals, ballots or wording; the correction is
+  kept apart from the rules' result and wins on every read and every re-parse; a vote corrected into the adoption stage
+  closes the record at the closing job's next run, and a record's closing vote is never corrected out of it (refused,
+  `vote-classification.closing-vote`), since a record closed by the vote is never reopened; the vote's page says
+  "Klasifikaciją pataisė moderatoriai" beside the stage, never who; nothing enters the moderators' queue.
 
 ## 8.1 Life of an appeal
 

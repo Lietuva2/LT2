@@ -12,6 +12,10 @@ Read before touching the Parliament module's client or import. The design is [07
   often.
 - The service is slow at times and drops connections: retry, and never let an outage take the site down.
 - Confirm any field you have not seen in a live response before relying on it.
+- A vote's `kind` and `stage` are the classification in force: `VoteClassification.Effective` of the rules'
+  (`VoteRules.Classify`) and a moderator's correction (`kind_override`, `stage_override`, design 7.2). The import writes
+  them through it on every parse and never touches the correction columns; anything new that classifies votes goes
+  through it too, and readers read `kind`/`stage` only.
 - The import (`ParliamentImporter.WalkAsync`) walks the chain once per run; each request has its own freshness rule
   (terms, MPs and sessions daily; open sessions' sittings every run; agendas, proceedings and results of sittings within
   `Seimas:RefetchDays`; a missing result on `ImportSchedule.IsMissingResultDue`). `RunAsync(ImportParts force, …)`:

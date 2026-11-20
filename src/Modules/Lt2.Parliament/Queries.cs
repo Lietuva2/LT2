@@ -72,7 +72,10 @@ public sealed record BillDetail(string Number, string Title, string? ESeimasUrl,
 
 public sealed record BallotInfo(MpRef Mp, string? FactionLabel, string Choice);
 
-public sealed record VoteDetail(VoteSummary Summary, DateTimeOffset SittingStartsAt, string AgendaItemTitle, IReadOnlyList<FactionSplit> Factions, IReadOnlyList<BallotInfo> Ballots);
+/// <param name="ClassificationCorrected">A moderator corrected the vote's kind or stage (design 7.2); the page says so, never who.</param>
+public sealed record VoteDetail(
+    VoteSummary Summary, DateTimeOffset SittingStartsAt, string AgendaItemTitle, IReadOnlyList<FactionSplit> Factions, IReadOnlyList<BallotInfo> Ballots,
+    bool ClassificationCorrected = false);
 
 /// <summary>Which votes the history lists (design 8.18).</summary>
 public enum VoteHistoryKind

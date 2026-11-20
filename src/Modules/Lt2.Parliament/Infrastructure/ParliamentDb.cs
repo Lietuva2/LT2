@@ -140,6 +140,9 @@ internal sealed class ParliamentDb(DbContextOptions<ParliamentDb> options) : DbC
             e.Property(x => x.Id).ValueGeneratedNever();
             e.Property(x => x.Kind).HasConversion<string>().HasMaxLength(16);
             e.Property(x => x.Stage).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.KindOverride).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.StageOverride).HasConversion<string>().HasMaxLength(16);
+            e.Property(x => x.OverrideStatement).HasMaxLength(StaffStatements.MaxLength);
             e.HasOne<AgendaItem>().WithMany().HasForeignKey(x => x.AgendaItemId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<Bill>().WithMany().HasForeignKey(x => x.BillId).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(x => x.HeldAt);

@@ -169,6 +169,45 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         (await database.ScalarAsync<long>("SELECT count(*) FROM parliament.fetch_state WHERE parser_version <> " + global::Lt2.Parliament.Import.ParliamentImporter.ParserVersion)).ShouldBe(0);
     }
 
+    /// <summary>
+    /// Design 7.2: a moderator's correction of a vote's classification is kept apart from the rules' result and wins over it
+    /// on every re-parse and every re-import: the import writes the effective classification and never touches the correction.
+    /// </summary>
+    [Fact]
+    public async Task A_moderators_correction_of_a_votes_classification_survives_a_re_parse_and_a_full_re_import()
+    {
+        await using var import = new ImportHarness(database);
+        await import.RunAsync();
+        const string Vote = "SELECT kind, stage, coalesce(kind_override, '-'), coalesce(stage_override, '-'), coalesce(override_statement, '-') FROM parliament.vote WHERE id = 99100005";
+        (await database.RowsAsync(Vote)).ShouldBe(["Amendment | Consideration | - | - | -"], "the rules' classification");
+
+        // As the moderators' action stores it: the correction in its own columns, the effective classification in kind and stage.
+        await database.ScalarAsync<int>(
+            "WITH u AS (UPDATE parliament.vote SET kind_override = 'StageResult', stage_override = 'Adoption', overridden_at = now(), override_statement = 'Bandymas.', " +
+            "kind = 'StageResult', stage = 'Adoption' WHERE id = 99100005 RETURNING 1) SELECT count(*)::int FROM u");
+        var corrected = await database.SnapshotAsync();
+
+        // Re-parsed from storage by a newer parser: the rules run again over the wording, and the correction still wins.
+        await database.ScalarAsync<int>("WITH u AS (UPDATE parliament.fetch_state SET parser_version = 0 RETURNING 1) SELECT count(*)::int FROM u");
+        var reparsed = await import.RunAsync();
+        reparsed.Status.ShouldBe("succeeded");
+        reparsed.Changes.ShouldBe(0, "the import does not write the rules' result over the correction, not even for a moment");
+        (await database.RowsAsync(Vote)).ShouldBe(["StageResult | Adoption | StageResult | Adoption | Bandymas."]);
+
+        // Every response fetched again (an administrator's full re-read): the same.
+        import.Clock.Advance(TimeSpan.FromDays(2));
+        (await import.RunAsync(ImportParts.All)).Status.ShouldBe("succeeded");
+        (await database.RowsAsync(Vote)).ShouldBe(["StageResult | Adoption | StageResult | Adoption | Bandymas."]);
+        (await database.SnapshotAsync()).ShouldBe(corrected);
+
+        // Without the correction the next re-parse writes the rules' classification again.
+        await database.ScalarAsync<int>(
+            "WITH u AS (UPDATE parliament.vote SET kind_override = NULL, stage_override = NULL, overridden_at = NULL, override_statement = NULL WHERE id = 99100005 RETURNING 1) SELECT count(*)::int FROM u");
+        await database.ScalarAsync<int>("WITH u AS (UPDATE parliament.fetch_state SET parser_version = 0 RETURNING 1) SELECT count(*)::int FROM u");
+        await import.RunAsync();
+        (await database.RowsAsync(Vote)).ShouldBe(["Amendment | Consideration | - | - | -"]);
+    }
+
     [Fact]
     public async Task A_run_cut_off_with_its_process_is_marked_failed_by_the_next_run()
     {

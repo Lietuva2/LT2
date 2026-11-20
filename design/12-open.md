@@ -15,7 +15,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 - 6.5: disk encryption, TLS to the database, encrypted backups (none of them in the repository).
 - 6.7: secret scanning (a repository setting for the owner), image scanning, an SBOM, signed images pulled by digest, a
   penetration test. Lock files, Dependabot, CodeQL and `security.txt` are built.
-- 7.2: a moderator correcting a vote's classification.
 - 7.3: "appeals in progress" on an MP's profile (the profile shows only the MP's responses); the line was taken out of
   7.3, so whether it stays designed is for the owner.
 - 8.1, 8.6, 8.20.1: telling participants and followers that a bill changed between stages (for example in a committee).
@@ -247,6 +246,12 @@ for the lawyer).
 
 ## Awaiting a native speaker
 
+- 7.2: a moderator's correction of a vote's classification: the public hint "Klasifikaciją pataisė moderatoriai" and its
+  answer, the methodology's paragraph (`ParliamentText` `Vote.Corrected`, `Vote.Corrected.Answer`,
+  `Method.Classification.2`); the moderators' part on the vote's page (`AppealUi` `VoteMod.*`: "Klasifikacija: {0}.",
+  "Nustatė taisyklės pagal balsavimo formuluotę.", "Pataisė moderatorius {0}: {1}", "Pataisyti klasifikaciją",
+  "Grąžinti taisyklių klasifikaciją", the form's sentences and labels, the confirmations); the refusals
+  (`ProblemText` `vote.not-found`, `vote-classification.*`; `ValidationMessages` `VoteClassification.*`).
 - 8.14.4: the organisations' line under a bill in a summary, "Organizacijos, prašančios balsuoti už: A, B.", "Organizacijos,
   prašančios balsuoti prieš: …", "Pastabų atsiuntė: …" (`EmailTemplates` and `AppealUi` `Digest.Organisations.*`); the
   methodology's row "Organizacijos" and its value and the rewritten sentences on statements and impersonation

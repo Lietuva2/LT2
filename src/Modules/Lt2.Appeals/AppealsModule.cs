@@ -65,6 +65,9 @@ public static class AppealsModule
         services.AddScoped<IMpResponseFeed, MpResponseFeed>();
         services.AddScoped<IRecordClosureFeed, RecordClosureFeed>();
 
+        // Design 7.2: the Parliament module refuses correcting a record's closing vote out of the adoption stage.
+        services.AddScoped<IClosingVotes, ClosingVotes>();
+
         // Design 8.25: a member's published arguments, for their public page and the follow emails about them.
         services.AddScoped<IMemberTexts, MemberTexts>();
 

@@ -60,6 +60,25 @@ internal static class Codes
         BodyKinds.Committee => BodyKind.Committee,
         _ => null,
     };
+
+    /// <summary>A vote's kind from its API code (a moderator's correction, design 7.2); null for an unknown code.</summary>
+    public static VoteKind? VoteKindOf(string? kind) => kind switch
+    {
+        VoteKinds.StageResult => VoteKind.StageResult,
+        VoteKinds.Amendment => VoteKind.Amendment,
+        VoteKinds.Procedural => VoteKind.Procedural,
+        VoteKinds.Other => VoteKind.Other,
+        _ => null,
+    };
+
+    /// <summary>A bill's stage from its API code; null for none or an unknown code.</summary>
+    public static BillStage? StageOf(string? stage) => stage switch
+    {
+        BillStages.Presentation => BillStage.Presentation,
+        BillStages.Consideration => BillStage.Consideration,
+        BillStages.Adoption => BillStage.Adoption,
+        _ => null,
+    };
 }
 
 internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts, IParliamentDataNotice notice, IMemoryCache cache, TimeProvider clock) : IParliamentQueries
@@ -283,7 +302,7 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
             .Select(x => new BallotInfo(new MpRef(x.p.Slug, x.p.FirstName, x.p.LastName), x.b.FactionLabel, Codes.Of(x.b.Choice)))
             .OrderBy(x => x.Mp.LastName, ByLithuanian).ThenBy(x => x.Mp.FirstName, ByLithuanian)
             .ToList();
-        return new VoteDetail(Summary(row.v, bills), row.StartsAt, row.Title, factions, ballots);
+        return new VoteDetail(Summary(row.v, bills), row.StartsAt, row.Title, factions, ballots, row.v.KindOverride is not null);
     }
 
     public async Task<VoteHistoryPage> VoteHistoryAsync(VoteHistoryFilter filter, CancellationToken cancellationToken)
