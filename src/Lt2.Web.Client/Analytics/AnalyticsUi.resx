@@ -20,4 +20,6 @@
   <data name="Mine.Former" xml:space="preserve"><value>mandatas baigėsi</value></data>
   <data name="Mine.SmallSample" xml:space="preserve"><value>maža imtis</value></data>
   <data name="Mine.Failed" xml:space="preserve"><value>Palyginimo įkelti nepavyko. Bandykite dar kartą vėliau.</value></data>
+  <data name="Error.Generic" xml:space="preserve"><value>Nepavyko. Bandykite dar kartą.</value></data>
+  <data name="Error.Network" xml:space="preserve"><value>Nepavyko susisiekti su serveriu. Patikrinkite ryšį ir bandykite dar kartą.</value></data>
 </root>

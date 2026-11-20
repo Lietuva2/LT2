@@ -108,7 +108,8 @@ measurements, timing) is deleted, not patched again.
 - Rules are checked where the data is written (a module service, for every caller), not only by HTTP validators.
   Limits that count rows are counted under a PostgreSQL advisory lock in the same transaction.
 - Every email goes through `EmailLayout` and one `EmailRenderer<T>` per outbox kind (details: `agents/features.md`).
-- User-facing text goes through `IStringLocalizer`. User input is plain text, encoded on output; a typed text is shown
+- User-facing text goes through `IStringLocalizer`, with literal keys (`T["Key"]`, not generated constants);
+  `ResourceKeyTests` fails when a literal key is not in its `.resx`. User input is plain text, encoded on output; a typed text is shown
   through `TypedText`/`LongText` as paragraphs and lists (design 8.2, "A text's layout"), never Markdown; a new writing
   box for one carries `<TextLayoutHint>`.
 - A new table goes on `DatabaseRoles.ReadableTables` or `WithheldTables` in the same change.
