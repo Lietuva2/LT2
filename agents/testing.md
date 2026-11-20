@@ -84,6 +84,10 @@ Read before writing or changing a test. The commands are in [AGENTS.md](../AGENT
   events the test placed in that week.
 - **Waits:** no fixed sleeps. In end-to-end tests a step after a navigation or a sign-in waits up to `E2ESteps.Slow`
   (60 s); Playwright's default of 5 s failed when an integration run shared the machine.
+- **Resource keys:** `ResourceKeyTests` (unit) reads `src` and fails when a literal key given to a localizer (`T["Key"]`,
+  `T.Format("Key", …)`, `cond ? "A" : "B"`) is not in the `.resx` of its marker class, or when a key-like literal goes to
+  something it cannot tie to a resource file (teach it the construct); keys built at runtime are not checked. A key whose
+  copy is not written yet goes on its `CopyMissing` list with the date it was reported, never as invented Lithuanian.
 
 ## Looking at every email
 
