@@ -47,6 +47,7 @@
       const administrator = staff.includes("administrator");
       show(details, "terms", me.termsRequired === true);
       show(details, "moderation", administrator || staff.includes("moderator"));
+      show(details, "feedback", administrator || staff.includes("moderator"));
       show(details, "settings", administrator);
       show(details, "invitations", administrator);
       show(details, "accounts", administrator);

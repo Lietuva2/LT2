@@ -295,6 +295,7 @@ public sealed class MenuTests : E2ETest
         await Assertions.Expect(item).ToHaveAttributeAsync("open", "");
         await Assertions.Expect(page.Locator("[data-account-name]")).ToHaveTextAsync(Name);
         await Assertions.Expect(page.Locator("[data-account-link=moderation]")).ToBeHiddenAsync();
+        await Assertions.Expect(page.Locator("[data-account-link=feedback]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-link=mp]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-link=terms]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-link=staff-key]")).ToBeHiddenAsync();

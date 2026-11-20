@@ -76,6 +76,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         // The administrators' screens, the Hangfire dashboard among them (design 3, 6.3), hidden until the browser has read
         // what the account may open; the dashboard is no Blazor page, so its link is a full page load.
         headers[0].ShouldContain("<li data-account-link=\"usage\" hidden>");
+        headers[0].ShouldContain("<li data-account-link=\"feedback\" hidden><a href=\"/moderavimas/atsiliepimai\">Atsiliepimai</a></li>");
         headers[0].ShouldContain("<li data-account-link=\"jobs\" hidden><a href=\"/administravimas/darbai\" data-enhance-nav=\"false\">Foniniai darbai</a></li>");
         headers[1].ShouldBe(headers[0]);
         headers[2].ShouldBe(headers[0], "a moderator's header names no staff screen of its own: the links are filled in the browser");
