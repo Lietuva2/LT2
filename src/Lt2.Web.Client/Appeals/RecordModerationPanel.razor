@@ -15,14 +15,14 @@
    browser; for anyone else the server refuses it and nothing renders. After an action the panel reads its answer again,
    tells the page's other islands, and the server's part of the page is read again in place (no reload), so it all shows
    the result. *@
-@if (State is { Status: "open" or "closed" } state)
+@if (State is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed } state)
 {
     <section class="sheet stack stack--tight" aria-labelledby="moderation-panel-title" id="moderation-panel">
         <h3 id="moderation-panel-title">@L["ModPanel.Title"]</h3>
         <p class="small">@L["ModPanel.Lead"] <a href="/moderavimas">@L["ModPanel.Queue"]</a></p>
         @* The open reports about the description, as the queue shows them, beside its actions (decided 2026-11-14). *@
         <Reports Items="state.DescriptionReports" Description="true" Id="panel-description-reports" />
-        <ModerationActions Id="state.Id" Number="@state.Number" Kind="record" Status="@state.Status" Held="state.Held" Threshold="state.Threshold" Planned="state.Planned"
+        <ModerationActions Id="state.Id" Number="@state.Number" Kind="@ReportTargets.Record" Status="@state.Status" Held="state.Held" Threshold="state.Threshold" Planned="state.Planned"
                            Description="@state.Description" DescriptionSource="@state.DescriptionSource" DescriptionUrl="@state.DescriptionUrl" ESeimasUrl="@ESeimasUrl"
                            HasOpenItems="state.HasOpenItems" ClosedReason="@state.ClosedReason" IdPrefix="panel-" OnDone="Reload" />
 
@@ -135,5 +135,5 @@
     }
 
     /// <summary>Waits for a moderator, carries a pre-screening flag, or has an open report.</summary>
-    private static bool NeedsLook(QueueReasonResponse reason) => reason.Status == "pending" || reason.Flags.Count > 0 || reason.Reports.Count > 0;
+    private static bool NeedsLook(QueueReasonResponse reason) => reason.Status == ReasonStatuses.Pending || reason.Flags.Count > 0 || reason.Reports.Count > 0;
 }

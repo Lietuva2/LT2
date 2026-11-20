@@ -63,25 +63,25 @@ internal sealed class ReportNotices(IParticipants participants, IOutbox outbox, 
     {
         switch (kind)
         {
-            case "reason":
+            case ReportTargets.Reason:
                 var reason = await (from r in db.Reasons.AsNoTracking()
                                     join a in db.BillRecords.AsNoTracking() on r.RecordId equals a.Id
                                     where r.Id == id
                                     select a.BillNumber).FirstOrDefaultAsync(ct);
                 return (reason, null, reason is null ? null : BillTextLinks.ToReason(reason, id));
-            case "comment":
+            case ReportTargets.Comment:
                 var comment = await db.Comments.AsNoTracking().Where(c => c.Id == id).Select(c => c.BillNumber).FirstOrDefaultAsync(ct);
                 return (comment, null, comment is null ? null : BillTextLinks.ToComment(comment, id));
-            case "statement":
+            case ReportTargets.Statement:
                 var statement = await db.OrganisationStatements.AsNoTracking().Where(s => s.Id == id).Select(s => s.BillNumber).FirstOrDefaultAsync(ct);
                 return (statement, null, statement is null ? null : BillPath(statement));
-            case "response":
+            case ReportTargets.Response:
                 var response = await db.MpResponses.AsNoTracking().Where(r => r.Id == id).Select(r => r.BillNumber).FirstOrDefaultAsync(ct);
                 return (response, null, response is null ? null : BillPath(response));
-            case "record":
+            case ReportTargets.Record:
                 var record = await db.BillRecords.AsNoTracking().Where(r => r.Id == id).Select(r => r.BillNumber).FirstOrDefaultAsync(ct);
                 return (record, null, record is null ? null : BillPath(record));
-            case "organisation":
+            case ReportTargets.Organisation:
                 var organisation = await db.Organisations.AsNoTracking().Where(o => o.Id == id).Select(o => new { o.Name, o.Slug }).FirstOrDefaultAsync(ct);
                 return (null, organisation?.Name, organisation is null ? null : "/o/" + Uri.EscapeDataString(organisation.Slug));
             default:

@@ -148,7 +148,7 @@ internal sealed class FollowService(
     {
         // Only an active organisation can be followed: a blocked or closed one publishes nothing (design 8.14.14).
         var organisation = await organisations.FindAsync(slug, cancellationToken);
-        return organisation is not { Status: OrganisationStatus.Active }
+        return organisation is not { Status: OrganisationStatuses.Active }
             ? Error.NotFound("organisation.not-found")
             : await AddAsync(userId, FollowKinds.Organisation, FollowRules.IdKey(organisation.Id), cancellationToken);
     }

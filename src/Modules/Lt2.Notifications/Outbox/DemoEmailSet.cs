@@ -102,17 +102,17 @@ internal static class DemoEmailSet
 
         (string Name, string Target, string Outcome, string? Bill, string? Title, string? Name2, string? Path, string? Statement)[] reports =
         [
-            ("kept-reason", "reason", ReportOutcomes.Kept, Bill, BillTitle, null, BillPath, "Argumentas atitinka taisykles."),
-            ("hidden-comment", "comment", ReportOutcomes.Hidden, Bill, BillTitle, null, null, Statement),
-            ("blocked-organisation", "organisation", ReportOutcomes.Blocked, null, null, Organisation, null, OrganisationStatement),
-            ("unconfirmed-organisation", "organisation", ReportOutcomes.Unconfirmed, null, null, Organisation, OrganisationPath, null),
-            ("merged-reason", "reason", ReportOutcomes.Merged, Bill, BillTitle, null, null, null),
-            ("corrected-record", "record", ReportOutcomes.Corrected, Bill, BillTitle, null, BillPath, "Aprašymas patikslintas pagal oficialų tekstą."),
-            ("removed-record", "record", ReportOutcomes.Removed, Bill, BillTitle, null, null, "Aprašyme buvo asmeninė nuomonė, o ne projekto turinys."),
-            ("withdrawn-statement", "statement", ReportOutcomes.Withdrawn, Bill, BillTitle, null, null, null),
-            ("gone-comment", "comment", ReportOutcomes.Gone, Bill, BillTitle, null, null, null),
-            ("hidden-profile", "profile", ReportOutcomes.Hidden, null, null, "Rūta Mockutė", null, "Tekste buvo asmens kontaktai, kuriuos skelbti negalima."),
-            ("kept-response", "response", ReportOutcomes.Kept, Bill, BillTitle, null, BillPath, null),
+            ("kept-reason", ReportTargets.Reason, ReportOutcomes.Kept, Bill, BillTitle, null, BillPath, "Argumentas atitinka taisykles."),
+            ("hidden-comment", ReportTargets.Comment, ReportOutcomes.Hidden, Bill, BillTitle, null, null, Statement),
+            ("blocked-organisation", ReportTargets.Organisation, ReportOutcomes.Blocked, null, null, Organisation, null, OrganisationStatement),
+            ("unconfirmed-organisation", ReportTargets.Organisation, ReportOutcomes.Unconfirmed, null, null, Organisation, OrganisationPath, null),
+            ("merged-reason", ReportTargets.Reason, ReportOutcomes.Merged, Bill, BillTitle, null, null, null),
+            ("corrected-record", ReportTargets.Record, ReportOutcomes.Corrected, Bill, BillTitle, null, BillPath, "Aprašymas patikslintas pagal oficialų tekstą."),
+            ("removed-record", ReportTargets.Record, ReportOutcomes.Removed, Bill, BillTitle, null, null, "Aprašyme buvo asmeninė nuomonė, o ne projekto turinys."),
+            ("withdrawn-statement", ReportTargets.Statement, ReportOutcomes.Withdrawn, Bill, BillTitle, null, null, null),
+            ("gone-comment", ReportTargets.Comment, ReportOutcomes.Gone, Bill, BillTitle, null, null, null),
+            ("hidden-profile", ReportTargets.Profile, ReportOutcomes.Hidden, null, null, "Rūta Mockutė", null, "Tekste buvo asmens kontaktai, kuriuos skelbti negalima."),
+            ("kept-response", ReportTargets.Response, ReportOutcomes.Kept, Bill, BillTitle, null, BillPath, null),
         ];
         foreach (var r in reports)
         {
@@ -219,22 +219,22 @@ internal static class DemoEmailSet
         const string to = "";
         var account = AccountScreens.EmailRhythm;
         var voted = new FollowVotedEmail(
-            to, Bill, BillTitle, "consideration", today.AddDays(-1), false, 71, 48, 9, "Pritarta po svarstymo.", "/seimas/" + Bill + "/balsavimas",
-            [new FollowedMpChoice(Mp, "against"), new FollowedMpChoice(OfficialMp, "for"), new FollowedMpChoice("Rūta Mockutė", null)], account, Token);
-        var statement = new FollowStatementEmail(to, Organisation, "domain", "pavyzdys.test", Bill, BillTitle, "remarks", BillPath, account, today, Token);
+            to, Bill, BillTitle, BillStages.Consideration, today.AddDays(-1), false, 71, 48, 9, "Pritarta po svarstymo.", "/seimas/" + Bill + "/balsavimas",
+            [new FollowedMpChoice(Mp, BallotChoices.Against), new FollowedMpChoice(OfficialMp, BallotChoices.For), new FollowedMpChoice("Rūta Mockutė", null)], account, Token);
+        var statement = new FollowStatementEmail(to, Organisation, "domain", "pavyzdys.test", Bill, BillTitle, StatementStances.Remarks, BillPath, account, today, Token);
         var argumentId = Guid.Parse("0193a1b2-0000-7000-8000-0000000000bb");
-        var closed = new FollowClosedEmail(to, OtherBill, OtherBillTitle, "rejected", today.AddDays(-2), "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys", OtherBillPath, account, Token);
+        var closed = new FollowClosedEmail(to, OtherBill, OtherBillTitle, ClosingReasons.Rejected, today.AddDays(-2), "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys", OtherBillPath, account, Token);
         return new FollowSet(
-            new FollowPlannedEmail(to, Bill, BillTitle, "adoption", today.AddDays(3), BillPath, account, Token),
+            new FollowPlannedEmail(to, Bill, BillTitle, BillStages.Adoption, today.AddDays(3), BillPath, account, Token),
             voted,
             voted with { IsConsensus = true, For = null, Against = null, Abstain = null, OfficialNote = null, Mps = [] },
             closed,
-            closed with { Reason = "withdrawn" },
+            closed with { Reason = ClosingReasons.Withdrawn },
             statement,
-            statement with { ConfirmedBy = null, ConfirmedDomain = null, Stance = "for" },
+            statement with { ConfirmedBy = null, ConfirmedDomain = null, Stance = StatementStances.For },
             new FollowResponsesEmail(
                 to, Bill, BillTitle, today.AddDays(-1),
-                [new FollowedResponse(Mp, "Reformų partija", "against"), new FollowedResponse(OfficialMp, "Pilietinė sąjunga", "for"), new FollowedResponse("Rūta Mockutė", null, "undecided")],
+                [new FollowedResponse(Mp, "Reformų partija", ResponseStances.Against), new FollowedResponse(OfficialMp, "Pilietinė sąjunga", ResponseStances.For), new FollowedResponse("Rūta Mockutė", null, ResponseStances.Undecided)],
                 BillPath, account, Token),
             new FollowMemberEmail(to, "Rūta Mockutė", Bill, BillTitle, BillTextLinks.ToReason(Bill, argumentId), "/nariai/ruta-mockute", account, MemberTextKinds.Argument, today, Token),
             new FollowMemberEmail(to, "Rūta Mockutė", Bill, BillTitle, BillTextLinks.ToComment(Bill, argumentId), "/nariai/ruta-mockute", account, MemberTextKinds.Comment, today, Token),
@@ -253,17 +253,17 @@ internal static class DemoEmailSet
         var monday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
         var runId = Guid.Parse("0193a1b2-0000-7000-8000-0000000000aa");
         var longReason = string.Concat(Enumerable.Repeat("Pajamų mokestis turi būti teisingas visiems dirbantiems ir nepriklausyti nuo to, kur žmogus gyvena. ", 5)).Trim();
-        var response = new MpStance(99000006, OtherBill, "against", now.AddDays(-2));
+        var response = new MpStance(99000006, OtherBill, ResponseStances.Against, now.AddDays(-2));
 
         MpDigestBill First() => new(
-            new DigestItemInfo(Bill, BillTitle, "adoption", monday.AddDays(3), 6800, 6150, 4280, 3900, null, null,
-                [new DigestReason("for", "Gynyba finansuojama nekeliant PVM.", 1310), new DigestReason("for", longReason, 880), new DigestReason("against", "Skatina keisti rezidavimo vietą.", 970)],
+            new DigestItemInfo(Bill, BillTitle, BillStages.Adoption, monday.AddDays(3), 6800, 6150, 4280, 3900, null, null,
+                [new DigestReason(Sides.For, "Gynyba finansuojama nekeliant PVM.", 1310), new DigestReason(Sides.For, longReason, 880), new DigestReason(Sides.Against, "Skatina keisti rezidavimo vietą.", 970)],
                 ForReasonCount: 14, AgainstReasonCount: 9),
             new DeliveryParty(Bill, "Reformų partija", 410, 520),
             null);
         MpDigestBill Second() => new(
-            new DigestItemInfo(OtherBill, OtherBillTitle, "consideration", null, 2210, 0, 640, 0, 38, 24,
-                [new DigestReason("for", "Mažina žalą sveikatai.", 540), new DigestReason("for", "Dažniau tikrinami pardavėjai.", 120)],
+            new DigestItemInfo(OtherBill, OtherBillTitle, BillStages.Consideration, null, 2210, 0, 640, 0, 38, 24,
+                [new DigestReason(Sides.For, "Mažina žalą sveikatai.", 540), new DigestReason(Sides.For, "Dažniau tikrinami pardavėjai.", 120)],
                 ForReasonCount: 2, AgainstReasonCount: 0),
             null,
             response);

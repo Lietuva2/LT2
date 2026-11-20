@@ -1,3 +1,4 @@
+using Lt2.SharedKernel;
 using Microsoft.AspNetCore.Identity;
 
 namespace Lt2.Identity.Domain;
@@ -227,7 +228,7 @@ internal sealed class FeedbackItem
     public string? Browser { get; set; }
 
     /// <summary><c>new</c>, <c>seen</c> or <c>done</c>.</summary>
-    public string Status { get; set; } = "new";
+    public string Status { get; set; } = FeedbackStatuses.New;
 
     /// <summary>The team's internal note, for example the address of a GitHub issue.</summary>
     public string? Note { get; set; }
@@ -467,15 +468,6 @@ internal sealed class PoliticianLink
 
     /// <summary><c>given-up</c>, <c>left</c>, <c>removed</c>, <c>administrator</c>, <c>mp-ended</c> or <c>account-deleted</c>.</summary>
     public string? EndReason { get; set; }
-}
-
-internal static class PoliticianParts
-{
-    /// <summary>The MP's own account (design 8.5.2): one per person.</summary>
-    public const string Mp = "mp";
-
-    /// <summary>An office member (design 8.5.3): at most five per MP.</summary>
-    public const string Office = "office";
 }
 
 /// <summary>

@@ -42,7 +42,7 @@
                     <ul class="rows">
                         @foreach (var r in p.Reports)
                         {
-                            <li><div class="rows__main"><span class="small num">@Display.DayTime(r.CreatedAt) · @L[r.Ground == "impersonation" ? "Report.Ground.person-impersonation" : "Report.Ground." + r.Ground]</span>@if (r.Text is { } t) {<span class="small">@t</span>}</div></li>
+                            <li><div class="rows__main"><span class="small num">@Display.DayTime(r.CreatedAt) · @L[r.Ground == ReportGrounds.Impersonation ? "Report.Ground.person-impersonation" : "Report.Ground." + r.Ground]</span>@if (r.Text is { } t) {<span class="small">@t</span>}</div></li>
                         }
                     </ul>
                 }

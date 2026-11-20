@@ -1,5 +1,6 @@
 using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Me;
+using Lt2.Api.Contracts.Mps;
 using Lt2.Web.Client.Components;
 
 namespace Lt2.Web.Client.Agenda;
@@ -185,7 +186,7 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, MyAcco
         {
             // Nothing on the agenda to ask about: the consent and the MP's own account come from the account's own GET /me.
             return await account.MeAsync() is { } me
-                ? new MyAgendaAnswer(new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase), me.HasPositionConsent, me.Mp is { Part: "mp" })
+                ? new MyAgendaAnswer(new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase), me.HasPositionConsent, me.Mp is { Part: PoliticianParts.Mp })
                 : null;
         }
 

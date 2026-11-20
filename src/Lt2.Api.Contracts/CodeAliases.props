@@ -1,0 +1,35 @@
+<Project>
+  <!--
+    The closed sets of codes (sides, statuses, kinds) are one source file each in Lt2.SharedKernel, compiled again into
+    Lt2.Api.Contracts (see Lt2.Api.Contracts.csproj). A project that sees both copies (the server, the tests) imports this file,
+    so a plain name like Sides means the contracts' copy and is never ambiguous. The values are the same in both.
+  -->
+  <ItemGroup>
+    <Using Include="Lt2.Api.Contracts.Admin.LockTargets" Alias="LockTargets" />
+    <Using Include="Lt2.Api.Contracts.Appeals.BillRecordStatuses" Alias="BillRecordStatuses" />
+    <Using Include="Lt2.Api.Contracts.Appeals.ClosingReasons" Alias="ClosingReasons" />
+    <Using Include="Lt2.Api.Contracts.Appeals.DescriptionSources" Alias="DescriptionSources" />
+    <Using Include="Lt2.Api.Contracts.Appeals.ReasonStatuses" Alias="ReasonStatuses" />
+    <Using Include="Lt2.Api.Contracts.Appeals.ReportGrounds" Alias="ReportGrounds" />
+    <Using Include="Lt2.Api.Contracts.Appeals.ReportTargets" Alias="ReportTargets" />
+    <Using Include="Lt2.Api.Contracts.Appeals.Sides" Alias="Sides" />
+    <Using Include="Lt2.Api.Contracts.Appeals.ThresholdSetters" Alias="ThresholdSetters" />
+    <Using Include="Lt2.Api.Contracts.Comments.CommentKinds" Alias="CommentKinds" />
+    <Using Include="Lt2.Api.Contracts.Comments.CommentStatuses" Alias="CommentStatuses" />
+    <Using Include="Lt2.Api.Contracts.Comments.CommentVoices" Alias="CommentVoices" />
+    <Using Include="Lt2.Api.Contracts.Digests.DigestRunStatuses" Alias="DigestRunStatuses" />
+    <Using Include="Lt2.Api.Contracts.Feedback.FeedbackKinds" Alias="FeedbackKinds" />
+    <Using Include="Lt2.Api.Contracts.Feedback.FeedbackStatuses" Alias="FeedbackStatuses" />
+    <Using Include="Lt2.Api.Contracts.Mps.PoliticianParts" Alias="PoliticianParts" />
+    <Using Include="Lt2.Api.Contracts.Mps.ResponseStances" Alias="ResponseStances" />
+    <Using Include="Lt2.Api.Contracts.Mps.ResponseStatuses" Alias="ResponseStatuses" />
+    <Using Include="Lt2.Api.Contracts.Organisations.OrganisationStatuses" Alias="OrganisationStatuses" />
+    <Using Include="Lt2.Api.Contracts.Organisations.StatementStances" Alias="StatementStances" />
+    <Using Include="Lt2.Api.Contracts.Organisations.StatementStatuses" Alias="StatementStatuses" />
+    <Using Include="Lt2.Api.Contracts.Parliament.BallotChoices" Alias="BallotChoices" />
+    <Using Include="Lt2.Api.Contracts.Parliament.BillStages" Alias="BillStages" />
+    <Using Include="Lt2.Api.Contracts.Parliament.BodyKinds" Alias="BodyKinds" />
+    <Using Include="Lt2.Api.Contracts.Parliament.FactionPositions" Alias="FactionPositions" />
+    <Using Include="Lt2.Api.Contracts.Parliament.VoteKinds" Alias="VoteKinds" />
+  </ItemGroup>
+</Project>

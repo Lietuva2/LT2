@@ -27,4 +27,6 @@
     <InternalsVisibleTo Include="Lt2.IntegrationTests" />
     <Using Include="Microsoft.AspNetCore.Http.HttpResults" />
   </ItemGroup>
+  <!-- The code classes seen twice (Lt2.SharedKernel and Lt2.Api.Contracts) mean the contracts' copy. -->
+  <Import Project="..\Lt2.Api.Contracts\CodeAliases.props" />
 </Project>

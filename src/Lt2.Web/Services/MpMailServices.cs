@@ -53,7 +53,7 @@ internal sealed class MpMailHost(IMpMail mail, IPoliticians politicians, IIdenti
     /// </summary>
     public async Task<Result<MpOfficeCopiesResponse>> OfficeCopiesAsync(ClaimsPrincipal user, string? frequency, CancellationToken ct)
     {
-        if (await politicians.SpeakerAsync(user, ct) is not { Part: "office" } member)
+        if (await politicians.SpeakerAsync(user, ct) is not { Part: PoliticianParts.Office } member)
         {
             return NotOffice;
         }

@@ -13,4 +13,6 @@
     <!-- The tests share one database and change global settings, so they run one at a time. -->
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <!-- The code classes seen twice (Lt2.SharedKernel and Lt2.Api.Contracts) mean the contracts' copy. -->
+  <Import Project="..\..\src\Lt2.Api.Contracts\CodeAliases.props" />
 </Project>

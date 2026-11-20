@@ -17,7 +17,7 @@
     </div>
 </div>
 <SplitBar For="Shown.For" Against="Shown.Against" Abstain="0" />
-@if ((Live?.Status ?? Status) == "open" && Shown.For + Shown.Against == 0)
+@if ((Live?.Status ?? Status) == BillRecordStatuses.Open && Shown.For + Shown.Against == 0)
 {
     <p class="small" id="nobody-yet">@L["Sides.Nobody"]</p>
 }

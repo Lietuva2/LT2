@@ -11,7 +11,7 @@ else if (_signedIn)
 {
     @if (_open)
     {
-        <ReportForm TargetKind="profile" TargetId="Guid.Empty" ProfileId="@ProfileId" OnClose="() => _open = false" />
+        <ReportForm TargetKind="@ReportTargets.Profile" TargetId="Guid.Empty" ProfileId="@ProfileId" OnClose="() => _open = false" />
     }
     else
     {

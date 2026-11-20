@@ -16,11 +16,11 @@
 @if (_profile is { } p)
 {
     <PageTitle>@p.Name · Lietuva 2.0</PageTitle>
-    @if (p.Status != "blocked")
+    @if (p.Status != OrganisationStatuses.Blocked)
     {
         @* Design 8.22.5: the name and, for an active organisation, its own description; a blocked one gives no preview. *@
         <LinkPreview Title="@p.Name" Path="@($"/o/{p.Slug}")"
-                     Description="@(p.Status == "active" && !string.IsNullOrWhiteSpace(p.Description) ? p.Description : P["Preview.Organisation"])" />
+                     Description="@(p.Status == OrganisationStatuses.Active && !string.IsNullOrWhiteSpace(p.Description) ? p.Description : P["Preview.Organisation"])" />
     }
     @* Owner, 2026-11-18: the header one step (--sp-4) above the page's first part, as on a bill's page; the parts below it
        a loose stack apart (.stack--snug, design 8.12.1). *@
@@ -43,14 +43,14 @@
                     {
                         <span class="tag" id="lobbyist">@L["Org.Profile.LobbyistTag"]</span>
                     }
-                    @if (p.Status != "active")
+                    @if (p.Status != OrganisationStatuses.Active)
                     {
                         <span class="tag tag--ink" id="organisation-state">@L["Org.State." + p.Status]</span>
                     }
                 </p>
-                @if (p.Status == "active")
+                @if (p.Status == OrganisationStatuses.Active)
                 {
-                    <FollowButton Kind="organisation" Key="@p.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
+                    <FollowButton Kind="@FollowButton.Organisation" Key="@p.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
                 }
                 else
                 {
@@ -60,7 +60,7 @@
         </div>
 
         <div class="stack stack--loose">
-            @if (p.Status == "blocked")
+            @if (p.Status == OrganisationStatuses.Blocked)
             {
                 <section class="sheet stack stack--tight" id="blocked" aria-labelledby="h-blocked">
                     <h2 id="h-blocked">@L["Org.Profile.Blocked"]</h2>
@@ -71,7 +71,7 @@
                     }
                 </section>
             }
-            else if (p.Status == "closed")
+            else if (p.Status == OrganisationStatuses.Closed)
             {
                 <p class="note note--quiet" id="closed">@L.Format("Org.Profile.Closed", p.ClosedAt is { } closedAt ? Display.Day(closedAt) : "")</p>
             }
@@ -107,13 +107,13 @@
                         @* Design 8.15: what this label means, in place (a hint); every label on the methodology page. *@
                         <p class="small"><Lt2.Web.Client.Components.Hint Id="label-meaning" Text="@L["Org.Profile.MeaningMore"]" Answer="@L[LabelMeaning(p.Label)]" More="/metodika#m-organisation-labels" /></p>
                         @* Design 8.16: the report form is a quiet sheet, so it opens inside this sheet, not on the ground. *@
-                        @if (p.Status == "active")
+                        @if (p.Status == OrganisationStatuses.Active)
                         {
                             <ReportOrganisation OrganisationId="p.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
                         }
                     </section>
 
-                    @if (p.Status == "active")
+                    @if (p.Status == OrganisationStatuses.Active)
                     {
                         <section class="sheet stack" aria-labelledby="h-statements" id="statements">
                             <h2 id="h-statements">@L["Org.Profile.Statements"]</h2>

@@ -14,29 +14,16 @@ public static class AppealLimits
     public const int StatementMaxLength = 1000;
     public const int ReportTextMaxLength = 1000;
 
-    public static readonly IReadOnlyList<string> Sides = ["for", "against"];
-
-    public static readonly IReadOnlyList<string> ReportGrounds = ["illegal", "personal-data", "insult", "spam", "other"];
-
-    /// <summary>A bill's description may also be reported as inaccurate ("Pranešti apie klaidą", design 8.13); an argument may not.</summary>
-    public static readonly IReadOnlyList<string> DescriptionReportGrounds = ["inaccurate", .. ReportGrounds];
-
-    /// <summary>An organisation or its statement may also be reported as "Apsimeta kita organizacija" (design 8.14.9).</summary>
-    public static readonly IReadOnlyList<string> OrganisationReportGrounds = ["impersonation", .. ReportGrounds];
-
-    /// <summary>The grounds a report on this target may give.</summary>
-    public static IReadOnlyList<string> ReportGroundsFor(string targetKind) => targetKind switch
-    {
-        "record" => DescriptionReportGrounds,
-        "organisation" or "statement" => OrganisationReportGrounds,
-        _ => ReportGrounds,
-    };
-
     /// <summary>
-    /// A bill's description (<c>record</c>), an argument, an organisation or an organisation's statement (design 8.14.14), or an
-    /// MP's response (design 8.5.5), or a comment (design 8.23.8).
+    /// What a report on the bills' route may be about: a bill's description (<c>record</c>), an argument, an organisation or an
+    /// organisation's statement (design 8.14.14), or an MP's response (design 8.5.5), or a comment (design 8.23.8). A profile is
+    /// reported through its own route.
     /// </summary>
-    public static readonly IReadOnlyList<string> ReportTargets = ["record", "reason", "organisation", "statement", "response", "comment"];
+    public static readonly IReadOnlyList<string> ReportTargets =
+    [
+        Appeals.ReportTargets.Record, Appeals.ReportTargets.Reason, Appeals.ReportTargets.Organisation, Appeals.ReportTargets.Statement,
+        Appeals.ReportTargets.Response, Appeals.ReportTargets.Comment,
+    ];
 
     /// <summary>The longest official text's address a description may carry (<c>record.description_url</c>, design 8.13).</summary>
     public const int DescriptionUrlMaxLength = 500;
@@ -126,7 +113,7 @@ public sealed record AuthorCardResponse(string ProfileId, string Name, string? A
 /// <summary>How many published arguments each side has (design 8.12.1): what a side's "Rodoma 2 iš 15" counts.</summary>
 public sealed record ReasonTotalsResponse(int For, int Against)
 {
-    public int Of(string side) => side == "for" ? For : Against;
+    public int Of(string side) => side == Sides.For ? For : Against;
 }
 
 /// <summary>
@@ -159,7 +146,7 @@ public static class ReasonLimits
     /// The page's address parameters (owner, 2026-11-19): how many of a side's arguments the page shows, so it grows without
     /// script (<c>?argumentai-uz=22</c>); the other side's, the responses' and the comments' parameters stay as they were.
     /// </summary>
-    public static string Parameter(string side) => side == "for" ? ForParameter : AgainstParameter;
+    public static string Parameter(string side) => side == Sides.For ? ForParameter : AgainstParameter;
 
     public const string ForParameter = "argumentai-uz";
 
@@ -300,7 +287,7 @@ public sealed record ReportRequest
 
     public Guid TargetId { get; init; }
 
-    /// <summary>One of <see cref="AppealLimits.ReportGrounds"/>.</summary>
+    /// <summary>One of <see cref="ReportGrounds"/>.</summary>
     public string Ground { get; init; } = "";
 
     public string? Text { get; init; }

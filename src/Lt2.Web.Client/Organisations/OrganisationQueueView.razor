@@ -28,7 +28,7 @@ else
                 <div class="row">
                     <span class="tag tag--ink">@L[org.Seen ? "OrgMod.Reported" : org.Changed ? "OrgMod.Changed" : "OrgMod.New"]</span>
                     <OrgLabel Label="org.Label" Id="@($"queue-org-label-{org.Id}")" />
-                    @if (org.Status == "blocked")
+                    @if (org.Status == OrganisationStatuses.Blocked)
                     {
                         <span class="tag">@L["Org.State.blocked"]</span>
                     }
@@ -67,7 +67,7 @@ else
                     <p class="note note--quiet">@L["OrgMod.Barred"]</p>
                 }
                 <Reports Items="org.Reports" />
-                <OrgModerationActions Id="org.Id" Kind="organisation" Status="@org.Status" ConfirmedBy="@org.Label.ConfirmedBy" />
+                <OrgModerationActions Id="org.Id" Kind="@ReportTargets.Organisation" Status="@org.Status" ConfirmedBy="@org.Label.ConfirmedBy" />
             </article>
         }
     </section>

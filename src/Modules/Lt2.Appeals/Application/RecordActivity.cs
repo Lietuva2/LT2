@@ -1,5 +1,6 @@
 using Lt2.Appeals.Domain;
 using Lt2.Appeals.Infrastructure;
+using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lt2.Appeals.Application;

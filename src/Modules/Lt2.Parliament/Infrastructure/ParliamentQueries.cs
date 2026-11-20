@@ -14,50 +14,50 @@ internal static class Codes
 {
     public static string Of(BodyKind kind) => kind switch
     {
-        BodyKind.Faction => "faction",
-        BodyKind.Committee => "committee",
-        BodyKind.Commission => "commission",
-        BodyKind.Group => "group",
-        _ => "other",
+        BodyKind.Faction => BodyKinds.Faction,
+        BodyKind.Committee => BodyKinds.Committee,
+        BodyKind.Commission => BodyKinds.Commission,
+        BodyKind.Group => BodyKinds.Group,
+        _ => BodyKinds.Other,
     };
 
     public static string Of(VoteKind kind) => kind switch
     {
-        VoteKind.StageResult => "stage-result",
-        VoteKind.Amendment => "amendment",
-        VoteKind.Procedural => "procedural",
-        _ => "other",
+        VoteKind.StageResult => VoteKinds.StageResult,
+        VoteKind.Amendment => VoteKinds.Amendment,
+        VoteKind.Procedural => VoteKinds.Procedural,
+        _ => VoteKinds.Other,
     };
 
     public static string? Of(BillStage? stage) => stage switch
     {
-        BillStage.Presentation => "presentation",
-        BillStage.Consideration => "consideration",
-        BillStage.Adoption => "adoption",
+        BillStage.Presentation => BillStages.Presentation,
+        BillStage.Consideration => BillStages.Consideration,
+        BillStage.Adoption => BillStages.Adoption,
         _ => null,
     };
 
     public static string Of(BallotChoice choice) => choice switch
     {
-        BallotChoice.For => "for",
-        BallotChoice.Against => "against",
-        BallotChoice.Abstain => "abstain",
-        _ => "did-not-vote",
+        BallotChoice.For => BallotChoices.For,
+        BallotChoice.Against => BallotChoices.Against,
+        BallotChoice.Abstain => BallotChoices.Abstain,
+        _ => BallotChoices.DidNotVote,
     };
 
     public static string Of(FactionPosition position) => position switch
     {
-        FactionPosition.For => "for",
-        FactionPosition.Against => "against",
-        FactionPosition.Abstain => "abstain",
-        FactionPosition.Free => "free",
-        _ => "nobody-voted",
+        FactionPosition.For => FactionPositions.For,
+        FactionPosition.Against => FactionPositions.Against,
+        FactionPosition.Abstain => FactionPositions.Abstain,
+        FactionPosition.Free => FactionPositions.Free,
+        _ => FactionPositions.NobodyVoted,
     };
 
     public static BodyKind? Kind(string kind) => kind switch
     {
-        "faction" => BodyKind.Faction,
-        "committee" => BodyKind.Committee,
+        BodyKinds.Faction => BodyKind.Faction,
+        BodyKinds.Committee => BodyKind.Committee,
         _ => null,
     };
 }
@@ -135,7 +135,7 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
                                   where m.PersonId == person.Id && b.TermId == term.Id
                                   select new { m, b }).ToListAsync(cancellationToken))
             .Select(x => new MembershipInfo(Ref(x.b), x.m.Role, x.m.From, x.m.To, x.m.To is null || x.m.To >= today))
-            .OrderByDescending(x => x.Current).ThenBy(x => x.Body.Kind == "faction" ? 0 : 1).ThenBy(x => x.Body.Name, ByLithuanian).ThenByDescending(x => x.From)
+            .OrderByDescending(x => x.Current).ThenBy(x => x.Body.Kind == BodyKinds.Faction ? 0 : 1).ThenBy(x => x.Body.Name, ByLithuanian).ThenByDescending(x => x.From)
             .ToList();
         var contacts = await db.Contacts.AsNoTracking().Where(c => c.PersonId == person.Id).OrderBy(c => c.Kind).ThenBy(c => c.Value)
             .Select(c => new ContactInfo(c.Kind, c.Value)).ToListAsync(cancellationToken);

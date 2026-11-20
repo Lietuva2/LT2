@@ -198,8 +198,8 @@ again). Tests: `AccountLockTests` (integration), `EmailRhythmTests.A_locked_acco
 
 **The lock from an item and the list of locked accounts (design 8.3; the owner, 2026-11-19: administrators cannot find an address to type).**
 Same file `AccountLockEndpoints` (`Policies.Administrator`, `FreshConfirmation` through the one `ActAsync`): `POST /admin/accounts/lock-author`
-(`AuthorLockRequest`: `targetKind` of `LockTargets` = `reason`, `comment`, `statement`, `profile`; `targetId`; `statement`; validator in
-`Lt2.Api.Contracts/Admin/RoleDtos.cs`) goes through `AuthorLock.LockAsync`, shared with the in-process `ServerAdminApi`: for the first three
+(`AuthorLockRequest`: `targetKind` of `LockTargets` = `reason`, `comment`, `statement`, `profile` (`Lt2.SharedKernel/LockTargets.cs`, linked
+into the contracts); `targetId`; `statement`; validator in `Lt2.Api.Contracts/Admin/RoleDtos.cs`) goes through `AuthorLock.LockAsync`, shared with the in-process `ServerAdminApi`: for the first three
 kinds `IAuthorLookup.AuthorOfAsync` (Appeals, `AuthorLookup`: `reasons.author_user_id`, `comments.author_user_id`,
 `organisation_statements.written_by_user_id`, the same columns the writing restriction reads; `reason.not-found`, `comment.not-found`,
 `statement.not-found`), for `profile` the id is the moderation id `ProfileModerationResponse.Id` (the account id the profile queue already

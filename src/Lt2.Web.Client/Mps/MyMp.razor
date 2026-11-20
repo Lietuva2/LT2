@@ -30,7 +30,7 @@ else if (Link is { } link)
     <section class="sheet stack" aria-labelledby="mp-title" id="mp-link">
         <h3 id="mp-title">@L["Mp.Title"]</h3>
         <p>
-            @L.Format(link.Part == "mp" ? "Mp.Managing" : "Mp.OfficeOf", link.FirstName + " " + link.LastName)
+            @L.Format(link.Part == PoliticianParts.Mp ? "Mp.Managing" : "Mp.OfficeOf", link.FirstName + " " + link.LastName)
             <a href="/p/@link.Slug">@L["Mp.ToProfile"]</a>
         </p>
         @* Design 8.5.7: the bills in summaries now, with the MP's responses. *@
@@ -41,7 +41,7 @@ else if (Link is { } link)
             <PasskeyStep IdPrefix="mp-" Confirmed="LoadAsync" />
         }
 
-        @if (link.Part == "mp" && Office is { } office)
+        @if (link.Part == PoliticianParts.Mp && Office is { } office)
         {
             <div class="stack stack--tight" id="mp-office">
                 <h4>@L["Mp.Office.Title"]</h4>
@@ -117,7 +117,7 @@ else if (Link is { } link)
 
         @* Design 8.19.3 (owner, 2026-11-17): an office member's own copies of the MP's summaries, whatever the MP chose for
            their own; the member's own mail, so any session may change it. *@
-        @if (link.Part == "office" && _copies is not null)
+        @if (link.Part == PoliticianParts.Office && _copies is not null)
         {
             <div class="stack stack--tight" id="mp-copies">
                 <h4>@L["Mp.Copies.Title"]</h4>
@@ -137,17 +137,17 @@ else if (Link is { } link)
 
         @if (_confirmEnd)
         {
-            <p class="note" role="alert">@L[link.Part == "mp" ? "Mp.GiveUpWarning" : "Mp.LeaveWarning"]</p>
+            <p class="note" role="alert">@L[link.Part == PoliticianParts.Mp ? "Mp.GiveUpWarning" : "Mp.LeaveWarning"]</p>
             <div class="row">
-                <button type="button" class="btn btn--against" id="mp-end-confirm" disabled="@(Locked || !link.MayWrite)" @onclick="EndAsync">@L[link.Part == "mp" ? "Mp.GiveUpConfirm" : "Mp.LeaveConfirm"]</button>
+                <button type="button" class="btn btn--against" id="mp-end-confirm" disabled="@(Locked || !link.MayWrite)" @onclick="EndAsync">@L[link.Part == PoliticianParts.Mp ? "Mp.GiveUpConfirm" : "Mp.LeaveConfirm"]</button>
                 <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmEnd = false">@L["Data.DeleteCancel"]</button>
             </div>
         }
         else
         {
             <p class="row">
-                <button type="button" class="btn btn--plain" id="mp-end" disabled="@(Locked || !link.MayWrite)" @onclick="() => _confirmEnd = true">@L[link.Part == "mp" ? "Mp.GiveUp" : "Mp.Leave"]</button>
-                @if (link.Part == "mp")
+                <button type="button" class="btn btn--plain" id="mp-end" disabled="@(Locked || !link.MayWrite)" @onclick="() => _confirmEnd = true">@L[link.Part == PoliticianParts.Mp ? "Mp.GiveUp" : "Mp.Leave"]</button>
+                @if (link.Part == PoliticianParts.Mp)
                 {
                     @* Design 8.5.2, step 4: a lost passkey is replaced by a new link to the official address. *@
                     <button type="button" class="linkish small" id="mp-new-link" disabled="@Locked" @onclick="() => ClaimAsync(link.Slug)">@L["Mp.NewLink"]</button>
@@ -190,9 +190,9 @@ else if (Link is { } link)
         var me = (await MeApi.GetAsync()).Value;
         Offer = me?.MpOffer;
         Link = me?.Mp;
-        Office = Link is { Part: "mp" } ? (await MpApi.GetOfficeAsync()).Value : null;
+        Office = Link is { Part: PoliticianParts.Mp } ? (await MpApi.GetOfficeAsync()).Value : null;
         _frequency = Link is { MayWrite: true } ? (await MailApi.GetMineAsync()).Value?.Frequency : null;
-        _copies = Link is { Part: "office" } ? (await MailApi.GetOfficeCopiesAsync()).Value?.Frequency : null;
+        _copies = Link is { Part: PoliticianParts.Office } ? (await MailApi.GetOfficeCopiesAsync()).Value?.Frequency : null;
     }
 
     private Task SaveCopiesAsync() => RunAsync(async () =>
@@ -277,6 +277,6 @@ else if (Link is { } link)
         _confirmEnd = false;
         _invitation = null;
         await LoadAsync();
-        Info = L[part == "mp" ? "Mp.GivenUp" : "Mp.Left"];
+        Info = L[part == PoliticianParts.Mp ? "Mp.GivenUp" : "Mp.Left"];
     });
 }

@@ -73,7 +73,7 @@
     private string Key => IdPrefix + Id.ToString("N");
 
     /// <summary>In the order shown: the main one first, hiding set apart at the end (owner, 2026-11-17).</summary>
-    private IReadOnlyList<string> Offered => Status == "hidden"
+    private IReadOnlyList<string> Offered => Status == CommentStatuses.Hidden
         ? ["restore", "restrict"]
         : [.. (Reported ? new[] { "keep" } : []), "restrict", "hide"];
 

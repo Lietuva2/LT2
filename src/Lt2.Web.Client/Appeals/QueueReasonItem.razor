@@ -23,7 +23,7 @@
         <TypedText Text="@Reason.Text" Class="bubble bubble--people voice" />
     </div>
     <Reports Items="Reason.Reports" />
-    <ModerationActions Id="Reason.Id" Kind="reason" Status="@Reason.Status" RecordStatus="@Reason.RecordStatus" MergeCandidates="Reason.MergeCandidates" Comments="Reason.Comments" IdPrefix="@(Panel ? "panel-" : "")"
+    <ModerationActions Id="Reason.Id" Kind="@ReportTargets.Reason" Status="@Reason.Status" RecordStatus="@Reason.RecordStatus" MergeCandidates="Reason.MergeCandidates" Comments="Reason.Comments" IdPrefix="@(Panel ? "panel-" : "")"
                        Seen="Reason.Seen" Reported="Reason.Reports.Count > 0" OnDone="OnDone" OnRestricted="OnRestricted" />
 </article>
 

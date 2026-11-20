@@ -46,7 +46,7 @@ public static class MpResponseRoutes
 /// <summary>The response's limits, the same numbers the server enforces (design 8.5.5), and the lists' paging (8.5.6).</summary>
 public static class MpResponseLimits
 {
-    public static readonly IReadOnlyList<string> Stances = ["for", "against", "undecided"];
+    public static readonly IReadOnlyList<string> Stances = ResponseStances.All;
 
     /// <summary>The responses a list shows first, on the bill's page and on the profile.</summary>
     public const int First = 10;

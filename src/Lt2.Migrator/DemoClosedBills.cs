@@ -147,7 +147,7 @@ public static class DemoClosedBills
         for (var i = 0; i < chosen.Count; i++)
         {
             var (user, registered) = (chosen[i].Key, chosen[i].Value);
-            var side = (i < larger) == membersFor ? "for" : "against";
+            var side = (i < larger) == membersFor ? Sides.For : Sides.Against;
             var earliest = registered > opened ? registered : opened;
             var taken = earliest + TimeSpan.FromMinutes(random.NextDouble() * Math.Max(1, (latest - earliest).TotalMinutes));
             positions.Add(new InventedPosition(user, side, registered, taken));
@@ -170,8 +170,8 @@ public static class DemoClosedBills
             }
         }
 
-        Argument("for", bill.ArgumentFor);
-        Argument("against", bill.ArgumentAgainst);
+        Argument(Sides.For, bill.ArgumentFor);
+        Argument(Sides.Against, bill.ArgumentAgainst);
         return new InventedRecordSpec(bill.Number, bill.Description, opened, positions, reasons);
     }
 }

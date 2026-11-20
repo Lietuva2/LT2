@@ -16,7 +16,7 @@
                 <li>
                     <div class="rows__main"><a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a></div>
                     <div class="rows__side">
-                        @if (org.Status != "active")
+                        @if (org.Status != OrganisationStatuses.Active)
                         {
                             <span class="tag">@L["Org.State." + org.Status]</span>
                         }

@@ -1,3 +1,5 @@
+using Lt2.SharedKernel;
+
 namespace Lt2.Appeals.Domain;
 
 /// <summary>
@@ -57,30 +59,4 @@ internal sealed class CommentAgreement
     public Guid UserId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
-}
-
-/// <summary>What a comment stands under (design 8.23.1): nothing else takes comments.</summary>
-internal static class CommentKinds
-{
-    public const string Reason = "reason";
-    public const string Statement = "statement";
-    public const string Response = "response";
-
-    public static readonly IReadOnlyList<string> All = [Reason, Statement, Response];
-}
-
-/// <summary>In whose name a comment is shown (design 8.23.2), decided by the server, never chosen in the form.</summary>
-internal static class CommentVoices
-{
-    public const string Person = "person";
-    public const string Organisation = "organisation";
-    public const string Mp = "mp";
-}
-
-internal static class CommentStatuses
-{
-    public const string Published = "published";
-
-    /// <summary>Hidden by a moderator: shown nowhere, nothing in its place; its "Sutinku" went with the hiding (design 8.23.8).</summary>
-    public const string Hidden = "hidden";
 }

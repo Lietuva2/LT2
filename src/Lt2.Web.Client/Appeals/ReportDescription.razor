@@ -8,7 +8,7 @@
         <p><button type="button" class="linkish small" id="report-appeal" disabled="@Locked" @onclick="() => _open = !_open">@L["Report.AppealOpen"]</button></p>
         @if (_open)
         {
-            <ReportForm TargetKind="record" TargetId="RecordId" OnClose="() => _open = false" />
+            <ReportForm TargetKind="@ReportTargets.Record" TargetId="RecordId" OnClose="() => _open = false" />
         }
     </div>
 }

@@ -1,3 +1,5 @@
+using Lt2.SharedKernel;
+
 namespace Lt2.Appeals.Domain;
 
 /// <summary>
@@ -52,29 +54,6 @@ internal sealed class MpResponse
 
     /// <summary>The account (the MP's or an office member's) that last wrote or withdrew it. Never public; emptied with the account.</summary>
     public Guid? WrittenByUserId { get; set; }
-}
-
-/// <summary>An MP's stance (design 8.5.5): "balsuosiu už", "balsuosiu prieš", "dar neapsisprendžiau".</summary>
-internal static class ResponseStances
-{
-    public const string For = "for";
-    public const string Against = "against";
-    public const string Undecided = "undecided";
-
-    public static readonly IReadOnlyList<string> All = [For, Against, Undecided];
-}
-
-internal static class ResponseStatuses
-{
-    public const string Published = "published";
-
-    /// <summary>Withdrawn by the MP's side: still shown, as "Atsakymas atsiimtas", with its versions (design 8.5.5).</summary>
-    public const string Withdrawn = "withdrawn";
-
-    /// <summary>Hidden by a moderator: its place shows the moderator's statement; "Atkurti" while the bill is open.</summary>
-    public const string Hidden = "hidden";
-
-    public static readonly IReadOnlyList<string> All = [Published, Withdrawn, Hidden];
 }
 
 /// <summary>

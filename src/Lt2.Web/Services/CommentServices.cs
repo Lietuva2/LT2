@@ -126,8 +126,8 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
 
     private static CommentAuthorResponse Map(CommentAuthor a, IReadOnlyDictionary<long, MpFacts> names) => a.Voice switch
     {
-        "organisation" => new CommentAuthorResponse(a.Voice, a.OrganisationName, a.OrganisationSlug, a.Label is { } l ? new OrganisationLabelResponse(l.ConfirmedBy, l.Domain) : null, null),
-        "mp" => new CommentAuthorResponse(a.Voice, null, null, null, Mp(a.SeimasPersonId, names)),
+        CommentVoices.Organisation => new CommentAuthorResponse(a.Voice, a.OrganisationName, a.OrganisationSlug, a.Label is { } l ? new OrganisationLabelResponse(l.ConfirmedBy, l.Domain) : null, null),
+        CommentVoices.Mp => new CommentAuthorResponse(a.Voice, null, null, null, Mp(a.SeimasPersonId, names)),
         _ => new CommentAuthorResponse(a.Voice, a.DisplayName, null, null, null, a.ProfileId),
     };
 

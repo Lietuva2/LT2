@@ -1,8 +1,10 @@
+using Lt2.SharedKernel;
+
 namespace Lt2.Notifications.Digests;
 
 /// <summary>
 /// <c>notify.digest_run</c> (design 5.4, 8.19.7): one summary, prepared for review and then gone, or one sending of the
-/// introduction letter. Its status says where it is (<see cref="RunStatuses"/>); a dry run is made and published, never sent.
+/// introduction letter. Its status says where it is (<see cref="DigestRunStatuses"/>); a dry run is made and published, never sent.
 /// </summary>
 internal sealed class DigestRun
 {
@@ -23,8 +25,8 @@ internal sealed class DigestRun
     /// <summary>When it goes: the weekly or before-vote time; for an urgent one, when it was approved.</summary>
     public DateTimeOffset? DueAt { get; set; }
 
-    /// <summary>See <see cref="RunStatuses"/>.</summary>
-    public string Status { get; set; } = RunStatuses.DryRun;
+    /// <summary>See <see cref="DigestRunStatuses"/>.</summary>
+    public string Status { get; set; } = DigestRunStatuses.DryRun;
 
     /// <summary>
     /// The moderator who approved it (owner, 2026-11-17): "Patvirtinti" on a prepared summary marks it reviewed (it still goes
@@ -55,24 +57,6 @@ internal sealed class DigestRun
 
     /// <summary>For a run of kind <c>introduction</c>: the letter's version sent.</summary>
     public int? LetterVersion { get; set; }
-}
-
-/// <summary>The statuses of a run (design 8.19.1, owner 2026-11-17: no approval).</summary>
-internal static class RunStatuses
-{
-    /// <summary>Prepared: its bills and arguments are chosen, moderators review it, it goes at <see cref="DigestRun.DueAt"/>.</summary>
-    public const string Prepared = "prepared";
-
-    /// <summary>Went while sending was off: made and published, never sent.</summary>
-    public const string DryRun = "dry-run";
-
-    public const string Sent = "sent";
-
-    /// <summary>A moderator declined it before its time ("Nesiųsti", with a public statement): nothing went.</summary>
-    public const string Cancelled = "cancelled";
-
-    /// <summary>At its time every bill it held was held by a moderator or no longer open: nothing went, nothing is public.</summary>
-    public const string Dropped = "dropped";
 }
 
 /// <summary>

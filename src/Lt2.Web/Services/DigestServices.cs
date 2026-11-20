@@ -17,8 +17,8 @@ internal static class DigestMapping
             i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.For, i.ForOlderThan30Days, i.Against, i.AgainstOlderThan30Days,
             i.SurgeSharePercent, i.SurgeWindowHours, i.Held, i.Gone,
             i.Reasons.Select(x => new DigestReviewReasonResponse(x.Id, x.Side, x.Text, x.Endorsements, x.Replacement)).ToList(),
-            DigestReasonCount.Shown(i.ForReasonCount, i.Reasons.Count(x => x.Side == "for")),
-            DigestReasonCount.Shown(i.AgainstReasonCount, i.Reasons.Count(x => x.Side == "against")))).ToList());
+            DigestReasonCount.Shown(i.ForReasonCount, i.Reasons.Count(x => x.Side == Sides.For)),
+            DigestReasonCount.Shown(i.AgainstReasonCount, i.Reasons.Count(x => x.Side == Sides.Against)))).ToList());
 
     public static IntroductionLetterResponse Public(IntroductionVersion v) => new(v.Version, v.Subject, v.Text, v.SignerName, v.SignerRole, v.SentAt);
 
@@ -45,7 +45,7 @@ internal static class DigestMapping
             return record.Error!;
         }
 
-        if (record.Value.Status is not ("open" or "closed"))
+        if (record.Value.Status is not (BillRecordStatuses.Open or BillRecordStatuses.Closed))
         {
             return Error.NotFound("record.not-found");
         }
@@ -74,12 +74,12 @@ internal static class DigestMapping
             return record.Error!;
         }
 
-        if (record.Value.Status is not ("open" or "closed"))
+        if (record.Value.Status is not (BillRecordStatuses.Open or BillRecordStatuses.Closed))
         {
             return Error.NotFound("record.not-found");
         }
 
-        return record.Value is { Status: "open", Id: { } id }
+        return record.Value is { Status: BillRecordStatuses.Open, Id: { } id }
             ? new RecordNextDigestResponse(await digests.NextForRecordAsync(id, ct))
             : new RecordNextDigestResponse(null);
     }
@@ -88,8 +88,8 @@ internal static class DigestMapping
         i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.For, i.ForOlderThan30Days, i.Against, i.AgainstOlderThan30Days,
         i.SurgeSharePercent, i.SurgeWindowHours,
         i.Reasons.Select(x => new DigestReasonResponse(x.Side, x.Text, x.Endorsements)).ToList(),
-        DigestReasonCount.Shown(i.ForReasonCount, i.Reasons.Count(x => x.Side == "for")),
-        DigestReasonCount.Shown(i.AgainstReasonCount, i.Reasons.Count(x => x.Side == "against")));
+        DigestReasonCount.Shown(i.ForReasonCount, i.Reasons.Count(x => x.Side == Sides.For)),
+        DigestReasonCount.Shown(i.AgainstReasonCount, i.Reasons.Count(x => x.Side == Sides.Against)));
 }
 
 /// <summary>Server-side <see cref="IDigestsApi"/> for the pages; the moderators' calls need an active moderator role.</summary>

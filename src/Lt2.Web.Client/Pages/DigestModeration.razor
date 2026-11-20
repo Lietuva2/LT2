@@ -53,11 +53,11 @@ else
 {
     @foreach (var run in Data.Runs)
     {
-        var prepared = run.Status == "prepared";
+        var prepared = run.Status == DigestRunStatuses.Prepared;
         <section class="sheet stack" aria-labelledby="digmod-h-@run.Id" id="digmod-run-@run.Id" @key="run.Id">
             <h2 id="digmod-h-@run.Id">@L["DigMod.Kind." + run.Kind] · <span class="num">@Display.Day(run.RunDate)</span></h2>
             <p class="small num" id="digmod-status-@run.Id">@StatusLine(run)</p>
-            @if (run.Status == "cancelled" && run.Statement is { } statement)
+            @if (run.Status == DigestRunStatuses.Cancelled && run.Statement is { } statement)
             {
                 <p class="small">@L.Format("DigMod.Statement", statement)</p>
             }
@@ -89,11 +89,11 @@ else
                     {
                         <p class="note">@L.Format("Surge.Note", Display.Number(item.SurgeWindowHours), Display.Number(share))</p>
                     }
-                    @foreach (var side in new[] { "for", "against" })
+                    @foreach (var side in Sides.All)
                     {
                         var reasons = item.Reasons.Where(r => r.Side == side).ToList();
                         <div class="stack stack--tight">
-                            <h4><span class="choice choice--@side">@L["DigMod.Reasons." + side]</span>@if ((side == "for" ? item.ForReasonsOf : item.AgainstReasonsOf) is { } of) { <text> </text><span class="small num">@L.Format("DigMod.OfSide", Display.Number(of))</span> }</h4>
+                            <h4><span class="choice choice--@side">@L["DigMod.Reasons." + side]</span>@if ((side == Sides.For ? item.ForReasonsOf : item.AgainstReasonsOf) is { } of) { <text> </text><span class="small num">@L.Format("DigMod.OfSide", Display.Number(of))</span> }</h4>
                             @if (reasons.Count == 0)
                             {
                                 <p class="small">@L["DigMod.NoReasons"]</p>
@@ -210,11 +210,11 @@ else
 
     private string StatusLine(DigestReviewRunResponse run) => run.Status switch
     {
-        "prepared" => L.Format("DigMod.Line.prepared", run.DueAt is { } due ? Display.DayTime(due) : "", Display.Number(run.MpCount))
+        DigestRunStatuses.Prepared => L.Format("DigMod.Line.prepared", run.DueAt is { } due ? Display.DayTime(due) : "", Display.Number(run.MpCount))
             + (run.ApprovedAt is { } approved ? " · " + L.Format("DigMod.Approved", Display.DayTime(approved)) : ""),
-        "sent" => L.Format("DigMod.Line.sent", Display.Number(run.MpCount), run.SentAt is { } at ? Display.DayTime(at) : ""),
-        "cancelled" => L["DigMod.Line.cancelled"],
-        "dropped" => L["DigMod.Line.dropped"],
+        DigestRunStatuses.Sent => L.Format("DigMod.Line.sent", Display.Number(run.MpCount), run.SentAt is { } at ? Display.DayTime(at) : ""),
+        DigestRunStatuses.Cancelled => L["DigMod.Line.cancelled"],
+        DigestRunStatuses.Dropped => L["DigMod.Line.dropped"],
         _ => L.Format("DigMod.Line.dry-run", Display.Number(run.MpCount)),
     };
 

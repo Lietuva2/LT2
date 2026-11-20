@@ -1,3 +1,5 @@
+using Lt2.SharedKernel;
+
 namespace Lt2.Appeals.Domain;
 
 /// <summary>
@@ -72,17 +74,6 @@ internal sealed class Organisation
     public string[] ScreeningFlags { get; set; } = [];
 
     public DateTimeOffset ChangedAt { get; set; }
-}
-
-internal static class OrganisationStatuses
-{
-    public const string Active = "active";
-
-    /// <summary>Blocked by a moderator: its statements are shown nowhere and its representatives cannot publish.</summary>
-    public const string Blocked = "blocked";
-
-    /// <summary>Closed by its last representative (or with that account): statements on open bills withdrawn.</summary>
-    public const string Closed = "closed";
 }
 
 internal static class ConfirmationKinds
@@ -175,7 +166,7 @@ internal sealed class OrganisationStatement
 
     public string BillNumber { get; set; } = "";
 
-    /// <summary>See <see cref="Stances"/>.</summary>
+    /// <summary>See <see cref="StatementStances"/>.</summary>
     public string Stance { get; set; } = "";
 
     public string Text { get; set; } = "";
@@ -208,31 +199,4 @@ internal sealed class OrganisationStatement
 
     /// <summary>The representative who wrote or last changed it; emptied when that account goes. Never public.</summary>
     public Guid? WrittenByUserId { get; set; }
-}
-
-/// <summary>An organisation's stance on a bill (design 8.14.3): it asks to vote for, against, or makes remarks.</summary>
-internal static class Stances
-{
-    public const string For = "for";
-    public const string Against = "against";
-    public const string Remarks = "remarks";
-
-    public static readonly IReadOnlyList<string> All = [For, Against, Remarks];
-}
-
-internal static class StatementStatuses
-{
-    /// <summary>Flagged by pre-screening: waits for a moderator, seen only by the organisation's representatives.</summary>
-    public const string Pending = "pending";
-
-    public const string Published = "published";
-
-    /// <summary>Hidden by a moderator; "Atkurti" brings it back while the bill is open.</summary>
-    public const string Hidden = "hidden";
-
-    /// <summary>Withdrawn by a representative, or by closing the organisation; shown nowhere, a new one may follow.</summary>
-    public const string Withdrawn = "withdrawn";
-
-    /// <summary>The statuses that hold the organisation's one statement on a bill (a partial unique index).</summary>
-    public static readonly string[] Holding = [Pending, Published, Hidden];
 }

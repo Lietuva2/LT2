@@ -47,8 +47,9 @@ open item in code. When a change makes a section untrue, rewrite the section to 
 - `master`: product code, changed only through branches with **merge commits, not squash**. `docs`: the concept website
   and discovery notes. `legacy`: the 2011–2020 platform; never modify.
 - Never push, open a pull request or publish anything without the owner asking.
-- Never start a subagent or background job on the Fable model: every agent runs on Opus 5.5 (`model: "opus"`, no forks).
-  Fable plans, designs and reviews; Opus agents do the implementation.
+- Never start a subagent or background job on the Fable model; every agent names its model (no forks): Opus 5.5 for
+  judgement (design, ambiguous cases, features, debugging, reviews), Sonnet 5.5 for mechanical sweeps whose brief makes
+  every decision; when unsure, Opus. Fable plans, designs and reviews; the agents do the implementation.
 - Discuss complex mechanics in chat first. The owner's suggestions are proposals: weigh them, say where you disagree.
   State each thing once, most important first, in plain language. Don't present undecided things as settled. Report
   what was verified and what was not; a test that did not run is not a pass.
@@ -95,6 +96,10 @@ measurements, timing) is deleted, not patched again.
   never reloads the page. UI conventions: `agents/interface.md`.
 - **Counted rules are pure functions** with unit tests named as the rule (statistics, thresholds, eligibility, `GroupRules`).
 - **Runtime settings** live in `config.setting`, every change audited; never hard-code a number the design calls a setting.
+- **Kinds are constants.** A closed set of string values that crosses layers (a kind, side, stage or status on the
+  wire) is one `public static class` of `const string` in `src/Lt2.SharedKernel/<Area>Codes.cs`, linked into
+  `Lt2.Api.Contracts` (one source, two copies; `CodeAliases.props` names the contracts' copy where both are seen), used by
+  the module, the pages and the client; never retype a value as a literal. Tests keep literals: they pin the wire format.
 - **Imports are repeatable:** store every Seimas response raw, parse separately, upsert by Seimas identifiers.
 - A feature's parts are named alike across the solution: contract and validator in `Lt2.Api.Contracts/<Area>`, handler
   in its module's `Application/`, endpoint in `Lt2.Web/Endpoints/<Module>`, tests in the test projects (design 4).

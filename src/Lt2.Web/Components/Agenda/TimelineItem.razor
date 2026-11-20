@@ -65,7 +65,7 @@
             <MyAgendaMark @key="Place" Number="@Item.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
         }
     </div>
-    @if (Member && Item.Record is { Status: "open" } open)
+    @if (Member && Item.Record is { Status: BillRecordStatuses.Open } open)
     {
         <MyAgendaSide @key="Place" Number="@Item.Number" Numbers="Numbers" Place="@Place" Record="open" @rendermode="InteractiveWebAssembly" />
     }
@@ -79,15 +79,15 @@
                     <a class="small" href="@source" rel="external">@T["Agenda.ToSource"]</a>
                 }
             }
-            else if (record.Status == "rejected")
+            else if (record.Status == BillRecordStatuses.Rejected)
             {
                 <span class="small">@T["Agenda.TakingPartClosed"]</span>
                 <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
             }
             else
             {
-                <RecordFigures Record="record" HideNobody="@(record.Status == "open")" Id="@Place" />
-                @if (record.Status == "closed")
+                <RecordFigures Record="record" HideNobody="@(record.Status == BillRecordStatuses.Open)" Id="@Place" />
+                @if (record.Status == BillRecordStatuses.Closed)
                 {
                     <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
                 }
@@ -97,9 +97,9 @@
                     <div class="tl-ask">
                         <span class="small">@U["Agenda.Ask"]</span>
                         <div class="tl-ask__sides sides">
-                            @foreach (var side in AppealLimits.Sides)
+                            @foreach (var side in Sides.All)
                             {
-                                <a class="btn btn--@side cta" id="home-@side-@Place" href="@SignInHref" aria-label="@U.Format("Agenda.Ask." + side, Item.Number)">@U[side == "for" ? "Agenda.For" : "Agenda.Against"]</a>
+                                <a class="btn btn--@side cta" id="home-@side-@Place" href="@SignInHref" aria-label="@U.Format("Agenda.Ask." + side, Item.Number)">@U[side == Sides.For ? "Agenda.For" : "Agenda.Against"]</a>
                             }
                         </div>
                     </div>

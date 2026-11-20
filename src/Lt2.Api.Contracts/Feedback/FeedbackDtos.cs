@@ -29,7 +29,7 @@ public sealed record FeedbackItemResponse(
 
 public sealed record FeedbackUpdateRequest
 {
-    public string Status { get; init; } = "new";
+    public string Status { get; init; } = FeedbackStatuses.New;
 
     /// <summary>The team's internal note, for example the address of a GitHub issue.</summary>
     public string? Note { get; init; }
@@ -44,9 +44,9 @@ public static class FeedbackLimits
 {
     public const int TextMaxLength = 2000;
 
-    public static readonly IReadOnlyList<string> Kinds = ["bug", "idea", "unclear", "other"];
+    public static readonly IReadOnlyList<string> Kinds = FeedbackKinds.All;
 
-    public static readonly IReadOnlyList<string> Statuses = ["new", "seen", "done"];
+    public static readonly IReadOnlyList<string> Statuses = FeedbackStatuses.All;
 }
 
 public static class FeedbackRoutes

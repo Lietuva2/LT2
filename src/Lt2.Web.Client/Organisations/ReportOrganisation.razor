@@ -6,7 +6,7 @@
 {
     @if (_open)
     {
-        <ReportForm TargetKind="organisation" TargetId="OrganisationId" OnClose="() => _open = false" />
+        <ReportForm TargetKind="@ReportTargets.Organisation" TargetId="OrganisationId" OnClose="() => _open = false" />
     }
     else
     {

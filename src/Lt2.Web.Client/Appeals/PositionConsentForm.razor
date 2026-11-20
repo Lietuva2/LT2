@@ -24,7 +24,7 @@
         <span>@L["Consent.Check"]</span>
     </label>
     <div class="row">
-        <button type="button" class="btn @(ForMark || ForAccount ? null : Side == "for" ? "btn--for" : "btn--against")" id="@(IdPrefix)consent-submit" disabled="@(Locked || !checkedBox)"
+        <button type="button" class="btn @(ForMark || ForAccount ? null : Side == Sides.For ? "btn--for" : "btn--against")" id="@(IdPrefix)consent-submit" disabled="@(Locked || !checkedBox)"
                 @onclick="OnConfirm">@(ForAccount ? L["Consent.Submit.account"] : ForMark ? L["Consent.Submit.mark"] : L["Consent.Submit." + Side])</button>
         <button type="button" class="btn btn--plain" id="@(IdPrefix)consent-cancel" disabled="@Locked" @onclick="OnCancel">@L["Cancel"]</button>
     </div>

@@ -21,7 +21,7 @@
 </MoreMenu>
 @if (_open)
 {
-    <div class="act__panel"><ReportForm TargetKind="response" TargetId="ResponseId" OnClose="() => _open = false" /></div>
+    <div class="act__panel"><ReportForm TargetKind="@ReportTargets.Response" TargetId="ResponseId" OnClose="() => _open = false" /></div>
 }
 
 @code {

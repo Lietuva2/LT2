@@ -31,7 +31,7 @@ else
     [Parameter, EditorRequired] public ThresholdResponse Threshold { get; set; } = default!;
 
     /// <summary>The record's status: <c>open</c> or <c>closed</c> (numbers frozen after the final vote).</summary>
-    [Parameter] public string Status { get; set; } = "open";
+    [Parameter] public string Status { get; set; } = BillRecordStatuses.Open;
 
     /// <summary>The Vilnius day the next summary holding the bill goes (<c>GET …/record/digests/next</c>); none known: null.</summary>
     [Parameter] public DateOnly? NextDay { get; set; }
@@ -47,7 +47,7 @@ else
 
     private DateOnly? _liveNext;
 
-    private bool Closed => Status == "closed";
+    private bool Closed => Status == BillRecordStatuses.Closed;
 
     private ThresholdResponse Shown => Live?.Threshold ?? Threshold;
 

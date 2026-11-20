@@ -41,7 +41,7 @@
         <div class="tl-ask">
             <span class="small">@L["Agenda.Ask"]</span>
             <div class="tl-ask__sides sides" aria-busy="@(Waiting ? "true" : null)">
-                @foreach (var side in AppealLimits.Sides)
+                @foreach (var side in Sides.All)
                 {
                     var chosen = _mine?.Side == side;
                     <button type="button" class="btn btn--@side cta" id="home-@side-@Place" aria-pressed="@(chosen ? "true" : "false")"
@@ -50,7 +50,7 @@
                             @onclick="e => ChooseAsync(side, e)">@if (chosen)
                         {
                             <span class="sides__check" aria-hidden="true">✓</span>
-                        }@L[side == "for" ? "Agenda.For" : "Agenda.Against"]</button>
+                        }@L[side == Sides.For ? "Agenda.For" : "Agenda.Against"]</button>
                 }
             </div>
         </div>

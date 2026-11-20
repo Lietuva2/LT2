@@ -1,3 +1,5 @@
+using Lt2.SharedKernel;
+
 namespace Lt2.Appeals.Domain;
 
 /// <summary>

@@ -37,7 +37,7 @@
            Until the island has started, and while a press is sent, the pair is busy: the buttons stay disabled but keep their
            colour (owner, 2026-11-18; lt2.css, "Waiting"). *@
         <div class="pair sides" aria-busy="@(Locked ? "true" : null)">
-            @foreach (var side in AppealLimits.Sides)
+            @foreach (var side in Sides.All)
             {
                 var chosen = Mine?.Side == side;
                 <button type="button" class="btn btn--@side btn--wide" id="side-@side" aria-pressed="@(chosen ? "true" : "false")"

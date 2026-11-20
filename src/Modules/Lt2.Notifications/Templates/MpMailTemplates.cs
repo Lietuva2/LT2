@@ -199,9 +199,9 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             html.Append("<p style=\"margin:10px 0 0;padding:8px 10px;border-left:3px solid #94a3b8;font-size:13px;line-height:1.5;color:#475569\">").Append(EmailLayout.Encode(surge.Trim())).Append("</p>");
         }
 
-        foreach (var side in new[] { "for", "against" })
+        foreach (var side in Sides.All)
         {
-            var colour = side == "for" ? ForColour : AgainstColour;
+            var colour = side == Sides.For ? ForColour : AgainstColour;
             var reasons = item.Reasons.Where(r => r.Side == side).ToList();
             if (reasons.Count == 0)
             {
@@ -212,7 +212,7 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
                 continue;
             }
 
-            var of = DigestReasonCount.Shown(side == "for" ? item.ForReasonCount : item.AgainstReasonCount, reasons.Count);
+            var of = DigestReasonCount.Shown(side == Sides.For ? item.ForReasonCount : item.AgainstReasonCount, reasons.Count);
             var heading = of is { } total ? l.Format("Digest.ReasonsOf." + side, N(total)) : l["Digest.Reasons." + side].Value;
             Line(heading);
             html.Append(SideHeading(heading.Trim(), colour, muted: false));

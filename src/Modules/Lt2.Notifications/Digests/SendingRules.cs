@@ -58,7 +58,7 @@ internal static class SendingRules
     public static bool MailMayLeave(bool inventedData, bool mailCaught) => !inventedData || mailCaught;
 
     /// <summary>What a prepared summary becomes at its time (design 8.19.1): a dry run while sending is off, otherwise sent.</summary>
-    public static string GoneStatus(string mode) => mode == Off ? RunStatuses.DryRun : RunStatuses.Sent;
+    public static string GoneStatus(string mode) => mode == Off ? DigestRunStatuses.DryRun : DigestRunStatuses.Sent;
 
     /// <summary>
     /// Which runs count for the weekly ceiling, "changed notably", "covered by Monday's summary" and "never yet in a
@@ -70,7 +70,7 @@ internal static class SendingRules
 
     /// <summary>The run statuses of <see cref="Counts"/>, as the database queries use them.</summary>
     public static IReadOnlyList<string> CountingStatuses(bool sendingOn) =>
-        sendingOn ? [RunStatuses.Prepared, RunStatuses.Sent] : [RunStatuses.Prepared, RunStatuses.DryRun, RunStatuses.Sent];
+        sendingOn ? [DigestRunStatuses.Prepared, DigestRunStatuses.Sent] : [DigestRunStatuses.Prepared, DigestRunStatuses.DryRun, DigestRunStatuses.Sent];
 
     /// <summary>The delivery statuses that count towards an MP's weekly ceiling: an email that went, or would have gone.</summary>
     public static readonly IReadOnlyList<string> CeilingDeliveryStatuses =

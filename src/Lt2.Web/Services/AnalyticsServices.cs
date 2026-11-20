@@ -232,7 +232,7 @@ internal sealed class AnalyticsReads(
 
         // The four figures (design 8.26.1): the bills discussed in the period and their counts as their pages show them.
         var discussed = await parliament.BillsDiscussedAsync(from, to, ct);
-        var states = (await appeals.BillStatesAsync(discussed, ct)).Values.Where(s => s.Status != "rejected").ToList();
+        var states = (await appeals.BillStatesAsync(discussed, ct)).Values.Where(s => s.Status != BillRecordStatuses.Rejected).ToList();
         var takenPart = states.Count(s => Sample(s.Counts, olderAccounts) > 0);
         var positions = states.Sum(s => Sample(s.Counts, olderAccounts));
 

@@ -31,7 +31,7 @@ internal sealed class CommentsService(
     ISettings settings,
     TimeProvider clock) : IComments, ICommentModeration, ICommentFeed
 {
-    private const string Kind = "comment";
+    private const string Kind = ReportTargets.Comment;
     private const int ListLimit = 100;
 
     public async Task<Result<CommentThread>> ThreadAsync(string kind, Guid targetId, string? cursor, int? limit, CancellationToken cancellationToken)

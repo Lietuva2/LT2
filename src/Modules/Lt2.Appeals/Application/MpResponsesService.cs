@@ -28,7 +28,7 @@ internal sealed class MpResponsesService(
     ISettings settings,
     TimeProvider clock) : IMpResponses, IMpResponseModeration
 {
-    private const string Kind = "response";
+    private const string Kind = ReportTargets.Response;
     private const int QueueLimit = 100;
 
     public async Task<Result<BillResponses>> OnBillAsync(string billNumber, CancellationToken cancellationToken)
@@ -460,7 +460,7 @@ internal sealed class MpResponsesService(
         }
 
         var choices = await catalogue.ChoicesAsync(final.VoteId, persons.Distinct().ToList(), ct);
-        return persons.Distinct().ToDictionary(p => p, p => new ResponseVote(final.VoteId, final.HeldAt, choices.GetValueOrDefault(p) ?? "did-not-vote"));
+        return persons.Distinct().ToDictionary(p => p, p => new ResponseVote(final.VoteId, final.HeldAt, choices.GetValueOrDefault(p) ?? BallotChoices.DidNotVote));
     }
 
     /// <summary>A version as kept: its stance and text, when it was written, and whether it was the text withdrawn.</summary>

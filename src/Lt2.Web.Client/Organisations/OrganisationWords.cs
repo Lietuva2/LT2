@@ -27,7 +27,7 @@ public static class OrganisationWords
     }
 
     /// <summary>The mark of a stance: for and against in their colours, remarks with the neutral hollow mark.</summary>
-    public static string StanceClass(string stance) => "choice choice--" + (stance is "for" or "against" ? stance : "remarks");
+    public static string StanceClass(string stance) => "choice choice--" + (stance is StatementStances.For or StatementStances.Against ? stance : StatementStances.Remarks);
 
     /// <summary>
     /// The genitive after a number (Lithuanian): singular after a number ending in 1 but not 11 ("21 dalyvio"), plural

@@ -20,7 +20,7 @@
         }
 
         @* Confirmation (design 8.14.2): by a code sent to an address on the website's domain, or by asking a moderator. *@
-        @if (Status == "active" && Label.ConfirmedBy is null)
+        @if (Status == OrganisationStatuses.Active && Label.ConfirmedBy is null)
         {
             <div class="stack stack--tight" id="confirm">
                 <h3>@L["Org.Confirm.Title"]</h3>
@@ -69,7 +69,7 @@
                     <li id="representative-@rep.Id" @key="rep.Id">
                         <div class="rows__main"><b>@(rep.DisplayName ?? L["Reasons.Anonymous"])@(rep.IsMe ? " " + L["Org.Reps.Me"] : "")</b><span class="small num">@L.Format("Org.Reps.Since", Display.Day(rep.Since))</span></div>
                         <div class="rows__side">
-                            @if (!rep.IsMe && Status != "closed")
+                            @if (!rep.IsMe && Status != OrganisationStatuses.Closed)
                             {
                                 <button class="btn btn--plain" type="button" id="remove-@rep.Id" disabled="@Locked" @onclick="() => RemoveAsync(rep.Id)">@L["Org.Reps.Remove"]</button>
                             }
@@ -77,7 +77,7 @@
                     </li>
                 }
             </ul>
-            @if (Status == "active")
+            @if (Status == OrganisationStatuses.Active)
             {
                 @if (m.Representatives.Count < OrganisationLimits.RepresentativesMax)
                 {
@@ -94,14 +94,14 @@
                     </div>
                 }
             }
-            @if (Status != "closed")
+            @if (Status != OrganisationStatuses.Closed)
             {
                 <div class="row">
                     @if (m.Representatives.Count > 1)
                     {
                         <button class="linkish small" type="button" id="leave" disabled="@Locked" @onclick="ToggleLeave">@L["Org.Reps.Leave"]</button>
                     }
-                    else if (Status == "active")
+                    else if (Status == OrganisationStatuses.Active)
                     {
                         <button class="linkish small" type="button" id="close" disabled="@Locked" @onclick="ToggleClose">@L["Org.Close"]</button>
                     }
@@ -117,12 +117,12 @@
             }
         </div>
 
-        @if (Status != "closed")
+        @if (Status != OrganisationStatuses.Closed)
         {
             <OrganisationInvitationLink Slug="@Slug" />
         }
 
-        @if (m.Statements.Where(s => s.Statement.Status != "published").ToList() is { Count: > 0 } unseen)
+        @if (m.Statements.Where(s => s.Statement.Status != StatementStatuses.Published).ToList() is { Count: > 0 } unseen)
         {
             <div class="stack stack--tight" id="unseen-statements">
                 <h3>@L["Org.Manage.NotShown"]</h3>
@@ -135,7 +135,7 @@
             </div>
         }
 
-        @if (Status == "active" && m.Refusal is null)
+        @if (Status == OrganisationStatuses.Active && m.Refusal is null)
         {
             <details class="more stack stack--tight" id="edit-profile">
                 <summary class="linkish small">@L["Org.Edit.Open"]</summary>
@@ -156,7 +156,7 @@
     [Parameter, EditorRequired] public string Slug { get; set; } = "";
 
     /// <summary>The profile's public state, from the server-rendered page.</summary>
-    [Parameter] public string Status { get; set; } = "active";
+    [Parameter] public string Status { get; set; } = OrganisationStatuses.Active;
 
     [Parameter] public OrganisationLabelResponse Label { get; set; } = new(null, null);
 

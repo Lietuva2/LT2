@@ -18,13 +18,13 @@ internal sealed class ProfileModerationHandlers(IDbContextFactory<IdentityDb> co
 
     public async Task<Result<Unit>> ReportAsync(Guid reporterUserId, string profileId, string ground, string? text, CancellationToken cancellationToken)
     {
-        if (!ProfileReportGrounds.All.Contains(ground))
+        if (!ReportGrounds.Profile.Contains(ground))
         {
             return Error.Validation("report.ground", "ground");
         }
 
         var note = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
-        if (note is { Length: > ProfileReportGrounds.TextMaxLength })
+        if (note is { Length: > ProfileReportLimits.TextMaxLength })
         {
             return Error.Validation("report.too-long", "text");
         }
@@ -176,7 +176,7 @@ internal sealed class ProfileModerationHandlers(IDbContextFactory<IdentityDb> co
         {
             await outbox.EnqueueAsync(
                 OutboxMessage.Create(MessageKinds.ReportDecidedEmail, new ReportDecidedEmail(
-                    reporter, "profile", outcome, null, null, profile.DisplayName, path, string.IsNullOrWhiteSpace(statement) ? null : statement.Trim())),
+                    reporter, ReportTargets.Profile, outcome, null, null, profile.DisplayName, path, string.IsNullOrWhiteSpace(statement) ? null : statement.Trim())),
                 dbTransaction,
                 cancellationToken);
         }

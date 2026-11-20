@@ -393,7 +393,7 @@ internal sealed class MpMailService(
             Kind = SendingRules.Introduction,
             RunDate = VilniusTime.DateOf(now),
             CreatedAt = now,
-            Status = RunStatuses.Sent,
+            Status = DigestRunStatuses.Sent,
             LetterVersion = letter.Version,
             DueAt = now,
             SentAt = now,

@@ -309,7 +309,7 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
             {
                 var theirs = followedMps[userId]
                     .Where(mpFacts.ContainsKey)
-                    .Select(id => new FollowedMpChoice(mpFacts[id].FirstName + " " + mpFacts[id].LastName, vote.HasResult ? ballots.GetValueOrDefault(id, "did-not-vote") : null))
+                    .Select(id => new FollowedMpChoice(mpFacts[id].FirstName + " " + mpFacts[id].LastName, vote.HasResult ? ballots.GetValueOrDefault(id, BallotChoices.DidNotVote) : null))
                     .OrderBy(c => c.Name, LithuanianOrder)
                     .ToList();
                 due.Add(new DueNotice(userId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowVotedEmail, new FollowVotedEmail(
@@ -471,7 +471,7 @@ internal sealed class StatementNotices(IDbContextFactory<NotificationsDb> contex
         foreach (var e in events)
         {
             if (shown.GetValueOrDefault(e.Key) is not { } statement
-                || known.GetValueOrDefault(statement.OrganisationId) is not { Status: OrganisationStatus.Active } organisation)
+                || known.GetValueOrDefault(statement.OrganisationId) is not { Status: OrganisationStatuses.Active } organisation)
             {
                 // No longer public, or its organisation blocked or closed meanwhile: never sent rather than sent late.
                 FollowEvents.Dropped(e, pass);
@@ -621,7 +621,7 @@ internal sealed class ResponseNotices(
     private static List<FollowedResponse> Listed(
         IEnumerable<PublicResponseFacts> told, IReadOnlyDictionary<long, MpFacts> mpsOf, IReadOnlyDictionary<long, string> factions) =>
         told.Select(r => (Response: r, Mp: mpsOf.GetValueOrDefault(r.SeimasPersonId)))
-            .OrderBy(x => x.Response.Stance switch { "for" => 0, "against" => 1, _ => 2 })
+            .OrderBy(x => x.Response.Stance switch { ResponseStances.For => 0, ResponseStances.Against => 1, _ => 2 })
             .ThenBy(x => x.Mp?.LastName ?? "", LithuanianOrder)
             .ThenBy(x => x.Mp?.FirstName ?? "", LithuanianOrder)
             .Select(x => new FollowedResponse(

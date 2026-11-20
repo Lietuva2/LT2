@@ -22,8 +22,8 @@ public sealed class RecordCloseRuleTests
     [Fact]
     public void A_moderator_closes_an_open_record_as_rejected_or_withdrawn_with_the_day_the_source_and_a_statement()
     {
-        RecordRules.CheckClose(BillRecordStatuses.Open, false, ClosedReasons.Rejected, Today, Today, Source, "Seimas atmetė.").ShouldBeNull();
-        RecordRules.CheckClose(BillRecordStatuses.Open, false, ClosedReasons.Withdrawn, Today.AddDays(-30), Today, Source, "Atsiimtas.").ShouldBeNull();
+        RecordRules.CheckClose(BillRecordStatuses.Open, false, ClosingReasons.Rejected, Today, Today, Source, "Seimas atmetė.").ShouldBeNull();
+        RecordRules.CheckClose(BillRecordStatuses.Open, false, ClosingReasons.Withdrawn, Today.AddDays(-30), Today, Source, "Atsiimtas.").ShouldBeNull();
     }
 
     [Theory]
@@ -42,14 +42,14 @@ public sealed class RecordCloseRuleTests
 
     [Fact]
     public void A_close_without_a_day_is_refused() =>
-        RecordRules.CheckClose(BillRecordStatuses.Open, false, ClosedReasons.Rejected, default, Today, Source, "Bandymas.").ShouldBe("closing.date-required");
+        RecordRules.CheckClose(BillRecordStatuses.Open, false, ClosingReasons.Rejected, default, Today, Source, "Bandymas.").ShouldBe("closing.date-required");
 
     [Theory]
     [InlineData("closed", false)]
     [InlineData("rejected", false)]
     [InlineData("open", true)]
     public void Only_an_open_record_whose_final_vote_is_not_recorded_is_closed_by_a_moderator(string status, bool finished) =>
-        RecordRules.CheckClose(status, finished, ClosedReasons.Rejected, Today, Today, Source, "Bandymas.").ShouldBe("moderation.wrong-state");
+        RecordRules.CheckClose(status, finished, ClosingReasons.Rejected, Today, Today, Source, "Bandymas.").ShouldBe("moderation.wrong-state");
 
     [Theory]
     [InlineData("closed", "rejected", true)]
@@ -66,7 +66,7 @@ public sealed class RecordCloseRuleTests
 
     [Fact]
     public void A_reopening_needs_a_statement() =>
-        RecordRules.CheckReopen(BillRecordStatuses.Closed, ClosedReasons.Rejected, "").ShouldBe("statement.required");
+        RecordRules.CheckReopen(BillRecordStatuses.Closed, ClosingReasons.Rejected, "").ShouldBe("statement.required");
 
     [Fact]
     public void The_source_is_required_and_follows_the_official_texts_rule()
@@ -84,9 +84,9 @@ public sealed class RecordCloseRuleTests
         var record = new BillRecord { Status = BillRecordStatuses.Open };
         var now = new DateTimeOffset(2026, 11, 19, 10, 0, 0, TimeSpan.Zero);
         var counts = CountRules.Publish(7, 2, 4, 1);
-        ClosingRules.Close(record, counts, now, ClosedReasons.Withdrawn, null, Today, Source);
+        ClosingRules.Close(record, counts, now, ClosingReasons.Withdrawn, null, Today, Source);
         (record.Status, record.ClosedAt, record.ClosingVoteId, record.ClosedReason, record.ClosedDecidedOn, record.ClosedSourceUrl)
-            .ShouldBe((BillRecordStatuses.Closed, (DateTimeOffset?)now, (long?)null, ClosedReasons.Withdrawn, (DateOnly?)Today, Source));
+            .ShouldBe((BillRecordStatuses.Closed, (DateTimeOffset?)now, (long?)null, ClosingReasons.Withdrawn, (DateOnly?)Today, Source));
         ClosingRules.IsFrozen(record).ShouldBeTrue();
         ClosingRules.Shown(record, Lt2.Appeals.SideCounts.None).ShouldBe(counts);
 

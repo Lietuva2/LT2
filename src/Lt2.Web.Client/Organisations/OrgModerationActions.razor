@@ -71,18 +71,18 @@
 
     [Parameter] public EventCallback<string> OnDone { get; set; }
 
-    private IReadOnlyList<string> Offered => Kind == "organisation"
+    private IReadOnlyList<string> Offered => Kind == ReportTargets.Organisation
         ? Status switch
         {
-            "active" => ConfirmedBy is null ? ["keep", "confirm", "block"] : ["keep", "unconfirm", "block"],
-            "blocked" => ConfirmedBy is null ? ["unblock"] : ["unblock", "unconfirm"],
+            OrganisationStatuses.Active => ConfirmedBy is null ? ["keep", "confirm", "block"] : ["keep", "unconfirm", "block"],
+            OrganisationStatuses.Blocked => ConfirmedBy is null ? ["unblock"] : ["unblock", "unconfirm"],
             _ => [],
         }
         : Status switch
         {
-            "pending" when BillFinished => ["leave", "hide"],
-            "pending" => ["publish", "restrict", "hide"],
-            "published" => ["seen", "restrict", "hide"],
+            StatementStatuses.Pending when BillFinished => ["leave", "hide"],
+            StatementStatuses.Pending => ["publish", "restrict", "hide"],
+            StatementStatuses.Published => ["seen", "restrict", "hide"],
             _ => [],
         };
 
@@ -94,7 +94,7 @@
 
     /// <summary>Design 8.3: on a statement an administrator also locks the writer's account, last after hiding, where the writer can be restricted.</summary>
     private IReadOnlyList<ModerationChoice> Choices =>
-        [.. Offered.Concat(_administrator && Kind == "statement" && Offered.Contains("restrict") ? ["lock"] : [])
+        [.. Offered.Concat(_administrator && Kind == ReportTargets.Statement && Offered.Contains("restrict") ? ["lock"] : [])
             .Select(a => new ModerationChoice(a, $"org-action-{a}-{Id}", L["OrgMod.Action." + a], Apart: a is "hide" or "block" or "lock"))];
 
     private static bool Optional(string action) => action is "keep" or "publish" or "seen" or "leave";
