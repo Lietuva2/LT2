@@ -195,7 +195,7 @@ public sealed class EmailLookTests
     {
         var html = Introduction().HtmlBody!;
 
-        html.ShouldContain("<p style=\"margin:24px 0 0;font-weight:600\">Donatas Šimelis</p><p style=\"margin:2px 0 16px;color:#475569\">VšĮ Lietuva 2.0 direktorius</p>");
+        html.ShouldContain("<p style=\"margin:32px 0 0;font-weight:600\">Donatas Šimelis</p><p style=\"margin:2px 0 24px;color:#475569\">VšĮ Lietuva 2.0 direktorius</p>");
         Introduction().TextBody.ShouldContain("Donatas Šimelis\nVšĮ Lietuva 2.0 direktorius\n\nKeisti suvestinių dažnumą");
     }
 

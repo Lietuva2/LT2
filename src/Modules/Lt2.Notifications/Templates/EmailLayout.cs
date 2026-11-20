@@ -36,14 +36,14 @@ internal static class EmailLayout
     /// <summary>The wordmark of the header: text, never an image.</summary>
     private const string Wordmark = "Lietuva 2.0";
 
-    /// <summary>The type of the whole email (16px, line height 1.55, ink on white).</summary>
-    private const string BaseStyle = "font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;line-height:1.55;color:#1e293b;background-color:#ffffff";
+    /// <summary>The type of the whole email (16px, line height 1.6, ink on white).</summary>
+    private const string BaseStyle = "font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:16px;line-height:1.6;color:#1e293b;background-color:#ffffff";
 
     /// <summary>One paragraph of the letter.</summary>
-    internal const string ParagraphStyle = "margin:0 0 16px";
+    internal const string ParagraphStyle = "margin:0 0 24px";
 
     /// <summary>The footer's grey (contrast 4.8:1 on white), small.</summary>
-    private const string FooterStyle = "margin:32px 0 0;padding:12px 0 0;border-top:1px solid #cbd5e1;font-size:13px;line-height:1.5;color:#64748b";
+    private const string FooterStyle = "margin:40px 0 0;padding:16px 0 0;border-top:1px solid #cbd5e1;font-size:13px;line-height:1.5;color:#64748b";
 
     /// <summary>The look of a "text: url" line's link in a letter: bold, in the site's green.</summary>
     private const string ActionLinkStyle = "font-weight:600;color:#1f6b3a";
@@ -159,8 +159,8 @@ internal static class EmailLayout
         + $"<body style=\"margin:0;padding:0;{BaseStyle}\">"
         + $"<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:100%;background-color:#ffffff\"><tr><td align=\"center\" style=\"padding:0\">"
         + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:100%;max-width:36rem\"><tr>"
-        + $"<td style=\"padding:24px 16px;text-align:left;{BaseStyle}\">"
-        + $"<div style=\"margin:0 0 24px;padding:0 0 10px;border-bottom:2px solid #1f6b3a;font-size:20px;line-height:1.3;font-weight:700;color:#154d29\">{Wordmark}</div>"
+        + $"<td style=\"padding:28px 20px;text-align:left;{BaseStyle}\">"
+        + $"<div style=\"margin:0 0 32px;padding:0 0 12px;border-bottom:2px solid #1f6b3a;font-size:20px;line-height:1.3;font-weight:700;color:#154d29\">{Wordmark}</div>"
         + bodyHtml
         + $"<div style=\"{FooterStyle}\">{footerHtml}</div>"
         + "</td></tr></table></td></tr></table></body></html>";
@@ -246,8 +246,8 @@ internal static class EmailLayout
     /// room above, the role muted on the next line.
     /// </summary>
     internal static string SignatureHtml(string name, string? role = null) =>
-        $"<p style=\"margin:24px 0 {(role is null ? "16px" : "0")};font-weight:600\">{Encode(name)}</p>"
-        + (role is null ? "" : $"<p style=\"margin:2px 0 16px;color:#475569\">{Encode(role)}</p>");
+        $"<p style=\"margin:32px 0 {(role is null ? "24px" : "0")};font-weight:600\">{Encode(name)}</p>"
+        + (role is null ? "" : $"<p style=\"margin:2px 0 24px;color:#475569\">{Encode(role)}</p>");
 
     /// <summary>
     /// What the system adds to an MP email, set apart from the letter by room and a light rule (design 8.19.5): optionally a
@@ -257,7 +257,7 @@ internal static class EmailLayout
     /// </summary>
     internal static string SystemHtml(string? lead, string? buttonLabel, string? buttonUrl, string quietLine)
     {
-        var html = "<div style=\"margin:32px 0 0;padding:20px 0 0;border-top:1px solid #cbd5e1\">";
+        var html = "<div style=\"margin:40px 0 0;padding:24px 0 0;border-top:1px solid #cbd5e1\">";
         if (lead is not null && buttonLabel is not null && buttonUrl is not null)
         {
             html += $"<p style=\"margin:0 0 12px;font-size:15px;line-height:1.5;color:#334155\">{Encode(lead)}</p>" + ButtonHtml(buttonUrl, buttonLabel, "0 0 20px");
@@ -286,8 +286,8 @@ internal static class EmailLayout
     /// </summary>
     internal static string TypedHtml(string typed) => string.Concat(TextLayout.Of(typed).Select(block => block.Kind switch
     {
-        TextBlockKind.Bullets => $"<ul style=\"margin:0 0 16px;padding-left:24px\">" + string.Concat(block.Items.Select(i => $"<li style=\"margin:0 0 4px\">{Linked(Encode(i.Text))}</li>")) + "</ul>",
-        TextBlockKind.Numbered => $"<ol style=\"margin:0 0 16px;padding-left:24px\">" + string.Concat(block.Items.Select(i => $"<li value=\"{i.Number?.ToString(CultureInfo.InvariantCulture)}\" style=\"margin:0 0 4px\">{Linked(Encode(i.Text))}</li>")) + "</ol>",
+        TextBlockKind.Bullets => $"<ul style=\"margin:0 0 24px;padding-left:24px\">" + string.Concat(block.Items.Select(i => $"<li style=\"margin:0 0 8px\">{Linked(Encode(i.Text))}</li>")) + "</ul>",
+        TextBlockKind.Numbered => $"<ol style=\"margin:0 0 24px;padding-left:24px\">" + string.Concat(block.Items.Select(i => $"<li value=\"{i.Number?.ToString(CultureInfo.InvariantCulture)}\" style=\"margin:0 0 8px\">{Linked(Encode(i.Text))}</li>")) + "</ol>",
         _ => $"<p style=\"{ParagraphStyle}\">{Linked(Encode(block.Items[0].Text))}</p>",
     }));
 
