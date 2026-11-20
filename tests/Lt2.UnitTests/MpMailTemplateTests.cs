@@ -247,8 +247,8 @@ public sealed class MpMailTemplateTests
             Official, 1, "Tema", Letter, "Rūta Mockutė", "VšĮ LT2.0 vadovė", MpMailPaths.Preferences(Token), MpMailPaths.OneClick(Token), Test: false, null));
 
         email.TextBody.ShouldStartWith(Letter + "\n\nRūta Mockutė");
-        email.HtmlBody!.ShouldContain("<p style=\"margin:0 0 16px\">Ką rasite:</p><ul style=\"margin:0 0 16px;padding-left:24px\"><li style=\"margin:0 0 4px\">projektų puslapius</li><li style=\"margin:0 0 4px\">argumentus &lt;b&gt;abiem&lt;/b&gt; pusėms</li></ul>"
-            + "<p style=\"margin:0 0 16px\">Kaip tai veikia:</p><ol style=\"margin:0 0 16px;padding-left:24px\"><li value=\"1\" style=\"margin:0 0 4px\">Žmonės renkasi pusę.</li><li value=\"2\" style=\"margin:0 0 4px\">Suvestinę gaunate jūs.</li></ol>");
+        email.HtmlBody!.ShouldContain("<p style=\"margin:0 0 24px\">Ką rasite:</p><ul style=\"margin:0 0 24px;padding-left:24px\"><li style=\"margin:0 0 8px\">projektų puslapius</li><li style=\"margin:0 0 8px\">argumentus &lt;b&gt;abiem&lt;/b&gt; pusėms</li></ul>"
+            + "<p style=\"margin:0 0 24px\">Kaip tai veikia:</p><ol style=\"margin:0 0 24px;padding-left:24px\"><li value=\"1\" style=\"margin:0 0 8px\">Žmonės renkasi pusę.</li><li value=\"2\" style=\"margin:0 0 8px\">Suvestinę gaunate jūs.</li></ol>");
         email.HtmlBody!.ShouldNotContain("<b>abiem</b>", Case.Sensitive, "nothing typed becomes markup");
     }
 

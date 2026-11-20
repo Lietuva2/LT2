@@ -54,7 +54,7 @@ public sealed class EmailLinkTests
     {
         var email = EmailLayout.Build("a@pavyzdys.test", "S", ["Laba diena,", "Projektas: " + Url], "Privatumas: https://lt2.test/privatumas");
         email.TextBody.ShouldBe("Laba diena,\n\nProjektas: " + Url + "\n\nPrivatumas: https://lt2.test/privatumas\n");
-        email.HtmlBody!.ShouldContain("<p style=\"margin:0 0 16px\">" + Link("Projektas") + "</p>");
+        email.HtmlBody!.ShouldContain("<p style=\"margin:0 0 24px\">" + Link("Projektas") + "</p>");
         email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/privatumas\" style=\"color:#64748b;text-decoration:underline\">Privatumas</a></div>", Case.Sensitive, "the footer's links are its grey, underlined");
         email.HtmlBody!.ShouldNotContain(">" + Url, Case.Sensitive, "no address printed as text");
     }

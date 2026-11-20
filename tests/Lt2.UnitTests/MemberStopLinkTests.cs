@@ -26,7 +26,7 @@ public sealed class MemberStopLinkTests
     private const string Bill = "XVP-0412";
     private const string Title = "Gyventojų pajamų mokesčio įstatymo pataisa";
     private const string Account = AccountScreens.EmailRhythm;
-    private const string FooterStart = "<div style=\"margin:32px 0 0;padding:12px 0 0;border-top:1px solid #cbd5e1;font-size:13px;line-height:1.5;color:#64748b\">";
+    private const string FooterStart = "<div style=\"margin:40px 0 0;padding:16px 0 0;border-top:1px solid #cbd5e1;font-size:13px;line-height:1.5;color:#64748b\">";
 
     /// <summary>Why each email of <see cref="EveryKind"/> came, in its order: the footer's first sentence.</summary>
     private static readonly string[] Reasons =

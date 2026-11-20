@@ -122,7 +122,7 @@ public sealed class DemoEmailTests
             Regex.IsMatch(email.Subject + email.TextBody + email.HtmlBody, @"\b(Email|Digest|MpMail|Intro|Report|Follow|Org|Account|Moderation)\.[A-Z]\w+(\.\w+)+").ShouldBeFalse(demo.Name + ": a resource key is shown instead of its text");
             email.TextBody.ShouldNotContain("\n\n\n", Case.Sensitive, demo.Name + ": an empty paragraph");
             email.TextBody.ShouldNotContain("null", Case.Insensitive, demo.Name);
-            email.HtmlBody!.ShouldNotContain("<p style=\"margin:0 0 16px\"></p>", Case.Sensitive, demo.Name + ": an empty paragraph");
+            email.HtmlBody!.ShouldNotContain("<p style=\"margin:0 0 24px\"></p>", Case.Sensitive, demo.Name + ": an empty paragraph");
             email.HtmlBody.ShouldNotContain("<br><br>", Case.Sensitive, demo.Name + ": an empty line");
         }
     }
