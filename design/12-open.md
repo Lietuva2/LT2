@@ -249,6 +249,8 @@ for the lawyer).
 
 ## Awaiting a native speaker
 
+- 8.19.4: the welcome to an extra recipient, "Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo
+  narys: {0}." (`EmailTemplates` `MpMail.extra-welcome.Body`), its stop link in the footer.
 - 8.19.3, 8.4: the summary's HTML-only link and figure labels (`EmailTemplates` `Digest.ForLabel` "Prašo balsuoti už", `Digest.AgainstLabel` "Prašo balsuoti prieš", `Digest.Older` "iš jų {0} – paskyros senesnės nei 30 d.", `Digest.AnswerButton` "Atsakyti visiems", `Digest.WholeReasonLabel` "Skaityti visą", `Digest.PublicCopyLabel` "Ši suvestinė viešai"); the text part no longer has "Visi skaičiai ir argumentai" beside another link to the same bill.
 - 8.19.3, 8.19.5: the takeover's lead line and button in every MP email, "Prisijungę prie Lietuva 2.0 šiuo adresu, galite perimti savo Seimo nario profilį ir atsakyti visiems iš karto." and "Perimti profilį ir atsakyti visiems iš karto" (`EmailTemplates` `Digest.TakeoverLead`, `Digest.TakeoverButton`).
 - 8.4, 8.19.3: the heading of a side with more than two published arguments, "Dažniausi argumentai už (iš {0}):" / "prieš (iš {0}):"

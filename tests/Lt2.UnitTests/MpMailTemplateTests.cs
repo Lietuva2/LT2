@@ -263,6 +263,19 @@ public sealed class MpMailTemplateTests
         email.Headers.ShouldBeNull("no one-click stop on a test copy");
     }
 
+    [Fact]
+    public void The_welcome_to_an_extra_recipient_carries_its_stop_link_in_the_footer_not_in_the_letter()
+    {
+        var email = Templates().Notice(new MpMailNoticeEmail(Official, MpMailNotices.ExtraWelcome, "Laima Uosytė", null, MpMailPaths.StopCopies(Token), "padejeja@pavyzdys.test", null));
+
+        email.TextBody.ShouldContain("Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo narys: Laima Uosytė.");
+        email.TextBody.ShouldNotContain("galite atsisakyti ir dabar");
+        var footer = email.TextBody[email.TextBody.IndexOf("Nebegauti kopijų: ", StringComparison.Ordinal)..];
+        footer.ShouldContain(MpMailPaths.StopCopies(Token));
+        footer.ShouldContain("privatumo pranešime");
+        email.HtmlBody!.ShouldContain(">Nebegauti kopijų</a>");
+    }
+
     [Theory]
     [InlineData(MpMailNotices.Changed, "suvestinių nustatymai pakeisti")]
     [InlineData(MpMailNotices.NewLink, "nauja suvestinių nustatymų nuoroda")]
