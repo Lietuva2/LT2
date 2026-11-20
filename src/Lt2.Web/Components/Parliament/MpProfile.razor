@@ -43,19 +43,19 @@
                the button. *@
             <div class="row follow-line">
                 <p class="row">
-                    @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee" or "group"))
+                    @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is BodyKinds.Faction or BodyKinds.Committee or BodyKinds.Group))
                     {
-                        @if (m.Body.Kind == "group")
+                        @if (m.Body.Kind == BodyKinds.Group)
                         {
                             <span class="tag">@m.Body.Name</span>
                         }
                         else
                         {
-                            <a class="tag @(m.Body.Kind == "faction" ? "tag--ink" : "")" href="/@(m.Body.Kind == "faction" ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
+                            <a class="tag @(m.Body.Kind == BodyKinds.Faction ? "tag--ink" : "")" href="/@(m.Body.Kind == BodyKinds.Faction ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
                         }
                     }
                 </p>
-                <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
+                <Lt2.Web.Client.Appeals.FollowButton Kind="@Lt2.Web.Client.Appeals.FollowButton.Mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
             </div>
         </div>
 

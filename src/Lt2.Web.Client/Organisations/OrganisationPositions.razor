@@ -39,7 +39,7 @@
                     </div>
                 }
             </div>
-            var remarks = Standing(statements).Where(i => i.Statement.Stance == "remarks").ToList();
+            var remarks = Standing(statements).Where(i => i.Statement.Stance == StatementStances.Remarks).ToList();
             @if (remarks.Count > 0)
             {
                 <div class="stack" id="organisations-remarks">
@@ -73,7 +73,7 @@
                             <span class="@OrganisationWords.StanceClass(own.Stance)">@L["Org.Stance." + own.Stance]</span>
                             <span class="tag" id="my-statement-status-@org.Slug">@L["Org.Status." + own.Status]</span>
                         </p>
-                        @if (own.Status == "hidden" && RendererInfo.IsInteractive)
+                        @if (own.Status == StatementStatuses.Hidden && RendererInfo.IsInteractive)
                         {
                             @* Owner, 2026-11-17: the representatives see their hidden statement, quiet, with the moderator's explanation. *@
                             <div class="said said--hidden" id="my-statement-hidden-@org.Slug">
@@ -86,7 +86,7 @@
                     {
                         <p class="note note--quiet" id="refusal-@org.Slug">@L["Org.Refusal." + refusal]</p>
                     }
-                    else if (org.Statement is not { Status: "hidden" })
+                    else if (org.Statement is not { Status: StatementStatuses.Hidden })
                     {
                         @if (_editing != org.Slug)
                         {
@@ -119,7 +119,7 @@
                                     <div class="switch switch--stack" id="stance-@org.Slug">
                                         @foreach (var stance in OrganisationLimits.Stances)
                                         {
-                                            <label class="switch__half switch__half--@(stance == "remarks" ? "neutral" : stance)">
+                                            <label class="switch__half switch__half--@(stance == StatementStances.Remarks ? "neutral" : stance)">
                                                 <input class="switch__input" type="radio" name="stance-@org.Slug" id="stance-@stance-@org.Slug" value="@stance" checked="@(_stance == stance)"
                                                        @onchange="() => _stance = stance" disabled="@Locked" aria-invalid="@Invalid("stance")" />
                                                 <span>@L["Org.Stance." + stance]</span>
@@ -143,7 +143,7 @@
                                            aria-describedby="@DescribedBy("link", $"statement-link-{org.Slug}", $"statement-link-hint-{org.Slug}")" aria-invalid="@Invalid("link")" placeholder="https://" @bind="_link" @bind:event="oninput" disabled="@Locked" />
                                     <FieldError Errors="Errors" Field="link" For="@($"statement-link-{org.Slug}")" />
                                 </div>
-                                @if (_stance is "for" or "against")
+                                @if (_stance is StatementStances.For or StatementStances.Against)
                                 {
                                     <div class="field @ErrorClass("goal")">
                                         <label for="statement-goal-@org.Slug">@L["Org.Form.Goal"]</label>
@@ -168,7 +168,7 @@
 }
 
 @code {
-    private static readonly string[] Sides = ["for", "against"];
+    private static readonly string[] Sides = [StatementStances.For, StatementStances.Against];
 
     /// <summary>
     /// The part shows when an organisation has a statement shown on the bill, or the caller represents one (their way to
@@ -292,7 +292,7 @@
     /// </summary>
     private RenderFragment Actions(StatementResponse statement) => __builder =>
     {
-        <CommentThread Kind="statement" TargetId="statement.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(statement.Id)" Count="statement.Comments"
+        <CommentThread Kind="@CommentKinds.Statement" TargetId="statement.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(statement.Id)" Count="statement.Comments"
                        Open="@(CommentPaging.Asked(CommentsShown, statement.Id, Linked) is not null)" Asked="@CommentPaging.Asked(CommentsShown, statement.Id, Linked)"
                        Marked="@CommentPaging.Marked(statement.Id, Linked)" PagePath="@CommentPaging.PagePath(Number, ResponsesShown)" Contact="@Contact" Moderator="Moderator" />
         <MoreMenu Id="@($"more-statement-{statement.Id}")">
@@ -308,7 +308,7 @@
         </MoreMenu>
         @if (_reporting == statement.Id)
         {
-            <div class="act__panel"><ReportForm TargetKind="statement" TargetId="statement.Id" OnClose="() => _reporting = null" /></div>
+            <div class="act__panel"><ReportForm TargetKind="@ReportTargets.Statement" TargetId="statement.Id" OnClose="() => _reporting = null" /></div>
         }
     };
 
@@ -324,7 +324,7 @@
         var threads = new Dictionary<Guid, CommentThreadResponse>();
         foreach (var item in Statements?.Items ?? [])
         {
-            if ((await CommentsApi.GetThreadAsync("statement", item.Statement.Id, CommentPaging.Asked(CommentsShown, item.Statement.Id, Linked))).Value is { } thread)
+            if ((await CommentsApi.GetThreadAsync(CommentKinds.Statement, item.Statement.Id, CommentPaging.Asked(CommentsShown, item.Statement.Id, Linked))).Value is { } thread)
             {
                 threads[item.Statement.Id] = thread;
             }
@@ -363,7 +363,7 @@
     private Task SaveAsync(string slug) => RunAsync(async () =>
     {
         int? goal = null;
-        if (_stance is "for" or "against" && !string.IsNullOrWhiteSpace(_goal))
+        if (_stance is StatementStances.For or StatementStances.Against && !string.IsNullOrWhiteSpace(_goal))
         {
             if (!int.TryParse(_goal.Replace(" ", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal), System.Globalization.NumberStyles.None,
                     System.Globalization.CultureInfo.InvariantCulture, out var parsed))
@@ -383,7 +383,7 @@
         }
 
         _editing = null;
-        Info = saved.Value!.Status == "pending" ? L["Org.Form.Pending"] : L["Org.Form.Published"];
+        Info = saved.Value!.Status == StatementStatuses.Pending ? L["Org.Form.Pending"] : L["Org.Form.Published"];
         await ReloadAsync();
     });
 

@@ -23,7 +23,7 @@
 }
 
 @code {
-    private static readonly string[] Order = ["for", "against", "abstain", "did-not-vote"];
+    private static readonly string[] Order = [BallotChoices.For, BallotChoices.Against, BallotChoices.Abstain, BallotChoices.DidNotVote];
 
     private List<(Hemicycle.Seat Seat, BallotResponse Ballot)> _seats = [];
     private double _side;

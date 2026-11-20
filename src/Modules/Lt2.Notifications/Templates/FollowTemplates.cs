@@ -265,7 +265,7 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     }
 
     /// <summary>Why a record a moderator closed closed: <c>withdrawn</c>, or <c>rejected</c> (also for anything unknown).</summary>
-    private static string ClosedReason(string? reason) => reason == "withdrawn" ? "withdrawn" : "rejected";
+    private static string ClosedReason(string? reason) => reason == ClosingReasons.Withdrawn ? ClosingReasons.Withdrawn : ClosingReasons.Rejected;
 
     /// <summary>A followed member's text: a comment, or an argument (also for anything unknown).</summary>
     private static string What(string? what) => what == MemberTextKinds.Comment ? MemberTextKinds.Comment : MemberTextKinds.Argument;

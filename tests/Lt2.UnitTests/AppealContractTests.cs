@@ -26,7 +26,7 @@ public sealed class AppealContractTests
         }
 
         AppealLimits.DescriptionMaxLength.ShouldBe(AppealRules.DescriptionMaxLength);
-        AppealLimits.Sides.ShouldBe(Sides.All);
+        Sides.All.ShouldBe(["for", "against"], "the wire format; the browser's and the server's copy are the same file");
     }
 
     [Fact]

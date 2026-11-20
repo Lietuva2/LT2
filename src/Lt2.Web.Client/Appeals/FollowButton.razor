@@ -53,8 +53,20 @@
     private bool _signedIn;
     private bool _own;
 
-    /// <summary><c>bill</c>, <c>mp</c>, <c>organisation</c> or <c>member</c>.</summary>
-    [Parameter, EditorRequired] public string Kind { get; set; } = "bill";
+    /// <summary>What is followed, <see cref="Kind"/>: a bill (by its number).</summary>
+    public const string Bill = "bill";
+
+    /// <summary>An MP, by the profile's slug.</summary>
+    public const string Mp = "mp";
+
+    /// <summary>An organisation, by the profile's slug.</summary>
+    public const string Organisation = "organisation";
+
+    /// <summary>A member's public profile, by its id.</summary>
+    public const string Member = "member";
+
+    /// <summary><see cref="Bill"/>, <see cref="Mp"/>, <see cref="Organisation"/> or <see cref="Member"/>.</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = Bill;
 
     /// <summary>The bill's number, the MP's or the organisation's profile slug, or a member's public profile id.</summary>
     [Parameter, EditorRequired] public string Key { get; set; } = "";
@@ -85,7 +97,7 @@
     protected override async Task OnInitializedAsync()
     {
         _signedIn = await IsSignedInAsync();
-        if (_signedIn && Kind == "member")
+        if (_signedIn && Kind == Member)
         {
             Own ??= (await Profiles.GetMineAsync()).Value?.ProfileId == Key;
             _own = Own == true;
@@ -95,14 +107,14 @@
         {
             Following = Kind switch
             {
-                "mp" => mine.Mps.Any(m => m.Slug == Key),
-                "organisation" => mine.Organisations.Any(o => o.Slug == Key),
-                "member" => (mine.Members ?? []).Any(m => m.ProfileId == Key),
+                Mp => mine.Mps.Any(m => m.Slug == Key),
+                Organisation => mine.Organisations.Any(o => o.Slug == Key),
+                Member => (mine.Members ?? []).Any(m => m.ProfileId == Key),
                 _ => mine.Bills.Any(b => string.Equals(b.Number, Key, StringComparison.OrdinalIgnoreCase)),
             };
         }
 
-        if (_signedIn && Kind == "bill" && RendererInfo.IsInteractive)
+        if (_signedIn && Kind == Bill && RendererInfo.IsInteractive)
         {
             BillState.Changed += OnBillChanged;
         }
@@ -144,12 +156,12 @@
         var follow = Following != true;
         var result = (Kind, follow) switch
         {
-            ("mp", true) => await Follows.FollowMpAsync(Key),
-            ("mp", false) => await Follows.UnfollowMpAsync(Key),
-            ("organisation", true) => await Follows.FollowOrganisationAsync(Key),
-            ("organisation", false) => await Follows.UnfollowOrganisationAsync(Key),
-            ("member", true) => await Follows.FollowMemberAsync(Key),
-            ("member", false) => await Follows.UnfollowMemberAsync(Key),
+            (Mp, true) => await Follows.FollowMpAsync(Key),
+            (Mp, false) => await Follows.UnfollowMpAsync(Key),
+            (Organisation, true) => await Follows.FollowOrganisationAsync(Key),
+            (Organisation, false) => await Follows.UnfollowOrganisationAsync(Key),
+            (Member, true) => await Follows.FollowMemberAsync(Key),
+            (Member, false) => await Follows.UnfollowMemberAsync(Key),
             (_, true) => await Follows.FollowBillAsync(Key),
             _ => await Follows.UnfollowBillAsync(Key),
         };

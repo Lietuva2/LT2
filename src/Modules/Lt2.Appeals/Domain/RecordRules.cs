@@ -1,3 +1,5 @@
+using Lt2.SharedKernel;
+
 namespace Lt2.Appeals.Domain;
 
 /// <summary>
@@ -129,7 +131,7 @@ internal static class RecordRules
             return "statement.required";
         }
 
-        if (reason is null || !ClosedReasons.ByModerator.Contains(reason))
+        if (reason is null || !ClosingReasons.ByModerator.Contains(reason))
         {
             return "closing.reason";
         }
@@ -168,7 +170,7 @@ internal static class RecordRules
 
     /// <summary>Whether "Atšaukti uždarymą" applies: a closed record whose reason is a moderator's (rejected or withdrawn).</summary>
     public static bool MayReopen(string recordStatus, string? closedReason) =>
-        recordStatus == BillRecordStatuses.Closed && closedReason is not null && ClosedReasons.ByModerator.Contains(closedReason);
+        recordStatus == BillRecordStatuses.Closed && closedReason is not null && ClosingReasons.ByModerator.Contains(closedReason);
 
     /// <summary>
     /// The source a moderator's description gets: <c>ai-draft</c> when it started from a draft, and it stays <c>ai-draft</c>

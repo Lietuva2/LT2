@@ -18,7 +18,7 @@
             <a class="statement__name" href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Title</a>
         </p>
     }
-    @if (Response.Status is not ("hidden" or "withdrawn"))
+    @if (Response.Status is not (ResponseStatuses.Hidden or ResponseStatuses.Withdrawn))
     {
         <p class="said__side"><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span></p>
     }
@@ -42,14 +42,14 @@
     </p>
     @switch (Response.Status)
     {
-        case "hidden":
+        case ResponseStatuses.Hidden:
             <p class="note note--quiet">@F.T["Responses.Hidden"]</p>
             @if (Response.HiddenStatement is { } why)
             {
                 <p class="small">@F.T.Format("Responses.HiddenWhy", why)</p>
             }
             break;
-        case "withdrawn":
+        case ResponseStatuses.Withdrawn:
             <p class="row"><span class="tag">@F.T["Responses.Withdrawn"]</span> <span class="small num">@Display.Day(Response.WithdrawnAt ?? Response.PublishedAt)</span></p>
             break;
         default:
@@ -65,7 +65,7 @@
             <span>@(who.Faction ?? F.T["Vote.NoFaction"])</span>
         }
         <span class="tag">@F.T["Responses.Mark"]</span>
-        @if (Response.Status != "hidden")
+        @if (Response.Status != ResponseStatuses.Hidden)
         {
             <span class="small num"><span class="nowrap">@F.T.Format("Responses.Published", Display.Day(Response.PublishedAt))</span>@if (Response.EditedAt is { } edited) {<text> · </text><span class="nowrap">@F.T.Format("Responses.Edited", Display.Day(edited))</span>}</span>
         }
@@ -75,13 +75,13 @@
         @* The action row (design 8.16.1): "Aptarimas (n)" and "⋯" on the bill's page, as under every text. *@
         <div class="act" id="@(IdPrefix)actions">@ChildContent</div>
     }
-    @if (Response.Status == "published" && Response.Vote is { } vote)
+    @if (Response.Status == ResponseStatuses.Published && Response.Vote is { } vote)
     {
         @* Design 8.5.5: two facts side by side, without a word of judgement; nothing anywhere adds them up. *@
         <p class="small" id="@(IdPrefix)vote">@F.T.Format("Responses.Answered", F.T["Responses.Will." + Response.Stance], F.T["Responses.Ballot." + vote.Ballot])
             <a href="/seimas/balsavimai/@vote.VoteId">@F.T["Responses.VotePage"]</a></p>
     }
-    @if (Response.Status != "hidden" && Response.Earlier.Count > 0)
+    @if (Response.Status != ResponseStatuses.Hidden && Response.Earlier.Count > 0)
     {
         <details class="more stack stack--tight">
             <summary class="linkish small">@F.T.Format("Responses.Earlier", Display.Number(Response.Earlier.Count))</summary>
@@ -90,7 +90,7 @@
                changes, so the last edit shows too, and a withdrawn one's withdrawal does, its text struck through, so the text
                withdrawn is there whole too. *@
             <ul class="stack stack--tight">
-                @if (Response.Status == "published")
+                @if (Response.Status == ResponseStatuses.Published)
                 {
                     <li class="stack stack--tight" id="@(IdPrefix)response-current">
                         <p class="row small"><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span>
@@ -98,7 +98,7 @@
                         <Lt2.Web.Client.Components.TextChanges Old="@Response.Earlier[0].Text" New="@Response.Text" Class="voice typed" />
                     </li>
                 }
-                else if (Response.Status == "withdrawn")
+                else if (Response.Status == ResponseStatuses.Withdrawn)
                 {
                     <li class="stack stack--tight" id="@(IdPrefix)response-withdrawal">
                         <p class="row small"><span class="num">@F.T.Format("Responses.Withdrawal", Display.Day(Response.WithdrawnAt ?? Response.Earlier[0].ReplacedAt))</span></p>
@@ -144,8 +144,8 @@
 
     private static string StanceClass(string? stance) => stance switch
     {
-        "for" => "choice choice--for",
-        "against" => "choice choice--against",
+        ResponseStances.For => "choice choice--for",
+        ResponseStances.Against => "choice choice--against",
         _ => "choice choice--remarks",
     };
 }

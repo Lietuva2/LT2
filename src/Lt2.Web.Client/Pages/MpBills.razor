@@ -73,17 +73,17 @@ else
                             }
                         </div>
                         <div class="rows__side">
-                            @if (b.Response is { Status: "published" } r)
+                            @if (b.Response is { Status: ResponseStatuses.Published } r)
                             {
                                 <span class="small" id="mp-bill-response-@b.Number">@L.Format("MpBills.Answered", L["MpResponse.Will." + r.Stance])</span>
                             }
-                            else if (b.Response is { Status: "hidden" })
+                            else if (b.Response is { Status: ResponseStatuses.Hidden })
                             {
                                 <span class="small" id="mp-bill-response-@b.Number">@L["MpBills.Hidden"]</span>
                             }
                             else
                             {
-                                @if (b.Response is { Status: "withdrawn" })
+                                @if (b.Response is { Status: ResponseStatuses.Withdrawn })
                                 {
                                     <span class="small" id="mp-bill-response-@b.Number">@L["MpBills.Withdrawn"]</span>
                                 }

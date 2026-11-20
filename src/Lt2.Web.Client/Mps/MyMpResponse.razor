@@ -44,7 +44,7 @@ else if (_mine is not null)
             <p class="note note--quiet" id="my-response-refusal">@L["MpResponse.Refusal." + refusal]</p>
         }
 
-        @if (mine.Response is { Status: "published" } && !_editing && mine.Open)
+        @if (mine.Response is { Status: ResponseStatuses.Published } && !_editing && mine.Open)
         {
             <p class="small" id="my-response-state">@L["MpResponse.IsPublished"]</p>
             @if (_withdrawing)
@@ -63,9 +63,9 @@ else if (_mine is not null)
                 </div>
             }
         }
-        else if (mine.Response is not { Status: "hidden" } && (mine.Open || _editing))
+        else if (mine.Response is not { Status: ResponseStatuses.Hidden } && (mine.Open || _editing))
         {
-            @if (mine.Response is { Status: "withdrawn" })
+            @if (mine.Response is { Status: ResponseStatuses.Withdrawn })
             {
                 <p class="small" id="my-response-state">@L["MpResponse.IsWithdrawn"]</p>
             }
@@ -77,7 +77,7 @@ else if (_mine is not null)
                     <div class="switch switch--stack" id="my-response-stance">
                         @foreach (var stance in MpResponseLimits.Stances)
                         {
-                            <label class="switch__half switch__half--@(stance == "undecided" ? "neutral" : stance)">
+                            <label class="switch__half switch__half--@(stance == ResponseStances.Undecided ? "neutral" : stance)">
                                 <input class="switch__input" type="radio" name="my-response-stance" id="my-response-stance-@stance" value="@stance" checked="@(_stance == stance)"
                                        @onchange="() => _stance = stance" disabled="@(Locked || !mine.MayWrite)" aria-invalid="@Invalid("stance")" />
                                 <span>@L["MpResponse.Stance." + stance]</span>
@@ -139,7 +139,7 @@ else if (_mine is not null)
 
         // The length is the members' texts setting, Texts:MaxLength (design 5.6, owner 2026-11-16); 0 = no limit.
         _maxLength ??= _mine is null ? null : (await Appeals.GetRulesAsync()).Value?.TextMaxLength;
-        var last = _mine?.Response is { Status: "withdrawn" } withdrawn ? withdrawn.Earlier.FirstOrDefault() : null;
+        var last = _mine?.Response is { Status: ResponseStatuses.Withdrawn } withdrawn ? withdrawn.Earlier.FirstOrDefault() : null;
         _stance = _mine?.Response?.Stance ?? last?.Stance;
         _text = _mine?.Response?.Text ?? last?.Text ?? "";
     }
@@ -186,7 +186,7 @@ else if (_mine is not null)
     /// <summary>Where the MP's response stands in the public list when the page does not show it yet; null otherwise.</summary>
     private async Task<int?> PositionBeyondShownAsync()
     {
-        if (_mine?.Response is not { Status: "published" } own || (await Responses.GetOnBillAsync(Number)).Value is not { } view)
+        if (_mine?.Response is not { Status: ResponseStatuses.Published } own || (await Responses.GetOnBillAsync(Number)).Value is not { } view)
         {
             return null;
         }

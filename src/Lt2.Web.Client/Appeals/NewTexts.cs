@@ -1,3 +1,4 @@
+using Lt2.Api.Contracts.Comments;
 using Lt2.Api.Contracts.Me;
 
 namespace Lt2.Web.Client.Appeals;
@@ -20,7 +21,7 @@ public sealed class NewTexts
         comments = answer.Comments.Select(c => c.Id).ToHashSet();
         discussions = answer.Comments.Select(c => c.TargetId).ToHashSet();
         CommentsByTarget = answer.Comments.GroupBy(c => c.TargetId).ToDictionary(g => g.Key, g => (IReadOnlyCollection<Guid>)g.Select(c => c.Id).ToList());
-        Reasons = answer.Reasons.Concat(answer.Comments.Where(c => c.TargetKind == "reason").Select(c => c.TargetId)).Distinct().ToList();
+        Reasons = answer.Reasons.Concat(answer.Comments.Where(c => c.TargetKind == CommentKinds.Reason).Select(c => c.TargetId)).Distinct().ToList();
     }
 
     /// <summary>

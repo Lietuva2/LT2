@@ -1,4 +1,5 @@
 using FluentValidation;
+using Lt2.Api.Contracts.Parliament;
 using Microsoft.Extensions.Localization;
 
 namespace Lt2.Api.Contracts.Appeals;
@@ -6,7 +7,7 @@ namespace Lt2.Api.Contracts.Appeals;
 internal static class AppealValidation
 {
     public static IRuleBuilderOptions<T, string> Side<T>(this IRuleBuilderInitial<T, string> rule, IStringLocalizer l) =>
-        rule.Must(s => AppealLimits.Sides.Contains(s)).WithMessage(l["Side.Invalid"]);
+        rule.Must(s => Sides.All.Contains(s)).WithMessage(l["Side.Invalid"]);
 
     public static IRuleBuilderOptions<T, string> ReasonText<T>(this IRuleBuilderInitial<T, string> rule, IStringLocalizer l) =>
         rule.Cascade(CascadeMode.Stop)
@@ -59,7 +60,7 @@ public sealed class ReportRequestValidator : AbstractValidator<ReportRequest>
     {
         RuleFor(x => x.TargetKind).Must(k => AppealLimits.ReportTargets.Contains(k)).WithMessage(l["Report.Target"]);
         RuleFor(x => x.TargetId).NotEmpty().WithMessage(l["Report.Target"]);
-        RuleFor(x => x.Ground).Must((x, g) => AppealLimits.ReportGroundsFor(x.TargetKind).Contains(g)).WithMessage(l["Report.Ground"]);
+        RuleFor(x => x.Ground).Must((x, g) => ReportGrounds.For(x.TargetKind).Contains(g)).WithMessage(l["Report.Ground"]);
         RuleFor(x => x.Text).Must(t => t is null || t.Trim().Length <= AppealLimits.ReportTextMaxLength).WithMessage(l["Report.TooLong"]);
     }
 }
@@ -146,7 +147,7 @@ public sealed class ModeratorPlannedRequestValidator : AbstractValidator<Moderat
     public ModeratorPlannedRequestValidator(IStringLocalizer<ValidationMessages> l)
     {
         RuleFor(x => x.Date).NotEqual(default(DateOnly)).WithMessage(l["Planned.Date"]);
-        RuleFor(x => x.Stage).Must(s => s is null or "presentation" or "consideration" or "adoption").WithMessage(l["Planned.Stage"]);
+        RuleFor(x => x.Stage).Must(s => s is null or BillStages.Presentation or BillStages.Consideration or BillStages.Adoption).WithMessage(l["Planned.Stage"]);
         RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
     }
 }

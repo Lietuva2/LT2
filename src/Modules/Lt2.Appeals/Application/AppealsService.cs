@@ -749,7 +749,7 @@ internal sealed class AppealsService(
         }
 
         var text = string.IsNullOrWhiteSpace(request.Text) ? null : AppealRules.NormaliseText(request.Text);
-        if (text is { Length: > ReportGrounds.TextMaxLength })
+        if (text is { Length: > ReportLimits.TextMaxLength })
         {
             return Error.Validation("report.too-long", "text");
         }
@@ -764,7 +764,7 @@ internal sealed class AppealsService(
             .Where(r => r.UserId == userId && r.EndedAt == null).Select(r => r.OrganisationId).ToListAsync(cancellationToken);
         switch (request.TargetKind)
         {
-            case "record":
+            case ReportTargets.Record:
                 // What is reported on a bill's record is its description (design 8.13): a record without one has nothing to report.
                 var record = await db.BillRecords.AsNoTracking().FirstOrDefaultAsync(a => a.Id == request.TargetId, cancellationToken);
                 if (record is null || record.Status is not (BillRecordStatuses.Open or BillRecordStatuses.Closed) || record.Description.Length == 0)
@@ -774,7 +774,7 @@ internal sealed class AppealsService(
 
                 recordId = record.Id;
                 break;
-            case "reason":
+            case ReportTargets.Reason:
                 var reason = await db.Reasons.AsNoTracking().FirstOrDefaultAsync(r => r.Id == request.TargetId && r.Status == ReasonStatuses.Published, cancellationToken);
                 if (reason is null)
                 {
@@ -784,7 +784,7 @@ internal sealed class AppealsService(
                 recordId = reason.RecordId;
                 own = reason.AuthorUserId == userId;
                 break;
-            case "organisation":
+            case ReportTargets.Organisation:
                 // Design 8.14.14: an organisation shown on the site; a blocked or closed one is shown nowhere.
                 if (!await db.Organisations.AnyAsync(o => o.Id == request.TargetId && o.Status == OrganisationStatuses.Active, cancellationToken))
                 {
@@ -793,7 +793,7 @@ internal sealed class AppealsService(
 
                 recordId = null;
                 break;
-            case "statement":
+            case ReportTargets.Statement:
                 if (await db.OrganisationStatements.Shown(db.Organisations).FirstOrDefaultAsync(s => s.Id == request.TargetId, cancellationToken) is not { } statement)
                 {
                     return Error.NotFound("report.target-not-found");
@@ -802,7 +802,7 @@ internal sealed class AppealsService(
                 recordId = null;
                 own = statement.WrittenByUserId == userId || represented.Contains(statement.OrganisationId);
                 break;
-            case "comment":
+            case ReportTargets.Comment:
                 // Design 8.23.8: a comment that is shown (published, its target shown, its bill's record not hidden).
                 if (!await CommentsService.IsShownAsync(db, request.TargetId, cancellationToken))
                 {
@@ -813,7 +813,7 @@ internal sealed class AppealsService(
                 var comment = await db.Comments.AsNoTracking().FirstAsync(c => c.Id == request.TargetId, cancellationToken);
                 own = NewsRules.OwnComment(comment.AuthorUserId, comment.OrganisationId, comment.SeimasPersonId, userId, represented.ToHashSet(), await SpeaksForAsync(userId, cancellationToken));
                 break;
-            case "response":
+            case ReportTargets.Response:
                 // Design 8.5.5: an MP's response that is shown (published, or withdrawn with its versions).
                 if (await db.MpResponses.AsNoTracking().FirstOrDefaultAsync(r => r.Id == request.TargetId && (r.Status == ResponseStatuses.Published || r.Status == ResponseStatuses.Withdrawn), cancellationToken) is not { } response)
                 {
@@ -984,8 +984,8 @@ internal sealed class AppealsService(
 
         // Owner, 2026-11-19: the answer carries each side's first page only (two, design 8.12.1) and how many each side has; the
         // rest is read a page at a time (ReasonsAsync), so a bill with many arguments is not sent whole.
-        var forPage = await ReasonPageAsync(db, record.Id, "for", 0, ReasonPages.First, ct);
-        var againstPage = await ReasonPageAsync(db, record.Id, "against", 0, ReasonPages.First, ct);
+        var forPage = await ReasonPageAsync(db, record.Id, Sides.For, 0, ReasonPages.First, ct);
+        var againstPage = await ReasonPageAsync(db, record.Id, Sides.Against, 0, ReasonPages.First, ct);
 
         return new BillRecordInfo(
             record.Id,
@@ -1187,29 +1187,9 @@ internal sealed class AppealsService(
 }
 
 /// <summary>
-/// Grounds for a report (design 8.3, Digital Services Act notice and action). A bill's description may also be reported as
-/// inaccurate ("Pranešti apie klaidą", design 8.13); an argument may not: it is its author's own opinion.
+/// A report (design 8.3, Digital Services Act notice and action): its grounds are <see cref="ReportGrounds"/>.
 /// </summary>
-internal static class ReportGrounds
+internal static class ReportLimits
 {
     public const int TextMaxLength = 1000;
-
-    public const string Inaccurate = "inaccurate";
-
-    public static readonly IReadOnlyList<string> All = ["illegal", "personal-data", "insult", "spam", "other"];
-
-    public static readonly IReadOnlyList<string> Description = [Inaccurate, .. All];
-
-    /// <summary>"Apsimeta kita organizacija" (design 8.14.9): an organisation or its statement may be reported as impersonation.</summary>
-    public const string Impersonation = "impersonation";
-
-    public static readonly IReadOnlyList<string> Organisation = [Impersonation, .. All];
-
-    /// <summary>The grounds a report on this target may give.</summary>
-    public static IReadOnlyList<string> For(string targetKind) => targetKind switch
-    {
-        "record" => Description,
-        "organisation" or "statement" => Organisation,
-        _ => All,
-    };
 }

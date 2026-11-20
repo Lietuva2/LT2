@@ -34,7 +34,7 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
 
         // Design 8.11.1 (owner, 2026-11-18): within a day, by activity, then stage, then number; bills the open data does not
         // know yet last (AgendaRules). The days earliest first; the votes' days newest first.
-        int ActivityOf(string number) => states.GetValueOrDefault(number) is { Status: not "rejected" } s ? AgendaRules.Activity(s.Counts.Total, s.Arguments) : 0;
+        int ActivityOf(string number) => states.GetValueOrDefault(number) is { Status: not BillRecordStatuses.Rejected } s ? AgendaRules.Activity(s.Counts.Total, s.Arguments) : 0;
         var days = planned
             .GroupBy(p => p.Date)
             .OrderBy(g => g.Key)
@@ -67,7 +67,7 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
     /// hidden (its page then shows none) or when the bill is not in the catalogue.
     /// </summary>
     private static List<AgendaOrganisationResponse> Organisations(BillRecordState? state, IReadOnlyList<BillOrganisation>? shown) =>
-        state is null || state.Status == "rejected" || shown is null
+        state is null || state.Status == BillRecordStatuses.Rejected || shown is null
             ? []
             : shown.Select(o => new AgendaOrganisationResponse(o.Slug, o.Name, new OrganisationLabelResponse(o.Label.ConfirmedBy, o.Label.Domain), o.Stance)).ToList();
 

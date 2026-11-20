@@ -17,5 +17,5 @@ internal static class GetCommitteesEndpoint
             .ProducesProblem(StatusCodes.Status404NotFound);
 
     private static async Task<IResult> HandleAsync(HttpContext http, ParliamentReads reads, ErrorMapper errors, CancellationToken ct) =>
-        PublicJson.From(http, errors, await reads.BodiesAsync("committee", ct));
+        PublicJson.From(http, errors, await reads.BodiesAsync(BodyKinds.Committee, ct));
 }

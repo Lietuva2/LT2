@@ -78,7 +78,7 @@ public static class CommentRoutes
 /// <summary>The comments' fixed numbers (design 8.23.6) and their page parameter (8.23.14).</summary>
 public static class CommentLimits
 {
-    public static readonly IReadOnlyList<string> Kinds = ["reason", "statement", "response"];
+    public static readonly IReadOnlyList<string> Kinds = CommentKinds.All;
 
     /// <summary>The comments a thread shows first.</summary>
     public const int First = 10;

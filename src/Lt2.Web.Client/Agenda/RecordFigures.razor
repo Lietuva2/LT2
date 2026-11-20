@@ -13,7 +13,7 @@
 {
     @if (!HideNobody)
     {
-        <span class="small" id="@(Id is null ? null : "home-nobody-" + Id)">@L[Record.Status == "closed" ? "Agenda.NobodyClosed" : "Agenda.Nobody"]</span>
+        <span class="small" id="@(Id is null ? null : "home-nobody-" + Id)">@L[Record.Status == BillRecordStatuses.Closed ? "Agenda.NobodyClosed" : "Agenda.Nobody"]</span>
     }
 }
 else

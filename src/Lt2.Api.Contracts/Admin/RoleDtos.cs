@@ -50,17 +50,6 @@ public sealed class AccountLockRequestValidator : AbstractValidator<AccountLockR
     }
 }
 
-/// <summary>The kinds of item an administrator locks the author of (design 8.3): the same places the writing restriction is reached from, and a public profile.</summary>
-public static class LockTargets
-{
-    public const string Reason = "reason";
-    public const string Comment = "comment";
-    public const string Statement = "statement";
-    public const string Profile = "profile";
-
-    public static readonly IReadOnlyList<string> All = [Reason, Comment, Statement, Profile];
-}
-
 /// <summary>
 /// Locks the account of the person who wrote an item (design 8.3): <see cref="TargetKind"/> and <see cref="TargetId"/> name the
 /// item (an argument, a comment, an organisation's statement, or a reported profile by its moderation id); the server finds the

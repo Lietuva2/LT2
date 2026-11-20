@@ -91,7 +91,7 @@ public sealed record MemberTextsResponse(IReadOnlyList<MemberTextResponse> Items
 /// <summary>A report of a member's public profile (design 8.25.6).</summary>
 public sealed record MemberReportRequest
 {
-    /// <summary>One of <see cref="ProfileLimits.ReportGrounds"/>.</summary>
+    /// <summary>One of <see cref="ReportGrounds.Profile"/>.</summary>
     public string Ground { get; init; } = "";
 
     public string? Text { get; init; }
@@ -114,9 +114,6 @@ public static class ProfileLimits
     /// <c>PublicProfileConsent.TextVersion</c> in SharedKernel (a unit test). A new wording gets a new version in both.
     /// </summary>
     public const string ConsentVersion = "2026-11-16";
-
-    /// <summary>The general report grounds and "Apsimeta kitu asmeniu ar pareigūnu" (design 8.25.6).</summary>
-    public static readonly IReadOnlyList<string> ReportGrounds = ["impersonation", .. AppealLimits.ReportGrounds];
 
     /// <summary>The texts a member's page shows at first (design 8.25.2).</summary>
     public const int Page = 10;
@@ -235,7 +232,7 @@ public sealed class MemberReportRequestValidator : AbstractValidator<MemberRepor
     public MemberReportRequestValidator(IStringLocalizer<ValidationMessages> l)
     {
         ArgumentNullException.ThrowIfNull(l);
-        RuleFor(x => x.Ground).Must(g => ProfileLimits.ReportGrounds.Contains(g)).WithMessage(l["Report.Ground"]);
+        RuleFor(x => x.Ground).Must(g => ReportGrounds.Profile.Contains(g)).WithMessage(l["Report.Ground"]);
         RuleFor(x => x.Text).Must(t => t is null || t.Trim().Length <= AppealLimits.ReportTextMaxLength).WithMessage(l["Report.TooLong"]);
     }
 }

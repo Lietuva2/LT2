@@ -18,7 +18,7 @@
     </div>
     <StatementView Statement="Statement" Name="@Item.OrganisationName" Slug="@Item.Slug" Label="Item.Label" IdPrefix="mod-" Whole="true" />
     <Reports Items="Item.Reports" />
-    <OrgModerationActions Id="Item.Id" Kind="statement" Status="@Item.Status" BillFinished="Item.BillFinished" OnDone="OnDone" />
+    <OrgModerationActions Id="Item.Id" Kind="@ReportTargets.Statement" Status="@Item.Status" BillFinished="Item.BillFinished" OnDone="OnDone" />
 </article>
 
 @code {

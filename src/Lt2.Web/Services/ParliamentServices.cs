@@ -161,16 +161,16 @@ internal sealed class ServerParliamentApi(ParliamentReads reads, ErrorMapper err
         errors.ToApiResult(await reads.MpVotesAsync(slug, cursor, Math.Clamp(limit ?? MpVoteLimits.Default, 1, MpVoteLimits.Max), cancellationToken), x => x);
 
     public async Task<ApiResult<IReadOnlyList<BodyListItem>>> GetFactionsAsync(CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await reads.BodiesAsync("faction", cancellationToken), x => x);
+        errors.ToApiResult(await reads.BodiesAsync(BodyKinds.Faction, cancellationToken), x => x);
 
     public async Task<ApiResult<BodyResponse>> GetFactionAsync(string slug, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await reads.BodyAsync("faction", slug, cancellationToken), x => x);
+        errors.ToApiResult(await reads.BodyAsync(BodyKinds.Faction, slug, cancellationToken), x => x);
 
     public async Task<ApiResult<IReadOnlyList<BodyListItem>>> GetCommitteesAsync(CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await reads.BodiesAsync("committee", cancellationToken), x => x);
+        errors.ToApiResult(await reads.BodiesAsync(BodyKinds.Committee, cancellationToken), x => x);
 
     public async Task<ApiResult<BodyResponse>> GetCommitteeAsync(string slug, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await reads.BodyAsync("committee", slug, cancellationToken), x => x);
+        errors.ToApiResult(await reads.BodyAsync(BodyKinds.Committee, slug, cancellationToken), x => x);
 
     public async Task<ApiResult<BillListResponse>> GetBillsAsync(string? q = null, string? cursor = null, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.BillsAsync(q, cursor, cancellationToken), x => x);

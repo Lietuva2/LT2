@@ -26,10 +26,10 @@ public static class OrganisationLimits
     /// <summary>The page a representative's one-time link opens, without the token.</summary>
     public const string InvitePage = "/organizacijos/kvietimas";
 
-    public static readonly IReadOnlyList<string> Stances = ["for", "against", "remarks"];
+    public static readonly IReadOnlyList<string> Stances = StatementStances.All;
 
     /// <summary>The stances that may carry a goal (design 8.14.5).</summary>
-    public static readonly IReadOnlyList<string> GoalStances = ["for", "against"];
+    public static readonly IReadOnlyList<string> GoalStances = StatementStances.WithGoal;
 
     /// <summary>The page a one-time link opens (design 8.14.14); the token is after the <c>#</c>, so the browser never sends it (design 6.8).</summary>
     public static string InvitePath(string token) => InvitePage + "#" + Uri.EscapeDataString(token);

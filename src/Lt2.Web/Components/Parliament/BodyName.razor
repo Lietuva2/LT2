@@ -1,11 +1,11 @@
 @using Lt2.Api.Contracts.Parliament
 
 @* A body's name, linked when it has a page (factions and committees). *@
-@if (Body.Kind == "faction")
+@if (Body.Kind == BodyKinds.Faction)
 {
     <a href="/frakcijos/@Body.Slug">@Body.Name</a>
 }
-else if (Body.Kind == "committee")
+else if (Body.Kind == BodyKinds.Committee)
 {
     <a href="/komitetai/@Body.Slug">@Body.Name</a>
 }

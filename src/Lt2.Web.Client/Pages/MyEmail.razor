@@ -34,7 +34,7 @@
                     <p class="note note--quiet" id="email-staff-passkey"><span>@L["EmailPart.StaffPasskey"]</span></p>
                     <PasskeyStep Staff="true" Account="_me" IdPrefix="email-" Confirmed="ProvenAsync" />
                 }
-                else if (_me.Mp?.Part == "mp")
+                else if (_me.Mp?.Part == PoliticianParts.Mp)
                 {
                     <PasskeyStep IdPrefix="email-" Confirmed="ProvenAsync" />
                 }

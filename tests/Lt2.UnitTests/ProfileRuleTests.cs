@@ -103,7 +103,7 @@ public sealed class ProfileRuleTests
 
     [Fact]
     public void A_profile_report_offers_impersonation_first() =>
-        ProfileLimits.ReportGrounds.ShouldBe(Lt2.Identity.ProfileReportGrounds.All);
+        ReportGrounds.Profile.ShouldBe(["impersonation", "illegal", "personal-data", "insult", "spam", "other"], "the wire format; the browser's and the server's copy are the same file");
 
     [Theory]
     [InlineData(null, 10)]

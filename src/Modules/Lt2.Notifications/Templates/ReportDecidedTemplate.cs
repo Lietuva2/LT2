@@ -14,7 +14,7 @@ internal sealed class ReportDecidedTemplate(IStringLocalizer<EmailTemplates> l, 
     /// <summary>The moderation rules' page, linked from every decision.</summary>
     public const string RulesPath = "/moderavimo-taisykles";
 
-    private static readonly string[] Targets = ["reason", "comment", "statement", "response", "record", "organisation", "profile"];
+    private static readonly string[] Targets = [ReportTargets.Reason, ReportTargets.Comment, ReportTargets.Statement, ReportTargets.Response, ReportTargets.Record, ReportTargets.Organisation, ReportTargets.Profile];
 
     public EmailMessage Render(ReportDecidedEmail model)
     {
@@ -26,12 +26,12 @@ internal sealed class ReportDecidedTemplate(IStringLocalizer<EmailTemplates> l, 
 
         var about = model.Target switch
         {
-            "organisation" or "profile" => l.Format("Report.About." + model.Target, model.Name ?? ""),
+            ReportTargets.Organisation or ReportTargets.Profile => l.Format("Report.About." + model.Target, model.Name ?? ""),
             _ => l.Format("Report.About." + model.Target, model.BillNumber ?? "", model.BillTitle ?? ""),
         };
 
         // Lithuanian agrees with the noun: a statement ("pozicija") and an organisation are feminine, the rest masculine.
-        var gender = model.Target is "statement" or "organisation" ? "f" : "m";
+        var gender = model.Target is ReportTargets.Statement or ReportTargets.Organisation ? "f" : "m";
         var paragraphs = new List<string>
         {
             l[EmailText.Greeting],

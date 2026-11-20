@@ -12,7 +12,7 @@
 else if (_link is { } link)
 {
     <p id="profile-mp">
-        @L.Format(link.Part == "mp" ? "Mp.Managing" : "Mp.OfficeOf", link.FirstName + " " + link.LastName)
+        @L.Format(link.Part == PoliticianParts.Mp ? "Mp.Managing" : "Mp.OfficeOf", link.FirstName + " " + link.LastName)
         <a href="/p/@link.Slug" id="profile-mp-profile">@L["Mp.ToProfile"]</a> · <a href="@AccountScreens.MpLink" id="profile-mp-manage">@L["MpLine.Manage"]</a>
     </p>
 }

@@ -138,7 +138,7 @@ internal sealed class FeedbackHandlers(IDbContextFactory<IdentityDb> contexts, I
         var now = clock.GetUtcNow();
         var replies = Replies(item.Replies).Append(new FeedbackReply(now, text.Trim())).ToList();
         item.Replies = JsonSerializer.Serialize(replies, JsonSerializerOptions.Web);
-        if (item.Status == "new")
+        if (item.Status == FeedbackStatuses.New)
         {
             item.Status = "seen";
         }

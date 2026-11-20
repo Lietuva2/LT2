@@ -12,9 +12,9 @@ internal sealed class AuthorLookup(IDbContextFactory<AppealsDb> contexts) : IAut
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var (who, notFound) = kind switch
         {
-            "reason" => (db.Reasons.Where(r => r.Id == id).Select(r => (Guid?)r.AuthorUserId), "reason.not-found"),
-            "comment" => (db.Comments.Where(c => c.Id == id).Select(c => (Guid?)c.AuthorUserId), "comment.not-found"),
-            "statement" => (db.OrganisationStatements.Where(s => s.Id == id).Select(s => (Guid?)s.WrittenByUserId), "statement.not-found"),
+            LockTargets.Reason => (db.Reasons.Where(r => r.Id == id).Select(r => (Guid?)r.AuthorUserId), "reason.not-found"),
+            LockTargets.Comment => (db.Comments.Where(c => c.Id == id).Select(c => (Guid?)c.AuthorUserId), "comment.not-found"),
+            LockTargets.Statement => (db.OrganisationStatements.Where(s => s.Id == id).Select(s => (Guid?)s.WrittenByUserId), "statement.not-found"),
             _ => (null, "lock.target"),
         };
         if (who is null)

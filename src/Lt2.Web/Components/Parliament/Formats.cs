@@ -32,9 +32,9 @@ internal sealed class Formats(IStringLocalizer<ParliamentText> t)
     /// <summary>The mark of an MP's choice or a faction's position: for, against, or the hollow mark for no vote.</summary>
     public static string ChoiceClass(string? code) => code switch
     {
-        "for" => "choice choice--for",
-        "against" => "choice choice--against",
-        "did-not-vote" or "free" or "nobody-voted" => "choice choice--absent",
+        BallotChoices.For => "choice choice--for",
+        BallotChoices.Against => "choice choice--against",
+        BallotChoices.DidNotVote or FactionPositions.Free or FactionPositions.NobodyVoted => "choice choice--absent",
         _ => "choice",
     };
 

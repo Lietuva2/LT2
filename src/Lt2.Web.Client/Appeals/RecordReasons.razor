@@ -39,7 +39,7 @@
             <template id="card-@card.ProfileId" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId, card.Name)">@L["Card.Open"]</a></p></template>
         }
         <div class="pair pair--reasons">
-            @foreach (var side in AppealLimits.Sides)
+            @foreach (var side in Sides.All)
             {
                 // Owner, 2026-11-19: each side is a column read a page at a time (ReasonPaging); under "Rodyti tik naujus" (design
                 // 8.11.8) only new arguments and those whose discussion has new comments, all of them (read when switched on).
@@ -95,7 +95,7 @@
                                 }
                                 @* Design 8.23.6: "Aptarimas" under the argument; prerendered with the island for the arguments the
                                    server renders, read when first opened for those a later page brought. *@
-                                <CommentThread Kind="reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
+                                <CommentThread Kind="@CommentKinds.Reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
                                                Open="@(AskedFor(reason.Id) is not null)" Asked="@AskedFor(reason.Id)" Marked="@CommentPaging.Marked(reason.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
                                 <MoreMenu Id="@($"more-reason-{reason.Id}")">
                                     @if (_signedIn)
@@ -112,7 +112,7 @@
                                             <button class="menu__item" type="button" id="edit-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                     @onclick="() => StartEditingAsync(reason)">@L["Reasons.Edit"]</button>
                                         }
-                                        @if (IsMine(reason) && record.Status == "open")
+                                        @if (IsMine(reason) && record.Status == BillRecordStatuses.Open)
                                         {
                                             <button class="menu__item" type="button" id="withdraw-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                     @onclick="() => _withdrawing = _withdrawing == reason.Id ? null : reason.Id">@L["Reasons.Withdraw"]</button>
@@ -139,7 +139,7 @@
                                 }
                                 @if (_reporting == reason.Id)
                                 {
-                                    <div class="act__panel"><ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" /></div>
+                                    <div class="act__panel"><ReportForm TargetKind="@ReportTargets.Reason" TargetId="reason.Id" OnClose="() => _reporting = null" /></div>
                                 }
                                 @if (_editing == reason.Id)
                                 {
@@ -148,7 +148,7 @@
                                         <fieldset class="field stack stack--tight @ErrorClass("side")">
                                             <legend>@L["Reasons.SideLegend"]</legend>
                                             <div class="switch" id="edit-side-@reason.Id">
-                                                @foreach (var half in AppealLimits.Sides)
+                                                @foreach (var half in Sides.All)
                                                 {
                                                     <label class="switch__half switch__half--@half">
                                                         <input class="switch__input" type="radio" name="edit-side-@reason.Id" id="edit-side-@half-@reason.Id" value="@half" checked="@(_editSide == half)"
@@ -184,7 +184,7 @@
                                 @if (_moderating == reason.Id && Moderated(reason.Id) is { } moderated)
                                 {
                                     <div class="act__panel sheet sheet--quiet moderate" id="moderation-@reason.Id">
-                                        <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" Seen="moderated.Seen" Reported="moderated.Reports.Count > 0" OnDone="ModeratorActedAsync" OnRestricted="ModeratorActedAsync" />
+                                        <ModerationActions Id="reason.Id" Kind="@ReportTargets.Reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" Seen="moderated.Seen" Reported="moderated.Reports.Count > 0" OnDone="ModeratorActedAsync" OnRestricted="ModeratorActedAsync" />
                                     </div>
                                 }
                             </div>
@@ -226,7 +226,7 @@
                 <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="StartWritingAsync">@L["Reasons.Write"]</button>
             </div>
         }
-        @if (_signedIn && record.Status == "open" && Restriction is { Restricted: true } restriction)
+        @if (_signedIn && record.Status == BillRecordStatuses.Open && Restriction is { Restricted: true } restriction)
         {
             <WritingRestricted Restriction="restriction" />
         }
@@ -253,7 +253,7 @@
                 <fieldset class="field stack stack--tight @ErrorClass("side")">
                     <legend>@L["Reasons.SideLegend"]</legend>
                     <div class="switch" id="reason-side">
-                        @foreach (var side in AppealLimits.Sides)
+                        @foreach (var side in Sides.All)
                         {
                             <label class="switch__half switch__half--@side">
                                 <input class="switch__input" type="radio" name="reason-side" id="reason-side-@side" value="@side" checked="@(_side == side)"
@@ -462,18 +462,18 @@
     /// <summary>How many "prieš" arguments the address asks the page to show (<c>?argumentai-pries=</c>).</summary>
     [SupplyParameterFromQuery(Name = ReasonLimits.AgainstParameter)] public string? AgainstShown { get; set; }
 
-    private int AskedOf(string side) => ReasonPaging.Asked(side == "for" ? ForShown : AgainstShown);
+    private int AskedOf(string side) => ReasonPaging.Asked(side == Sides.For ? ForShown : AgainstShown);
 
     /// <summary>A side's column; before anything is read, an empty one.</summary>
     private ReasonPageResponse Column(string side) =>
         Columns?.GetValueOrDefault(side) ?? new ReasonPageResponse(side, [], 0, null, []);
 
     /// <summary>Every argument the page shows, of both sides.</summary>
-    private IEnumerable<ReasonResponse> AllShownReasons => AppealLimits.Sides.SelectMany(s => Column(s).Items);
+    private IEnumerable<ReasonResponse> AllShownReasons => Sides.All.SelectMany(s => Column(s).Items);
 
     /// <summary>Each public profile's card once on the page (design 8.25.4), of every argument shown.</summary>
     private IEnumerable<AuthorCardResponse> AllCards =>
-        AppealLimits.Sides.SelectMany(s => Column(s).Cards ?? []).Concat(Record?.Cards ?? []).DistinctBy(c => c.ProfileId);
+        Sides.All.SelectMany(s => Column(s).Cards ?? []).Concat(Record?.Cards ?? []).DistinctBy(c => c.ProfileId);
 
     /// <summary>The arguments that stand outside their pages' order: the linked one and the one just published.</summary>
     private HashSet<Guid> Pinned => new[] { LinkedReason, CommentedReason, _written }.OfType<Guid>().ToHashSet();
@@ -498,7 +498,7 @@
 
 
     /// <summary>An argument may be written for either side, with or without a side of one's own (design 8.2).</summary>
-    private bool CanWrite => _signedIn && !_mpAccount && Record?.Status == "open" && Restriction is not { Restricted: true } && Mine is { } mine && mine.ReasonsLeft is null or > 0;
+    private bool CanWrite => _signedIn && !_mpAccount && Record?.Status == BillRecordStatuses.Open && Restriction is not { Restricted: true } && Mine is { } mine && mine.ReasonsLeft is null or > 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -525,7 +525,7 @@
         // Only for a moderator (the page says so; nobody else asks), and only in the browser: a "Moderuoti" opened before
         // the island starts would close when it does. The panel beside it hands over the answer it brought from the
         // server (MyBillState), so usually nothing is asked again.
-        if (Moderator && _signedIn && RendererInfo.IsInteractive && Record is { Id: not null, Status: "open" or "closed" })
+        if (Moderator && _signedIn && RendererInfo.IsInteractive && Record is { Id: not null, Status: BillRecordStatuses.Open or BillRecordStatuses.Closed })
         {
             _moderation = await State.ModerationAsync(Number);
         }
@@ -600,14 +600,14 @@
     private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync(IEnumerable<Guid>? only = null)
     {
         var threads = new Dictionary<Guid, CommentThreadResponse>();
-        if (Record is not { Status: "open" or "closed" })
+        if (Record is not { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed })
         {
             return threads;
         }
 
         foreach (var id in only ?? AllShownReasons.Select(r => r.Id))
         {
-            if ((await CommentsApi.GetThreadAsync("reason", id, AskedFor(id))).Value is { } thread)
+            if ((await CommentsApi.GetThreadAsync(CommentKinds.Reason, id, AskedFor(id))).Value is { } thread)
             {
                 threads[id] = thread;
             }
@@ -621,20 +621,20 @@
     /// (design 8.23.6): the page shows it with its discussion open, wherever its pages would put it.
     /// </summary>
     private Guid? CommentedReason =>
-        Linked is { Kind: "reason" } linked ? linked.TargetId
+        Linked is { Kind: CommentKinds.Reason } linked ? linked.TargetId
         : CommentsShown?.Split('-') is [var id, _] && Guid.TryParseExact(id, "N", out var target) ? target
         : null;
 
     /// <summary>The columns as the address asks, from the bill's answer where it carries enough, else from the API.</summary>
     private async Task<Dictionary<string, ReasonPageResponse>?> ColumnsAsync()
     {
-        if (Record is not { Status: "open" or "closed" } record)
+        if (Record is not { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed } record)
         {
             return null;
         }
 
         var columns = new Dictionary<string, ReasonPageResponse>();
-        foreach (var side in AppealLimits.Sides)
+        foreach (var side in Sides.All)
         {
             columns[side] = await ReadThroughAsync(ReasonPaging.FromRecord(record, side), AskedOf(side));
         }
@@ -687,7 +687,7 @@
             return;
         }
 
-        foreach (var side in AppealLimits.Sides)
+        foreach (var side in Sides.All)
         {
             if (Columns.TryGetValue(side, out var column) && ReasonPaging.Read(column) < AskedOf(side))
             {
@@ -767,8 +767,8 @@
     /// runs, so the served HTML stays the same for everyone; not under "Rodyti tik naujus". A record hidden as a whole shows none.
     /// </summary>
     private IEnumerable<ReasonResponse> OwnHidden(string side) =>
-        RendererInfo.IsInteractive && !OnlyNew && Record?.Status is "open" or "closed" && Mine is { } mine
-            ? mine.MyReasons.Where(r => r.Status == "hidden" && r.Side == side)
+        RendererInfo.IsInteractive && !OnlyNew && Record?.Status is BillRecordStatuses.Open or BillRecordStatuses.Closed && Mine is { } mine
+            ? mine.MyReasons.Where(r => r.Status == ReasonStatuses.Hidden && r.Side == side)
             : [];
 
     /// <summary>The argument whose edit form is open below its row ("⋯" → "Redaguoti").</summary>
@@ -782,7 +782,7 @@
     /// for everyone. Not shown at all otherwise.
     /// </summary>
     private bool MayEdit(ReasonResponse reason) =>
-        !_mpAccount && Record?.Status == "open" && Restriction is not { Restricted: true } && Mine?.Editable.Contains(reason.Id) == true;
+        !_mpAccount && Record?.Status == BillRecordStatuses.Open && Restriction is not { Restricted: true } && Mine?.Editable.Contains(reason.Id) == true;
 
     private Task StartEditingAsync(ReasonResponse reason) => RunAsync(async () =>
     {
@@ -820,7 +820,7 @@
         }
 
         CancelEditing();
-        Info = saved.Value!.Status == "pending" ? L["Reasons.EditedPending"] : L["Reasons.Edited"];
+        Info = saved.Value!.Status == ReasonStatuses.Pending ? L["Reasons.EditedPending"] : L["Reasons.Edited"];
         await ReloadAsync();
     });
 
@@ -903,12 +903,12 @@
     /// positions consent the press asks for it in place (<see cref="ToggleEndorsementAsync"/>).
     /// </summary>
     private bool MayEndorse(ReasonResponse reason, bool endorsed) =>
-        Record?.Status == "open" && Mine is { } mine && (endorsed || (!IsMine(reason) && mine.EndorsementsLeft is null or > 0));
+        Record?.Status == BillRecordStatuses.Open && Mine is { } mine && (endorsed || (!IsMine(reason) && mine.EndorsementsLeft is null or > 0));
 
     private string? EndorseHint(ReasonResponse reason, bool endorsed) =>
         MayEndorse(reason, endorsed) ? null
             : IsMine(reason) ? L["Reasons.OwnReason"].Value
-            : Record?.Status != "open" || Mine is null ? null
+            : Record?.Status != BillRecordStatuses.Open || Mine is null ? null
             : L["Reasons.NoEndorsementsLeft"].Value;
 
     /// <summary>
@@ -1014,7 +1014,7 @@
         }
 
         CancelWriting();
-        if (written.Value!.Status == "pending")
+        if (written.Value!.Status == ReasonStatuses.Pending)
         {
             // Waiting for a moderator (design 8.3): not public, so nothing of it is shown.
             Info = L["Reasons.Pending"];
@@ -1056,11 +1056,11 @@
     private async Task ReadAgainAsync(bool threads)
     {
         Record = await State.RecordAsync(Number) ?? Record;
-        if (Columns is not null && Record is { Status: "open" or "closed" })
+        if (Columns is not null && Record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed })
         {
             var pinned = Pinned;
             var columns = new Dictionary<string, ReasonPageResponse>();
-            foreach (var side in AppealLimits.Sides)
+            foreach (var side in Sides.All)
             {
                 var column = Column(side);
                 columns[side] = await FirstPagesAsync(side, ReasonPaging.Read(column)) is { } fresh ? ReasonPaging.Refresh(column, fresh, pinned) : column;
@@ -1070,7 +1070,7 @@
             foreach (var id in pinned)
             {
                 var found = (await Appeals.GetReasonAsync(id)).Value;
-                foreach (var side in AppealLimits.Sides)
+                foreach (var side in Sides.All)
                 {
                     columns[side] = found is not null && found.Reason.Side == side && string.Equals(found.BillNumber, Number, StringComparison.OrdinalIgnoreCase)
                         ? ReasonPaging.Pin(columns[side], found.Reason, found.Cards, first: id == _written || columns[side].Items.All(r => r.Id != id))

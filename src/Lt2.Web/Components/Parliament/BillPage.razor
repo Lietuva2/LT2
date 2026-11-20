@@ -62,12 +62,12 @@
                     {
                         <span class="tag" id="last-stage">@F.Stage(done)</span>
                     }
-                    @if (_record?.Status == "closed")
+                    @if (_record?.Status == BillRecordStatuses.Closed)
                     {
                         <span class="tag" id="appeal-status">@A["Status.closed"]</span>
                     }
                 </p>
-                <FollowButton Kind="bill" Key="@b.Number" Followers="_followers" @rendermode="InteractiveWebAssembly" />
+                <FollowButton Kind="@FollowButton.Bill" Key="@b.Number" Followers="_followers" @rendermode="InteractiveWebAssembly" />
             </div>
         </div>
 
@@ -75,7 +75,7 @@
            comes after the votes; on a wide screen .bill-body places it back in the right column beside the main column, and
            every other part spans both columns below them (design 8.12.1). *@
         <div class="@(HasAside ? "bill-body" : "stack stack--loose")">
-            @if (_record is { Status: "rejected" } hidden)
+            @if (_record is { Status: BillRecordStatuses.Rejected } hidden)
             {
                 @* Design 8.12.3: taking part is closed by the moderators; sides and arguments are kept unseen. *@
                 <section class="sheet stack stack--tight" id="taking-part-closed" aria-labelledby="h-closed-by-moderators">
@@ -99,7 +99,7 @@
                             @* Design 8.13: always beside it the label, the day it was made, the official text it was made from
                                when known, its history, and "Pranešti apie klaidą". *@
                             <p class="fine" id="description-source">
-                                @if (a.DescriptionSource is "ai-draft" or "ai")
+                                @if (a.DescriptionSource is DescriptionSources.AiDraft or DescriptionSources.Ai)
                                 {
                                     <span class="tag" id="ai-label">@A["What.Source." + a.DescriptionSource]</span>
                                 }
@@ -142,9 +142,9 @@
                            them at once, without reloading the page (owner, 2026-11-17). A closed record's note, worded here,
                            stands between the counts and the surge note. *@
                         <SideFigures Number="@b.Number" Status="@a.Status" Counts="a.Counts" Surge="a.Surge"
-                                     Frozen="@(a.Status == "closed" && a.ClosedAt is { } closedAt ? A.Format(a.ClosingVoteId is null ? "Closed.Frozen.Ended" : "Closed.Frozen", F.Date(closedAt)) : null)"
+                                     Frozen="@(a.Status == BillRecordStatuses.Closed && a.ClosedAt is { } closedAt ? A.Format(a.ClosingVoteId is null ? "Closed.Frozen.Ended" : "Closed.Frozen", F.Date(closedAt)) : null)"
                                      @rendermode="InteractiveWebAssembly" />
-                        @if (a.Status == "open")
+                        @if (a.Status == BillRecordStatuses.Open)
                         {
                             <SidePicker Number="@b.Number" @rendermode="InteractiveWebAssembly" />
                         }
@@ -155,12 +155,12 @@
                         <div class="stack stack--tight" id="threshold">
                             <h3 id="h-reach">@A["Threshold.Heading"]</h3>
                             <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
-                                               LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == "sent")" @rendermode="InteractiveWebAssembly" />
+                                               LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == DigestRunStatuses.Sent)" @rendermode="InteractiveWebAssembly" />
                             @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
                                now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
                                moderator's statement (design 8.12). *@
                             <p class="small"><Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" /></p>
-                            @if (a.Threshold.SetBy == "moderator")
+                            @if (a.Threshold.SetBy == ThresholdSetters.Moderator)
                             {
                                 <p class="small" id="threshold-set-by">@A["Threshold.SetBy.moderator"]</p>
                             }
@@ -168,7 +168,7 @@
                             {
                                 <p class="small" id="threshold-note">@A.Format("Threshold.Note", thresholdNote)</p>
                             }
-                            @if (a.Status == "open")
+                            @if (a.Status == BillRecordStatuses.Open)
                             {
                                 <ShareLine Number="@b.Number" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="InteractiveWebAssembly" />
                             }
@@ -189,9 +189,9 @@
                                 @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
                                 <p class="row result-line"><VoteMajorityTag HasResult="vote.Summary.Vote.HasResult" For="vote.Summary.Totals.For" Against="vote.Summary.Totals.Against" Abstain="vote.Summary.Totals.Abstain" /><MajorityHint Id="hint-closing-majority" /></p>
                                 <div class="totals">
-                                    <div class="figure figure--for figure--m"><span class="label">@F.Choice("for")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.For)</span></div>
-                                    <div class="figure figure--against figure--m"><span class="label">@F.Choice("against")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Against)</span></div>
-                                    <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Abstain)</span></div>
+                                    <div class="figure figure--for figure--m"><span class="label">@F.Choice(BallotChoices.For)</span><span class="figure__num">@Display.Number(vote.Summary.Totals.For)</span></div>
+                                    <div class="figure figure--against figure--m"><span class="label">@F.Choice(BallotChoices.Against)</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Against)</span></div>
+                                    <div class="figure figure--m"><span class="label">@F.Choice(BallotChoices.Abstain)</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Abstain)</span></div>
                                 </div>
                                 @if (vote.Summary.OfficialNote is { } officialNote)
                                 {
@@ -206,13 +206,13 @@
                             }
                         </section>
                     }
-                    else if (a is { Status: "closed", ClosedReason: "rejected" or "withdrawn", ClosedDecidedOn: { } decidedOn })
+                    else if (a is { Status: BillRecordStatuses.Closed, ClosedReason: ClosingReasons.Rejected or ClosingReasons.Withdrawn, ClosedDecidedOn: { } decidedOn })
                     {
                         @* Design 8.1 step 6 (owner, 2026-11-19): a moderator recorded that the Seimas rejected the bill or its
                            initiators withdrew it, which the open data does not say: what happened, the day and the source on lrs.lt,
                            where a vote-closed record shows the Seimas result. No vote, so no MPs' ballots. *@
                         <section class="sheet stack" aria-labelledby="h-result" id="seimas-result">
-                            <h2 id="h-result">@A[a.ClosedReason == "withdrawn" ? "Closed.Heading.withdrawn" : "Closed.Heading"]</h2>
+                            <h2 id="h-result">@A[a.ClosedReason == ClosingReasons.Withdrawn ? "Closed.Heading.withdrawn" : "Closed.Heading"]</h2>
                             <p id="closed-decision">@A.Format("Closed.Decision." + a.ClosedReason, Display.Day(decidedOn))@if (a.ClosedSourceUrl is { } closedSource)
                                 {
                                     @(" ")<a href="@closedSource" rel="external noopener" id="closed-source">@A["Closed.Source"]</a>
@@ -238,7 +238,7 @@
                 <BillResponses Number="@b.Number" Linked="_linked" />
             }
 
-            @if (_record is null or { Status: "rejected" })
+            @if (_record is null or { Status: BillRecordStatuses.Rejected })
             {
                 @* No side column (a hidden record, or a finished bill nobody took part in): the stages stand full-width here. *@
                 @StagesSheet(b, inAside: false)
@@ -316,7 +316,7 @@
 }
 
 @code {
-    private static readonly string[] Stages = ["presentation", "consideration", "adoption"];
+    private static readonly string[] Stages = [BillStages.Presentation, BillStages.Consideration, BillStages.Adoption];
     private BillResponse? _bill;
     private BillRecordResponse? _record;
     private int _followers;
@@ -328,7 +328,7 @@
     private DateOnly? _nextDigest;
 
     /// <summary>The newest summary that went with the bill (sent or a dry run; a declined one did not go).</summary>
-    private RecordDigestResponse? LastGone => _digests.Where(d => d.Status is "sent" or "dry-run").MaxBy(d => d.RunDate);
+    private RecordDigestResponse? LastGone => _digests.Where(d => d.Status is DigestRunStatuses.Sent or DigestRunStatuses.DryRun).MaxBy(d => d.RunDate);
 
     /// <summary>Sending as it is now (design 8.19.1): the summaries part says nothing is sent only while that is so.</summary>
     private string _sending = "off";
@@ -340,7 +340,7 @@
     /// The page has the side column (design 8.12.1): a record that is shown, open or closed. A finished bill nobody took part
     /// in and a record the moderators hid have none; their stages stand full-width above the votes.
     /// </summary>
-    private bool HasAside => _record is not null and not { Status: "rejected" };
+    private bool HasAside => _record is not null and not { Status: BillRecordStatuses.Rejected };
 
     [Parameter] public string Number { get; set; } = "";
 
@@ -377,11 +377,11 @@
 
         // The empty open state for an active bill nobody took part in; nothing for a finished one (the bill only).
         _record = (await Appeals.GetRecordAsync(_bill.Number)).Value;
-        if (_record is { Id: not null, Status: "open" or "closed" })
+        if (_record is { Id: not null, Status: BillRecordStatuses.Open or BillRecordStatuses.Closed })
         {
             _digests = (await Digests.GetRecordDigestsAsync(_bill.Number)).Value ?? [];
             _sending = (await Digests.GetRulesAsync()).Value?.Sending ?? "off";
-            if (_record is { Status: "open", Threshold.Reached: true })
+            if (_record is { Status: BillRecordStatuses.Open, Threshold.Reached: true })
             {
                 _nextDigest = (await Digests.GetRecordNextDigestAsync(_bill.Number)).Value?.Day;
             }
@@ -389,7 +389,7 @@
 
         // Owner, 2026-11-19 (design 8.3, 8.12.3): the moderators' panel and "Moderuoti" on an open record and on a closed one,
         // where only what applies there is offered ("Atšaukti uždarymą" among it).
-        if (_record is { Status: "open" or "closed" } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
+        if (_record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
         {
             _moderator = (await Authorization.AuthorizeAsync(http.User, http, Lt2.Web.Security.Policies.Moderator)).Succeeded;
         }
@@ -429,7 +429,7 @@
             <ol class="stages">
                 @foreach (var stage in Stages)
                 {
-                    var result = b.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result" && v.Vote.Stage == stage);
+                    var result = b.Votes.LastOrDefault(v => v.Vote.Kind == VoteKinds.StageResult && v.Vote.Stage == stage);
                     <li class="stage @(result is null ? "stage--next" : "")" id="stage-@stage">
                         <span class="label">@F.Stage(stage)</span>
                         @if (result is null && PlannedStage(b) == stage && b.Planned is { } plan)
@@ -467,7 +467,7 @@
                     }
                 </p>
             }
-            @if (inAside && b.Planned is not null && _record is { Status: "open" })
+            @if (inAside && b.Planned is not null && _record is { Status: BillRecordStatuses.Open })
             {
                 @* Design 8.4, 8.12.1 (owner, 2026-11-17): "Data neteisinga?" beside the planned stage's date it reports, for
                    participants only, and only while a date is shown. *@
@@ -494,14 +494,14 @@
             return null;
         }
 
-        var voted = b.Votes.Where(v => v.Vote.Kind == "stage-result").Select(v => v.Vote.Stage).ToHashSet();
+        var voted = b.Votes.Where(v => v.Vote.Kind == VoteKinds.StageResult).Select(v => v.Vote.Stage).ToHashSet();
         var stage = b.Planned.Stage ?? Stages.FirstOrDefault(s => !voted.Contains(s));
         return stage is not null && !voted.Contains(stage) ? stage : null;
     }
 
     /// <summary>The latest stage the Seimas voted on, shown when nothing is planned.</summary>
     private static string? LastStage(BillResponse bill) =>
-        bill.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result")?.Vote.Stage;
+        bill.Votes.LastOrDefault(v => v.Vote.Kind == VoteKinds.StageResult)?.Vote.Stage;
 
     /// <summary>
     /// The link preview's text (design 8.22.5): the description when a person wrote or checked it (an AI text nobody read goes
@@ -509,13 +509,13 @@
     /// "not a representative poll" beside them.
     /// </summary>
     private string PreviewText(BillResponse b) =>
-        _record is { Status: "open" or "closed" } r && r.Description.Length > 0 && r.DescriptionSource != "ai"
+        _record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed } r && r.Description.Length > 0 && r.DescriptionSource != DescriptionSources.Ai
             ? r.Description
-            : P.Format(_record?.Status switch { "open" => "Preview.Bill.Open", "closed" => "Preview.Bill.Closed", _ => "Preview.Bill.Other" }, b.Title);
+            : P.Format(_record?.Status switch { BillRecordStatuses.Open => "Preview.Bill.Open", BillRecordStatuses.Closed => "Preview.Bill.Closed", _ => "Preview.Bill.Other" }, b.Title);
 
     private static int ToGo(ThresholdResponse t) => Math.Max(0, t.Value - t.Participants);
 
     /// <summary>"Kas yra riba?": what the threshold is and does, then the number that holds now for this bill (design 8.15).</summary>
     private string ThresholdAnswer(ThresholdResponse t) =>
-        A["Threshold.Meaning"] + " " + A.Format(t.SetBy == "moderator" ? "Threshold.NowOwn" : "Threshold.Now", Display.Number(t.Value));
+        A["Threshold.Meaning"] + " " + A.Format(t.SetBy == ThresholdSetters.Moderator ? "Threshold.NowOwn" : "Threshold.Now", Display.Number(t.Value));
 }

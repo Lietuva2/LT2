@@ -32,16 +32,16 @@ else if (_view is { Items.Count: > 0 } view)
                 var item = view.Items[i];
                 <li id="@ResponsePaging.ItemId(i + 1)">
                     <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"atsakymas-{i + 1}-")"
-                                    Mark="@(item.Response.Status == "published" ? Mark(item.Response.Id) : null)">
+                                    Mark="@(item.Response.Status == ResponseStatuses.Published ? Mark(item.Response.Id) : null)">
                         @if (_threads.GetValueOrDefault(item.Response.Id) is { } thread)
                         {
                             @* Design 8.23.6: "Aptarimas" under a shown response (a withdrawn one read-only), an island of its own here. *@
-                            <CommentThread Kind="response" TargetId="item.Response.Id" Number="@Number" Thread="thread" Count="thread.Count"
+                            <CommentThread Kind="@CommentKinds.Response" TargetId="item.Response.Id" Number="@Number" Thread="thread" Count="thread.Count"
                                            Open="@(CommentPaging.Asked(CommentsShown, item.Response.Id, Linked) is not null)" Asked="@CommentPaging.Asked(CommentsShown, item.Response.Id, Linked)"
                                            Marked="@CommentPaging.Marked(item.Response.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator"
                                            @rendermode="InteractiveWebAssembly" />
                         }
-                        @if (item.Response.Status is "published" or "withdrawn")
+                        @if (item.Response.Status is ResponseStatuses.Published or ResponseStatuses.Withdrawn)
                         {
                             <Lt2.Web.Client.Mps.ReportResponse ResponseId="item.Response.Id" MpSlug="@item.Mp.Slug" Contact="@Contact" Moderator="Moderator" @rendermode="InteractiveWebAssembly" />
                         }
@@ -100,7 +100,7 @@ else if (_view is { Items.Count: > 0 } view)
         _shown = _view is null ? 0 : Math.Min(ResponsePaging.Shown(Show, _view.Items.Count), _view.Items.Count);
 
         // A link to a comment under a response beyond the first ten shows the responses through it (design 8.23.6).
-        if (_view is not null && Linked is { Kind: "response" } linked
+        if (_view is not null && Linked is { Kind: CommentKinds.Response } linked
             && _view.Items.ToList().FindIndex(i => i.Response.Id == linked.TargetId) is var at and >= 0)
         {
             _shown = Math.Max(_shown, at + 1);
@@ -110,8 +110,8 @@ else if (_view is { Items.Count: > 0 } view)
         _threads = [];
         foreach (var item in _view?.Items.Take(_shown) ?? [])
         {
-            if (item.Response.Status is "published" or "withdrawn"
-                && (await Comments.GetThreadAsync("response", item.Response.Id, CommentPaging.Asked(CommentsShown, item.Response.Id, Linked))).Value is { } thread)
+            if (item.Response.Status is ResponseStatuses.Published or ResponseStatuses.Withdrawn
+                && (await Comments.GetThreadAsync(CommentKinds.Response, item.Response.Id, CommentPaging.Asked(CommentsShown, item.Response.Id, Linked))).Value is { } thread)
             {
                 _threads[item.Response.Id] = thread;
             }

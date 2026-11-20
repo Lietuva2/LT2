@@ -352,7 +352,7 @@ internal sealed class ModerationService(
         record.DescriptionUrl = address;
         record.ChangedAt = now;
         await recorder.RecordAsync(
-            db, transaction, "record", record.Id, "describe", request.Statement.Trim(), moderator, now, record.BillNumber,
+            db, transaction, ReportTargets.Record, record.Id, "describe", request.Statement.Trim(), moderator, now, record.BillNumber,
             new { descriptionSource = record.DescriptionSource, descriptionUrl = address }, answersReports: true, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -551,7 +551,7 @@ internal sealed class ModerationService(
 
     public Task<Result<Unit>> SetPlannedAsync(Guid recordId, DateOnly date, string? stage, string statement, StaffActor moderator, CancellationToken cancellationToken)
     {
-        if (stage is not (null or "presentation" or "consideration" or "adoption"))
+        if (stage is not (null or BillStages.Presentation or BillStages.Consideration or BillStages.Adoption))
         {
             return Task.FromResult<Result<Unit>>(Error.Validation("planned.stage", "stage"));
         }
@@ -680,7 +680,7 @@ internal sealed class ModerationService(
         }
 
         record.ChangedAt = now;
-        await recorder.RecordAsync(db, transaction, "record", recordId, action, StatementRules.Normalise(statement), moderator, now, record.BillNumber, details(), answersReports, ct, auditAction);
+        await recorder.RecordAsync(db, transaction, ReportTargets.Record, recordId, action, StatementRules.Normalise(statement), moderator, now, record.BillNumber, details(), answersReports, ct, auditAction);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         return Result.Ok();
@@ -719,7 +719,7 @@ internal sealed class ModerationService(
         }
 
         var stored = StatementRules.Normalise(statement);
-        await recorder.RecordAsync(db, transaction, "reason", reasonId, action, stored, moderator, now, record.BillNumber, details, answersReports: true, ct);
+        await recorder.RecordAsync(db, transaction, ReportTargets.Reason, reasonId, action, stored, moderator, now, record.BillNumber, details, answersReports: true, ct);
         if (outcome.Value is { } notice)
         {
             var excerpt = reason.Text.Length > 120 ? reason.Text[..120] + "…" : reason.Text;

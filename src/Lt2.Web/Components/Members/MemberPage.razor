@@ -39,7 +39,7 @@ else if (_profile is { } p)
                 <div class="member-head"><MemberBadge ProfileId="@p.ProfileId" Name="@p.DisplayName" /><h1 id="member-name">@p.DisplayName</h1></div>
                 <Lt2.Web.Client.Components.NeedsScript />
                 @* Owner, 2026-11-17: "Sekti" and how many follow in one compact line under the name, as on every followed page. *@
-                <FollowButton Kind="member" Key="@p.ProfileId" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
+                <FollowButton Kind="@FollowButton.Member" Key="@p.ProfileId" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
                 @if (p.Party is { } party)
                 {
                     @* Design 8.25.9: only while the member ticked "Rodyti viešame profilyje"; the name after a colon, never declined. *@

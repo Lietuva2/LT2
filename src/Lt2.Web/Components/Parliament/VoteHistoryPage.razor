@@ -132,7 +132,7 @@
         var vote = item.Summary.Vote;
         if (vote.Bill is { } bill)
         {
-            return (bill.Title, vote.Kind == "stage-result" || string.IsNullOrWhiteSpace(vote.Wording) ? null : vote.Wording);
+            return (bill.Title, vote.Kind == VoteKinds.StageResult || string.IsNullOrWhiteSpace(vote.Wording) ? null : vote.Wording);
         }
 
         return VotePage.Heading(item.AgendaItemTitle, vote.Wording);

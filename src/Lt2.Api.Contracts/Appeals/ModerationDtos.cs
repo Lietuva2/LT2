@@ -22,7 +22,7 @@ public sealed record QueueRecordResponse(
     bool Held,
     int Participants,
     string? DescriptionUrl,
-    string Status = "open");
+    string Status = BillRecordStatuses.Open);
 
 /// <summary>A participant's flag about the planned date (design 8.4), with the date they say is right when they gave one.</summary>
 public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt, DateOnly? Date = null);
@@ -52,7 +52,7 @@ public sealed record QueueReasonResponse(
     IReadOnlyList<QueueReportResponse> Reports,
     IReadOnlyList<ReasonResponse> MergeCandidates,
     DateTimeOffset CreatedAt,
-    string RecordStatus = "open")
+    string RecordStatus = BillRecordStatuses.Open)
 {
     /// <summary>How many comments go with the argument when it is merged (design 8.23.7).</summary>
     public int Comments { get; init; }
@@ -106,18 +106,6 @@ public sealed record CloseRecordRequest
     public string SourceUrl { get; init; } = "";
 
     public string Statement { get; init; } = "";
-}
-
-/// <summary>Why a record a moderator closes closed (design 8.1 step 6): the values of <see cref="CloseRecordRequest.Reason"/>.</summary>
-public static class ClosingReasons
-{
-    public const string Rejected = "rejected";
-    public const string Withdrawn = "withdrawn";
-
-    /// <summary>A record closed by the Seimas's final vote; never a moderator's choice.</summary>
-    public const string Vote = "vote";
-
-    public static readonly IReadOnlyList<string> ByModerator = [Rejected, Withdrawn];
 }
 
 public sealed record ModeratorThresholdRequest

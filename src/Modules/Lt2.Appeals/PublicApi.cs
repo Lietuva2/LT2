@@ -51,7 +51,7 @@ public sealed record ReasonTotals(int For, int Against)
 {
     public static readonly ReasonTotals None = new(0, 0);
 
-    public int Of(string side) => side == "for" ? For : Against;
+    public int Of(string side) => side == Sides.For ? For : Against;
 }
 
 /// <summary>
@@ -242,7 +242,7 @@ public sealed record QueueRecord(
     bool Held,
     int Participants,
     string? DescriptionUrl,
-    string Status = "open");
+    string Status = BillRecordStatuses.Open);
 
 /// <summary>
 /// What a moderator's controls on the bill's page need (design 8.12.3): the state that decides which actions apply, and
@@ -280,7 +280,7 @@ public sealed record QueueReason(
     IReadOnlyList<QueueReport> Reports,
     IReadOnlyList<ReasonInfo> MergeCandidates,
     DateTimeOffset CreatedAt,
-    string RecordStatus = "open")
+    string RecordStatus = BillRecordStatuses.Open)
 {
     /// <summary>How many comments go with it when it is merged (design 8.23.7: the confirmation says so).</summary>
     public int Comments { get; init; }

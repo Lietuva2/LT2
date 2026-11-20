@@ -50,7 +50,7 @@
                     }
                     @* Design 8.19.2: what happened to it, in one line under the date; never which MPs. *@
                     <p class="small num" id="run-status-@run.Id">@StatusLine(run)</p>
-                    @if (run.Status == "cancelled" && run.Statement is { } statement)
+                    @if (run.Status == DigestRunStatuses.Cancelled && run.Statement is { } statement)
                     {
                         <p class="small" id="run-statement-@run.Id">@T.Format("Digests.Statement", statement)</p>
                     }
@@ -94,10 +94,10 @@
                                 <p class="note">@U.Format("Surge.Note", Display.Number(item.SurgeWindowHours), Display.Number(share))</p>
                             }
                             <div class="pair">
-                                @foreach (var side in new[] { "for", "against" })
+                                @foreach (var side in Sides.All)
                                 {
                                     <div class="stack stack--tight">
-                                        <h4><span class="choice choice--@side">@T["Digests.Side." + side]</span>@if ((side == "for" ? item.ForReasonsOf : item.AgainstReasonsOf) is { } of) { <text> </text><span class="small num" id="@($"digest-of-{item.BillNumber}-{side}")">@T.Format("Digests.OfSide", Display.Number(of))</span> }</h4>
+                                        <h4><span class="choice choice--@side">@T["Digests.Side." + side]</span>@if ((side == Sides.For ? item.ForReasonsOf : item.AgainstReasonsOf) is { } of) { <text> </text><span class="small num" id="@($"digest-of-{item.BillNumber}-{side}")">@T.Format("Digests.OfSide", Display.Number(of))</span> }</h4>
                                         @if (!item.Reasons.Any(r => r.Side == side))
                                         {
                                             <p class="small">@T["Digests.NoReasons"]</p>
@@ -187,8 +187,8 @@ else
     /// <summary>The public copy's one line (design 8.19.2): a dry run, sent to how many and when, or declined.</summary>
     private string StatusLine(DigestRunResponse run) => run.Status switch
     {
-        "sent" => T.Format("Digests.Line.sent", Display.Number(run.SentCount), run.SentAt is { } at ? Display.DayTime(at) : ""),
-        "cancelled" => T["Digests.Line.cancelled"],
+        DigestRunStatuses.Sent => T.Format("Digests.Line.sent", Display.Number(run.SentCount), run.SentAt is { } at ? Display.DayTime(at) : ""),
+        DigestRunStatuses.Cancelled => T["Digests.Line.cancelled"],
         _ => T["Digests.Line.dry-run"],
     };
 

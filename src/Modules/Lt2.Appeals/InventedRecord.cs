@@ -1,4 +1,5 @@
 using Lt2.Appeals.Domain;
+using Lt2.SharedKernel;
 using Npgsql;
 using NpgsqlTypes;
 

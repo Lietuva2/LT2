@@ -76,7 +76,7 @@
                     <li>
                         <div class="rows__main">
                             <a href="/o/@Uri.EscapeDataString(o.Slug)">@o.Name</a>
-                            <span class="small">@OrganisationWords.LabelText(L, o.Label)@(o.Status != "active" ? " · " + L["Org.State." + o.Status] : "")</span>
+                            <span class="small">@OrganisationWords.LabelText(L, o.Label)@(o.Status != OrganisationStatuses.Active ? " · " + L["Org.State." + o.Status] : "")</span>
                         </div>
                         <div class="rows__side">
                             <button type="button" class="btn btn--plain btn--compact" disabled="@Locked" @onclick="() => UnfollowOrganisationAsync(o.Slug)">@L["Follow.Unfollow"]</button>

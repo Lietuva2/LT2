@@ -57,8 +57,8 @@ internal sealed class MpResponseReads(
             .ThenBy(x => x.Mp.Slug, StringComparer.Ordinal)
             .Select(x => new BillMpResponseResponse(x.Mp, MpResponseMapping.Map(x.Item)))
             .ToList();
-        var shown = bill.Items.Where(i => i.Status == "published").ToList();
-        var counts = new MpResponseCountsResponse(shown.Count, shown.Count(i => i.Stance == "for"), shown.Count(i => i.Stance == "against"), shown.Count(i => i.Stance == "undecided"));
+        var shown = bill.Items.Where(i => i.Status == ResponseStatuses.Published).ToList();
+        var counts = new MpResponseCountsResponse(shown.Count, shown.Count(i => i.Stance == ResponseStances.For), shown.Count(i => i.Stance == ResponseStances.Against), shown.Count(i => i.Stance == ResponseStances.Undecided));
         return new BillMpResponsesResponse(bill.BillNumber, bill.Open, counts, items);
     }
 
@@ -109,7 +109,7 @@ internal sealed class MpResponseReads(
             return saved.Error!;
         }
 
-        if (first && saved.Value!.Status == "published")
+        if (first && saved.Value!.Status == ResponseStatuses.Published)
         {
             try
             {
@@ -218,10 +218,10 @@ internal sealed class MpResponseReads(
 
     private static MpResponderResponse Unknown(long person) => new("", "", person.ToString(CultureInfo.InvariantCulture), null);
 
-    private static int Order(ResponseView v) => v.Status != "published" ? 3 : v.Stance switch
+    private static int Order(ResponseView v) => v.Status != ResponseStatuses.Published ? 3 : v.Stance switch
     {
-        "for" => 0,
-        "against" => 1,
+        ResponseStances.For => 0,
+        ResponseStances.Against => 1,
         _ => 2,
     };
 }

@@ -1,3 +1,4 @@
+using Lt2.SharedKernel;
 using System.Text.RegularExpressions;
 
 namespace Lt2.Identity.Domain;
@@ -8,8 +9,8 @@ internal static partial class FeedbackRules
     public const int TextMaxLength = 2000;
 
 
-    public static readonly IReadOnlyList<string> Kinds = ["bug", "idea", "unclear", "other"];
-    public static readonly IReadOnlyList<string> Statuses = ["new", "seen", "done"];
+    public static readonly IReadOnlyList<string> Kinds = FeedbackKinds.All;
+    public static readonly IReadOnlyList<string> Statuses = FeedbackStatuses.All;
 
     public static string? CheckText(string? text)
     {

@@ -61,7 +61,7 @@ else
                         <TypedText Text="@record.Description" Class="voice typed" />
                     </details>
                 }
-                <RestoreForm Id="record.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreAppeal.Sentence." + (record.RestoresAs ?? "open")]"
+                <RestoreForm Id="record.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreAppeal.Sentence." + (record.RestoresAs ?? BillRecordStatuses.Open)]"
                              StatementLabel="@L["Hidden.Statement"]" Restore="request => ModerationApi.RestoreRecordAsync(record.Id, request)" />
             </article>
         }

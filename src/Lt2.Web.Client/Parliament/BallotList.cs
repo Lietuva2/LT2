@@ -53,7 +53,7 @@ public static class BallotList
 
     /// <summary>The ballot choices in the order of the links, with their words in the address.</summary>
     public static IReadOnlyList<(string Choice, string Slug)> Choices { get; } =
-        [("for", "uz"), ("against", "pries"), ("abstain", "susilaike"), ("did-not-vote", "nebalsavo")];
+        [(BallotChoices.For, "uz"), (BallotChoices.Against, "pries"), (BallotChoices.Abstain, "susilaike"), (BallotChoices.DidNotVote, "nebalsavo")];
 
     public static BallotListView Apply(
         IReadOnlyList<BallotResponse> ballots, IReadOnlyList<FactionSplitResponse> factions, string? query, string? faction, string? ballot, string? show)

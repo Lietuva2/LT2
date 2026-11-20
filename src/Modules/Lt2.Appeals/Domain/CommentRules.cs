@@ -1,4 +1,5 @@
 using Lt2.Appeals.Screening;
+using Lt2.SharedKernel;
 
 namespace Lt2.Appeals.Domain;
 

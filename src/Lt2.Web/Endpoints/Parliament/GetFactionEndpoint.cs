@@ -17,5 +17,5 @@ internal static class GetFactionEndpoint
             .ProducesProblem(StatusCodes.Status404NotFound);
 
     private static async Task<IResult> HandleAsync(HttpContext http, ParliamentReads reads, ErrorMapper errors, string slug, CancellationToken ct) =>
-        PublicJson.From(http, errors, await reads.BodyAsync("faction", slug, ct));
+        PublicJson.From(http, errors, await reads.BodyAsync(BodyKinds.Faction, slug, ct));
 }

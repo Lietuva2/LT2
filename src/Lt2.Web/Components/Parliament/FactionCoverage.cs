@@ -14,7 +14,7 @@ internal static class FactionCoverage
         ArgumentNullException.ThrowIfNull(mandate);
         var end = mandate.To is { } to && to < today ? to : today;
         var periods = memberships
-            .Where(m => m.Body.Kind == "faction" && m.From <= end && (m.To is null || m.To >= mandate.From))
+            .Where(m => m.Body.Kind == BodyKinds.Faction && m.From <= end && (m.To is null || m.To >= mandate.From))
             .OrderBy(m => m.From)
             .ToList();
         if (periods.Count == 0)

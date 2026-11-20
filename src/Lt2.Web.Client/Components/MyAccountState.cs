@@ -1,4 +1,5 @@
 using Lt2.Api.Contracts.Me;
+using Lt2.Api.Contracts.Mps;
 
 namespace Lt2.Web.Client.Components;
 
@@ -17,7 +18,7 @@ public sealed class MyAccountState(IMeApi me)
     /// (<paramref name="interactive"/> false) and for a visitor.
     /// </summary>
     public async Task<bool> IsMpAccountAsync(bool interactive) =>
-        interactive && (await MeAsync())?.Mp is { Part: "mp" };
+        interactive && (await MeAsync())?.Mp is { Part: PoliticianParts.Mp };
 
     /// <summary>
     /// The address part (<c>/p/{slug}</c>) of the MP the caller speaks for (the MP's own account or an office member), or null;

@@ -526,11 +526,9 @@ public interface IMemberProfiles
     Task<Result<Unit>> RestoreAboutAsync(Guid id, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 }
 
-/// <summary>The report grounds of a profile (design 8.25.6): the general ones and "Apsimeta kitu asmeniu ar pareigūnu".</summary>
-public static class ProfileReportGrounds
+/// <summary>A report of a profile (design 8.25.6): its grounds are <see cref="ReportGrounds.Profile"/>.</summary>
+public static class ProfileReportLimits
 {
-    public static readonly IReadOnlyList<string> All = ["impersonation", "illegal", "personal-data", "insult", "spam", "other"];
-
     public const int TextMaxLength = 1000;
 }
 

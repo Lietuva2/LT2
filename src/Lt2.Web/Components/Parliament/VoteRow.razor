@@ -31,7 +31,7 @@
         }
 
         yield return Vote.Stage is { } stage ? F.Stage(stage).ToLowerInvariant() : F.Kind(Vote.Kind).ToLowerInvariant();
-        if (Vote.Kind == "amendment")
+        if (Vote.Kind == VoteKinds.Amendment)
         {
             yield return F.Kind(Vote.Kind).ToLowerInvariant();
         }

@@ -47,9 +47,9 @@
             @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
             <p class="row result-line" id="vote-majority"><VoteMajorityTag For="totals.For" Against="totals.Against" Abstain="totals.Abstain" /><MajorityHint /></p>
             <div class="totals">
-                <div class="figure figure--m figure--for"><span class="label">@F.Choice("for")</span><span class="figure__num">@Display.Number(totals.For)</span></div>
-                <div class="figure figure--m figure--against"><span class="label">@F.Choice("against")</span><span class="figure__num">@Display.Number(totals.Against)</span></div>
-                <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Display.Number(totals.Abstain)</span></div>
+                <div class="figure figure--m figure--for"><span class="label">@F.Choice(BallotChoices.For)</span><span class="figure__num">@Display.Number(totals.For)</span></div>
+                <div class="figure figure--m figure--against"><span class="label">@F.Choice(BallotChoices.Against)</span><span class="figure__num">@Display.Number(totals.Against)</span></div>
+                <div class="figure figure--m"><span class="label">@F.Choice(BallotChoices.Abstain)</span><span class="figure__num">@Display.Number(totals.Abstain)</span></div>
             </div>
             <SplitBar For="totals.For" Against="totals.Against" Abstain="totals.Abstain" />
             @if (totals.Voted is { } voted)
@@ -143,7 +143,7 @@
             yield return F.Stage(stage);
         }
 
-        if (vote.Kind != "stage-result")
+        if (vote.Kind != VoteKinds.StageResult)
         {
             yield return F.Kind(vote.Kind);
         }

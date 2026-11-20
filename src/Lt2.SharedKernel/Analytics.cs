@@ -180,7 +180,7 @@ public static class AnalyticsRules
         {
             switch (choice)
             {
-                case "for" or "against" or "abstain":
+                case BallotChoices.For or BallotChoices.Against or BallotChoices.Abstain:
                     common++;
                     if (string.Equals(choice, side, StringComparison.Ordinal))
                     {
@@ -188,7 +188,7 @@ public static class AnalyticsRules
                     }
 
                     break;
-                case "free":
+                case FactionPositions.Free:
                     free++;
                     break;
             }

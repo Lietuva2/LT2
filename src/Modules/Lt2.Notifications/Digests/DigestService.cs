@@ -41,7 +41,7 @@ internal sealed class DigestService(
     private static readonly IReadOnlySet<string> NoLeadCommittees = new HashSet<string>();
 
     /// <summary>The statuses of a summary that has gone or was declined, which the public copy shows.</summary>
-    private static readonly string[] PublicStatuses = [RunStatuses.DryRun, RunStatuses.Sent, RunStatuses.Cancelled];
+    private static readonly string[] PublicStatuses = [DigestRunStatuses.DryRun, DigestRunStatuses.Sent, DigestRunStatuses.Cancelled];
 
     public async Task<IReadOnlyList<DigestRunInfo>> RunDueAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
@@ -104,7 +104,7 @@ internal sealed class DigestService(
 
             // Every prepared summary whose time has come goes, as prepared: nobody approves it.
             var due = await db.DigestRuns.AsNoTracking()
-                .Where(r => r.Status == RunStatuses.Prepared && (r.DueAt == null || r.DueAt <= now))
+                .Where(r => r.Status == DigestRunStatuses.Prepared && (r.DueAt == null || r.DueAt <= now))
                 .OrderBy(r => r.DueAt).Select(r => r.Id).ToListAsync(cancellationToken);
             foreach (var id in due)
             {
@@ -183,7 +183,7 @@ internal sealed class DigestService(
         }
 
         // Read under the lock: a second moderator pressing at the same moment finds it approved already.
-        if (run.Status != RunStatuses.Prepared || run.ApprovedAt is not null)
+        if (run.Status != DigestRunStatuses.Prepared || run.ApprovedAt is not null)
         {
             return Error.Conflict("digest.not-prepared");
         }
@@ -224,14 +224,14 @@ internal sealed class DigestService(
             return Error.NotFound("digest.not-found");
         }
 
-        if (run.Status != RunStatuses.Prepared)
+        if (run.Status != DigestRunStatuses.Prepared)
         {
             return Error.Conflict("digest.not-prepared");
         }
 
         // The public copy says it was not sent and shows what it held at that moment, as it would have gone then.
         await FreezeAsync(db, run, candidates, now, cancellationToken);
-        run.Status = RunStatuses.Cancelled;
+        run.Status = DigestRunStatuses.Cancelled;
         run.Statement = statement.Trim();
         run.CancelledBy = moderator.UserId;
         run.CancelledAt = now;
@@ -283,7 +283,7 @@ internal sealed class DigestService(
         // A prepared summary that holds the record: its bills are fixed and it goes at its own time.
         var prepared = await (from i in db.DigestItems
                               join r in db.DigestRuns on i.RunId equals r.Id
-                              where i.RecordId == recordId && r.Status == RunStatuses.Prepared
+                              where i.RecordId == recordId && r.Status == DigestRunStatuses.Prepared
                               orderby r.DueAt
                               select r.DueAt ?? r.CreatedAt).FirstOrDefaultAsync(cancellationToken);
         if (prepared != default)
@@ -332,7 +332,7 @@ internal sealed class DigestService(
     {
         var now = clock.GetUtcNow();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var prepared = await db.DigestRuns.AsNoTracking().Where(r => r.Status == RunStatuses.Prepared)
+        var prepared = await db.DigestRuns.AsNoTracking().Where(r => r.Status == DigestRunStatuses.Prepared)
             .OrderBy(r => r.DueAt).Select(r => r.Id).ToListAsync(cancellationToken);
         var result = new List<DigestReview>();
         if (prepared.Count > 0)
@@ -363,7 +363,7 @@ internal sealed class DigestService(
                     items.Select(i =>
                     {
                         var c = candidates.GetValueOrDefault(i.RecordId);
-                        var reasons = Sides()
+                        var reasons = Sides.All
                             .SelectMany(side => choices.Where(x => x.RecordId == i.RecordId && x.Side == side && byId.ContainsKey(x.ReasonId))
                                 .Select(x => (Choice: x, Reason: byId[x.ReasonId]))
                                 .OrderByDescending(x => x.Reason.Endorsements).ThenBy(x => x.Choice.Place)
@@ -372,24 +372,24 @@ internal sealed class DigestService(
                         return c is null
                             ? new DigestReviewItem(i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.ForCount, i.ForOlderThan30Days, i.AgainstCount,
                                 i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, Held: false, Gone: true, reasons,
-                                Published(pool, i.RecordId, "for"), Published(pool, i.RecordId, "against"))
+                                Published(pool, i.RecordId, Sides.For), Published(pool, i.RecordId, Sides.Against))
                             : new DigestReviewItem(i.RecordId, c.BillNumber, c.BillTitle, c.Planned?.Stage ?? i.Stage, c.Planned?.Date ?? i.PlannedDate, c.For,
                                 c.ForOlderThan30Days, c.Against, c.AgainstOlderThan30Days, c.SurgeSharePercent, c.SurgeWindowHours, c.Held, Gone: false, reasons,
-                                Published(pool, i.RecordId, "for"), Published(pool, i.RecordId, "against"));
+                                Published(pool, i.RecordId, Sides.For), Published(pool, i.RecordId, Sides.Against));
                     }).ToList()));
             }
         }
 
         // Then the latest that went or were declined, as they went.
         var gone = await db.DigestRuns.AsNoTracking()
-            .Where(r => r.Kind != SendingRules.Introduction && r.Status != RunStatuses.Prepared)
+            .Where(r => r.Kind != SendingRules.Introduction && r.Status != DigestRunStatuses.Prepared)
             .OrderByDescending(r => r.SentAt ?? r.CancelledAt ?? r.CreatedAt).Take(30).ToListAsync(cancellationToken);
         var goneItems = await db.DigestItems.AsNoTracking().Where(i => gone.Select(r => r.Id).Contains(i.RunId)).OrderBy(i => i.Position).ToListAsync(cancellationToken);
         foreach (var run in gone)
         {
             result.Add(new DigestReview(
                 run.Id, run.Kind, run.RunDate, run.SittingDate, run.CreatedAt, run.DueAt, run.Status,
-                run.Status == RunStatuses.Sent ? run.SentCount : run.MpCount, run.SentCount, run.SentAt, run.ApprovedAt, run.Statement,
+                run.Status == DigestRunStatuses.Sent ? run.SentCount : run.MpCount, run.SentCount, run.SentAt, run.ApprovedAt, run.Statement,
                 goneItems.Where(i => i.RunId == run.Id).Select(i => new DigestReviewItem(
                     i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.ForCount, i.ForOlderThan30Days, i.AgainstCount,
                     i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, false, false,
@@ -404,7 +404,7 @@ internal sealed class DigestService(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var run = await db.DigestRuns.AsNoTracking()
-            .Where(r => r.Status == RunStatuses.Prepared && r.ApprovedAt == null)
+            .Where(r => r.Status == DigestRunStatuses.Prepared && r.ApprovedAt == null)
             .OrderBy(r => r.DueAt).FirstOrDefaultAsync(cancellationToken);
         if (run is null)
         {
@@ -423,8 +423,6 @@ internal sealed class DigestService(
             await db.IntroductionLetters.AnyAsync(l => l.SentAt != null, ct),
             await locks.InventedDataAsync(ct),
             locks.MailCaught);
-
-    private static string[] Sides() => ["for", "against"];
 
     /// <summary>How many published arguments a side of a record has in the pool: the set the shown ones are chosen from (design 8.4).</summary>
     private static int Published(IReadOnlyList<DigestPoolReason> pool, Guid recordId, string side) => pool.Count(r => r.RecordId == recordId && r.Side == side);
@@ -458,7 +456,7 @@ internal sealed class DigestService(
             SittingDate = sitting,
             CreatedAt = now.ToUniversalTime(),
             DueAt = dueAt.ToUniversalTime(),
-            Status = RunStatuses.Prepared,
+            Status = DigestRunStatuses.Prepared,
             ApprovedBy = approved?.Moderator.UserId,
             ApprovedAt = approved is null ? null : now.ToUniversalTime(),
         };
@@ -482,8 +480,8 @@ internal sealed class DigestService(
                 AgainstOlderThan30Days = c.AgainstOlderThan30Days,
                 SurgeSharePercent = c.SurgeSharePercent,
                 SurgeWindowHours = c.SurgeWindowHours,
-                ForReasonCount = Published(pool, c.RecordId, "for"),
-                AgainstReasonCount = Published(pool, c.RecordId, "against"),
+                ForReasonCount = Published(pool, c.RecordId, Sides.For),
+                AgainstReasonCount = Published(pool, c.RecordId, Sides.Against),
             });
         }
 
@@ -522,7 +520,7 @@ internal sealed class DigestService(
     private async Task<IReadOnlyList<DigestPoolReason>?> ReconcileAsync(NotificationsDb db, Guid runId, DateTimeOffset now, CancellationToken ct)
     {
         var run = await db.DigestRuns.AsNoTracking().FirstOrDefaultAsync(r => r.Id == runId, ct);
-        if (run is not { Status: RunStatuses.Prepared })
+        if (run is not { Status: DigestRunStatuses.Prepared })
         {
             return null;
         }
@@ -537,7 +535,7 @@ internal sealed class DigestService(
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.ExecuteSqlRawAsync(LockSql, ct);
-        if (!await db.DigestRuns.AnyAsync(r => r.Id == runId && r.Status == RunStatuses.Prepared, ct))
+        if (!await db.DigestRuns.AnyAsync(r => r.Id == runId && r.Status == DigestRunStatuses.Prepared, ct))
         {
             return null;
         }
@@ -600,12 +598,12 @@ internal sealed class DigestService(
             item.AgainstOlderThan30Days = c.AgainstOlderThan30Days;
             item.SurgeSharePercent = c.SurgeSharePercent;
             item.SurgeWindowHours = c.SurgeWindowHours;
-            item.ForReasonCount = Published(pool, item.RecordId, "for");
-            item.AgainstReasonCount = Published(pool, item.RecordId, "against");
+            item.ForReasonCount = Published(pool, item.RecordId, Sides.For);
+            item.AgainstReasonCount = Published(pool, item.RecordId, Sides.Against);
 
             // In the order chosen, not sorted again by marks (owner, 2026-11-17); the count beside each is read now.
             item.Reasons = JsonSerializer.Serialize(
-                Sides().SelectMany(side => choices.Where(x => x.RecordId == item.RecordId && x.Side == side && byId.ContainsKey(x.ReasonId))
+                Sides.All.SelectMany(side => choices.Where(x => x.RecordId == item.RecordId && x.Side == side && byId.ContainsKey(x.ReasonId))
                         .OrderBy(x => x.Place)
                         .Select(x => new DigestReason(side, byId[x.ReasonId].Text, byId[x.ReasonId].Endorsements)))
                     .ToList(),
@@ -630,7 +628,7 @@ internal sealed class DigestService(
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.ExecuteSqlRawAsync(LockSql, ct);
         var run = await db.DigestRuns.FirstOrDefaultAsync(r => r.Id == runId, ct);
-        if (run is not { Status: RunStatuses.Prepared })
+        if (run is not { Status: DigestRunStatuses.Prepared })
         {
             return;
         }
@@ -638,7 +636,7 @@ internal sealed class DigestService(
         run.SentAt = now.ToUniversalTime();
         if (await FreezeAsync(db, run, candidates, now, ct) == 0)
         {
-            run.Status = RunStatuses.Dropped;
+            run.Status = DigestRunStatuses.Dropped;
             await db.SaveChangesAsync(ct);
             await audit.WriteAsync(
                 new AuditEntry("digest.dropped", null, null, "digest:" + run.Id, JsonSerializer.SerializeToElement(new { kind = run.Kind }, JsonSerializerOptions.Web)),
@@ -664,7 +662,7 @@ internal sealed class DigestService(
             JsonSerializerOptions.Web);
 
         run.Status = SendingRules.GoneStatus(state.Mode);
-        if (run.Status == RunStatuses.DryRun)
+        if (run.Status == DigestRunStatuses.DryRun)
         {
             // Sending off: every MP within the ceiling would have had it.
             foreach (var mp in recipients)
@@ -692,7 +690,7 @@ internal sealed class DigestService(
         }
 
         await db.SaveChangesAsync(ct);
-        if (run.Status == RunStatuses.Sent)
+        if (run.Status == DigestRunStatuses.Sent)
         {
             await audit.WriteAsync(
                 new AuditEntry("digest.sent", approvedBy?.UserId, approvedBy?.Role, "digest:" + run.Id,
@@ -794,7 +792,7 @@ internal sealed class DigestService(
         }
 
         await OfficeCopiesAsync(db, run, info, plan, partyJson, responses, ct);
-        run.Status = RunStatuses.Sent;
+        run.Status = DigestRunStatuses.Sent;
         run.SentCount = plan.Count(p => p.Official == DeliveryStatuses.Queued);
         await source.MarkSummarisedAsync(
             await db.DigestItems.Where(i => i.RunId == run.Id).Select(i => i.RecordId).ToListAsync(ct), now, db.Database.CurrentTransaction!.GetDbTransaction(), ct);
@@ -989,7 +987,7 @@ internal sealed class DigestService(
                 r.SentCount,
                 r.SentAt,
                 r.DueAt,
-                r.Status == RunStatuses.Cancelled ? r.Statement : null,
+                r.Status == DigestRunStatuses.Cancelled ? r.Statement : null,
                 r.ApprovedAt))
             .ToList();
     }

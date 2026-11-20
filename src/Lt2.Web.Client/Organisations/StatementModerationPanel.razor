@@ -84,5 +84,5 @@
     }
 
     /// <summary>Waits for a moderator, carries a pre-screening flag, has an open report, or nobody has looked yet.</summary>
-    private static bool NeedsLook(QueueStatementResponse s) => s.Status == "pending" || s.Flags.Count > 0 || s.Reports.Count > 0 || !s.Seen;
+    private static bool NeedsLook(QueueStatementResponse s) => s.Status == StatementStatuses.Pending || s.Flags.Count > 0 || s.Reports.Count > 0 || !s.Seen;
 }

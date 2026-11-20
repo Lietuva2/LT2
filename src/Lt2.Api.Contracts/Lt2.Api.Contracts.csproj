@@ -11,6 +11,16 @@
     <Compile Include="..\Lt2.SharedKernel\BillTextLinks.cs" Link="Comments\BillTextLinks.cs" />
     <!-- How every long list grows by "Rodyti daugiau" (design 8.16.4), also in Lt2.SharedKernel for the modules' pages. -->
     <Compile Include="..\Lt2.SharedKernel\ListPaging.cs" Link="ListPaging.cs" />
+    <!-- The closed sets of codes stored as text and carried by the API (sides, statuses, kinds), also in Lt2.SharedKernel
+         for the modules: one definition for the modules, the server's pages and the browser. -->
+    <Compile Include="..\Lt2.SharedKernel\AppealCodes.cs" Link="Appeals\AppealCodes.cs" />
+    <Compile Include="..\Lt2.SharedKernel\CommentCodes.cs" Link="Comments\CommentCodes.cs" />
+    <Compile Include="..\Lt2.SharedKernel\OrganisationCodes.cs" Link="Organisations\OrganisationCodes.cs" />
+    <Compile Include="..\Lt2.SharedKernel\MpCodes.cs" Link="Mps\MpCodes.cs" />
+    <Compile Include="..\Lt2.SharedKernel\ParliamentCodes.cs" Link="Parliament\ParliamentCodes.cs" />
+    <Compile Include="..\Lt2.SharedKernel\DigestCodes.cs" Link="Digests\DigestCodes.cs" />
+    <Compile Include="..\Lt2.SharedKernel\FeedbackCodes.cs" Link="Feedback\FeedbackCodes.cs" />
+    <Compile Include="..\Lt2.SharedKernel\LockTargets.cs" Link="Admin\LockTargets.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />

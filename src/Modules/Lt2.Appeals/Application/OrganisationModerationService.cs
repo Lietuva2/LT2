@@ -24,7 +24,7 @@ internal sealed class OrganisationModerationService(
     TimeProvider clock) : IOrganisationModeration
 {
     private const int QueueLimit = 100;
-    private static readonly string[] Kinds = ["organisation", "statement"];
+    private static readonly string[] Kinds = [ReportTargets.Organisation, ReportTargets.Statement];
 
     public async Task<OrganisationModerationItems> QueueAsync(CancellationToken cancellationToken)
     {
@@ -328,7 +328,7 @@ internal sealed class OrganisationModerationService(
         }
 
         o.ChangedAt = now;
-        await recorder.RecordAsync(db, transaction, "organisation", o.Id, action, statement, moderator, now, null, new { organisation = o.Slug }, answersReports: true, ct);
+        await recorder.RecordAsync(db, transaction, ReportTargets.Organisation, o.Id, action, statement, moderator, now, null, new { organisation = o.Slug }, answersReports: true, ct);
         await NotifyAsync(db, transaction, o, notice, $"/o/{Uri.EscapeDataString(o.Slug)}", statement, contact, null, ct);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
@@ -361,7 +361,7 @@ internal sealed class OrganisationModerationService(
             return Error.Conflict(refused);
         }
 
-        await recorder.RecordAsync(db, transaction, "statement", s.Id, action, statement, moderator, now, s.BillNumber, new { organisation = o.Slug }, answersReports: true, ct);
+        await recorder.RecordAsync(db, transaction, ReportTargets.Statement, s.Id, action, statement, moderator, now, s.BillNumber, new { organisation = o.Slug }, answersReports: true, ct);
         if (notice is not null)
         {
             await NotifyAsync(db, transaction, o, notice, $"/seimas/{Uri.EscapeDataString(s.BillNumber)}", statement, contact, bill?.Bill ?? new BillFacts(s.BillNumber, s.BillNumber), ct);

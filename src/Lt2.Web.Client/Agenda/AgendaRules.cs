@@ -1,3 +1,4 @@
+using Lt2.Api.Contracts.Parliament;
 using Lt2.Api.Contracts;
 
 namespace Lt2.Web.Client.Agenda;
@@ -80,9 +81,9 @@ public static class AgendaRules
     /// <summary>The stage's place in a day: priėmimas first, then svarstymas, then pateikimas, then none.</summary>
     public static int StageRank(string? stage) => stage switch
     {
-        "adoption" => 0,
-        "consideration" => 1,
-        "presentation" => 2,
+        BillStages.Adoption => 0,
+        BillStages.Consideration => 1,
+        BillStages.Presentation => 2,
         _ => 3,
     };
 

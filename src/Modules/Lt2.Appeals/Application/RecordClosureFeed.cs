@@ -17,7 +17,7 @@ internal sealed class RecordClosureFeed(IDbContextFactory<AppealsDb> contexts) :
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var closed = await db.BillRecords.AsNoTracking()
             .Where(r => r.Status == BillRecordStatuses.Closed
-                && (r.ClosedReason == ClosedReasons.Rejected || r.ClosedReason == ClosedReasons.Withdrawn)
+                && (r.ClosedReason == ClosingReasons.Rejected || r.ClosedReason == ClosingReasons.Withdrawn)
                 && r.ClosedAt >= from && r.ClosedAt < to
                 && r.ClosedDecidedOn != null && r.ClosedSourceUrl != null)
             .OrderBy(r => r.ClosedAt)

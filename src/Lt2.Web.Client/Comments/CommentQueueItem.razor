@@ -9,11 +9,11 @@
     <div class="row">
         <a class="tag tag--ink num" href="@BillTextLinks.ToComment(Item.Bill.Number, Item.Id)">@Item.Bill.Number</a>
         <b>@AuthorName(Item.Author)</b>
-        @if (Item.Author.Voice == "organisation")
+        @if (Item.Author.Voice == CommentVoices.Organisation)
         {
             <span class="tag">@L["Comments.Mark.Organisation"]</span>
         }
-        else if (Item.Author.Voice == "mp")
+        else if (Item.Author.Voice == CommentVoices.Mp)
         {
             <span class="tag">@L["Comments.Mark.Mp"]</span>
         }
@@ -55,14 +55,14 @@
 
     private string AuthorName(CommentAuthorResponse a) => a.Voice switch
     {
-        "mp" => a.Mp is { } mp ? $"{mp.FirstName} {mp.LastName}".Trim() : "",
+        CommentVoices.Mp => a.Mp is { } mp ? $"{mp.FirstName} {mp.LastName}".Trim() : "",
         _ => a.Name ?? L["Comments.NoName"],
     };
 
     private string? TargetName => Item.Target.Kind switch
     {
-        "statement" => Item.Target.OrganisationName,
-        "response" => Item.Target.Mp is { } mp ? $"{mp.FirstName} {mp.LastName}".Trim() : null,
+        CommentKinds.Statement => Item.Target.OrganisationName,
+        CommentKinds.Response => Item.Target.Mp is { } mp ? $"{mp.FirstName} {mp.LastName}".Trim() : null,
         _ => Item.Target.AuthorName,
     };
 }

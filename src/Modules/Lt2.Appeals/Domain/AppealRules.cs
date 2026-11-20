@@ -2,17 +2,6 @@ using Lt2.SharedKernel;
 
 namespace Lt2.Appeals.Domain;
 
-/// <summary>The two sides of a record (design 8.2). Abstaining is not a request to an MP, so it is not offered.</summary>
-internal static class Sides
-{
-    public const string For = "for";
-    public const string Against = "against";
-
-    public static readonly IReadOnlyList<string> All = [For, Against];
-
-    public static bool IsSide(string? value) => value is For or Against;
-}
-
 /// <summary>
 /// The counted rules of appeals (design 8.2, 8.4, 6.6; <c>AGENTS.md</c> "Appeals"), as pure functions. Each returns the
 /// error code a request gets when it breaks the rule, or <c>null</c> when it keeps it.

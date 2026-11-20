@@ -17,7 +17,7 @@
         {
             <span class="tag">@F.Stage(Stage)</span>
         }
-        @if (Kind is not null && Kind != "stage-result")
+        @if (Kind is not null && Kind != VoteKinds.StageResult)
         {
             <span class="tag">@F.Kind(Kind)</span>
         }

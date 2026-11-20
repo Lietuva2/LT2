@@ -1,3 +1,4 @@
+using Lt2.SharedKernel;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -273,7 +274,7 @@ internal static partial class OrganisationRules
     /// </summary>
     public static string? CheckStatement(string? stance, string? text, string? link, int? goal, int maxLength)
     {
-        if (stance is null || !Stances.All.Contains(stance))
+        if (stance is null || !StatementStances.All.Contains(stance))
         {
             return "statement.stance-invalid";
         }
@@ -299,7 +300,7 @@ internal static partial class OrganisationRules
             return null;
         }
 
-        if (stance == Stances.Remarks)
+        if (stance == StatementStances.Remarks)
         {
             return "statement.goal-with-remarks";
         }
@@ -366,8 +367,8 @@ internal static partial class OrganisationRules
     /// </summary>
     public static int? Progress(string stance, int? goal, int forCount, int againstCount) => goal is null ? null : stance switch
     {
-        Stances.For => forCount,
-        Stances.Against => againstCount,
+        StatementStances.For => forCount,
+        StatementStances.Against => againstCount,
         _ => null,
     };
 
@@ -377,8 +378,8 @@ internal static partial class OrganisationRules
     /// </summary>
     public static int StanceOrder(string stance) => stance switch
     {
-        Stances.For => 0,
-        Stances.Against => 1,
+        StatementStances.For => 0,
+        StatementStances.Against => 1,
         _ => 2,
     };
 }

@@ -1,5 +1,6 @@
 @using Lt2.Api.Contracts.Admin
 @using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Parliament
 @inherits InteractiveBase<AppealUi>
 @inject IModerationApi Moderation
 @inject FluentValidation.IValidator<ModeratorDescriptionRequest> DescriptionValidator
@@ -112,9 +113,9 @@
                         <div class="field">
                             <label for="stage-@Key">@L["Mod.PlannedStage"]</label>
                             <select class="input" id="stage-@Key" @bind="_stage" disabled="@Locked">
-                                <option value="presentation">@L["Mod.Stage.presentation"]</option>
-                                <option value="consideration">@L["Mod.Stage.consideration"]</option>
-                                <option value="adoption">@L["Mod.Stage.adoption"]</option>
+                                <option value="@BillStages.Presentation">@L["Mod.Stage.presentation"]</option>
+                                <option value="@BillStages.Consideration">@L["Mod.Stage.consideration"]</option>
+                                <option value="@BillStages.Adoption">@L["Mod.Stage.adoption"]</option>
                             </select>
                         </div>
                     </div>
@@ -199,7 +200,7 @@
     private int? _threshold;
     private Guid? _mergeInto;
     private string? _planned;
-    private string _stage = "consideration";
+    private string _stage = BillStages.Consideration;
     private string _description = "";
     private string? _descriptionUrl;
     private string? _descriptionNow;
@@ -223,12 +224,12 @@
     [Parameter, EditorRequired] public string Kind { get; set; } = "";
 
     /// <summary>The kind as the resource keys name it: their keys for a record still say <c>appeal</c> (kept on purpose).</summary>
-    private string SentenceKind => Kind == "record" ? "appeal" : Kind;
+    private string SentenceKind => Kind == ReportTargets.Record ? "appeal" : Kind;
 
     [Parameter] public string Status { get; set; } = "";
 
     /// <summary>For an argument: its record's status. On a closed record only hiding and "Palikti" are offered (design 6.9).</summary>
-    [Parameter] public string RecordStatus { get; set; } = "open";
+    [Parameter] public string RecordStatus { get; set; } = BillRecordStatuses.Open;
 
     [Parameter] public IReadOnlyList<ReasonResponse>? MergeCandidates { get; set; }
 
@@ -294,12 +295,12 @@
     /// </summary>
     private IReadOnlyList<string> Offered => (Kind, Status) switch
     {
-        ("record", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "planned", "threshold", "close", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
-        ("record", "closed") => [.. (HasOpenItems ? new[] { "keep" } : []), .. ClosedDescriptionActions, .. (ClosingReasons.ByModerator.Contains(ClosedReason ?? "") ? new[] { "reopen" } : []), "hide"],
-        ("reason", "published") when RecordStatus == "closed" => [.. KeepReason, "hide"],
-        ("reason", _) when RecordStatus == "closed" => ["hide"],
-        ("reason", "pending") => ["publish", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict", "hide"],
-        ("reason", _) => [.. KeepReason, .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict", "hide"],
+        (ReportTargets.Record, BillRecordStatuses.Open) => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "planned", "threshold", "close", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
+        (ReportTargets.Record, BillRecordStatuses.Closed) => [.. (HasOpenItems ? new[] { "keep" } : []), .. ClosedDescriptionActions, .. (ClosingReasons.ByModerator.Contains(ClosedReason ?? "") ? new[] { "reopen" } : []), "hide"],
+        (ReportTargets.Reason, ReasonStatuses.Published) when RecordStatus == BillRecordStatuses.Closed => [.. KeepReason, "hide"],
+        (ReportTargets.Reason, _) when RecordStatus == BillRecordStatuses.Closed => ["hide"],
+        (ReportTargets.Reason, ReasonStatuses.Pending) => ["publish", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict", "hide"],
+        (ReportTargets.Reason, _) => [.. KeepReason, .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict", "hide"],
         _ => [],
     };
 
@@ -319,7 +320,7 @@
     /// </summary>
     private bool OffersLock => _administrator && Offered.Contains("restrict");
 
-    private string? GroupOf(string action) => Kind != "record" ? null : action switch
+    private string? GroupOf(string action) => Kind != ReportTargets.Record ? null : action switch
     {
         "confirm" or "describe" or "undescribe" => L["Mod.Group.description"].Value,
         "planned" or "threshold" or "close" or "reopen" => L["Mod.Group.seimas"].Value,
@@ -333,7 +334,7 @@
     /// </summary>
     private string[] DescriptionActions => Number is null
         ? []
-        : [.. (CurrentSource == "ai" ? new[] { "confirm" } : []), "describe", .. (string.IsNullOrEmpty(CurrentDescription) ? Array.Empty<string>() : ["undescribe"])];
+        : [.. (CurrentSource == DescriptionSources.Ai ? new[] { "confirm" } : []), "describe", .. (string.IsNullOrEmpty(CurrentDescription) ? Array.Empty<string>() : ["undescribe"])];
 
     /// <summary>
     /// The description's actions on a closed record (design 6.9): correct it or remove one that exists. Confirming an AI
@@ -374,7 +375,7 @@
         _done = null;
         _threshold = Threshold;
         _planned = Planned is { } p ? Display.Day(p.Date) : null;
-        _stage = Planned?.Stage ?? "consideration";
+        _stage = Planned?.Stage ?? BillStages.Consideration;
         _mergeInto = null;
         _description = CurrentDescription ?? "";
         _descriptionUrl = CurrentUrl;
@@ -455,9 +456,9 @@
         // The description's state after the action, as the server made it (design 8.13).
         (_descriptionNow, _sourceNow, _urlNow) = action switch
         {
-            "confirm" => (CurrentDescription, "ai-draft", CurrentUrl),
+            "confirm" => (CurrentDescription, DescriptionSources.AiDraft, CurrentUrl),
             "undescribe" => ("", null, null),
-            "describe" => (_description.Trim(), _fromDraft || CurrentSource is "ai" or "ai-draft" ? "ai-draft" : "moderator", OfficialTextAddress.Normalise(_descriptionUrl)),
+            "describe" => (_description.Trim(), _fromDraft || CurrentSource is DescriptionSources.Ai or DescriptionSources.AiDraft ? DescriptionSources.AiDraft : DescriptionSources.Moderator, OfficialTextAddress.Normalise(_descriptionUrl)),
             _ => (_descriptionNow, _sourceNow, _urlNow),
         };
         _open = null;
@@ -544,7 +545,7 @@
     {
         var statement = new StatementRequest { Statement = _statement };
         var note = new ModerationRequest { Statement = string.IsNullOrWhiteSpace(_statement) ? null : _statement };
-        if (Kind == "reason")
+        if (Kind == ReportTargets.Reason)
         {
             var reasonId = Id!.Value;
             return action switch

@@ -143,7 +143,7 @@
                             }
                             @if (_reporting == c.Id)
                             {
-                                <div class="act__panel"><ReportForm TargetKind="comment" TargetId="c.Id" OnClose="() => _reporting = null" /></div>
+                                <div class="act__panel"><ReportForm TargetKind="@ReportTargets.Comment" TargetId="c.Id" OnClose="() => _reporting = null" /></div>
                             }
                             @if (moderated is not null && _moderating == c.Id)
                             {
@@ -486,7 +486,7 @@
     {
         switch (a.Voice)
         {
-            case "organisation":
+            case CommentVoices.Organisation:
                 if (a.OrganisationSlug is { } slug)
                 {
                     <a class="comment__name" href="@Lt2.Web.Client.Organisations.OrganisationWords.ProfilePath(slug)">@a.Name</a>
@@ -496,7 +496,7 @@
                     <b class="comment__name">@a.Name</b>
                 }
                 break;
-            case "mp":
+            case CommentVoices.Mp:
                 if (a.Mp is { Slug.Length: > 0 } mp)
                 {
                     <a class="comment__name" href="/p/@mp.Slug">@mp.FirstName @mp.LastName</a>
@@ -527,14 +527,14 @@
     {
         switch (a.Voice)
         {
-            case "organisation":
+            case CommentVoices.Organisation:
                 <span class="tag">@L["Comments.Mark.Organisation"]</span>
                 @if (a.Label is { } label)
                 {
                     <span class="comment__label">@Lt2.Web.Client.Organisations.OrganisationWords.LabelText(L, label)</span>
                 }
                 break;
-            case "mp":
+            case CommentVoices.Mp:
                 <span class="tag">@L["Comments.Mark.Mp"]</span>
                 break;
         }
@@ -592,8 +592,8 @@
             @* What becomes public and under whose name (design 8.15, 8.23.2): said above the box, decided by the server. *@
             <p class="small" id="comment-voice-@Key">@(voice?.Voice switch
             {
-                "organisation" => L["Comments.Voice.organisation"],
-                "mp" => L["Comments.Voice.mp"],
+                CommentVoices.Organisation => L["Comments.Voice.organisation"],
+                CommentVoices.Mp => L["Comments.Voice.mp"],
                 _ => L["Comments.Voice.person"],
             })</p>
             <div class="field @ErrorClass("text")">

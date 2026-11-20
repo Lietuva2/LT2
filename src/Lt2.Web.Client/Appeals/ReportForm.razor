@@ -16,12 +16,12 @@ else
     <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SendAsync" novalidate aria-label="@L["Report.Title"]">
         <fieldset class="stack stack--tight">
             <legend class="label">@L["Report.Ground"]</legend>
-            @foreach (var ground in TargetKind == "profile" ? ProfileLimits.ReportGrounds : AppealLimits.ReportGroundsFor(TargetKind))
+            @foreach (var ground in TargetKind == ReportTargets.Profile ? ReportGrounds.Profile : ReportGrounds.For(TargetKind))
             {
                 <label class="check">
                     <input type="radio" name="@($"ground-{TargetId:N}")" value="@ground" checked="@(_ground == ground)"
                            @onchange="() => _ground = ground" disabled="@Locked" />
-                    <span>@L[(TargetKind == "profile" && ground == "impersonation" ? "Report.Ground.person-impersonation" : "Report.Ground." + ground)]</span>
+                    <span>@L[(TargetKind == ReportTargets.Profile && ground == ReportGrounds.Impersonation ? "Report.Ground.person-impersonation" : "Report.Ground." + ground)]</span>
                 </label>
             }
         </fieldset>
@@ -54,7 +54,7 @@ else
 
     private Task SendAsync() => RunAsync(async () =>
     {
-        var result = TargetKind == "profile"
+        var result = TargetKind == ReportTargets.Profile
             ? await Profiles.ReportAsync(ProfileId!, new MemberReportRequest { Ground = _ground!, Text = _text })
             : await Appeals.ReportAsync(new ReportRequest { TargetKind = TargetKind, TargetId = TargetId, Ground = _ground!, Text = _text });
         if (!result.IsSuccess)
