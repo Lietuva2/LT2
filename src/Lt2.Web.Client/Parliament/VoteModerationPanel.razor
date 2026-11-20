@@ -1,0 +1,187 @@
+@using Lt2.Api.Contracts.Parliament
+@inherits InteractiveBase<AppealUi>
+@inject IVoteModerationApi Api
+@inject FluentValidation.IValidator<VoteClassificationRequest> Validator
+@inject FluentValidation.IValidator<VoteClassificationResetRequest> ResetValidator
+@inject NavigationManager Navigation
+
+@* "Moderavimas" on a vote's page (design 7.2), rendered only when the server found a moderator or an administrator in a
+   staff-passkey session: the classification in force, whether the rules or a moderator made it (when, and the statement;
+   never who), and under "Veiksmai" "Pataisyti klasifikaciją" (the kind as radios, the stage only for a stage result, a
+   required statement) and, on a corrected vote, "Grąžinti taisyklių klasifikaciją". The closing vote of a bill's record is
+   not offered for correction: it says why. The state comes from the moderators' own answer, asked for once while the server
+   prerenders the page and not again in the browser; for anyone else the server refuses it and nothing renders. After an
+   action the part reads its answer again and the server's part of the page is read again in place (no reload), so the
+   page's label and its note show the result. *@
+@if (State is { } state)
+{
+    <section class="sheet stack stack--tight" aria-labelledby="vote-moderation-title" id="vote-moderation">
+        <h2 id="vote-moderation-title">@L["ModPanel.Title"]</h2>
+        <p id="vote-classification-now">@L.Format("VoteMod.Now", Describe(state.Kind, state.Stage))</p>
+        @if (state.Corrected)
+        {
+            <p class="small" id="vote-classification-source">@L.Format("VoteMod.Corrected", state.CorrectedAt is { } at ? Display.DayTime(at) : "", state.Statement ?? "")</p>
+            <p class="small" id="vote-classification-rules">@L.Format("VoteMod.Rules", Describe(state.RulesKind, state.RulesStage))</p>
+        }
+        else
+        {
+            <p class="small" id="vote-classification-source">@L["VoteMod.ByRules"]</p>
+        }
+
+        @if (state.ClosesRecord)
+        {
+            <p class="note note--quiet" id="vote-classification-closing">@L["VoteMod.Closing"]</p>
+        }
+        else if (_open is null)
+        {
+            <ModerationMenu Id="vote-mod-more" Choices="Choices(state)" Locked="Locked" OnChoose="Open" />
+        }
+        else
+        {
+            <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="vote-action-title" id="vote-action-form">
+                <ActionHeading Id="vote-action-title" Level="3">@L["VoteMod.Action." + _open]</ActionHeading>
+                @if (_open == "reclassify")
+                {
+                    <p class="small" id="vote-action-sentence">@L["VoteMod.Sentence.reclassify"]</p>
+                    <fieldset class="stack stack--tight @ErrorClass("kind")" id="vote-kind">
+                        <legend class="label">@L["VoteMod.Kind"]</legend>
+                        @foreach (var kind in VoteKinds.All)
+                        {
+                            <label class="check">
+                                <input type="radio" name="vote-kind" id="vote-kind-@kind" value="@kind" checked="@(_kind == kind)" @onchange="() => _kind = kind" disabled="@Locked" />
+                                <span>@L["VoteMod.Kind." + kind]</span>
+                            </label>
+                        }
+                        <FieldError Errors="Errors" Field="kind" For="vote-kind" />
+                    </fieldset>
+                    @if (_kind == VoteKinds.StageResult)
+                    {
+                        <fieldset class="stack stack--tight @ErrorClass("stage")" id="vote-stage">
+                            <legend class="label">@L["VoteMod.Stage"]</legend>
+                            @foreach (var stage in BillStages.All)
+                            {
+                                <label class="check">
+                                    <input type="radio" name="vote-stage" id="vote-stage-@stage" value="@stage" checked="@(_stage == stage)" @onchange="() => _stage = stage" disabled="@Locked" />
+                                    <span>@L["Mod.Stage." + stage]</span>
+                                </label>
+                            }
+                            <FieldError Errors="Errors" Field="stage" For="vote-stage" />
+                        </fieldset>
+                        @if (_stage == BillStages.Adoption)
+                        {
+                            <p class="small" id="vote-action-closes">@L["VoteMod.Closes"]</p>
+                        }
+                    }
+                }
+                else
+                {
+                    <p class="small" id="vote-action-sentence">@L.Format("VoteMod.Sentence.reset", Describe(state.RulesKind, state.RulesStage))</p>
+                }
+                <div class="field @ErrorClass("statement")">
+                    <label for="vote-statement">@L["Mod.Statement.Required"]</label>
+                    <textarea class="textarea" id="vote-statement" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", "vote-statement")"></textarea>
+                    <FieldError Errors="Errors" Field="statement" For="vote-statement" />
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn" id="vote-action-submit" disabled="@Locked">@L["VoteMod.Action." + _open]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="Close">@L["Cancel"]</button>
+                </div>
+            </form>
+        }
+        @* Outside the form, so the confirmation stays after it closes. *@
+        <Messages Message="@Message" Info="@Info" />
+    </section>
+}
+
+@code {
+    private string? _open;
+    private string? _kind;
+    private string? _stage;
+    private string _statement = "";
+
+    [Parameter, EditorRequired] public long VoteId { get; set; }
+
+    [PersistentState] public VoteClassificationResponse? State { get; set; }
+
+    /// <summary>Set once the server has asked, so the browser does not ask again.</summary>
+    [PersistentState] public bool? Asked { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Asked == true)
+        {
+            return;
+        }
+
+        Asked = true;
+        if (await IsSignedInAsync())
+        {
+            State = (await Api.GetClassificationAsync(VoteId)).Value;
+        }
+    }
+
+    /// <summary>Design 8.3: no filled button (nothing waits on a vote); "Veiksmai" holds the correction, and on a corrected vote the way back.</summary>
+    private IReadOnlyList<ModerationChoice> Choices(VoteClassificationResponse state) =>
+    [
+        new("reclassify", "vote-action-reclassify", L["VoteMod.Action.reclassify"]),
+        .. state.Corrected ? new ModerationChoice[] { new("reset", "vote-action-reset", L["VoteMod.Action.reset"]) } : [],
+    ];
+
+    /// <summary>A kind with its stage, as the moderators read it: "Stadijos balsavimas · Priėmimas".</summary>
+    private string Describe(string kind, string? stage) =>
+        stage is null ? L["VoteMod.Kind." + kind] : $"{L["VoteMod.Kind." + kind]} · {L["Mod.Stage." + stage]}";
+
+    private void Open(string action)
+    {
+        ClearMessages();
+        _open = action;
+        _statement = "";
+        _kind = State?.Kind;
+        _stage = State?.Kind == VoteKinds.StageResult ? State.Stage : null;
+    }
+
+    private void Close() => _open = null;
+
+    private VoteClassificationRequest Request() => new()
+    {
+        Kind = _kind ?? "",
+        Stage = _kind == VoteKinds.StageResult ? _stage : null,
+        Statement = _statement,
+    };
+
+    private Task SubmitAsync() => RunAsync(async () =>
+    {
+        var action = _open!;
+        ApiResult sent;
+        if (action == "reclassify")
+        {
+            if (!Valid(Validator.Validate(Request())))
+            {
+                return;
+            }
+
+            sent = await Api.CorrectClassificationAsync(VoteId, Request());
+        }
+        else
+        {
+            var reset = new VoteClassificationResetRequest { Statement = _statement };
+            if (!Valid(ResetValidator.Validate(reset)))
+            {
+                return;
+            }
+
+            sent = await Api.ResetClassificationAsync(VoteId, reset);
+        }
+
+        if (!Succeeded(sent, "kind", "stage", "statement"))
+        {
+            return;
+        }
+
+        _open = null;
+        State = (await Api.GetClassificationAsync(VoteId)).Value ?? State;
+        Info = L["VoteMod.Done." + action];
+        Navigation.Refresh();
+    });
+}

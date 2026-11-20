@@ -226,4 +226,11 @@
   <data name="reason.reacted" xml:space="preserve"><value>Šio argumento redaguoti nebegalima: į jį jau sureagavo kiti. Galite jį atsiimti.</value></data>
   <data name="agreement.own-comment" xml:space="preserve"><value>„Sutinku“ negalima pažymėti prie savo komentaro.</value></data>
   <data name="mp.not-office" xml:space="preserve"><value>Suvestinių kopijas gauna tik Seimo nario biuro nariai.</value></data>
+  <data name="vote.not-found" xml:space="preserve"><value>Tokio balsavimo nėra.</value></data>
+  <data name="vote-classification.kind" xml:space="preserve"><value>Pasirinkite, koks tai balsavimas.</value></data>
+  <data name="vote-classification.stage" xml:space="preserve"><value>Pasirinkite projekto stadiją.</value></data>
+  <data name="vote-classification.unchanged" xml:space="preserve"><value>Balsavimas jau taip ir klasifikuotas.</value></data>
+  <data name="vote-classification.rules" xml:space="preserve"><value>Taip balsavimą klasifikuoja taisyklės: pasirinkite „Grąžinti taisyklių klasifikaciją“.</value></data>
+  <data name="vote-classification.not-corrected" xml:space="preserve"><value>Šio balsavimo klasifikacijos moderatoriai netaisė.</value></data>
+  <data name="vote-classification.closing-vote" xml:space="preserve"><value>Šiuo balsavimu projekto priėmimo stadijoje uždarytas kreipimasis: balsavimu uždaryto kreipimosi atverti iš naujo negalima, todėl šis balsavimas lieka priėmimo stadijos balsavimu.</value></data>
 </root>

@@ -38,8 +38,8 @@ internal enum BodyKind
 
 /// <summary>
 /// Reading rules over Seimas text: ballot values, consensus, vote classification, body kinds. All are assumptions about
-/// wording (register) and must be re-tested against recorded items (design 7.2); a moderator can later correct a
-/// classification.
+/// wording (register) and must be re-tested against recorded items (design 7.2); a moderator's correction of a
+/// classification wins over <see cref="Classify"/> (<see cref="Domain.VoteClassification"/>).
 /// </summary>
 internal static class VoteRules
 {

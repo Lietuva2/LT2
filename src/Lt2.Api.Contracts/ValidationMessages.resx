@@ -74,4 +74,8 @@
   <data name="Introduction.Signer" xml:space="preserve"><value>Nurodykite pasirašančiojo vardą, pavardę ir pareigas (ne daugiau kaip 200 ženklų).</value></data>
   <data name="About.TooLong" xml:space="preserve"><value>Tekstas „Apie mane“ per ilgas: ne daugiau kaip {0} ženklų.</value></data>
   <data name="EmailRestore.Required" xml:space="preserve"><value>Nuorodos kodo nėra: atverkite visą nuorodą iš laiško arba įveskite kodą.</value></data>
+  <data name="VoteClassification.Kind" xml:space="preserve"><value>Pasirinkite, koks tai balsavimas.</value></data>
+  <data name="VoteClassification.Stage" xml:space="preserve"><value>Pasirinkite projekto stadiją.</value></data>
+  <data name="VoteClassification.NoStage" xml:space="preserve"><value>Stadija nurodoma tik stadijos balsavimui.</value></data>
+  <data name="VoteClassification.Statement" xml:space="preserve"><value>Parašykite, kodėl taisote klasifikaciją.</value></data>
 </root>

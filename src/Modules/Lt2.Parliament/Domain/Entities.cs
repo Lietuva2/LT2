@@ -172,9 +172,29 @@ internal sealed class Vote
 
     public string? Type { get; set; }
 
+    /// <summary>
+    /// The effective kind every reader uses (design 7.2): a moderator's correction when there is one, otherwise what
+    /// <see cref="VoteRules.Classify"/> found. Written only through <see cref="VoteClassification.Effective"/>.
+    /// </summary>
     public VoteKind Kind { get; set; }
 
+    /// <summary>The effective stage, with <see cref="Kind"/>.</summary>
     public BillStage? Stage { get; set; }
+
+    /// <summary>A moderator's correction of the kind (design 7.2); null while the rules' classification stands. Never
+    /// touched by the import.</summary>
+    public VoteKind? KindOverride { get; set; }
+
+    /// <summary>The stage of the correction: chosen for a stage result, the agenda item's for an amendment, none otherwise.</summary>
+    public BillStage? StageOverride { get; set; }
+
+    public DateTimeOffset? OverriddenAt { get; set; }
+
+    /// <summary>The moderator's account (design 6.9: a staff action keeps the id); never shown.</summary>
+    public Guid? OverriddenBy { get; set; }
+
+    /// <summary>The moderator's statement of the correction.</summary>
+    public string? OverrideStatement { get; set; }
 
     public bool IsConsensus { get; set; }
 

@@ -5,6 +5,8 @@
 @inject IMetaApi Meta
 @inject Formats F
 @inject NavigationManager Navigation
+@inject IHttpContextAccessor Http
+@inject Microsoft.AspNetCore.Authorization.IAuthorizationService Authorization
 
 @if (_vote is { } v)
 {
@@ -23,8 +25,14 @@
                 <li><a href="/seimas/@bill.Number">@bill.Number</a></li>
             }
         </ol>
-        <p class="label num">@string.Join(" · ", Label(vote))</p>
+        @* Design 7.2: a classification a moderator corrected says so beside the stage, never who. *@
+        <p class="label num">@string.Join(" · ", Label(vote))@if (v.ClassificationCorrected)
+            {<text> · </text><Lt2.Web.Client.Components.Hint Id="classification-corrected" Text="@F.T["Vote.Corrected"]" Answer="@F.T["Vote.Corrected.Answer"]" More="/metodika#stadijos" />}</p>
         <h1>@heading</h1>
+        @if (_moderator)
+        {
+            <Lt2.Web.Client.Components.NeedsScript />
+        }
         @if (wording is not null)
         {
             <p class="lead">@wording</p>
@@ -64,6 +72,12 @@
         <SourceLine UpdatedAt="@_updatedAt" />
     </section>
 
+    @* Design 7.2: a moderator corrects the vote's classification here; nobody else sees the part or its answer. *@
+    @if (_moderator)
+    {
+        <Lt2.Web.Client.Parliament.VoteModerationPanel VoteId="vote.Id" @rendermode="InteractiveWebAssembly" />
+    }
+
     @if (v.Ballots.Count > 0)
     {
         <section class="sheet stack" aria-labelledby="h-seats">
@@ -99,6 +113,7 @@
 @code {
     private VoteResponse? _vote;
     private DateTimeOffset? _updatedAt;
+    private bool _moderator;
 
     [Parameter] public long Id { get; set; }
 
@@ -112,6 +127,10 @@
         }
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+        if (Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
+        {
+            _moderator = (await Authorization.AuthorizeAsync(http.User, http, Lt2.Web.Security.Policies.Moderator)).Succeeded;
+        }
     }
 
     /// <summary>

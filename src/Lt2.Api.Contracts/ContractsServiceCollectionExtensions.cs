@@ -47,6 +47,8 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Appeals.MergeReasonRequest>, Appeals.MergeReasonRequestValidator>();
         services.AddScoped<IValidator<Appeals.FlagRequest>, Appeals.FlagRequestValidator>();
         services.AddScoped<IValidator<Appeals.ModeratorPlannedRequest>, Appeals.ModeratorPlannedRequestValidator>();
+        services.AddScoped<IValidator<Parliament.VoteClassificationRequest>, Parliament.VoteClassificationRequestValidator>();
+        services.AddScoped<IValidator<Parliament.VoteClassificationResetRequest>, Parliament.VoteClassificationResetRequestValidator>();
         services.AddScoped<IValidator<Digests.UrgentDigestRequest>, Appeals.UrgentDigestRequestValidator>();
         services.AddScoped<IValidator<Appeals.DescriptionDraftRequest>, Appeals.DescriptionDraftRequestValidator>();
         services.AddScoped<IValidator<Organisations.OrganisationRequest>, Organisations.OrganisationRequestValidator>();

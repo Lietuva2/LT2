@@ -17,7 +17,7 @@ public static class BodyKinds
     public const string Other = "other";
 }
 
-/// <summary>The kind of a vote (design 7.2): what the rules over its wording found.</summary>
+/// <summary>The kind of a vote (design 7.2): what the rules over its wording found, or what a moderator corrected it to.</summary>
 public static class VoteKinds
 {
     /// <summary>The result of a bill's stage (presentation, consideration or adoption).</summary>
@@ -28,6 +28,9 @@ public static class VoteKinds
 
     /// <summary>What the rules cannot classify.</summary>
     public const string Other = "other";
+
+    /// <summary>Every kind, in the order a moderator's form offers them (design 7.2).</summary>
+    public static readonly IReadOnlyList<string> All = [StageResult, Amendment, Procedural, Other];
 }
 
 /// <summary>The stages of a bill in the Seimas, in their order; a planned date names one too (design 8.4).</summary>

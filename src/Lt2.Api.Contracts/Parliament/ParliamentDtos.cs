@@ -87,5 +87,9 @@ public sealed record VoteListResponse(IReadOnlyList<VoteListItem> Items, int Tot
 
 public sealed record BallotResponse(MpLink Mp, string? FactionLabel, string Choice);
 
+/// <param name="ClassificationCorrected">
+/// A moderator corrected the vote's kind or stage (design 7.2); the page says "Klasifikaciją pataisė moderatoriai", never who.
+/// </param>
 public sealed record VoteResponse(
-    VoteSummaryResponse Summary, DateTimeOffset SittingStartsAt, string AgendaItemTitle, IReadOnlyList<FactionSplitResponse> Factions, IReadOnlyList<BallotResponse> Ballots);
+    VoteSummaryResponse Summary, DateTimeOffset SittingStartsAt, string AgendaItemTitle, IReadOnlyList<FactionSplitResponse> Factions, IReadOnlyList<BallotResponse> Ballots,
+    bool ClassificationCorrected = false);

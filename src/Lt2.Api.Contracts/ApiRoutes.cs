@@ -158,6 +158,15 @@ public static class ParliamentRoutes
     public static string BillByNumber(string number) => $"{Bills}/{Uri.EscapeDataString(number)}";
 
     public static string VoteById(long id) => $"{ApiRoutes.Prefix}/votes/{id.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+
+    /// <summary>
+    /// Design 7.2, moderator: a vote's classification (<c>GET</c>), corrected (<c>PUT</c>: kind, stage, statement) or returned to
+    /// the rules' (<c>DELETE</c>: statement).
+    /// </summary>
+    public const string VoteClassification = ApiRoutes.Prefix + "/moderation/votes/{id:long}/classification";
+
+    public static string VoteClassificationOf(long id) =>
+        $"{ApiRoutes.Prefix}/moderation/votes/{id.ToString(System.Globalization.CultureInfo.InvariantCulture)}/classification";
 }
 
 /// <summary>Design 8.8, 8.12: bills as people take part on them, positions, arguments, endorsements, reports and moderation.</summary>

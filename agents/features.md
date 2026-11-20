@@ -337,6 +337,30 @@ English; each calls `RunAsync(ImportParts.…)`, sets the parameter `Outcome`, a
 `ImportTests.Forcing_*`, `Only_one_import_runs_at_a_time_a_forced_one_included`, `ImportScheduleTests`,
 `ParliamentImportJobTests`, `JobsDashboardTests.The_imports_manual_jobs_are_listed_never_scheduled_and_an_administrator_triggers_one_audited`.
 
+**A moderator corrects a vote's classification (design 7.2, owner 2026-11-20).** Storage: `parliament.vote` keeps the
+correction apart from the rules' result (`kind_override`, `stage_override`, `overridden_at`, `overridden_by`,
+`override_statement`; migration `VoteClassificationOverride`), and `kind`/`stage` hold the classification in force,
+written only through the pure `VoteClassification.Effective` (Parliament `Domain/VoteClassification.cs`, with
+`Corrected`, `CheckCorrection`, `CheckReturn` and the codes) by `ParliamentImporter.ApplyProceedings` on every parse and by
+the moderator's action, so every reader (the queries, `BillCatalogue`, the closing job, analytics) needs nothing of its
+own. The action: `IVoteClassifications` (`VoteClassifications.cs`), `Application/VoteCorrections` (`StateAsync`,
+`CorrectAsync`, `ResetAsync`: `StaffStatements`, the codes by `Codes.VoteKindOf`/`StageOf`, the vote's row locked `FOR
+UPDATE`, the rules recomputed from the stored wording and the agenda item's stage, audited `vote.reclassified` /
+`vote.classification-reset` with before, after and the statement in the same transaction); whether the vote closed a
+record is Appeals' `ClosingVotes` (`IClosingVotes` in SharedKernel: any record whose `closing_vote_id` it is). Routes
+`ParliamentRoutes.VoteClassification` (`GET`/`PUT`/`DELETE /api/v1/moderation/votes/{id}/classification`,
+`Endpoints/Parliament/VoteClassificationEndpoints`, policy `Moderator`, `ModeratorEndpoint.ActAsync`), contracts
+`VoteClassificationRequest`/`VoteClassificationResetRequest` with their validators and `VoteClassificationResponse`
+(`Lt2.Api.Contracts/Parliament/VoteModerationDtos.cs`), `IVoteModerationApi` (`ServerVoteModerationApi` in
+`ParliamentServices.cs`, `HttpVoteModerationApi`). The page: `VotePage` asks whether the caller is a moderator and renders
+`Lt2.Web.Client/Parliament/VoteModerationPanel` (`#vote-moderation`, `ModerationMenu` `#vote-mod-more` with
+`reclassify`/`reset`, the form `#vote-action-form`, radios `#vote-kind-{code}`/`#vote-stage-{code}`, `#vote-statement`;
+`#vote-classification-closing` in place of the actions on a record's closing vote; `AppealUi` `VoteMod.*`); everyone sees
+the hint `#classification-corrected` ("Klasifikaciją pataisė moderatoriai", `VoteResponse.ClassificationCorrected`,
+`ParliamentText` `Vote.Corrected*`) beside the stage, and `/metodika#stadijos` says so (`Method.Classification.2`). Tests:
+unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
+`ImportTests.A_moderators_correction_of_a_votes_classification_survives_a_re_parse_and_a_full_re_import`.
+
 **MPs on the platform (design 8.5, built 2026-11-15: the link 8.5.1–8.5.4, then the response 8.5.5–8.5.7).**
 - The official address: an "El. p." contact of open data on `lrs.lt` (not a sub-domain), compared ignoring case, of an MP
   whose mandate has not ended; listed for two or more such MPs, it belongs to nobody (`OfficialAddresses` in Parliament,

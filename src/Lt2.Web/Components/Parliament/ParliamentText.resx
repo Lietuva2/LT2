@@ -207,4 +207,7 @@
   <data name="Responses.VersionCurrent" xml:space="preserve"><value>dabartinė versija, parašyta {0}</value></data>
   <data name="Responses.Withdrawal" xml:space="preserve"><value>atsakymas atsiimtas {0}</value></data>
   <data name="Responses.More" xml:space="preserve"><value>Rodyti daugiau atsakymų</value></data>
+  <data name="Vote.Corrected" xml:space="preserve"><value>Klasifikaciją pataisė moderatoriai</value></data>
+  <data name="Vote.Corrected.Answer" xml:space="preserve"><value>Ar balsavimas yra projekto stadijos balsavimas ir kurios stadijos, nustato taisyklės pagal balsavimo formuluotę. Šį balsavimą taisyklės priskyrė klaidingai, todėl jo klasifikaciją pataisė moderatoriai.</value></data>
+  <data name="Method.Classification.2" xml:space="preserve"><value>Kai taisyklės balsavimą priskiria klaidingai, moderatoriai jo klasifikaciją pataiso ir nurodo priežastį. Pataisymas išlieka ir tada, kai Seimo duomenys perskaitomi iš naujo, o tokio balsavimo puslapyje parašyta „Klasifikaciją pataisė moderatoriai“. Balsavimas, kuriuo uždarytas projekto kreipimasis, lieka priėmimo stadijos balsavimu.</value></data>
 </root>
