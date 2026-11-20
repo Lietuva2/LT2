@@ -259,7 +259,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The stance "remarks without a side" is offered (8.14.3, 2026-11-14).
 - The goal counts the organisation's own side (8.14.5, 2026-11-14).
 - Organisations appear on the site first; the line in the summaries to MPs comes later, by its own decision (8.14.4,
-  2026-11-14).
+  2026-11-14). That decision: build the line in summaries and "keep out of summaries", as 8.14.4 and 8.14.9 design them;
+  the automatic check of an organisation's website is not built, since moderators look at the website themselves
+  (8.14.4, 8.14.9, 2026-11-20).
 - Whether a person may delegate to an organisation is a later question; nothing here assumes or prevents it (2026-11-14).
 - Confirmation is by email domain, or by a moderator for organisations without one; moderators look at the website
   themselves, with no automatic check of the name (8.14.2, 8.14.9, 2026-11-14).

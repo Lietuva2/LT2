@@ -233,6 +233,8 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             }
         }
 
+        Organisations(item, Line, html);
+
         // One action: the response with the way to change it, or the button to answer. The bill's page is linked once in the
         // text part, as the line's address (the heading carries it in the HTML part too).
         if (bill.Response is { } response)
@@ -260,6 +262,46 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         }
 
         return new EmailBlock(text.ToString(), html.Append("</div>").ToString());
+    }
+
+    /// <summary>
+    /// The organisations' line under the arguments (design 8.14.4, owner 2026-11-20): per stance one sentence naming the
+    /// organisations, "Organizacijos, prašančios balsuoti už: A, B.", for, against, then remarks; nothing when none is named or
+    /// the snapshot predates the line. The HTML part sets it apart by a thin rule, the words muted and each name a link to its
+    /// statement on the bill's page; the text part keeps the sentence and gives each name's address in full on a line of its own.
+    /// Never a statement's text.
+    /// </summary>
+    private void Organisations(DigestItemInfo item, Action<string> line, StringBuilder html)
+    {
+        if (item.Organisations is not { Count: > 0 } named)
+        {
+            return;
+        }
+
+        html.Append("<div style=\"margin:16px 0 0;padding-top:10px;border-top:1px solid #e2e8f0\">");
+        foreach (var stance in StatementStances.All)
+        {
+            var of = named.Where(o => o.Stance == stance).ToList();
+            if (of.Count == 0)
+            {
+                continue;
+            }
+
+            var label = l["Digest.Organisations." + stance].Value;
+            line("  " + label + " " + string.Join(", ", of.Select(o => o.Name)) + ".");
+            html.Append("<p style=\"margin:0 0 4px;font-size:14px;line-height:1.5;color:#64748b\">").Append(EmailLayout.Encode(label)).Append(' ');
+            for (var i = 0; i < of.Count; i++)
+            {
+                var url = Link(BillTextLinks.ToStatement(item.BillNumber, of[i].StatementId));
+                line("    " + of[i].Name + ": " + url);
+                html.Append(i == 0 ? "" : ", ").Append("<a href=\"").Append(System.Net.WebUtility.HtmlEncode(url))
+                    .Append("\" style=\"color:#1e293b\">").Append(EmailLayout.Encode(of[i].Name)).Append("</a>");
+            }
+
+            html.Append(".</p>");
+        }
+
+        html.Append("</div>");
     }
 
     /// <summary>One side's figure in the pair (as the page's <c>figure</c>): the label, the number large in the side's colour, the older-than-30-days figure as a small note.</summary>

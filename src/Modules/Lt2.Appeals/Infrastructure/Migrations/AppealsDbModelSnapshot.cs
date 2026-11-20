@@ -638,6 +638,19 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("domain_barred");
 
+                    b.Property<Guid?>("KeptOutByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("kept_out_by_user_id");
+
+                    b.Property<DateTimeOffset?>("KeptOutOfSummariesAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("kept_out_of_summaries_at");
+
+                    b.Property<string>("KeptOutStatement")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("kept_out_statement");
+
                     b.Property<string>("LegalCode")
                         .HasMaxLength(9)
                         .HasColumnType("character varying(9)")

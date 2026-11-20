@@ -67,7 +67,9 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            events, the follow kinds; Rhythm/: how often a member's emails come, design 8.24). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
                            IPlannedAgenda, IMpDirectory, IMpMailAddresses (the one way an official address leaves
                            Parliament, for sending), IDigestSource, IPartySupporters, IAccountData (one per module),
-                           IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource,
+                           IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource (IDigestSource also
+                           gives the organisations' statements for a summary's line; Digests.cs holds its pure rule,
+                           DigestOrganisationRules, design 8.14.4),
                            IOrganisationDirectory, IOrganisationCodeSwitch, IMpLinks, IMpResponseFeed,
                            IRecordClosureFeed (moderators' closes of rejected or withdrawn bills, for the follow emails),
                            IWritingRestrictions, IStaffAddresses). The host

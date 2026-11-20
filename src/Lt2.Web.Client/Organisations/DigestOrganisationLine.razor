@@ -1,0 +1,34 @@
+@using Lt2.Api.Contracts.Digests
+@using Lt2.Api.Contracts.Organisations
+@inject IStringLocalizer<AppealUi> L
+
+@* The organisations' line under a bill in a summary (design 8.14.4), on its public copy and the moderators' screen as in the
+   MPs' email: per stance one sentence, "Organizacijos, prašančios balsuoti už: A, B.", for, against, then remarks, each name a
+   link to its statement on the bill's page. Names only, never a statement's text; nothing when none is named or the snapshot
+   predates the line. Plain markup, so it reads without JavaScript. *@
+@if (Organisations is { Count: > 0 } named)
+{
+    <div class="stack stack--tight" id="@Id">
+        @foreach (var stance in StatementStances.All)
+        {
+            var of = named.Where(o => o.Stance == stance).ToList();
+            @if (of.Count > 0)
+            {
+                <p class="small" id="@($"{Id}-{stance}")">@(L["Digest.Organisations." + stance] + " ")@for (var i = 0; i < of.Count; i++)
+                    {
+                        var o = of[i];
+                        <text>@(i == 0 ? "" : ", ")</text><a href="@Lt2.Api.Contracts.Comments.BillTextLinks.ToStatement(BillNumber, o.StatementId)">@o.Name</a>
+                    }.</p>
+            }
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public string BillNumber { get; set; } = "";
+
+    /// <summary>The line as the summary holds it; null for a snapshot made before it was kept.</summary>
+    [Parameter] public IReadOnlyList<DigestOrganisationResponse>? Organisations { get; set; }
+
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+}

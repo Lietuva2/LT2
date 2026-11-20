@@ -84,6 +84,91 @@ public sealed class OrganisationModerationTests(DatabaseFixture database) : ApiT
         }
     }
 
+    /// <summary>
+    /// Design 8.14.9 (owner, 2026-11-20): "Neįtraukti į suvestines" needs a moderator and a statement, changes nothing on the
+    /// site, is recorded and audited, told to the representatives by email and on their own part of the profile only, listed for
+    /// the moderators with its undo, and undone by "Vėl įtraukti į suvestines".
+    /// </summary>
+    [Fact]
+    public async Task Keeping_an_organisation_out_of_summaries_changes_nothing_on_the_site_is_audited_told_to_its_representatives_and_undone()
+    {
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        await Database.FreeBillAsync(AppealSteps.TaxBill);
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
+        var created = await member.RegisterOrganisationAsync();
+        await member.PublishStatementAsync(AppealSteps.TaxBill, created.Slug, "for", "Organizacijos pozicija suvestinėms.");
+        using var visitor = NewBrowser();
+        var profileBefore = System.Text.Json.JsonSerializer.Serialize(await visitor.ProfileAsync(created.Slug));
+        var statementsBefore = System.Text.Json.JsonSerializer.Serialize((await visitor.StatementsAsync(AppealSteps.TaxBill)).Items.Where(i => i.OrganisationId == created.Id));
+        var keepOut = OrganisationRoutes.With(OrganisationRoutes.KeepOutOfSummaries, created.Id);
+        var returnTo = OrganisationRoutes.With(OrganisationRoutes.ReturnToSummaries, created.Id);
+        const string Why = "Organizacijos pavadinimas klaidina Seimo narius.";
+
+        // A member cannot act, and a moderator must say why.
+        using (var refused = await member.PostAsync(keepOut, new StatementRequest { Statement = "Ne moderatorius." }))
+        {
+            refused.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        }
+
+        using (var empty = await moderator.Browser.PostAsync(keepOut, new StatementRequest { Statement = " " }))
+        {
+            empty.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        }
+
+        using (var notKeptOut = await moderator.Browser.PostAsync(returnTo, new StatementRequest { Statement = "Bandymas." }))
+        {
+            await notKeptOut.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
+        }
+
+        await moderator.Browser.ActAsync(OrganisationRoutes.KeepOutOfSummaries, created.Id, Why);
+        using (var again = await moderator.Browser.PostAsync(keepOut, new StatementRequest { Statement = "Dar kartą." }))
+        {
+            await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
+        }
+
+        // Nothing changes on the site: the profile and the bill's statements answer exactly as before.
+        System.Text.Json.JsonSerializer.Serialize(await visitor.ProfileAsync(created.Slug)).ShouldBe(profileBefore);
+        System.Text.Json.JsonSerializer.Serialize((await visitor.StatementsAsync(AppealSteps.TaxBill)).Items.Where(i => i.OrganisationId == created.Id)).ShouldBe(statementsBefore);
+
+        // Its representatives are told, by email and on their own part of the profile; nobody else sees it.
+        (await Database.OrganisationNoticesAsync(email)).ShouldContain("kept-out-of-summaries");
+        var mine = await member.GetJsonAsync<OrganisationManagementResponse>(OrganisationRoutes.ManagementOf(created.Slug));
+        mine.KeptOutOfSummariesAt.ShouldNotBeNull();
+        mine.KeptOutStatement.ShouldBe(Why);
+        var (stranger, _) = await Factory.MemberAsync();
+        using (stranger)
+        {
+            var theirs = await stranger.GetJsonAsync<OrganisationManagementResponse>(OrganisationRoutes.ManagementOf(created.Slug));
+            theirs.IsRepresentative.ShouldBeFalse();
+            theirs.KeptOutOfSummariesAt.ShouldBeNull();
+            theirs.KeptOutStatement.ShouldBeNull();
+        }
+
+        // The moderators see it on the list of hidden items with who, when and why.
+        var kept = (await moderator.Browser.GetJsonAsync<HiddenOrganisationsResponse>(OrganisationRoutes.ModerationHidden)).KeptOut.ShouldNotBeNull().Single(o => o.Id == created.Id);
+        kept.Statement.ShouldBe(Why);
+        kept.KeptOutAt.ShouldBeGreaterThan(DateTimeOffset.UtcNow.AddMinutes(-5));
+
+        await moderator.Browser.ActAsync(OrganisationRoutes.ReturnToSummaries, created.Id, "Paaiškėjo, kad pavadinimas tikras.");
+        (await Database.OrganisationNoticesAsync(email)).First().ShouldBe("back-in-summaries");
+        (await member.GetJsonAsync<OrganisationManagementResponse>(OrganisationRoutes.ManagementOf(created.Slug))).KeptOutOfSummariesAt.ShouldBeNull();
+        (await moderator.Browser.GetJsonAsync<HiddenOrganisationsResponse>(OrganisationRoutes.ModerationHidden)).KeptOut.ShouldNotBeNull().ShouldNotContain(o => o.Id == created.Id);
+        System.Text.Json.JsonSerializer.Serialize(await visitor.ProfileAsync(created.Slug)).ShouldBe(profileBefore);
+
+        // Recorded and audited, without an address; neither answers the organisation's reports.
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM appeals.moderation_action WHERE target_kind = 'organisation' AND target_id = @o AND action IN ('keep-out', 'keep-in')", ("o", created.Id))).ShouldBe(2);
+        var audit = await Database.ScalarAsync<string>(
+            "SELECT string_agg(action || ' ' || coalesce(details::text, ''), ' | ') FROM audit.event WHERE target = @t", ("t", "organisation:" + created.Id));
+        audit.ShouldNotBeNull().ShouldContain("moderation.organisation.keep-out");
+        audit.ShouldContain("moderation.organisation.keep-in");
+        audit.ShouldContain(Why);
+        audit.ShouldNotContain(email, Case.Insensitive);
+
+        await Database.ExecuteAsync("UPDATE appeals.organisation_statement SET status = 'withdrawn' WHERE organisation_id = @o", ("o", created.Id));
+    }
+
     /// <summary>Design 8.14.14, 6.8: a changed description that pre-screening flags brings the organisation back to the queue.</summary>
     [Fact]
     public async Task A_flagged_new_description_brings_a_seen_organisation_back_to_the_queue()

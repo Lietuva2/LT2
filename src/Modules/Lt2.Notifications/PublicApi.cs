@@ -47,7 +47,10 @@ public interface IEmailConnection : IAsyncDisposable
     Task SendAsync(EmailMessage message, CancellationToken cancellationToken);
 }
 
-/// <summary>One record as frozen in a summary when it went. No person: counts, the surge note and arguments without authors.</summary>
+/// <summary>
+/// One record as frozen in a summary when it went. No person: counts, the surge note, arguments without authors, and the
+/// organisations named under it (design 8.14.4; null in a snapshot made before the line was kept).
+/// </summary>
 public sealed record DigestItemInfo(
     string BillNumber,
     string BillTitle,
@@ -61,7 +64,8 @@ public sealed record DigestItemInfo(
     int? SurgeWindowHours,
     IReadOnlyList<Lt2.SharedKernel.DigestReason> Reasons,
     int? ForReasonCount = null,
-    int? AgainstReasonCount = null);
+    int? AgainstReasonCount = null,
+    IReadOnlyList<Lt2.SharedKernel.DigestOrganisation>? Organisations = null);
 
 /// <summary>A summary run (design 8.7, 8.19) as its public copy shows it: without MP-specific figures and never which MPs.</summary>
 /// <param name="Status">
@@ -123,7 +127,8 @@ public sealed record DigestReviewItem(
     bool Gone,
     IReadOnlyList<DigestReviewReason> Reasons,
     int? ForReasonCount = null,
-    int? AgainstReasonCount = null);
+    int? AgainstReasonCount = null,
+    IReadOnlyList<Lt2.SharedKernel.DigestOrganisation>? Organisations = null);
 
 /// <summary>
 /// A summary as the moderators' screen shows it (design 8.19.2, owner 2026-11-17): the common text once, as MPs read it. A

@@ -9,8 +9,8 @@
 @inject IStringLocalizer<Lt2.Web.Components.PageText> P
 
 @* The public record of the summaries (design 8.7, design/ui/suvestines.html): the frozen numbers and arguments, both
-   sides, the 30-day counts and the surge note, without MP-specific figures and without any person. In M2a every summary
-   is a dry run: made, published here, never sent. *@
+   sides, the 30-day counts, the surge note and the organisations named under each bill (8.14.4), without MP-specific figures
+   and without any person. While sending is off every summary is a dry run: made, published here, never sent. *@
 @if (_runs is { Count: > 0 } runs)
 {
     <PageTitle>@(Single is { } one ? RunTitle(one) : T["Digests.Title"] + " " + (Date ?? "")) · Lietuva 2.0</PageTitle>
@@ -115,6 +115,8 @@
                                     </div>
                                 }
                             </div>
+                            @* Design 8.14.4: the organisations named under the bill, as in the MPs' email, frozen with the summary. *@
+                            <Lt2.Web.Client.Organisations.DigestOrganisationLine BillNumber="@item.BillNumber" Organisations="item.Organisations" Id="@($"digest-orgs-{run.Id:N}-{item.BillNumber}")" />
                         </section>
                     }
                 </section>

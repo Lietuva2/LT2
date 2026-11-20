@@ -4,7 +4,7 @@
 
 @* Blocked organisations and hidden statements on the moderators' list of hidden items (design 8.14.14), with who did it,
    when and why, and "Atkurti": lifting a block brings back exactly the statements that were shown; a hidden statement comes
-   back while its bill takes statements. *@
+   back while its bill takes statements. Organisations kept out of summaries (8.14.9) are listed with their undo. *@
 @if (Items is { } items)
 {
     <section class="stack" aria-labelledby="h-hidden-organisations" id="hidden-organisations">
@@ -27,6 +27,29 @@
             </article>
         }
     </section>
+
+    @* Design 8.14.9: organisations kept out of summaries to MPs, shown on the site as before, with "Vėl įtraukti į suvestines". *@
+    @if (items.KeptOut is { Count: > 0 } keptOut)
+    {
+        <section class="stack" aria-labelledby="h-kept-out-organisations" id="kept-out-organisations">
+            <h2 id="h-kept-out-organisations">@L["OrgMod.Hidden.KeptOut"]</h2>
+            <p class="small">@L["OrgMod.Hidden.KeptOutLead"]</p>
+            @foreach (var org in keptOut)
+            {
+                <article class="sheet stack stack--tight" id="kept-out-organisation-@org.Id" aria-labelledby="hko-@org.Id" @key="org.Id">
+                    <h3 id="hko-@org.Id"><a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a></h3>
+                    <p class="small num">@ModerationWords.Hidden(L, org.KeptOutAt, org.KeptOutBy)</p>
+                    @if (org.Statement is { } statement)
+                    {
+                        <p class="small">@L.Format("Hidden.Why", statement)</p>
+                    }
+                    <RestoreForm Id="org.Id" IdPrefix="org-keep-in" Sentence="@L["OrgMod.Sentence.keep-in"]" StatementLabel="@L["OrgMod.Statement"]"
+                                 Label="@L["OrgMod.Action.keep-in"]" Done="@L["OrgMod.Done.keep-in"]"
+                                 Restore="request => Moderation.ReturnToSummariesAsync(org.Id, request)" />
+                </article>
+            }
+        </section>
+    }
 
     <section class="stack" aria-labelledby="h-hidden-statements" id="hidden-statements">
         <h2 id="h-hidden-statements">@L["OrgMod.Hidden.Statements"]</h2>

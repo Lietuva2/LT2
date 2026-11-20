@@ -122,6 +122,31 @@ internal sealed class DigestSource(
             .ToList();
     }
 
+    public async Task<IReadOnlyList<DigestStatementFacts>> OrganisationStatementsAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(billNumbers);
+        var numbers = billNumbers.Select(AppealReads.NormaliseBillNumber).Distinct().ToList();
+        if (numbers.Count == 0)
+        {
+            return [];
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return (await (from s in db.OrganisationStatements.AsNoTracking()
+                       join o in db.Organisations.AsNoTracking() on s.OrganisationId equals o.Id
+                       where numbers.Contains(s.BillNumber) && s.Status == StatementStatuses.Published
+                       select new
+                       {
+                           s.Id, OrganisationId = o.Id, o.Slug, o.Name, s.BillNumber, s.Stance, s.Status, OrganisationStatus = o.Status, o.ConfirmedBy,
+                           o.KeptOutOfSummariesAt, s.FirstPublicAt, s.PublishedAt,
+                       })
+                .ToListAsync(cancellationToken))
+            .Select(r => new DigestStatementFacts(
+                r.Id, r.OrganisationId, r.Slug, r.Name, r.BillNumber, r.Stance, r.Status, r.OrganisationStatus, r.ConfirmedBy is not null,
+                r.KeptOutOfSummariesAt is not null, r.FirstPublicAt, r.PublishedAt))
+            .ToList();
+    }
+
     public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<PartyNumbers>>> PartyNumbersAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken)
     {
         var byParty = await supporters.SupportersByPartyAsync(cancellationToken);

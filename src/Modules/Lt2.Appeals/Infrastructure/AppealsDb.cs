@@ -209,6 +209,7 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(o => o.ConfirmedDomain).HasMaxLength(253);
             e.Property(o => o.ConfirmationNote).HasMaxLength(1000);
             e.Property(o => o.BlockStatement).HasMaxLength(1000);
+            e.Property(o => o.KeptOutStatement).HasMaxLength(1000);
             e.HasIndex(o => o.Slug).IsUnique();
 
             // Design 8.14.14: no other organisation that is not blocked or closed has the same name, compared without case.

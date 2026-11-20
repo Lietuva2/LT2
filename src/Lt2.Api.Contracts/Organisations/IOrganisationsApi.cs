@@ -36,6 +36,11 @@ public static class OrganisationRoutes
     public const string Unblock = ModerationQueue + "/{id:guid}/unblock";
     public const string Confirm = ModerationQueue + "/{id:guid}/confirm";
     public const string Unconfirm = ModerationQueue + "/{id:guid}/unconfirm";
+
+    /// <summary>Design 8.14.9: "Neįtraukti į suvestines" (no summary to MPs names it) and its undo, "Vėl įtraukti į suvestines".</summary>
+    public const string KeepOutOfSummaries = ModerationQueue + "/{id:guid}/keep-out-of-summaries";
+
+    public const string ReturnToSummaries = ModerationQueue + "/{id:guid}/return-to-summaries";
     public const string PublishStatement = ApiRoutes.Prefix + "/moderation/statements/{id:guid}/publish";
 
     /// <summary>Design 6.9: "Palikti" on a statement that still waited when the bill closed.</summary>
@@ -152,6 +157,12 @@ public interface IOrganisationModerationApi
     Task<ApiResult> ConfirmAsync(Guid organisationId, StatementRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> UnconfirmAsync(Guid organisationId, StatementRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>"Neįtraukti į suvestines" (design 8.14.9): no summary to MPs names the organisation; on the site it stays as it was.</summary>
+    Task<ApiResult> KeepOutOfSummariesAsync(Guid organisationId, StatementRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>"Vėl įtraukti į suvestines".</summary>
+    Task<ApiResult> ReturnToSummariesAsync(Guid organisationId, StatementRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> PublishStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default);
 

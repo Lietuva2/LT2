@@ -327,6 +327,17 @@ internal static partial class OrganisationRules
         _ => "moderation.wrong-state",
     };
 
+    /// <summary>
+    /// "Neįtraukti į suvestines" (design 8.14.9): on an organisation that is not closed (a blocked one too, so lifting the block
+    /// does not bring it back into summaries) and is not kept out already.
+    /// </summary>
+    public static string? CheckKeepOut(string status, bool keptOut) =>
+        status == OrganisationStatuses.Closed || keptOut ? "moderation.wrong-state" : null;
+
+    /// <summary>"Vėl įtraukti į suvestines": only on an organisation kept out of summaries that is not closed.</summary>
+    public static string? CheckKeepIn(string status, bool keptOut) =>
+        status == OrganisationStatuses.Closed || !keptOut ? "moderation.wrong-state" : null;
+
     /// <summary>"Palikti" on a statement that still waited when the bill closed (design 6.9): only there.</summary>
     public static string? CheckKeepWaiting(string statementStatus, bool billFinished) =>
         statementStatus == StatementStatuses.Pending && billFinished ? null : "moderation.wrong-state";

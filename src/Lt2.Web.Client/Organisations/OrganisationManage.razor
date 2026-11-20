@@ -18,6 +18,17 @@
         {
             <p class="note note--quiet" id="manage-refusal">@L["Org.Refusal." + refusal]</p>
         }
+        @* Design 8.14.9: kept out of summaries to MPs, told to its representatives only, with the moderators' statement. *@
+        @if (m.KeptOutOfSummariesAt is not null)
+        {
+            <div class="note note--quiet stack stack--tight" id="manage-kept-out">
+                <p>@L["Org.Manage.KeptOut"]</p>
+                @if (m.KeptOutStatement is { } why)
+                {
+                    <p class="small">@L.Format("Org.Profile.BlockedWhy", why)</p>
+                }
+            </div>
+        }
 
         @* Confirmation (design 8.14.2): by a code sent to an address on the website's domain, or by asking a moderator. *@
         @if (Status == OrganisationStatuses.Active && Label.ConfirmedBy is null)

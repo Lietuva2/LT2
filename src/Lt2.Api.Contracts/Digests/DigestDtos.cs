@@ -9,9 +9,18 @@ namespace Lt2.Api.Contracts.Digests;
 
 public sealed record DigestReasonResponse(string Side, string Text, int Endorsements);
 
+/// <summary>
+/// An organisation named in a summary under a bill (design 8.14.4): its stance (<c>for</c>, <c>against</c>, <c>remarks</c>), its
+/// name and profile address, and the statement its name links to on the bill's page
+/// (<c>BillTextLinks.ToStatement</c>). Never the statement's text.
+/// </summary>
+public sealed record DigestOrganisationResponse(string Stance, Guid OrganisationId, string Slug, string Name, Guid StatementId);
+
 /// <remarks>
 /// <c>ForReasonsOf</c> and <c>AgainstReasonsOf</c> (design 8.4, owner 2026-11-20): the published arguments a side has, set only when the
 /// arguments listed are not all of them (the heading reads "(iš N)"); null otherwise, and in a snapshot made before it was kept.
+/// <c>Organisations</c> (design 8.14.4): the organisations named under the bill, for, against, then remarks, each stance in the
+/// order published; empty when none qualified, null in a snapshot made before the line was kept.
 /// </remarks>
 public sealed record DigestItemResponse(
     string BillNumber,
@@ -26,7 +35,8 @@ public sealed record DigestItemResponse(
     int? SurgeWindowHours,
     IReadOnlyList<DigestReasonResponse> Reasons,
     int? ForReasonsOf = null,
-    int? AgainstReasonsOf = null);
+    int? AgainstReasonsOf = null,
+    IReadOnlyList<DigestOrganisationResponse>? Organisations = null);
 
 /// <summary>
 /// A summary as its public copy shows it. <paramref name="CreatedAt"/>: when it was prepared; <paramref name="MpCount"/>: MPs it
@@ -65,6 +75,8 @@ public sealed record DigestReviewReasonResponse(Guid? Id, string Side, string Te
 /// <summary>
 /// A bill of a summary on the moderators' screen: for a prepared summary its numbers now, <paramref name="Held"/> (it drops out
 /// unless released) and <paramref name="Gone"/> (no longer open: it drops out); <paramref name="RecordId"/> for "Sulaikyti".
+/// <paramref name="Organisations"/>: the organisations' line (design 8.14.4), for a prepared summary as it would go now (a
+/// moderator may keep one out, "Neįtraukti į suvestines"), for a gone one as it went; null in a snapshot made before it was kept.
 /// </summary>
 public sealed record DigestReviewItemResponse(
     Guid RecordId,
@@ -82,7 +94,8 @@ public sealed record DigestReviewItemResponse(
     bool Gone,
     IReadOnlyList<DigestReviewReasonResponse> Reasons,
     int? ForReasonsOf = null,
-    int? AgainstReasonsOf = null);
+    int? AgainstReasonsOf = null,
+    IReadOnlyList<DigestOrganisationResponse>? Organisations = null);
 
 /// <summary>
 /// A summary on the moderators' screen (design 8.19.2, owner 2026-11-17): its common text once, as MPs read it. Status

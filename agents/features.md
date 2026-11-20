@@ -817,13 +817,25 @@ Integration: `DemoAppealTests`, `DemoSidesTests`.
 - One statement per organisation per bill (`for`, `against`, `remarks`; as long as `Texts:MaxLength` allows, owner 2026-11-16; an https link; with a
   side an optional goal "Siekiame {N} dalyvių · dabar {n}"), in "Organizacijų pozicijos" after the MPs' responses and before
   the arguments, shown only with a statement or for a representative (owner, 2026-11-17: `OrganisationPositions.Shown`). Never
-  counted: counts, thresholds, lists, statistics and summaries are the same with and without them (the agenda and the
-  front page name them beside a bill, never with a number), and nothing about organisations goes to MPs yet. Edits keep public versions; frozen when the bill closes; none on a
-  hidden record.
+  counted: counts, thresholds, lists, statistics and which bills summaries hold are the same with and without them (the
+  agenda and the front page name them beside a bill, never with a number); a summary names them under a bill (below).
+  Edits keep public versions; frozen when the bill closes; none on a hidden record. The bill's page gives each statement
+  the id `BillTextLinks.StatementElement` (`statement-{id}`), which the summaries' links use.
 - Moderation after the fact: new and changed organisations and waiting, flagged, reported or unseen statements are in
   the queue; block and lift (lifting returns exactly what was shown), hide and restore a statement, publish a waiting one,
   confirm by hand, withdraw a confirmation, "Palikti"; each emailed to every representative. Report ground "Apsimeta kita
-  organizacija". Not built: "keep out of summaries".
+  organizacija". No automatic check of the website (owner, 2026-11-14).
+- **Keep out of summaries (design 8.14.9, owner 2026-11-20).** `IOrganisationModeration.KeepOutOfSummariesAsync` /
+  `ReturnToSummariesAsync` (`POST /moderation/organisations/{id}/keep-out-of-summaries`, `…/return-to-summaries`,
+  `StatementRequest`, statement required; `OrganisationRules.CheckKeepOut`/`CheckKeepIn`: not closed, `moderation.wrong-state`
+  otherwise; a blocked one can be kept out): columns `kept_out_of_summaries_at`, `kept_out_by_user_id`, `kept_out_statement`
+  on `appeals.organisation`; recorded and audited (`moderation.organisation.keep-out` / `keep-in`), answers no report; emailed
+  with the notices `kept-out-of-summaries` / `back-in-summaries` (`OrganisationNotices`). On the site nothing changes. UI:
+  "Neįtraukti į suvestines" / "Vėl įtraukti į suvestines" under "Kiti veiksmai" of `OrgModerationActions` (queue), beside each
+  organisation of a prepared summary on `/moderavimas/suvestines`, and a section of `HiddenOrganisationsView` with the undo
+  (`HiddenOrganisationsResponse.KeptOut`); the representatives' `OrganisationManage` shows a quiet note with the statement
+  (`OrganisationManagementResponse.KeptOutOfSummariesAt`, `KeptOutStatement`). Tests: `OrganisationModerationTests`,
+  `DigestOrganisationTests` (unit).
 - A statement still waiting when its bill closes (owner, 2026-11-15) can no longer be published (error
   `statement.waiting-bill-closed`); the queue still shows it and offers only "Palikti" (`/moderation/statements/{id}/keep`:
   it stays unpublished, leaves the queue unless reported, representatives are told) and hiding.
@@ -858,11 +870,25 @@ Integration: `DemoAppealTests`, `DemoSidesTests`.
   `MpMailTemplates` (`Digest.ReasonsOf.*`), `DigestMapping` (`ForReasonsOf`/`AgainstReasonsOf` on `DigestItemResponse` and
   `DigestReviewItemResponse`, so the public copy and the moderators' screen show it); `DigestItemInfo.ForReasonCount` carries the raw one.
   No total of marks. Tests: `MpMailTemplateTests` (rule, headings for 0, 1, 2, 3, 14), `DigestReviewTests`, `MpSendingTests`.
+- **The organisations' line (design 8.14.4, owner 2026-11-20).** After a bill's arguments: "Organizacijos, prašančios balsuoti
+  už: A, B." / "… prieš: …" / "Pastabų atsiuntė: …" (`Digest.Organisations.*` in `EmailTemplates` and `AppealUi`), names only,
+  each linking to `BillTextLinks.ToStatement` (`/seimas/{n}#statement-{id}`). The rule is `DigestOrganisationRules` (SharedKernel,
+  pure): published now, `first_public_at` no later than the run's preparation (`digest_run.created_at`), organisation active,
+  confirmed, not kept out; for, against, remarks, each by `published_at` then id (the bill page's order). The facts come from
+  Appeals through `IDigestSource.OrganisationStatementsAsync` (no table read across modules); applied live on the moderators'
+  screen and once more when it goes (`FreezeAsync`), so a keep-out or block during review applies. Frozen as JSON in
+  `digest_item.organisations` (null in an older snapshot: no line; `[]` when none qualified), carried by
+  `DigestItemInfo.Organisations` / `DigestItemResponse.Organisations` / `DigestReviewItemResponse.Organisations`. Rendered by
+  `MpMailTemplates.Organisations` (HTML: under a thin rule, muted words, names as dark links; text part: the sentence, then
+  each name with its full address on its own line) and by `DigestOrganisationLine` (Web.Client) on `DigestPage` and
+  `DigestModeration`. Tests: `DigestOrganisationTests` (rule and email), `DigestOrganisationLineTests` (bUnit),
+  `OrganisationCountTests` (integration: prepared, screen, keep-out during review, snapshot, public answer and page).
 - Always both sides, always with the count for accounts older than 30 days, with the most endorsed published reasons,
   without their authors' names (email, public copy and snapshot alike). A reason longer than about 300
   characters is shortened in the email by `TextExcerpt`, with "Visas argumentas: {link}" to it on the
   public copy (`MpMailPaths.ReasonOnPublicCopy` = `DigestRoutes.ReasonAnchor`); the snapshot keeps the whole text (owner,
-  2026-11-16). The email prints no other member-written text (the MP's own response as stance and date only).
+  2026-11-16). The email prints no other member-written text (the MP's own response as stance and date only; organisations
+  by name only).
 - The weekly one holds appeals on that week's agenda, or never summarised, or whose participants changed by at least
   the `Digest:NotableChange` share (default 10 %) since the last summary that held them.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.

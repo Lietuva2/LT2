@@ -356,7 +356,12 @@ internal sealed class OrganisationsService(
             domain,
             host,
             statements.Select(s => new RepresentedStatement(facts.GetValueOrDefault(s.BillNumber) ?? new BillFacts(s.BillNumber, s.BillNumber), OrganisationReads.Info(s, counts.GetValueOrDefault(s.BillNumber)))).ToList(),
-            refusal);
+            refusal)
+        {
+            // Design 8.14.9: its representatives are told it is kept out of summaries, and why; nobody else sees it.
+            KeptOutOfSummariesAt = o.KeptOutOfSummariesAt,
+            KeptOutStatement = o.KeptOutOfSummariesAt is null ? null : o.KeptOutStatement,
+        };
     }
 
     public async Task<Result<Unit>> SendCodeAsync(string slug, Guid userId, string address, CancellationToken cancellationToken)

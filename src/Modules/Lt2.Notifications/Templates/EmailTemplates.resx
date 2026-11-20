@@ -73,6 +73,9 @@
 <data name="Digest.ReasonsOf.against" xml:space="preserve"><value>  Dažniausi argumentai prieš (iš {0}):</value></data>
 <data name="Digest.NoReasons.for" xml:space="preserve"><value>  Argumentų už dar nėra.</value></data>
 <data name="Digest.NoReasons.against" xml:space="preserve"><value>  Argumentų prieš dar nėra.</value></data>
+<data name="Digest.Organisations.for" xml:space="preserve"><value>Organizacijos, prašančios balsuoti už:</value></data>
+<data name="Digest.Organisations.against" xml:space="preserve"><value>Organizacijos, prašančios balsuoti prieš:</value></data>
+<data name="Digest.Organisations.remarks" xml:space="preserve"><value>Pastabų atsiuntė:</value></data>
 <data name="Digest.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Digest.PublicCopy" xml:space="preserve"><value>Ta pati suvestinė viešai: {0}</value></data>
 <data name="Digest.WholeReason" xml:space="preserve"><value>Visas argumentas: {0}</value></data>
@@ -109,6 +112,10 @@
 <data name="Organisation.Code.Intro" xml:space="preserve"><value>kodas, kuriuo patvirtinsite, kad organizacija „{0}“ valdo domeną {1}:</value></data>
 <data name="Organisation.Code.What" xml:space="preserve"><value>Kodą įveskite organizacijos puslapyje Lietuva 2.0. Patvirtinus prie organizacijos bus rodoma „Patvirtinta per el. pašto adresą @{1}“. Šio el. pašto adreso nesaugome, išsaugomas tik domenas.</value></data>
 <data name="Organisation.Code.Ignore" xml:space="preserve"><value>Jei kodo neprašėte, nieko daryti nereikia: be jo organizacija nebus patvirtinta.</value></data>
+<data name="Organisation.kept-out-of-summaries.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacija „{0}“ neįtraukiama į suvestines Seimo nariams</value></data>
+<data name="Organisation.kept-out-of-summaries.Body" xml:space="preserve"><value>moderatorius nusprendė organizacijos „{0}“ neįtraukti į suvestines Seimo nariams: jose ji nebus minima tarp organizacijų, prašančių balsuoti už ar prieš arba atsiuntusių pastabų. Svetainėje organizacija ir jos pozicijos rodomos taip pat. Organizacijos puslapis: {2}</value></data>
+<data name="Organisation.back-in-summaries.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacija „{0}“ vėl įtraukiama į suvestines Seimo nariams</value></data>
+<data name="Organisation.back-in-summaries.Body" xml:space="preserve"><value>moderatorius nusprendė organizaciją „{0}“ vėl įtraukti į suvestines Seimo nariams: jose minimos patvirtintų organizacijų viešos pozicijos, taip pat ir jos. Organizacijos puslapis: {2}</value></data>
 <data name="Organisation.Why" xml:space="preserve"><value>Šį laišką gavote, nes esate šios organizacijos atstovas Lietuva 2.0.</value></data>
 <data name="Organisation.blocked.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacija „{0}“ užblokuota</value></data>
 <data name="Organisation.blocked.Body" xml:space="preserve"><value>moderatorius užblokavo organizaciją „{0}“. Kol blokavimas galioja, jos pozicijos niekur nerodomos ir atstovai negali skelbti naujų. Organizacijos puslapis: {2}</value></data>

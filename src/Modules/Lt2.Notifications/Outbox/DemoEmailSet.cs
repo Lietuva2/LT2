@@ -135,13 +135,14 @@ internal static class DemoEmailSet
             var statementNotice = notice.StartsWith("statement-", StringComparison.Ordinal);
             var commentNotice = notice is OrganisationNotices.CommentHidden or OrganisationNotices.CommentRestored;
             var onBill = statementNotice || commentNotice;
-            var withReasons = notice is OrganisationNotices.Blocked or OrganisationNotices.StatementHidden or OrganisationNotices.CommentHidden or OrganisationNotices.ConfirmationWithdrawn;
+            var withReasons = notice is OrganisationNotices.Blocked or OrganisationNotices.StatementHidden or OrganisationNotices.CommentHidden or OrganisationNotices.ConfirmationWithdrawn
+                or OrganisationNotices.KeptOutOfSummaries or OrganisationNotices.BackInSummaries;
             Add(MessageKinds.OrganisationNoticeEmail, "organisation-notice-" + notice, to => new OrganisationNoticeEmail(
                 to,
                 notice,
                 Organisation,
                 onBill ? BillPath : OrganisationPath,
-                withReasons ? OrganisationStatement : null,
+                withReasons ? (notice == OrganisationNotices.BackInSummaries ? "Organizacija pateikė įrodymų, kad nurodyta svetainė priklauso jai." : OrganisationStatement) : null,
                 withReasons ? Contact : null,
                 onBill ? Bill : null,
                 onBill ? BillTitle : null));
@@ -258,7 +259,14 @@ internal static class DemoEmailSet
         MpDigestBill First() => new(
             new DigestItemInfo(Bill, BillTitle, BillStages.Adoption, monday.AddDays(3), 6800, 6150, 4280, 3900, null, null,
                 [new DigestReason(Sides.For, "Gynyba finansuojama nekeliant PVM.", 1310), new DigestReason(Sides.For, longReason, 880), new DigestReason(Sides.Against, "Skatina keisti rezidavimo vietą.", 970)],
-                ForReasonCount: 14, AgainstReasonCount: 9),
+                ForReasonCount: 14, AgainstReasonCount: 9,
+                Organisations:
+                [
+                    new DigestOrganisation(StatementStances.For, Guid.Parse("0193a1b2-0000-7000-8000-0000000000c1"), "pavyzdine-mokesciu-aiskumo-asociacija", Organisation, Guid.Parse("0193a1b2-0000-7000-8000-0000000000d1")),
+                    new DigestOrganisation(StatementStances.For, Guid.Parse("0193a1b2-0000-7000-8000-0000000000c2"), "pavyzdine-dirbanciuju-bendrija", "Pavyzdinė dirbančiųjų bendrija", Guid.Parse("0193a1b2-0000-7000-8000-0000000000d2")),
+                    new DigestOrganisation(StatementStances.Against, Guid.Parse("0193a1b2-0000-7000-8000-0000000000c3"), "pavyzdinis-darbdaviu-forumas", "Pavyzdinis darbdavių forumas", Guid.Parse("0193a1b2-0000-7000-8000-0000000000d3")),
+                    new DigestOrganisation(StatementStances.Remarks, Guid.Parse("0193a1b2-0000-7000-8000-0000000000c4"), "pavyzdine-viesuju-finansu-stebesena", "Pavyzdinė viešųjų finansų stebėsena", Guid.Parse("0193a1b2-0000-7000-8000-0000000000d4")),
+                ]),
             new DeliveryParty(Bill, "Reformų partija", 410, 520),
             null);
         MpDigestBill Second() => new(

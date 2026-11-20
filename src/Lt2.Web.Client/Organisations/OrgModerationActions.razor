@@ -7,7 +7,7 @@
 @* The actions on an organisation or a statement (design 8.14.14), as on the queue's screen (8.3): the shared
    ModerationMenu (owner, 2026-11-17), choosing one opens only its own field with one sentence on what it does, only the actions that apply to the item's state
    are offered, one is open at a time, and the confirmation stays after the action closes. Each is recorded, audited and
-   emailed to the organisation's representatives. On a statement, "Riboti rašymą" reaches its writer as for an argument. *@
+   emailed to the organisation's representatives. "Neįtraukti į suvestines" and its undo (design 8.14.9) are among "Kiti veiksmai". On a statement, "Riboti rašymą" reaches its writer as for an argument. *@
 <div class="stack stack--tight" id="org-actions-@Id">
     @if (!_finished)
     {
@@ -69,13 +69,19 @@
     /// <summary>An organisation's confirmation: null while "Nepatvirtinta".</summary>
     [Parameter] public string? ConfirmedBy { get; set; }
 
+    /// <summary>An organisation a moderator keeps out of summaries to MPs (design 8.14.9): "Vėl įtraukti į suvestines" is offered.</summary>
+    [Parameter] public bool KeptOut { get; set; }
+
     [Parameter] public EventCallback<string> OnDone { get; set; }
+
+    /// <summary>Keeping it out of summaries, or taking it back in (design 8.14.9), under "Kiti veiksmai".</summary>
+    private string Summaries => KeptOut ? "keep-in" : "keep-out";
 
     private IReadOnlyList<string> Offered => Kind == ReportTargets.Organisation
         ? Status switch
         {
-            OrganisationStatuses.Active => ConfirmedBy is null ? ["keep", "confirm", "block"] : ["keep", "unconfirm", "block"],
-            OrganisationStatuses.Blocked => ConfirmedBy is null ? ["unblock"] : ["unblock", "unconfirm"],
+            OrganisationStatuses.Active => ["keep", ConfirmedBy is null ? "confirm" : "unconfirm", Summaries, "block"],
+            OrganisationStatuses.Blocked => ConfirmedBy is null ? ["unblock", Summaries] : ["unblock", "unconfirm", Summaries],
             _ => [],
         }
         : Status switch
@@ -143,6 +149,8 @@
             "unblock" => await Moderation.UnblockAsync(Id, statement),
             "confirm" => await Moderation.ConfirmAsync(Id, statement),
             "unconfirm" => await Moderation.UnconfirmAsync(Id, statement),
+            "keep-out" => await Moderation.KeepOutOfSummariesAsync(Id, statement),
+            "keep-in" => await Moderation.ReturnToSummariesAsync(Id, statement),
             "publish" or "seen" => await Moderation.PublishStatementAsync(Id, note),
             "leave" => await Moderation.KeepStatementAsync(Id, note),
             "hide" => await Moderation.HideStatementAsync(Id, statement),
