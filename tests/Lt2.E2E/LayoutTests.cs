@@ -66,6 +66,7 @@ public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : E2ETes
         await page.GotoAsync($"{Base}/darbotvarke");
         await page.Locator("#account-toggle").ClickAsync();
         await Assertions.Expect(page.Locator("[data-account-link=moderation]")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("[data-account-link=feedback]")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("[data-account-link=settings]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-link=invitations]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-link=jobs]")).ToBeHiddenAsync();
