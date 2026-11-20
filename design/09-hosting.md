@@ -41,7 +41,9 @@ VPS, which also runs the owner's other sites:
   not start its own Caddy there: that Caddy gets one site block for LT2's hostname and reaches `web` over its Docker
   network (`deploy/compose.shared-proxy.yaml`, `deploy/shared-proxy.Caddyfile`). The block keeps what LT2's own
   Caddyfile does (compression, the 1 MB request limit, no `Server` header, the forwarded scheme), writes no access log
-  for the site, and adds `X-Robots-Tag: noindex, nofollow`, since a trial with invented data must not be indexed.
+  for the site, and adds `X-Robots-Tag: noindex, nofollow` and a `/robots.txt` that disallows everything, since a
+  trial with invented data must be neither indexed nor crawled (the robots file also keeps out crawlers that collect
+  pages for purposes other than search, which `noindex` does not).
   Forwarding headers count only from that Caddy (`LT2_PROXY_HOST`). Nothing else on the server is changed: no other
   site's block, container, volume, port or firewall rule.
 - **Reading the caught emails.** Whoever reads Mailpit reads every sign-in code and can sign in to any account (a staff

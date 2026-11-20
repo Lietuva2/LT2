@@ -4,7 +4,8 @@
 #
 # It keeps what deploy/Caddyfile does: compression, the 1 MB request limit and no Server header; Caddy's proxy sends
 # the scheme (X-Forwarded-Proto) and the client's address (X-Forwarded-For, any incoming value replaced) by default.
-# It adds X-Robots-Tag, since a trial with invented data must not be indexed (drop those lines for production).
+# It adds X-Robots-Tag and a robots.txt that disallows everything, since a trial with invented data must be neither
+# crawled nor indexed (drop those lines for production).
 #
 # Logs: no `log` directive, so no access log for the site. Not covered: a request that Caddy itself fails with a 5xx
 # (web stopped or restarting: 502) goes to that Caddy's error log with the client's address, user agent and full
@@ -24,6 +25,11 @@ lt2.example.org {
 		X-Robots-Tag "noindex, nofollow"
 	}
 
+	respond /robots.txt <<TXT
+		User-agent: *
+		Disallow: /
+		TXT 200
+
 	reverse_proxy lt2-web:8080
 }
 
@@ -37,6 +43,11 @@ mail.example.org {
 		-Server
 		X-Robots-Tag "noindex, nofollow"
 	}
+
+	respond /robots.txt <<TXT
+		User-agent: *
+		Disallow: /
+		TXT 200
 
 	reverse_proxy lt2-mailpit:8025
 }

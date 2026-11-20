@@ -289,8 +289,8 @@ A server whose ports 80 and 443 already belong to another Compose project's Cadd
 nothing on 80 or 443, and joins `web` to that Caddy's Docker network (`LT2_PROXY_NETWORK`) under the alias `lt2-web`.
 Forwarded client addresses are believed only from that Caddy, named by `LT2_PROXY_HOST` (design 6.8), not from the other
 containers on the shared network. `deploy/shared-proxy.Caddyfile` is the site block to append to that Caddy's Caddyfile, with `lt2.example.org` replaced
-by the site's hostname: compression, the 1 MB request limit, no `Server` header, no access log and `X-Robots-Tag:
-noindex, nofollow`. A request that Caddy itself fails (a 502 while `web` restarts) still reaches that Caddy's error log
+by the site's hostname: compression, the 1 MB request limit, no `Server` header, no access log, `X-Robots-Tag:
+noindex, nofollow` and a `/robots.txt` that disallows everything (a trial only; drop both for production). A request that Caddy itself fails (a 502 while `web` restarts) still reaches that Caddy's error log
 with the client's address and full address, an invitation code or an MP's mail link token in it included; only that
 Caddy's global log options could drop them, and they belong to the other project. The application's own logs replace the
 link token. Real hostnames, addresses and paths live only on the server, never in this repository.
