@@ -32,6 +32,10 @@ else
                     {
                         <span class="tag">@L["Org.State.blocked"]</span>
                     }
+                    @if (org.KeptOutOfSummaries)
+                    {
+                        <span class="tag" id="queue-kept-out-@org.Id">@L["OrgMod.KeptOut"]</span>
+                    }
                     @foreach (var flag in org.Flags)
                     {
                         <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
@@ -67,7 +71,7 @@ else
                     <p class="note note--quiet">@L["OrgMod.Barred"]</p>
                 }
                 <Reports Items="org.Reports" />
-                <OrgModerationActions Id="org.Id" Kind="@ReportTargets.Organisation" Status="@org.Status" ConfirmedBy="@org.Label.ConfirmedBy" />
+                <OrgModerationActions Id="org.Id" Kind="@ReportTargets.Organisation" Status="@org.Status" ConfirmedBy="@org.Label.ConfirmedBy" KeptOut="org.KeptOutOfSummaries" />
             </article>
         }
     </section>

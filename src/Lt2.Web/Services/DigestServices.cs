@@ -18,7 +18,8 @@ internal static class DigestMapping
             i.SurgeSharePercent, i.SurgeWindowHours, i.Held, i.Gone,
             i.Reasons.Select(x => new DigestReviewReasonResponse(x.Id, x.Side, x.Text, x.Endorsements, x.Replacement)).ToList(),
             DigestReasonCount.Shown(i.ForReasonCount, i.Reasons.Count(x => x.Side == Sides.For)),
-            DigestReasonCount.Shown(i.AgainstReasonCount, i.Reasons.Count(x => x.Side == Sides.Against)))).ToList());
+            DigestReasonCount.Shown(i.AgainstReasonCount, i.Reasons.Count(x => x.Side == Sides.Against)),
+            Map(i.Organisations))).ToList());
 
     public static IntroductionLetterResponse Public(IntroductionVersion v) => new(v.Version, v.Subject, v.Text, v.SignerName, v.SignerRole, v.SentAt);
 
@@ -89,7 +90,12 @@ internal static class DigestMapping
         i.SurgeSharePercent, i.SurgeWindowHours,
         i.Reasons.Select(x => new DigestReasonResponse(x.Side, x.Text, x.Endorsements)).ToList(),
         DigestReasonCount.Shown(i.ForReasonCount, i.Reasons.Count(x => x.Side == Sides.For)),
-        DigestReasonCount.Shown(i.AgainstReasonCount, i.Reasons.Count(x => x.Side == Sides.Against)));
+        DigestReasonCount.Shown(i.AgainstReasonCount, i.Reasons.Count(x => x.Side == Sides.Against)),
+        Map(i.Organisations));
+
+    /// <summary>The organisations' line (design 8.14.4); null stays null: a snapshot made before it was kept shows none.</summary>
+    private static List<DigestOrganisationResponse>? Map(IReadOnlyList<DigestOrganisation>? organisations) =>
+        organisations?.Select(o => new DigestOrganisationResponse(o.Stance, o.OrganisationId, o.Slug, o.Name, o.StatementId)).ToList();
 }
 
 /// <summary>Server-side <see cref="IDigestsApi"/> for the pages; the moderators' calls need an active moderator role.</summary>

@@ -89,6 +89,7 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.BillNumber).HasMaxLength(40);
             b.Property(x => x.Stage).HasMaxLength(16);
             b.Property(x => x.Reasons).HasColumnType("jsonb");
+            b.Property(x => x.Organisations).HasColumnType("jsonb");
             b.HasIndex(x => x.RunId);
             b.HasIndex(x => x.RecordId);
             b.HasOne<Digests.DigestRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Cascade);

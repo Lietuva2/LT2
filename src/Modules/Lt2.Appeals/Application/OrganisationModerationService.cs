@@ -80,6 +80,9 @@ internal sealed class OrganisationModerationService(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var blocked = await db.Organisations.AsNoTracking().Where(o => o.Status == OrganisationStatuses.Blocked).ToListAsync(cancellationToken);
+        var keptOut = await db.Organisations.AsNoTracking()
+            .Where(o => o.KeptOutOfSummariesAt != null && o.Status != OrganisationStatuses.Closed)
+            .OrderByDescending(o => o.KeptOutOfSummariesAt).ToListAsync(cancellationToken);
         var hidden = await db.OrganisationStatements.AsNoTracking().Where(s => s.Status == StatementStatuses.Hidden).ToListAsync(cancellationToken);
         var targets = hidden.Select(s => s.Id).ToList();
         var hides = (await db.ModerationActions.AsNoTracking().Where(m => targets.Contains(m.TargetId) && m.Action == "hide").ToListAsync(cancellationToken))
@@ -87,7 +90,8 @@ internal sealed class OrganisationModerationService(
             .ToDictionary(g => g.Key, g => g.OrderByDescending(m => m.CreatedAt).First());
         var organisationIds = hidden.Select(s => s.OrganisationId).Distinct().ToList();
         var organisationOf = await db.Organisations.AsNoTracking().Where(o => organisationIds.Contains(o.Id)).ToDictionaryAsync(o => o.Id, cancellationToken);
-        var names = await appealReads.NamesAsync(blocked.Select(o => o.BlockedByUserId).OfType<Guid>().Concat(hides.Values.Select(m => m.ModeratorUserId)), cancellationToken);
+        var names = await appealReads.NamesAsync(
+            blocked.Select(o => o.BlockedByUserId).Concat(keptOut.Select(o => o.KeptOutByUserId)).OfType<Guid>().Concat(hides.Values.Select(m => m.ModeratorUserId)), cancellationToken);
         var billsOf = await reads.BillsAsync(db, hidden.Select(s => s.BillNumber).ToList(), cancellationToken);
 
         return new HiddenOrganisationItems(
@@ -103,7 +107,13 @@ internal sealed class OrganisationModerationService(
                         hide?.CreatedAt, hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, bill?.Open == true);
                 })
                 .OrderByDescending(s => s.HiddenAt ?? DateTimeOffset.MinValue)
-                .ToList());
+                .ToList())
+        {
+            KeptOut = keptOut
+                .Select(o => new KeptOutOrganisation(
+                    o.Id, o.Slug, o.Name, o.Status, o.KeptOutOfSummariesAt!.Value, o.KeptOutByUserId is { } by ? names.GetValueOrDefault(by) : null, o.KeptOutStatement))
+                .ToList(),
+        };
     }
 
     public Task<Result<Unit>> KeepAsync(Guid organisationId, string? note, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
@@ -195,6 +205,39 @@ internal sealed class OrganisationModerationService(
             return null;
         }, cancellationToken);
 
+    /// <summary>
+    /// "Neįtraukti į suvestines" (design 8.14.9, owner 2026-11-20): from now on no summary to MPs names the organisation, also one
+    /// already prepared and not yet gone. On the site it stays exactly as it was. It answers no report: the reports stay open.
+    /// </summary>
+    public Task<Result<Unit>> KeepOutOfSummariesAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: true) ?? OnOrganisationAsync(organisationId, moderator, "keep-out", statement.Trim(), OrganisationNotices.KeptOutOfSummaries, contact, null, (_, o, now) =>
+        {
+            if (OrganisationRules.CheckKeepOut(o.Status, o.KeptOutOfSummariesAt is not null) is { } refused)
+            {
+                return Task.FromResult<string?>(refused);
+            }
+
+            o.KeptOutOfSummariesAt = now;
+            o.KeptOutByUserId = moderator.UserId;
+            o.KeptOutStatement = statement.Trim();
+            return Task.FromResult<string?>(null);
+        }, cancellationToken, answersReports: false);
+
+    /// <summary>"Vėl įtraukti į suvestines" (design 8.14.9): undoes keeping it out; the next summary to go may name it again.</summary>
+    public Task<Result<Unit>> ReturnToSummariesAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: true) ?? OnOrganisationAsync(organisationId, moderator, "keep-in", statement.Trim(), OrganisationNotices.BackInSummaries, contact, null, (_, o, _) =>
+        {
+            if (OrganisationRules.CheckKeepIn(o.Status, o.KeptOutOfSummariesAt is not null) is { } refused)
+            {
+                return Task.FromResult<string?>(refused);
+            }
+
+            o.KeptOutOfSummariesAt = null;
+            o.KeptOutByUserId = null;
+            o.KeptOutStatement = null;
+            return Task.FromResult<string?>(null);
+        }, cancellationToken, answersReports: false);
+
     public Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
         Refused(statement, required: false) ?? OnStatementAsync(statementId, moderator, "publish", StatementRules.Normalise(statement), contact, async (db, s, bill, now) =>
         {
@@ -280,7 +323,7 @@ internal sealed class OrganisationModerationService(
 
     private static QueueOrganisation QueueItem(Organisation o, IReadOnlyList<Report> reports, IReadOnlyList<ProfileChange> history) => new(
         o.Id, o.Slug, o.Name, o.Description, o.Website, o.LegalCode, o.DeclaredLobbyist, OrganisationReads.Label(o), o.Status, o.SeenAt is not null,
-        history.Count > 0, o.ScreeningFlags, ReportsOn(reports, o.Id), history, o.ConfirmationNote, o.DomainBarred, o.RegisteredAt);
+        history.Count > 0, o.ScreeningFlags, ReportsOn(reports, o.Id), history, o.ConfirmationNote, o.DomainBarred, o.RegisteredAt, o.KeptOutOfSummariesAt is not null);
 
     private async Task<IReadOnlyList<QueueStatement>> QueueStatementsAsync(AppealsDb db, IReadOnlyList<OrganisationStatement> statements, IReadOnlyList<Report> reports, CancellationToken ct)
     {
@@ -304,7 +347,8 @@ internal sealed class OrganisationModerationService(
     private delegate Task<(string? Refusal, string? Notice)> StatementAction(AppealsDb db, OrganisationStatement statement, BillForStatements? bill, DateTimeOffset now);
 
     private async Task<Result<Unit>> OnOrganisationAsync(
-        Guid organisationId, StaffActor moderator, string action, string? statement, string notice, string? contact, string? codeState, OrganisationAction apply, CancellationToken ct)
+        Guid organisationId, StaffActor moderator, string action, string? statement, string notice, string? contact, string? codeState, OrganisationAction apply, CancellationToken ct,
+        bool answersReports = true)
     {
         await using var db = await contexts.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -328,7 +372,7 @@ internal sealed class OrganisationModerationService(
         }
 
         o.ChangedAt = now;
-        await recorder.RecordAsync(db, transaction, ReportTargets.Organisation, o.Id, action, statement, moderator, now, null, new { organisation = o.Slug }, answersReports: true, ct);
+        await recorder.RecordAsync(db, transaction, ReportTargets.Organisation, o.Id, action, statement, moderator, now, null, new { organisation = o.Slug }, answersReports, ct);
         await NotifyAsync(db, transaction, o, notice, $"/o/{Uri.EscapeDataString(o.Slug)}", statement, contact, null, ct);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);

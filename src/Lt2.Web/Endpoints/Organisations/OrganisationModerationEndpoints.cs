@@ -12,7 +12,7 @@ namespace Lt2.Web.Endpoints.Organisations;
 /// Moderation of organisations and statements (design 8.14.9, 8.14.14), moderators in a staff-passkey session only:
 /// <c>GET /api/v1/moderation/organisations</c> (the queue's part), <c>…/hidden</c> (blocked organisations and hidden
 /// statements), <c>GET /moderation/bills/{number}/statements</c> (the "Moderavimas" panel on the bill's page), and the actions:
-/// keep, block, unblock, confirm, unconfirm an organisation; publish, hide, restore a statement; the writer's screen and
+/// keep, block, unblock, confirm, unconfirm an organisation, keep it out of summaries to MPs and take it back in; publish, hide, restore a statement; the writer's screen and
 /// restricting the writer, as for an argument. Each action is audited and emailed to the organisation's representatives.
 /// </summary>
 internal static class OrganisationModerationEndpoints
@@ -40,6 +40,8 @@ internal static class OrganisationModerationEndpoints
         Act<StatementRequest>(api, OrganisationRoutes.Unblock, "UnblockOrganisation", (m, id, r, a, c, ct) => m.UnblockAsync(id, r.Statement, a, c, ct));
         Act<StatementRequest>(api, OrganisationRoutes.Confirm, "ConfirmOrganisationByHand", (m, id, r, a, c, ct) => m.ConfirmAsync(id, r.Statement, a, c, ct));
         Act<StatementRequest>(api, OrganisationRoutes.Unconfirm, "WithdrawOrganisationConfirmation", (m, id, r, a, c, ct) => m.WithdrawConfirmationAsync(id, r.Statement, a, c, ct));
+        Act<StatementRequest>(api, OrganisationRoutes.KeepOutOfSummaries, "KeepOrganisationOutOfSummaries", (m, id, r, a, c, ct) => m.KeepOutOfSummariesAsync(id, r.Statement, a, c, ct));
+        Act<StatementRequest>(api, OrganisationRoutes.ReturnToSummaries, "ReturnOrganisationToSummaries", (m, id, r, a, c, ct) => m.ReturnToSummariesAsync(id, r.Statement, a, c, ct));
         Act<ModerationRequest>(api, OrganisationRoutes.PublishStatement, "PublishStatement", (m, id, r, a, c, ct) => m.PublishStatementAsync(id, r.Statement, a, c, ct));
         Act<ModerationRequest>(api, OrganisationRoutes.KeepStatement, "KeepStatement", (m, id, r, a, c, ct) => m.KeepStatementAsync(id, r.Statement, a, c, ct));
         Act<StatementRequest>(api, OrganisationRoutes.HideStatement, "HideStatement", (m, id, r, a, c, ct) => m.HideStatementAsync(id, r.Statement, a, c, ct));

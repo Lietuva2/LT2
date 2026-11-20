@@ -5,11 +5,13 @@
 @inherits InteractiveBase<AppealUi>
 @inject IDigestsApi Digests
 @inject IModerationApi Moderation
+@inject Lt2.Api.Contracts.Organisations.IOrganisationModerationApi Organisations
 
 @* Design 8.19.2 (owner, 2026-11-17): the moderators' summaries screen. A weekly or before-vote summary is prepared a day ahead
    and goes at its time unless declined; nobody has to approve it. Each summary's common text is shown once, as MPs read it: the
    bills with their numbers now (a prepared one) or as it went, the chosen arguments with "Paslėpti" (the next of its side comes
-   in, marked) and the bill's "Sulaikyti siuntimą". A prepared one offers "Patvirtinti" (reviewed; it still goes at its time) and
+   in, marked), the organisations named under the bill with "Neįtraukti į suvestines" (8.14.9), and the bill's "Sulaikyti
+   siuntimą". A prepared one offers "Patvirtinti" (reviewed; it still goes at its time) and
    "Nesiųsti" (a statement of at least 20 characters, public on the copy). Moderators in a staff-passkey session; the server
    refuses anything else and audits each action. *@
 <PageTitle>@L["DigMod.PageTitle"]</PageTitle>
@@ -123,6 +125,30 @@ else
                                 </div>
                             }
                         </div>
+                    }
+                    @* Design 8.14.4, 8.14.9: the organisations named under the bill; on a prepared summary as it would go now, each
+                       with "Neįtraukti į suvestines" (the organisation drops out of every summary; on the site it stays). *@
+                    <Lt2.Web.Client.Organisations.DigestOrganisationLine BillNumber="@item.BillNumber" Organisations="item.Organisations" Id="@($"digmod-orgs-{run.Id:N}-{item.BillNumber}")" />
+                    @if (prepared && item.Organisations is { Count: > 0 } named)
+                    {
+                        <ul class="rows" id="digmod-orgs-actions-@run.Id-@item.RecordId">
+                            @foreach (var org in named)
+                            {
+                                <li @key="org.StatementId">
+                                    <div class="rows__main"><span class="small">@org.Name</span></div>
+                                    <div class="rows__side">
+                                        @if (_open != ("keep-out", org.StatementId))
+                                        {
+                                            <button type="button" class="btn btn--plain" id="digmod-keep-out-@org.StatementId" disabled="@Locked" @onclick='() => Open("keep-out", org.StatementId)'>@L["OrgMod.Action.keep-out"]</button>
+                                        }
+                                    </div>
+                                </li>
+                                @if (_open == ("keep-out", org.StatementId))
+                                {
+                                    <li>@StatementForm(org.StatementId, L["DigMod.KeepOutHint"], L["OrgMod.Action.keep-out"], () => KeepOutAsync(org.OrganisationId))</li>
+                                }
+                            }
+                        </ul>
                     }
                     @if (prepared && !item.Gone)
                     {
@@ -238,6 +264,19 @@ else
         _open = null;
         await ReloadAsync();
         Info ??= L["DigMod.Hidden"];
+    });
+
+    /// <summary>"Neįtraukti į suvestines" (design 8.14.9): audited, the representatives told; the line is read again.</summary>
+    private Task KeepOutAsync(Guid organisationId) => RunAsync(async () =>
+    {
+        if (!Succeeded(await Organisations.KeepOutOfSummariesAsync(organisationId, new StatementRequest { Statement = _statement }), "statement"))
+        {
+            return;
+        }
+
+        _open = null;
+        await ReloadAsync();
+        Info ??= L["DigMod.KeptOut"];
     });
 
     private Task HoldAsync(Guid recordId, bool held) => RunAsync(async () =>

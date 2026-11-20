@@ -10,7 +10,10 @@ addresses: "Atsakyti visiems" (button), "Keisti arba papildyti", "Skaityti visą
 nėra." (or "prieš"); a side with one or two published arguments reads "Dažniausi argumentai už:" with no "(iš N)", since the
 two shown are all of them; a bill with a surge note adds "Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos
 per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima." under the counts. An argument longer than about 300
-characters is cut with "…" and followed by "Visas argumentas: {link}" to it on the public copy.
+characters is cut with "…" and followed by "Visas argumentas: {link}" to it on the public copy. After the arguments, the
+organisations' line (8.14.4) has one sentence per stance with organisations named ("Organizacijos, prašančios balsuoti
+už: …", "… prieš: …", "Pastabų atsiuntė: …"), each name's address to its statement on its own line under it; in the HTML
+part the names are the links; a bill with no organisation named has no line.
 
 ```
 Tema: Lietuva 2.0 suvestinė Seimo nariams, 2026-09-21
@@ -31,6 +34,8 @@ Priėmimas · planuojama rugsėjo 24 d.
   Dažniausi argumentai prieš (iš 9):
   · Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą. (1 480)
   · Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą. (970)
+  Organizacijos, prašančios balsuoti už: Pavyzdinė mokesčių aiškumo asociacija.
+    Pavyzdinė mokesčių aiškumo asociacija: https://lietuva2.lt/seimas/XVP-0412#statement-0193a1b2-0000-7000-8000-0000000000d1
   Jūsų atsakymas: balsuosiu prieš (2026-09-18). Keisti arba papildyti: https://lietuva2.lt/seimas/XVP-0412
 
 XVP-1811 · …

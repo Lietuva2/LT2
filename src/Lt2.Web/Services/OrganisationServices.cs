@@ -42,7 +42,11 @@ internal static class OrganisationMapping
         m.DomainConfirmation,
         m.WebsiteHost,
         m.Statements.Select(s => new RepresentedStatementResponse(AppealMapping.Map(s.Bill), Map(s.Statement))).ToList(),
-        m.Refusal);
+        m.Refusal)
+    {
+        KeptOutOfSummariesAt = m.KeptOutOfSummariesAt,
+        KeptOutStatement = m.KeptOutStatement,
+    };
 
     public static MyBillOrganisationResponse Map(MyBillOrganisation m) =>
         new(m.OrganisationId, m.Slug, m.Name, m.Status, Map(m.Label), m.Statement is { } s ? Map(s) : null, m.Refusal) { HiddenStatement = m.HiddenStatement };
@@ -61,14 +65,15 @@ internal static class OrganisationMapping
         q.Organisations.Select(o => new QueueOrganisationResponse(
             o.Id, o.Slug, o.Name, o.Description, o.Website, o.LegalCode, o.DeclaredLobbyist, Map(o.Label), o.Status, o.Seen, o.Changed, o.Flags,
             o.Reports.Select(AppealMapping.Map).ToList(), o.History.Select(h => new ProfileChangeResponse(h.At, h.Field, h.OldValue, h.NewValue)).ToList(),
-            o.ConfirmationNote, o.DomainBarred, o.RegisteredAt)).ToList(),
+            o.ConfirmationNote, o.DomainBarred, o.RegisteredAt, o.KeptOutOfSummaries)).ToList(),
         q.Statements.Select(Map).ToList(),
         q.OrganisationsTotal,
         q.StatementsTotal);
 
     public static HiddenOrganisationsResponse Map(HiddenOrganisationItems h) => new(
         h.Organisations.Select(o => new HiddenOrganisationResponse(o.Id, o.Slug, o.Name, o.BlockedAt, o.BlockedBy, o.Statement)).ToList(),
-        h.Statements.Select(s => new HiddenStatementResponse(s.Id, AppealMapping.Map(s.Bill), s.OrganisationName, s.Stance, s.Text, s.HiddenAt, s.HiddenBy, s.Statement, s.Restorable)).ToList());
+        h.Statements.Select(s => new HiddenStatementResponse(s.Id, AppealMapping.Map(s.Bill), s.OrganisationName, s.Stance, s.Text, s.HiddenAt, s.HiddenBy, s.Statement, s.Restorable)).ToList(),
+        h.KeptOut.Select(o => new KeptOutOrganisationResponse(o.Id, o.Slug, o.Name, o.Status, o.KeptOutAt, o.KeptOutBy, o.Statement)).ToList());
 }
 
 /// <summary>
@@ -242,6 +247,12 @@ internal sealed class ServerOrganisationModerationApi(
 
     public Task<ApiResult> UnconfirmAsync(Guid organisationId, StatementRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.WithdrawConfirmationAsync(organisationId, request.Statement, m, Contact, cancellationToken));
+
+    public Task<ApiResult> KeepOutOfSummariesAsync(Guid organisationId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.KeepOutOfSummariesAsync(organisationId, request.Statement, m, Contact, cancellationToken));
+
+    public Task<ApiResult> ReturnToSummariesAsync(Guid organisationId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.ReturnToSummariesAsync(organisationId, request.Statement, m, Contact, cancellationToken));
 
     public Task<ApiResult> PublishStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.PublishStatementAsync(statementId, request.Statement, m, Contact, cancellationToken));

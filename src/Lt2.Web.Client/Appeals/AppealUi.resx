@@ -707,6 +707,21 @@
 <data name="OrgMod.Hidden.NotOpen" xml:space="preserve"><value>Seimas dėl projekto jau balsavo arba dalyvavimas uždarytas: pozicijos atkurti negalima.</value></data>
 <data name="OrgMod.Restore.Sentence.organisation" xml:space="preserve"><value>Blokavimas atšaukiamas: grąžinamos lygiai tos pozicijos, kurios buvo rodomos. Paaiškinimas siunčiamas atstovams.</value></data>
 <data name="OrgMod.Restore.Sentence.statement" xml:space="preserve"><value>Pozicija vėl rodoma. Paaiškinimas siunčiamas atstovams.</value></data>
+<data name="OrgMod.Action.keep-out" xml:space="preserve"><value>Neįtraukti į suvestines</value></data>
+<data name="OrgMod.Action.keep-in" xml:space="preserve"><value>Vėl įtraukti į suvestines</value></data>
+<data name="OrgMod.Sentence.keep-out" xml:space="preserve"><value>Organizacija nebus minima suvestinėse Seimo nariams, taip pat ir jau parengtoje, bet dar neišsiųstoje. Svetainėje ji liks tokia, kokia yra. Paaiškinimas siunčiamas atstovams.</value></data>
+<data name="OrgMod.Sentence.keep-in" xml:space="preserve"><value>Patvirtintos organizacijos viešos pozicijos vėl bus minimos suvestinėse Seimo nariams. Paaiškinimas siunčiamas atstovams.</value></data>
+<data name="OrgMod.Done.keep-out" xml:space="preserve"><value>Organizacija neįtraukiama į suvestines.</value></data>
+<data name="OrgMod.Done.keep-in" xml:space="preserve"><value>Organizacija vėl įtraukiama į suvestines.</value></data>
+<data name="OrgMod.KeptOut" xml:space="preserve"><value>Neįtraukiama į suvestines</value></data>
+<data name="OrgMod.Hidden.KeptOut" xml:space="preserve"><value>Organizacijos, neįtraukiamos į suvestines</value></data>
+<data name="OrgMod.Hidden.KeptOutLead" xml:space="preserve"><value>Svetainėje jos rodomos kaip visos kitos; suvestinėse Seimo nariams jų pavadinimai neminimi.</value></data>
+<data name="Org.Manage.KeptOut" xml:space="preserve"><value>Moderatoriai šios organizacijos neįtraukia į suvestines Seimo nariams: jose ji neminima. Svetainėje organizacija ir jos pozicijos rodomos kaip visų kitų.</value></data>
+<data name="Digest.Organisations.for" xml:space="preserve"><value>Organizacijos, prašančios balsuoti už:</value></data>
+<data name="Digest.Organisations.against" xml:space="preserve"><value>Organizacijos, prašančios balsuoti prieš:</value></data>
+<data name="Digest.Organisations.remarks" xml:space="preserve"><value>Pastabų atsiuntė:</value></data>
+<data name="DigMod.KeepOutHint" xml:space="preserve"><value>Organizacija nebus minima nė vienoje suvestinėje Seimo nariams, kol ją vėl įtrauksite; svetainėje ji liks tokia, kokia yra. Atstovai gaus jūsų paaiškinimą el. paštu.</value></data>
+<data name="DigMod.KeptOut" xml:space="preserve"><value>Atlikta: organizacija suvestinėse neminima.</value></data>
 <data name="Admin.Group.organisations" xml:space="preserve"><value>Organizacijos</value></data>
 <data name="Admin.Setting.Organisations:PerAccount" xml:space="preserve"><value>Kiek organizacijų gali užregistruoti viena paskyra</value></data>
 <data name="Admin.Help.Organisations:PerAccount" xml:space="preserve"><value>Neleidžia vienam žmogui užplūsti sąrašo. Uždarytos organizacijos nesiskaičiuoja, užblokuotos skaičiuojasi. Sumažinus jau užregistruotos lieka.</value></data>

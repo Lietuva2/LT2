@@ -81,6 +81,8 @@
                 <dt>@A["Method.Digests.Ceiling"]</dt><dd class="num">@A.Format("Method.Digests.CeilingValue", Display.Number(r.MaxPerWeek))</dd>
                 <dt>@A["Method.Digests.Counts"]</dt><dd class="num">@A.Format("Method.Digests.CountsValue", Display.Number(r.OlderThanDays))</dd>
                 <dt>@A["Method.Digests.Reasons"]</dt><dd class="num">@A.Format("Method.Digests.ReasonsValue", Display.Number(r.ReasonsPerSide))</dd>
+                @* Design 8.14.4: the organisations named under each bill. *@
+                <dt id="organisations-in-summaries">@A["Method.Digests.Organisations"]</dt><dd>@A["Method.Digests.OrganisationsValue"]</dd>
                 <dt>@A["Method.Digests.Surge"]</dt><dd class="num">@A.Format("Method.Digests.SurgeValue", Display.Number((int)Math.Round(r.SurgeMinimumShare * 100)), Display.Number(r.SurgeWindowHours), Display.Number(r.SurgeMinimumAccounts))</dd>
                 @* Design 8.4 (owner, 2026-11-17): the setting Digest:PartyGroupMinimum; 0 and 1 both show any group of one or more. *@
                 <dt id="grupes">@A["Method.Digests.Groups"]</dt><dd class="num" id="group-minimum">@(r.GroupMinimum <= 1 ? A["Method.Digests.GroupsAny"] : A.Format("Method.Digests.GroupsValue", Display.Number(r.GroupMinimum)))</dd>

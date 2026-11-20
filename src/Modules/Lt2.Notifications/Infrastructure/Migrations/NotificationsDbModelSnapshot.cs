@@ -156,6 +156,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("for_reason_count");
 
+                    b.Property<string>("Organisations")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("organisations");
+
                     b.Property<DateOnly?>("PlannedDate")
                         .HasColumnType("date")
                         .HasColumnName("planned_date");

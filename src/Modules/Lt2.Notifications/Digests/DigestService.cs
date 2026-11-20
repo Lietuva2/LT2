@@ -354,6 +354,10 @@ internal sealed class DigestService(
                 var items = await db.DigestItems.AsNoTracking().Where(i => i.RunId == id).OrderBy(i => i.Position).ToListAsync(cancellationToken);
                 var choices = await db.DigestChoices.AsNoTracking().Where(c => c.RunId == id && c.LeftAt == null).ToListAsync(cancellationToken);
                 var byId = pool.ToDictionary(r => r.Id);
+
+                // The organisations' line as it would go now (design 8.14.4): a moderator's keep-out or block still changes it.
+                var lines = DigestOrganisationRules.ByBill(
+                    await source.OrganisationStatementsAsync(items.Select(i => i.BillNumber).ToList(), cancellationToken), run.CreatedAt);
                 var counts = await CeilingCountsAsync(db, DigestRules.WeekStart(run.RunDate), state.On, exclude: run.Id, cancellationToken);
                 var wouldGo = state.On
                     ? (await PlanAsync(db, run.Kind, recipients, counts, maxPerWeek, cancellationToken)).Count(p => p.Official is DeliveryStatuses.Queued or DeliveryStatuses.Introduced)
@@ -369,13 +373,14 @@ internal sealed class DigestService(
                                 .OrderByDescending(x => x.Reason.Endorsements).ThenBy(x => x.Choice.Place)
                                 .Select(x => new DigestReviewReason(x.Reason.Id, side, x.Reason.Text, x.Reason.Endorsements, x.Choice.Replacement)))
                             .ToList();
+                        var line = lines.GetValueOrDefault(i.BillNumber) ?? [];
                         return c is null
                             ? new DigestReviewItem(i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.ForCount, i.ForOlderThan30Days, i.AgainstCount,
                                 i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, Held: false, Gone: true, reasons,
-                                Published(pool, i.RecordId, Sides.For), Published(pool, i.RecordId, Sides.Against))
+                                Published(pool, i.RecordId, Sides.For), Published(pool, i.RecordId, Sides.Against), line)
                             : new DigestReviewItem(i.RecordId, c.BillNumber, c.BillTitle, c.Planned?.Stage ?? i.Stage, c.Planned?.Date ?? i.PlannedDate, c.For,
                                 c.ForOlderThan30Days, c.Against, c.AgainstOlderThan30Days, c.SurgeSharePercent, c.SurgeWindowHours, c.Held, Gone: false, reasons,
-                                Published(pool, i.RecordId, Sides.For), Published(pool, i.RecordId, Sides.Against));
+                                Published(pool, i.RecordId, Sides.For), Published(pool, i.RecordId, Sides.Against), line);
                     }).ToList()));
             }
         }
@@ -394,7 +399,7 @@ internal sealed class DigestService(
                     i.RecordId, i.BillNumber, i.BillTitle, i.Stage, i.PlannedDate, i.ForCount, i.ForOlderThan30Days, i.AgainstCount,
                     i.AgainstOlderThan30Days, i.SurgeSharePercent, i.SurgeWindowHours, false, false,
                     Snapshot(i).Select(r => new DigestReviewReason(null, r.Side, r.Text, r.Endorsements, false)).ToList(),
-                    i.ForReasonCount, i.AgainstReasonCount)).ToList()));
+                    i.ForReasonCount, i.AgainstReasonCount, OrganisationsOf(i))).ToList()));
         }
 
         return result;
@@ -578,6 +583,10 @@ internal sealed class DigestService(
         var choices = await db.DigestChoices.AsNoTracking().Where(c => c.RunId == run.Id && c.LeftAt == null).ToListAsync(ct);
         var byId = pool.ToDictionary(r => r.Id);
         var byRecord = candidates.ToDictionary(c => c.RecordId);
+
+        // The organisations' line (design 8.14.4): statements public when the summary was prepared, of organisations confirmed,
+        // not blocked and not kept out of summaries now.
+        var lines = DigestOrganisationRules.ByBill(await source.OrganisationStatementsAsync(items.Select(i => i.BillNumber).ToList(), ct), run.CreatedAt);
         var kept = 0;
         foreach (var item in items)
         {
@@ -608,6 +617,7 @@ internal sealed class DigestService(
                         .Select(x => new DigestReason(side, byId[x.ReasonId].Text, byId[x.ReasonId].Endorsements)))
                     .ToList(),
                 JsonSerializerOptions.Web);
+            item.Organisations = JsonSerializer.Serialize(lines.GetValueOrDefault(item.BillNumber) ?? [], JsonSerializerOptions.Web);
         }
 
         await db.SaveChangesAsync(ct);
@@ -955,6 +965,10 @@ internal sealed class DigestService(
     private static List<DigestReason> Snapshot(DigestItem i) =>
         JsonSerializer.Deserialize<List<DigestReason>>(i.Reasons, JsonSerializerOptions.Web) ?? [];
 
+    /// <summary>The organisations' line as frozen (design 8.14.4); null for a snapshot made before it was kept.</summary>
+    private static List<DigestOrganisation>? OrganisationsOf(DigestItem i) =>
+        i.Organisations is { } json ? JsonSerializer.Deserialize<List<DigestOrganisation>>(json, JsonSerializerOptions.Web) ?? [] : null;
+
     /// <summary>The runs as their public copy shows them; with <paramref name="recordId"/>, only that record's item.</summary>
     private static async Task<IReadOnlyList<DigestRunInfo>> InfoAsync(NotificationsDb db, IReadOnlyList<DigestRun> runs, CancellationToken ct, Guid? recordId = null)
     {
@@ -983,7 +997,8 @@ internal sealed class DigestService(
                     i.SurgeWindowHours,
                     Snapshot(i),
                     i.ForReasonCount,
-                    i.AgainstReasonCount)).ToList(),
+                    i.AgainstReasonCount,
+                    OrganisationsOf(i))).ToList(),
                 r.SentCount,
                 r.SentAt,
                 r.DueAt,

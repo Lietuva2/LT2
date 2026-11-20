@@ -153,7 +153,16 @@ public sealed record OrganisationManagementResponse(
     string? DomainConfirmation,
     string? WebsiteHost,
     IReadOnlyList<RepresentedStatementResponse> Statements,
-    string? Refusal);
+    string? Refusal)
+{
+    /// <summary>
+    /// When a moderator kept the organisation out of summaries to MPs (design 8.14.9), with the moderator's statement; null while
+    /// it may be named in them. In the representatives' own answer only.
+    /// </summary>
+    public DateTimeOffset? KeptOutOfSummariesAt { get; init; }
+
+    public string? KeptOutStatement { get; init; }
+}
 
 /// <summary>One organisation the caller represents on a bill: its statement there (if any) and why it cannot publish now.</summary>
 public sealed record MyBillOrganisationResponse(Guid OrganisationId, string Slug, string Name, string Status, OrganisationLabelResponse Label, StatementResponse? Statement, string? Refusal)
@@ -263,7 +272,8 @@ public sealed record QueueOrganisationResponse(
     IReadOnlyList<ProfileChangeResponse> History,
     string? ConfirmationNote,
     bool DomainBarred,
-    DateTimeOffset RegisteredAt);
+    DateTimeOffset RegisteredAt,
+    bool KeptOutOfSummaries = false);
 
 /// <summary>A statement for a moderator: waiting, flagged, reported or not yet seen. Never who wrote it.</summary>
 public sealed record QueueStatementResponse(
@@ -292,4 +302,11 @@ public sealed record HiddenOrganisationResponse(Guid Id, string Slug, string Nam
 public sealed record HiddenStatementResponse(
     Guid Id, BillRefResponse Bill, string OrganisationName, string Stance, string Text, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
-public sealed record HiddenOrganisationsResponse(IReadOnlyList<HiddenOrganisationResponse> Organisations, IReadOnlyList<HiddenStatementResponse> Statements);
+/// <summary>
+/// An organisation a moderator keeps out of summaries to MPs (design 8.14.9), with who, when and why, and "Vėl įtraukti į
+/// suvestines"; on the site it is shown as before. <c>Status</c>: <c>active</c> or <c>blocked</c>.
+/// </summary>
+public sealed record KeptOutOrganisationResponse(Guid Id, string Slug, string Name, string Status, DateTimeOffset KeptOutAt, string? KeptOutBy, string? Statement);
+
+public sealed record HiddenOrganisationsResponse(
+    IReadOnlyList<HiddenOrganisationResponse> Organisations, IReadOnlyList<HiddenStatementResponse> Statements, IReadOnlyList<KeptOutOrganisationResponse>? KeptOut = null);

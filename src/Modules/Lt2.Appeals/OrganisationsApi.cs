@@ -103,7 +103,16 @@ public sealed record OrganisationManagement(
     string? DomainConfirmation,
     string? WebsiteHost,
     IReadOnlyList<RepresentedStatement> Statements,
-    string? Refusal);
+    string? Refusal)
+{
+    /// <summary>
+    /// When a moderator kept the organisation out of summaries to MPs (design 8.14.9), with the moderator's statement: told to
+    /// its representatives only, never public.
+    /// </summary>
+    public DateTimeOffset? KeptOutOfSummariesAt { get; init; }
+
+    public string? KeptOutStatement { get; init; }
+}
 
 /// <summary>
 /// One organisation the caller represents, on a bill: its statement there (any status but withdrawn) and, when it cannot
@@ -148,7 +157,8 @@ public sealed record QueueOrganisation(
     IReadOnlyList<ProfileChange> History,
     string? ConfirmationNote,
     bool DomainBarred,
-    DateTimeOffset RegisteredAt);
+    DateTimeOffset RegisteredAt,
+    bool KeptOutOfSummaries = false);
 
 /// <summary>A statement for a moderator: waiting, flagged, reported, or not yet seen. Who wrote it is not shown.</summary>
 public sealed record QueueStatement(
@@ -184,7 +194,17 @@ public sealed record HiddenOrganisation(Guid Id, string Slug, string Name, DateT
 public sealed record HiddenStatement(
     Guid Id, BillFacts Bill, string OrganisationName, string Stance, string Text, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
-public sealed record HiddenOrganisationItems(IReadOnlyList<HiddenOrganisation> Organisations, IReadOnlyList<HiddenStatement> Statements);
+/// <summary>
+/// An organisation a moderator keeps out of summaries to MPs (design 8.14.9), on the moderators' list of hidden items with
+/// "Vėl įtraukti į suvestines"; on the site it is shown as before. <paramref name="Status"/>: <c>active</c> or <c>blocked</c>.
+/// </summary>
+public sealed record KeptOutOrganisation(Guid Id, string Slug, string Name, string Status, DateTimeOffset KeptOutAt, string? KeptOutBy, string? Statement);
+
+public sealed record HiddenOrganisationItems(IReadOnlyList<HiddenOrganisation> Organisations, IReadOnlyList<HiddenStatement> Statements)
+{
+    /// <summary>The organisations kept out of summaries, most recent first.</summary>
+    public IReadOnlyList<KeptOutOrganisation> KeptOut { get; init; } = [];
+}
 
 /// <summary>Organisations and their statements (design 8.14.14 stage A), for members and visitors.</summary>
 public interface IOrganisations
@@ -292,6 +312,15 @@ public interface IOrganisationModeration
 
     /// <summary>Withdraws any confirmation; after that only a moderator can confirm the organisation.</summary>
     Task<Result<Unit>> WithdrawConfirmationAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// "Neįtraukti į suvestines" (design 8.14.9): no summary to MPs names the organisation from now on, a prepared one not yet gone
+    /// included; on the site it stays as it was. Not on a closed one or one kept out already (<c>moderation.wrong-state</c>).
+    /// </summary>
+    Task<Result<Unit>> KeepOutOfSummariesAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>"Vėl įtraukti į suvestines": undoes it (<c>moderation.wrong-state</c> when it is not kept out).</summary>
+    Task<Result<Unit>> ReturnToSummariesAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>Publishes a waiting statement, or marks a published one seen ("Palikti"); its open reports close.</summary>
     Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);

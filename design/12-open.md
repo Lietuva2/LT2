@@ -33,8 +33,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
   8.24).
 - 8.13, 8.11.6: a reader of bills' official texts (`IBillTextSource` has only the "unavailable" source), so the AI
   summary job runs and makes nothing; the AI provider is off until configured.
-- 8.14.4: organisations named in the summaries to MPs. 8.14.9: "keep out of summaries" and the automatic check of an
-  organisation's website.
 
 ## Where the code does not do what a rule says
 
@@ -249,6 +247,18 @@ for the lawyer).
 
 ## Awaiting a native speaker
 
+- 8.14.4: the organisations' line under a bill in a summary, "Organizacijos, prašančios balsuoti už: A, B.", "Organizacijos,
+  prašančios balsuoti prieš: …", "Pastabų atsiuntė: …" (`EmailTemplates` and `AppealUi` `Digest.Organisations.*`); the
+  methodology's row "Organizacijos" and its value and the rewritten sentences on statements and impersonation
+  (`AppealText` `Method.Digests.Organisations*`, `Method.Organisations.2`, `.3`).
+- 8.14.9: keeping an organisation out of summaries: "Neįtraukti į suvestines", "Vėl įtraukti į suvestines", their sentences
+  and confirmations, the tag "Neįtraukiama į suvestines", the hidden list's "Organizacijos, neįtraukiamos į suvestines"
+  with its lead, the summaries screen's hint and confirmation (`AppealUi` `OrgMod.Action.keep-out|keep-in`,
+  `OrgMod.Sentence.*`, `OrgMod.Done.*`, `OrgMod.KeptOut`, `OrgMod.Hidden.KeptOut*`, `DigMod.KeepOutHint`, `DigMod.KeptOut`),
+  the representatives' note (`Org.Manage.KeptOut`), the moderation rules' sentence (`AppealText` `Rules.Organisations.2`)
+  and the two emails ("Lietuva 2.0: organizacija „{0}“ neįtraukiama į
+  suvestines Seimo nariams" and "…vėl įtraukiama…", `EmailTemplates` `Organisation.kept-out-of-summaries.*`,
+  `Organisation.back-in-summaries.*`).
 - 8.19.4: the welcome to an extra recipient, "Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo
   narys: {0}." (`EmailTemplates` `MpMail.extra-welcome.Body`), its stop link in the footer.
 - 8.19.3, 8.4: the summary's HTML-only link and figure labels (`EmailTemplates` `Digest.ForLabel` "Prašo balsuoti už", `Digest.AgainstLabel` "Prašo balsuoti prieš", `Digest.Older` "iš jų {0} – paskyros senesnės nei 30 d.", `Digest.AnswerButton` "Atsakyti visiems", `Digest.WholeReasonLabel` "Skaityti visą", `Digest.PublicCopyLabel` "Ši suvestinė viešai"); the text part no longer has "Visi skaičiai ir argumentai" beside another link to the same bill.

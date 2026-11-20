@@ -41,6 +41,15 @@ public static class BillTextLinks
     public static string ToReason(string billNumber, Guid reasonId) =>
         Page(billNumber) + "?" + ReasonParameter + "=" + reasonId.ToString("N", CultureInfo.InvariantCulture) + "#" + ReasonElement(reasonId);
 
+    /// <summary>The element id of an organisation's statement in "Organizacijų pozicijos" on the bill's page (design 8.14.3).</summary>
+    public static string StatementElement(Guid statementId) => "statement-" + statementId.ToString("D", CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// <c>/seimas/{number}#statement-{id}</c>: the statement on its bill's page (design 8.14.4, the summaries' line). Every
+    /// statement shown is on the page, so the fragment alone finds it.
+    /// </summary>
+    public static string ToStatement(string billNumber, Guid statementId) => Page(billNumber) + "#" + StatementElement(statementId);
+
     /// <summary>The id an address parameter names; null for anything that is not one.</summary>
     public static Guid? Parse(string? value) =>
         !string.IsNullOrEmpty(value) && (Guid.TryParseExact(value, "N", out var id) || Guid.TryParseExact(value, "D", out id)) ? id : null;

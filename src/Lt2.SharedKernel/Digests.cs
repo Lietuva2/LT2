@@ -15,6 +15,87 @@ public static class DigestReasonCount
 }
 
 /// <summary>
+/// An organisation named in a summary's line under a bill (design 8.14.4): its stance, its name and profile address, and the
+/// statement the name links to on the bill's page. Never the statement's text, never a representative.
+/// </summary>
+/// <param name="Stance">One of <see cref="StatementStances"/>.</param>
+public sealed record DigestOrganisation(string Stance, Guid OrganisationId, string Slug, string Name, Guid StatementId);
+
+/// <summary>
+/// An organisation's statement on a bill as the summaries read it from the Appeals module (design 8.14.4): what the line's
+/// rule (<see cref="DigestOrganisationRules"/>) decides by. No text, no person.
+/// </summary>
+/// <param name="StatementStatus">One of <see cref="StatementStatuses"/>.</param>
+/// <param name="OrganisationStatus">One of <see cref="OrganisationStatuses"/>.</param>
+/// <param name="Confirmed">"Patvirtinta": by its domain or by a moderator.</param>
+/// <param name="KeptOutOfSummaries">A moderator keeps the organisation out of summaries (design 8.14.9).</param>
+/// <param name="FirstPublicAt">When the statement first became public; null while it never was.</param>
+/// <param name="PublishedAt">When it was published: the order on the bill's page.</param>
+public sealed record DigestStatementFacts(
+    Guid StatementId,
+    Guid OrganisationId,
+    string Slug,
+    string Name,
+    string BillNumber,
+    string Stance,
+    string StatementStatus,
+    string OrganisationStatus,
+    bool Confirmed,
+    bool KeptOutOfSummaries,
+    DateTimeOffset? FirstPublicAt,
+    DateTimeOffset PublishedAt);
+
+/// <summary>
+/// The rule for the organisations' line under a bill in a summary (design 8.14.4, owner 2026-11-20). A statement is named
+/// when it is published now and was public when the summary was prepared (the moment its arguments were fixed), and its
+/// organisation is active (not blocked or closed), confirmed ("Patvirtinta") and not kept out of summaries by a moderator.
+/// The names are grouped by stance (asks to vote for, against, remarks) and, within a stance, in the order the bill's page
+/// shows them: the order published (design 8.14.3, 8.14.8: the same order rule for all).
+/// </summary>
+public static class DigestOrganisationRules
+{
+    public static bool Named(DigestStatementFacts statement, DateTimeOffset preparedAt)
+    {
+        ArgumentNullException.ThrowIfNull(statement);
+        return statement.StatementStatus == StatementStatuses.Published
+            && statement.FirstPublicAt is { } first && first <= preparedAt
+            && statement.OrganisationStatus == OrganisationStatuses.Active
+            && statement.Confirmed
+            && !statement.KeptOutOfSummaries
+            && StatementStances.All.Contains(statement.Stance);
+    }
+
+    /// <summary>The line of one bill: the organisations named, for, against, then remarks, each stance in the order published.</summary>
+    public static IReadOnlyList<DigestOrganisation> Line(IEnumerable<DigestStatementFacts> statements, DateTimeOffset preparedAt) =>
+        statements.Where(s => Named(s, preparedAt))
+            .OrderBy(s => IndexOf(s.Stance))
+            .ThenBy(s => s.PublishedAt)
+            .ThenBy(s => s.StatementId)
+            .Select(s => new DigestOrganisation(s.Stance, s.OrganisationId, s.Slug, s.Name, s.StatementId))
+            .ToList();
+
+    /// <summary>The line of each bill (compared without case), from statements on several bills; a bill with none named is missing.</summary>
+    public static IReadOnlyDictionary<string, IReadOnlyList<DigestOrganisation>> ByBill(IEnumerable<DigestStatementFacts> statements, DateTimeOffset preparedAt) =>
+        statements.GroupBy(s => s.BillNumber, StringComparer.OrdinalIgnoreCase)
+            .Select(g => (g.Key, Line: Line(g, preparedAt)))
+            .Where(x => x.Line.Count > 0)
+            .ToDictionary(x => x.Key, x => x.Line, StringComparer.OrdinalIgnoreCase);
+
+    private static int IndexOf(string stance)
+    {
+        for (var i = 0; i < StatementStances.All.Count; i++)
+        {
+            if (StatementStances.All[i] == stance)
+            {
+                return i;
+            }
+        }
+
+        return StatementStances.All.Count;
+    }
+}
+
+/// <summary>
 /// A record as the summaries see it now (design 8.4): both sides with the counts for accounts older than 30 days, the
 /// threshold, the surge note and the planned date. Its arguments come from <see cref="IDigestSource.ReasonPoolAsync"/>.
 /// </summary>
@@ -60,6 +141,12 @@ public interface IDigestSource
     /// preparation. Whether a moderator has seen one does not matter.
     /// </summary>
     Task<IReadOnlyList<DigestPoolReason>> ReasonPoolAsync(IReadOnlyCollection<Guid> recordIds, DateTimeOffset publishedBy, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The organisations' statements published now on the given bills (design 8.14.4), with their organisations' state, for
+    /// the line under each bill (<see cref="DigestOrganisationRules"/> decides which are named). Never a text or a person.
+    /// </summary>
+    Task<IReadOnlyList<DigestStatementFacts>> OrganisationStatementsAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
 
     /// <summary>Per record and party, the supporters on each side, with every group under 20 already withheld.</summary>
     Task<IReadOnlyDictionary<Guid, IReadOnlyList<PartyNumbers>>> PartyNumbersAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken);

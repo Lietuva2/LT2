@@ -65,6 +65,18 @@ internal sealed class Organisation
     public DateTimeOffset? ClosedAt { get; set; }
 
     /// <summary>
+    /// When a moderator kept the organisation out of summaries to MPs (design 8.14.9); null while it may be named in them. It
+    /// changes nothing on the site. Never public: its representatives see it on their own part of the profile.
+    /// </summary>
+    public DateTimeOffset? KeptOutOfSummariesAt { get; set; }
+
+    /// <summary>The moderator who kept it out of summaries. Never public.</summary>
+    public Guid? KeptOutByUserId { get; set; }
+
+    /// <summary>The moderator's statement for keeping it out of summaries, for its representatives and the moderators.</summary>
+    public string? KeptOutStatement { get; set; }
+
+    /// <summary>
     /// When a moderator last looked; null while new, or changed in its name or website, or in its description when
     /// pre-screening flags the new one (design 6.8), so it is in the queue.
     /// </summary>

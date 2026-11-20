@@ -7,7 +7,7 @@
    The line right above the bubble is always the organisation's name, where the bubble's tail points (owner, 2026-11-18;
    design 8.16.3): the stance stands above the name as a small line, the label ("Patvirtinta", with its hint) under the
    bubble with the link, the goal and the dates. *@
-<article class="said statement" id="@(IdPrefix)statement-@Statement.Id" aria-label="@(Name ?? L["Org.Statement"])">
+<article class="said statement" id="@(IdPrefix + Lt2.Api.Contracts.Comments.BillTextLinks.StatementElement(Statement.Id))" aria-label="@(Name ?? L["Org.Statement"])">
     @if (ShowStance)
     {
         <p class="said__side"><span class="@OrganisationWords.StanceClass(Statement.Stance)">@L["Org.Stance." + Statement.Stance]</span></p>

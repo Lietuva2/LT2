@@ -122,6 +122,13 @@ internal sealed class DigestItem
 
     /// <summary>The arguments as JSON: side, text, "Man svarbu" count; no author.</summary>
     public string Reasons { get; set; } = "[]";
+
+    /// <summary>
+    /// The organisations' line as JSON (design 8.14.4): per organisation named, its stance, id, profile address, name and the
+    /// statement its name links to; never the statement's text. Written when the summary goes; null in a prepared one and in a
+    /// snapshot made before the line was kept, which then show none.
+    /// </summary>
+    public string? Organisations { get; set; }
 }
 
 /// <summary>

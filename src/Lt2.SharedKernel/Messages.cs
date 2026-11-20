@@ -240,8 +240,14 @@ public static class OrganisationNotices
     public const string CommentHidden = "comment-hidden";
     public const string CommentRestored = "comment-restored";
 
+    /// <summary>A moderator keeps the organisation out of summaries to MPs, or takes it back in (design 8.14.9).</summary>
+    public const string KeptOutOfSummaries = "kept-out-of-summaries";
+
+    public const string BackInSummaries = "back-in-summaries";
+
     public static readonly IReadOnlyList<string> All =
-        [Blocked, Unblocked, Kept, Confirmed, ConfirmationWithdrawn, StatementPublished, StatementKept, StatementHidden, StatementRestored, CommentHidden, CommentRestored];
+        [Blocked, Unblocked, Kept, Confirmed, ConfirmationWithdrawn, StatementPublished, StatementKept, StatementHidden, StatementRestored, CommentHidden, CommentRestored,
+            KeptOutOfSummaries, BackInSummaries];
 }
 
 

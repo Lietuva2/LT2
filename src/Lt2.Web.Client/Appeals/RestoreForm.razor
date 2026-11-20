@@ -10,14 +10,14 @@
         @if (_done is null)
         {
             <div class="row">
-                <button type="button" class="btn btn--plain" id="@($"{IdPrefix}-open-{Id}")" disabled="@(Locked || !Allowed)" @onclick="() => _open = true">@L["Hidden.Restore"]</button>
+                <button type="button" class="btn btn--plain" id="@($"{IdPrefix}-open-{Id}")" disabled="@(Locked || !Allowed)" @onclick="() => _open = true">@(Label ?? L["Hidden.Restore"])</button>
             </div>
         }
     }
     else
     {
         <form class="sheet sheet--quiet stack stack--tight" @onsubmit="RestoreAsync" novalidate aria-labelledby="@($"{IdPrefix}-title-{Id}")">
-            <h4 id="@($"{IdPrefix}-title-{Id}")">@L["Hidden.Restore"]</h4>
+            <h4 id="@($"{IdPrefix}-title-{Id}")">@(Label ?? L["Hidden.Restore"])</h4>
             <p class="small">@Sentence</p>
             <div class="field @ErrorClass("statement")">
                 <label for="@StatementId">@StatementLabel</label>
@@ -26,7 +26,7 @@
                 <FieldError Errors="Errors" Field="statement" For="@StatementId" />
             </div>
             <div class="row">
-                <button type="submit" class="btn" id="@($"{IdPrefix}-submit-{Id}")" disabled="@Locked">@L["Hidden.Restore"]</button>
+                <button type="submit" class="btn" id="@($"{IdPrefix}-submit-{Id}")" disabled="@Locked">@(Label ?? L["Hidden.Restore"])</button>
                 <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = false">@L["Cancel"]</button>
             </div>
         </form>
@@ -53,6 +53,12 @@
     /// <summary>False when the server would refuse now; the reason is shown beside the item.</summary>
     [Parameter] public bool Allowed { get; set; } = true;
 
+    /// <summary>The action's name on its button and heading when it is not "Atkurti" (design 8.14.9: "Vėl įtraukti į suvestines").</summary>
+    [Parameter] public string? Label { get; set; }
+
+    /// <summary>The confirmation when it is not "Atkurta".</summary>
+    [Parameter] public string? Done { get; set; }
+
     /// <summary>The restoring call itself.</summary>
     [Parameter, EditorRequired] public Func<StatementRequest, Task<ApiResult>> Restore { get; set; } = default!;
 
@@ -66,6 +72,6 @@
         }
 
         _open = false;
-        _done = L["Hidden.Restored"];
+        _done = Done ?? L["Hidden.Restored"];
     });
 }
