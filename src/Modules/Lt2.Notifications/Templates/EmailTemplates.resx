@@ -215,7 +215,7 @@
   <data name="MpMail.extra-confirmed.Subject" xml:space="preserve"><value>Lietuva 2.0: papildomas gavėjas patvirtintas</value></data>
   <data name="MpMail.extra-confirmed.Body" xml:space="preserve"><value>nuo šiol suvestinių kopijos siunčiamos ir papildomu adresu: {1}. Seimo narys: {0}.</value></data>
   <data name="MpMail.extra-welcome.Subject" xml:space="preserve"><value>Lietuva 2.0: gausite Seimo nario suvestinių kopijas</value></data>
-  <data name="MpMail.extra-welcome.Body" xml:space="preserve"><value>Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo narys: {0}. Kiekvienoje kopijoje bus nuoroda „Nebegauti kopijų“; ja galite atsisakyti ir dabar: {2}</value></data>
+  <data name="MpMail.extra-welcome.Body" xml:space="preserve"><value>Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo narys: {0}.</value></data>
   <data name="MpMail.extra-removed.Subject" xml:space="preserve"><value>Lietuva 2.0: papildomas gavėjas pašalintas</value></data>
   <data name="MpMail.extra-removed.Body" xml:space="preserve"><value>suvestinių kopijos papildomu adresu nebesiunčiamos: {1}. Seimo narys: {0}.</value></data>
   <data name="Follow.Member.Subject.argument" xml:space="preserve"><value>Lietuva 2.0: {0} paskelbė argumentą dėl {1}</value></data>

@@ -76,7 +76,13 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         }
 
         blocks.Add(Signature());
-        return EmailLayout.BuildMp(model.To, l[$"MpMail.{model.Notice}.Subject"], blocks, EmailLayout.Footer(l, site.Value.Address), null);
+
+        // The welcome to an extra recipient carries its stop link where every copy carries it, in the footer (owner,
+        // 2026-11-20): the letter says what happened, the way out stays at hand without being spelled out.
+        var footer = model.Notice == MpMailNotices.ExtraWelcome && link.Length > 0
+            ? l.Format("Digest.CopyStop", link) + "\n" + EmailLayout.Footer(l, site.Value.Address)
+            : EmailLayout.Footer(l, site.Value.Address);
+        return EmailLayout.BuildMp(model.To, l[$"MpMail.{model.Notice}.Subject"], blocks, footer, null);
     }
 
     /// <summary>The subject and paragraphs of one MP's summary: the email's text part.</summary>
