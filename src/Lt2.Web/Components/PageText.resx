@@ -58,6 +58,7 @@
   <data name="Agenda.OlderNote" xml:space="preserve"><value>Skliaustuose – kiek iš jų paskyrų senesnės nei 30 d.</value></data>
   <data name="Agenda.All" xml:space="preserve"><value>Visa darbotvarkė →</value></data>
   <data name="Home.Coming" xml:space="preserve"><value>Artimiausiu metu Seime</value></data>
+  <data name="Home.Recent" xml:space="preserve"><value>Neseniai balsuota</value></data>
 <data name="Agenda.TakingPartClosed" xml:space="preserve"><value>Dalyvavimas uždarytas</value></data>
   <data name="Home.Lead" xml:space="preserve"><value>Matykite, ką Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko prašote.</value></data>
   <data name="Home.HaveCode" xml:space="preserve"><value>Turite kvietimo kodą?</value></data>

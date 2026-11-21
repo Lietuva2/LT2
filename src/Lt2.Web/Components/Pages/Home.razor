@@ -161,6 +161,14 @@
             <PlannedDay Page="AgendaPaging.Front" Day="day" View="view" First="AgendaRules.FrontPerDay" Planned="_grownPlanned" Voted="_grownVoted" Member="member" Numbers="_numbers" />
         }
 
+        // Owner, 2026-11-21: the planned days run forward and the voted days back, so the voted ones stand under a heading of
+        // their own, as on the agenda page; without a vote in the last seven days the heading says so under it.
+        <h3 class="home-recent" id="h-home-recent">@T["Home.Recent"]</h3>
+        if (_voted.Count == 0)
+        {
+            <p id="home-no-recent">@T["Agenda.NoRecent"]</p>
+        }
+
         foreach (var (day, view) in _voted)
         {
             <VotedDay Page="AgendaPaging.Front" Day="day" View="view" First="AgendaRules.FrontPerDay" Planned="_grownPlanned" Voted="_grownVoted" Member="member" Numbers="_numbers" />
