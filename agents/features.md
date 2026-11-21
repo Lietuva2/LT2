@@ -643,7 +643,20 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   "Kaip balsavo Seimo nariai".
   The figures are one component (`Lt2.Web.Client/Agenda/RecordFigures`, with `SplitBar` in `Lt2.Web.Client/Components`),
   rendered by the server and by the island; with a side and a copy that says zero, the island reads the live numbers once on
-  start. The server keeps the front page's agenda in memory for 60 s (`FrontPageAgenda`; a test removes
+  start. **A reached row names its summary's day (design 8.12.2, owner 2026-11-21):** "suvestinė planuojama {day}" /
+  "suvestinė išsiųsta {day}" (`AppealUi` `Agenda.Summary.planned|sent`) in the `nowrap` part that otherwise says "riba
+  pasiekta", from `AgendaRecordResponse.Summary` (`RecordSummaryResponse(Kind, Day)`, kinds `RowSummaryKinds` in
+  `SharedKernel/DigestCodes.cs`). The pure rule is `Lt2.Web.Client/Agenda/RowSummaryRules` (`RowSummaryRulesTests`): open
+  record: planned day, else last really sent; closed: last sent only; no trial variants, a dry run never counts. The host
+  composes it in `RowSummaries` (`Lt2.Web/Services/RowSummaryServices.cs`) for `AgendaReads` and `GET /api/v1/appeals`
+  (`/projektai`, `AppealList`'s `#reached-{number}` in place of "riba {N}"): one `IDigests.SummaryDaysAsync` call per list
+  for the reached rows (Notifications: the planned day by the same batch as `NextForRecordAsync`, `IDigestSource.CandidatesAsync(ids)`
+  from Appeals, and the last `sent` run; a constant number of queries, not one per row), cached with the agenda. `MyAgendaSide`
+  keeps the page's summary on its live numbers; a threshold first reached by the member's own side asks
+  `GET …/record/digests/next` once (`MyAgendaTests`). The bill's page (`ThresholdProgress`) says "Projektas jau buvo
+  suvestinėje Seimo nariams – balsuoti prašo {n} …" (`Threshold.Summarised.*`, `Threshold.SummarisedClosed.*`) when
+  `EnteredSummaries` and the participants are under the threshold. Tests over HTTP: `DigestTests` (planned, prepared, dry
+  run stays "riba pasiekta"), `MpSendingTests` (sent; the page's line after the threshold is raised). The server keeps the front page's agenda in memory for 60 s (`FrontPageAgenda`; a test removes
   `FrontPageAgenda.CacheKey` instead of waiting). A side taken, changed or withdrawn marks the copy out of date
   (`FrontPageFreshness`, marked by `TakingSides` for every API client): the first request once the copy is 2 s old reads
   the agenda again; other changes wait for the minute. The agenda page reads the same copy (`ServerAgendaApi`; a side marks

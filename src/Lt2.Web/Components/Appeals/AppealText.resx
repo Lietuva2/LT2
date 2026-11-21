@@ -163,6 +163,9 @@
 <data name="What.Source.ai-draft" xml:space="preserve"><value>Sukurta DI · taisė žmonės</value></data>
 <data name="What.Source.moderator" xml:space="preserve"><value>Parašė moderatorius</value></data>
 <data name="List.Limit" xml:space="preserve"><value>riba {0}</value></data>
+<data name="List.Reached" xml:space="preserve"><value>riba pasiekta</value></data>
+<data name="List.Summary.planned" xml:space="preserve"><value>suvestinė planuojama {0}</value></data>
+<data name="List.Summary.sent" xml:space="preserve"><value>suvestinė išsiųsta {0}</value></data>
 <data name="Method.Organisations" xml:space="preserve"><value>Organizacijų pozicijos</value></data>
 <data name="Method.Organisations.1" xml:space="preserve"><value>Organizacija – asociacija, profesinė sąjunga, įmonė, partija, bendruomenė ar grupė be juridinio asmens statuso – gali paskelbti savo poziciją dėl Seimo projekto: prašo balsuoti už, prieš arba teikia pastabų. Ją registruoja ir jos vardu rašo nariai, jos atstovai; iš anksto niekas jos netvirtina, moderatoriai peržiūri po to. Atstovų vardai viešai nerodomi.</value></data>
 <data name="Method.Organisations.2" xml:space="preserve"><value>Pozicija nėra dalyvio balsas: ji neskaičiuojama tarp dalyvių, nepriartina projekto prie ribos ir neturi „Man svarbu“. Suvestinėse Seimo nariams po projekto argumentų minimi tik patvirtintų organizacijų pavadinimai pagal jų poziciją, su nuoroda į ją, be pozicijos teksto. Organizacija gali nurodyti tikslą – kiek dalyvių savo pusėje ji siekia, – bet tai tik jos pačios tikslas savo nariams ir rėmėjams.</value></data>

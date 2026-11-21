@@ -55,15 +55,20 @@ internal sealed class DigestSource(
         CandidatesOfAsync(null, cancellationToken);
 
     public async Task<DigestCandidate?> CandidateAsync(Guid recordId, CancellationToken cancellationToken) =>
-        (await CandidatesOfAsync(recordId, cancellationToken)).SingleOrDefault();
+        (await CandidatesOfAsync([recordId], cancellationToken)).SingleOrDefault();
 
-    /// <summary>Every open record, or only <paramref name="recordId"/> while it is open.</summary>
-    private async Task<IReadOnlyList<DigestCandidate>> CandidatesOfAsync(Guid? recordId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<DigestCandidate>> CandidatesAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(recordIds);
+        return recordIds.Count == 0 ? [] : await CandidatesOfAsync(recordIds.Distinct().ToList(), cancellationToken);
+    }
+
+    /// <summary>Every open record, or only those of <paramref name="recordIds"/> that are open.</summary>
+    private async Task<IReadOnlyList<DigestCandidate>> CandidatesOfAsync(List<Guid>? recordIds, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var appeals = await db.BillRecords.AsNoTracking()
-            .Where(a => a.Status == BillRecordStatuses.Open && (recordId == null || a.Id == recordId))
-            .ToListAsync(cancellationToken);
+        var open = db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Open);
+        var appeals = await (recordIds is null ? open : open.Where(a => recordIds.Contains(a.Id))).ToListAsync(cancellationToken);
         if (appeals.Count == 0)
         {
             return [];

@@ -72,13 +72,37 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             html.ShouldContain($"Suvestinė planuojama {planned:yyyy-MM-dd}; kol vyksta bandymas, Seimo nariams ji nesiunčiama.");
             html.ShouldNotContain("class=\"ruler\"", customMessage: "the ruler gives way to the words");
 
+            // Owner, 2026-11-21: the rows name the same planned day in place of "riba pasiekta", with no trial variant.
+            var plannedLine = $"suvestinė planuojama {planned:yyyy-MM-dd}";
+            (await stranger.AgendaRecordAsync(AppealSteps.ThirdBill)).Summary.ShouldBe(new RecordSummaryResponse("planned", planned));
+            var row = await Factory.AgendaRowAsync(stranger, AppealSteps.ThirdBill, monday.AddDays(3));
+            row.ShouldContain("2</b> dalyviai ·</span> <span class=\"nowrap\">" + plannedLine + "</span>", customMessage: "a part of its own, after the participants");
+            row.ShouldNotContain("riba pasiekta");
+            row.ShouldNotContain("bandym", Case.Insensitive);
+            (await stranger.ProjectsItemAsync(AppealSteps.ThirdBill)).Summary.ShouldBe(new RecordSummaryResponse("planned", planned));
+            var listed = await stranger.ProjectsRowAsync(AppealSteps.ThirdBill);
+            listed.ShouldContain(plannedLine);
+            listed.ShouldNotContain("riba 2", customMessage: "a reached threshold is said in words, without its number");
+
             (await RunDueAsync(At(monday.AddDays(-1), 7, 15))).ShouldContain(r => r.Status == "prepared");
             (await stranger.GetJsonAsync<RecordNextDigestResponse>(path)).Day.ShouldBe(monday, "the prepared summary holds it: its own day");
+            (await Factory.AgendaRowAsync(stranger, AppealSteps.ThirdBill, monday.AddDays(3))).ShouldContain($"suvestinė planuojama {monday:yyyy-MM-dd}");
 
             (await RunDueAsync(At(monday, 7, 15))).ShouldContain(r => r.Status == "dry-run");
             (await stranger.GetJsonAsync<RecordNextDigestResponse>(path)).Day.ShouldBeNull("the week's summary held it for its sitting; nothing changed since");
             html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
             html.ShouldContain($"Bandomoji suvestinė sudaryta {monday:yyyy-MM-dd}; Seimo nariams ji nesiųsta.");
+            html.ShouldContain("Riba pasiekta – balsuoti prašo 2 dalyviai.", customMessage: "a dry run does not count as a summary sent");
+
+            // A dry run is not "išsiųsta" (owner, 2026-11-21): with nothing planned and none sent the rows say "riba pasiekta".
+            (await stranger.AgendaRecordAsync(AppealSteps.ThirdBill)).Summary.ShouldBeNull();
+            row = await Factory.AgendaRowAsync(stranger, AppealSteps.ThirdBill, monday.AddDays(3));
+            row.ShouldContain("<span class=\"nowrap\">riba pasiekta</span>");
+            row.ShouldNotContain("suvestinė");
+            (await stranger.ProjectsItemAsync(AppealSteps.ThirdBill)).Summary.ShouldBeNull();
+            listed = await stranger.ProjectsRowAsync(AppealSteps.ThirdBill);
+            listed.ShouldContain(">riba pasiekta</span>");
+            listed.ShouldNotContain("suvestinė");
         }
         finally
         {

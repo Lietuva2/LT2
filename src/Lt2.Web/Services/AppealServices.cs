@@ -110,7 +110,7 @@ internal static class AppealMapping
 /// Server-side <see cref="IAppealsApi"/> (design 3.1): the server-rendered pages and the prerendered interactive
 /// components call the module in-process, as the signed-in person of the current request.
 /// </summary>
-internal sealed class ServerAppealsApi(IAppealsModule appeals, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
+internal sealed class ServerAppealsApi(IAppealsModule appeals, RowSummaries list, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
 {
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 
@@ -118,7 +118,7 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, TakingSides sides
         ApiResult<AppealRulesResponse>.Ok(AppealMapping.Map(await appeals.RulesAsync(cancellationToken)));
 
     public async Task<ApiResult<BillListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, int? limit = null, CancellationToken cancellationToken = default) =>
-        ApiResult<BillListResponse>.Ok(AppealMapping.Map(await appeals.ListAsync(new BillListQuery(search, planned, closed, cursor, sort, BillListLimits.Of(limit?.ToString(System.Globalization.CultureInfo.InvariantCulture))), cancellationToken)));
+        ApiResult<BillListResponse>.Ok(await list.ListAsync(new BillListQuery(search, planned, closed, cursor, sort, BillListLimits.Of(limit?.ToString(System.Globalization.CultureInfo.InvariantCulture))), cancellationToken));
 
     public async Task<ApiResult<BillRecordResponse>> GetRecordAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await appeals.GetAsync(number, cancellationToken), AppealMapping.Map);

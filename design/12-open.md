@@ -318,6 +318,9 @@ for the lawyer).
 - 8.12.2: the reached threshold, "Riba pasiekta – …" (`AppealUi` `Threshold.Reached.*`, `Threshold.ReachedClosed.*`)
   and "Suvestinė Seimo nariams planuojama …" (`Threshold.Next`), also for the owner's look; the threshold hint's answer
   "Riba – dalyvių skaičius …".
+- 8.12.2: "Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašo …" (`AppealUi` `Threshold.Summarised.*`,
+  `Threshold.SummarisedClosed.*`) and the rows' "suvestinė planuojama …" and "suvestinė išsiųsta …" (`AppealUi`
+  `Agenda.Summary.*`, `AppealText` `List.Summary.*`, `List.Reached`).
 - 8.15: texts applied in the `.resx` files with no native reading recorded: the registration form's lead and its "Kaip
   tai veikia" items; the shortened lines of the bill's page (`Share.Lead`, `Side.Private`, `Reasons.SimilarText`,
   `Org.Section`, `Org.Form`, `Org.Mine`); the organisation's profile and code texts; the account's texts

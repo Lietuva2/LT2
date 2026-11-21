@@ -18,6 +18,7 @@
     <Using Include="Lt2.Api.Contracts.Comments.CommentStatuses" Alias="CommentStatuses" />
     <Using Include="Lt2.Api.Contracts.Comments.CommentVoices" Alias="CommentVoices" />
     <Using Include="Lt2.Api.Contracts.Digests.DigestRunStatuses" Alias="DigestRunStatuses" />
+    <Using Include="Lt2.Api.Contracts.Digests.RowSummaryKinds" Alias="RowSummaryKinds" />
     <Using Include="Lt2.Api.Contracts.Feedback.FeedbackKinds" Alias="FeedbackKinds" />
     <Using Include="Lt2.Api.Contracts.Feedback.FeedbackStatuses" Alias="FeedbackStatuses" />
     <Using Include="Lt2.Api.Contracts.Mps.PoliticianParts" Alias="PoliticianParts" />

@@ -23,3 +23,16 @@ public static class DigestRunStatuses
     /// <summary>At its time every bill it held was held by a moderator or no longer open: nothing went, nothing is public.</summary>
     public const string Dropped = "dropped";
 }
+
+/// <summary>
+/// The summary a list row names in place of "riba pasiekta" for a bill whose threshold is reached (design 8.12.2, owner
+/// 2026-11-21): the one planned that would hold it, or the last one really sent that held it.
+/// </summary>
+public static class RowSummaryKinds
+{
+    /// <summary>"suvestinė planuojama {day}": the day the next summary that would hold the bill is planned.</summary>
+    public const string Planned = "planned";
+
+    /// <summary>"suvestinė išsiųsta {day}": the day the last summary really sent to MPs that held the bill went.</summary>
+    public const string Sent = "sent";
+}

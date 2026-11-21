@@ -67,6 +67,13 @@ public sealed record RecordDigestResponse(Guid RunId, string Kind, DateOnly RunD
 public sealed record RecordNextDigestResponse(DateOnly? Day);
 
 /// <summary>
+/// The summary a list row names for a bill whose threshold is reached (design 8.12.2, owner 2026-11-21), in place of "riba
+/// pasiekta": <c>Kind</c> <c>planned</c> with the Vilnius day the next summary that would hold it is planned, or <c>sent</c>
+/// with the day the last summary really sent to MPs that held it went (<see cref="RowSummaryKinds"/>).
+/// </summary>
+public sealed record RecordSummaryResponse(string Kind, DateOnly Day);
+
+/// <summary>
 /// An argument of a summary on the moderators' screen (design 8.19.2): <paramref name="Id"/> while the summary is prepared (for
 /// "Paslėpti"), null once gone; <paramref name="Replacement"/>: it came in for a hidden one ("Įtrauktas vietoj paslėpto").
 /// </summary>

@@ -156,6 +156,12 @@ public sealed record DigestReview(
 public sealed record DigestPending(DateTimeOffset DueAt, int Bills, int Reasons);
 
 /// <summary>
+/// A record's summaries as a list row names them (design 8.12.2): the Vilnius day the next summary that would hold it is
+/// planned (none: not known, held, or the record is not open) and the Vilnius day of the last summary really sent that held it.
+/// </summary>
+public sealed record RecordSummaryDays(DateOnly? Planned, DateOnly? LastSent);
+
+/// <summary>
 /// Summaries to MPs (design 8.4, 8.7, 8.19): prepared for review by the rules, and gone at their time as design 8.19 says;
 /// nobody approves them (owner, 2026-11-17).
 /// </summary>
@@ -203,6 +209,13 @@ public interface IDigests
     /// (<c>DigestRules.NextSendingDay</c>); null when no such summary is known or the record is held or not open.
     /// </summary>
     Task<DateOnly?> NextForRecordAsync(Guid recordId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// For the rows of a list (design 8.12.2, owner 2026-11-21), in one read whatever their number: per given record, the day
+    /// the next summary holding it is planned (the rule of <see cref="NextForRecordAsync"/>) and the day of the last summary
+    /// really sent to MPs that held it (a dry run does not count). Every given record is in the answer.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, RecordSummaryDays>> SummaryDaysAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken);
 
     /// <summary>
     /// The moderators' summaries screen (design 8.19.2): the prepared summaries first, soonest first, each with its numbers now and

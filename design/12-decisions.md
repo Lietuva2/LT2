@@ -233,6 +233,12 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - One threshold for all bills, with a moderator's override; objections reach moderators by email, not through the
   product (8.12.2, 2026-11-14).
 - Hiding a record closes taking part on the bill; a bill once sent stays eligible (2026-11-14).
+- A reached bill's list rows (the front page, the agenda, `/projektai`) name the summary's day instead of "riba
+  pasiekta": "suvestinė planuojama {yyyy-MM-dd}" when one that would hold it is planned, else "suvestinė išsiųsta
+  {yyyy-MM-dd}" for the last one really sent, else "riba pasiekta"; the rows show everything as it would be live, with no
+  trial variants (no "bandomoji", a dry run is not "išsiųsta"). The bill's page names a bill reached only through an
+  earlier summary sent, its participants now under the threshold: "Projektas jau buvo suvestinėje Seimo nariams –
+  balsuoti prašo {n} dalyvių." (8.12.2, 2026-11-21).
 - Arguments are moderated on the bill's page too, with the queue's actions (8.12.3, 2026-11-14).
 - `/projektai` orders by activity (the default; a plain sum of participants and published arguments, which also picks
   the front page's cards), by planned date, or by the latest activity: the last side, argument, comment, organisation's
