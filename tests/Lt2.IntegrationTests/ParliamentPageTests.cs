@@ -58,6 +58,9 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
 
         html.IndexOf("Dabartiniai Seimo nariai", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("Buvę šios kadencijos Seimo nariai", StringComparison.Ordinal));
         html[html.IndexOf("Buvę šios kadencijos Seimo nariai", StringComparison.Ordinal)..].ShouldContain("Tadas Alksninis");
+        // Design 8.16.5 (owner, 2026-11-21): each group's heading row stays at the top of the screen.
+        ListHeadSteps.StickyRow(html, ">Dabartiniai Seimo nariai</h2>").ShouldBe("<div class=\"row list-head\"><h2>Dabartiniai Seimo nariai</h2></div>");
+        ListHeadSteps.StickyRow(html, ">Buvę šios kadencijos Seimo nariai</h2>").ShouldBe("<div class=\"row list-head\"><h2>Buvę šios kadencijos Seimo nariai</h2></div>");
 
         var filtered = await OkAsync("/seimo-nariai?frakcija=reformu-partijos-frakcija");
         filtered.ShouldContain("Rasta: 4");

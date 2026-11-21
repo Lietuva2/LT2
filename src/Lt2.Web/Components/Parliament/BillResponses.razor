@@ -21,7 +21,7 @@
 else if (_view is { Items.Count: > 0 } view)
 {
     <section class="sheet stack" id="atsakymai" aria-labelledby="h-responses">
-        <h2 id="h-responses">@F.T["Responses.Title"]</h2>
+        <div class="row list-head"><h2 id="h-responses">@F.T["Responses.Title"]</h2></div>
         @if (view.Counts.Answered > 0)
         {
             <p class="small num" id="responses-counts">@F.T.Format("Responses.Counts", Display.Number(view.Counts.Answered), Display.Number(view.Counts.For), Display.Number(view.Counts.Against), Display.Number(view.Counts.Undecided))</p>

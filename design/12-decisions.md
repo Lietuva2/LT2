@@ -314,6 +314,11 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   and the front page's days, `/projektai`, the history of votes, a vote's ballots, an MP's votes, a member's texts,
   `/statistika`'s bills), a list of members' long texts adds 20 (arguments, comments, MPs' responses); the caps on a
   page stay (8.16.4, 2026-11-19).
+- Every public list's heading row stays at the top of the screen while its sheet scrolls past ("Jūsų projektai", the
+  MPs' list, a vote's ballots, a profile's lists and the rest). On a list page whose list's sheet has no heading of its
+  own (`/projektai`, the history of votes, an MP's votes and bills, `/organizacijos`) the page's head stays instead:
+  the title and the tab row under it; the lead and the filters scroll away, and the count line is an ordinary line
+  (8.16.5; owner, 2026-11-21).
 
 ## 8.19 Sending the summaries
 

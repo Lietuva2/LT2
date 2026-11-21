@@ -116,7 +116,7 @@
                     @if (p.Status == OrganisationStatuses.Active)
                     {
                         <section class="sheet stack" aria-labelledby="h-statements" id="statements">
-                            <h2 id="h-statements">@L["Org.Profile.Statements"]</h2>
+                            <div class="row list-head"><h2 id="h-statements">@L["Org.Profile.Statements"]</h2></div>
 
                             @if (p.Statements.Count == 0)
                             {
@@ -170,7 +170,7 @@
                     @if (p.History.Count > 0)
                     {
                         <section class="sheet stack stack--tight" aria-labelledby="h-history" id="history">
-                            <h2 id="h-history">@L["Org.Profile.History"]</h2>
+                            <div class="row list-head"><h2 id="h-history">@L["Org.Profile.History"]</h2></div>
                             @* Owner, 2026-11-18: newest first (the answer lists them oldest first); a name or a website is short, so a
                                change reads "A → B", not compared word by word. *@
                             <ul class="rows">

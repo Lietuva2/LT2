@@ -1056,25 +1056,71 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
    which keeps its heading on the first screen at 1280 px (design 8.7). */
 .home-agenda { margin-block-start: calc(var(--sp-6) - var(--sp-7)); }
 
-/* A list's heading row (design 8.16.5, owner 2026-11-21): the heading and the link beside it stay at the top of the screen
-   while their own sheet scrolls past and leave with it, on the sheet's colour with a rule under it, at every width. It
-   takes its padding out of the gap above it, so at rest the heading stands where it would. --list-head is the row's
-   height with one line of heading (the link beside it is lower than the heading); a day's date (from 54rem) stays just
-   under it, and a link that lands in the list (--list-landing) stops below it. Under 54rem the link may go under the
-   heading, so a landing leaves room for that line as well. */
-:root {
+/* A list's heading row (design 8.16.5, owner 2026-11-21): the sheet's first child, the heading and the link beside it,
+   stays at the top of the screen while its own sheet scrolls past and leaves with it, on the sheet's colour with a rule
+   under it, at every width. The row takes its padding out of the gap above it, so at rest the heading stands where it
+   would. --list-head is the row's height with one line of heading: an h2 row by default, an h3 row set on its sheet
+   (:has, below). A day's date (from 54rem) stays just under it; whatever a link lands on in the list (an element with an
+   id after the row, --list-landing) stops below it. Under 54rem the heading may take a second line and the link beside it go
+   under it (--list-wrap), so a landing leaves room for both. The lengths are declared on every sheet, so each sheet
+   works them out from its own row. */
+:root, .sheet {
   --list-head: calc(0.98 * var(--fs-5) + 2 * var(--sp-3) + 1px);
-  --list-landing: calc(var(--list-head) + var(--sp-4));
+  --list-wrap: 0px;
+  --list-landing: calc(var(--list-head) + var(--list-wrap) + var(--sp-4));
 }
+@media (max-width: 54rem) {
+  :root, .sheet { --list-wrap: calc(0.98 * var(--fs-5) + 1.5 * var(--fs-2) + var(--sp-3)); }
+}
+.sheet:has(> .list-head h3) { --list-head: calc(1.05 * var(--fs-4) + 2 * var(--sp-3) + 1px); }
 .list-head {
   position: sticky; top: 0; z-index: 2;
   min-height: var(--list-head);
   margin-block-start: calc(-1 * var(--sp-3)); padding-block: var(--sp-3);
   background: var(--sheet); border-bottom: 1px solid var(--rule);
 }
-@media (max-width: 54rem) {
-  :root { --list-landing: calc(var(--list-head) + 1.5 * var(--fs-2) + var(--sp-3) + var(--sp-4)); }
+.list-head ~ [id], .list-head ~ * [id] { scroll-margin-top: var(--list-landing); }
+
+/* A list page's head (design 8.16.5, owner 2026-11-21): where the list's sheet has no heading of its own, the page's
+   title and the tab row right under it (.page-head, a child of main, so it stays while the page's content scrolls past)
+   stay at the top of the screen on the ground's colour with a rule under it; the label above it, the lead and the filters
+   (.page-head__rest) scroll away. Its padding and rule are taken out of the gaps round it, so at rest everything stands
+   where it would in one .stack (main's gap is --sp-7, the head's neighbours --sp-5 away). --page-head is its height with
+   one line of title; the days' dates (from 54rem) stay just under it and whatever a link lands on after it stops below it.
+   Under 54rem the title is the h3's size and the padding smaller, so the head is about 105px tall on a phone with the tabs
+   (46px without); a landing leaves room for a second line of the title. */
+:root {
+  --page-head-pad: var(--sp-3);
+  --page-head-title: calc(0.98 * var(--fs-6));
+  --page-head-tabs: calc(1.5 * var(--fs-2) + 2 * var(--sp-1) + 4px);
+  --page-head-wrap: 0px;
+  --page-head: calc(var(--page-head-title) + 2 * var(--page-head-pad) + 1px);
 }
+main:has(> .page-head .project-tabs) {
+  --page-head: calc(var(--page-head-title) + var(--sp-5) + var(--page-head-tabs) + 2 * var(--page-head-pad) + 1px);
+}
+@media (max-width: 54rem) {
+  :root {
+    --page-head-pad: var(--sp-2);
+    --page-head-title: calc(0.98 * var(--fs-4));
+    --page-head-wrap: var(--page-head-title);
+  }
+  main > .page-head h1 { font-size: var(--fs-4); }
+}
+@media (max-width: 36rem) {
+  :root { --page-head-tabs: calc(1.5 * var(--fs-1) + 2 * var(--sp-1) + 4px); }
+}
+main > .page-head {
+  position: sticky; top: 0; z-index: 3;
+  min-height: var(--page-head);
+  margin-block: calc(-1 * var(--page-head-pad)) calc(-1 * var(--page-head-pad) - 1px);
+  padding-block: var(--page-head-pad);
+  background: var(--ground); border-bottom: 1px solid var(--rule);
+}
+main > * + .page-head { margin-block-start: calc(var(--sp-5) - var(--sp-7) - var(--page-head-pad)); }
+main > .page-head + .page-head__rest { margin-block-start: calc(var(--sp-5) - var(--sp-7)); }
+main > .page-head ~ * .tl-date { top: calc(var(--page-head) + var(--sp-4)); }
+main > .page-head ~ [id], main > .page-head ~ * [id] { scroll-margin-top: calc(var(--page-head) + var(--page-head-wrap) + var(--sp-4)); }
 
 /* The timeline: one block per sitting day, the day's date beside its bills, kept just under the list's heading row. */
 .tl-day {

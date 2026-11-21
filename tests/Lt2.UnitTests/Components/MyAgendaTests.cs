@@ -180,9 +180,24 @@ public sealed class MyAgendaTests : BunitContext
         var sided = panel.Find("#my-agenda-XVP-0412");
         sided.QuerySelector(".choice--for")!.TextContent.ShouldBe(Text("Mine.Side.for"));
         panel.FindAll("#my-agenda button").ShouldBeEmpty("no share link, a side or not (owner, 2026-11-19: the bill's page keeps it)");
+        // Design 8.16.5 (owner, 2026-11-21): the heading row is the sheet's first child and stays at the top of the screen.
+        panel.Find("#my-agenda > .row.list-head:first-child > #h-my-agenda").TextContent.ShouldBe(Text("Mine.Title"));
         _me.Calls.ShouldNotContain("GetInvitationAsync", "the panel reads no invitation");
         _bills.Calls.ShouldBe(["GetAsync"], "every listed bill is among the rows shown: one request");
         ((MyBillsQuery)_bills.Arguments[0][0]!).Numbers.ShouldBe(Numbers);
+    }
+
+    /// <summary>The member's own answer did not come: the panel says so under its heading, which stays at the top as ever.</summary>
+    [Fact]
+    public void A_panel_whose_answer_failed_says_so_under_its_sticky_heading()
+    {
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _follows.On("GetMineAsync", ApiResult<MyFollowsResponse>.Fail(new ApiProblem { Status = 500, Code = "server-error" }));
+
+        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Numbers, Numbers));
+
+        panel.WaitForAssertion(() => panel.Find("#my-agenda-failed > .row.list-head:first-child > #h-my-agenda").TextContent.ShouldBe(Text("Mine.Title")));
+        panel.FindAll("#my-agenda").ShouldBeEmpty();
     }
 
     /// <summary>

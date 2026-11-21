@@ -245,7 +245,7 @@
             }
 
             <section class="sheet stack" aria-labelledby="h-votes">
-                <h2 id="h-votes">@F.T["Bill.Votes"]</h2>
+                <div class="row list-head"><h2 id="h-votes">@F.T["Bill.Votes"]</h2></div>
                 @if (b.Votes.Count == 0)
                 {
                     <p>@F.T["Bill.NoVotes"]</p>
@@ -280,7 +280,7 @@
                     }
 
                     <section class="sheet stack stack--tight" aria-labelledby="h-digests" id="digests">
-                        <h3 id="h-digests">@A["Digests.OnAppeal.Heading"]</h3>
+                        <div class="row list-head"><h3 id="h-digests">@A["Digests.OnAppeal.Heading"]</h3></div>
                         @if (_digests.Count == 0)
                         {
                             <p class="small" id="no-digests">@A["Digests.OnAppeal.None"]</p>

@@ -15,10 +15,15 @@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@T["List.Title"]" Description="@P["Preview.Projects"]" />
 
-<div class="stack">
-    <p class="label">Lietuva 2.0</p>
+@* Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's head (the title and the tab
+   row) stays at the top of the screen while the list scrolls past; the label above it, the lead, the tabs of the list and
+   the search scroll away. *@
+<p class="label">Lietuva 2.0</p>
+<div class="stack page-head" id="page-head">
     <h1>@T["List.Title"]</h1>
     <ProjectTabs Current="ProjectTab.Bills" />
+</div>
+<div class="stack page-head__rest">
     <p class="lead">@T["List.Lead"]</p>
     <nav class="row tabs" aria-label="@T["List.Tabs"]">
         @if (Closed)

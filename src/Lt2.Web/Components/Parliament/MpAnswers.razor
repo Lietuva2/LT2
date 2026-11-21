@@ -10,7 +10,7 @@
 @if (_view is { Items.Count: > 0 } view)
 {
     <section class="sheet stack" id="atsakymai" aria-labelledby="h-answers">
-        <h2 id="h-answers">@F.T["Responses.ProfileTitle"]</h2>
+        <div class="row list-head"><h2 id="h-answers">@F.T["Responses.ProfileTitle"]</h2></div>
         <ol class="stack" id="answers-list">
             @for (var i = 0; i < _shown; i++)
             {

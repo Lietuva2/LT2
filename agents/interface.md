@@ -94,12 +94,19 @@ Read before changing a page, a component or an island. The rules behind it are d
   (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press, landing on the first row added). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the history of votes; the agenda's lists carry none (owner,
   2026-11-21).
-- **A list's heading row stays at the top of the screen (design 8.16.5, owner 2026-11-21):** the heading and the link
-  beside it in `div.row.list-head` as the sheet's first child (`position: sticky`, the sheet's colour, a `--rule` line
-  under it, CSS only). `--list-head` (its height) places the wide screen's sticky `.tl-date` under it, and
-  `--list-landing` is the `scroll-margin-top` of anything a link lands on in the list (`.tl-item`, `.tl-day`); a new
-  anchor in such a list takes it too. Used on the front page's and `/darbotvarke`'s two sheets; a list whose sheet has no
-  visible heading (`/projektai`, an MP's bills) has none.
+- **Every public list's heading row stays at the top of the screen (design 8.16.5, owner 2026-11-21):** a new public
+  list sheet puts its heading (h2, or h3 in a side column) and any link beside it in `div.row.list-head` as the sheet's
+  first child (`position: sticky`, the sheet's colour, a `--rule` line under it, CSS only). The lengths are declared on
+  every `.sheet`: `--list-head` (the row's height; an h3 row's sheet sets it itself through `:has`) places the wide
+  screen's sticky `.tl-date` under it, and `--list-landing` (plus `--list-wrap` under 54rem) is the `scroll-margin-top`
+  of every element with an id after the row, so a new anchor in the list needs nothing. Not for prose, a record's
+  details, forms or the bill page's side columns. **A list page whose list's sheet has no heading of its own** sticks
+  its page head instead: the h1 and a `<ProjectTabs>` right under it in `div.page-head#page-head` (`.stack` with the
+  tabs), a direct child of `main` (so it stays while the page's content scrolls past), on the ground's colour with the
+  rule; a label or crumbs above it stay outside, and the lead and the filters follow in `div.stack.page-head__rest`. Its
+  margins assume `main`'s `.stack--loose` gap. `--page-head` (one line of title, with or without the tabs, through
+  `main:has`) places the dates and the `scroll-margin-top` of every element with an id after it. The count line in the
+  sheet stays an ordinary line. Under 54rem the head's h1 is `--fs-4`.
 - **Lists of bills show one number a side and nothing under them (owner, 2026-11-21):** no count for accounts older than
   30 days in brackets, no note, no hint, no "not a representative poll"; those stay on the bill's page, the summaries,
   the statistics page and the methodology.

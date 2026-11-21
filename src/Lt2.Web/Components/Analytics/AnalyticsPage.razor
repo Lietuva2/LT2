@@ -327,7 +327,7 @@
     </div>
 
     <section class="sheet stack" aria-labelledby="h-unity" id="frakciju-vieningumas">
-        <h2 id="h-unity">@T["Unity.Title"]</h2>
+        <div class="row list-head"><h2 id="h-unity">@T["Unity.Title"]</h2></div>
         <p class="small">
             @T["Unity.Lead"]@(" ")
             <Lt2.Web.Client.Components.Hint Id="hint-faction-position" Text="@T["Unity.Hint"]" Answer="@T["Unity.Answer"]" More="/metodika#kaip-frakcija" />
@@ -389,7 +389,7 @@
 }
 
 <section class="sheet stack" aria-labelledby="h-mine" id="kas-balsuoja-kaip-jus">
-    <h2 id="h-mine">@T["Mine.Title"]</h2>
+    <div class="row list-head"><h2 id="h-mine">@T["Mine.Title"]</h2></div>
     <p class="small">@T["Mine.Lead"]</p>
     <MyAgreement @rendermode="InteractiveWebAssembly" />
 </section>

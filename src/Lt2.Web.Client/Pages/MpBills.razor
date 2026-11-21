@@ -14,12 +14,16 @@
    without the numbers. Nothing about other MPs. Asked for only in the browser. *@
 <PageTitle>@L["MpBills.PageTitle"]</PageTitle>
 
-<div class="stack">
-    <ol class="crumbs">
-        <li><a href="@AccountScreens.Taking">@L["MpBills.Account"]</a></li>
-        <li>@L["MpBills.Title"]</li>
-    </ol>
+@* Design 8.16.5 (owner, 2026-11-21): the list's sheet has no visible heading, so the page's title stays at the top of the
+   screen while the list scrolls past; the way back above it and the lead scroll away. *@
+<ol class="crumbs">
+    <li><a href="@AccountScreens.Taking">@L["MpBills.Account"]</a></li>
+    <li>@L["MpBills.Title"]</li>
+</ol>
+<div class="page-head" id="page-head">
     <h1>@L["MpBills.Title"]</h1>
+</div>
+<div class="stack page-head__rest">
     <NeedsScript />
     <p class="lead">@L["MpBills.Lead"]</p>
 </div>

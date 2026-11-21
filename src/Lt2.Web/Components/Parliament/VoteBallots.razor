@@ -6,7 +6,7 @@
    by ballot, shown a part at a time; the state is the page's address (a GET form like the MP list's, and plain links), so
    it works without JavaScript and a filtered list can be linked to. The filtering is BallotList's; this only draws it. *@
 <section class="sheet stack" id="balsai" aria-labelledby="h-ballots">
-    <h2 id="h-ballots">@F.T["Vote.Ballots"]</h2>
+    <div class="row list-head"><h2 id="h-ballots">@F.T["Vote.Ballots"]</h2></div>
     <form class="filters" method="get" action="@BallotList.Address(VoteId, null, null, null, null, "balsai")" role="search" id="ballot-search">
         @if (BallotList.SlugOf(_view.Choice) is { } slug)
         {

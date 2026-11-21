@@ -96,6 +96,9 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
         html.ShouldContain($"<section class=\"tl-day tl-past\"");
         html.ShouldContain($"id=\"diena-{day:yyyy-MM-dd}\"");
         html.ShouldContain("id=\"balsavimas-1\"");
+        // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's title stays at the top of
+        // the screen; the way back above it scrolls away.
+        ListHeadSteps.PageHead(html).ShouldMatch("^<div class=\"page-head\" id=\"page-head\"><h1>[^<]+: balsavimai</h1></div>$");
         html.ShouldContain($"href=\"/seimas/balsavimai/{all.Items[0].Vote.Id}\"");
         Regex.Count(html, "id=\"balsavimas-\\d+\"").ShouldBe(Math.Min(all.Items.Count, Lt2.Web.Client.Parliament.MpVotePaging.First));
         if (all.Items.Count > Lt2.Web.Client.Parliament.MpVotePaging.First)

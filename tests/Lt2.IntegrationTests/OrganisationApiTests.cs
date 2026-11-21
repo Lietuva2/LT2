@@ -42,12 +42,17 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/o/" + created.Slug));
         html.ShouldContain(name);
         html.ShouldContain("Nepatvirtinta");
+        // Design 8.16.5 (owner, 2026-11-21): the statements' heading row stays at the top of the screen; "about" is not a list.
+        ListHeadSteps.StickyRow(html, "id=\"h-statements\"").ShouldBe("<div class=\"row list-head\"><h2 id=\"h-statements\">Pozicijos dėl projektų</h2></div>");
+        html.ShouldContain("<h2 id=\"h-about\">");
         // Design 8.15: what this label means is answered in place (a hint), every label on the methodology page.
         AppealPageTests.HintOf(html, "label-meaning").ShouldBe(("Ką reiškia ši žyma?", "„Nepatvirtinta“: niekas nepatikrino, ar organizacija tikrai valdo nurodytą svetainę.", "/metodika#m-organisation-labels"));
         var listed = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/organizacijos?q=" + Uri.EscapeDataString(name)));
         listed.ShouldContain(name);
         // The labels repeat in the rows: what they mean is said once, beside the list.
         AppealPageTests.HintOf(listed, "labels-what").Trigger.ShouldBe("Ką reiškia žymos?");
+        // Design 8.16.5: the list's sheet has no heading of its own, so the page's title stays at the top of the screen.
+        ListHeadSteps.PageHead(listed).ShouldBe("<div class=\"page-head\" id=\"page-head\"><h1>Organizacijos</h1></div>");
 
         // A new organisation is in the moderators' queue to be looked at, not approved.
         var moderator = (await ModeratorAsync()).Browser;
@@ -162,6 +167,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         var newest = page.IndexOf("→ https://" + movedHost, StringComparison.Ordinal);
         newest.ShouldBeGreaterThan(0);
         newest.ShouldBeLessThan(page.IndexOf(oldName + " → " + newName, StringComparison.Ordinal));
+        ListHeadSteps.StickyRow(page, "id=\"h-history\"").ShouldStartWith("<div class=\"row list-head\"><h2 id=\"h-history\">");
 
         // Somebody who is not a representative cannot change it.
         var (other, _) = await Factory.MemberAsync();
