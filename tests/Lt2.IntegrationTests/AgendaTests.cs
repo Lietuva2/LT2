@@ -50,7 +50,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             third.Record.Counts.For.ShouldBe(1);
             third.Record.Threshold.Participants.ShouldBe(1);
 
-            // The page, without JavaScript: planned dates in words, never a countdown, and the not-a-poll notice.
+            // The page, without JavaScript: planned dates in words, never a countdown.
             ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
             html.ShouldContain("<h1>Seimo darbotvarkė</h1>");
@@ -66,11 +66,24 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             row.ShouldNotContain("Nurodyti, ko prašote");
             Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldNotContain("Ko prašo, argumentai");
             Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldContain($"id=\"home-counts-{today.AddDays(7):yyyy-MM-dd}-{AppealSteps.ThirdBill}\"");
+            // Owner, 2026-11-21: a list's row shows one number a side, without the count for accounts older than 30 days.
+            Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldMatch(
+                "id=\"home-counts-[0-9-]+" + AppealSteps.ThirdBill + "\">\\s*<span class=\"nowrap\"><span class=\"choice choice--for\">už</span> 1 ·</span>\\s*<span class=\"nowrap\"><span class=\"choice choice--against\">prieš</span> 0</span>\\s*</span>");
             html.ShouldNotContain("Dar niekas nenurodė");
             html.ShouldNotContain("Kreipimosi prašo");
             html.ShouldNotContain("/kreipimasis\"");
-            html.ShouldContain("Tai nėra reprezentatyvi apklausa");
             Countdown().IsMatch(html).ShouldBeFalse("never a countdown");
+
+            // Owner, 2026-11-21: two sheets with their heading rows (design 8.16.5); the coming list's heading has no link
+            // (this page is the whole agenda). Nothing under the lists: no note, no hint, no "not a representative poll".
+            ReasonsToComeSteps.HeadRow(html, "h-coming").ShouldNotContain("<a ");
+            ReasonsToComeSteps.HeadRow(html, "h-recent").ShouldContain("id=\"agenda-votes-older\"");
+            html.ShouldNotContain("Tai nėra reprezentatyvi apklausa");
+            html.ShouldNotContain("id=\"not-a-poll\"");
+            html.ShouldNotContain("id=\"agenda-older-note\"");
+            html.ShouldNotContain("Skliaustuose");
+            html.ShouldNotContain("id=\"threshold-what\"");
+            html.ShouldNotContain("Kas yra balsavusiųjų dauguma");
         }
         finally
         {
@@ -332,7 +345,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             block.ShouldContain($"<a class=\"show-more__link\" href=\"/?diena={today:yyyy-MM-dd}:55#agenda-{today:yyyy-MM-dd}-{known[AgendaRules.FrontPerDay].Number}\" id=\"{id}-more\">Rodyti daugiau</a>");
             block.ShouldNotContain("Rodyti likusius");
             Regex.Count(html, "<section class=\"tl-day\"").ShouldBeLessThanOrEqualTo(2, "the next two sitting days");
-            html.ShouldContain("<a href=\"/darbotvarke\">", customMessage: "one link to the whole agenda, by the heading");
+            ReasonsToComeSteps.HeadRow(html, "h-home-coming").ShouldContain("<a href=\"/darbotvarke\" id=\"home-agenda-all\">", customMessage: "one link to the whole agenda, beside the heading");
 
             known.Count.ShouldBeGreaterThan(55, "the day's known bills do not fit two pages");
             known.Count.ShouldBeLessThanOrEqualTo(105, "three pages hold them");

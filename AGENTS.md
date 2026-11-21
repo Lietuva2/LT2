@@ -140,8 +140,9 @@ A person's side on a bill is a political opinion: special-category data under GD
 - Nothing is worded as new or changed ("dabar", "nuo šiol", "nauja", "pasikeitė", "atnaujinta"): nobody has seen the site.
 - Neutral-to-positive towards politicians: connection and explanation, not control; "skirtumas" over "atotrūkis";
   neutral chips, not warning colours.
-- Numbers come from self-selected "Lietuva 2.0 naudotojai", never "the public" or a referendum; every place that shows
-  them says they are not a representative poll. Planned Seimas dates are "Planuojama …", never a countdown.
+- Numbers come from self-selected "Lietuva 2.0 naudotojai", never "the public" or a referendum; the bill's page, the
+  summaries (page and email), the statistics page and the methodology say they are not a representative poll; lists of
+  bills do not (owner, 2026-11-21). Planned Seimas dates are "Planuojama …", never a countdown.
 - Dates as numbers are `yyyy-MM-dd` (`HH:mm`, Vilnius); a date in a form is a text field in that format, never the
   browser's date control.
 - Terms: *kreipimasis* (appeal), *pozicija*, *argumentas* (reason), *atsakymas* (an MP's response), *suvestinė*

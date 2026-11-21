@@ -41,10 +41,13 @@ public sealed partial class StartPageTests : E2ETest
         await Assertions.Expect(page.Locator("main form")).ToHaveCountAsync(0);
         await Assertions.Expect(page.Locator("#my-agenda")).ToHaveCountAsync(0);
         await Assertions.Expect(page.Locator("#h-home-coming")).ToBeVisibleAsync();
-        await Assertions.Expect(page.Locator("#not-a-poll")).ToBeVisibleAsync();
+        // Owner, 2026-11-21: no "not a representative poll" under the lists; the bill's page has it.
+        await Assertions.Expect(page.Locator("#not-a-poll")).ToHaveCountAsync(0);
 
-        // Design 8.16: the agenda is on a sheet. Design 8.7 (owner, 2026-11-16): no block about organisations.
+        // Design 8.16: the agenda is on a sheet, the voted days on one of their own (owner, 2026-11-21). Design 8.7 (owner,
+        // 2026-11-16): no block about organisations.
         await Assertions.Expect(page.Locator("#home-coming")).ToHaveClassAsync(new Regex(@"\bsheet\b"));
+        await Assertions.Expect(page.Locator("#home-recent")).ToHaveClassAsync(new Regex(@"\bsheet\b"));
         await Assertions.Expect(page.Locator("main a[href='/organizacijos/nauja']")).ToHaveCountAsync(0);
 
         // Design 8.7 (owner, 2026-11-16): the trial note has the same left and right edges as the invented-data notice.
@@ -169,7 +172,7 @@ public sealed partial class StartPageTests : E2ETest
             // (design 8.11.2), and the mark under the title and the panel show it without a reload.
             await Assertions.Expect(page.Locator($"#home-counts-{place}")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
             var shown = Regex.Replace(await page.Locator($"#home-counts-{place}").InnerTextAsync(), @"[\s\u00A0\u202F]", "");
-            shown.ShouldStartWith("už" + await LiveForAsync(page, number) + "(", Case.Sensitive, "the bill's live numbers, the member's side among them");
+            shown.ShouldStartWith("už" + await LiveForAsync(page, number) + "·", Case.Sensitive, "the bill's live numbers, the member's side among them");
             await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate");
             await Assertions.Expect(row.Locator(".mine .choice--for")).ToBeVisibleAsync();
             await Assertions.Expect(page.Locator($"#my-agenda-{number}")).ToBeVisibleAsync();
@@ -204,7 +207,7 @@ public sealed partial class StartPageTests : E2ETest
             // 2026-11-18, has thousands): compared without the spaces.
             await Assertions.Expect(page.Locator($"#home-counts-{place}")).ToBeVisibleAsync();
             Regex.Replace(await page.Locator($"#home-counts-{place}").InnerTextAsync(), @"[\s\u00A0\u202F]", "")
-                .ShouldStartWith("už" + live.ToString(System.Globalization.CultureInfo.InvariantCulture) + "(", Case.Sensitive);
+                .ShouldStartWith("už" + live.ToString(System.Globalization.CultureInfo.InvariantCulture) + "·", Case.Sensitive);
             (await ServerCountAsync(page, place, number)).ShouldBe(live, "the server's page after a side, without waiting for the minute");
 
             // The other button changes it, with one press: no consent again.
@@ -563,7 +566,7 @@ public sealed partial class StartPageTests : E2ETest
         await Assertions.Expect(page.Locator(".intro-steps > li")).ToHaveCountAsync(4);
         await Assertions.Expect(page.Locator("#home-coming .tl-item").First).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#home-coming .tl-item a.btn").First).ToBeVisibleAsync();
-        await Assertions.Expect(page.Locator("#not-a-poll")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("#home-votes-older")).ToBeVisibleAsync();
     }
 
     /// <summary>"už" and "prieš" stand side by side in the row, both whole.</summary>
@@ -633,7 +636,7 @@ public sealed partial class StartPageTests : E2ETest
     /// </summary>
     private static async Task<int?> ServerCountAsync(IPage page, string place, string number)
     {
-        var pattern = new Regex("id=\"home-counts-" + Regex.Escape(place) + "\"[^>]*>\\s*<span class=\"nowrap\"><span class=\"choice choice--for\">[^<]*</span>\\s*([\\d\\u00A0 ]+?)\\s*\\(");
+        var pattern = new Regex("id=\"home-counts-" + Regex.Escape(place) + "\"[^>]*>\\s*<span class=\"nowrap\"><span class=\"choice choice--for\">[^<]*</span>\\s*([\\d\\u00A0 ]+?)\\s*·");
         int? last = null;
         var until = DateTime.UtcNow.AddSeconds(10);
         var live = await LiveForAsync(page, number);

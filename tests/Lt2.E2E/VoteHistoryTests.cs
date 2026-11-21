@@ -24,12 +24,12 @@ public sealed partial class VoteHistoryTests : E2ETest
         var history = page.GetByRole(AriaRole.Heading, new() { Name = "Seimo balsavimai", Level = 1 });
 
         await page.GotoAsync(Base + "/");
-        await page.Locator("#home-votes-older a").ClickAsync();
+        await page.Locator("#home-votes-older").ClickAsync();
         await page.WaitForURLAsync(Base + "/seimas/balsavimai", new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(history).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
 
         await page.GotoAsync(Base + "/darbotvarke");
-        await page.Locator("#agenda-votes-older a").ClickAsync();
+        await page.Locator("#agenda-votes-older").ClickAsync();
         await page.WaitForURLAsync(Base + "/seimas/balsavimai", new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(history).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
 

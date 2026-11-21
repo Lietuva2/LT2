@@ -92,7 +92,17 @@ Read before changing a page, a component or an island. The rules behind it are d
   `<TimelineDate>` (label, the date in words, the weekday and the day's count) and the rows in `div.tl-rows`; on a narrow
   screen the head is a band of its own (`PlannedDay`, `VotedDay`). A longer day grows by `<ShowMore>` like every list
   (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press, landing on the first row added). A vote's majority beside its numbers is
-  `<VoteMajorityTag>`, with one `<MajorityHint>` beside the list.
+  `<VoteMajorityTag>`, with one `<MajorityHint>` beside the history of votes; the agenda's lists carry none (owner,
+  2026-11-21).
+- **A list's heading row stays at the top of the screen (design 8.16.5, owner 2026-11-21):** the heading and the link
+  beside it in `div.row.list-head` as the sheet's first child (`position: sticky`, the sheet's colour, a `--rule` line
+  under it, CSS only). `--list-head` (its height) places the wide screen's sticky `.tl-date` under it, and
+  `--list-landing` is the `scroll-margin-top` of anything a link lands on in the list (`.tl-item`, `.tl-day`); a new
+  anchor in such a list takes it too. Used on the front page's and `/darbotvarke`'s two sheets; a list whose sheet has no
+  visible heading (`/projektai`, an MP's bills) has none.
+- **Lists of bills show one number a side and nothing under them (owner, 2026-11-21):** no count for accounts older than
+  30 days in brackets, no note, no hint, no "not a representative poll"; those stay on the bill's page, the summaries,
+  the statistics page and the methodology.
 - **A member's name that links to a public profile has `<MemberBadge ProfileId="…" Name="…" />` before it** (design 8.25.4;
   `Lt2.Web.Client/Components`; on server pages `<Lt2.Web.Client.Components.MemberBadge …/>`): a round `span.initials` with the
   initials, `aria-hidden="true"`, colour class `initials--0…7` from the profile's public id, the `--badge-n-bg|ink` tokens in
@@ -122,7 +132,8 @@ what it is, the fields with their labels, and the action; every other explanatio
 page, or on the methodology page (`/metodika`) or the moderation rules, reached by a short link to the part that says
 it (the part must exist; give it an `id`). What always stays inline: what becomes public and under whose name, what
 cannot be undone, a consent and what it covers, the invented-data notice, "not a representative poll" beside the
-numbers, that summaries are a trial and nothing is sent, status and error messages, labels, a field's hint needed to
+numbers on the bill's page, the summaries, the statistics page and the methodology (not under lists of bills), that
+summaries are a trial and nothing is sent, status and error messages, labels, a field's hint needed to
 fill it (format, limit), and what the design requires beside data (a description's label and date, the 30-day count,
 a moderator's statement). **The one collapsing pattern** is the browser's own
 `<details class="more stack stack--tight"><summary class="linkish small">…</summary>…</details>`: no script, so it
@@ -142,5 +153,5 @@ on the document) adds hover and keyboard focus after a delay, the place beside t
 the trigger. The answer says what the thing is and does first, then the number; a setting is said as what holds now
 ("Dabar – 100"), and a bill's own value when it has one. `More` ("Plačiau") only where there is more to say. A longer
 explanation, a list of steps or a form stays a `details.more`; how the site works in general stays on `/metodika`; a link
-that would leave the page only to explain a term is a hint instead. In a list, one hint beside the list (near its note
-line), never one per row. An island never opens a hint from code; a hint is phrasing content and may stand in a paragraph.
+that would leave the page only to explain a term is a hint instead. In a list, one hint beside the list, never one per
+row; the lists of bills (front page, `/darbotvarke`, `/projektai`) carry none. An island never opens a hint from code; a hint is phrasing content and may stand in a paragraph.

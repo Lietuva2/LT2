@@ -369,24 +369,34 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     // ---- The ways in -------------------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task The_start_page_and_the_agenda_link_to_the_history_also_without_a_recent_vote()
+    public async Task The_start_page_and_the_agenda_link_to_the_history_beside_the_heading_also_without_a_recent_vote()
     {
         using var visitor = NewBrowser();
         (await visitor.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda)).RecentVotes.ShouldBeEmpty("no vote in the last seven days");
         ForgetFrontPage();
 
+        // Owner, 2026-11-21: the voted days are a sheet of their own with an h2, and "Ankstesni balsavimai" stands beside the
+        // heading, as "Visa darbotvarkė" beside the planned days' heading; the section shows without a vote too.
         var home = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/"));
         home.ShouldNotContain("id=\"home-voted-");
-        home.ShouldContain("<h3 class=\"home-recent\" id=\"h-home-recent\">Neseniai balsuota</h3>");
+        home.ShouldContain("<section class=\"sheet stack\" aria-labelledby=\"h-home-recent\" id=\"home-recent\">");
+        var row = ReasonsToComeSteps.HeadRow(home, "h-home-recent");
+        row.ShouldContain("<h2 id=\"h-home-recent\">Neseniai balsuota</h2>");
+        row.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"home-votes-older\">Ankstesni balsavimai →</a>");
         home.ShouldContain("<p id=\"home-no-recent\">Per pastarąsias septynias dienas Seimas dėl projektų etapų nebalsavo.</p>");
-        home.ShouldContain("<p class=\"tl-older\" id=\"home-votes-older\"><a href=\"/seimas/balsavimai\">Ankstesni balsavimai →</a></p>");
+        home.IndexOf("id=\"home-no-recent\"", StringComparison.Ordinal).ShouldBeGreaterThan(home.IndexOf("id=\"h-home-recent\"", StringComparison.Ordinal));
+        home.ShouldNotContain("tl-older", customMessage: "no link at the end of the list");
+        Regex.Count(home, "Ankstesni balsavimai").ShouldBe(1);
+
         var agenda = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
         agenda.ShouldContain("id=\"agenda-no-recent\"");
-        agenda.ShouldContain("<p class=\"tl-older\" id=\"agenda-votes-older\"><a href=\"/seimas/balsavimai\">Ankstesni balsavimai →</a></p>");
+        ReasonsToComeSteps.HeadRow(agenda, "h-recent").ShouldContain("<a href=\"/seimas/balsavimai\" id=\"agenda-votes-older\">Ankstesni balsavimai →</a>");
+        agenda.ShouldNotContain("tl-older");
+        Regex.Count(agenda, "Ankstesni balsavimai").ShouldBe(1);
     }
 
     [Fact]
-    public async Task With_a_recent_vote_the_link_is_under_the_last_voted_day()
+    public async Task With_a_recent_vote_the_voted_days_are_a_section_of_their_own_with_the_link_beside_its_heading()
     {
         var old = await Database.MoveVoteAsync(ReasonsToComeSteps.TaxConsiderationVote, DateTimeOffset.UtcNow.AddDays(-2));
         try
@@ -394,19 +404,25 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
             ForgetFrontPage();
             using var visitor = NewBrowser();
             var home = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/"));
-            var voted = home.LastIndexOf("id=\"home-voted-", StringComparison.Ordinal);
-            voted.ShouldBeGreaterThan(0);
-            // The voted days stand under their own heading, after every planned day and before the first voted one.
+            home.LastIndexOf("id=\"home-voted-", StringComparison.Ordinal).ShouldBeGreaterThan(0);
+            // The planned days' sheet ends before the voted days' sheet begins; its heading row holds the link, before the
+            // first voted day.
+            var coming = home.IndexOf("id=\"home-coming\"", StringComparison.Ordinal);
+            var recent = home.IndexOf("<section class=\"sheet stack\" aria-labelledby=\"h-home-recent\" id=\"home-recent\">", StringComparison.Ordinal);
+            coming.ShouldBeGreaterThan(0);
+            recent.ShouldBeGreaterThan(home.LastIndexOf("id=\"agenda-", StringComparison.Ordinal));
+            var between = home[coming..recent];
+            Regex.Count(between, "<section").ShouldBe(Regex.Count(between, "</section>") - 1, "the planned days' sheet is closed before the next opens");
             var heading = home.IndexOf("id=\"h-home-recent\"", StringComparison.Ordinal);
-            heading.ShouldBeGreaterThan(home.LastIndexOf("id=\"agenda-", StringComparison.Ordinal));
             heading.ShouldBeLessThan(home.IndexOf("id=\"home-voted-", StringComparison.Ordinal));
+            home.IndexOf("id=\"home-votes-older\"", StringComparison.Ordinal).ShouldBeGreaterThan(heading);
+            home.IndexOf("id=\"home-votes-older\"", StringComparison.Ordinal).ShouldBeLessThan(home.IndexOf("id=\"home-voted-", StringComparison.Ordinal));
             home.ShouldNotContain("id=\"home-no-recent\"");
-            home.IndexOf("id=\"home-votes-older\"", StringComparison.Ordinal).ShouldBeGreaterThan(voted);
-            home.IndexOf("id=\"home-votes-older\"", StringComparison.Ordinal).ShouldBeLessThan(home.IndexOf("id=\"home-older-note\"", StringComparison.Ordinal));
 
             var agenda = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
             agenda.IndexOf("id=\"agenda-votes-older\"", StringComparison.Ordinal)
-                .ShouldBeGreaterThan(agenda.IndexOf("id=\"recent-" + ReasonsToComeSteps.TaxConsiderationVote + "\"", StringComparison.Ordinal));
+                .ShouldBeLessThan(agenda.IndexOf("id=\"recent-" + ReasonsToComeSteps.TaxConsiderationVote + "\"", StringComparison.Ordinal));
+            agenda.IndexOf("id=\"agenda-votes-older\"", StringComparison.Ordinal).ShouldBeGreaterThan(agenda.IndexOf("id=\"h-recent\"", StringComparison.Ordinal));
         }
         finally
         {
@@ -414,7 +430,6 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
             ForgetFrontPage();
         }
     }
-
     [Fact]
     public async Task A_vote_page_links_up_to_the_history_and_balsavimai_is_never_a_bill()
     {

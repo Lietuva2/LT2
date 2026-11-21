@@ -430,7 +430,9 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   linked account's form is the island `MyMpResponse`, filled in the browser only (on an open bill nobody answered yet it
   stands alone with `Section`, bringing the part's sheet and heading for a linked account); reports are `ReportResponse` islands.
 - `/seimo-narys/projektai` (8.5.7, `MpBills`, linked from `MyMp`; `GET /me/mp/bills`): the bills in summaries now in the
-  summaries' order (`Lt2.Notifications.DigestLists.InSummariesNow`), with the MP's own response or "Atsakyti"; then (owner,
+  summaries' order (`Lt2.Notifications.DigestLists.InSummariesNow`), with both sides' numbers, one each
+  (`#mp-bill-counts-{number}`; no count for accounts older than 30 days and no `#not-a-poll`, owner 2026-11-21; the API
+  still returns them), and the MP's own response or "Atsakyti"; then (owner,
   2026-11-17) every other bill the MP answered, any state, newest first, without the counts ("Dabar suvestinėje nėra",
   "Atsakyti" only while open); a code session may read it; nothing about other MPs. A first response follows the bill for
   the account that wrote it (`MpResponseReads.SaveAsync`, as `TakingSides` for a first side; never refused or undone by the
@@ -648,8 +650,10 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `BillRecordState.Arguments`), then stage (adoption, consideration, presentation; the parser reads a combined stage as its
   furthest, `AgendaParser.StageOf`), then number, bills without a title last; the votes by Vilnius day, newest first, each
   day the same way. `AgendaRules.Day` cuts a day: the front page (`Home.razor`) shows `FrontDays` (2) planned and voted
-  days of `FrontPerDay` (5), the voted ones under the heading `h3#h-home-recent` "Neseniai balsuota" (owner, 2026-11-21;
-  `#home-no-recent` when none), and `/darbotvarke` `PagePerDay` (10), and only those (owner, 2026-11-18: the hidden rows are
+  days of `FrontPerDay` (5), on two sheets (owner, 2026-11-21): `section#home-coming` (h2 `#h-home-coming`, "Visa
+  darbotvarkė" `a#home-agenda-all` beside it) and `section#home-recent` (h2 `#h-home-recent` "Neseniai balsuota",
+  "Ankstesni balsavimai →" `a#home-votes-older` beside it; `#home-no-recent` under it when none), each heading row a
+  sticky `div.row.list-head` (design 8.16.5); and `/darbotvarke` `PagePerDay` (10), and only those (owner, 2026-11-18: the hidden rows are
   not in the HTML). A day grows by the shared `<ShowMore>` (owner, 2026-11-19, design 8.16.4; "Rodyti likusius" and
   `Agenda.ShowRest` gone): one day is `PlannedDay` / `VotedDay` (`Lt2.Web/Components/Agenda`, used by both pages), whose
   line `#{day}-more` (status `#{day}-shown`, "Rodoma N iš M") stands under a day with more known rows than its first page
@@ -661,7 +665,9 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `day:N` only (a bare day, a word, a number ≤ 0 dropped); `AgendaRules.ShownKnown` ignores a number not above the first
   rows and caps at the day (and `MaxAsked`). N is `AgendaDayView.ShownCount`: the known rows shown, plus the unknown bills
   once their line shows; M is the head's count; the last page has the status and no link. Enhanced navigation swaps it in
-  with script. The front page keeps "Visa darbotvarkė" by its heading and "Ankstesni balsavimai →". The unknown bills are
+  with script. `/darbotvarke` has the same two sheets (`#agenda-coming`, `#agenda-recent`), `a#agenda-votes-older` beside
+  `#h-recent` in its heading row. Neither page has a note, a hint or `#not-a-poll` under its lists, and the rows show one
+  number a side (`RecordFigures`; owner, 2026-11-21). The unknown bills are
   `UnknownBills` (`details.tl-unknown`) after the last known row once every known row shows (`AgendaDayView.UnknownShown`),
   on both pages;
   rows `TimelineItem` and `VotedItem` with `Member` and `Numbers` as on the front page (owner, 2026-11-19: the same rows;
@@ -689,12 +695,14 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `ParliamentText` `Majority.*`: "Dauguma už", "Dauguma prieš", "Nėra daugumos"), the consensus as "Pritarta bendru
   sutarimu", nothing without numbers; used by `VotedItemMain` (front page, agenda, `/seimas/balsavimai`), `VoteResultSide`
   (the bill's votes), the bill's closing vote and `VotePage`; `<MajorityHint>` ("Kas yra balsavusiųjų dauguma?") stands once
-  beside each such list.
+  beside the history of votes, on the vote's page and on the bill's page; the agenda's lists carry none (owner, 2026-11-21).
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), planned date or the latest activity (owner, 2026-11-17: the page offers these
   three, `rikiuoti` = `aktyvumas`, `data`, `naujausia`; another value falls back to the default; the API's `sort` has
   `activity`, `participants`, `arguments`, `planned`, `latest`), with a search and the link "Planuojami per 14 dienų"
-  (applies at once, keeps the search; `aria-current` while on); each row has "už … (…) · prieš … (…)" beside its bar, and in
+  (applies at once, keeps the search; `aria-current` while on); each row has "už … · prieš …" beside its bar (`List.Counts`,
+  one number a side; nothing under the list: no note, hint or `#not-a-poll`, owner 2026-11-21; the sheet has no heading,
+  so nothing sticks, design 8.16.5), and in
   the latest-activity order "Paskutinė veikla {yyyy-MM-dd HH:mm}". The last activity is one time per bill,
   `appeals.bill_record.last_activity_at`, set by `RecordActivity` (Appeals) in the same transaction as a side taken, changed or
   withdrawn, an argument published, a comment written, an organisation's statement or an MP's response made public or

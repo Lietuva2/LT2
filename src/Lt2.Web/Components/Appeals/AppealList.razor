@@ -3,7 +3,6 @@
 @using Lt2.Web.Client.Appeals
 @inject IStringLocalizer<Lt2.Web.Components.PageText> P
 @inject IAppealsApi Appeals
-@inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject IStringLocalizer<AppealText> T
 @inject Formats F
 
@@ -11,7 +10,8 @@
    active bill, by activity (participants plus published arguments) unless sorted by planned date or by the latest activity
    (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form; the order, the filter "Planuojami per 14 dienų" (a link that applies at
    once, keeping the search), the closed tab and "Rodyti daugiau" are plain links. Each row shows its participants and
-   arguments, and the sides' numbers beside its bar. *@
+   arguments, and the sides' numbers beside its bar. Nothing stands under the list: what the numbers are and what "riba" is
+   are said on the bill's page and the methodology (owner, 2026-11-21). *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@T["List.Title"]" Description="@P["Preview.Projects"]" />
 
@@ -131,19 +131,15 @@
                         <div class="rows__side">
                             @if (item.Counts.For + item.Counts.Against > 0)
                             {
-                                @* Owner, 2026-11-17: the sides' numbers beside the bar, not in the text line. *@
-                                <span class="small num" id="counts-@item.Bill.Number">@T.Format("List.Counts", Display.Number(item.Counts.For), Display.Number(item.Counts.ForOlderThan30Days), Display.Number(item.Counts.Against), Display.Number(item.Counts.AgainstOlderThan30Days))</span>
+                                @* Owner, 2026-11-17: the sides' numbers beside the bar, not in the text line; 2026-11-21: one number a
+                                   side, without the count for accounts older than 30 days (the bill's page has it). *@
+                                <span class="small num" id="counts-@item.Bill.Number">@T.Format("List.Counts", Display.Number(item.Counts.For), Display.Number(item.Counts.Against))</span>
                             }
                             <SplitBar For="item.Counts.For" Against="item.Counts.Against" Abstain="0" Small="true" />
                         </div>
                     </li>
                 }
             </ul>
-            @* Design 8.15: "riba" repeats in the rows, so what it is is said once, beside the list (a hint). *@
-            <p class="small" id="older-note">@T["List.OlderNote"]@if (_threshold is { } threshold)
-                {
-                    @(" · ")<Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@T["Threshold.What"]" Answer="@(T["Threshold.Meaning"] + " " + T.Format("Threshold.NowList", Display.Number(threshold)))" More="/metodika#riba" />
-                }</p>
             @* Owner, 2026-11-18: the list grows in place by the address, landing on the first bill added (as 8.18). *@
             <Lt2.Web.Client.Components.ShowMore Id="more" StatusId="shown" Shown="_offset + Math.Min(_shown, page.Items.Count)" Total="page.Total"
                 Href="@(BillListPaging.More(_shown, _offset, page.Total) is { } more && page.Items.Count > _shown ? Link(From, Sort, Planned, more) + "#bill-" + page.Items[_shown].Bill.Number : null)">
@@ -156,7 +152,6 @@
     </div>
 }
 
-<p class="note note--quiet" id="not-a-poll">@T["NotAPoll"]</p>
 
 @code {
     private BillListResponse? _page;
@@ -196,15 +191,12 @@
 
     private bool Filtered => !string.IsNullOrWhiteSpace(Q) || Planned;
 
-    /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint beside the list.</summary>
-    private int? _threshold;
 
     protected override async Task OnParametersSetAsync()
     {
         _shown = BillListPaging.Shown(Show);
         _offset = BillListPaging.Offset(From);
         _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort], BillListPaging.Asked(_shown))).Value;
-        _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
     }
 
     /// <summary>The same search and tab, with the given page (none = the first), order, filter and length (none = the first 20).</summary>

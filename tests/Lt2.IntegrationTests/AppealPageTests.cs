@@ -19,9 +19,23 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         return (response.StatusCode, WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
     }
 
-    private static void ShouldSpeakOfUsersNotThePublic(string html)
+    /// <summary>
+    /// The page speaks of users, never the public; the bill's page says the numbers are not a representative poll, and a list
+    /// of bills does not (owner, 2026-11-21: the bill's page, the summaries, the statistics and the methodology say it).
+    /// </summary>
+    private static void ShouldSpeakOfUsersNotThePublic(string html, bool notice = true)
     {
-        html.ShouldContain("Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.");
+        const string NotAPoll = "Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.";
+        if (notice)
+        {
+            html.ShouldContain(NotAPoll);
+        }
+        else
+        {
+            html.ShouldNotContain(NotAPoll);
+            html.ShouldNotContain("id=\"not-a-poll\"");
+        }
+
         foreach (var word in new[] { "visuomen", "rinkėj", "referendum" })
         {
             Regex.IsMatch(MainOf(html), word, RegexOptions.IgnoreCase).ShouldBeFalse(word);
@@ -294,7 +308,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     }
 
     [Fact]
-    public async Task The_list_shows_active_bills_by_activity_with_participants_and_arguments_and_the_note()
+    public async Task The_list_shows_active_bills_by_activity_with_participants_and_arguments_and_one_number_a_side()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
         var (initiator, _) = await Factory.MemberAsync();
@@ -315,16 +329,21 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");
         html.ShouldContain("dalyvių 1 · argumentų 1");
-        html.ShouldContain("Skliaustuose – kiek iš jų paskyrų senesnės nei 30 d.", customMessage: "one legend under the list (design 8.15, annex P2)");
+        // Owner, 2026-11-21: no note under the list (no count in brackets to explain, no hint "Kas yra riba?").
+        html.ShouldNotContain("Skliaustuose");
+        html.ShouldNotContain("id=\"older-note\"");
+        html.ShouldNotContain("id=\"threshold-what\"");
         html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal), "most activity first");
 
-        // Owner, 2026-11-17: the sides' numbers stand beside the bar; two orders; the planned filter is a link.
+        // Owner, 2026-11-17: the sides' numbers stand beside the bar; two orders; the planned filter is a link. Owner,
+        // 2026-11-21: one number a side, without the count for accounts older than 30 days.
         var row = html[html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal)..];
         row = row[..row.IndexOf("</li>", StringComparison.Ordinal)];
         var side = row[row.IndexOf("rows__side", StringComparison.Ordinal)..];
-        side.ShouldContain("už 1 (0) · prieš 0 (0)");
-        side.IndexOf("už 1 (0)", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("<svg", StringComparison.Ordinal), "the numbers, then the bar");
-        row[..row.IndexOf("rows__side", StringComparison.Ordinal)].ShouldNotContain("už 1 (0)", customMessage: "not in the text line");
+        side.ShouldContain("<span class=\"small num\" id=\"counts-XVP-0618\">už 1 · prieš 0</span>");
+        side.ShouldNotContain("(0)");
+        side.IndexOf("už 1", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("<svg", StringComparison.Ordinal), "the numbers, then the bar");
+        row[..row.IndexOf("rows__side", StringComparison.Ordinal)].ShouldNotContain("už 1", customMessage: "not in the text line");
         html.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">pagal aktyvumą</b>");
         html.ShouldContain("<a href=\"/projektai?rikiuoti=data\" id=\"sort-data\">pagal planuojamą datą</a>");
         html.ShouldNotContain("rikiuoti=argumentai");
@@ -334,7 +353,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var (_, oldSort) = await PageAsync(stranger, "/projektai?rikiuoti=argumentai");
         oldSort.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">", customMessage: "an old order falls back to the default");
         html.ShouldNotContain("/kreipimaisi", customMessage: "the site links to /projektai directly, not through the redirect");
-        ShouldSpeakOfUsersNotThePublic(html);
+        ShouldSpeakOfUsersNotThePublic(html, notice: false);
 
         var (_, found) = await PageAsync(stranger, "/projektai?q=pajamu%20mokescio");
         found.ShouldNotContain("id=\"bill-XVP-0533\"");
@@ -432,7 +451,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
 
     /// <summary>
     /// Design 8.15: "Kas yra riba?" answers in place with the number that holds now: a bill's own threshold when a moderator
-    /// set one, otherwise the current setting, which the lists' hint and the methodology's row "Riba" (without repeating the word) say too.
+    /// set one, otherwise the current setting, which the methodology's row "Riba" (without repeating the word) says too.
     /// </summary>
     [Fact]
     public async Task The_threshold_hint_says_the_number_that_holds_now_for_the_bill_and_follows_the_setting()
@@ -454,12 +473,9 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
             HintOf((await PageAsync(stranger, "/seimas/" + AppealSteps.SecondBill)).Html, "threshold-what").Answer.ShouldBe(Meaning + " Dabar – 120.");
             HintOf((await PageAsync(stranger, "/seimas/" + AppealSteps.ThirdBill)).Html, "threshold-what").Answer.ShouldEndWith("dabar – 150.", customMessage: "a bill's own number does not follow the default");
 
-            // "riba" repeats in the lists' rows: one hint beside the list says what it is and the default that holds now.
-            var listHint = (Meaning + " Dabar – 120, jei moderatorius projektui nenustatė kitos; eilutėje rodoma to projekto riba.", "/metodika#riba");
-            var list = HintOf((await PageAsync(stranger, "/projektai")).Html, "threshold-what");
-            (list.Answer, list.More).ShouldBe(listHint);
-            var agenda = HintOf((await PageAsync(stranger, "/darbotvarke")).Html, "threshold-what");
-            (agenda.Answer, agenda.More).ShouldBe(listHint);
+            // Owner, 2026-11-21: the lists carry no hint; the bill's page and the methodology say what "riba" is.
+            (await PageAsync(stranger, "/projektai")).Html.ShouldNotContain("id=\"threshold-what\"");
+            (await PageAsync(stranger, "/darbotvarke")).Html.ShouldNotContain("id=\"threshold-what\"");
 
             (await PageAsync(stranger, "/metodika")).Html.ShouldContain("<dd class=\"num\">dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 120. Šį skaičių gali keisti administratorius");
         }
