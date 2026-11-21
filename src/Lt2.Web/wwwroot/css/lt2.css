@@ -1110,6 +1110,23 @@ main:has(> .page-head .project-tabs) {
 @media (max-width: 36rem) {
   :root { --page-head-tabs: calc(1.5 * var(--fs-1) + 2 * var(--sp-1) + 4px); }
 }
+/* A list's heading on the ground above its filters and its sheet (the statistics' comparison of bills, design 8.16.5):
+   it stays at the top of the screen within its own part of the page, on the ground's colour with the rule under it,
+   and takes its padding out of the room round it. A link that lands below it stops under it; under 54rem the heading is
+   the smaller size and may take two lines, so a landing leaves room for both. */
+:root { --ground-head: calc(0.98 * var(--fs-5) + 2 * var(--sp-2) + 1px); }
+.ground-head {
+  position: sticky; top: 0; z-index: 2;
+  margin-block: calc(-1 * var(--sp-2)) calc(-1 * var(--sp-2) - 1px);
+  padding-block: var(--sp-2);
+  background: var(--ground); border-bottom: 1px solid var(--rule);
+}
+.ground-head ~ [id], .ground-head ~ * [id] { scroll-margin-top: calc(var(--ground-head) + var(--sp-4)); }
+@media (max-width: 54rem) {
+  :root { --ground-head: calc(2 * 0.98 * var(--fs-4) + 2 * var(--sp-2) + 1px); }
+  .ground-head { font-size: var(--fs-4); }
+}
+
 main > .page-head {
   position: sticky; top: 0; z-index: 3;
   min-height: var(--page-head);

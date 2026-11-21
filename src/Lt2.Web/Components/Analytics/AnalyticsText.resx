@@ -27,7 +27,7 @@
   <data name="CountedAt" xml:space="preserve"><value>Suskaičiuota {0}; skaičiai atnaujinami kas valandą.</value></data>
   <data name="SmallSample" xml:space="preserve"><value>maža imtis</value></data>
   <data name="SmallSample.Answer" xml:space="preserve"><value>Kai skaičiuojama mažiau nei {0} pozicijų ar balsavimų, dalis procentais nerodoma – tik patys skaičiai.</value></data>
-  <data name="Compare.Title" xml:space="preserve"><value>„Už“ dalis: Seimo balsavimas ir Lietuva 2.0 naudotojų pozicijos</value></data>
+  <data name="Compare.Title" xml:space="preserve"><value>„Už“ dalis: Seimas ir Lietuva 2.0 naudotojai</value></data>
   <data name="Compare.Seimas" xml:space="preserve"><value>Seimas</value></data>
   <data name="Compare.Members" xml:space="preserve"><value>Lietuva 2.0 naudotojai</value></data>
   <data name="Compare.Half" xml:space="preserve"><value>Linija ties 50 % – daugumos riba.</value></data>

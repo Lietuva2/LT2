@@ -76,6 +76,10 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
             html.ShouldContain("id=\"nav-statistics\" aria-current=\"page\"");
             html.ShouldNotContain("id=\"project-tabs\"", customMessage: "owner, 2026-11-17: a menu item of its own, no tab row");
+            // Design 8.16.5 (owner, 2026-11-21): the comparison's short heading stays at the top of the screen, on the ground
+            // above its filters and sheet, which follow it in the same part of the page.
+            html.ShouldContain("<h2 class=\"ground-head\" id=\"h-compare\">„Už“ dalis: Seimas ir Lietuva 2.0 naudotojai</h2>");
+            html.IndexOf("id=\"h-compare\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"compare-list\"", StringComparison.Ordinal));
             var listRow = TableRow(html, Bill);
             Regex.IsMatch(listRow, $@"<td class=""num analytics-table__number"">{Bill} <span").ShouldBeTrue("the number, then the title (owner, 2026-11-19)");
             listRow.ShouldContain($"<a href=\"/seimas/{Bill}\">{row.Title}</a>", customMessage: "the title links to the bill's page (owner, 2026-11-19)");
