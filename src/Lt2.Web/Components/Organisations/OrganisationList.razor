@@ -11,9 +11,13 @@
 <PageTitle>@L["Org.List.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@L["Org.List.Title"]" />
 
-<div class="stack">
-    <p class="label">Lietuva 2.0</p>
+@* Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's title stays at the top of the
+   screen while the list scrolls past; the label above it, the lead and the search scroll away. *@
+<p class="label">Lietuva 2.0</p>
+<div class="page-head" id="page-head">
     <h1>@L["Org.List.Title"]</h1>
+</div>
+<div class="stack page-head__rest">
     <p class="lead">@L["Org.List.Lead"]</p>
     <form class="filters" method="get" action="/organizacijos" role="search" id="organisation-search">
         <div class="field">

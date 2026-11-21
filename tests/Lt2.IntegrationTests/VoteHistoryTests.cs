@@ -208,6 +208,12 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         html.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimas/balsavimai\" role=\"search\" id=\"votes-search\">");
         html.IndexOf("id=\"votes-search\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"balsavimai\"", StringComparison.Ordinal), "the controls lie above the list's sheet");
         var list = List(html);
+        // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's title and its tab row stay
+        // at the top of the screen; the lead and the form scroll away.
+        var head = ListHeadSteps.PageHead(html);
+        head.ShouldStartWith("<div class=\"stack page-head\" id=\"page-head\"><h1>Seimo balsavimai</h1>");
+        head.ShouldContain("id=\"project-tabs\"");
+        head.ShouldNotContain("id=\"votes-search\"");
 
         Row().Count(list).ShouldBe(30);
         list.ShouldContain("Rodoma 30 iš 331");

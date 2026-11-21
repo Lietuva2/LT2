@@ -12,11 +12,13 @@
 {
     <PageTitle>@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}") · Lietuva 2.0</PageTitle>
     <LinkPreview Title="@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}")" />
-    <div class="stack">
-        <ol class="crumbs">
-            <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>
-            <li><a href="/p/@p.Mp.Slug">@p.Mp.FirstName @p.Mp.LastName</a></li>
-        </ol>
+    @* Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's title stays at the top of
+       the screen while the list scrolls past, the days' dates just under it; the way back above it scrolls away. *@
+    <ol class="crumbs">
+        <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>
+        <li><a href="/p/@p.Mp.Slug">@p.Mp.FirstName @p.Mp.LastName</a></li>
+    </ol>
+    <div class="page-head" id="page-head">
         <h1>@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}")</h1>
     </div>
 

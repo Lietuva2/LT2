@@ -334,6 +334,14 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldNotContain("id=\"older-note\"");
         html.ShouldNotContain("id=\"threshold-what\"");
         html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal), "most activity first");
+        // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's title and its tab row stay
+        // at the top of the screen; the label, the lead, the list's tabs and the search scroll away, the count line is ordinary.
+        var head = ListHeadSteps.PageHead(html);
+        head.ShouldStartWith("<div class=\"stack page-head\" id=\"page-head\"><h1>Projektai</h1>");
+        head.ShouldContain("id=\"project-tabs\"");
+        head.ShouldNotContain("Lietuva 2.0");
+        head.ShouldNotContain("id=\"tab-active\"");
+        html.ShouldContain("<p class=\"small num\" role=\"status\" id=\"found\">Rasta projektų: ");
 
         // Owner, 2026-11-17: the sides' numbers stand beside the bar; two orders; the planned filter is a link. Owner,
         // 2026-11-21: one number a side, without the count for accounts older than 30 days.

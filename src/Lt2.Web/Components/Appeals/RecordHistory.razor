@@ -31,7 +31,7 @@
         }
     </section>
     <section class="sheet stack" aria-labelledby="h-edits" id="edits">
-        <h2 id="h-edits">@T["History.Edits"]</h2>
+        <div class="row list-head"><h2 id="h-edits">@T["History.Edits"]</h2></div>
         @if (_history is not { Count: > 0 } edits)
         {
             <p>@T["History.None"]</p>

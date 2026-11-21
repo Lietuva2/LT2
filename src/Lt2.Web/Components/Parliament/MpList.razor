@@ -64,8 +64,9 @@ else
             continue;
         }
 
+        @* Design 8.16.5: each group's heading row stays at the top of the screen while its sheet scrolls past. *@
         <section class="sheet stack" aria-label="@F.T[heading]">
-            <h2>@F.T[heading]</h2>
+            <div class="row list-head"><h2>@F.T[heading]</h2></div>
             <ul class="rows">
                 @foreach (var mp in group)
                 {

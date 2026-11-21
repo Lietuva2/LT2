@@ -10,11 +10,12 @@
    from the member's own answers (their follows, with each bill's planned date and last vote, and their sides), asked
    only in the browser, so nothing shows until they have loaded and nothing of them is
    in the page's HTML. When the member takes, changes or withdraws a side in a row of the timeline, the panel follows
-   without a reload (MyAgendaState.Changed). *@
+   without a reload (MyAgendaState.Changed). The heading row stays at the top of the screen while the sheet scrolls past
+   (.list-head, design 8.16.5). *@
 @if (_rows is { } rows && !(rows.Count == 0 && _startShown))
 {
     <section class="sheet stack stack--tight my-agenda" aria-labelledby="h-my-agenda" id="my-agenda">
-        <h2 id="h-my-agenda">@L["Mine.Title"]</h2>
+        <div class="row list-head"><h2 id="h-my-agenda">@L["Mine.Title"]</h2></div>
         @if (rows.Count == 0)
         {
             <p class="small" id="my-agenda-none">@L["Mine.None"]</p>
@@ -64,7 +65,7 @@ else if (Message is not null)
 {
     @* The member's own answer did not come: say so, so the panel is not silently missing. *@
     <section class="sheet stack stack--tight my-agenda" aria-labelledby="h-my-agenda" id="my-agenda-failed">
-        <h2 id="h-my-agenda">@L["Mine.Title"]</h2>
+        <div class="row list-head"><h2 id="h-my-agenda">@L["Mine.Title"]</h2></div>
         <Messages Message="@Message" />
     </section>
 }

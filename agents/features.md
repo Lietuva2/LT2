@@ -324,7 +324,9 @@ then 50 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) wit
 links to it. The history of votes (`/seimas/balsavimai`, design 8.18: `VoteHistoryPage`, its address state in
 `VoteHistory` in Lt2.Web.Client, `GET /api/v1/votes` read and counted in the database a part at a time) groups votes by
 Vilnius day, 30 then 50 more up to 300, with no participants' numbers; its rows share `VotedItemMain` with the start
-page's "Balsuota".
+page's "Balsuota". Its sheet has no heading, so its `div.page-head#page-head` (the h1 and `ProjectTabs`, a child of
+`main`) is sticky (design 8.16.5), the days' dates under it, the lead and the form in `.page-head__rest`; an MP's votes
+(`MpVotes`) have the h1 alone in it, the crumbs above it.
 
 **The Seimas import's jobs (design 7.2; owner 2026-11-18).** The scheduled `parliament-import` (`ParliamentImportJob`,
 every 15 minutes, imports when `IParliamentImport.DueAsync` says so) is unchanged; when not due it logs "Parliament import
@@ -434,7 +436,8 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   (`#mp-bill-counts-{number}`; no count for accounts older than 30 days and no `#not-a-poll`, owner 2026-11-21; the API
   still returns them), and the MP's own response or "Atsakyti"; then (owner,
   2026-11-17) every other bill the MP answered, any state, newest first, without the counts ("Dabar suvestinėje nėra",
-  "Atsakyti" only while open); a code session may read it; nothing about other MPs. A first response follows the bill for
+  "Atsakyti" only while open); a code session may read it; nothing about other MPs. The sheet's `h2#h-mp-bills` stays
+  visually hidden; the page's h1 is its sticky `div.page-head#page-head` (design 8.16.5). A first response follows the bill for
   the account that wrote it (`MpResponseReads.SaveAsync`, as `TakingSides` for a first side; never refused or undone by the
   follow; editing or withdrawing adds nothing).
 
@@ -677,7 +680,8 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   The islands ask `/me/bills` about
   the shown rows only (`AgendaRules.Asked`; `MyAgendaState` splits them into requests of `MyBillsQuery.MaxNumbers`, sent side by side); "Jūsų projektai" (`MyAgendaPanel`,
   `MyAgendaState.PanelAsync`) lists the followed bills of the whole agenda and last week from `GET /me/follows`
-  (`OnTheAgenda`) and asks `/me/bills` about those not shown, 30 a request (`Requests`).
+  (`OnTheAgenda`) and asks `/me/bills` about those not shown, 30 a request (`Requests`); its `h2#h-my-agenda` is in a sticky
+  `div.row.list-head` in both of its sheets (`#my-agenda`, `#my-agenda-failed`; design 8.16.5).
   **The greeting and the new member's start (design 8.28.3).** `MyStart` (`Lt2.Web.Client/Agenda`, an island) renders the
   member's `h1#home-title`: "Sveiki" as served and before the island runs, then "Sveiki prisijungę" with the start
   (`#home-start`: the full steps `.intro-steps.starter__full`, the short `.starter__short` under 54rem, "Kaip tai veikia →" to
@@ -702,7 +706,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `activity`, `participants`, `arguments`, `planned`, `latest`), with a search and the link "Planuojami per 14 dienų"
   (applies at once, keeps the search; `aria-current` while on); each row has "už … · prieš …" beside its bar (`List.Counts`,
   one number a side; nothing under the list: no note, hint or `#not-a-poll`, owner 2026-11-21; the sheet has no heading,
-  so nothing sticks, design 8.16.5), and in
+  so the h1 and `ProjectTabs` are its sticky `div.page-head#page-head`, design 8.16.5; `p#found` is an ordinary line), and in
   the latest-activity order "Paskutinė veikla {yyyy-MM-dd HH:mm}". The last activity is one time per bill,
   `appeals.bill_record.last_activity_at`, set by `RecordActivity` (Appeals) in the same transaction as a side taken, changed or
   withdrawn, an argument published, a comment written, an organisation's statement or an MP's response made public or
