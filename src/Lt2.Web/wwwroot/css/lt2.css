@@ -663,6 +663,13 @@ body > .page { width: 100%; }
 .agreement { gap: var(--sp-3); }
 .agreement__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(6rem, 10rem) 3.5rem; gap: var(--sp-3); align-items: center; }
 .agreement__row > .small { grid-column: 1 / -1; }
+/* Where the list is narrow (a phone), a row's name takes its own line and the bar with its share the next, so a long
+   name ("Pilietinės sąjungos frakcija") never breaks inside a word (owner, 2026-11-21). */
+.agreement { container-type: inline-size; }
+@container (max-width: 32rem) {
+  .agreement__row { grid-template-columns: minmax(0, 1fr) 3.5rem; row-gap: var(--sp-1); }
+  .agreement__name { grid-column: 1 / -1; }
+}
 .agreement__name small { display: block; color: var(--ink-2); }
 .seat--for { fill: var(--for); }
 .seat--against { fill: var(--against); }
@@ -1069,8 +1076,14 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   --list-wrap: 0px;
   --list-landing: calc(var(--list-head) + var(--list-wrap) + var(--sp-4));
 }
+/* Under 54rem a list's h2 is the smaller heading size, as a page's sticky title is, so the row that stays at the top
+   takes less of a phone's screen (owner, 2026-11-21); every list's heading stays the same size as the others. */
 @media (max-width: 54rem) {
-  :root, .sheet { --list-wrap: calc(0.98 * var(--fs-5) + 1.5 * var(--fs-2) + var(--sp-3)); }
+  :root, .sheet {
+    --list-head: calc(0.98 * var(--fs-4) + 2 * var(--sp-3) + 1px);
+    --list-wrap: calc(0.98 * var(--fs-4) + 1.5 * var(--fs-2) + var(--sp-3));
+  }
+  .list-head h2 { font-size: var(--fs-4); }
 }
 .sheet:has(> .list-head h3) { --list-head: calc(1.05 * var(--fs-4) + 2 * var(--sp-3) + 1px); }
 .list-head {
