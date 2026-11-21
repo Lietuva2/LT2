@@ -513,7 +513,7 @@
             ? r.Description
             : P.Format(_record?.Status switch { BillRecordStatuses.Open => "Preview.Bill.Open", BillRecordStatuses.Closed => "Preview.Bill.Closed", _ => "Preview.Bill.Other" }, b.Title);
 
-    private static int ToGo(ThresholdResponse t) => Math.Max(0, t.Value - t.Participants);
+    private static int ToGo(ThresholdResponse t) => ShareLine.MissingOf(t);
 
     /// <summary>"Kas yra riba?": what the threshold is and does, then the number that holds now for this bill (design 8.15).</summary>
     private string ThresholdAnswer(ThresholdResponse t) =>
