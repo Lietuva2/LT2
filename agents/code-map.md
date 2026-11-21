@@ -52,7 +52,7 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and
                            Lt2.Api.Contracts (AppealCodes.cs: Sides, BillRecordStatuses, ClosingReasons, ReasonStatuses,
                            ThresholdSetters, DescriptionSources, ReportTargets, ReportGrounds; CommentCodes.cs;
                            OrganisationCodes.cs; MpCodes.cs; ParliamentCodes.cs: the API codes the Parliament module's
-                           enums map to in Codes; DigestCodes.cs; FeedbackCodes.cs; LockTargets.cs; a project that sees
+                           enums map to in Codes; DigestCodes.cs: DigestRunStatuses, RowSummaryKinds; FeedbackCodes.cs; LockTargets.cs; a project that sees
                            both copies imports Lt2.Api.Contracts/CodeAliases.props); no clock of its own (TimeProvider
                            is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
@@ -75,7 +75,9 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            IRecordClosureFeed (moderators' closes of rejected or withdrawn bills, for the follow emails),
                            IClosingVotes (whether a vote closed a bill's record, for correcting its classification),
                            IWritingRestrictions, IStaffAddresses). The host
-                           composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
+                           composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces, and
+                           a reached bill's summary day on the list rows (Services/RowSummaryServices.cs: RowSummaries over
+                           IDigests.SummaryDaysAsync, the rule Lt2.Web.Client/Agenda/RowSummaryRules; design 8.12.2).
                            Identity also owns MPs' links (Application/Politicians: politician_link, politician_token,
                            design 8.5); "whose official address is this" is IMpDirectory.OfficialAddressOwnerAsync
                            (Parliament's OfficialAddresses, the one definition), and the MP's own account is refused as a

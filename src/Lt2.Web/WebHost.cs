@@ -100,6 +100,7 @@ internal static class WebHost
         services.AddScoped<IModerationApi, ServerModerationApi>();
         services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationsApi, ServerOrganisationsApi>();
         services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationModerationApi, ServerOrganisationModerationApi>();
+        services.AddScoped<RowSummaries>();
         services.AddScoped<AgendaReads>();
         services.AddScoped<Lt2.Api.Contracts.Agenda.IAgendaApi, ServerAgendaApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, ServerFollowsApi>();

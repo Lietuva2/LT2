@@ -3,6 +3,7 @@ using Bunit;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Agenda;
 using Lt2.Api.Contracts.Appeals;
+using Lt2.Api.Contracts.Digests;
 using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Me;
 using Lt2.Web.Client;
@@ -53,6 +54,7 @@ public sealed class MyAgendaTests : BunitContext
     private readonly ApiFake _follows;
     private readonly ApiFake _me;
     private readonly ApiFake _appeals;
+    private readonly ApiFake _digests;
 
     public MyAgendaTests()
     {
@@ -71,6 +73,9 @@ public sealed class MyAgendaTests : BunitContext
         Services.AddSingleton(bills);
         Services.AddSingleton(me);
         Services.AddSingleton(appeals);
+        var digests = DispatchProxy.Create<IDigestsApi, ApiFake>();
+        _digests = (ApiFake)(object)digests;
+        Services.AddSingleton(digests);
         Services.AddSingleton(DispatchProxy.Create<IModerationApi, ApiFake>());
         AddAuthorization().SetAuthorized("member@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -485,6 +490,46 @@ public sealed class MyAgendaTests : BunitContext
         var progress = under.FindAll(".nowrap").Skip(2).Select(e => Flat(e.TextContent)).ToList();
         progress.ShouldHaveSingleItem().ShouldStartWith(Flat(Display.Number(9000) + " "));
         progress[0].ShouldEndWith(Flat(Display.Number(10000)));
+    }
+
+    [Fact]
+    public void A_reached_row_names_its_summarys_day_in_place_of_riba_pasiekta_kept_in_one_part()
+    {
+        // Design 8.12.2 (owner, 2026-11-21): the summary planned that would hold the bill, else the last one really sent; a
+        // row under its threshold says nothing of summaries.
+        var record = new AgendaRecordResponse(null, "open", new SideCountsResponse(6800, 6195, 4280, 3917), new ThresholdResponse(10000, "default", null, 11080, true, false));
+        string ThresholdPart(AgendaRecordResponse r) =>
+            Render<RecordFigures>(p => p.Add(c => c.Record, r)).FindAll(".nowrap").Skip(2).Select(e => Flat(e.TextContent)).Last();
+
+        ThresholdPart(record with { Summary = new("planned", new DateOnly(2026, 11, 30)) }).ShouldBe("suvestinė planuojama 2026-11-30");
+        ThresholdPart(record with { Summary = new("sent", new DateOnly(2026, 11, 16)) }).ShouldBe("suvestinė išsiųsta 2026-11-16");
+        ThresholdPart(record).ShouldBe("riba pasiekta");
+        ThresholdPart(record with { Threshold = record.Threshold with { Participants = 9000, Reached = false }, Summary = new("sent", new DateOnly(2026, 11, 16)) })
+            .ShouldNotContain("suvestinė");
+    }
+
+    [Fact]
+    public void A_threshold_first_reached_by_the_members_own_side_asks_the_next_summarys_day_once()
+    {
+        // Design 8.12.2: the page's copy was under the threshold, so it named no summary; the member's side reaches it, and the
+        // row asks the day the bill's page would show (GET …/record/digests/next), as the bill's page does.
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _digests.On("GetRecordNextDigestAsync", ApiResult<RecordNextDigestResponse>.Ok(new RecordNextDigestResponse(new DateOnly(2026, 11, 30))));
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(Live(Other, 600, 400) with { Threshold = new ThresholdResponse(1000, "default", null, 1000, true, false) }));
+        var side = Render<MyAgendaSide>(p => p
+            .Add(c => c.Number, Other).Add(c => c.Numbers, Numbers).Add(c => c.Place, "2026-11-19-XVP-0618")
+            .Add(c => c.Record, new AgendaRecordResponse(Guid.CreateVersion7(), "open", new SideCountsResponse(600, 0, 399, 0), new ThresholdResponse(1000, "default", null, 999, false, false))));
+        side.Markup.ShouldNotContain("suvestinė");
+
+        side.Find("#home-for-2026-11-19-XVP-0618").Click();
+
+        side.WaitForAssertion(() => Flat(side.Markup).ShouldContain("suvestinė planuojama 2026-11-30"));
+        _digests.Calls.Count(c => c == "GetRecordNextDigestAsync").ShouldBe(1);
+
+        // Another press reads the live numbers again; the row keeps its summary and asks nothing more.
+        side.Find("#home-against-2026-11-19-XVP-0618").Click();
+        side.WaitForAssertion(() => Flat(side.Markup).ShouldContain("suvestinė planuojama 2026-11-30"));
+        _digests.Calls.Count(c => c == "GetRecordNextDigestAsync").ShouldBe(1);
     }
 
     /// <summary>The text with every run of white space (the numbers' own spaces included) as one space.</summary>

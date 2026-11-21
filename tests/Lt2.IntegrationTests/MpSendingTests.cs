@@ -161,6 +161,50 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
         }
     }
 
+    /// <summary>
+    /// Design 8.12.2 (owner, 2026-11-21): once a summary really sent held the bill and none is planned, the rows say the day it
+    /// went in place of "riba pasiekta"; and a bill that counts as reached only through that summary, its participants now under
+    /// a higher threshold, says so on its page.
+    /// </summary>
+    [Fact]
+    public async Task A_bill_in_a_summary_really_sent_names_its_day_in_the_rows_and_its_page_says_it_was_in_a_summary()
+    {
+        await Database.ResetMpMailAsync();
+        var (moderator, admin, bill, monday) = await SummaryWeekAsync(27);
+        try
+        {
+            (await admin.IntroduceAsync()).ShouldBeGreaterThan(0);
+            await admin.SetFreshAsync("Digest:Sending", "automatic");
+            (await Factory.RunDueAsync(MpSendingSteps.At(monday.AddDays(-1), 7, 5))).Single().Status.ShouldBe("prepared");
+            (await Factory.RunDueAsync(MpSendingSteps.At(monday, 7, 5))).Single().Status.ShouldBe("sent");
+
+            using var stranger = NewBrowser();
+            var sentLine = $"suvestinė išsiųsta {monday:yyyy-MM-dd}";
+            (await stranger.GetJsonAsync<RecordNextDigestResponse>(DigestRoutes.NextOfRecordOn(bill.Number))).Day.ShouldBeNull("nothing planned that would hold it");
+            (await stranger.AgendaRecordAsync(bill.Number)).Summary.ShouldBe(new RecordSummaryResponse("sent", monday));
+            (await Factory.AgendaRowAsync(stranger, bill.Number, monday.AddDays(3))).ShouldContain("1</b> dalyvis ·</span> <span class=\"nowrap\">" + sentLine + "</span>");
+            (await stranger.ProjectsItemAsync(bill.Number)).Summary.ShouldBe(new RecordSummaryResponse("sent", monday));
+            (await stranger.ProjectsRowAsync(bill.Number)).ShouldContain(sentLine);
+            WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + bill.Number)).ShouldContain("Riba pasiekta – balsuoti prašo 1 dalyvis.", customMessage: "at its threshold");
+
+            // A moderator raises the threshold: the bill is still reached, through the summary sent, and its page says so.
+            using (var raised = await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.RecordThreshold, bill.Id), new ModeratorThresholdRequest { Threshold = 5, Statement = "Bandymas." }))
+            {
+                raised.StatusCode.ShouldBe(HttpStatusCode.NoContent, await raised.Content.ReadAsStringAsync());
+            }
+
+            var page = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + bill.Number));
+            page.ShouldContain("Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašo 1 dalyvis.");
+            page.ShouldNotContain("Riba pasiekta");
+            page.ShouldNotContain("class=\"ruler\"", customMessage: "it counts as reached: no ruler");
+            (await Factory.AgendaRowAsync(stranger, bill.Number, monday.AddDays(3))).ShouldContain(sentLine);
+        }
+        finally
+        {
+            await CleanUpAsync(admin);
+        }
+    }
+
     [Fact]
     public async Task A_declined_summary_sends_nothing_says_why_publicly_and_frees_its_place_under_the_ceiling()
     {

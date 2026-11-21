@@ -11,10 +11,12 @@ namespace Lt2.Web.Services;
 
 /// <summary>
 /// The agenda (design 8.11.1), composed by the host from the Parliament module (planned items, recent stage results, when
-/// the agenda was read) and the Appeals module (each bill's public numbers, both sides for every bill, design 8.12.5). It reads
-/// nothing about the caller, so the answer is the same for everyone and cacheable.
+/// the agenda was read) and the Appeals module (each bill's public numbers, both sides for every bill, design 8.12.5), with the
+/// Notifications module's summary days for the bills whose threshold is reached (<see cref="RowSummaries"/>, design 8.12.2). It
+/// reads nothing about the caller, so the answer is the same for everyone and cacheable.
 /// </summary>
-internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, IParliamentQueries parliament, IAppealsModule appeals, IOrganisations organisations, TimeProvider clock)
+internal sealed class AgendaReads(
+    IPlannedAgenda agenda, IBillCatalogue bills, IParliamentQueries parliament, IAppealsModule appeals, IOrganisations organisations, RowSummaries summaries, TimeProvider clock)
 {
     /// <summary>"Recently voted": the stage results of the last seven days.</summary>
     public const int RecentDays = 7;
@@ -28,6 +30,15 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
         var numbers = planned.Select(p => p.BillNumber).Concat(recent.Select(v => v.Vote.Bill!.Number)).Distinct().ToList();
         var facts = numbers.Count == 0 ? new Dictionary<string, BillFacts>() : await bills.FindManyAsync(numbers, ct);
         var states = await appeals.BillStatesAsync(numbers, ct);
+
+        // Design 8.12.2 (owner, 2026-11-21): a reached bill's row names its summary's day, read once for every row.
+        var summaryOf = await summaries.OfAsync(states.Values.Select(s => (s.RecordId, s.Status, s.Threshold.Reached)), ct);
+        AgendaRecordResponse? Record(BillRecordState? state)
+        {
+            var numbers = Numbers(state);
+            return numbers is { Id: { } id } && summaryOf.TryGetValue(id, out var summary) ? numbers with { Summary = summary } : numbers;
+        }
+
         var plannedNumbers = planned.Select(p => p.BillNumber).Distinct().ToList();
         var shown = await organisations.ShownOnBillsAsync(plannedNumbers, ct);
         var read = await parliament.AgendaReadAsync(ct);
@@ -72,7 +83,7 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
             : shown.Select(o => new AgendaOrganisationResponse(o.Slug, o.Name, new OrganisationLabelResponse(o.Label.ConfirmedBy, o.Label.Domain), o.Stance)).ToList();
 
     /// <summary>A bill the catalogue knows has numbers (zeros while nobody took part); one it does not know has none.</summary>
-    private static AgendaRecordResponse? Record(BillRecordState? state) =>
+    private static AgendaRecordResponse? Numbers(BillRecordState? state) =>
         state is null ? null : new AgendaRecordResponse(state.RecordId, state.Status, AppealMapping.Map(state.Counts), AppealMapping.Map(state.Threshold));
 }
 

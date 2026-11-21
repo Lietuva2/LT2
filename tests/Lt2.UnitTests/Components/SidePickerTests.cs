@@ -130,6 +130,26 @@ public sealed class SidePickerTests : BunitContext
         _digests.Calls.ShouldBeEmpty("the day is the server's, given with the page");
     }
 
+    /// <summary>
+    /// Design 8.12.2 (owner, 2026-11-21): a bill that counts as reached only because it was in a summary really sent, its
+    /// participants now under the threshold, says so in place of "Riba pasiekta"; at or over the threshold it says "Riba
+    /// pasiekta" whether or not it was in a summary; a closed record speaks in the past tense.
+    /// </summary>
+    [Fact]
+    public void A_bill_reached_only_through_a_sent_summary_says_it_was_in_a_summary_to_mps()
+    {
+        var summarised = new ThresholdResponse(100, "default", null, 40, Reached: true, EnteredSummaries: true);
+
+        Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, summarised)).Find("#threshold-reached").TextContent
+            .ShouldBe("Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašo 40 dalyvių.");
+        Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, summarised with { Participants = 1 })).Find("#threshold-reached").TextContent
+            .ShouldBe("Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašo 1 dalyvis.");
+        Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, summarised with { Participants = 2 }).Add(c => c.Status, "closed"))
+            .Find("#threshold-reached").TextContent.ShouldBe("Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašė 2 dalyviai.");
+        Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, summarised with { Participants = 100 })).Find("#threshold-reached").TextContent
+            .ShouldBe("Riba pasiekta – balsuoti prašo 100 dalyvių.", "at its threshold, the threshold is what is true");
+    }
+
     /// <summary>A threshold first reached by a side taken on the page asks the day of the next summary then (design 8.12.2).</summary>
     [Fact]
     public void A_threshold_reached_on_the_page_asks_the_next_summarys_day()

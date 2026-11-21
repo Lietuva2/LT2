@@ -7,13 +7,14 @@
 @* How far the bill is from its threshold (design 8.12.1): the ruler and "n dalyvių · riba N". The server's numbers at first;
    after a side is taken, changed or withdrawn on the page, the bill's live numbers, without reloading the page.
    Once the threshold is reached (design 8.12.2, owner 2026-11-18) the ruler gives way to the words: "Riba pasiekta – balsuoti
-   prašo n dalyvių." and under it what is true of the summaries: the day the next one holding the bill is planned (with the
+   prašo n dalyvių." (a bill reached only by an earlier summary really sent, its participants now under the threshold:
+   "Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašo n dalyvių.", owner 2026-11-21) and under it what is true of the summaries: the day the next one holding the bill is planned (with the
    trial's "nesiunčiama" while sending is off), else the day the last one went, else that the next one's day is not known
    yet; on a closed record the past tense and the last summary only. A threshold first reached on the page asks the next
    day then. *@
 @if (Shown.Reached)
 {
-    <p class="num" id="threshold-reached"><b>@L.Format((Closed ? "Threshold.ReachedClosed." : "Threshold.Reached.") + NumberForms.Of(Shown.Participants), Display.Number(Shown.Participants))</b></p>
+    <p class="num" id="threshold-reached"><b>@L.Format(ReachedKey + NumberForms.Of(Shown.Participants), Display.Number(Shown.Participants))</b></p>
     @if (SummaryLine is { } line)
     {
         <p class="small num" id="threshold-summary">@line</p>
@@ -50,6 +51,19 @@ else
     private bool Closed => Status == BillRecordStatuses.Closed;
 
     private ThresholdResponse Shown => Live?.Threshold ?? Threshold;
+
+    /// <summary>
+    /// The reached line's words (design 8.12.2, owner 2026-11-21): a bill that counts as reached only because it was in a
+    /// summary really sent, its participants now under the threshold, says so ("Projektas jau buvo suvestinėje Seimo nariams
+    /// – …"); at or over its threshold, "Riba pasiekta – …". The key's number form is added by the caller.
+    /// </summary>
+    private string ReachedKey => (Shown.EnteredSummaries && Shown.Participants < Shown.Value, Closed) switch
+    {
+        (true, false) => "Threshold.Summarised.",
+        (true, true) => "Threshold.SummarisedClosed.",
+        (false, false) => "Threshold.Reached.",
+        (false, true) => "Threshold.ReachedClosed.",
+    };
 
     private DateOnly? Next => _liveNext ?? NextDay;
 

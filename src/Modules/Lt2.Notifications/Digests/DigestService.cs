@@ -272,30 +272,65 @@ internal sealed class DigestService(
 
     public async Task<DateOnly?> NextForRecordAsync(Guid recordId, CancellationToken cancellationToken)
     {
-        var candidate = await source.CandidateAsync(recordId, cancellationToken);
-        if (candidate is null || candidate.Held)
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return (await NextDaysAsync(db, [recordId], cancellationToken)).TryGetValue(recordId, out var day) ? day : null;
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, RecordSummaryDays>> SummaryDaysAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(recordIds);
+        var ids = recordIds.Distinct().ToList();
+        if (ids.Count == 0)
         {
-            return null;
+            return new Dictionary<Guid, RecordSummaryDays>();
         }
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
 
-        // A prepared summary that holds the record: its bills are fixed and it goes at its own time.
+        // Only a summary really sent counts (design 8.12.2, owner 2026-11-21): a dry run is not "išsiųsta".
+        var sent = (await (from i in db.DigestItems
+                           join r in db.DigestRuns on i.RunId equals r.Id
+                           where ids.Contains(i.RecordId) && r.Status == DigestRunStatuses.Sent
+                           group r.RunDate by i.RecordId into g
+                           select new { RecordId = g.Key, Day = g.Max() }).ToListAsync(cancellationToken))
+            .ToDictionary(x => x.RecordId, x => x.Day);
+        var next = await NextDaysAsync(db, ids, cancellationToken);
+        return ids.ToDictionary(
+            id => id,
+            id => new RecordSummaryDays(next.TryGetValue(id, out var planned) ? planned : null, sent.TryGetValue(id, out var last) ? last : null));
+    }
+
+    /// <summary>
+    /// The day the next summary holding each of the given records goes (design 8.12.2), read for all of them at once: a
+    /// prepared summary's own day when one holds the record (its bills are fixed and it goes at its own time), otherwise the
+    /// day <see cref="DigestRules.NextSendingDay"/> gives now. A record not open, held, or without a day known is missing.
+    /// </summary>
+    private async Task<Dictionary<Guid, DateOnly>> NextDaysAsync(NotificationsDb db, IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<Guid, DateOnly>();
+        var candidates = (await source.CandidatesAsync(recordIds, cancellationToken)).Where(c => !c.Held).ToList();
+        if (candidates.Count == 0)
+        {
+            return result;
+        }
+
+        var ids = candidates.Select(c => c.RecordId).ToList();
         var prepared = await (from i in db.DigestItems
                               join r in db.DigestRuns on i.RunId equals r.Id
-                              where i.RecordId == recordId && r.Status == DigestRunStatuses.Prepared
-                              orderby r.DueAt
-                              select r.DueAt ?? r.CreatedAt).FirstOrDefaultAsync(cancellationToken);
-        if (prepared != default)
+                              where ids.Contains(i.RecordId) && r.Status == DigestRunStatuses.Prepared
+                              select new { i.RecordId, At = r.DueAt ?? r.CreatedAt }).ToListAsync(cancellationToken);
+        foreach (var held in prepared.GroupBy(p => p.RecordId))
         {
-            return VilniusTime.DateOf(prepared);
+            result[held.Key] = VilniusTime.DateOf(held.Min(p => p.At));
         }
 
-        if (!DigestRules.Eligible(candidate))
+        var eligible = candidates.Where(c => !result.ContainsKey(c.RecordId) && DigestRules.Eligible(c)).ToList();
+        if (eligible.Count == 0)
         {
-            return null;
+            return result;
         }
 
+        var eligibleIds = eligible.Select(c => c.RecordId).ToList();
         var now = clock.GetUtcNow();
         var today = VilniusTime.DateOf(now);
         var sendingOn = (await StateAsync(db, cancellationToken)).On;
@@ -307,25 +342,54 @@ internal sealed class DigestService(
         var beforeVoteMade = (await db.DigestRuns.AsNoTracking().Where(r => r.Kind == DigestRules.BeforeVote && r.SittingDate >= today)
                 .Select(r => r.SittingDate!.Value).ToListAsync(cancellationToken))
             .ToHashSet();
-        var covered = candidate.Planned is { } planned
-            && (await CoveredByMondayAsync(db, DigestRules.WeekStart(planned.Date), planned.Date, sendingOn, cancellationToken)).Contains(recordId);
-        var last = await (from i in db.DigestItems
-                          join r in db.DigestRuns on i.RunId equals r.Id
-                          where i.RecordId == recordId && statuses.Contains(r.Status)
-                          orderby r.CreatedAt descending
-                          select (int?)(i.ForCount + i.AgainstCount)).FirstOrDefaultAsync(cancellationToken);
-        var sittings = (await mps.SittingDaysAsync(today, today.AddDays(DigestRules.SittingsKnownDays + 7), cancellationToken)).ToHashSet();
 
-        return DigestRules.NextSendingDay(candidate, new NextSummaryFacts(
-            now,
-            DigestRules.TimeOf(await settings.GetAsync(SettingKeys.DigestWeekly, cancellationToken)),
-            DigestRules.TimeOf(await settings.GetAsync(SettingKeys.DigestBeforeVote, cancellationToken)),
-            sittings,
-            weeklyMade,
-            beforeVoteMade,
-            covered,
-            last,
-            await settings.GetAsync(SettingKeys.DigestNotableChange, cancellationToken)));
+        // Whether the Monday summary of a record's planned week (a counting one, prepared or gone) holds it with that sitting
+        // date: one read for every record planned, compared here.
+        var plannedWeeks = eligible.Where(c => c.Planned is not null).Select(c => DigestRules.WeekStart(c.Planned!.Date)).ToList();
+        var mondays = new List<(Guid RecordId, DateOnly RunDate, DateOnly Sitting)>();
+        if (plannedWeeks.Count > 0)
+        {
+            mondays = (await (from i in db.DigestItems
+                              join r in db.DigestRuns on i.RunId equals r.Id
+                              where eligibleIds.Contains(i.RecordId) && r.Kind == DigestRules.Weekly && plannedWeeks.Contains(r.RunDate)
+                                    && i.PlannedDate != null && statuses.Contains(r.Status)
+                              select new { i.RecordId, r.RunDate, Sitting = i.PlannedDate!.Value }).ToListAsync(cancellationToken))
+                .Select(x => (x.RecordId, x.RunDate, x.Sitting)).ToList();
+        }
+
+        // Each record's participants in its last counting summary (none: never in one).
+        var lastCounts = (await (from i in db.DigestItems
+                                 join r in db.DigestRuns on i.RunId equals r.Id
+                                 where eligibleIds.Contains(i.RecordId) && statuses.Contains(r.Status)
+                                 select new { i.RecordId, r.CreatedAt, Count = i.ForCount + i.AgainstCount }).ToListAsync(cancellationToken))
+            .GroupBy(x => x.RecordId)
+            .ToDictionary(g => g.Key, g => g.MaxBy(x => x.CreatedAt)!.Count);
+        var sittings = (await mps.SittingDaysAsync(today, today.AddDays(DigestRules.SittingsKnownDays + 7), cancellationToken)).ToHashSet();
+        var weeklyAt = DigestRules.TimeOf(await settings.GetAsync(SettingKeys.DigestWeekly, cancellationToken));
+        var beforeVoteAt = DigestRules.TimeOf(await settings.GetAsync(SettingKeys.DigestBeforeVote, cancellationToken));
+        var notable = await settings.GetAsync(SettingKeys.DigestNotableChange, cancellationToken);
+
+        foreach (var candidate in eligible)
+        {
+            var covered = candidate.Planned is { } planned
+                && mondays.Any(m => m.RecordId == candidate.RecordId && m.RunDate == DigestRules.WeekStart(planned.Date) && m.Sitting == planned.Date);
+            var day = DigestRules.NextSendingDay(candidate, new NextSummaryFacts(
+                now,
+                weeklyAt,
+                beforeVoteAt,
+                sittings,
+                weeklyMade,
+                beforeVoteMade,
+                covered,
+                lastCounts.TryGetValue(candidate.RecordId, out var last) ? last : null,
+                notable));
+            if (day is { } d)
+            {
+                result[candidate.RecordId] = d;
+            }
+        }
+
+        return result;
     }
 
     public async Task<IReadOnlyList<DigestReview>> ReviewAsync(CancellationToken cancellationToken)

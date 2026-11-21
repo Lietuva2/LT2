@@ -11,7 +11,14 @@ namespace Lt2.Api.Contracts.Agenda;
 /// <c>Id</c> is the bill's record, null while nobody has taken part; <c>Status</c> is <c>open</c>, <c>closed</c> or
 /// <c>rejected</c> (taking part closed by the moderators, no numbers shown).
 /// </summary>
-public sealed record AgendaRecordResponse(Guid? Id, string Status, SideCountsResponse Counts, ThresholdResponse Threshold);
+public sealed record AgendaRecordResponse(Guid? Id, string Status, SideCountsResponse Counts, ThresholdResponse Threshold)
+{
+    /// <summary>
+    /// For a bill whose threshold is reached, the summary the row names in place of "riba pasiekta" (design 8.12.2): the one
+    /// planned that would hold it, else the last one really sent that held it; null otherwise.
+    /// </summary>
+    public Digests.RecordSummaryResponse? Summary { get; init; }
+}
 
 /// <summary>
 /// An organisation with a public statement on the bill (design 8.7): its profile's address, name, label and stance

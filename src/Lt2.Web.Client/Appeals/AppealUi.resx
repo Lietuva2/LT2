@@ -784,6 +784,8 @@
   <data name="Agenda.Against" xml:space="preserve"><value>prieš</value></data>
   <data name="Agenda.NobodyClosed" xml:space="preserve"><value>Niekas nedalyvavo</value></data>
   <data name="Agenda.Reached" xml:space="preserve"><value>riba pasiekta</value></data>
+  <data name="Agenda.Summary.planned" xml:space="preserve"><value>suvestinė planuojama {0}</value></data>
+  <data name="Agenda.Summary.sent" xml:space="preserve"><value>suvestinė išsiųsta {0}</value></data>
   <data name="Agenda.Participants.One" xml:space="preserve"><value>dalyvis</value></data>
   <data name="Agenda.Participants.Few" xml:space="preserve"><value>dalyviai</value></data>
   <data name="Agenda.Participants.Many" xml:space="preserve"><value>dalyvių</value></data>
@@ -796,6 +798,12 @@
   <data name="Threshold.ReachedClosed.One" xml:space="preserve"><value>Riba pasiekta – balsuoti prašė {0} dalyvis.</value></data>
   <data name="Threshold.ReachedClosed.Few" xml:space="preserve"><value>Riba pasiekta – balsuoti prašė {0} dalyviai.</value></data>
   <data name="Threshold.ReachedClosed.Many" xml:space="preserve"><value>Riba pasiekta – balsuoti prašė {0} dalyvių.</value></data>
+  <data name="Threshold.Summarised.One" xml:space="preserve"><value>Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašo {0} dalyvis.</value></data>
+  <data name="Threshold.Summarised.Few" xml:space="preserve"><value>Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašo {0} dalyviai.</value></data>
+  <data name="Threshold.Summarised.Many" xml:space="preserve"><value>Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašo {0} dalyvių.</value></data>
+  <data name="Threshold.SummarisedClosed.One" xml:space="preserve"><value>Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašė {0} dalyvis.</value></data>
+  <data name="Threshold.SummarisedClosed.Few" xml:space="preserve"><value>Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašė {0} dalyviai.</value></data>
+  <data name="Threshold.SummarisedClosed.Many" xml:space="preserve"><value>Projektas jau buvo suvestinėje Seimo nariams – balsuoti prašė {0} dalyvių.</value></data>
   <data name="Threshold.Next" xml:space="preserve"><value>Suvestinė Seimo nariams planuojama {0}.</value></data>
   <data name="Threshold.NextTrial" xml:space="preserve"><value>Suvestinė planuojama {0}; kol vyksta bandymas, Seimo nariams ji nesiunčiama.</value></data>
   <data name="Threshold.NextUnknown" xml:space="preserve"><value>Kitos suvestinės Seimo nariams data dar nežinoma.</value></data>

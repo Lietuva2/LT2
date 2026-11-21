@@ -1,9 +1,11 @@
 @using Lt2.Api.Contracts.Agenda
+@using Lt2.Api.Contracts.Digests
 @inherits InteractiveBase<AppealUi>
 @implements IDisposable
 @inject MyAgendaState State
 @inject IAppealsApi Appeals
 @inject IMeApi MeApi
+@inject IDigestsApi Digests
 
 @* A member's side column in a row of the timeline, on the front page and the agenda page alike (design 8.7, "Taking a side
    in the row"; 8.11.1, owner 2026-11-19), for a bill whose record is open. Under the bill's numbers a coming bill offers
@@ -235,12 +237,28 @@
         {
             if ((await Appeals.GetRecordAsync(Number)).Value is { } live)
             {
-                _live = new AgendaRecordResponse(live.Id, live.Status, live.Counts, live.Threshold);
+                _live = new AgendaRecordResponse(live.Id, live.Status, live.Counts, live.Threshold) { Summary = await SummaryAsync(live) };
             }
         }
         catch (HttpRequestException)
         {
             // The page's copy stays; the next action reads again.
         }
+    }
+
+    /// <summary>
+    /// The summary the row names once the threshold is reached (design 8.12.2, owner 2026-11-21). A side changes the numbers,
+    /// not the summaries' days, so the row keeps the one the page has; only a threshold first reached by the member's own
+    /// action asks the day of the next summary, as the bill's page does (one request, then never again for this row).
+    /// </summary>
+    private async Task<RecordSummaryResponse?> SummaryAsync(BillRecordResponse live)
+    {
+        var known = _live?.Summary ?? Record.Summary;
+        if (known is not null || !live.Threshold.Reached || Record.Threshold.Reached || _live is { Threshold.Reached: true } || live.Status != BillRecordStatuses.Open)
+        {
+            return known;
+        }
+
+        return RowSummaryRules.Of(live.Status, reached: true, (await Digests.GetRecordNextDigestAsync(Number)).Value?.Day, lastSent: null);
     }
 }

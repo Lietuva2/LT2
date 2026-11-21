@@ -119,7 +119,13 @@
                                     @T.Format("List.Activity", Display.Number(item.Counts.For + item.Counts.Against), Display.Number(item.Arguments))
                                 }
                             </span>
-                            @if (item.Counts.For + item.Counts.Against > 0)
+                            @if (item.Threshold.Reached)
+                            {
+                                @* Design 8.12.2 (owner, 2026-11-21): a reached threshold is said in words, without its number: the
+                                   summary planned that would hold the bill, else the last one really sent, else "riba pasiekta". *@
+                                <span class="small num" id="reached-@item.Bill.Number">@(item.Summary is { } summary ? T.Format("List.Summary." + summary.Kind, Display.Day(summary.Day)) : T["List.Reached"].Value)</span>
+                            }
+                            else if (item.Counts.For + item.Counts.Against > 0)
                             {
                                 <span class="small num">@T.Format("List.Limit", Display.Number(item.Threshold.Value))</span>
                             }

@@ -215,7 +215,14 @@ public sealed record SurgeResponse(int SharePercent, int WindowHours);
 /// </summary>
 public sealed record BillListItemResponse(
     Guid? Id, BillRefResponse Bill, string Status, SideCountsResponse Counts, ThresholdResponse Threshold, PlannedDateResponse? Planned, int Arguments,
-    DateTimeOffset? LastActivityAt = null);
+    DateTimeOffset? LastActivityAt = null)
+{
+    /// <summary>
+    /// For a bill whose threshold is reached, the summary the row names in place of "riba pasiekta" (design 8.12.2): the one
+    /// planned that would hold it, else the last one really sent that held it; null otherwise.
+    /// </summary>
+    public Digests.RecordSummaryResponse? Summary { get; init; }
+}
 
 public sealed record BillListResponse(IReadOnlyList<BillListItemResponse> Items, int Total, string? NextCursor);
 

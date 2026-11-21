@@ -135,6 +135,9 @@ public interface IDigestSource
     /// <summary>One record as <see cref="CandidatesAsync"/> gives it; null when it is not open.</summary>
     Task<DigestCandidate?> CandidateAsync(Guid recordId, CancellationToken cancellationToken);
 
+    /// <summary>The given records as <see cref="CandidatesAsync"/> gives them, in one read; those not open are missing.</summary>
+    Task<IReadOnlyList<DigestCandidate>> CandidatesAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken);
+
     /// <summary>
     /// The arguments a summary may choose from on the given records (design 8.19.2, owner 2026-11-17): published now (so
     /// neither hidden, merged nor waiting) and first public no later than <paramref name="publishedBy"/>, the summary's
