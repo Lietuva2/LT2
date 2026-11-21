@@ -1073,6 +1073,10 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .tl-item__side .splitbar, .tl-item__main .splitbar { width: 100%; }
 .tl-item .note { max-width: none; }
 
+/* "Neseniai balsuota" on the front page (owner, 2026-11-21): the voted days, which run back in time, set apart from the
+   planned days above them by a heading with room over it. */
+.home-recent { margin-block-start: var(--sp-6); }
+
 /* "Ankstesni balsavimai" under the last voted day (design 8.18): in the column of the rows, beside no date. */
 .tl-older { margin: 0; padding-inline-start: calc(9rem + var(--sp-5)); }
 

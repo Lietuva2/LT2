@@ -165,7 +165,8 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   following and no "Organizacijos" block; following is explained at `/metodika#sekimas` (8.16, 2026-11-16).
 - The front page shows the next two sitting days and the last two voting days, five rows of each; "Visa darbotvarkė"
   by the heading and "Ankstesni balsavimai →" under the last voted day (8.11.1, 2026-11-18). No row of links ("Visi
-  projektai", "Suvestinės Seimo nariams", "Seimo nariai") under its agenda (2026-11-19).
+  projektai", "Suvestinės Seimo nariams", "Seimo nariai") under its agenda (2026-11-19). The voted days stand under
+  their own heading, "Neseniai balsuota", so the turn from planned days to past ones is named (8.7, 2026-11-21).
 - A day's rows go by activity (participants plus published arguments), then stage (priėmimas, svarstymas, pateikimas; a
   combined stage as its furthest), then number; bills the open data does not know yet last, folded into one line.
   Followers never rank anything; a member's followed bills are not moved up ("Jūsų projektai" is their place)

@@ -648,7 +648,8 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `BillRecordState.Arguments`), then stage (adoption, consideration, presentation; the parser reads a combined stage as its
   furthest, `AgendaParser.StageOf`), then number, bills without a title last; the votes by Vilnius day, newest first, each
   day the same way. `AgendaRules.Day` cuts a day: the front page (`Home.razor`) shows `FrontDays` (2) planned and voted
-  days of `FrontPerDay` (5) and `/darbotvarke` `PagePerDay` (10), and only those (owner, 2026-11-18: the hidden rows are
+  days of `FrontPerDay` (5), the voted ones under the heading `h3#h-home-recent` "Neseniai balsuota" (owner, 2026-11-21;
+  `#home-no-recent` when none), and `/darbotvarke` `PagePerDay` (10), and only those (owner, 2026-11-18: the hidden rows are
   not in the HTML). A day grows by the shared `<ShowMore>` (owner, 2026-11-19, design 8.16.4; "Rodyti likusius" and
   `Agenda.ShowRest` gone): one day is `PlannedDay` / `VotedDay` (`Lt2.Web/Components/Agenda`, used by both pages), whose
   line `#{day}-more` (status `#{day}-shown`, "Rodoma N iš M") stands under a day with more known rows than its first page

@@ -377,6 +377,8 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
 
         var home = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/"));
         home.ShouldNotContain("id=\"home-voted-");
+        home.ShouldContain("<h3 class=\"home-recent\" id=\"h-home-recent\">Neseniai balsuota</h3>");
+        home.ShouldContain("<p id=\"home-no-recent\">Per pastarąsias septynias dienas Seimas dėl projektų etapų nebalsavo.</p>");
         home.ShouldContain("<p class=\"tl-older\" id=\"home-votes-older\"><a href=\"/seimas/balsavimai\">Ankstesni balsavimai →</a></p>");
         var agenda = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
         agenda.ShouldContain("id=\"agenda-no-recent\"");
@@ -394,6 +396,11 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
             var home = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/"));
             var voted = home.LastIndexOf("id=\"home-voted-", StringComparison.Ordinal);
             voted.ShouldBeGreaterThan(0);
+            // The voted days stand under their own heading, after every planned day and before the first voted one.
+            var heading = home.IndexOf("id=\"h-home-recent\"", StringComparison.Ordinal);
+            heading.ShouldBeGreaterThan(home.LastIndexOf("id=\"agenda-", StringComparison.Ordinal));
+            heading.ShouldBeLessThan(home.IndexOf("id=\"home-voted-", StringComparison.Ordinal));
+            home.ShouldNotContain("id=\"home-no-recent\"");
             home.IndexOf("id=\"home-votes-older\"", StringComparison.Ordinal).ShouldBeGreaterThan(voted);
             home.IndexOf("id=\"home-votes-older\"", StringComparison.Ordinal).ShouldBeLessThan(home.IndexOf("id=\"home-older-note\"", StringComparison.Ordinal));
 
