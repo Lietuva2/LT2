@@ -8,8 +8,9 @@
 
 @* The bills people can take part on (design 8.12.5, GET /appeals), server-rendered and readable without JavaScript: every
    active bill, by activity (participants plus published arguments) unless sorted by planned date or by the latest activity
-   (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form; the order, the filter "Planuojami per 14 dienų" (a link that applies at
-   once, keeping the search), the closed tab and "Rodyti daugiau" are plain links. Each row shows its participants and
+   (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form with the box "Planuojami per 14 dienų", applied with
+   "Rodyti" (owner, 2026-11-21); the order (keeping the search and the filter), the closed tab and "Rodyti daugiau" are
+   plain links. Each row shows its participants and
    arguments, and the sides' numbers beside its bar. Nothing stands under the list: what the numbers are and what "riba" is
    are said on the bill's page and the methodology (owner, 2026-11-21). *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
@@ -48,15 +49,16 @@
             {
                 <input type="hidden" name="rikiuoti" value="@Sort" />
             }
-            @if (Planned)
-            {
-                <input type="hidden" name="planuojami" value="taip" />
-            }
         }
         <div class="field">
             <label for="q">@T["List.Search"]</label>
             <input class="input" id="q" name="q" type="search" value="@Q" autocomplete="off" />
         </div>
+        @if (!Closed)
+        {
+            @* Owner, 2026-11-21: the filter is a box in the search form, right above "Rodyti", applied with it. *@
+            <label class="check small"><input type="checkbox" id="planuojami" name="planuojami" value="taip" checked="@Planned" /><span>@T["List.Planned"]</span></label>
+        }
         <div class="row">
             <button class="btn" type="submit">@T["List.SearchButton"]</button>
             @if (Filtered)
@@ -69,8 +71,6 @@
 
 @if (!Closed)
 {
-    @* Owner, 2026-11-17: the filter is a link that applies at once (no script), on the ground above the list with the order. *@
-    <p class="small"><a class="toggle-link" href="@Link(null, Sort, !Planned)" id="planned" aria-current="@(Planned ? "true" : null)">@T["List.Planned"]</a></p>
     <p class="small" id="sort">
         @T["List.Sort"]@(" ")
         @for (var i = 0; i < SortNames.Length; i++)

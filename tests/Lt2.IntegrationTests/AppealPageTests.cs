@@ -356,8 +356,12 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("<a href=\"/projektai?rikiuoti=data\" id=\"sort-data\">pagal planuojamą datą</a>");
         html.ShouldNotContain("rikiuoti=argumentai");
         html.ShouldNotContain("rikiuoti=dalyviai");
-        html.ShouldContain("<a class=\"toggle-link\" href=\"/projektai?planuojami=taip\" id=\"planned\">Planuojami per 14 dienų</a>");
-        html.ShouldNotContain("id=\"planuojami\"", customMessage: "no checkbox applied by \"Rodyti\"");
+        // Owner, 2026-11-21: the filter is a box in the search form, right above "Rodyti", applied with it; no link of its own.
+        var form = html[html.IndexOf("id=\"bill-search\"", StringComparison.Ordinal)..];
+        form = form[..form.IndexOf("</form>", StringComparison.Ordinal)];
+        form.ShouldContain("<label class=\"check small\"><input type=\"checkbox\" id=\"planuojami\" name=\"planuojami\" value=\"taip\" /><span>Planuojami per 14 dienų</span></label>");
+        form.IndexOf("id=\"planuojami\"", StringComparison.Ordinal).ShouldBeLessThan(form.IndexOf("type=\"submit\"", StringComparison.Ordinal), "above the button");
+        html.ShouldNotContain("id=\"planned\"");
         var (_, oldSort) = await PageAsync(stranger, "/projektai?rikiuoti=argumentai");
         oldSort.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">", customMessage: "an old order falls back to the default");
         html.ShouldNotContain("/kreipimaisi", customMessage: "the site links to /projektai directly, not through the redirect");
@@ -377,10 +381,12 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
             planned.ShouldContain("id=\"bill-XVP-0533\"");
             planned.ShouldNotContain("id=\"bill-XVP-0618\"");
 
-            // The link turns the filter off and keeps the search and the order; the search keeps the filter.
+            // While on, the box is ticked and the form keeps the order; the orders keep the search and the filter.
             var (_, searched) = await PageAsync(stranger, "/projektai?rikiuoti=data&q=rinkliav&planuojami=taip");
-            searched.ShouldContain("<a class=\"toggle-link\" href=\"/projektai?rikiuoti=data&q=rinkliav\" id=\"planned\" aria-current=\"true\">");
-            searched.ShouldContain("type=\"hidden\" name=\"planuojami\" value=\"taip\"");
+            searched.ShouldContain("<input type=\"checkbox\" id=\"planuojami\" name=\"planuojami\" value=\"taip\" checked />");
+            searched.ShouldNotContain("type=\"hidden\" name=\"planuojami\"");
+            searched.ShouldContain("type=\"hidden\" name=\"rikiuoti\" value=\"data\"");
+            searched.ShouldContain("<a href=\"/projektai?q=rinkliav&planuojami=taip\" id=\"sort-aktyvumas\">");
             var (_, byDate) = await PageAsync(stranger, "/projektai?rikiuoti=data");
             byDate.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal).ShouldBeLessThan(byDate.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal), "the planned one first");
         }

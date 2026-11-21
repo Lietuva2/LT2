@@ -703,8 +703,8 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), planned date or the latest activity (owner, 2026-11-17: the page offers these
   three, `rikiuoti` = `aktyvumas`, `data`, `naujausia`; another value falls back to the default; the API's `sort` has
-  `activity`, `participants`, `arguments`, `planned`, `latest`), with a search and the link "Planuojami per 14 dienų"
-  (applies at once, keeps the search; `aria-current` while on); each row has "už … · prieš …" beside its bar (`List.Counts`,
+  `activity`, `participants`, `arguments`, `planned`, `latest`), with a search and the box "Planuojami per 14 dienų"
+  (`input#planuojami` in the search form above "Rodyti", applied with it; owner 2026-11-21); each row has "už … · prieš …" beside its bar (`List.Counts`,
   one number a side; nothing under the list: no note, hint or `#not-a-poll`, owner 2026-11-21; the sheet has no heading,
   so the h1 and `ProjectTabs` are its sticky `div.page-head#page-head`, design 8.16.5; `p#found` is an ordinary line), and in
   the latest-activity order "Paskutinė veikla {yyyy-MM-dd HH:mm}". The last activity is one time per bill,
