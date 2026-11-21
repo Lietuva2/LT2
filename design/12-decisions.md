@@ -320,6 +320,8 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   the title and the tab row under it; the lead and the filters scroll away, and the count line is an ordinary line
   (8.16.5; owner, 2026-11-21). The statistics' comparison keeps its heading, shortened to "„Už“ dalis: Seimas ir Lietuva
   2.0 naudotojai", in view the same way, on the ground above its filters and sheet (8.16.5, 8.26; owner, 2026-11-21).
+- `/projektai`'s "Planuojami per 14 dienų" is a box in the search form above "Rodyti", applied with it, not a link on a
+  line of its own; no date range filter, since planned dates reach about two weeks ahead (8.12.5; owner, 2026-11-21).
 
 ## 8.19 Sending the summaries
 
