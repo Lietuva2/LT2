@@ -106,7 +106,9 @@ Read before changing a page, a component or an island. The rules behind it are d
   rule; a label or crumbs above it stay outside, and the lead and the filters follow in `div.stack.page-head__rest`. Its
   margins assume `main`'s `.stack--loose` gap. `--page-head` (one line of title, with or without the tabs, through
   `main:has`) places the dates and the `scroll-margin-top` of every element with an id after it. The count line in the
-  sheet stays an ordinary line. Under 54rem the head's h1 is `--fs-4`.
+  sheet stays an ordinary line. Under 54rem the head's h1 is `--fs-4`. **A list whose h2 stands on the ground above its
+  filters and sheet, in one container with them** (the statistics' comparison), gives that h2 `class="ground-head"`:
+  sticky within that container on the ground's colour, `--ground-head` its height for the landings after it.
 - **Lists of bills show one number a side and nothing under them (owner, 2026-11-21):** no count for accounts older than
   30 days in brackets, no note, no hint, no "not a representative poll"; those stay on the bill's page, the summaries,
   the statistics page and the methodology.

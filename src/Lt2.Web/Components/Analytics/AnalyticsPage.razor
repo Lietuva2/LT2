@@ -108,7 +108,9 @@
     </section>
 
     <div class="stack" id="@AnalyticsList.Anchor">
-        <h2 id="h-compare">@T["Compare.Title"]</h2>
+        @* Design 8.16.5 (owner, 2026-11-21): the comparison's heading stands on the ground above its filters and its sheet,
+           and stays at the top of the screen until the sheet has scrolled past; the lead and the filters scroll away. *@
+        <h2 class="ground-head" id="h-compare">@T["Compare.Title"]</h2>
         <p class="small" id="compare-lead">@T["Compare.Lead"]</p>
         @if (d.BillsClosed > 0)
         {
