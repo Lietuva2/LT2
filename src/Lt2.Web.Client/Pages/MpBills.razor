@@ -9,9 +9,9 @@
 @* "Projektai, dėl kurių į jus kreipiamasi" (design 8.5.7): for an account linked to an MP (the MP's or an office member's; a
    code session may read it), reached from the account page. The summaries' list on a page, live: the open bills that
    reached the threshold and are not held, in the summaries' order, each with its number, title, stage, "Planuojama …", both
-   sides' numbers, and the MP's own response or a link to answer on the bill's page; then (owner, 2026-11-17) the bills the MP
-   answered that are in no summary now, newest answer first, without the numbers. Nothing about other MPs. Asked for only in
-   the browser. *@
+   sides' numbers (one each, and no notes under the list: owner, 2026-11-21), and the MP's own response or a link to answer
+   on the bill's page; then (owner, 2026-11-17) the bills the MP answered that are in no summary now, newest answer first,
+   without the numbers. Nothing about other MPs. Asked for only in the browser. *@
 <PageTitle>@L["MpBills.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -59,11 +59,13 @@ else
                                     <span class="num">@L.Format("MpBills.Planned", Display.Day(plan.Date))</span>
                                 </span>
                             }
-                            @if (b is { For: { } forCount, ForOlderThan30Days: { } forOlder, Against: { } againstCount, AgainstOlderThan30Days: { } againstOlder })
+                            @if (b is { For: { } forCount, Against: { } againstCount })
                             {
-                                <span class="small num">
-                                    <span class="choice choice--for">@L["MpBills.ForSide"]</span> @Display.Number(forCount) (@L.Format("MpBills.Older", Display.Number(forOlder)))
-                                    · <span class="choice choice--against">@L["MpBills.AgainstSide"]</span> @Display.Number(againstCount) (@L.Format("MpBills.Older", Display.Number(againstOlder)))
+                                @* Owner, 2026-11-21: one number a side, as every list of bills; the bill's page and the summary
+                                   carry the count for accounts older than 30 days. *@
+                                <span class="small num" id="mp-bill-counts-@b.Number">
+                                    <span class="choice choice--for">@L["MpBills.ForSide"]</span> @Display.Number(forCount)
+                                    · <span class="choice choice--against">@L["MpBills.AgainstSide"]</span> @Display.Number(againstCount)
                                 </span>
                             }
                             else
@@ -98,7 +100,6 @@ else
             </ul>
         }
     </section>
-    <p class="note note--quiet" id="mp-bills-not-a-poll">@L["MpBills.NotAPoll"]</p>
 }
 
 @code {

@@ -108,8 +108,12 @@ floor; 8.4).
 ## 6.6 Integrity of the numbers
 
 - One account per normalised email address (6.2); one position per account per bill. This is weaker than a verified identity,
-  which is why the 30-day count is always shown and why every number is described as a signal.
-- Every published count comes with the count for **accounts older than 30 days**.
+  which is why the 30-day count is shown wherever a bill's numbers are read in full and why every number is described
+  as a signal.
+- A bill's counts on its page, in the summaries (page and email), on the moderators' summary screen and on the
+  statistics page come with the count for **accounts older than 30 days**. A list of bills (the front page, the agenda,
+  `/projektai`, an MP's bills) shows one number a side and leads to the bill's page, where the count is (owner,
+  2026-11-21).
 - **Surge detection:** when a large share of recent positions on a bill come from accounts created in the last days
   (default: at least 30 % of the last 72 hours' positions and at least 50 accounts; the settings `Surge:MinimumShare`,
   `Surge:WindowHours`, `Surge:MinimumAccounts`), the bill's page and the summary say so in neutral words, and a moderator

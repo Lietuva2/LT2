@@ -257,9 +257,9 @@ public sealed class MenuTests : E2ETest
             }
         }
 
-        // The link under the agenda's voted list stays as a second way to the history of votes; its tab row leads back.
+        // The link beside the agenda's voted list's heading stays as a second way to the history of votes; its tab row leads back.
         await page.GotoAsync(E2ESteps.Base + "/darbotvarke");
-        await page.Locator("#agenda-votes-older a").ClickAsync();
+        await page.Locator("#agenda-votes-older").ClickAsync();
         await page.WaitForURLAsync(new Regex("/seimas/balsavimai$"), new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.Locator("#tab-seimas-balsavimai")).ToHaveAttributeAsync("aria-current", "page");
         await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", "true");

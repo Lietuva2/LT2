@@ -448,13 +448,16 @@ public sealed class MyAgendaTests : BunitContext
     [Fact]
     public void A_line_of_numbers_breaks_only_between_its_parts()
     {
-        // Design 8.7, "The row lines up": a side's word, count and bracket stay together, so do the participants, and "riba
-        // pasiekta"; the "·" ends a part, so no line starts with it. Reached, the line no longer names the threshold's number
-        // (design 8.12.2, owner 2026-11-18); under it, the participants keep the threshold beside them.
+        // Design 8.7, "The row lines up": a side's word and count stay together, so do the participants, and "riba pasiekta";
+        // the "·" ends a part, so no line starts with it. Reached, the line no longer names the threshold's number (design
+        // 8.12.2, owner 2026-11-18); under it, the participants keep the threshold beside them. Owner, 2026-11-21: one number
+        // a side, without the count for accounts older than 30 days in brackets.
         var record = new AgendaRecordResponse(null, "open", new SideCountsResponse(6800, 6195, 4280, 3917), new ThresholdResponse(10000, "default", null, 11080, true, false));
         var figures = Render<RecordFigures>(p => p.Add(c => c.Record, record).Add(c => c.Id, "2026-11-19-XVP-0412"));
-        var forPart = $"{Text("Agenda.For")} {Display.Number(6800)} ({Display.Number(6195)})";
-        var againstPart = $"{Text("Agenda.Against")} {Display.Number(4280)} ({Display.Number(3917)})";
+        var forPart = $"{Text("Agenda.For")} {Display.Number(6800)}";
+        var againstPart = $"{Text("Agenda.Against")} {Display.Number(4280)}";
+        figures.Find("#home-counts-2026-11-19-XVP-0412").TextContent.ShouldNotContain("(");
+        figures.Markup.ShouldNotContain(Display.Number(6195));
 
         figures.FindAll("#home-counts-2026-11-19-XVP-0412 > .nowrap").Select(e => Flat(e.TextContent)).ShouldBe([Flat(forPart + " ·"), Flat(againstPart)]);
         var threshold = figures.FindAll(".nowrap").Skip(2).Select(e => Flat(e.TextContent)).ToList();

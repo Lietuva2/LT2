@@ -1052,13 +1052,36 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   .starter__short { display: flex; }
 }
 
-/* The agenda's sheet (design 8.16): a sheet stands apart by itself, so it comes one step closer to what is above it,
+/* The agenda's first sheet (design 8.16): a sheet stands apart by itself, so it comes one step closer to what is above it,
    which keeps its heading on the first screen at 1280 px (design 8.7). */
 .home-agenda { margin-block-start: calc(var(--sp-6) - var(--sp-7)); }
 
-/* The timeline: one block per sitting day, the day's date beside its bills. */
-.tl-day { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
-.tl-date { position: sticky; top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-1); }
+/* A list's heading row (design 8.16.5, owner 2026-11-21): the heading and the link beside it stay at the top of the screen
+   while their own sheet scrolls past and leave with it, on the sheet's colour with a rule under it, at every width. It
+   takes its padding out of the gap above it, so at rest the heading stands where it would. --list-head is the row's
+   height with one line of heading (the link beside it is lower than the heading); a day's date (from 54rem) stays just
+   under it, and a link that lands in the list (--list-landing) stops below it. Under 54rem the link may go under the
+   heading, so a landing leaves room for that line as well. */
+:root {
+  --list-head: calc(0.98 * var(--fs-5) + 2 * var(--sp-3) + 1px);
+  --list-landing: calc(var(--list-head) + var(--sp-4));
+}
+.list-head {
+  position: sticky; top: 0; z-index: 2;
+  min-height: var(--list-head);
+  margin-block-start: calc(-1 * var(--sp-3)); padding-block: var(--sp-3);
+  background: var(--sheet); border-bottom: 1px solid var(--rule);
+}
+@media (max-width: 54rem) {
+  :root { --list-landing: calc(var(--list-head) + 1.5 * var(--fs-2) + var(--sp-3) + var(--sp-4)); }
+}
+
+/* The timeline: one block per sitting day, the day's date beside its bills, kept just under the list's heading row. */
+.tl-day {
+  display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-5); align-items: start;
+  scroll-margin-top: var(--list-landing);
+}
+.tl-date { position: sticky; top: calc(var(--list-head) + var(--sp-4)); display: flex; flex-direction: column; gap: var(--sp-1); }
 .tl-date b { font: 800 var(--fs-5)/0.95 var(--font-display); }
 .tl-past .tl-date b { color: var(--ink-2); }
 .tl-items { list-style: none; margin: 0; padding: 0; }
@@ -1073,21 +1096,14 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .tl-item__side .splitbar, .tl-item__main .splitbar { width: 100%; }
 .tl-item .note { max-width: none; }
 
-/* "Neseniai balsuota" on the front page (owner, 2026-11-21): the voted days, which run back in time, set apart from the
-   planned days above them by a heading with room over it. */
-.home-recent { margin-block-start: var(--sp-6); }
-
-/* "Ankstesni balsavimai" under the last voted day (design 8.18): in the column of the rows, beside no date. */
-.tl-older { margin: 0; padding-inline-start: calc(9rem + var(--sp-5)); }
-
 /* A vote's majority chip and its numbers on one line (design 8.18, "The majority"). */
 .result-line { gap: var(--sp-1) var(--sp-2); }
 
 /* A day's column (owner, 2026-11-18; 2026-11-19): the rows it shows, then, once every known row shows, the bills the open
    data does not know yet folded into one line, then the shared "Rodoma N iš M · Rodyti daugiau" (ShowMore), each under the
-   rows, at the rows' left edge. The link lands on the first row added, a little below the top of the screen. */
+   rows, at the rows' left edge. The link lands on the first row added, a little below the list's heading row. */
 .tl-rows { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
-.tl-items > .tl-item { scroll-margin-top: var(--sp-4); }
+.tl-items > .tl-item { scroll-margin-top: var(--list-landing); }
 .tl-unknown > summary { padding-block: var(--sp-1); }
 .tl-unknown__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .tl-unknown__list > li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
@@ -1131,7 +1147,6 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   .tl-past .tl-date { border-inline-start-color: var(--ink-3); }
   .tl-day + .tl-day { margin-block-start: var(--sp-4); }
   .tl-date b { font-size: var(--fs-4); }
-  .tl-older { padding-inline-start: 0; }
   .tl-item { grid-template-columns: minmax(0, 1fr); }
   .tl-item__side { max-width: 26rem; }
   .tl-ask { max-width: none; }

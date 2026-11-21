@@ -240,7 +240,26 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         html.ShouldNotContain("id=\"email\"");
         html.ShouldNotContain("Aktyviausi projektai");
         html.IndexOf("Kaip tai veikia", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal));
-        html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"not-a-poll\"", StringComparison.Ordinal));
+
+        // Owner, 2026-11-21: the planned days and the voted days are two sheets, each heading row holding its heading and the
+        // link to the list's long form (design 8.7, 8.16.5).
+        html.ShouldContain("<section class=\"sheet stack home-agenda\" aria-labelledby=\"h-home-coming\" id=\"home-coming\">");
+        html.ShouldContain("<section class=\"sheet stack\" aria-labelledby=\"h-home-recent\" id=\"home-recent\">");
+        var coming = ReasonsToComeSteps.HeadRow(html, "h-home-coming");
+        coming.ShouldContain("<h2 id=\"h-home-coming\">Artimiausiu metu Seime</h2>");
+        coming.ShouldContain("<a href=\"/darbotvarke\" id=\"home-agenda-all\">Visa darbotvarkė →</a>");
+        var recent = ReasonsToComeSteps.HeadRow(html, "h-home-recent");
+        recent.ShouldContain("<h2 id=\"h-home-recent\">Neseniai balsuota</h2>");
+        recent.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"home-votes-older\">Ankstesni balsavimai →</a>");
+
+        // Nothing under the lists: no note on the numbers, no hint and no "not a representative poll" (the bill's page,
+        // the summaries, the statistics and the methodology say it).
+        html.ShouldNotContain("id=\"not-a-poll\"");
+        html.ShouldNotContain("Tai nėra reprezentatyvi apklausa");
+        html.ShouldNotContain("id=\"home-older-note\"");
+        html.ShouldNotContain("Skliaustuose");
+        html.ShouldNotContain("id=\"threshold-what\"");
+        html.ShouldNotContain("Kas yra balsavusiųjų dauguma");
 
         // Owner, 2026-11-19: no row of links under the agenda ("Visi projektai", the summaries, the MPs); the footer repeats
         // the menu's sections instead (design 8.21, NavigationTests).
@@ -251,10 +270,6 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         main.ShouldNotContain("Suvestinės Seimo nariams");
         main.ShouldNotContain("href=\"/suvestines\"", customMessage: "the summaries are reached from the menu and the footer");
 
-        // Design 8.15: "Kas yra riba?" once, beside the note under the timeline, with the number that holds now; none per row.
-        Regex.Count(html, "class=\"hint__trigger\" id=\"threshold-what\"").ShouldBe(1);
-        html.ShouldContain("Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – ");
-        html.IndexOf("id=\"home-older-note\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"threshold-what\"", StringComparison.Ordinal));
 
         // The member's "Kaip tai veikia" lands on the same steps on the methodology page.
         var method = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/metodika"));

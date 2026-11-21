@@ -163,10 +163,17 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 - The front page's head: a larger logo beside the title and the lead, the trial note under both; no paragraph on
   following and no "Organizacijos" block; following is explained at `/metodika#sekimas` (8.16, 2026-11-16).
-- The front page shows the next two sitting days and the last two voting days, five rows of each; "Visa darbotvarkė"
-  by the heading and "Ankstesni balsavimai →" under the last voted day (8.11.1, 2026-11-18). No row of links ("Visi
-  projektai", "Suvestinės Seimo nariams", "Seimo nariai") under its agenda (2026-11-19). The voted days stand under
-  their own heading, "Neseniai balsuota", so the turn from planned days to past ones is named (8.7, 2026-11-21).
+- The front page shows the next two sitting days and the last two voting days, five rows of each (8.11.1, 2026-11-18).
+  No row of links ("Visi projektai", "Suvestinės Seimo nariams", "Seimo nariai") under its agenda (2026-11-19).
+- The front page's planned days and voted days are two sheets, "Artimiausiu metu Seime" and "Neseniai balsuota" (both
+  h2), each with its long form's link beside the heading ("Visa darbotvarkė →", "Ankstesni balsavimai →"; on
+  `/darbotvarke` "Ankstesni balsavimai →" beside the recent votes' heading too). A list's heading row stays at the top of
+  the screen while its sheet scrolls past, at every width; from 54rem a day's date stays just under it. Lists of bills
+  (the front page, `/darbotvarke`, `/projektai`, an MP's bills) show one number a side, without the count for accounts
+  older than 30 days in brackets, and nothing under them: no note on the brackets, no hints ("Kas yra riba?", the
+  majority) and no "not a representative poll" notice. That notice stays on the bill's page, the summaries (page and
+  email), the statistics page and the methodology, and the counts for accounts older than 30 days on the bill's page,
+  the summaries, the moderators' summary screen and the statistics (8.7, 8.11.1, 8.12.5, 8.16.5; owner, 2026-11-21).
 - A day's rows go by activity (participants plus published arguments), then stage (priėmimas, svarstymas, pateikimas; a
   combined stage as its furthest), then number; bills the open data does not know yet last, folded into one line.
   Followers never rank anything; a member's followed bills are not moved up ("Jūsų projektai" is their place)

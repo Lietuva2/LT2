@@ -32,7 +32,8 @@ public sealed partial class ReasonsToComeTests : E2ETest
         await page.GotoAsync(Base + "/darbotvarke");
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Seimo darbotvarkė", Level = 1 })).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#agenda-coming")).ToContainTextAsync("Planuojama");
-        await Assertions.Expect(page.Locator("#not-a-poll")).ToBeVisibleAsync();
+        // Owner, 2026-11-21: no "not a representative poll" under the lists; the bill's page has it.
+        await Assertions.Expect(page.Locator("#not-a-poll")).ToHaveCountAsync(0);
     }
 
     /// <summary>

@@ -2,9 +2,7 @@
 @using Lt2.Api.Contracts.Agenda
 @using Lt2.Web.Client.Agenda
 @inject IAgendaApi Api
-@inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject IStringLocalizer<PageText> T
-@inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject Formats F
 
 @* The agenda (design 8.11.1): public, server-rendered, readable without JavaScript. What the Seimas plans to consider, by
@@ -29,8 +27,13 @@
     </AuthorizeView>
 </div>
 
+@* Two lists, each on its sheet; each heading row stays at the top of the screen while its sheet scrolls past (.list-head,
+   design 8.16.5). Nothing stands under the lists: what the numbers are is said on the bill's page and the methodology
+   (owner, 2026-11-21). *@
 <section class="sheet stack" aria-labelledby="h-coming" id="agenda-coming">
-    <h2 id="h-coming">@T["Agenda.Coming"]</h2>
+    <div class="row list-head">
+        <h2 id="h-coming">@T["Agenda.Coming"]</h2>
+    </div>
     <p class="small" id="agenda-source">
         @* An explicit space: Razor drops the white space between the sentences. *@
         @T["Agenda.Source"]@(" ")
@@ -60,8 +63,12 @@
     }
 </section>
 
+@* Design 8.18: the long form of this list beside its heading, also when the last seven days had no vote. *@
 <section class="sheet stack" aria-labelledby="h-recent" id="agenda-recent">
-    <h2 id="h-recent">@T["Agenda.Recent"]</h2>
+    <div class="row list-head">
+        <h2 id="h-recent">@T["Agenda.Recent"]</h2>
+        <a href="@Lt2.Web.Client.Parliament.VoteHistory.Path" id="agenda-votes-older">@T["Agenda.Older"]</a>
+    </div>
     @if (_agenda is null || _agenda.RecentVotes.Count == 0)
     {
         <p id="agenda-no-recent">@T["Agenda.NoRecent"]</p>
@@ -73,22 +80,11 @@
             <NotAuthorized>@Recent(false)</NotAuthorized>
         </AuthorizeView>
     }
-    @* Design 8.18: the long form of this list, also when the last seven days had no vote. *@
-    <p class="tl-older" id="agenda-votes-older"><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path">@T["Agenda.Older"]</a></p>
 </section>
-
-@* Design 8.15: "riba" repeats in the rows, so what it is is said once, beside the list's note (a hint). *@
-<p class="small" id="agenda-older-note">@T["Agenda.OlderNote"]@if (_threshold is { } threshold)
-    {
-        @(" · ")<Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@(A["Threshold.Meaning"] + " " + A.Format("Threshold.NowList", Display.Number(threshold)))" More="/metodika#riba" />
-    }@* Design 8.18, "The majority": what the voted rows' chip means, once beside the list. *@@(" · ")<MajorityHint /></p>
-<p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 
 @code {
     private AgendaResponse? _agenda;
 
-    /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint beside the list.</summary>
-    private int? _threshold;
 
     /// <summary>The planned days shown grown, with the known rows each shows (<c>?diena=2026-11-24:60</c>), for the links.</summary>
     private IReadOnlyDictionary<DateOnly, int> _planned = new Dictionary<DateOnly, int>();
@@ -117,7 +113,6 @@
         var planned = AgendaPaging.Read(Planned);
         var voted = AgendaPaging.Read(Voted);
         _agenda = (await Api.GetAgendaAsync()).Value;
-        _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
 
         // Owner, 2026-11-18: one block per sitting day with its date, weekday and count; the first ten rows of a day in the
         // agenda's order (AgendaRules). Owner, 2026-11-19: then the shared "Rodyti daugiau", 50 more a click by the address

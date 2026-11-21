@@ -1,14 +1,14 @@
 @using Lt2.Api.Contracts.Agenda
 @inject IStringLocalizer<AppealUi> L
 
-@* A bill's public numbers in a row of the timeline (design 8.7, 8.11.1): both sides with the count for accounts older than
-   30 days in brackets, the bar and the threshold; a bill nobody took part in says so, unless the row offers the sides
-   (owner, 2026-11-19: "minimise non-essential texts"; the buttons stand there instead) or the member's own answer has a
-   side (the page's agenda is up to a minute old, so a member who has just taken a side must not read that nobody has); a
-   closed one always says "Niekas nedalyvavo". A line breaks only after a "·", never inside a part ("The row lines up").
-   The page explains the brackets and says the numbers are not a representative poll right under the timeline. Plain
-   markup, no island of its own: the server renders it in every row, and the member's island of a row (MyAgendaSide)
-   renders the same component, with the bill's live numbers after the member's own action. *@
+@* A bill's public numbers in a row of the timeline (design 8.7, 8.11.1): both sides, one number each (owner, 2026-11-21: a
+   list carries no count for accounts older than 30 days; the bill's page does), the bar and the threshold; a bill nobody
+   took part in says so, unless the row offers the sides (owner, 2026-11-19: "minimise non-essential texts"; the buttons
+   stand there instead) or the member's own answer has a side (the page's agenda is up to a minute old, so a member who has
+   just taken a side must not read that nobody has); a closed one always says "Niekas nedalyvavo". A line breaks only after
+   a "·", never inside a part ("The row lines up"). Nothing under the list explains the numbers: the bill's page and the
+   methodology do. Plain markup, no island of its own: the server renders it in every row, and the member's island of a
+   row (MyAgendaSide) renders the same component, with the bill's live numbers after the member's own action. *@
 @if (Record.Counts.For + Record.Counts.Against == 0)
 {
     @if (!HideNobody)
@@ -19,8 +19,8 @@
 else
 {
     <span class="small num" id="@(Id is null ? null : "home-counts-" + Id)">
-        <span class="nowrap"><span class="choice choice--for">@L["Agenda.For"]</span> @Display.Number(Record.Counts.For) (@Display.Number(Record.Counts.ForOlderThan30Days)) ·</span>
-        <span class="nowrap"><span class="choice choice--against">@L["Agenda.Against"]</span> @Display.Number(Record.Counts.Against) (@Display.Number(Record.Counts.AgainstOlderThan30Days))</span>
+        <span class="nowrap"><span class="choice choice--for">@L["Agenda.For"]</span> @Display.Number(Record.Counts.For) ·</span>
+        <span class="nowrap"><span class="choice choice--against">@L["Agenda.Against"]</span> @Display.Number(Record.Counts.Against)</span>
     </span>
     <SplitBar For="Record.Counts.For" Against="Record.Counts.Against" Abstain="0" Small="true" />
     @* Once the threshold is reached the line no longer measures towards it (design 8.12.2, owner 2026-11-18: as the bill's page

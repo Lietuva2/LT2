@@ -156,13 +156,11 @@
   <data name="MpBills.Planned" xml:space="preserve"><value>Planuojama {0}</value></data>
   <data name="MpBills.ForSide" xml:space="preserve"><value>Už</value></data>
   <data name="MpBills.AgainstSide" xml:space="preserve"><value>Prieš</value></data>
-  <data name="MpBills.Older" xml:space="preserve"><value>senesnių nei 30 d. paskyrų: {0}</value></data>
   <data name="MpBills.Answered" xml:space="preserve"><value>Atsakyta: {0}</value></data>
   <data name="MpBills.Hidden" xml:space="preserve"><value>Atsakymą paslėpė moderatoriai</value></data>
   <data name="MpBills.Withdrawn" xml:space="preserve"><value>Atsakymas atsiimtas</value></data>
   <data name="MpBills.NotInSummary" xml:space="preserve"><value>Dabar suvestinėje nėra</value></data>
   <data name="MpBills.Answer" xml:space="preserve"><value>Atsakyti</value></data>
-  <data name="MpBills.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Report.AppealOpen" xml:space="preserve"><value>Pranešti apie klaidą</value></data>
 <data name="Report.Title" xml:space="preserve"><value>Pranešimas moderatoriams</value></data>
 <data name="Report.Ground" xml:space="preserve"><value>Kodėl pranešate?</value></data>

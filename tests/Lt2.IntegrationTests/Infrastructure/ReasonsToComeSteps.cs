@@ -25,6 +25,19 @@ public static class ReasonsToComeSteps
             ("b", bill), ("d", date), ("s", stage));
     }
 
+    /// <summary>
+    /// The heading row (design 8.16.5: <c>div.row.list-head</c>, kept at the top of the screen) that holds the heading with this
+    /// id, from its start to its end: the heading and the link beside it.
+    /// </summary>
+    public static string HeadRow(string html, string headingId)
+    {
+        var heading = html.IndexOf($"id=\"{headingId}\"", StringComparison.Ordinal);
+        heading.ShouldBeGreaterThan(0, $"the page has the heading {headingId}");
+        var start = html.LastIndexOf("<div class=\"row list-head\">", heading, StringComparison.Ordinal);
+        start.ShouldBeGreaterThan(0, $"{headingId} stands in a heading row");
+        return html[start..html.IndexOf("</div>", heading, StringComparison.Ordinal)];
+    }
+
     /// <summary>The bill has no current planned date any more.</summary>
     public static Task UnplanAsync(this DatabaseFixture database, string bill) =>
         database.ExecuteAsync("UPDATE parliament.planned_item SET gone_at = now() WHERE bill_number = @b AND gone_at IS NULL", ("b", bill));
