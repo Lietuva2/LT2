@@ -33,7 +33,14 @@
     /// <summary>Participants still missing to the threshold (0 = reached).</summary>
     [Parameter] public int ToGo { get; set; }
 
-    private int Missing => Live is { Threshold: var t } ? Math.Max(0, t.Value - t.Participants) : ToGo;
+    private int Missing => Live is { Threshold: var t } ? MissingOf(t) : ToGo;
+
+    /// <summary>
+    /// Participants still missing to the threshold: none once it is reached, which a bill that has been in a summary really
+    /// sent to MPs is, whatever its participants now (design 8.12.2, <c>first_summarised_at</c>).
+    /// </summary>
+    public static int MissingOf(ThresholdResponse threshold) =>
+        threshold.Reached ? 0 : Math.Max(0, threshold.Value - threshold.Participants);
 
     private MyInvitationResponse? Invitation { get; set; }
 

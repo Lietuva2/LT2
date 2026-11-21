@@ -54,6 +54,16 @@ public sealed class ShareLineTests : BunitContext
     }
 
     [Fact]
+    public void Nothing_is_missing_once_the_threshold_is_reached_also_below_it_after_a_sent_summary()
+    {
+        // Design 8.12.2: a bill that has been in a summary really sent to MPs counts as having reached its threshold,
+        // whatever its participants now; the share line must not say "Iki ribos trūksta 96 dalyvių" under "Riba pasiekta".
+        ShareLine.MissingOf(new ThresholdResponse(100, "default", null, 4, Reached: true, EnteredSummaries: true)).ShouldBe(0);
+        ShareLine.MissingOf(new ThresholdResponse(100, "default", null, 4, Reached: false, EnteredSummaries: false)).ShouldBe(96);
+        ShareLine.MissingOf(new ThresholdResponse(100, "default", null, 130, Reached: true, EnteredSummaries: false)).ShouldBe(0);
+    }
+
+    [Fact]
     public void A_code_that_is_off_or_used_up_gives_the_plain_address_and_says_why()
     {
         var line = Line(usable: false);
