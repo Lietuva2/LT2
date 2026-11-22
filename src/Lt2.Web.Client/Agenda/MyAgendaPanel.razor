@@ -26,34 +26,8 @@
                 @foreach (var (bill, ownSide) in rows)
                 {
                     <li id="my-agenda-@bill.Number" @key="bill.Number">
-                        <span class="row">
-                            <a class="tag tag--ink num" href="@BillPath(bill.Number)">@bill.Number</a>
-                            @if (bill.Planned is { } planned)
-                            {
-                                <span class="tag num">@L.Format("Mine.Planned", Display.Day(planned.Date))</span>
-                            }
-                        </span>
-                        <a class="my-agenda__title" href="@BillPath(bill.Number)">@bill.Title</a>
-                        <span class="small">
-                            @if (ownSide is { } side)
-                            {
-                                @L["Mine.Side"]@(" ")<span class="choice choice--@side">@L["Mine.Side." + side]</span>
-                            }
-                            else
-                            {
-                                <a href="@BillPath(bill.Number)">@L["Mine.NoSideAction"]</a>
-                            }
-                        </span>
-                        @if (bill.LastStageResult is { } vote && vote.HeldAt >= Since)
-                        {
-                            @* The last week's vote, as the account's list of followed bills says it (design 8.11.2). *@
-                            <span class="small num">@L.Format("Follows.Voted", Display.Day(vote.HeldAt)) @(vote.IsConsensus ? L["Follows.Consensus"] : L.Format("Follows.Result", Display.Number(vote.For), Display.Number(vote.Against), Display.Number(vote.Abstain)))</span>
-                        }
-                        @if (bill.New is { } news)
-                        {
-                            @* Design 8.11.8: what was written on a followed bill since the member last opened its page. *@
-                            <a class="small num" href="@BillPath(bill.Number)" id="my-agenda-new-@bill.Number">@NewsLine.Of(L, news)</a>
-                        }
+                        @* Only the last week's vote is shown (design 8.11.1). *@
+                        <MyBillRow Bill="bill" Side="@ownSide" Since="Since" NewIdPrefix="my-agenda-new-" />
                     </li>
                 }
             </ul>
@@ -86,8 +60,6 @@ else if (Message is not null)
     [Parameter, EditorRequired] public IReadOnlyList<string> Numbers { get; set; } = [];
 
     [Inject] private TimeProvider Clock { get; set; } = default!;
-
-    private static string BillPath(string number) => "/seimas/" + Uri.EscapeDataString(number);
 
     protected override async Task OnInitializedAsync()
     {

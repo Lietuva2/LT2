@@ -103,10 +103,51 @@ public sealed class MyAgendaState(IMyBillsApi bills, IFollowsApi follows, MyAcco
     {
         ArgumentNullException.ThrowIfNull(followed);
         var since = now.AddDays(-RecentDays);
-        var list = followed.Where(b => b.Planned is not null || b.LastStageResult?.HeldAt >= since).ToList();
+        return Ordered(followed.Where(b => b.Planned is not null || b.LastStageResult?.HeldAt >= since));
+    }
+
+    /// <summary>
+    /// "Tik mano" on the bills list (design 8.12.5): every bill the member follows, planned ones first by date, then the others
+    /// by their last vote, newest first, and those with neither by number.
+    /// </summary>
+    public static IReadOnlyList<FollowedBillResponse> Ordered(IEnumerable<FollowedBillResponse> followed)
+    {
+        ArgumentNullException.ThrowIfNull(followed);
+        var list = followed.ToList();
         return list.Where(b => b.Planned is not null).OrderBy(b => b.Planned!.Date).ThenBy(b => b.Number, StringComparer.Ordinal)
-            .Concat(list.Where(b => b.Planned is null).OrderByDescending(b => b.LastStageResult!.HeldAt).ThenBy(b => b.Number, StringComparer.Ordinal))
+            .Concat(list.Where(b => b.Planned is null).OrderByDescending(b => b.LastStageResult?.HeldAt).ThenBy(b => b.Number, StringComparer.Ordinal))
             .ToList();
+    }
+
+    /// <summary>
+    /// "Tik mano" (design 8.12.5): all the bills the member follows (a first side follows the bill, design 8.11.2) with their own
+    /// side, from their follows and <c>/me/bills</c>, a request per <see cref="MyBillsQuery.MaxNumbers"/> bills side by side.
+    /// Asked each time the box is ticked; null when an answer failed.
+    /// </summary>
+    public async Task<IReadOnlyList<MyAgendaRow>?> FollowedAsync()
+    {
+        if ((await follows.GetMineAsync()).Value is not { } mine)
+        {
+            return null;
+        }
+
+        var listed = Ordered(mine.Bills);
+        var answers = await Task.WhenAll(Requests(listed.Select(b => b.Number).ToList()).Select(part => bills.GetAsync(new MyBillsQuery { Numbers = part })));
+        var sides = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var answer in answers)
+        {
+            if (answer.Value is not { } value)
+            {
+                return null;
+            }
+
+            foreach (var own in value.Bills)
+            {
+                sides[own.Number] = own.Side;
+            }
+        }
+
+        return listed.Select(b => new MyAgendaRow(b, sides.GetValueOrDefault(b.Number))).ToList();
     }
 
     /// <summary>Bill numbers in requests of at most <see cref="MyBillsQuery.MaxNumbers"/>, none empty.</summary>

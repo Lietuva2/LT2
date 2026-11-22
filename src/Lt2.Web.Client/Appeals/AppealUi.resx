@@ -785,6 +785,9 @@
   <data name="Mod.Shown" xml:space="preserve"><value>Rodoma {0} iš {1}. Kiti rodomi, kai šie bus sutvarkyti.</value></data>
   <data name="Mine.None" xml:space="preserve"><value>Šiuo metu darbotvarkėje nėra projektų, kuriuos sekate.</value></data>
   <data name="Mine.All" xml:space="preserve"><value>Visi sekami projektai ir Seimo nariai →</value></data>
+  <data name="Mine.Only" xml:space="preserve"><value>Tik mano</value></data>
+  <data name="Mine.OnlyTitle" xml:space="preserve"><value>Mano projektai</value></data>
+  <data name="Mine.OnlyNone" xml:space="preserve"><value>Dar nesekate nė vieno projekto.</value></data>
   <data name="Agenda.Nobody" xml:space="preserve"><value>Niekas nenurodė, ko prašo</value></data>
   <data name="Agenda.For" xml:space="preserve"><value>už</value></data>
   <data name="Agenda.Against" xml:space="preserve"><value>prieš</value></data>

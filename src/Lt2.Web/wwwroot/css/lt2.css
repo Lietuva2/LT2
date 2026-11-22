@@ -1095,11 +1095,12 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .list-head ~ [id], .list-head ~ * [id] { scroll-margin-top: var(--list-landing); }
 
 /* A list page's head (design 8.16.5, owner 2026-11-21): where the list's sheet has no heading of its own, the page's
-   title and the tab row right under it (.page-head, a child of main, so it stays while the page's content scrolls past)
-   stay at the top of the screen on the ground's colour with a rule under it; the label above it, the lead and the filters
-   (.page-head__rest) scroll away. Its padding and rule are taken out of the gaps round it, so at rest everything stands
+   title (a list of one's own) or the tab row of "Seimas" (the five pages that are its tabs: the heading "Seimas", .seimas-title,
+   is an ordinary heading that scrolls away, only the row under it stays) in .page-head, a child of main, so it stays while the
+   page's content scrolls past, at the top of the screen on the ground's colour with a rule under it; what is above it, the lead,
+   the views of "Projektai" and the filters (.page-head__rest) scroll away. Its padding and rule are taken out of the gaps round it, so at rest everything stands
    where it would in one .stack (main's gap is --sp-7, the head's neighbours --sp-5 away). --page-head is its height with
-   one line of title; the days' dates (from 54rem) stay just under it and whatever a link lands on after it stops below it.
+   one line of title (the tab row alone on the pages of "Seimas"); the days' dates (from 54rem) stay just under it and whatever a link lands on after it stops below it.
    Under 54rem the title is the h3's size and the padding smaller, so the head is about 105px tall on a phone with the tabs
    (46px without); a landing leaves room for a second line of the title. */
 :root {
@@ -1109,8 +1110,9 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   --page-head-wrap: 0px;
   --page-head: calc(var(--page-head-title) + 2 * var(--page-head-pad) + 1px);
 }
-main:has(> .page-head .project-tabs) {
-  --page-head: calc(var(--page-head-title) + var(--sp-5) + var(--page-head-tabs) + 2 * var(--page-head-pad) + 1px);
+main:has(> .seimas-title + .page-head) {
+  --page-head: calc(var(--page-head-tabs) + 2 * var(--page-head-pad) + 1px);
+  --page-head-wrap: 0px;
 }
 @media (max-width: 54rem) {
   :root {
@@ -1118,7 +1120,7 @@ main:has(> .page-head .project-tabs) {
     --page-head-title: calc(0.98 * var(--fs-4));
     --page-head-wrap: var(--page-head-title);
   }
-  main > .page-head h1 { font-size: var(--fs-4); }
+  main > .page-head h1, .seimas-title { font-size: var(--fs-4); }
 }
 @media (max-width: 36rem) {
   :root { --page-head-tabs: calc(1.5 * var(--fs-1) + 2 * var(--sp-1) + 4px); }
@@ -1151,6 +1153,12 @@ main > * + .page-head { margin-block-start: calc(var(--sp-5) - var(--sp-7) - var
 main > .page-head + .page-head__rest { margin-block-start: calc(var(--sp-5) - var(--sp-7)); }
 main > .page-head ~ * .tl-date { top: calc(var(--page-head) + var(--sp-4)); }
 main > .page-head ~ [id], main > .page-head ~ * [id] { scroll-margin-top: calc(var(--page-head) + var(--page-head-wrap) + var(--sp-4)); }
+/* A list's heading row on a page with a page head (the groups of the list of MPs) stays just under the page head, and what a
+   link lands on after it stops below both. */
+main > .page-head ~ .sheet > .list-head { top: var(--page-head); }
+main > .page-head ~ .sheet > .list-head ~ [id], main > .page-head ~ .sheet > .list-head ~ * [id] {
+  scroll-margin-top: calc(var(--page-head) + var(--list-landing));
+}
 
 /* The timeline: one block per sitting day, the day's date beside its bills, kept just under the list's heading row. */
 .tl-day {
@@ -1209,6 +1217,10 @@ main > .page-head ~ [id], main > .page-head ~ * [id] { scroll-margin-top: calc(v
 .my-agenda__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr)); gap: var(--sp-5); }
 .my-agenda__list > li { display: flex; flex-direction: column; gap: var(--sp-2); padding-top: var(--sp-3); border-top: 1px solid var(--rule); min-width: 0; }
 .my-agenda__title { font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
+
+/* "Tik mano" on the bills list (design 8.12.5): ticked, the member's own bills stand in place of the public list; the island sets
+   the attribute on the page's root element and takes it off when it goes away. */
+html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none; }
 
 @media (max-width: 64rem) { .intro-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 54rem) {

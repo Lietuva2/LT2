@@ -8,8 +8,10 @@
 <PageTitle>@F.T["Mps.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@F.T["Mps.Title"]" />
 
-<section class="stack" aria-labelledby="mps-title">
-    <h1 id="mps-title">@F.T["Mps.Title"]</h1>
+@* Design 8.21, 8.16.5: the list is the tab "Seimo nariai" of "Seimas": the heading "Seimas" and the tab row (the part that stays
+   at the top); the lead, the search and the count scroll away. *@
+<SeimasHead Current="SeimasTab.Mps" />
+<section class="stack page-head__rest" aria-label="@F.T["Mps.Title"]">
     @if (_term is not null)
     {
         <p class="lead">@F.T.Format("Mps.Lead", _term.Name)</p>

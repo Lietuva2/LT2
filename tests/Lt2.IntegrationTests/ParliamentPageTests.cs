@@ -51,6 +51,8 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
     {
         var html = await OkAsync("/seimo-nariai");
         html.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimo-nariai\"", customMessage: "design 8.16: the filters lie on the ground above the list's sheet");
+        // Design 8.21: the list is the tab "Seimo nariai" of Seimas: the heading and the tab row are its head, the filters follow.
+        ListHeadSteps.SeimasHead(html).ShouldContain("<a href=\"/seimo-nariai\" id=\"tab-mps\" aria-current=\"page\">Seimo nariai</a>");
         foreach (var name in new[] { "Jonas Petraitis", "Ona Jonaitienė", "Aurelija Kadagytė" })
         {
             html.ShouldContain(name);

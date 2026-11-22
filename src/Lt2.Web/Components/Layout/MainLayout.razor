@@ -6,33 +6,33 @@
 @inject IConfiguration Configuration
 @inject NavigationManager Navigation
 
-@* Design 8.21: the menu is the logo, "Projektai" (a dropdown with its four tabs; current on them and everything under
-   them; owner, 2026-11-17 and 2026-11-19), "Seimo nariai", "Statistika" (design 8.26, owner 2026-11-17), and "Prisijungti" or the account
-   item; one line from 360 px up. What has no place there is in the footer. *@
+@* Design 8.21: the menu is the logo, "Seimas" (a dropdown with its three tabs "Projektai", "Suvestinės" and "Seimo nariai";
+   current on them and everything under them), "Statistika" (design 8.26, owner 2026-11-17), and "Prisijungti" or the account
+   item; one line from 340 px up. What has no place there is in the footer. *@
 <header class="page top">
     <a class="top__brand" href="/"><Logo /><span class="top__name">Lietuva 2.0</span></a>
     <nav class="top__nav" aria-label="@T["Nav.Label"]">
-        @* Design 8.21 (owner, 2026-11-19): "Projektai" is two things in one place, and CSS chooses by the device, with no script.
-           Where the device can hover (a mouse), it is a link to the agenda (ProjectsHome) and its panel shows on hover and while
+        @* Design 8.21 (owner, 2026-11-19): "Seimas" is two things in one place, and CSS chooses by the device, with no script.
+           Where the device can hover (a mouse), it is a link to the agenda (SeimasHome) and its panel shows on hover and while
            focus is inside it, so the keyboard reaches the entries; js/lt2-account.js lets Escape close it. Where it cannot (a
            touch screen), it is a disclosure like the account item, opened by a press; the script closes it on Escape, a press
            outside and focus leaving. The one panel follows either. Design 8.28.2: every entry shows its line under its name,
            for everyone; under 32rem the panel is as wide as the page. *@
         <div class="drop drop--desc" id="projects-menu" data-nav-hover>
-            <a class="drop__toggle drop__link" href="@MenuSections.ProjectsHome" id="nav-projects" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</a>
+            <a class="drop__toggle drop__link" href="@MenuSections.SeimasHome" id="nav-projects" aria-current="@(MenuSections.InSeimas(Path) ? "true" : null)">@T["Nav.Seimas"]</a>
             <details class="drop__touch" id="projects-touch" data-nav-menu>
-                <summary class="drop__toggle" id="nav-projects-touch" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</summary>
+                <summary class="drop__toggle" id="nav-projects-touch" aria-current="@(MenuSections.InSeimas(Path) ? "true" : null)">@T["Nav.Seimas"]</summary>
             </details>
             <div class="drop__panel drop__panel--start drop__panel--desc" id="projects-panel">
                 <ul class="drop__links">
                     @foreach (var item in MenuSections.Tabs)
                     {
-                        <li><a href="@item.Path" id="@("nav-" + item.Slug)" aria-current="@("/" + Path == item.Path ? "page" : null)"><span class="drop__label">@U[item.NameKey]</span><span class="drop__desc">@U[item.LineKey]</span></a></li>
+                        <li><a href="@item.Path" id="@("nav-" + item.Slug)" aria-current="@(MenuSections.TabOf(Path) == item.Tab ? "page" : null)"><span class="drop__label">@U[item.NameKey]</span><span class="drop__desc">@U[item.LineKey]</span></a></li>
                     }
                 </ul>
             </div>
         </div>
-        @* The menu's one line shows no lines (it stays one line from 340 px); they are read in "Kur ką rasti". *@
+        @* The menu's one line ("Statistika") shows no line (it stays one line from 340 px); it is read in "Kur ką rasti". *@
         @foreach (var item in MenuSections.In(MenuPlace.Menu))
         {
             <a href="@item.Path" id="@("nav-" + item.Slug)" aria-current="@MenuSections.CurrentMark(item, Path)">@U[item.NameKey]</a>

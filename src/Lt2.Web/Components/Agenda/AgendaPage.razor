@@ -6,9 +6,9 @@
 @inject Formats F
 
 @* The agenda (design 8.11.1): public, server-rendered, readable without JavaScript. What the Seimas plans to consider, by
-   day, earliest first, from the lrs.lt agenda (10–12 days ahead, changes often: "Planuojama …", never a countdown), and
-   the stage votes of the last seven days. The rows are the front page's (TimelineItem, VotedItem; owner, 2026-11-19: they
-   look the same, one component): a coming bill offers "Prašau balsuoti" in its row, a visitor's sides lead to signing in
+   day, earliest first, from the lrs.lt agenda (10–12 days ahead, changes often: "Planuojama …", never a countdown); the
+   votes already held are one link away, "Ankstesni balsavimai" (the vote history). The rows are the front page's
+   (TimelineItem; owner, 2026-11-19: they look the same, one component): a coming bill offers "Prašau balsuoti" in its row, a visitor's sides lead to signing in
    and back to the bill, a member's mark and side column are islands filled in the browser from their own answer
    (MyAgendaState), so the server renders the same page for every member and nothing per person is in it. Without the
    front page's "Jūsų projektai" and greeting. Read from the front page's copy, kept a minute (FrontPageAgenda through
@@ -16,10 +16,13 @@
 <PageTitle>@T["Agenda.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@T["Agenda.Title"]" Description="@T["Preview.Agenda"]" />
 
-<div class="stack">
-    <h1>@T["Agenda.Title"]</h1>
-    <ProjectTabs Current="ProjectTab.Agenda" />
+@* Design 8.21, 8.16.5: the head of the tab "Projektai" (the heading "Seimas", then the tab row, the only part that stays at
+   the top of the screen); the views of the tab, the lead and the link to the earlier votes scroll away. *@
+<SeimasHead Current="SeimasTab.Projects" />
+<div class="stack page-head__rest">
+    <ProjectViews Current="ProjectView.Agenda" />
     <p class="lead">@T["Agenda.Lead"]</p>
+    <p class="small"><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path" id="agenda-votes-older">@T["Agenda.Older"]</a></p>
     <AuthorizeView>
         <Authorized>
             <Lt2.Web.Client.Components.NeedsScript />
@@ -27,13 +30,9 @@
     </AuthorizeView>
 </div>
 
-@* Two lists, each on its sheet; each heading row stays at the top of the screen while its sheet scrolls past (.list-head,
-   design 8.16.5). Nothing stands under the lists: what the numbers are is said on the bill's page and the methodology
-   (owner, 2026-11-21). *@
-<section class="sheet stack" aria-labelledby="h-coming" id="agenda-coming">
-    <div class="row list-head">
-        <h2 id="h-coming">@T["Agenda.Coming"]</h2>
-    </div>
+@* The list of what is coming on its sheet; it has no heading row of its own (the tab row is the one that stays at the top).
+   Nothing stands under it: what the numbers are is said on the bill's page and the methodology (owner, 2026-11-21). *@
+<section class="sheet stack" aria-label="@T["Agenda.Coming"]" id="agenda-coming">
     <p class="small" id="agenda-source">
         @* An explicit space: Razor drops the white space between the sentences. *@
         @T["Agenda.Source"]@(" ")
@@ -63,25 +62,6 @@
     }
 </section>
 
-@* Design 8.18: the long form of this list beside its heading, also when the last seven days had no vote. *@
-<section class="sheet stack" aria-labelledby="h-recent" id="agenda-recent">
-    <div class="row list-head">
-        <h2 id="h-recent">@T["Agenda.Recent"]</h2>
-        <a href="@Lt2.Web.Client.Parliament.VoteHistory.Path" id="agenda-votes-older">@T["Agenda.Older"]</a>
-    </div>
-    @if (_agenda is null || _agenda.RecentVotes.Count == 0)
-    {
-        <p id="agenda-no-recent">@T["Agenda.NoRecent"]</p>
-    }
-    else
-    {
-        <AuthorizeView>
-            <Authorized>@Recent(true)</Authorized>
-            <NotAuthorized>@Recent(false)</NotAuthorized>
-        </AuthorizeView>
-    }
-</section>
-
 @code {
     private AgendaResponse? _agenda;
 
@@ -89,14 +69,11 @@
     /// <summary>The planned days shown grown, with the known rows each shows (<c>?diena=2026-11-24:60</c>), for the links.</summary>
     private IReadOnlyDictionary<DateOnly, int> _planned = new Dictionary<DateOnly, int>();
 
-    /// <summary>The voted days shown grown (<c>?balsuota=</c>).</summary>
-    private IReadOnlyDictionary<DateOnly, int> _voted = new Dictionary<DateOnly, int>();
-
     /// <summary>Each planned day with its rows as the page cuts them.</summary>
     private List<(DateOnly Day, AgendaDayView<AgendaItemResponse> View)> _coming = [];
 
-    /// <summary>Each voted day, newest first, with its rows as the page cuts them.</summary>
-    private List<(DateOnly Day, AgendaDayView<AgendaVoteResponse> View)> _recent = [];
+    /// <summary>The page has no voted days (the votes held are in the vote history), so none is grown in its links.</summary>
+    private static readonly IReadOnlyDictionary<DateOnly, int> NoVoted = new Dictionary<DateOnly, int>();
 
     /// <summary>
     /// The bills of the rows shown, each once, for a member's islands to ask about (<c>/me/bills</c>, in requests of
@@ -106,12 +83,9 @@
 
     [SupplyParameterFromQuery(Name = AgendaPaging.PlannedParameter)] public string[]? Planned { get; set; }
 
-    [SupplyParameterFromQuery(Name = AgendaPaging.VotedParameter)] public string[]? Voted { get; set; }
-
     protected override async Task OnParametersSetAsync()
     {
         var planned = AgendaPaging.Read(Planned);
-        var voted = AgendaPaging.Read(Voted);
         _agenda = (await Api.GetAgendaAsync()).Value;
 
         // Owner, 2026-11-18: one block per sitting day with its date, weekday and count; the first ten rows of a day in the
@@ -120,13 +94,8 @@
         _coming = (_agenda?.Days ?? [])
             .Select(d => (d.Date, Cut(d.Items, i => i.Title is not null, planned.GetValueOrDefault(d.Date))))
             .ToList();
-        _recent = (_agenda?.RecentVotes ?? []).GroupBy(v => Display.DayOf(v.HeldAt))
-            .Select(g => (g.Key, Cut(g.ToList(), _ => true, voted.GetValueOrDefault(g.Key))))
-            .ToList();
         _planned = AgendaPaging.Grown(_coming.Select(d => (d.Day, d.View.Shown.Count)), AgendaRules.PagePerDay);
-        _voted = AgendaPaging.Grown(_recent.Select(d => (d.Day, d.View.Shown.Count)), AgendaRules.PagePerDay);
-        _numbers = AgendaRules.Asked(
-            _coming.SelectMany(d => d.View.Shown.Select(i => i.Number)).Concat(_recent.SelectMany(d => d.View.Shown.Select(v => v.Number))));
+        _numbers = AgendaRules.Asked(_coming.SelectMany(d => d.View.Shown.Select(i => i.Number)));
     }
 
     /// <summary>A day cut for this page: its first ten known rows, or as many as the address asks.</summary>
@@ -137,16 +106,7 @@
     {
         foreach (var (day, view) in _coming)
         {
-            <PlannedDay Page="AgendaPaging.Agenda" Day="day" View="view" First="AgendaRules.PagePerDay" Planned="_planned" Voted="_voted" Member="member" Numbers="_numbers" />
-        }
-    };
-
-    private RenderFragment Recent(bool member) => __builder =>
-    {
-        // By day, newest first, each in the agenda's order, grown as the planned days.
-        foreach (var (day, view) in _recent)
-        {
-            <VotedDay Page="AgendaPaging.Agenda" Day="day" View="view" First="AgendaRules.PagePerDay" Planned="_planned" Voted="_voted" Member="member" Numbers="_numbers" />
+            <PlannedDay Page="AgendaPaging.Agenda" Day="day" View="view" First="AgendaRules.PagePerDay" Planned="_planned" Voted="NoVoted" Member="member" Numbers="_numbers" />
         }
     };
 }

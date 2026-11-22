@@ -58,6 +58,7 @@ public static class ClientServices
         services.AddScoped<BotCheckBrowser>();
         services.AddScoped<Appeals.MyBillState>();
         services.AddScoped<Agenda.MyAgendaState>();
+        services.AddScoped<Appeals.MineOnlyState>();
         services.AddScoped<Comments.CommentState>();
         services.AddScoped<Components.MyAccountState>();
         services.TryAddSingleton(TimeProvider.System);

@@ -16,28 +16,13 @@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@T["List.Title"]" Description="@P["Preview.Projects"]" />
 
-@* Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's head (the title and the tab
-   row) stays at the top of the screen while the list scrolls past; the label above it, the lead, the tabs of the list and
-   the search scroll away. *@
-<p class="label">Lietuva 2.0</p>
-<div class="stack page-head" id="page-head">
-    <h1>@T["List.Title"]</h1>
-    <ProjectTabs Current="ProjectTab.Bills" />
-</div>
+@* Design 8.16.5, 8.21 (owner, 2026-11-21): the list's sheet has no heading of its own, so the tab row of "Seimas" stays at
+   the top of the screen while the list scrolls past; the heading above it, the views of the tab ("Darbotvarkė",
+   "Svarstomi", "Uždaryti"), the lead and the search scroll away. *@
+<SeimasHead Current="SeimasTab.Projects" />
 <div class="stack page-head__rest">
+    <ProjectViews Current="@(Closed ? ProjectView.Closed : ProjectView.Active)" />
     <p class="lead">@T["List.Lead"]</p>
-    <nav class="row tabs" aria-label="@T["List.Tabs"]">
-        @if (Closed)
-        {
-            <a href="/projektai" id="tab-active">@T["List.Tab.Active"]</a>
-            <b aria-current="page" id="tab-closed">@T["List.Tab.Closed"]</b>
-        }
-        else
-        {
-            <b aria-current="page" id="tab-active">@T["List.Tab.Active"]</b>
-            <a href="/projektai?skirtukas=uzdaryti" id="tab-closed">@T["List.Tab.Closed"]</a>
-        }
-    </nav>
     <form class="filters" method="get" action="/projektai" role="search" id="bill-search">
         @if (Closed)
         {
@@ -59,6 +44,8 @@
             @* Owner, 2026-11-21: the filter is a box in the search form, right above "Rodyti", applied with it. *@
             <label class="check small"><input type="checkbox" id="planuojami" name="planuojami" value="taip" checked="@Planned" /><span>@T["List.Planned"]</span></label>
         }
+        @* "Tik mano": a member's own bills instead of the list (design 8.12.5); an island, so nothing of any member is in this page. *@
+        <MineOnlyBox @rendermode="InteractiveWebAssembly" />
         <div class="row">
             <button class="btn" type="submit">@T["List.SearchButton"]</button>
             @if (Filtered)
@@ -91,6 +78,9 @@
         }
     </p>
 }
+
+@* "Mano projektai" while "Tik mano" is ticked; the list below and its order line are then hidden by CSS (lt2.css). *@
+<MineBills @rendermode="InteractiveWebAssembly" />
 
 @if (_page is { } page)
 {

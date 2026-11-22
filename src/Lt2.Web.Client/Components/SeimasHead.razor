@@ -1,0 +1,21 @@
+@inject IStringLocalizer<UiText> T
+
+@* Design 8.21: the head of the five pages that are the three tabs of "Seimas" (the agenda, the bills' lists, the vote history,
+   the list of summaries, the list of MPs): the heading "Seimas", which scrolls away, then the row of the three tabs as plain
+   links, the current one marked, the only part that stays at the top of the window. It is a fragment with no wrapper, so the
+   row is a child of <main> and CSS can pin it (main > .page-head); what else the page has in its head (the views row, the lead,
+   the filters) follows in its own div.page-head__rest. On the ground (design 8.16), no script. *@
+<h1 class="seimas-title">@T["Seimas.Title"]</h1>
+<div class="page-head" id="page-head">
+    <nav class="row tabs project-tabs" aria-label="@T["Tabs.Label"]" id="project-tabs">
+        @foreach (var item in MenuSections.Tabs)
+        {
+            <a href="@item.Path" id="@item.Slug" aria-current="@(item.Tab == Current ? "page" : null)">@T[item.NameKey]</a>
+        }
+    </nav>
+</div>
+
+@code {
+    /// <summary>The tab the page is.</summary>
+    [Parameter, EditorRequired] public SeimasTab Current { get; set; }
+}

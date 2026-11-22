@@ -202,18 +202,22 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     public async Task The_page_shows_30_by_day_and_grows_by_50_landing_on_the_first_row_added()
     {
         var html = await OkAsync("/seimas/balsavimai?iki=" + Until);
-        html.ShouldContain("<h1>Seimo balsavimai</h1>");
-        html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"tab-seimas-balsavimai\" aria-current=\"page\">Balsavimai</a>", customMessage: "the tab row, its own tab marked with the search in the address too (design 8.21, owner 2026-11-19)");
+        html.ShouldContain("<title>Seimo balsavimai · Lietuva 2.0</title>");
+        html.ShouldContain("<h1 class=\"seimas-title\">Seimas</h1>");
+        html.ShouldContain("<h2>Seimo balsavimai</h2>", customMessage: "the page's own heading, under the tab row");
+        html.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the page is no tab of its own: Projektai is the current tab, with the search in the address too (design 8.21)");
+        html.ShouldNotContain("id=\"tab-seimas-balsavimai\"");
+        html.ShouldNotContain("id=\"view-agenda\"", customMessage: "no views row: the page is reached by a link");
         html.ShouldNotContain("id=\"to-agenda\"", customMessage: "the tab row leads back to the agenda; no breadcrumb");
         html.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimas/balsavimai\" role=\"search\" id=\"votes-search\">");
         html.IndexOf("id=\"votes-search\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"balsavimai\"", StringComparison.Ordinal), "the controls lie above the list's sheet");
         var list = List(html);
-        // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's title and its tab row stay
-        // at the top of the screen; the lead and the form scroll away.
-        var head = ListHeadSteps.PageHead(html);
-        head.ShouldStartWith("<div class=\"stack page-head\" id=\"page-head\"><h1>Seimo balsavimai</h1>");
+        // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the tab row stays at the top of
+        // the screen; the heading "Seimas", the page's own heading, the lead and the form scroll away.
+        var head = ListHeadSteps.SeimasHead(html);
         head.ShouldContain("id=\"project-tabs\"");
         head.ShouldNotContain("id=\"votes-search\"");
+        html.ShouldMatch("<div class=\"stack page-head__rest\">\\s*<h2>Seimo balsavimai</h2>\\s*<p class=\"lead\">");
 
         Row().Count(list).ShouldBe(30);
         list.ShouldContain("Rodoma 30 iš 331");
@@ -395,8 +399,8 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         Regex.Count(home, "Ankstesni balsavimai").ShouldBe(1);
 
         var agenda = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
-        agenda.ShouldContain("id=\"agenda-no-recent\"");
-        ReasonsToComeSteps.HeadRow(agenda, "h-recent").ShouldContain("<a href=\"/seimas/balsavimai\" id=\"agenda-votes-older\">Ankstesni balsavimai →</a>");
+        agenda.ShouldNotContain("id=\"agenda-no-recent\"");
+        agenda.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"agenda-votes-older\">Ankstesni balsavimai →</a>");
         agenda.ShouldNotContain("tl-older");
         Regex.Count(agenda, "Ankstesni balsavimai").ShouldBe(1);
     }
@@ -426,9 +430,9 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
             home.ShouldNotContain("id=\"home-no-recent\"");
 
             var agenda = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
-            agenda.IndexOf("id=\"agenda-votes-older\"", StringComparison.Ordinal)
-                .ShouldBeLessThan(agenda.IndexOf("id=\"recent-" + ReasonsToComeSteps.TaxConsiderationVote + "\"", StringComparison.Ordinal));
-            agenda.IndexOf("id=\"agenda-votes-older\"", StringComparison.Ordinal).ShouldBeGreaterThan(agenda.IndexOf("id=\"h-recent\"", StringComparison.Ordinal));
+            // The agenda page lists no vote held, a recent one too: the link to the history is all it has.
+            agenda.ShouldContain("id=\"agenda-votes-older\"");
+            agenda.ShouldNotContain("id=\"recent-" + ReasonsToComeSteps.TaxConsiderationVote + "\"");
         }
         finally
         {
@@ -444,10 +448,10 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
             var html = await OkAsync(path);
             html.ShouldContain("<li><a href=\"/seimas/balsavimai\" id=\"to-vote-history\">Seimo balsavimai</a></li>", customMessage: path);
 
-            // Design 8.21: a vote is under the tab "Balsavimai", as a summary's date page is under "Suvestinės": the menu item
-            // "Projektai" is current, the dropdown marks no page of its own, and there is no tab row.
+            // Design 8.21: a vote is under the tab "Projektai", as a summary's date page is under "Suvestinės": the menu item
+            // "Seimas" is current, the dropdown marks no page of its own, and there is no tab row.
             var header = html[..html.IndexOf("</header>", StringComparison.Ordinal)];
-            header.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>", customMessage: path);
+            header.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>", customMessage: path);
             header.ShouldNotContain("aria-current=\"page\"", customMessage: path);
             html.ShouldNotContain("id=\"project-tabs\"", customMessage: path);
         }
