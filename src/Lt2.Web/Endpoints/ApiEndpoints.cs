@@ -157,9 +157,21 @@ internal static class ApiEndpoints
     /// <summary>Runs the shared FluentValidation validator for <typeparamref name="T"/> before the handler.</summary>
     public static RouteHandlerBuilder WithValidation<T>(this RouteHandlerBuilder builder) =>
         builder.AddEndpointFilter<ValidationFilter<T>>().ProducesValidationProblem();
+
+    /// <summary>
+    /// Runs <typeparamref name="TValidator"/> for <typeparamref name="T"/> instead of the shared one: the same request checked
+    /// for another action, as a statement emailed to the author (<c>StatementToAuthorRequestValidator</c>, design 8.3), whose
+    /// refusal names the author. Only the messages may differ; the fields and the status are the shared validator's.
+    /// </summary>
+    public static RouteHandlerBuilder WithValidation<T, TValidator>(this RouteHandlerBuilder builder) where TValidator : IValidator<T> =>
+        builder.AddEndpointFilter<ValidationFilter<T, TValidator>>().ProducesValidationProblem();
 }
 
-internal sealed class ValidationFilter<T>(IValidator<T> validator, ErrorMapper errors) : IEndpointFilter
+/// <summary>Runs the validator an endpoint names by its type (<see cref="ApiEndpoints.WithValidation{T, TValidator}"/>).</summary>
+internal sealed class ValidationFilter<T, TValidator>(TValidator validator, ErrorMapper errors) : ValidationFilter<T>(validator, errors)
+    where TValidator : IValidator<T>;
+
+internal class ValidationFilter<T>(IValidator<T> validator, ErrorMapper errors) : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {

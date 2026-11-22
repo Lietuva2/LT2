@@ -62,7 +62,8 @@ else
                     </details>
                 }
                 <RestoreForm Id="record.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreAppeal.Sentence." + (record.RestoresAs ?? BillRecordStatuses.Open)]"
-                             StatementLabel="@L["Hidden.Statement"]" Restore="request => ModerationApi.RestoreRecordAsync(record.Id, request)" />
+                             StatementLabel="@L["Mod.Statement.Staff"]" StatementHint="@L["Mod.Statement.Staff.Hint"]"
+                             Restore="request => ModerationApi.RestoreRecordAsync(record.Id, request)" />
             </article>
         }
     </section>
@@ -93,7 +94,7 @@ else
                 {
                     <p class="note note--quiet">@L["Hidden.ReasonNotOpen"]</p>
                 }
-                <RestoreForm Id="reason.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreReason.Sentence"]" StatementLabel="@L["Hidden.Statement"]"
+                <RestoreForm Id="reason.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreReason.Sentence"]" StatementLabel="@L["Mod.Statement.Author"]"
                              Allowed="reason.Restorable" Restore="request => ModerationApi.RestoreReasonAsync(reason.Id, request)" />
             </article>
         }

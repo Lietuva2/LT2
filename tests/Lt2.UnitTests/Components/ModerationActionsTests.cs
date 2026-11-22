@@ -215,7 +215,8 @@ public sealed class ModerationActionsTests : BunitContext
         _api.On("RemoveDescriptionAsync", ApiResult.Ok());
         var actions = Render("record", "open", description: "DI santrauka.", source: "ai");
         actions.Find($"#action-undescribe-{Item}").Click();
-        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Required"));
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Staff"));
+        actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe(Text("Mod.Statement.Staff.Hint.description"));
         actions.Find($"#statement-{Item}").Input("Santrauka klaidinga.");
         actions.Find("form").Submit();
 
@@ -492,11 +493,49 @@ public sealed class ModerationActionsTests : BunitContext
             .Add(c => c.Id, Item).Add(c => c.Number, Bill).Add(c => c.Kind, "record").Add(c => c.Status, "closed").Add(c => c.ClosedReason, "rejected"));
         actions.Find($"#action-reopen-{Item}").Click();
         actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.reopen"));
-        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Required"));
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Staff"));
+        actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe(Text("Mod.Statement.Staff.Hint"));
         actions.Find($"#statement-{Item}").Input("Projektas neatmestas, grąžintas tobulinti.");
         actions.Find("form").Submit();
 
         ((StatementRequest)_api.Arguments[_api.Calls.IndexOf("ReopenRecordAsync")][1]!).Statement.ShouldBe("Projektas neatmestas, grąžintas tobulinti.");
         actions.Markup.ShouldContain(Text("Mod.Done.reopen"));
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-22 (design 8.3): each explanation says who reads it. Closing a bill as rejected or withdrawn has no
+    /// author and is shown nowhere: only staff read it (moderation_action, audit), and the line under the label says so.
+    /// </summary>
+    [Fact]
+    public void The_close_statement_is_labelled_as_read_by_staff_only()
+    {
+        var actions = Render("record", "open");
+        actions.Find($"#action-close-{Item}").Click();
+
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe("Paaiškinimas moderatoriams (privalomas)");
+        actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe("Mato tik moderatoriai ir administratoriai.");
+        actions.Find($"#statement-{Item}").GetAttribute("aria-describedby").ShouldBe($"statement-hint-{Item}");
+    }
+
+    /// <summary>Owner, 2026-11-22 (design 8.3): an argument's author receives the statement of reasons by email.</summary>
+    [Fact]
+    public void Hiding_an_argument_labels_the_statement_as_the_authors()
+    {
+        var actions = Render("reason", "published");
+        actions.Find($"#action-hide-{Item}").Click();
+
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe("Paaiškinimas autoriui (privalomas)");
+        actions.FindAll($"#statement-hint-{Item}").ShouldBeEmpty();
+    }
+
+    /// <summary>Owner, 2026-11-22 (design 8.3, 8.12.3): a hidden record's page shows the statement to everyone.</summary>
+    [Fact]
+    public void Hiding_a_record_labels_the_statement_as_public_on_the_bills_page()
+    {
+        var actions = Render("record", "open");
+        actions.Find($"#action-hide-{Item}").Click();
+
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe("Viešas paaiškinimas (privalomas)");
+        actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe("Rodomas projekto puslapyje.");
     }
 }

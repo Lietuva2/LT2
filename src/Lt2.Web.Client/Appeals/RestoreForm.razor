@@ -2,8 +2,9 @@
 @inherits InteractiveBase<AppealUi>
 
 @* "Atkurti" on the moderators' list of hidden items (design 8.3, 8.14.14), for a bill, an argument, an organisation or a
-   statement: opens only its own field, a required statement (sent to whoever the item belongs to), with one sentence on
-   what it does. The confirmation stays after the action closes. *@
+   statement: opens only its own field, a required statement labelled by who reads it (the item's author or its organisation's
+   representatives by email; a bill's record has none, so staff only, with a line saying so: design 8.3, owner 2026-11-22),
+   with one sentence on what it does. The confirmation stays after the action closes. *@
 <div class="stack stack--tight" id="@($"{IdPrefix}-{Id}")">
     @if (!_open)
     {
@@ -21,8 +22,12 @@
             <p class="small">@Sentence</p>
             <div class="field @ErrorClass("statement")">
                 <label for="@StatementId">@StatementLabel</label>
+                @if (StatementHint is not null)
+                {
+                    <p class="field__hint" id="@StatementHintId">@StatementHint</p>
+                }
                 <textarea class="textarea" id="@StatementId" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"
-                          aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", StatementId)"></textarea>
+                          aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", StatementId, StatementHint is null ? "" : StatementHintId)"></textarea>
                 <FieldError Errors="Errors" Field="statement" For="@StatementId" />
             </div>
             <div class="row">
@@ -47,8 +52,11 @@
     /// <summary>One sentence on what restoring does.</summary>
     [Parameter, EditorRequired] public string Sentence { get; set; } = "";
 
-    /// <summary>The label of the statement, saying who receives it.</summary>
+    /// <summary>The label of the statement, saying who receives it (design 8.3, owner 2026-11-22).</summary>
     [Parameter, EditorRequired] public string StatementLabel { get; set; } = "";
+
+    /// <summary>The line under the label when the label alone does not say where the statement goes (staff only); null for none.</summary>
+    [Parameter] public string? StatementHint { get; set; }
 
     /// <summary>False when the server would refuse now; the reason is shown beside the item.</summary>
     [Parameter] public bool Allowed { get; set; } = true;
@@ -63,6 +71,8 @@
     [Parameter, EditorRequired] public Func<StatementRequest, Task<ApiResult>> Restore { get; set; } = default!;
 
     private string StatementId => $"{IdPrefix}-statement-{Id}";
+
+    private string StatementHintId => $"{IdPrefix}-statement-hint-{Id}";
 
     private Task RestoreAsync() => RunAsync(async () =>
     {

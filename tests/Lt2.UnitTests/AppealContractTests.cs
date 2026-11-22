@@ -47,12 +47,27 @@ public sealed class AppealContractTests
         AppealLimits.StatementMaxLength.ShouldBe(StaffStatements.MaxLength);
     }
 
+    /// <summary>
+    /// Owner, 2026-11-22 (design 8.3): the refusal names the author only where the author receives the statement by email; a
+    /// statement shown on a page or read by staff only has no author. Same field, same request, another message.
+    /// </summary>
     [Fact]
-    public void Returning_or_hiding_needs_a_statement_of_reasons()
+    public void Returning_or_hiding_needs_a_statement_of_reasons_whose_refusal_names_the_author_only_when_it_goes_to_one()
     {
-        var validator = new StatementRequestValidator(L);
-        validator.Validate(new StatementRequest { Statement = " " }).Errors.Single().ErrorMessage.ShouldBe("Parašykite paaiškinimą autoriui.");
-        validator.Validate(new StatementRequest { Statement = "Aprašymas nėra neutralus." }).IsValid.ShouldBeTrue();
+        var plain = new StatementRequestValidator(L);
+        var toAuthor = new StatementToAuthorRequestValidator(L);
+        var blank = new StatementRequest { Statement = " " };
+
+        plain.Validate(blank).Errors.Single().ErrorMessage.ShouldBe("Parašykite paaiškinimą.");
+        toAuthor.Validate(blank).Errors.Single().ErrorMessage.ShouldBe("Parašykite paaiškinimą autoriui.");
+        plain.Validate(blank).Errors.Single().PropertyName.ShouldBe(toAuthor.Validate(blank).Errors.Single().PropertyName);
+        new MergeReasonRequestValidator(L).Validate(new MergeReasonRequest { IntoReasonId = Guid.NewGuid(), Statement = "" })
+            .Errors.Single().ErrorMessage.ShouldBe("Parašykite paaiškinimą autoriui.");
+        new CloseRecordRequestValidator(L)
+            .Validate(new CloseRecordRequest { Reason = "rejected", DecidedOn = new DateOnly(2026, 11, 2), SourceUrl = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas", Statement = "" })
+            .Errors.Single().ErrorMessage.ShouldBe("Parašykite paaiškinimą.");
+        plain.Validate(new StatementRequest { Statement = "Aprašymas nėra neutralus." }).IsValid.ShouldBeTrue();
+        toAuthor.Validate(new StatementRequest { Statement = "Įžeidus tonas." }).IsValid.ShouldBeTrue();
     }
 
     [Fact]

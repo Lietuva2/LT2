@@ -179,7 +179,7 @@ public sealed class CancelDigestRequestValidator : AbstractValidator<CancelDiges
 
     public CancelDigestRequestValidator(IStringLocalizer<ValidationMessages> l) =>
         RuleFor(x => x.Statement).Cascade(CascadeMode.Stop)
-            .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["Statement.Required"])
+            .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["Statement.RequiredPlain"])
             .Must(t => t.Trim().Length >= Minimum).WithMessage(l["Digest.CancelTooShort"])
             .Must(t => t.Trim().Length <= Appeals.AppealLimits.StatementMaxLength).WithMessage(l["Statement.TooLong"]);
 }

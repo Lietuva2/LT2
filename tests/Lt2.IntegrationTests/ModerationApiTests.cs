@@ -279,6 +279,41 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         (await AuditAsync("moderation.reason.hide", reasonId)).ShouldBe(1);
     }
 
+    /// <summary>
+    /// Owner, 2026-11-22 (design 8.3): a missing statement's refusal names the author only where the author receives it by
+    /// email. A bill's record has no author: closing it is read by staff only, hiding it is shown on its page. The code stays
+    /// <c>validation</c> on the field <c>statement</c>; only the message differs.
+    /// </summary>
+    [Fact]
+    public async Task A_missing_statement_is_refused_naming_the_author_only_where_the_author_receives_it()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        var moderator = (await ModeratorAsync()).Browser;
+        var record = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
+        var reasonId = (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+
+        async Task<string?> RefusedAsync(string route, object request)
+        {
+            using var refused = await moderator.PostAsync(route, request);
+            await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
+            return (await refused.ProblemAsync()).GetProperty("errors").GetProperty("statement")[0].GetString();
+        }
+
+        (await RefusedAsync(AppealRoutes.With(AppealRoutes.HideReason, reasonId), new StatementRequest { Statement = " " }))
+            .ShouldBe("Parašykite paaiškinimą autoriui.");
+        (await RefusedAsync(
+                AppealRoutes.With(AppealRoutes.CloseRecord, record.Id),
+                new CloseRecordRequest { Reason = "rejected", DecidedOn = new DateOnly(2026, 11, 2), SourceUrl = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas", Statement = "" }))
+            .ShouldBe("Parašykite paaiškinimą.");
+        (await RefusedAsync(AppealRoutes.With(AppealRoutes.HideRecord, record.Id), new StatementRequest { Statement = " " }))
+            .ShouldBe("Parašykite paaiškinimą.");
+
+        // Nothing was done.
+        (await initiator.RecordAsync(AppealSteps.ThirdBill)).Status.ShouldBe("open");
+        (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id.ShouldBe(reasonId);
+    }
+
     [Fact]
     public async Task Merging_an_argument_moves_its_marks_to_the_similar_one_and_tells_its_author()
     {

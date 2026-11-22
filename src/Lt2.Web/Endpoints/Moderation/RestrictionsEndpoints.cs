@@ -26,7 +26,7 @@ internal static class RestrictionsEndpoints
             .WithName("LiftRestriction")
             .WithTags("Moderation")
             .RequireAuthorization(Policies.Moderator)
-            .WithValidation<StatementRequest>()
+            .WithValidation<StatementRequest, StatementToAuthorRequestValidator>()
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);

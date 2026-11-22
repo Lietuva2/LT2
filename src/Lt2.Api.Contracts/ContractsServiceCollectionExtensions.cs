@@ -38,6 +38,9 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Appeals.ReportRequest>, Appeals.ReportRequestValidator>();
         services.AddScoped<IValidator<Appeals.ModerationRequest>, Appeals.ModerationRequestValidator>();
         services.AddScoped<IValidator<Appeals.StatementRequest>, Appeals.StatementRequestValidator>();
+
+        // The same request when its statement is emailed to the author (design 8.3): the endpoints of those actions ask for it by type.
+        services.AddScoped<Appeals.StatementToAuthorRequestValidator>();
         services.AddScoped<IValidator<Appeals.RestrictionRequest>, Appeals.RestrictionRequestValidator>();
         services.AddScoped<IValidator<Feedback.FeedbackRequest>, Feedback.FeedbackRequestValidator>();
         services.AddScoped<IValidator<Feedback.FeedbackReplyRequest>, Feedback.FeedbackReplyRequestValidator>();

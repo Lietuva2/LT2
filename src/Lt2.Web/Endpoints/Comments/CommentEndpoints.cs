@@ -90,18 +90,19 @@ internal static class CommentEndpoints
             .WithValidation<RestrictionRequest>()
             .Produces<RestrictionCreatedResponse>(StatusCodes.Status201Created).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
-        Act<StatementRequest>(api, CommentRoutes.Hide, "HideComment", (m, id, r, a, c, ct) => m.HideAsync(id, r.Statement, a, c, ct));
-        Act<StatementRequest>(api, CommentRoutes.Restore, "RestoreComment", (m, id, r, a, c, ct) => m.RestoreAsync(id, r.Statement, a, c, ct));
-        Act<ModerationRequest>(api, CommentRoutes.Keep, "KeepComment", (m, id, r, a, _, ct) => m.KeepAsync(id, r.Statement, a, ct));
+        // Hiding and restoring email the statement to the comment's author (design 8.23.8): its refusal names the author (8.3).
+        Act<StatementRequest, StatementToAuthorRequestValidator>(api, CommentRoutes.Hide, "HideComment", (m, id, r, a, c, ct) => m.HideAsync(id, r.Statement, a, c, ct));
+        Act<StatementRequest, StatementToAuthorRequestValidator>(api, CommentRoutes.Restore, "RestoreComment", (m, id, r, a, c, ct) => m.RestoreAsync(id, r.Statement, a, c, ct));
+        Act<ModerationRequest, FluentValidation.IValidator<ModerationRequest>>(api, CommentRoutes.Keep, "KeepComment", (m, id, r, a, _, ct) => m.KeepAsync(id, r.Statement, a, ct));
     }
 
     private delegate Task<Result<Unit>> Action<in T>(ICommentModeration moderation, Guid id, T request, StaffActor moderator, string? contact, CancellationToken ct);
 
-    private static void Act<T>(IEndpointRouteBuilder api, string route, string name, Action<T> action) =>
+    private static void Act<T, TValidator>(IEndpointRouteBuilder api, string route, string name, Action<T> action) where TValidator : FluentValidation.IValidator<T> =>
         api.MapPost(ApiEndpoints.Relative(route), (Guid id, T request, HttpContext context, ICommentModeration moderation, CancellationToken ct) =>
                 ModeratorEndpoint.ActAsync(context, m => action(moderation, id, request, m, ModeratorEndpoint.Contact(context), ct)))
             .WithName(name).WithTags("Moderation").RequireAuthorization(Policies.Moderator)
-            .WithValidation<T>()
+            .WithValidation<T, TValidator>()
             .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
     private static IResult Ok<T>(Result<T> result, ErrorMapper errors) => result.IsSuccess ? TypedResults.Ok(result.Value) : errors.ToResult(result.Error!);

@@ -311,6 +311,12 @@ for the lawyer).
   užrakinta" and "…atrakinta" with their bodies and the line on writing to the team and on erasure, `EmailTemplates`
   `Notice.account-locked.*`, `Notice.account-unlocked.*`) and the refusals (`ProblemText` `account.lock-self`,
   `account.lock-staff`, `account.locked`, `account.not-locked`).
+- 8.3: the moderators' explanation labelled by who reads it: "Paaiškinimas autoriui (privalomas)", "Viešas paaiškinimas
+  (privalomas)" with "Rodomas projekto puslapyje.", "Rodomas atsakymo vietoje." and "Rodomas organizacijos puslapyje. Jį gaus
+  ir organizacijos atstovai el. paštu.", "Paaiškinimas moderatoriams (privalomas)" with "Mato tik moderatoriai ir
+  administratoriai." and, for a description, "Mato moderatoriai ir administratoriai; jei apie aprašymą pranešta, jį el. paštu
+  gaus ir pranešimą pateikę nariai." (`AppealUi` `Mod.Statement.*`); the refusal "Parašykite paaiškinimą." where no author
+  receives it (`ValidationMessages` `Statement.RequiredPlain`).
 - 8.5.2: the MPs' section of "Paskyros": "Seimo narių profiliai", its lead, "Perimtas {0}", "Baigti ryšį", the sentence and
   "Ryšys baigtas. Seimo narys: {0}." (`AppealUi` `Acc.Mps.*`).
 - 8.7, 8.12.1: "Paspaudę dar kartą, atsiimsite." (`AppealUi` `Side.PressAgain`), the pressed button's title.
