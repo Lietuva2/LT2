@@ -198,7 +198,6 @@
 <data name="Hidden.RestoresAs.closed" xml:space="preserve"><value>Atkūrus bus uždarytas, kaip buvo</value></data>
 <data name="Hidden.ReasonNotOpen" xml:space="preserve"><value>Dalyvauti dėl šio projekto nebegalima, todėl argumento atkurti negalima.</value></data>
 <data name="Hidden.Restore" xml:space="preserve"><value>Atkurti</value></data>
-<data name="Hidden.Statement" xml:space="preserve"><value>Paaiškinimas (privalomas)</value></data>
 <data name="Hidden.Restored" xml:space="preserve"><value>Atkurta.</value></data>
 <data name="Hidden.RestoreAppeal.Sentence.open" xml:space="preserve"><value>Dalyvavimas dėl projekto vėl bus atviras: pozicijos, argumentai ir „Man svarbu“ žymos grįš tokie, kokie buvo.</value></data>
 <data name="Hidden.RestoreAppeal.Sentence.closed" xml:space="preserve"><value>Projektas vėl bus rodomas uždarytas, su užfiksuotais skaičiais ir argumentais, kaip buvo.</value></data>
@@ -255,7 +254,14 @@
 <data name="Mod.Sentence.reason.hide" xml:space="preserve"><value>Argumentas bus paslėptas, o „Man svarbu“ žymos prie jo ištrintos. Jį galima atkurti, bet be žymų. Paaiškinimą gaus autorius.</value></data>
 <data name="Mod.Sentence.reason.merge.Comments" xml:space="preserve"><value>Kartu bus ištrinti komentarai po juo: {0}.</value></data>
   <data name="Mod.Sentence.reason.merge" xml:space="preserve"><value>Argumentas bus sujungtas su pasirinktu panašiu: „Man svarbu“ žymos persikels prie jo, o šis nebebus rodomas. Paaiškinimą gaus autorius.</value></data>
-<data name="Mod.Statement.Required" xml:space="preserve"><value>Paaiškinimas (privalomas)</value></data>
+<data name="Mod.Statement.Author" xml:space="preserve"><value>Paaiškinimas autoriui (privalomas)</value></data>
+<data name="Mod.Statement.Public" xml:space="preserve"><value>Viešas paaiškinimas (privalomas)</value></data>
+<data name="Mod.Statement.Public.Hint.bill" xml:space="preserve"><value>Rodomas projekto puslapyje.</value></data>
+<data name="Mod.Statement.Public.Hint.response" xml:space="preserve"><value>Rodomas atsakymo vietoje.</value></data>
+<data name="Mod.Statement.Public.Hint.organisation" xml:space="preserve"><value>Rodomas organizacijos puslapyje. Jį gaus ir organizacijos atstovai el. paštu.</value></data>
+<data name="Mod.Statement.Staff" xml:space="preserve"><value>Paaiškinimas moderatoriams (privalomas)</value></data>
+<data name="Mod.Statement.Staff.Hint" xml:space="preserve"><value>Mato tik moderatoriai ir administratoriai.</value></data>
+<data name="Mod.Statement.Staff.Hint.description" xml:space="preserve"><value>Mato moderatoriai ir administratoriai; jei apie aprašymą pranešta, jį el. paštu gaus ir pranešimą pateikę nariai.</value></data>
 <data name="Mod.MergeChoose" xml:space="preserve"><value>Pasirinkite argumentą, su kuriuo sujungti.</value></data>
 <data name="Mod.Done.publish" xml:space="preserve"><value>Atlikta: paskelbta.</value></data>
 <data name="Mod.Done.keep" xml:space="preserve"><value>Atlikta: palikta, pranešimai uždaryti.</value></data>

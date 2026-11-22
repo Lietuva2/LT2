@@ -589,6 +589,23 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `RecordRules.CheckRecordAction` / `CheckReasonAction`, and the queue offers exactly them. The bill's page asks
   whether the caller is a moderator on an open and on a closed record (`BillPage.razor`; owner, 2026-11-19), so a closed
   record's page shows the "Moderavimas" panel and "Moderuoti" with only those actions (design 8.3).
+- **Who reads a moderator's explanation (design 8.3, owner 2026-11-22).** Each statement field's label says it:
+  `AppealUi` `Mod.Statement.Author` (emailed to the author: an argument's hide, merge and restore, a comment's, "Apie
+  mane", restoring an MP's response), `Mod.Statement.Public` with `Mod.Statement.Public.Hint.bill|response|organisation`
+  (hiding a record, its threshold; hiding a response; blocking an organisation) and `Mod.Statement.Staff` with
+  `Mod.Statement.Staff.Hint` (`.description` for writing or removing a description, which answers its reports); an
+  organisation's other actions keep `OrgMod.Statement`. `ModerationActions.StatementLabel`/`StatementHint` pick them for a
+  bill's and an argument's actions; `RestoreForm.StatementHint`, `DigestModeration`'s `StatementForm` and
+  `VoteModerationPanel` carry the line under the label (`field__hint`, in `aria-describedby`). On the server one
+  `StatementRequest` serves both: `StatementRequestValidator` (the shared `IValidator<StatementRequest>`) refuses a missing
+  statement with `Statement.RequiredPlain` "Parašykite paaiškinimą.", and the endpoints whose statement goes to the author
+  pick `StatementToAuthorRequestValidator` by type (`WithValidation<StatementRequest, StatementToAuthorRequestValidator>()`,
+  `Statement.Required` "Parašykite paaiškinimą autoriui."): `HideReasonEndpoint`, `RestoreReason`, `LiftRestriction`,
+  the comment's and the profile's hide and restore, `RestoreMpResponse`; `MergeReasonRequestValidator` and
+  `RestrictionRequestValidator` name the author too (the helper `Statement(l, required, toAuthor)`). The code stays
+  `validation` on `statement`. The modules' own `statement.required` already reads "Parašykite paaiškinimą."
+  (`ProblemText`). Tests: `ModerationActionsTests`, `AppealContractTests` (unit),
+  `ModerationApiTests.A_missing_statement_is_refused_naming_the_author_only_where_the_author_receives_it` (integration).
 - **Closing a rejected or withdrawn bill (design 8.1 step 6, owner 2026-11-19).** The open data has no such status, so
   a moderator closes the open record: "Uždaryti: projektas atmestas ar atsiimtas" under "Seime" in the record's menu
   (`ModerationActions`, `ClosingReasons` in the contracts), `POST /api/v1/moderation/records/{id}/close`

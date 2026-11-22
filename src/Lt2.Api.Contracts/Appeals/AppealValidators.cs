@@ -21,10 +21,16 @@ internal static class AppealValidation
             .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["Description.Required"])
             .Must(t => t.Trim().Length <= AppealLimits.DescriptionMaxLength).WithMessage(l["Description.TooLong"]);
 
-    public static IRuleBuilderOptions<T, string?> Statement<T>(this IRuleBuilderInitial<T, string?> rule, IStringLocalizer l, bool required) =>
+    /// <summary>
+    /// A staff statement: at most <see cref="AppealLimits.StatementMaxLength"/> characters, and present when
+    /// <paramref name="required"/>. Its refusal names the reader only when the statement is emailed to the text's author
+    /// (<paramref name="toAuthor"/>, design 8.3, owner 2026-11-22): "Parašykite paaiškinimą autoriui."; a statement shown on a
+    /// page or read by staff only has no author to name, so it says "Parašykite paaiškinimą.".
+    /// </summary>
+    public static IRuleBuilderOptions<T, string?> Statement<T>(this IRuleBuilderInitial<T, string?> rule, IStringLocalizer l, bool required, bool toAuthor = false) =>
         required
             ? rule.Cascade(CascadeMode.Stop)
-                .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["Statement.Required"])
+                .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(toAuthor ? l["Statement.Required"] : l["Statement.RequiredPlain"])
                 .Must(t => t!.Trim().Length <= AppealLimits.StatementMaxLength).WithMessage(l["Statement.TooLong"])
             : rule.Must(t => t is null || t.Trim().Length <= AppealLimits.StatementMaxLength).WithMessage(l["Statement.TooLong"]);
 }
@@ -70,17 +76,37 @@ public sealed class ModerationRequestValidator : AbstractValidator<ModerationReq
     public ModerationRequestValidator(IStringLocalizer<ValidationMessages> l) => RuleFor(x => x.Statement).Statement(l, required: false);
 }
 
-/// <summary>Returning or hiding needs a statement of reasons (design 8.3).</summary>
+/// <summary>Restricting a writer needs a statement of reasons, emailed to that person (design 8.3).</summary>
 public sealed class RestrictionRequestValidator : AbstractValidator<RestrictionRequest>
 {
     public RestrictionRequestValidator(IStringLocalizer<ValidationMessages> l) =>
-        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true, toAuthor: true).OverridePropertyName("statement");
 }
 
+/// <summary>
+/// A required statement nobody receives as its author: one shown on a page (hiding a bill's record or an MP's response,
+/// blocking an organisation) or read by staff only (closing, holding, an administrator's actions), and an organisation's,
+/// which names its representatives in the form. The refusal names nobody (design 8.3, owner 2026-11-22). The actions whose
+/// statement is emailed to the author check the same request with <see cref="StatementToAuthorRequestValidator"/>, chosen by
+/// their endpoint.
+/// </summary>
 public sealed class StatementRequestValidator : AbstractValidator<StatementRequest>
 {
     public StatementRequestValidator(IStringLocalizer<ValidationMessages> l) =>
         RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+}
+
+/// <summary>
+/// A required statement emailed to the text's author as the statement of reasons (design 8.3, owner 2026-11-22): hiding or
+/// restoring an argument, a comment or a member's "Apie mane", restoring an MP's response, lifting a restriction. The same
+/// <see cref="StatementRequest"/> as <see cref="StatementRequestValidator"/>; the endpoint picks this one
+/// (<c>WithValidation&lt;StatementRequest, StatementToAuthorRequestValidator&gt;</c>), and only the message differs
+/// ("Parašykite paaiškinimą autoriui."), never the field or the status.
+/// </summary>
+public sealed class StatementToAuthorRequestValidator : AbstractValidator<StatementRequest>
+{
+    public StatementToAuthorRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true, toAuthor: true).OverridePropertyName("statement");
 }
 
 public sealed class ModeratorThresholdRequestValidator : AbstractValidator<ModeratorThresholdRequest>
@@ -127,7 +153,7 @@ public sealed class MergeReasonRequestValidator : AbstractValidator<MergeReasonR
     public MergeReasonRequestValidator(IStringLocalizer<ValidationMessages> l)
     {
         RuleFor(x => x.IntoReasonId).NotEmpty().WithMessage(l["Merge.Target"]);
-        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true, toAuthor: true).OverridePropertyName("statement");
     }
 }
 

@@ -44,13 +44,12 @@
                             <ActionHeading Id="@($"response-action-title-{r.Id}")" Level="3">@L["RespMod.Action." + _action]</ActionHeading>
                             <p class="small">@L["RespMod.Sentence." + _action]</p>
                             <div class="field @ErrorClass("statement")">
-                                <label for="response-statement-@r.Id">@L[_action == "keep" ? "Mod.Note.Reporters" : "OrgMod.Statement"]</label>
-                                @if (_action == "keep")
-                                {
-                                    <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>
-                                }
+                                @* Design 8.3 (owner, 2026-11-22): a hidden response's statement is shown in its place to everyone
+                                   (8.5.5); the sentence says the MP gets it too. *@
+                                <label for="response-statement-@r.Id">@L[_action == "keep" ? "Mod.Note.Reporters" : "Mod.Statement.Public"]</label>
+                                <p class="field__hint" id="response-statement-hint-@r.Id">@L[_action == "keep" ? "Mod.Note.Reporters.Hint" : "Mod.Statement.Public.Hint.response"]</p>
                                 <textarea class="textarea" id="response-statement-@r.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
-                                          aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"response-statement-{r.Id}")"></textarea>
+                                          aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"response-statement-{r.Id}", $"response-statement-hint-{r.Id}")"></textarea>
                                 <FieldError Errors="Errors" Field="statement" For="@($"response-statement-{r.Id}")" />
                             </div>
                             <div class="row">
@@ -96,7 +95,7 @@
                     {
                         <p class="note note--quiet">@L["RespMod.NotOpen"]</p>
                     }
-                    <RestoreForm Id="r.Id" IdPrefix="response-restore" Sentence="@L["RespMod.Restore.Sentence"]" StatementLabel="@L["OrgMod.Statement"]"
+                    <RestoreForm Id="r.Id" IdPrefix="response-restore" Sentence="@L["RespMod.Restore.Sentence"]" StatementLabel="@L["Mod.Statement.Author"]"
                                  Allowed="r.Restorable" Restore="request => Moderation.RestoreAsync(r.Id, request)" />
                 </article>
             }

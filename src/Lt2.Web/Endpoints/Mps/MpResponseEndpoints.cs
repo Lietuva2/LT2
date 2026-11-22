@@ -53,18 +53,21 @@ internal static class MpResponseEndpoints
         api.MapGet(ApiEndpoints.Relative(MpResponseRoutes.Moderation), async (MpResponseReads reads, CancellationToken ct) => TypedResults.Ok(await reads.ModerationAsync(ct)))
             .WithName("GetResponseModeration").WithTags("Moderation").RequireAuthorization(Policies.Moderator).Produces<MpResponseModerationResponse>();
 
-        Act<ModerationRequest>(api, MpResponseRoutes.Keep, "KeepMpResponse", (m, id, r, a, _, ct) => m.KeepAsync(id, r.Statement, a, ct));
-        Act<StatementRequest>(api, MpResponseRoutes.Hide, "HideMpResponse", (m, id, r, a, c, ct) => m.HideAsync(id, r.Statement, a, c, ct));
-        Act<StatementRequest>(api, MpResponseRoutes.Restore, "RestoreMpResponse", (m, id, r, a, c, ct) => m.RestoreAsync(id, r.Statement, a, c, ct));
+        Act<ModerationRequest, FluentValidation.IValidator<ModerationRequest>>(api, MpResponseRoutes.Keep, "KeepMpResponse", (m, id, r, a, _, ct) => m.KeepAsync(id, r.Statement, a, ct));
+
+        // Design 8.3 (owner, 2026-11-22): a hidden response's statement is shown in its place to everyone (8.5.5), so its refusal
+        // names nobody; restoring emails the statement to the MP alone, so its refusal names the author.
+        Act<StatementRequest, FluentValidation.IValidator<StatementRequest>>(api, MpResponseRoutes.Hide, "HideMpResponse", (m, id, r, a, c, ct) => m.HideAsync(id, r.Statement, a, c, ct));
+        Act<StatementRequest, StatementToAuthorRequestValidator>(api, MpResponseRoutes.Restore, "RestoreMpResponse", (m, id, r, a, c, ct) => m.RestoreAsync(id, r.Statement, a, c, ct));
     }
 
     private delegate Task<Result<Unit>> Action<in T>(IMpResponseModeration moderation, Guid id, T request, StaffActor moderator, string? contact, CancellationToken ct);
 
-    private static void Act<T>(IEndpointRouteBuilder api, string route, string name, Action<T> action) =>
+    private static void Act<T, TValidator>(IEndpointRouteBuilder api, string route, string name, Action<T> action) where TValidator : FluentValidation.IValidator<T> =>
         api.MapPost(ApiEndpoints.Relative(route), (Guid id, T request, HttpContext context, IMpResponseModeration moderation, CancellationToken ct) =>
                 ModeratorEndpoint.ActAsync(context, m => action(moderation, id, request, m, ModeratorEndpoint.Contact(context), ct)))
             .WithName(name).WithTags("Moderation").RequireAuthorization(Policies.Moderator)
-            .WithValidation<T>()
+            .WithValidation<T, TValidator>()
             .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
     private static IResult Ok<T>(Result<T> result, ErrorMapper errors) => result.IsSuccess ? TypedResults.Ok(result.Value) : errors.ToResult(result.Error!);

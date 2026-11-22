@@ -29,13 +29,15 @@
                 <ActionHeading Id="@($"org-action-title-{Id}")">@L["OrgMod.Action." + _open]</ActionHeading>
                 <p class="small" id="org-action-sentence-@Id">@L["OrgMod.Sentence." + _open]</p>
                 <div class="field @ErrorClass("statement")">
-                    <label for="org-statement-@Id">@L[_open == "keep" ? "Mod.Note.Reporters" : Optional(_open) ? "OrgMod.Note" : _open == "confirm" ? "OrgMod.Checked" : "OrgMod.Statement"]</label>
-                    @if (_open == "keep")
+                    @* Design 8.3 (owner, 2026-11-22): the label says who reads it. A block's statement is shown on the
+                       organisation's page (8.14.14) and also emailed to the representatives; every other one goes to them by email. *@
+                    <label for="org-statement-@Id">@L[_open == "keep" ? "Mod.Note.Reporters" : Optional(_open) ? "OrgMod.Note" : _open == "confirm" ? "OrgMod.Checked" : _open == "block" ? "Mod.Statement.Public" : "OrgMod.Statement"]</label>
+                    @if (_open is "keep" or "block")
                     {
-                        <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>
+                        <p class="field__hint" id="org-statement-hint-@Id">@L[_open == "keep" ? "Mod.Note.Reporters.Hint" : "Mod.Statement.Public.Hint.organisation"]</p>
                     }
                     <textarea class="textarea" id="org-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
-                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"org-statement-{Id}")"></textarea>
+                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"org-statement-{Id}", _open is "keep" or "block" ? $"org-statement-hint-{Id}" : "")"></textarea>
                     <FieldError Errors="Errors" Field="statement" For="@($"org-statement-{Id}")" />
                 </div>
                 <div class="row">

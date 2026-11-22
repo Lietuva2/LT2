@@ -168,15 +168,17 @@
                     </fieldset>
                 }
 
+                @* Design 8.3 (owner, 2026-11-22): the explanation says who reads it, the author by email, everyone on the
+                   bill's page, or staff only; the note of "Palikti" goes to the members who reported, by email (2026-11-17). *@
+                @{ var hint = StatementHint(_open); }
                 <div class="field @ErrorClass("statement")">
-                    <label for="statement-@Key">@L[StatementLabel(_open)]</label>
-                    <textarea class="textarea" id="statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
-                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"statement-{Key}")"></textarea>
-                    @if (_open == "keep")
+                    <label for="statement-@Key">@StatementLabel(_open)</label>
+                    @if (hint is not null)
                     {
-                        @* Owner, 2026-11-17: the note of "Palikti" goes to the members who reported, by email. *@
-                        <p class="field__hint" id="statement-hint-@Key">@L["Mod.Note.Reporters.Hint"]</p>
+                        <p class="field__hint" id="statement-hint-@Key">@hint</p>
                     }
+                    <textarea class="textarea" id="statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"statement-{Key}", hint is null ? "" : $"statement-hint-{Key}")"></textarea>
                     <FieldError Errors="Errors" Field="statement" For="@($"statement-{Key}")" />
                 </div>
                 <div class="row">
@@ -355,13 +357,34 @@
     private string ActionLabel(string action) =>
         action == "describe" ? (string.IsNullOrEmpty(CurrentDescription) ? "Mod.Action.write" : "Mod.Action.describe") : "Mod.Action." + action;
 
-    /// <summary>A note is optional when publishing or keeping, a statement required for everything else.</summary>
-    private static string StatementLabel(string action) => action switch
+    /// <summary>
+    /// A note is optional when publishing, keeping or confirming, a statement required for everything else, labelled by who reads
+    /// it (design 8.3, owner 2026-11-22): an argument's author by email (hiding, merging); everyone on the bill's page (hiding the
+    /// record, 8.12.3; its own threshold, 8.12.2); otherwise only staff (the description, the planned date, closing and undoing
+    /// it, holding, releasing and an urgent summary are recorded and audited and emailed to nobody).
+    /// </summary>
+    private string StatementLabel(string action) => action switch
     {
-        "keep" => "Mod.Note.Reporters",
-        "publish" => "Mod.Note.Optional",
-        "confirm" => "Mod.Note.Record",
-        _ => "Mod.Statement.Required",
+        "keep" => L["Mod.Note.Reporters"],
+        "publish" => L["Mod.Note.Optional"],
+        "confirm" => L["Mod.Note.Record"],
+        _ when Kind == ReportTargets.Reason => L["Mod.Statement.Author"],
+        "hide" or "threshold" => L["Mod.Statement.Public"],
+        _ => L["Mod.Statement.Staff"],
+    };
+
+    /// <summary>
+    /// The line under the label on where the explanation goes, or null when the label says it all (the author's). A bill's
+    /// description answers the reports on it, whose members get the statement too (8.3, 8.13).
+    /// </summary>
+    private string? StatementHint(string action) => action switch
+    {
+        "keep" => L["Mod.Note.Reporters.Hint"].Value,
+        "publish" or "confirm" => null,
+        _ when Kind == ReportTargets.Reason => null,
+        "hide" or "threshold" => L["Mod.Statement.Public.Hint.bill"].Value,
+        "describe" or "undescribe" => L["Mod.Statement.Staff.Hint.description"].Value,
+        _ => L["Mod.Statement.Staff.Hint"].Value,
     };
 
     /// <summary>Actions after which the item has left the queue for good.</summary>

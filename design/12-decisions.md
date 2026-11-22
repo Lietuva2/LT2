@@ -132,6 +132,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - A moderator's actions are one filled button for what the item needs most in its state and "Kiti veiksmai" opening the
   rest; a bill's grouped under "Aprašymas", "Seime" and "Suvestinės", "Paslėpti" set apart at the end; the same on every
   moderation screen (8.16.1, 2026-11-17).
+- Each moderator's explanation is labelled by who reads it: the author by email ("Paaiškinimas autoriui"), everyone on a page
+  ("Viešas paaiškinimas", with the page named under it), or staff only ("Paaiškinimas moderatoriams", "Mato tik moderatoriai
+  ir administratoriai."); where nobody receives it as its author the refusal is "Parašykite paaiškinimą." (8.3, 2026-11-22).
 
 ## 8.4 Summaries to MPs
 

@@ -78,9 +78,12 @@
                     <p class="small" id="vote-action-sentence">@L.Format("VoteMod.Sentence.reset", Describe(state.RulesKind, state.RulesStage))</p>
                 }
                 <div class="field @ErrorClass("statement")">
-                    <label for="vote-statement">@L["Mod.Statement.Required"]</label>
+                    @* Design 8.3 (owner, 2026-11-22): the statement is shown only in this moderators' part and the audit log;
+                       the vote's page says a moderator corrected it, never why (7.2). *@
+                    <label for="vote-statement">@L["Mod.Statement.Staff"]</label>
+                    <p class="field__hint" id="vote-statement-hint">@L["Mod.Statement.Staff.Hint"]</p>
                     <textarea class="textarea" id="vote-statement" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
-                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", "vote-statement")"></textarea>
+                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", "vote-statement", "vote-statement-hint")"></textarea>
                     <FieldError Errors="Errors" Field="statement" For="vote-statement" />
                 </div>
                 <div class="row">

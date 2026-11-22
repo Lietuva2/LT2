@@ -61,7 +61,8 @@
                         <ActionHeading Id="@($"profile-action-title-{p.Id}")" Level="3">@L["ProfileMod.Action." + _action]</ActionHeading>
                         <p class="small">@L["ProfileMod.Sentence." + _action]</p>
                         <div class="field @ErrorClass("statement")">
-                            <label for="profile-statement-@p.Id">@L[_action == "keep" ? "Mod.Note.Reporters" : "OrgMod.Statement"]</label>
+                            @* Design 8.3 (owner, 2026-11-22): hiding and restoring email the statement to the member who wrote the text. *@
+                            <label for="profile-statement-@p.Id">@L[_action == "keep" ? "Mod.Note.Reporters" : "Mod.Statement.Author"]</label>
                     @if (_action == "keep")
                     {
                         <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>

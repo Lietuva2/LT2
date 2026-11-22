@@ -31,7 +31,8 @@
                 <ActionHeading Id="@($"comment-action-title-{Key}")">@L["Comments.Mod.Action." + _open]</ActionHeading>
                 <p class="small">@L["Comments.Mod.Sentence." + _open]</p>
                 <div class="field @ErrorClass("statement")">
-                    <label for="comment-statement-@Key">@(_open == "keep" ? L["Mod.Note.Reporters"] : L["Mod.Statement.Required"])</label>
+                    @* Design 8.3 (owner, 2026-11-22): hiding and restoring email the statement to the comment's author. *@
+                    <label for="comment-statement-@Key">@(_open == "keep" ? L["Mod.Note.Reporters"] : L["Mod.Statement.Author"])</label>
                     @if (_open == "keep")
                     {
                         <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>

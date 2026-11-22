@@ -115,7 +115,7 @@ else
                                     {
                                         @if (_open == ("hide", reasonId))
                                         {
-                                            @StatementForm(reasonId, L["DigMod.HideHint"], L["Mod.Action.hide"], () => HideAsync(reasonId))
+                                            @StatementForm(reasonId, L["Mod.Statement.Author"], null, L["DigMod.HideHint"], L["Mod.Action.hide"], () => HideAsync(reasonId))
                                         }
                                         else
                                         {
@@ -145,7 +145,7 @@ else
                                 </li>
                                 @if (_open == ("keep-out", org.StatementId))
                                 {
-                                    <li>@StatementForm(org.StatementId, L["DigMod.KeepOutHint"], L["OrgMod.Action.keep-out"], () => KeepOutAsync(org.OrganisationId))</li>
+                                    <li>@StatementForm(org.StatementId, L["OrgMod.Statement"], null, L["DigMod.KeepOutHint"], L["OrgMod.Action.keep-out"], () => KeepOutAsync(org.OrganisationId))</li>
                                 }
                             }
                         </ul>
@@ -155,7 +155,7 @@ else
                         var action = item.Held ? "release" : "hold";
                         @if (_open == (action, item.RecordId))
                         {
-                            @StatementForm(item.RecordId, L[item.Held ? "DigMod.ReleaseHint" : "DigMod.HoldHint"], L["Mod.Action." + action], () => HoldAsync(item.RecordId, item.Held))
+                            @StatementForm(item.RecordId, L["Mod.Statement.Staff"], L["Mod.Statement.Staff.Hint"], L[item.Held ? "DigMod.ReleaseHint" : "DigMod.HoldHint"], L["Mod.Action." + action], () => HoldAsync(item.RecordId, item.Held))
                         }
                         else
                         {
@@ -219,12 +219,20 @@ else
         }
     }
 
-    /// <summary>One statement form at a time (design 8.3: one action open per item).</summary>
-    private RenderFragment StatementForm(Guid id, string hint, string label, Func<Task> act) =>
+    /// <summary>
+    /// One statement form at a time (design 8.3: one action open per item), its label saying who reads the statement (owner,
+    /// 2026-11-22): the argument's author, the organisation's representatives, or staff only with <paramref name="reader"/>
+    /// saying so under the label.
+    /// </summary>
+    private RenderFragment StatementForm(Guid id, string statementLabel, string? reader, string hint, string label, Func<Task> act) =>
         @<div class="sheet--quiet stack stack--tight" id="digmod-form-@id">
-            <label for="digmod-act-@id">@L["Mod.Statement.Required"]</label>
+            <label for="digmod-act-@id">@statementLabel</label>
+            @if (reader is not null)
+            {
+                <p class="field__hint" id="digmod-act-reader-@id">@reader</p>
+            }
             <textarea class="textarea @ErrorClass("statement")" id="digmod-act-@id" rows="2" maxlength="@AppealLimits.StatementMaxLength"
-                      aria-describedby="@DescribedBy("statement", "digmod-act-" + id, "digmod-act-hint-" + id)" aria-invalid="@Invalid("statement")"
+                      aria-describedby="@DescribedBy("statement", "digmod-act-" + id, reader is null ? "" : "digmod-act-reader-" + id, "digmod-act-hint-" + id)" aria-invalid="@Invalid("statement")"
                       @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
             <p class="field__hint" id="digmod-act-hint-@id">@hint</p>
             <FieldError Errors="Errors" Field="statement" For="@("digmod-act-" + id)" />
