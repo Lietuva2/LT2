@@ -332,7 +332,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldNotContain("Kreipimaisi");
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");
-        html.ShouldContain("dalyvių 1 · argumentų 1");
+        html.ShouldContain("argumentų 1");
         // Owner, 2026-11-21: no note under the list (no count in brackets to explain, no hint "Kas yra riba?").
         html.ShouldNotContain("Skliaustuose");
         html.ShouldNotContain("id=\"older-note\"");
@@ -358,7 +358,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         side.ShouldNotContain("(0)");
         side.IndexOf("už</span> 1", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("<svg", StringComparison.Ordinal), "the numbers, then the bar");
         var text = row[..row.IndexOf("tl-item__side", StringComparison.Ordinal)];
-        text.ShouldContain("dalyvių 1 · argumentų 1");
+        text.ShouldContain("argumentų 1");
+        text.ShouldNotContain("dalyvių", customMessage: "the participants are said once, in the right column (owner, 2026-11-23)");
         text.ShouldNotContain("už</span> 1", customMessage: "not in the text line");
         text.ShouldContain("<a class=\"tag tag--ink num\" href=\"/seimas/XVP-0618\">XVP-0618</a>", customMessage: "the number tag leads to the bill, as in the agenda");
         row.ShouldNotContain("id=\"counts-XVP-0618\"", customMessage: "the shared figures replace the list's own counts");
