@@ -18,6 +18,13 @@ public sealed record AgendaRecordResponse(Guid? Id, string Status, SideCountsRes
     /// planned that would hold it, else the last one really sent that held it; null otherwise.
     /// </summary>
     public Digests.RecordSummaryResponse? Summary { get; init; }
+
+    /// <summary>
+    /// The number of published arguments, which only the bills' list gives (owner, 2026-11-23: it stands in the row's right column,
+    /// after the participants); null in the agenda's and the front page's answer, where it is left out altogether.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public int? Arguments { get; init; }
 }
 
 /// <summary>

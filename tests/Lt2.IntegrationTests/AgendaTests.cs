@@ -49,6 +49,8 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             third.Record.Id.ShouldBe(record.Id);
             third.Record.Counts.For.ShouldBe(1);
             third.Record.Threshold.Participants.ShouldBe(1);
+            third.Record.Arguments.ShouldBeNull("only the bills' list gives the number of arguments (owner, 2026-11-23)");
+            (await visitor.Client.GetStringAsync(AgendaRoutes.Agenda)).ShouldNotContain("\"arguments\"", customMessage: "a null is not written");
 
             // The page, without JavaScript: planned dates in words, never a countdown.
             ForgetAgenda();
@@ -70,6 +72,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             row.ShouldNotContain("Niekas nenurodė");
             row.ShouldNotContain("Nurodyti, ko prašote");
             Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldNotContain("Ko prašo, argumentai");
+            Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldNotContain("argumentų", customMessage: "the agenda's rows say nothing of arguments");
             Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldContain($"id=\"home-counts-{today.AddDays(7):yyyy-MM-dd}-{AppealSteps.ThirdBill}\"");
             // Owner, 2026-11-21: a list's row shows one number a side, without the count for accounts older than 30 days.
             Row(html, today.AddDays(7), AppealSteps.ThirdBill).ShouldMatch(

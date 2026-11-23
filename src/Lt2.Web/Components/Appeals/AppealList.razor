@@ -11,7 +11,8 @@
    active bill, by activity (participants plus published arguments) unless sorted by planned date or by the latest activity
    (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form with the box "Planuojami per 14 dienų", applied with
    "Rodyti" (owner, 2026-11-21); the order (keeping the search and the filter), the closed tab and "Rodyti daugiau" are
-   plain links. Each row is the agenda's (TimelineItem, owner 2026-11-23) with the participants and arguments besides. Nothing
+   plain links. Each row is the agenda's (TimelineItem, owner 2026-11-23) with the number of arguments added to its participants'
+   line in the right column (owner, 2026-11-23). Nothing
    stands under the list: what the numbers are and what "riba" is are said on the bill's page and the methodology (owner,
    2026-11-21). *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
@@ -149,12 +150,6 @@
                     }
                 </Tags>
                 <Details>
-                    @* Owner, 2026-11-23: the participants are said once, in the right column; the one number only this line has is the
-                       arguments', and nothing stands here for a bill without any. *@
-                    @if (item.Arguments > 0)
-                    {
-                        <span class="small num">@T.Format("List.Arguments", Display.Number(item.Arguments))</span>
-                    }
                     @if (Sort == "naujausia" && item.LastActivityAt is { } last)
                     {
                         @* Owner, 2026-11-17: in this order each row says when the bill last saw activity. *@
@@ -168,7 +163,7 @@
     /// <summary>The list's item as the shared row takes it: the stage is the planned item's, the figures the record's public numbers.</summary>
     private static AgendaItemResponse AsRow(BillListItemResponse item) => new(
         item.Bill.Number, item.Bill.Title, item.Planned?.Stage, item.Planned?.SetByModerator ?? false, item.Planned?.SourceUrl,
-        new AgendaRecordResponse(item.Id, item.Status, item.Counts, item.Threshold) { Summary = item.Summary }, item.Organisations);
+        new AgendaRecordResponse(item.Id, item.Status, item.Counts, item.Threshold) { Summary = item.Summary, Arguments = item.Arguments }, item.Organisations);
 
     [SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
 

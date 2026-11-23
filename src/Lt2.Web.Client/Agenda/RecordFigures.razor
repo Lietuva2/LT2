@@ -6,7 +6,8 @@
    took part in says so, unless the row offers the sides (owner, 2026-11-19: "minimise non-essential texts"; the buttons
    stand there instead) or the member's own answer has a side (the page's agenda is up to a minute old, so a member who has
    just taken a side must not read that nobody has); a closed one always says "Niekas nedalyvavo". A line breaks only after
-   a "·", never inside a part ("The row lines up"). The block stands under the word "Dalyviai" (owner, 2026-11-23: each
+   a "·", never inside a part ("The row lines up"). The bills' list adds one more part, "argumentų N" (owner, 2026-11-23:
+   next to the participants; only when there are any), after the threshold's or the summary's. The block stands under the word "Dalyviai" (owner, 2026-11-23: each
    block of numbers in a row says whose they are; the Seimas's result stands under "Seimas"), and is left out altogether
    where it would hold nothing. Nothing under the list explains the numbers: the bill's page and the methodology do. Plain markup, no island of its own: the server renders it in every row, and the member's island of a
    row (MyAgendaSide) renders the same component, with the bill's live numbers after the member's own action. *@
@@ -30,11 +31,14 @@
                planned that would hold the bill, else the last one really sent; no trial variants), else "riba pasiekta". *@
             <span class="small num">@if (Record.Threshold.Reached)
                 {
-                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L["Agenda.Participants." + NumberForms.Of(Record.Threshold.Participants)] ·</span>@(" ")<span class="nowrap">@(Record.Summary is { } summary ? L.Format("Agenda.Summary." + summary.Kind, Display.Day(summary.Day)) : L["Agenda.Reached"].Value)</span>
+                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L["Agenda.Participants." + NumberForms.Of(Record.Threshold.Participants)] ·</span>@(" ")<span class="nowrap">@(Record.Summary is { } summary ? L.Format("Agenda.Summary." + summary.Kind, Display.Day(summary.Day)) : L["Agenda.Reached"].Value)@More</span>
                 }
                 else
                 {
-                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress." + NumberForms.Of(Record.Threshold.Participants), Display.Number(Record.Threshold.Value))</span>
+                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress." + NumberForms.Of(Record.Threshold.Participants), Display.Number(Record.Threshold.Value))@More</span>
+                }@if (Record.Arguments is { } arguments and > 0)
+                {
+                    @(" ")<span class="nowrap">@L.Format("Agenda.Arguments", Display.Number(arguments))</span>
                 }</span>
         }
     </div>
@@ -47,6 +51,9 @@
     /// Leaves out "Niekas nenurodė, ko prašo": the row offers the sides, or the member's own answer says they have one.
     /// </summary>
     [Parameter] public bool HideNobody { get; set; }
+
+    /// <summary>The " ·" that ends the last part when another follows it: the number of arguments (list rows only).</summary>
+    private string More => Record.Arguments is > 0 ? " ·" : "";
 
     /// <summary>The row's place (see MyAgendaSide), for the ids of the line "nobody yet" and the counts; none when not given.</summary>
     [Parameter] public string? Id { get; set; }

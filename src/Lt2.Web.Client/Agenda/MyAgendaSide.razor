@@ -238,7 +238,7 @@
         {
             if ((await Appeals.GetRecordAsync(Number)).Value is { } live)
             {
-                _live = new AgendaRecordResponse(live.Id, live.Status, live.Counts, live.Threshold) { Summary = await SummaryAsync(live) };
+                _live = new AgendaRecordResponse(live.Id, live.Status, live.Counts, live.Threshold) { Summary = await SummaryAsync(live), Arguments = Record.Arguments };
             }
         }
         catch (HttpRequestException)

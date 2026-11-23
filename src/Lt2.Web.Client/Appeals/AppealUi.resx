@@ -798,6 +798,7 @@
   <data name="Agenda.Participants.One" xml:space="preserve"><value>dalyvis</value></data>
   <data name="Agenda.Participants.Few" xml:space="preserve"><value>dalyviai</value></data>
   <data name="Agenda.Participants.Many" xml:space="preserve"><value>dalyvių</value></data>
+  <data name="Agenda.Arguments" xml:space="preserve"><value>argumentų {0}</value></data>
   <data name="Threshold.Progress.One" xml:space="preserve"><value>dalyvis · riba {0}</value></data>
   <data name="Threshold.Progress.Few" xml:space="preserve"><value>dalyviai · riba {0}</value></data>
   <data name="Threshold.Progress.Many" xml:space="preserve"><value>dalyvių · riba {0}</value></data>

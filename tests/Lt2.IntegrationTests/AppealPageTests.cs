@@ -332,7 +332,6 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldNotContain("Kreipimaisi");
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");
-        html.ShouldContain("argumentų 1");
         // Owner, 2026-11-21: no note under the list (no count in brackets to explain, no hint "Kas yra riba?").
         html.ShouldNotContain("Skliaustuose");
         html.ShouldNotContain("id=\"older-note\"");
@@ -349,8 +348,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("<p class=\"small num\" role=\"status\" id=\"found\">Rasta projektų: ");
 
         // Owner, 2026-11-23: the row is the agenda's: the sides' numbers stand in the side column with the bar (one number a
-        // side, without the count for accounts older than 30 days, owner 2026-11-21), the text line says the participants and
-        // arguments; two orders; the planned filter is a box in the form.
+        // side, without the count for accounts older than 30 days, owner 2026-11-21), the participants' line there ends with
+        // the number of arguments, and the text line says neither; two orders; the planned filter is a box in the form.
         var row = html[html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal)..];
         row = row[..row.IndexOf("</li>", StringComparison.Ordinal)];
         var side = row[row.IndexOf("tl-item__side", StringComparison.Ordinal)..];
@@ -358,7 +357,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         side.ShouldNotContain("(0)");
         side.IndexOf("už</span> 1", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("<svg", StringComparison.Ordinal), "the numbers, then the bar");
         var text = row[..row.IndexOf("tl-item__side", StringComparison.Ordinal)];
-        text.ShouldContain("argumentų 1");
+        side.ShouldMatch("<b>1</b> dalyvis · riba [\\d\\s]+ ·</span>\\s*<span class=\"nowrap\">argumentų 1</span>");
+        text.ShouldNotContain("argumentų", customMessage: "the arguments are said in the right column, after the participants (owner, 2026-11-23)");
         text.ShouldNotContain("dalyvių", customMessage: "the participants are said once, in the right column (owner, 2026-11-23)");
         text.ShouldNotContain("už</span> 1", customMessage: "not in the text line");
         text.ShouldContain("<a class=\"tag tag--ink num\" href=\"/seimas/XVP-0618\">XVP-0618</a>", customMessage: "the number tag leads to the bill, as in the agenda");
