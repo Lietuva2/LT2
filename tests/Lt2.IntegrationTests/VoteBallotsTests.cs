@@ -81,13 +81,13 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
 
         Row().Count(list).ShouldBe(20);
         list.ShouldContain("Rodoma 20 iš 141");
-        list.ShouldContain("href=\"/seimas/balsavimai/99199701?rodyti=70#ballot-21\"");
+        list.ShouldContain("href=\"/seimas/balsavimai/99199701?rodyti=70\"");
 
         var more = List(await OkAsync(Page + "?rodyti=70"));
         Row().Count(more).ShouldBe(70);
         more.ShouldContain("id=\"ballot-21\"");
         more.ShouldContain("Rodoma 70 iš 141");
-        more.ShouldContain("?rodyti=120#ballot-71");
+        more.ShouldContain("?rodyti=120");
 
         var all = List(await OkAsync(Page + "?rodyti=141"));
         Row().Count(all).ShouldBe(141);
@@ -117,7 +117,7 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
     {
         var expected = await CountAsync(stored);
         var plain = List(await OkAsync(Page));
-        plain.ShouldContain($"href=\"/seimas/balsavimai/99199701?balsas={slug}#ballots\" id=\"ballots-{choice}\">{word} <span class=\"num\">{expected}</span></a>");
+        plain.ShouldContain($"href=\"/seimas/balsavimai/99199701?balsas={slug}\" id=\"ballots-{choice}\">{word} <span class=\"num\">{expected}</span></a>");
 
         var list = List(await OkAsync($"{Page}?balsas={slug}&rodyti=141"));
 
@@ -135,7 +135,7 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
         Row().Count(found).ShouldBe(1);
         found.ShouldContain("Indrė Žolynaitė");
         found.ShouldContain("value=\"zolynaite\"");
-        found.ShouldContain("href=\"/seimas/balsavimai/99199701?q=zolynaite&balsas=nebalsavo#ballots\"");
+        found.ShouldContain("href=\"/seimas/balsavimai/99199701?q=zolynaite&balsas=nebalsavo\"");
 
         var withBallot = List(await OkAsync(Page + "?q=zolynaite&balsas=nebalsavo"));
         Row().Count(withBallot).ShouldBe(1);
@@ -144,7 +144,7 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
         var otherBallot = List(await OkAsync(Page + "?q=zolynaite&balsas=uz"));
         Row().Count(otherBallot).ShouldBe(0);
         otherBallot.ShouldContain("Nerasta nė vieno Seimo nario.");
-        otherBallot.ShouldContain("href=\"/seimas/balsavimai/99199701?balsas=uz#ballots\"", customMessage: "clearing keeps the ballot");
+        otherBallot.ShouldContain("href=\"/seimas/balsavimai/99199701?balsas=uz\"", customMessage: "clearing keeps the ballot");
 
         foreach (var faction in new[] { "rpf", "reformu+partijos", "pilietines+sajungos" })
         {
@@ -159,7 +159,7 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
     {
         var list = List(await OkAsync(Page));
 
-        list.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimas/balsavimai/99199701#ballots\" role=\"search\"");
+        list.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimas/balsavimai/99199701\" data-enhance role=\"search\"");
         list.ShouldContain("name=\"q\"");
         list.ShouldContain("<select class=\"input\" id=\"ballot-faction\" name=\"frakcija\">");
         list.ShouldNotContain("name=\"balsas\"", customMessage: "no ballot chosen, nothing hidden");
@@ -202,11 +202,11 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
         })
         {
             var count = await Database.ScalarAsync<long>("SELECT count(*) FROM parliament.ballot WHERE vote_id = @v AND faction_label = 'RPF' AND choice = @c", ("v", Vote), ("c", stored));
-            list.ShouldContain($"href=\"/seimas/balsavimai/99199701?frakcija=reformu-partijos-frakcija&balsas={slug}#ballots\" id=\"ballots-{choice}\">");
+            list.ShouldContain($"href=\"/seimas/balsavimai/99199701?frakcija=reformu-partijos-frakcija&balsas={slug}\" id=\"ballots-{choice}\">");
             Regex.IsMatch(list, $"id=\"ballots-{choice}\">[^<]+<span class=\"num\">{count}</span>").ShouldBeTrue(slug);
         }
 
-        list.ShouldContain("href=\"/seimas/balsavimai/99199701#ballots\" id=\"ballot-clear\"", customMessage: "clearing resets the faction");
+        list.ShouldContain("href=\"/seimas/balsavimai/99199701\" id=\"ballot-clear\"", customMessage: "clearing resets the faction");
     }
 
     [Fact]
@@ -229,8 +229,8 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
         Row().Count(list).ShouldBe(1);
         list.ShouldContain("Indrė Žolynaitė");
         list.ShouldContain("<input type=\"hidden\" name=\"balsas\" value=\"nebalsavo\"");
-        list.ShouldContain("href=\"/seimas/balsavimai/99199701?q=zolynaite&frakcija=reformu-partijos-frakcija&balsas=uz#ballots\"");
-        list.ShouldContain("href=\"/seimas/balsavimai/99199701?balsas=nebalsavo#ballots\" id=\"ballot-clear\"");
+        list.ShouldContain("href=\"/seimas/balsavimai/99199701?q=zolynaite&frakcija=reformu-partijos-frakcija&balsas=uz\"");
+        list.ShouldContain("href=\"/seimas/balsavimai/99199701?balsas=nebalsavo\" id=\"ballot-clear\"");
 
         var otherFaction = List(await OkAsync(Page + "?q=zolynaite&frakcija=pilietines-sajungos-frakcija"));
         Row().Count(otherFaction).ShouldBe(0);
@@ -239,7 +239,7 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
         var more = List(await OkAsync(Page + "?frakcija=reformu-partijos-frakcija"));
         var inFaction = await Database.ScalarAsync<long>("SELECT count(*) FROM parliament.ballot WHERE vote_id = @v AND faction_label = 'RPF'", ("v", Vote));
         inFaction.ShouldBeGreaterThan(20, "the faction's list is longer than its first page");
-        more.ShouldContain($"href=\"/seimas/balsavimai/99199701?frakcija=reformu-partijos-frakcija&rodyti={Math.Min(70, inFaction)}#ballot-21\"",
+        more.ShouldContain($"href=\"/seimas/balsavimai/99199701?frakcija=reformu-partijos-frakcija&rodyti={Math.Min(70, inFaction)}\"",
             customMessage: "50 more, or the rest of the faction");
     }
 

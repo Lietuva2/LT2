@@ -533,8 +533,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `ReasonPaging`, unit-tested): the address asks how many (`?argumentai-uz=` / `?argumentai-pries=`, `ReasonLimits.Parameter`,
   read on the server, and in the browser up to it should enhanced navigation have grown it before the island started);
   "Rodyti daugiau argumentų" under each column is `<ShowMore>` (`#reasons-more-{side}`, status `#reasons-more-{side}-shown`),
-  the island's `MoreAsync` reads 20 more (`ReasonLimits.Step`) in place and focuses the first added; the name line carries
-  `#arguments-for-{n}` where the link lands without script. The linked argument (`?argumentas=`), one a comment link or
+  the island's `MoreAsync` reads 20 more (`ReasonLimits.Step`) in place and focuses the first added without scrolling. The linked argument (`?argumentas=`), one a comment link or
   `?komentarai=` names, and the one just published are pinned first in their side (`ReasonPaging.Pin`), read alone when
   their pages would not bring them; "Rodyti tik naujus" reads the new ones the pages lack (`NewTexts.Reasons`) and adds them
   last. The server renders the discussions of every argument it shows; one a later page brought reads its own on opening.
@@ -693,8 +692,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   (`AgendaRules.Paged`) and links to `AgendaPaging.MorePlanned` / `MoreVoted`: the same page with the day grown by
   `AgendaRules.MorePerDay` (50, `ListPaging.RowStep`; `NextAsked`), `?diena=2026-11-24:60` / `?balsuota=2026-11-17:60` (pages `AgendaPaging.Agenda`,
   blocks `#day-…`/`#voted-day-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`; the parameter repeats for every
-  day grown, `AgendaPaging.Grown` carrying on only days shown beyond their first rows), landing on the first row added by its
-  own id (`AgendaPaging.PlannedRowId` `#agenda-{day}-{number}`, `VotedRowId` `#recent-{vote}`). `AgendaPaging.Read` takes
+  day grown, `AgendaPaging.Grown` carrying on only days shown beyond their first rows). `AgendaPaging.Read` takes
   `day:N` only (a bare day, a word, a number ≤ 0 dropped); `AgendaRules.ShownKnown` ignores a number not above the first
   rows and caps at the day (and `MaxAsked`). N is `AgendaDayView.ShownCount`: the known rows shown, plus the unknown bills
   once their line shows; M is the head's count; the last page has the status and no link. Enhanced navigation swaps it in
@@ -741,7 +739,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `appeals.bill_record.last_activity_at`, set by `RecordActivity` (Appeals) in the same transaction as a side taken, changed or
   withdrawn, an argument published, a comment written, an organisation's statement or an MP's response made public or
   changed; never who acted. The page shows 20 and grows in place by `?rodyti=` (`Lt2.Web.Client/Appeals/BillListPaging`:
-  +50, landing on `#bill-{next}`, which it knows by asking one more; at most 200, then "Tolesni projektai" `?nuo=`); the API's
+  +50, up to 200, then "Tolesni projektai" `?nuo=`); the API's
   `limit` (`BillListLimits`, 20, 1–200). The list is composed in memory (`AppealsService.ListAsync`): the bills are the
   Parliament module's, the activity the Appeals module's. An MP's votes (`/p/{slug}/balsavimai`, `MpVotePaging`) are by day,
   50 then +50 by `?rodyti=` (rows `#vote-{n}`), at most 300, then `?nuo=`; `GET /mps/{slug}/votes` takes `limit`
@@ -1046,7 +1044,7 @@ page (first in its side's column) or the responses' paging, its "Aptarimas" open
 changes nothing. The thread's API pages by `limit` and `cursor` (`CommentRules.Limit`, the first page at least ten, a later one 20 when not asked; the answer's
 `NextCursor`); "Rodyti daugiau komentarų" is `<ShowMore>` (`#comments-more-{target}`, `#comments-shown-{target}`): by the
 address (`?komentarai=`, `CommentPaging`) without script and before the island runs, and once it runs `CommentThread.MoreAsync`
-reads the next 20 (`CommentLimits.Step`) in place and focuses the first added (owner, 2026-11-19: the running island had let enhanced navigation
+reads the next 20 (`CommentLimits.Step`) in place and focuses the first added without scrolling (owner, 2026-11-19: the running island had let enhanced navigation
 fetch the page and kept its own list, so nothing changed).
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.

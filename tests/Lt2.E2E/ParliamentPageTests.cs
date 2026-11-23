@@ -119,22 +119,22 @@ public sealed class ParliamentPageTests : E2ETest
         await Assertions.Expect(page.Locator("svg.seatmap rect.seat")).ToHaveCountAsync(141);
         await page.GotoAsync(SignUpTests.BaseUrl + "/seimas/balsavimai/99100002");
 
-        // Design 8.17: the ballots' search and faction are a plain GET form and the ballot a plain link, all landing on the list.
+        // Design 8.17: the ballots' search and faction are a plain GET form and the ballot a plain link, with the filters in the query string.
         var ballotSearch = page.Locator("#ballot-search");
         await ballotSearch.GetByLabel("Vardas ar pavardė").FillAsync("azuol");
         await ballotSearch.GetByRole(AriaRole.Button, new() { Name = "Rodyti", Exact = true }).ClickAsync();
-        await AtAsync(page, @"/seimas/balsavimai/99100002\?q=azuol[^#]*#ballots$");
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?q=azuol[^#]*$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(1);
         await Assertions.Expect(page.Locator("#ballot-rows")).ToContainTextAsync("Marius Ąžuolaitis");
         await page.Locator("#ballot-clear").ClickAsync();
-        await AtAsync(page, @"/seimas/balsavimai/99100002#ballots$");
+        await AtAsync(page, @"/seimas/balsavimai/99100002$");
         await page.Locator("#ballots-against").ClickAsync();
-        await AtAsync(page, @"/seimas/balsavimai/99100002\?balsas=pries#ballots$");
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?balsas=pries$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(20);
         await Assertions.Expect(page.Locator("#ballots-shown")).ToHaveTextAsync("Rodoma 20 iš 38");
         await ballotSearch.GetByLabel("Frakcija").SelectOptionAsync(new SelectOptionValue { Label = "Pilietinės sąjungos frakcija" });
         await ballotSearch.GetByRole(AriaRole.Button, new() { Name = "Rodyti", Exact = true }).ClickAsync();
-        await AtAsync(page, @"/seimas/balsavimai/99100002\?[^#]*frakcija=pilietines-sajungos-frakcija[^#]*#ballots$");
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?[^#]*frakcija=pilietines-sajungos-frakcija[^#]*$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(8);
         await Assertions.Expect(page.Locator("#ballots-against")).ToHaveAttributeAsync("aria-current", "true");
         await Assertions.Expect(page.Locator("#ballots-shown")).ToHaveTextAsync("Rodoma 8 iš 8");

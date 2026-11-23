@@ -61,10 +61,10 @@ public sealed class ListPagingTests
     {
         BillListPaging.More(BillListPaging.First, 0, 500).ShouldBe(70, "/projektai: 20, then 70");
         BillListPaging.More(170, 0, 500).ShouldBe(BillListPaging.Cap, "the last press before the cap adds fewer");
-        VoteHistory.More(VoteHistory.Read(null, null, null, null), 30, 1000).ShouldBe("/seimas/balsavimai?rodyti=80#vote-31");
+        VoteHistory.More(VoteHistory.Read(null, null, null, null), 30, 1000).ShouldBe("/seimas/balsavimai?rodyti=80");
         MpVotePaging.More(MpVotePaging.First, hasMore: true).ShouldBe(100);
-        AnalyticsList.More(AnalyticsList.Read(null, null, null, null, null, null, null, null, null), 400, "XVP-0412")
-            .ShouldBe("/statistika?rodyti=60#bill-XVP-0412");
+        AnalyticsList.More(AnalyticsList.Read(null, null, null, null, null, null, null, null, null), 400)
+            .ShouldBe("/statistika?rodyti=60");
         ProfileLimits.More(null).ShouldBe(60, "a member's page: 10, then 60");
         ProfileLimits.More(480).ShouldBe(ProfileLimits.MaxShown);
         BallotList.Step.ShouldBe(ListPaging.RowStep);

@@ -226,7 +226,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
 
         Row().Count(list).ShouldBe(30);
         list.ShouldContain("Rodoma 30 iš 331");
-        list.ShouldContain("href=\"/seimas/balsavimai?iki=2001-12-31&rodyti=80#vote-31\" id=\"votes-more\"");
+        list.ShouldContain("href=\"/seimas/balsavimai?iki=2001-12-31&rodyti=80\" id=\"votes-more\"");
         list.ShouldContain("<section class=\"tl-day tl-past\" aria-label=\"2001 m. gruodžio 31 d.\" id=\"day-2001-12-31\">");
         list.ShouldContain("<span class=\"label\">2001 m.</span><b>gruodžio 31 d.</b><span class=\"small\">pirmadienis</span>");
         RowsOf(list, "2001-12-31").ShouldBe(4);
@@ -236,7 +236,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         Row().Count(more).ShouldBe(80);
         more.ShouldContain("id=\"vote-31\"");
         more.ShouldContain("Rodoma 80 iš 331");
-        more.ShouldContain("?iki=2001-12-31&rodyti=130#vote-81");
+        more.ShouldContain("?iki=2001-12-31&rodyti=130");
         RowsOf(more, "2001-12-22").ShouldBe(3, "a cut day continues when more is shown");
         foreach (var page in new[] { list, more })
         {
@@ -284,7 +284,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     {
         var found = List(await OkAsync("/seimas/balsavimai?q=zuvininkystes&iki=" + Until));
         found.ShouldContain("Rodoma 30 iš 331");
-        found.ShouldContain("href=\"/seimas/balsavimai?q=zuvininkystes&iki=2001-12-31&rodyti=80#vote-31\"");
+        found.ShouldContain("href=\"/seimas/balsavimai?q=zuvininkystes&iki=2001-12-31&rodyti=80\"");
 
         var none = await OkAsync("/seimas/balsavimai?q=nera-tokio-projekto");
         none.ShouldContain("value=\"nera-tokio-projekto\"");

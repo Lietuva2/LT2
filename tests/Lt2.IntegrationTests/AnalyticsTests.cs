@@ -526,14 +526,14 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
                 .ShouldBe((null, null, null, AnalyticsBillQuery.Latest, AnalyticsBillQuery.DefaultLimit, 12), "a value the API would not make is the default");
 
             // The page: ten bills in the plot and the same ten in the table, then "Rodyti daugiau" to the same address with
-            // more, landing on the first bill added in the plot.
+            // more.
             var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T"));
             Regex.Count(page, "<li class=\"dotplot__row\" id=\"bill-").ShouldBe(10);
             Regex.Count(page, "<tr id=\"row-").ShouldBe(10);
             Regex.Matches(page, "<li class=\"dotplot__row\" id=\"bill-([^\"]+)\"").Select(m => m.Groups[1].Value)
                 .ShouldBe(Regex.Matches(page, "<tr id=\"row-([^\"]+)\"").Select(m => m.Groups[1].Value), "the plot and the table hold the same bills in the same order");
             Regex.IsMatch(page, @"id=""compare-shown"">Rodoma\s10\siš\s12<").ShouldBeTrue();
-            page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=60#bill-XVP-T011\" id=\"compare-more\"");
+            page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=60\" id=\"compare-more\"");
             var more = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rodyti=60"));
             Regex.Count(more, "<li class=\"dotplot__row\" id=\"bill-").ShouldBe(12);
             Regex.Count(more, "<tr id=\"row-").ShouldBe(12);
@@ -560,7 +560,8 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             (await visitor.Client.GetStringAsync($"/statistika?nuo={votedOn.AddDays(1):yyyy-MM-dd}&iki={votedOn:yyyy-MM-dd}")).ShouldContain("id=\"compare-reversed\"");
             var none = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=nera-tokio-projekto"));
             none.ShouldContain("id=\"compare-none\"");
-            none.ShouldContain("id=\"compare-clear\"");
+            none.ShouldContain("href=\"/statistika\" id=\"compare-clear\"");
+            Regex.Match(none, "<form[^>]*id=\\\"compare-filters\\\"[^>]*>").Value.ShouldContain("action=\"/statistika\" data-enhance");
         }
         finally
         {

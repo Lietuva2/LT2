@@ -93,11 +93,11 @@ public sealed class VoteHistoryTests
     {
         var state = VoteHistory.Read("pajamu", "visi", "2026-05-19", null);
 
-        VoteHistory.More(state, 30, 95).ShouldBe("/seimas/balsavimai?q=pajamu&kas=visi&iki=2026-05-19&rodyti=80#vote-31");
-        VoteHistory.More(state with { Shown = 80 }, 80, 95).ShouldBe("/seimas/balsavimai?q=pajamu&kas=visi&iki=2026-05-19&rodyti=130#vote-81");
+        VoteHistory.More(state, 30, 95).ShouldBe("/seimas/balsavimai?q=pajamu&kas=visi&iki=2026-05-19&rodyti=80");
+        VoteHistory.More(state with { Shown = 80 }, 80, 95).ShouldBe("/seimas/balsavimai?q=pajamu&kas=visi&iki=2026-05-19&rodyti=130");
         VoteHistory.More(state with { Shown = 130 }, 95, 95).ShouldBeNull("every vote found is shown");
         VoteHistory.More(Plain, 30, 30).ShouldBeNull();
-        VoteHistory.More(Plain with { Shown = 285 }, 285, 1000).ShouldBe("/seimas/balsavimai?rodyti=300#vote-286", "never beyond 300");
+        VoteHistory.More(Plain with { Shown = 285 }, 285, 1000).ShouldBe("/seimas/balsavimai?rodyti=300", "never beyond 300");
         VoteHistory.More(Plain with { Shown = 300 }, 300, 1000).ShouldBeNull("a page shows at most 300");
     }
 

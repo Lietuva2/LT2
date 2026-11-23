@@ -112,24 +112,22 @@ public static class ReasonPaging
     public static int NextAsked(ReasonPageResponse column) => Math.Min(Read(column) + ReasonLimits.Step, Cap);
 
     /// <summary>
-    /// The anchor of the <paramref name="position"/>-th argument shown in a side's column (1-based): "Rodyti daugiau argumentų"
-    /// without script lands on the first one added, whose own id the link cannot know (as the comments do, design 8.23.14).
+    /// The element id of the <paramref name="position"/>-th argument shown in a side's column (1-based).
     /// </summary>
     public static string PositionAnchor(string side, int position) =>
         "arguments-" + side + "-" + position.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// The page's own address with the side's count set to <paramref name="count"/> and every other parameter kept, landing on
-    /// <paramref name="anchor"/>: a path from the site's root (the pages carry <c>&lt;base href="/"&gt;</c>), never a bare fragment.
+    /// The page's address from the site's root, with its query parameters and without a fragment.
     /// <paramref name="absoluteWithCount"/> is the page's absolute address with the count already set; <paramref name="baseUri"/> the site's.
     /// </summary>
-    public static string Address(string absoluteWithCount, string baseUri, string anchor)
+    public static string Address(string absoluteWithCount, string baseUri)
     {
         ArgumentNullException.ThrowIfNull(absoluteWithCount);
         ArgumentNullException.ThrowIfNull(baseUri);
         var withoutFragment = absoluteWithCount.Split('#')[0];
         var relative = withoutFragment.StartsWith(baseUri, StringComparison.OrdinalIgnoreCase) ? withoutFragment[baseUri.Length..] : withoutFragment;
-        return "/" + relative.TrimStart('/') + "#" + anchor;
+        return "/" + relative.TrimStart('/');
     }
 
     private static string? Next(int read, int total) => read < total ? read.ToString(CultureInfo.InvariantCulture) : null;

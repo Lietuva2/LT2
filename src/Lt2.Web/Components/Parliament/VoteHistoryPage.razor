@@ -87,8 +87,7 @@
                 </ul>
             </section>
         }
-        @* The shared "show more" (owner, 2026-11-19): lands on the first row added, so the reader goes on where they stopped (as the
-           ballot list, 8.17); then "Senesni balsavimai" once the page is full. *@
+        @* The shared "show more" grows the list in place. "Senesni balsavimai" opens an older page once this one is full. *@
         <Lt2.Web.Client.Components.ShowMore Id="votes-more" StatusId="votes-shown" Shown="_items.Count" Total="_total" Href="@VoteHistory.More(_state, _items.Count, _total)">
             @if (VoteHistory.Older(_state, _items, _total) is { } older)
             {

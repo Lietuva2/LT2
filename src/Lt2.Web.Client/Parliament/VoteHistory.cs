@@ -111,7 +111,7 @@ public static class VoteHistory
     }
 
     /// <summary>
-    /// "Rodyti daugiau": the same list with <see cref="Step"/> more (at most 300), landing on the first row added; null when every vote found is shown
+    /// "Rodyti daugiau": the same list with <see cref="Step"/> more (at most 300). Null when every vote found is shown
     /// or the page holds as many as it may.
     /// </summary>
     public static string? More(VoteHistoryState state, int shown, int total)
@@ -122,7 +122,7 @@ public static class VoteHistory
             return null;
         }
 
-        return Address(state with { Shown = Lt2.Api.Contracts.ListPaging.Next(state.Shown, Step, Cap) }, Row(shown + 1));
+        return Address(state with { Shown = Lt2.Api.Contracts.ListPaging.Next(state.Shown, Step, Cap) });
     }
 
     /// <summary>
@@ -144,6 +144,6 @@ public static class VoteHistory
         return Address(state with { Until = last == first ? last.AddDays(-1) : last, Shown = First }, ListId);
     }
 
-    /// <summary>The id of the <paramref name="number"/>-th row, where "Rodyti daugiau" lands.</summary>
+    /// <summary>The id of the <paramref name="number"/>-th row.</summary>
     public static string Row(int number) => "vote-" + number.ToString(CultureInfo.InvariantCulture);
 }

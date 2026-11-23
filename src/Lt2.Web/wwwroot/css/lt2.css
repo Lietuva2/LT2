@@ -1234,7 +1234,7 @@ main > .page-head ~ .sheet > .list-head ~ [id], main > .page-head ~ .sheet > .li
 
 /* A day's column (owner, 2026-11-18; 2026-11-19): the rows it shows, then, once every known row shows, the bills the open
    data does not know yet folded into one line, then the shared "Rodoma N iš M · Rodyti daugiau" (ShowMore), each under the
-   rows, at the rows' left edge. The link lands on the first row added, a little below the list's heading row. */
+   rows, at the rows' left edge. */
 .tl-rows { display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
 .tl-items > .tl-item { scroll-margin-top: var(--list-landing); }
 .tl-unknown > summary { padding-block: var(--sp-1); }

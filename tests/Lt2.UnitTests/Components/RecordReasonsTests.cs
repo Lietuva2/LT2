@@ -454,8 +454,8 @@ public sealed class RecordReasonsTests : BunitContext
 
     /// <summary>
     /// Owner, 2026-11-19: each side is read a page at a time. Under each column "Rodoma 2 iš 30" and "Rodyti daugiau argumentų", a
-    /// link to the page with that side grown by 20 (every other parameter kept), landing on the first one added; once the island
-    /// runs it reads the next 20 from the API in place, gives the first one added the focus, and the link then points further.
+    /// link to the page with that side grown by 20 (every other parameter kept). The running island reads the next 20 from
+    /// the API in place and focuses the first item added without scrolling. The link then points to the next page.
     /// </summary>
     [Fact]
     public void Rodyti_daugiau_argumentu_reads_the_sides_next_page_in_place_and_points_to_the_grown_address()
@@ -471,7 +471,7 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 2 iš 30");
         var more = reasons.Find("#reasons #reasons-for #reasons-more-for");
         more.TextContent.ShouldBe("Rodyti daugiau argumentų");
-        more.GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=22#arguments-for-3");
+        more.GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=22");
         reasons.FindAll("#reasons-more-against").ShouldBeEmpty("one argument against: nothing more to show");
 
         more.Click();
@@ -485,7 +485,7 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.Find($"#reason-{many[2].Id} > .said__by").Id.ShouldBe("arguments-for-3");
         JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal));
         reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 22 iš 30");
-        reasons.Find("#reasons-more-for").GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=42#arguments-for-23");
+        reasons.Find("#reasons-more-for").GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=42");
 
         reasons.Find("#reasons-more-for").Click();
         reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Count.ShouldBe(30));

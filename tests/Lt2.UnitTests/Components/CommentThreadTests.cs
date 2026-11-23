@@ -265,11 +265,10 @@ public sealed class CommentThreadTests : BunitContext
     }
 
     /// <summary>
-    /// Design 8.23.14: "Rodyti daugiau komentarų" lands on the first new comment, which the page gives the position anchor, and
-    /// keeps the page's other parameters.
+    /// Design 8.23.14: "Rodyti daugiau komentarų" keeps the page's other parameters and expands the thread.
     /// </summary>
     [Fact]
-    public void Rodyti_daugiau_komentaru_lands_on_the_first_new_comment_by_its_position()
+    public void Rodyti_daugiau_komentaru_keeps_the_other_parameters_without_a_fragment()
     {
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));
         var items = Enumerable.Range(1, 10).Select(i => new CommentResponse(
@@ -279,7 +278,7 @@ public sealed class CommentThreadTests : BunitContext
             .Add(c => c.PagePath, "/seimas/" + Bill + "?atsakymai=20"));
         thread.Find($"#{CommentPaging.PositionAnchor(Target, 10)}").ShouldNotBeNull("each comment carries its position");
         thread.Find($"#comments-more-{Target:N}").GetAttribute("href")
-            .ShouldBe($"/seimas/{Bill}?atsakymai=20&komentarai={Target:N}-12#{CommentPaging.PositionAnchor(Target, 11)}");
+            .ShouldBe($"/seimas/{Bill}?atsakymai=20&komentarai={Target:N}-12");
         thread.Find($"#comments-shown-{Target:N}").TextContent.ShouldBe("Rodoma 10 iš 12");
         thread.Find($"#comments-more-{Target:N}").HasAttribute("data-enhance-nav").ShouldBeFalse("before the island runs, the plain link");
     }
@@ -314,7 +313,7 @@ public sealed class CommentThreadTests : BunitContext
         thread.Find($"#{CommentLimits.ElementId(Comment(11).Id)}").GetAttribute("tabindex").ShouldBe("-1");
         JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal), "the first one added takes the focus");
         thread.Find($"#comments-shown-{Target:N}").TextContent.ShouldBe("Rodoma 30 iš 45");
-        thread.Find($"#comments-more-{Target:N}").GetAttribute("href").ShouldBe($"/seimas/{Bill}?komentarai={Target:N}-45#{CommentPaging.PositionAnchor(Target, 31)}");
+        thread.Find($"#comments-more-{Target:N}").GetAttribute("href").ShouldBe($"/seimas/{Bill}?komentarai={Target:N}-45");
     }
 
     /// <summary>Design 8.23.7: under a withdrawn response the discussion is read-only: no "Sutinku", no deleting, for anyone.</summary>

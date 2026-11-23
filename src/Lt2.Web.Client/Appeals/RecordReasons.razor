@@ -213,7 +213,7 @@
                         @* Owner, 2026-11-19: under each side's own column (on a phone the columns stack, so one link under both
                            would add to a column far above the reader), the shared "show more" (ShowMore): "Rodoma 2 iš 15" and
                            "Rodyti daugiau argumentų", a link to this page with the side grown (?argumentai-uz=22), which the
-                           island takes over once it runs: the next 20 from the API, in place, the focus on the first added. *@
+                           island takes over once it runs: the next 20 from the API, in place, focusing the first added without scrolling. *@
                         <ShowMore Id="@($"reasons-more-{side}")" Shown="column.Items.Count" Total="column.Total" Text="@L["Reasons.More"]" Controls="@($"reasons-{side}")"
                                   Href="@(ReasonPaging.More(column) ? MoreAddress(side, column) : null)" OnMore="() => MoreAsync(side)" />
                     }
@@ -369,8 +369,8 @@
             _focusAdded = null;
             try
             {
-                // The first argument added takes the focus and comes into view; the reader goes on from there.
-                await first.FocusAsync();
+                // Give keyboard readers a starting point without moving the viewport.
+                await first.FocusAsync(preventScroll: true);
             }
             catch (Microsoft.JSInterop.JSException)
             {
@@ -478,12 +478,11 @@
     /// <summary>The arguments that stand outside their pages' order: the linked one and the one just published.</summary>
     private HashSet<Guid> Pinned => new[] { LinkedReason, CommentedReason, _written }.OfType<Guid>().ToHashSet();
 
-    /// <summary>"Rodyti daugiau argumentų" without script: this page with the side grown by a step, every other parameter kept, landing on the first added.</summary>
+    /// <summary>"Rodyti daugiau argumentų" without script: this page with the side grown by a step, every other parameter kept.</summary>
     private string MoreAddress(string side, ReasonPageResponse column) =>
         ReasonPaging.Address(
             Navigation.GetUriWithQueryParameter(ReasonLimits.Parameter(side), ReasonPaging.NextAsked(column)),
-            Navigation.BaseUri,
-            ReasonPaging.PositionAnchor(side, column.Items.Count + 1));
+            Navigation.BaseUri);
 
     /// <summary>The bill's page, where signing in from "Man svarbu" comes back to.</summary>
     private string BillPath => "/seimas/" + Uri.EscapeDataString(Number);

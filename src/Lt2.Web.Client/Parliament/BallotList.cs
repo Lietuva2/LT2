@@ -93,10 +93,9 @@ public static class BallotList
     }
 
     /// <summary>
-    /// The vote page's address with this state, landing on <paramref name="fragment"/>; defaults are left out, so the plain
-    /// list is the plain address.
+    /// The vote page's address with this state, with default filters and length omitted.
     /// </summary>
-    public static string Address(long voteId, string? query, string? faction, string? choice, int? show, string fragment)
+    public static string Address(long voteId, string? query, string? faction, string? choice, int? show)
     {
         var parts = new List<string>();
         if (!string.IsNullOrWhiteSpace(query))
@@ -120,7 +119,7 @@ public static class BallotList
         }
 
         var path = "/seimas/balsavimai/" + voteId.ToString(CultureInfo.InvariantCulture);
-        return (parts.Count == 0 ? path : path + "?" + string.Join("&", parts)) + "#" + fragment;
+        return parts.Count == 0 ? path : path + "?" + string.Join("&", parts);
     }
 
     /// <summary>The word of a choice in the address ("uz"), null for all.</summary>

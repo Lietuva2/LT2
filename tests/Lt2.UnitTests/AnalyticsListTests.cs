@@ -21,7 +21,7 @@ public sealed class AnalyticsListTests
         plain.ShouldBe(new AnalyticsListState(null, false, null, null, null, "", "", "", 10));
         plain.Filtered.ShouldBeFalse();
         AnalyticsList.Address(plain).ShouldBe("/statistika");
-        AnalyticsList.Query(plain).ShouldBe(new AnalyticsBillQuery(Limit: 11), "one more than shown, to land on the next");
+        AnalyticsList.Query(plain).ShouldBe(new AnalyticsBillQuery(Limit: 10));
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class AnalyticsListTests
     {
         var state = Read(yearText: "2026", accounts: "senesnes", from: "2026-03-01", to: "2026-10-31", q: " pajamų ", result: "skyresi", majority: "nera", sort: "skirtumas", show: "30");
         AnalyticsList.Query(state).ShouldBe(new AnalyticsBillQuery(
-            new DateOnly(2026, 3, 1), new DateOnly(2026, 10, 31), "pajamų", AnalyticsBillQuery.Differed, "none", AnalyticsBillQuery.Difference, 31));
+            new DateOnly(2026, 3, 1), new DateOnly(2026, 10, 31), "pajamų", AnalyticsBillQuery.Differed, "none", AnalyticsBillQuery.Difference, 30));
         AnalyticsList.Address(state).ShouldBe(
             "/statistika?metai=2026&paskyros=senesnes&nuo=2026-03-01&iki=2026-10-31&q=pajam%C5%B3&rezultatas=skyresi&dauguma=nera&rikiuoti=skirtumas&rodyti=30");
         state.Filtered.ShouldBeTrue();
@@ -62,14 +62,12 @@ public sealed class AnalyticsListTests
     }
 
     [Fact]
-    public void Rodyti_daugiau_adds_twenty_and_lands_on_the_first_row_added()
+    public void Rodyti_daugiau_adds_fifty_without_a_fragment()
     {
-        AnalyticsList.More(Read(q: "XVP"), found: 25, next: "XVP-0711").ShouldBe("/statistika?q=XVP&rodyti=60#bill-XVP-0711");
-        AnalyticsList.More(Read(show: "30"), found: 25, next: null).ShouldBeNull("every bill found is shown");
-        AnalyticsList.More(Read(show: "300"), found: 400, next: "XVP-0999").ShouldBeNull("the list holds as many as it may");
-        AnalyticsList.More(Read(show: "260"), found: 400, next: "XVP-0999")!.ShouldStartWith("/statistika?rodyti=300#", Case.Sensitive, "the last press before the cap adds fewer");
-        AnalyticsList.More(Read(q: "XVP"), found: 25, next: "XVP-0711", nextInPlot: false)
-            .ShouldBe("/statistika?q=XVP&rodyti=60#comparison", "a bill without a place in the plot: the part itself, the table stays closed");
+        AnalyticsList.More(Read(q: "XVP"), found: 25).ShouldBe("/statistika?q=XVP&rodyti=60");
+        AnalyticsList.More(Read(show: "30"), found: 25).ShouldBeNull("every bill found is shown");
+        AnalyticsList.More(Read(show: "300"), found: 400).ShouldBeNull("the list holds as many as it may");
+        AnalyticsList.More(Read(show: "260"), found: 400)!.ShouldBe("/statistika?rodyti=300", "the last press before the cap adds fewer");
     }
 
     [Fact]
@@ -86,7 +84,7 @@ public sealed class AnalyticsListTests
     public void Isvalyti_keeps_the_period_and_the_accounts_and_clears_the_list()
     {
         var state = Read(yearText: "2026", accounts: "senesnes", q: "pajamų", result: "sutapo", show: "30");
-        AnalyticsList.Cleared(state, AnalyticsList.Anchor).ShouldBe("/statistika?metai=2026&paskyros=senesnes#comparison");
+        AnalyticsList.Cleared(state).ShouldBe("/statistika?metai=2026&paskyros=senesnes");
     }
 
     [Fact]

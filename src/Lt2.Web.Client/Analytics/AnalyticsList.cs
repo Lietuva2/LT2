@@ -48,15 +48,14 @@ public sealed record AnalyticsListState(
 
 /// <summary>
 /// Design 8.26.1 item 2 (owner, 2026-11-18): the list of closed bills on <c>/statistika</c>. The first <see cref="First"/>
-/// bills, then "Rodyti daugiau" adds <see cref="Step"/> in place by the address (<c>?rodyti=</c>), landing on the first bill
-/// added, up to <see cref="Cap"/> (the filters narrow a longer list). A value the page would not make falls back to the
-/// default, never to an error. The words in the address are Lithuanian; the API's are its own.
+/// bills, then "Rodyti daugiau" adds <see cref="Step"/> in place by the address (<c>?rodyti=</c>), up to <see cref="Cap"/>.
+/// The filters narrow a longer list. Unknown values fall back to the defaults. The words in the address are Lithuanian; the API's are its own.
 /// </summary>
 public static class AnalyticsList
 {
     public const string Path = "/statistika";
 
-    /// <summary>The id of the part with the list, where its form lands.</summary>
+    /// <summary>The id of the comparison section.</summary>
     public const string Anchor = "comparison";
 
     public const int First = 10;
@@ -101,8 +100,7 @@ public static class AnalyticsList
     }
 
     /// <summary>
-    /// What to ask the API for: the list's filters and one bill more than shown while the list may grow, so "Rodyti daugiau"
-    /// can land on the next bill.
+    /// What to ask the API for: the list's filters and how many bills to show.
     /// </summary>
     public static AnalyticsBillQuery Query(AnalyticsListState state)
     {
@@ -115,14 +113,14 @@ public static class AnalyticsList
             Api(Results, state.Result),
             Api(Majorities, state.Majority),
             Api(Sorts, state.Sort) ?? AnalyticsBillQuery.Latest,
-            state.Shown < Cap ? state.Shown + 1 : state.Shown);
+            state.Shown);
     }
 
     /// <summary>
-    /// The page's address with this state, landing on <paramref name="fragment"/>; defaults are left out, and a day is
+    /// The page's address with this state. Defaults are left out, and a day is
     /// written only when it is a date (one that is not was ignored and said so; the next address forgets it).
     /// </summary>
-    public static string Address(AnalyticsListState state, string? fragment = null)
+    public static string Address(AnalyticsListState state)
     {
         ArgumentNullException.ThrowIfNull(state);
         var parts = new List<string>();
@@ -165,35 +163,29 @@ public static class AnalyticsList
             parts.Add("rodyti=" + state.Shown.ToString(CultureInfo.InvariantCulture));
         }
 
-        var address = parts.Count == 0 ? Path : Path + "?" + string.Join("&", parts);
-        return fragment is null ? address : address + "#" + fragment;
+        return parts.Count == 0 ? Path : Path + "?" + string.Join("&", parts);
     }
 
     /// <summary>The page with the period and the accounts kept and the list's filters cleared ("Išvalyti").</summary>
-    public static string Cleared(AnalyticsListState state, string? fragment = null)
+    public static string Cleared(AnalyticsListState state)
     {
         ArgumentNullException.ThrowIfNull(state);
-        return Address(new AnalyticsListState(state.Year, state.Older, null, null, null, "", "", "", First), fragment);
+        return Address(new AnalyticsListState(state.Year, state.Older, null, null, null, "", "", "", First));
     }
 
-    /// <summary>
-    /// "Rodyti daugiau": the same plot and table with <see cref="Step"/> more, landing on <paramref name="next"/>, the first bill
-    /// added (the API answers one more than shown), when it has a row in the plot (<paramref name="nextInPlot"/>); otherwise
-    /// on the part itself (<see cref="Anchor"/>), since the table is closed. Null when every bill found is shown or the list
-    /// holds <see cref="Cap"/>.
-    /// </summary>
-    public static string? More(AnalyticsListState state, int found, string? next, bool nextInPlot = true)
+    /// <summary>The same plot and table with <see cref="Step"/> more, up to <see cref="Cap"/> or the total found.</summary>
+    public static string? More(AnalyticsListState state, int found)
     {
         ArgumentNullException.ThrowIfNull(state);
-        if (next is null || state.Shown >= Cap || found <= state.Shown)
+        if (state.Shown >= Cap || found <= state.Shown)
         {
             return null;
         }
 
-        return Address(state with { Shown = Lt2.Api.Contracts.ListPaging.Next(state.Shown, Step, Cap) }, nextInPlot ? Row(next) : Anchor);
+        return Address(state with { Shown = Lt2.Api.Contracts.ListPaging.Next(state.Shown, Step, Cap) });
     }
 
-    /// <summary>The id of a bill's row in the plot, where "Rodyti daugiau" lands.</summary>
+    /// <summary>The id of a bill's row in the plot.</summary>
     public static string Row(string number) => "bill-" + number;
 
     private static string Word(IReadOnlyList<(string Slug, string ApiValue)> choices, string? word) =>

@@ -24,7 +24,7 @@
         {
             @* The shared "show more" (owner, 2026-11-19). *@
             <Lt2.Web.Client.Components.ShowMore Id="answers-more" StatusId="answers-shown" Shown="_shown" Total="view.Items.Count" Text="@F.T["Responses.More"]"
-                Href="@(ResponsePaging.More(_shown, view.Items.Count) is { } more ? ResponsePaging.Address("/p/" + Slug, more, ResponsePaging.ItemId(_shown + 1)) : null)" />
+                Href="@(ResponsePaging.More(_shown, view.Items.Count) is { } more ? ResponsePaging.Address("/p/" + Slug, more) : null)" />
         }
     </section>
 }

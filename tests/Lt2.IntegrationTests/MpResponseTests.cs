@@ -485,12 +485,12 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             page.ShouldContain("Atsakė Seimo narių: 45. Balsuos už: 15 · prieš: 15 · dar neapsisprendė: 15.");
             Shown(page).ShouldBe(10);
             page.ShouldContain("Rodoma 10 iš 45");
-            page.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=30#response-11\"", customMessage: "owner, 2026-11-19: 20 more a press");
+            page.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=30\"", customMessage: "owner, 2026-11-19: 20 more a press");
 
             var more = await PartAsync(visitor, $"/seimas/{Listed}?atsakymai=30");
             Shown(more).ShouldBe(30);
             more.ShouldContain("Rodoma 30 iš 45");
-            more.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=45#response-31\"");
+            more.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=45\"");
             var all = await PartAsync(visitor, $"/seimas/{Listed}?atsakymai=45");
             Shown(all).ShouldBe(45);
             all.ShouldNotContain("id=\"responses-more\"");
@@ -511,7 +511,7 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             var profile = await PartAsync(visitor, "/p/" + slug);
             Shown(profile).ShouldBe(10);
             profile.IndexOf("Profilio atsakymas nr. 1.", StringComparison.Ordinal).ShouldBeLessThan(profile.IndexOf("Profilio atsakymas nr. 2.", StringComparison.Ordinal), "newest first");
-            profile.ShouldContain($"href=\"/p/{slug}?atsakymai=12#response-11\"");
+            profile.ShouldContain($"href=\"/p/{slug}?atsakymai=12\"");
             Shown(await PartAsync(visitor, $"/p/{slug}?atsakymai=12")).ShouldBe(12);
         }
         finally

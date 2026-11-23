@@ -150,14 +150,13 @@ public sealed class CommentRuleTests
     }
 
     [Fact]
-    public void The_pages_address_asks_for_more_of_one_target_and_lands_on_the_first_new_comment()
+    public void The_pages_address_asks_for_more_of_one_target_without_a_fragment()
     {
-        // Ten shown, twenty more asked: the link lands on the eleventh, the first new one (its own id is not known yet).
-        var address = CommentPaging.Address("/seimas/XVP-0412", Target, 30, CommentPaging.PositionAnchor(Target, 11));
-        address.ShouldBe($"/seimas/XVP-0412?komentarai={Target:N}-30#comment-{Target:N}-11");
+        var address = CommentPaging.Address("/seimas/XVP-0412", Target, 30);
+        address.ShouldBe($"/seimas/XVP-0412?komentarai={Target:N}-30");
         CommentPaging.PagePath("XVP-0412", "20").ShouldBe("/seimas/XVP-0412?atsakymai=20", "the responses' page is kept");
         CommentPaging.PagePath("XVP-0412", null).ShouldBe("/seimas/XVP-0412");
-        CommentPaging.Address("/seimas/XVP-0412?atsakymai=20", Target, 20, "a").ShouldStartWith("/seimas/XVP-0412?atsakymai=20&komentarai=");
+        CommentPaging.Address("/seimas/XVP-0412?atsakymai=20", Target, 20).ShouldStartWith("/seimas/XVP-0412?atsakymai=20&komentarai=");
         CommentPaging.Asked($"{Target:N}-20", Target).ShouldBe(20);
         CommentPaging.Asked($"{Target:N}-20", Guid.NewGuid()).ShouldBeNull("another target's comments");
         CommentPaging.Asked("bet-kas", Target).ShouldBeNull();

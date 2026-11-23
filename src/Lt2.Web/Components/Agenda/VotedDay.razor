@@ -5,7 +5,7 @@
 
 @* One voting day of the timeline, on the front page and the agenda page alike (design 8.7, 8.11.1): its head (date, weekday,
    how many stage votes the day holds), the votes the page shows, and under a day longer than its first page the shared
-   "show more" (owner, 2026-11-19), as a sitting day's (PlannedDay): ?balsuota=2026-11-17:60, landing on the first vote added. *@
+   "show more" (owner, 2026-11-19), as a sitting day's (PlannedDay): ?balsuota=2026-11-17:60. *@
 <section class="tl-day tl-past" aria-label="@($"{T["Agenda.Voted"]} {F.DayMonth(Day)}")" id="@Id">
     <TimelineDate Label="@T["Agenda.Voted"]" Day="Day" Count="@AgendaWords.Votes(T, View.Count)" />
     <div class="tl-rows">
@@ -49,6 +49,6 @@
     private string Id => Page.VotedDayId(Day);
 
     private string? More => AgendaRules.NextAsked(View.Shown.Count, View.Known) is { } asked
-        ? AgendaPaging.MoreVoted(Page, Planned, Voted, Day, asked, AgendaPaging.VotedRowId(View.Rest[0].VoteId))
+        ? AgendaPaging.MoreVoted(Page, Planned, Voted, Day, asked)
         : null;
 }

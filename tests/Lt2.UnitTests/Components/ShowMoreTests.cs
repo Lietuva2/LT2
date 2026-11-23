@@ -23,13 +23,13 @@ public sealed class ShowMoreTests : BunitContext
     {
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));
         var more = Render<ShowMore>(p => p.Add(c => c.Id, "votes-more").Add(c => c.Shown, 30).Add(c => c.Total, 1234)
-            .Add(c => c.Href, "/seimas/balsavimai?rodyti=60#vote-31").Add(c => c.OnMore, () => { }));
+            .Add(c => c.Href, "/seimas/balsavimai?rodyti=60").Add(c => c.OnMore, () => { }));
 
         more.Find("#votes-more-line").ClassList.ShouldContain("show-more");
         more.Find("#votes-more-shown").TextContent.ShouldBe("Rodoma 30 iš 1 234");
         var link = more.Find("a#votes-more");
         // Owner, 2026-11-19: a plain text link, not a button's look (it clashed with the buttons under a list).
-        (link.TextContent, link.GetAttribute("href"), link.ClassName).ShouldBe(("Rodyti daugiau", "/seimas/balsavimai?rodyti=60#vote-31", "show-more__link"));
+        (link.TextContent, link.GetAttribute("href"), link.ClassName).ShouldBe(("Rodyti daugiau", "/seimas/balsavimai?rodyti=60", "show-more__link"));
         link.HasAttribute("data-enhance-nav").ShouldBeFalse("enhanced navigation fetches it");
     }
 
@@ -39,7 +39,7 @@ public sealed class ShowMoreTests : BunitContext
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
         var pressed = 0;
         var more = Render<ShowMore>(p => p.Add(c => c.Id, "comments-more").Add(c => c.Shown, 10).Add(c => c.Total, 12)
-            .Add(c => c.Href, "/seimas/XVP-0412?komentarai=x-20#k").Add(c => c.Text, "Rodyti daugiau komentarų").Add(c => c.OnMore, () => pressed++));
+            .Add(c => c.Href, "/seimas/XVP-0412?komentarai=x-20").Add(c => c.Text, "Rodyti daugiau komentarų").Add(c => c.OnMore, () => pressed++));
         var link = more.Find("a#comments-more");
         link.GetAttribute("data-enhance-nav").ShouldBe("false");
         link.ClassName.ShouldBe("show-more__link", "the same plain link once the island runs");

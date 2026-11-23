@@ -89,7 +89,7 @@
 
         // Owner, 2026-11-18: one block per sitting day with its date, weekday and count; the first ten rows of a day in the
         // agenda's order (AgendaRules). Owner, 2026-11-19: then the shared "Rodyti daugiau", 50 more a click by the address
-        // (AgendaPaging, ?diena=2026-11-24:60), landing on the first row added: the served page holds only the rows it shows.
+        // (AgendaPaging, ?diena=2026-11-24:60), and the served page holds only the rows it shows.
         _coming = (_agenda?.Days ?? [])
             .Select(d => (d.Date, Cut(d.Items, i => i.Title is not null, planned.GetValueOrDefault(d.Date))))
             .ToList();

@@ -7,7 +7,7 @@
    it works without JavaScript and a filtered list can be linked to. The filtering is BallotList's; this only draws it. *@
 <section class="sheet stack" id="ballots" aria-labelledby="h-ballots">
     <div class="row list-head"><h2 id="h-ballots">@F.T["Vote.Ballots"]</h2></div>
-    <form class="filters" method="get" action="@BallotList.Address(VoteId, null, null, null, null, "ballots")" role="search" id="ballot-search">
+    <form class="filters" method="get" action="@BallotList.Address(VoteId, null, null, null, null)" data-enhance role="search" id="ballot-search">
         @if (BallotList.SlugOf(_view.Choice) is { } slug)
         {
             <input type="hidden" name="balsas" value="@slug" />
@@ -50,7 +50,7 @@
             }
             else
             {
-                <a href="@BallotList.Address(VoteId, _view.Query, _view.Faction, c.Choice, null, "ballots")" id="@id">@Name(c) <span class="num">@Display.Number(c.Count)</span></a>
+                <a href="@BallotList.Address(VoteId, _view.Query, _view.Faction, c.Choice, null)" id="@id">@Name(c) <span class="num">@Display.Number(c.Count)</span></a>
             }
         }
     </p>
@@ -73,10 +73,9 @@
                 </li>
             }
         </ul>
-        @* The shared "show more" (owner, 2026-11-19): lands on the first row added, not on the top of the list, so the reader goes on
-           where they stopped. *@
+        @* The shared "show more" grows this list in place. *@
         <Lt2.Web.Client.Components.ShowMore Id="ballots-more" StatusId="ballots-shown" Shown="_view.Shown.Count" Total="_view.Matched"
-            Href="@(_view.More is { } more ? BallotList.Address(VoteId, _view.Query, _view.Faction, _view.Choice, more, "ballot-" + (_view.Shown.Count + 1)) : null)" />
+            Href="@(_view.More is { } more ? BallotList.Address(VoteId, _view.Query, _view.Faction, _view.Choice, more) : null)" />
     }
 </section>
 
@@ -98,7 +97,7 @@
     [SupplyParameterFromQuery(Name = "rodyti")] public string? Show { get; set; }
 
     /// <summary>The same list without the search and the faction (the ballot chosen stays).</summary>
-    private string Clear => BallotList.Address(VoteId, null, null, _view.Choice, null, "ballots");
+    private string Clear => BallotList.Address(VoteId, null, null, _view.Choice, null);
 
     protected override void OnParametersSet() => _view = BallotList.Apply(Ballots, Factions, Query, Faction, Ballot, Show);
 

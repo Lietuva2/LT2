@@ -272,10 +272,10 @@ public sealed class BallotListTests
     [Fact]
     public void The_address_carries_only_what_differs_from_the_defaults()
     {
-        BallotList.Address(99100002, null, null, null, null, "ballots").ShouldBe("/seimas/balsavimai/99100002#ballots");
-        BallotList.Address(99100002, " Žolynaitė ", Psf, "abstain", 20, "ballots")
-            .ShouldBe("/seimas/balsavimai/99100002?q=%C5%BDolynait%C4%97&frakcija=pilietines-sajungos-frakcija&balsas=susilaike#ballots");
-        BallotList.Address(99100002, null, null, "did-not-vote", 70, "ballot-21").ShouldBe("/seimas/balsavimai/99100002?balsas=nebalsavo&rodyti=70#ballot-21");
+        BallotList.Address(99100002, null, null, null, null).ShouldBe("/seimas/balsavimai/99100002");
+        BallotList.Address(99100002, " Žolynaitė ", Psf, "abstain", 20)
+            .ShouldBe("/seimas/balsavimai/99100002?q=%C5%BDolynait%C4%97&frakcija=pilietines-sajungos-frakcija&balsas=susilaike");
+        BallotList.Address(99100002, null, null, "did-not-vote", 70).ShouldBe("/seimas/balsavimai/99100002?balsas=nebalsavo&rodyti=70");
     }
 
     [Fact]

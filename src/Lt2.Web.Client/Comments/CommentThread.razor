@@ -183,10 +183,9 @@
         {
             @* The shared "show more" (owner, 2026-11-19): without script, and before the island runs, a link to this page with 20
                more of this discussion (?komentarai=); once the island runs it reads the next 20 from the API and adds them in
-               place, the focus on the first added (until 2026-11-19 the running island let enhanced navigation fetch the page and
-               kept its own list, so nothing changed). "Rodyti daugiau komentarų": a long comment has its own "Rodyti daugiau". *@
+               place, focusing the first added without scrolling. "Rodyti daugiau komentarų": a long comment has its own "Rodyti daugiau". *@
             <ShowMore Id="@($"comments-more-{Key}")" StatusId="@($"comments-shown-{Key}")" Shown="thread.Items.Count" Total="thread.Count" Text="@L["Comments.More"]"
-                      Controls="@($"comments-{Key}")" Href="@CommentPaging.Address(PagePath, TargetId, more, CommentPaging.PositionAnchor(TargetId, thread.Items.Count + 1))"
+                      Controls="@($"comments-{Key}")" Href="@CommentPaging.Address(PagePath, TargetId, more)"
                       OnMore="MoreAsync" />
         }
         @if (!thread.BillOpen)
@@ -414,7 +413,7 @@
             _focusAdded = null;
             try
             {
-                await item.FocusAsync();
+                await item.FocusAsync(preventScroll: true);
             }
             catch (Microsoft.JSInterop.JSException)
             {
