@@ -1,0 +1,88 @@
+@using Lt2.Web.Client.Agenda
+@inherits InteractiveBase<AppealUi>
+@implements IDisposable
+@inject MineOnlyState State
+@inject MyAgendaState Agenda
+
+@* "Mano projektai" on the bills list while "Tik mano" is ticked (design 8.12.5): the bills the member follows (a first side
+   follows the bill, design 8.11.2) with their own side, in the rows of the front page's "Jūsų projektai" (MyBillRow). It
+   comes from the member's own answers (MyAgendaState.FollowedAsync), asked only in the browser, so nothing shows until the box is
+   ticked and nothing of the member is in the page's HTML. The search box does not apply to it. *@
+@if (State.On && _rows is { } rows)
+{
+    <section class="sheet stack stack--tight" aria-labelledby="h-mine-bills" id="mine-bills">
+        <h2 id="h-mine-bills">@L["Mine.OnlyTitle"]</h2>
+        @if (rows.Count == 0)
+        {
+            <p class="small" id="mine-bills-none">@L["Mine.OnlyNone"]</p>
+        }
+        else
+        {
+            <ul class="my-agenda__list">
+                @foreach (var (bill, side) in rows)
+                {
+                    <li id="mine-bill-@bill.Number" @key="bill.Number">
+                        <MyBillRow Bill="bill" Side="@side" NewIdPrefix="mine-bill-new-" />
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
+else if (State.On && Message is not null)
+{
+    @* The member's own answer did not come: say so. *@
+    <section class="sheet stack stack--tight" aria-labelledby="h-mine-bills" id="mine-bills-failed">
+        <h2 id="h-mine-bills">@L["Mine.OnlyTitle"]</h2>
+        <Messages Message="@Message" />
+    </section>
+}
+
+@code {
+    private IReadOnlyList<MyAgendaRow>? _rows;
+    private int _asked;
+    private bool _listening;
+
+    protected override void OnInitialized()
+    {
+        // Only in the browser: while the server prerenders, the section is not there at all.
+        if (RendererInfo.IsInteractive)
+        {
+            State.Changed += OnChanged;
+            _listening = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_listening)
+        {
+            State.Changed -= OnChanged;
+        }
+    }
+
+    private void OnChanged() => _ = InvokeAsync(ReadAsync);
+
+    private async Task ReadAsync()
+    {
+        var ask = ++_asked;
+        if (!State.On)
+        {
+            _rows = null;
+            Message = null;
+            StateHasChanged();
+            return;
+        }
+
+        var rows = await Agenda.FollowedAsync();
+        if (ask != _asked)
+        {
+            // The box was cleared (or ticked again) while the answer was on its way.
+            return;
+        }
+
+        _rows = rows;
+        Message = rows is null ? L["Error.Generic"].Value : null;
+        StateHasChanged();
+    }
+}

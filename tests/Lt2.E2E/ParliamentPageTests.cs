@@ -13,14 +13,14 @@ public sealed class ParliamentPageTests : E2ETest
 {
     private static readonly (string Name, string Path, string Heading)[] Pages =
     [
-        ("mps", "/seimo-nariai", "Seimo nariai"),
+        ("mps", "/seimo-nariai", "Seimas"),
         ("profile", "/p/jonas-petraitis", "Jonas Petraitis"),
         ("profile-votes", "/p/jonas-petraitis/balsavimai", "Jonas Petraitis: balsavimai"),
         ("former", "/p/tadas-alksninis", "Tadas Alksninis"),
         ("faction", "/frakcijos/regionu-aljanso-frakcija", "Regionų aljanso frakcija"),
         ("committee", "/komitetai/biudzeto-ir-finansu-komitetas", "Biudžeto ir finansų komitetas"),
         ("bill", "/seimas/XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa"),
-        ("votes", "/seimas/balsavimai", "Seimo balsavimai"),
+        ("votes", "/seimas/balsavimai", "Seimas"),
         ("vote", "/seimas/balsavimai/99100002", "Gyventojų pajamų mokesčio įstatymo pataisa"),
         ("vote-consensus", "/seimas/balsavimai/99100003", "Vietinių rinkliavų įstatymo pataisa"),
         ("vote-note", "/seimas/balsavimai/99100004", "Atliekų tvarkymo įstatymo pataisa"),

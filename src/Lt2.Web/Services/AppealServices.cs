@@ -110,7 +110,7 @@ internal static class AppealMapping
 /// Server-side <see cref="IAppealsApi"/> (design 3.1): the server-rendered pages and the prerendered interactive
 /// components call the module in-process, as the signed-in person of the current request.
 /// </summary>
-internal sealed class ServerAppealsApi(IAppealsModule appeals, RowSummaries list, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
+internal sealed class ServerAppealsApi(IAppealsModule appeals, BillListReads list, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
 {
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 

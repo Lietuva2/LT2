@@ -5,7 +5,7 @@ namespace Lt2.E2E;
 
 /// <summary>
 /// Design 8.18 against the running stack with the invented parliament: the history of votes is reached from the start
-/// page, the agenda page and a vote's page; a row leads to its vote and its bill; "Visi balsavimai" adds the other kinds;
+/// page, the tab row of the agenda page and a vote's page; a row's title leads to its vote and its number to its bill; "Visi balsavimai" adds the other kinds;
 /// the search and "Iki" are a plain GET form that works with JavaScript off; nothing scrolls sideways at 390 px. Paging and
 /// the 300 cap need more votes than the stand-in has: the integration tests seed their own.
 /// </summary>
@@ -21,7 +21,7 @@ public sealed partial class VoteHistoryTests : E2ETest
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
         await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT" });
         var page = await context.NewPageAsync();
-        var history = page.GetByRole(AriaRole.Heading, new() { Name = "Seimo balsavimai", Level = 1 });
+        var history = page.Locator("#tab-seimas-balsavimai[aria-current=page]");
 
         await page.GotoAsync(Base + "/");
         await page.Locator("#home-votes-older").ClickAsync();
@@ -29,25 +29,26 @@ public sealed partial class VoteHistoryTests : E2ETest
         await Assertions.Expect(history).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
 
         await page.GotoAsync(Base + "/darbotvarke");
-        await page.Locator("#agenda-votes-older").ClickAsync();
+        await page.Locator("#tab-seimas-balsavimai").ClickAsync();
         await page.WaitForURLAsync(Base + "/seimas/balsavimai", new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(history).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
 
         // The newest stage result: its vote, back up to the history, then its bill.
         var first = page.Locator("#balsavimas-1");
-        var vote = await first.Locator("a.cta").GetAttributeAsync("href");
-        var bill = await first.Locator("a.tl-item__title").GetAttributeAsync("href");
+        var vote = await first.Locator("a.tl-item__title").GetAttributeAsync("href");
+        var bill = await first.Locator("a.tag").First.GetAttributeAsync("href");
         vote.ShouldNotBeNull().ShouldMatch("^/seimas/balsavimai/\\d+$");
         bill.ShouldNotBeNull().ShouldMatch("^/seimas/[XVI]+P-\\d+$");
         var title = (await first.Locator("a.tl-item__title").InnerTextAsync()).Trim();
+        (await first.Locator("a.cta").CountAsync()).ShouldBe(0, "no button: the title leads to the vote");
 
-        await first.Locator("a.cta").ClickAsync();
+        await first.Locator("a.tl-item__title").ClickAsync();
         await page.WaitForURLAsync(Base + vote, new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync(title, new() { Timeout = E2ESteps.Slow });
         await page.Locator("#to-vote-history").ClickAsync();
         await Assertions.Expect(history).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
 
-        await page.Locator("#balsavimas-1 a.tl-item__title").ClickAsync();
+        await page.Locator("#balsavimas-1 a.tag").First.ClickAsync();
         await page.WaitForURLAsync(Base + bill, new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync(title, new() { Timeout = E2ESteps.Slow });
     }

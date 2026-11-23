@@ -1,0 +1,49 @@
+@using Lt2.Api.Contracts.Follows
+@inherits InteractiveBase<AppealUi>
+
+@* The inside of one row of the member's own bills (design 8.7, "Jūsų projektai"; design 8.12.5, "Mano projektai" on the bills
+   list): the bill's number and planned date, its title, the member's own side or "Dar nenurodėte, ko prašote", the last
+   vote's result and what is new (design 8.11.8). The caller's <li> holds the row's id and key. *@
+<span class="row">
+    <a class="tag tag--ink num" href="@BillPath(Bill.Number)">@Bill.Number</a>
+    @if (Bill.Planned is { } planned)
+    {
+        <span class="tag num">@L.Format("Mine.Planned", Display.Day(planned.Date))</span>
+    }
+</span>
+<a class="my-agenda__title" href="@BillPath(Bill.Number)">@Bill.Title</a>
+<span class="small">
+    @if (Side is { } side)
+    {
+        @L["Mine.Side"]@(" ")<span class="choice choice--@side">@L["Mine.Side." + side]</span>
+    }
+    else
+    {
+        <a href="@BillPath(Bill.Number)">@L["Mine.NoSideAction"]</a>
+    }
+</span>
+@if (Bill.LastStageResult is { } vote && (Since is not { } since || vote.HeldAt >= since))
+{
+    @* The last vote, as the account's list of followed bills says it (design 8.11.2). *@
+    <span class="small num">@L.Format("Follows.Voted", Display.Day(vote.HeldAt)) @(vote.IsConsensus ? L["Follows.Consensus"] : L.Format("Follows.Result", Display.Number(vote.For), Display.Number(vote.Against), Display.Number(vote.Abstain)))</span>
+}
+@if (Bill.New is { } news)
+{
+    @* Design 8.11.8: what was written on a followed bill since the member last opened its page. *@
+    <a class="small num" href="@BillPath(Bill.Number)" id="@(NewIdPrefix + Bill.Number)">@NewsLine.Of(L, news)</a>
+}
+
+@code {
+    [Parameter, EditorRequired] public FollowedBillResponse Bill { get; set; } = default!;
+
+    /// <summary>The member's own side on the bill (<c>for</c>, <c>against</c>), null when none.</summary>
+    [Parameter] public string? Side { get; set; }
+
+    /// <summary>A vote before this is not shown (the front page's last week); null shows the last vote whenever it was.</summary>
+    [Parameter] public DateTimeOffset? Since { get; set; }
+
+    /// <summary>The id of the "what is new" line is this and the bill's number.</summary>
+    [Parameter, EditorRequired] public string NewIdPrefix { get; set; } = "";
+
+    private static string BillPath(string number) => "/seimas/" + Uri.EscapeDataString(number);
+}

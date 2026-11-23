@@ -12,7 +12,8 @@ namespace Lt2.Web.Endpoints.Appeals;
 /// arguments, by activity (the default), participants, arguments or planned date; a search by number or title, those
 /// planned soon, or the closed tab (design 8.12.5); <c>limit</c> of them (20 by default, at most 200: <see cref="BillListLimits"/>).
 /// Public and the same for everyone. A row whose threshold is reached carries the summary it names (design 8.12.2,
-/// <see cref="RowSummaries"/>).
+/// <see cref="RowSummaries"/>), and every row the organisations with a public statement on its bill, as the agenda's rows
+/// (<see cref="BillListReads"/>).
 /// </summary>
 internal static class GetAppealsEndpoint
 {
@@ -25,7 +26,7 @@ internal static class GetAppealsEndpoint
             .Produces(StatusCodes.Status304NotModified);
 
     private static async Task<IResult> HandleAsync(
-        HttpContext http, RowSummaries list, ErrorMapper errors, string? q, bool? planned, string? tab, string? sort, string? cursor, string? limit, CancellationToken cancellationToken) =>
+        HttpContext http, BillListReads list, ErrorMapper errors, string? q, bool? planned, string? tab, string? sort, string? cursor, string? limit, CancellationToken cancellationToken) =>
         PublicJson.From(
             http,
             errors,

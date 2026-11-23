@@ -45,6 +45,24 @@ public static partial class ListHeadSteps
         return head;
     }
 
+    /// <summary>
+    /// The head of the five pages that are the tabs of "Seimas" (design 8.21): the heading "Seimas" and the sticky
+    /// <c>main &gt; .page-head</c> that holds the tab row alone, from the heading to the head's closing tag. Nothing else
+    /// stands in it: not the page's own heading, the lead, the views of "Projektai" or the filters.
+    /// </summary>
+    public static string SeimasHead(string html)
+    {
+        var start = html.IndexOf("<h1 class=\"seimas-title\">", StringComparison.Ordinal);
+        start.ShouldBeGreaterThan(0, "the page has the heading \"Seimas\"");
+        var end = html.IndexOf("</div>", start, StringComparison.Ordinal) + "</div>".Length;
+        var head = html[start..end];
+        head.ShouldMatch("^<h1 class=\"seimas-title\">Seimas</h1>\\s*<div class=\"page-head\" id=\"page-head\"><nav class=\"row tabs project-tabs\"");
+        head.ShouldEndWith("</nav></div>");
+        head.ShouldNotContain("class=\"lead\"");
+        head.ShouldNotContain("<form");
+        return head;
+    }
+
     /// <summary>The first tag after a sheet's opening tag, with only white space before it.</summary>
     [GeneratedRegex("\\G\\s*(?<open><(?<tag>[a-z0-9]+)[^>]*?\\bclass=\"(?<class>[^\"]*)\"[^>]*>)")]
     private static partial Regex FirstTag();

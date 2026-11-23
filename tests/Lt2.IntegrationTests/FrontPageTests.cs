@@ -263,7 +263,7 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
 
         // Owner, 2026-11-19: no row of links under the agenda ("Visi projektai", the summaries, the MPs); the footer repeats
         // the menu's sections instead (design 8.21, NavigationTests).
-        // The menu's dropdown says "Visi projektai, kurių…" on every page (design 8.28.2): the page's own part is read.
+        // The menu's dropdown says "Seimo darbotvarkė ir visi projektai…" on every page (design 8.28.2): the page's own part is read.
         var main = html[html.IndexOf("<main", StringComparison.Ordinal)..html.IndexOf("</main>", StringComparison.Ordinal)];
         main.ShouldNotContain("id=\"home-more\"");
         main.ShouldNotContain("Visi projektai");

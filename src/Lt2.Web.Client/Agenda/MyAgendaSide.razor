@@ -22,7 +22,7 @@
    2026-11-19: "No need, if the label 'Sekate' lights up anyway"). After the member's own action the row shows the
    bill's live numbers from its public answer, not the page's copy that may be a minute old; so does it once on start when
    that copy says nobody took part but the member's own answer has a side. A row of the last week's
-   votes (VoteId) offers no sides, only "Kaip balsavo Seimo nariai"; nor does a row for an MP's own account (design 8.5.4,
+   votes (Voted) offers no sides, only the numbers; nor does a row for an MP's own account (design 8.5.4,
    known from the browser's answer), which keeps the numbers only.
 
    Rendered straight into the row (the side column and, while asked, the consent as the row's last part). While the server
@@ -30,9 +30,9 @@
    for every member, nothing of the member's own in it. *@
 <div class="tl-item__side" id="home-side-@Place">
     <RecordFigures Record="Shown" HideNobody="@(Asks || _mine?.Side is not null)" Id="@Place" />
-    @if (VoteId is { } vote)
+    @if (Voted)
     {
-        <a class="btn btn--plain cta" href="/seimas/balsavimai/@vote">@L["Agenda.Action.Votes"]</a>
+        @* A vote's row: the numbers only (the title leads to the vote's page). *@
     }
     else if (_answer is { MpAccount: true })
     {
@@ -84,8 +84,8 @@
     /// <summary>The bill's public numbers as the page has them (public, the same for everyone; up to a minute old).</summary>
     [Parameter, EditorRequired] public AgendaRecordResponse Record { get; set; } = default!;
 
-    /// <summary>A row of the last week's votes: no sides to take, the link to the vote instead.</summary>
-    [Parameter] public long? VoteId { get; set; }
+    /// <summary>A row of the last week's votes: no sides to take, the numbers only.</summary>
+    [Parameter] public bool Voted { get; set; }
 
     private AgendaRecordResponse Shown => _live ?? Record;
 
@@ -103,7 +103,7 @@
     /// The row offers the sides (a coming bill, not the MP's own account): no "nobody yet" beside them (owner, 2026-11-19).
     /// Before the answer is read it is a member's row like any other.
     /// </summary>
-    private bool Asks => VoteId is null && _answer is not { MpAccount: true };
+    private bool Asks => !Voted && _answer is not { MpAccount: true };
 
     protected override async Task OnInitializedAsync()
     {

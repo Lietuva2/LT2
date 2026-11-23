@@ -1095,11 +1095,12 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .list-head ~ [id], .list-head ~ * [id] { scroll-margin-top: var(--list-landing); }
 
 /* A list page's head (design 8.16.5, owner 2026-11-21): where the list's sheet has no heading of its own, the page's
-   title and the tab row right under it (.page-head, a child of main, so it stays while the page's content scrolls past)
-   stay at the top of the screen on the ground's colour with a rule under it; the label above it, the lead and the filters
-   (.page-head__rest) scroll away. Its padding and rule are taken out of the gaps round it, so at rest everything stands
+   title (a list of one's own) or the tab row of "Seimas" (the five pages that are its tabs: the heading "Seimas", .seimas-title,
+   is an ordinary heading that scrolls away, only the row under it stays) in .page-head, a child of main, so it stays while the
+   page's content scrolls past, at the top of the screen on the ground's colour with a rule under it; what is above it, the lead,
+   the views of "Projektai" and the filters (.page-head__rest) scroll away. Its padding and rule are taken out of the gaps round it, so at rest everything stands
    where it would in one .stack (main's gap is --sp-7, the head's neighbours --sp-5 away). --page-head is its height with
-   one line of title; the days' dates (from 54rem) stay just under it and whatever a link lands on after it stops below it.
+   one line of title (the tab row alone on the pages of "Seimas"); the days' dates (from 54rem) stay just under it and whatever a link lands on after it stops below it.
    Under 54rem the title is the h3's size and the padding smaller, so the head is about 105px tall on a phone with the tabs
    (46px without); a landing leaves room for a second line of the title. */
 :root {
@@ -1109,8 +1110,9 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   --page-head-wrap: 0px;
   --page-head: calc(var(--page-head-title) + 2 * var(--page-head-pad) + 1px);
 }
-main:has(> .page-head .project-tabs) {
-  --page-head: calc(var(--page-head-title) + var(--sp-5) + var(--page-head-tabs) + 2 * var(--page-head-pad) + 1px);
+main:has(> .seimas-title + .page-head) {
+  --page-head: calc(var(--page-head-tabs) + 2 * var(--page-head-pad) + 1px);
+  --page-head-wrap: 0px;
 }
 @media (max-width: 54rem) {
   :root {
@@ -1118,7 +1120,7 @@ main:has(> .page-head .project-tabs) {
     --page-head-title: calc(0.98 * var(--fs-4));
     --page-head-wrap: var(--page-head-title);
   }
-  main > .page-head h1 { font-size: var(--fs-4); }
+  main > .page-head h1, .seimas-title { font-size: var(--fs-4); }
 }
 @media (max-width: 36rem) {
   :root { --page-head-tabs: calc(1.5 * var(--fs-1) + 2 * var(--sp-1) + 4px); }
@@ -1151,6 +1153,12 @@ main > * + .page-head { margin-block-start: calc(var(--sp-5) - var(--sp-7) - var
 main > .page-head + .page-head__rest { margin-block-start: calc(var(--sp-5) - var(--sp-7)); }
 main > .page-head ~ * .tl-date { top: calc(var(--page-head) + var(--sp-4)); }
 main > .page-head ~ [id], main > .page-head ~ * [id] { scroll-margin-top: calc(var(--page-head) + var(--page-head-wrap) + var(--sp-4)); }
+/* A list's heading row on a page with a page head (the groups of the list of MPs) stays just under the page head, and what a
+   link lands on after it stops below both. */
+main > .page-head ~ .sheet > .list-head { top: var(--page-head); }
+main > .page-head ~ .sheet > .list-head ~ [id], main > .page-head ~ .sheet > .list-head ~ * [id] {
+  scroll-margin-top: calc(var(--page-head) + var(--list-landing));
+}
 
 /* The timeline: one block per sitting day, the day's date beside its bills, kept just under the list's heading row. */
 .tl-day {
@@ -1166,6 +1174,8 @@ main > .page-head ~ [id], main > .page-head ~ * [id] { scroll-margin-top: calc(v
   padding-block: var(--sp-4); border-top: 1px solid var(--rule);
 }
 .tl-items > .tl-item:last-child { border-bottom: 1px solid var(--rule); }
+/* A row with the main column only (the votes' history: the title leads to the vote's page). */
+.tl-item--single { grid-template-columns: minmax(0, 1fr); }
 .tl-item__main { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
 .tl-item__title { font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
 .tl-item__side { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; min-width: 0; }
@@ -1209,6 +1219,10 @@ main > .page-head ~ [id], main > .page-head ~ * [id] { scroll-margin-top: calc(v
 .my-agenda__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr)); gap: var(--sp-5); }
 .my-agenda__list > li { display: flex; flex-direction: column; gap: var(--sp-2); padding-top: var(--sp-3); border-top: 1px solid var(--rule); min-width: 0; }
 .my-agenda__title { font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
+
+/* "Tik mano" on the bills list (design 8.12.5): ticked, the member's own bills stand in place of the public list; the island sets
+   the attribute on the page's root element and takes it off when it goes away. */
+html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none; }
 
 @media (max-width: 64rem) { .intro-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 54rem) {
@@ -1328,6 +1342,14 @@ main > .page-head ~ [id], main > .page-head ~ * [id] { scroll-margin-top: calc(v
 .top__nav .drop__panel--desc .drop__links a:hover .drop__label { text-decoration: underline; }
 .top__nav .drop__panel--desc .drop__links a[aria-current="page"] .drop__label {
   text-decoration: underline; text-decoration-color: var(--link); text-decoration-thickness: 3px; text-underline-offset: 0.3em; }
+/* "Seimas" is the first of only three items, so it stands near the menu's right end and a 21rem panel hung from its left edge
+   would run past the window (about 45px between 48rem and 64rem, a touch screen up to 48rem). Above 32rem the panel hangs from the
+   menu's right edge instead, under the items, and never leaves the window; under 32rem it is as wide as the page (below). */
+@media (min-width: 32.01rem) {
+  .top__nav { position: relative; }
+  .drop--desc { position: static; }
+  .drop--desc > .drop__panel { inset-inline-start: auto; inset-inline-end: 0; }
+}
 @media (max-width: 32rem) {
   .top { position: relative; }
   .drop--desc { position: static; }
@@ -1375,8 +1397,32 @@ main > .page-head ~ [id], main > .page-head ~ * [id] { scroll-margin-top: calc(v
 .project-tabs a { color: var(--ink); text-decoration: none; padding-block: var(--sp-1); border-bottom: 4px solid transparent; }
 .project-tabs a:hover { border-bottom-color: var(--slate); }
 .project-tabs a[aria-current="page"] { border-bottom-color: var(--link); }
+/* The views of "Projektai" (Darbotvarkė, Aktyvūs, Uždaryti): a square segmented control one level under the tab row, the
+   site's own cut corners kept (no radius): a ruled box on the sheet's colour, the current view filled in the ink colour, the
+   others quiet until hovered. It wraps on a very narrow screen with the rule kept between the segments. */
+.views {
+  display: inline-flex; flex-wrap: wrap; inline-size: fit-content; max-inline-size: 100%;
+  border: 1px solid var(--rule); background: var(--sheet); font-size: var(--fs-1); font-weight: 600;
+}
+.views a, .views b {
+  padding: var(--sp-2) var(--sp-4); color: var(--ink-2); text-decoration: none; line-height: 1.3;
+  border-inline-end: 1px solid var(--rule);
+}
+.views > :last-child { border-inline-end: 0; }
+.views a:hover { color: var(--ink); background: var(--sheet-2); }
+.views b[aria-current="page"] { background: var(--ink); color: var(--sheet); }
+@media (max-width: 24rem) { .views a, .views b { padding-inline: var(--sp-3); } }
 @media (max-width: 36rem) {
   .project-tabs { column-gap: var(--sp-3); font-size: var(--fs-1); }
+}
+/* "Projektai · Balsavimai · Suvestinės · Seimo nariai" are 314px wide at --fs-1 with the phone's gap, so the row stays on one
+   line (the sticky head keeps its height, --page-head) down to 346px of screen; narrower, a smaller gap keeps it to 334px,
+   and below 21rem the smaller type to 320px. Measured live at 390, 360, 340 and 320. */
+@media (max-width: 22rem) {
+  .project-tabs { column-gap: var(--sp-2); }
+}
+@media (max-width: 21rem) {
+  .project-tabs { font-size: var(--fs-0); }
 }
 
 /* The terms of use and the privacy notice (design 8.22): long descriptions in the facts lists read as running text; on a phone

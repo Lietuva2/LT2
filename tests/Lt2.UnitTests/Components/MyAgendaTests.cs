@@ -95,8 +95,8 @@ public sealed class MyAgendaTests : BunitContext
 
     private string Text(string key) => Services.GetRequiredService<IStringLocalizer<AppealUi>>()[key];
 
-    private IRenderedComponent<MyAgendaSide> Side(string number, string place, long? voteId = null) => Render<MyAgendaSide>(p => p
-        .Add(c => c.Number, number).Add(c => c.Place, place).Add(c => c.Numbers, Numbers).Add(c => c.Record, NobodyYet).Add(c => c.VoteId, voteId));
+    private IRenderedComponent<MyAgendaSide> Side(string number, string place, bool voted = false) => Render<MyAgendaSide>(p => p
+        .Add(c => c.Number, number).Add(c => c.Place, place).Add(c => c.Numbers, Numbers).Add(c => c.Record, NobodyYet).Add(c => c.Voted, voted));
 
     private IRenderedComponent<MyAgendaMark> Mark(string number, string place) => Render<MyAgendaMark>(p => p
         .Add(c => c.Number, number).Add(c => c.Place, place).Add(c => c.Numbers, Numbers));
@@ -309,8 +309,8 @@ public sealed class MyAgendaTests : BunitContext
         // The page's agenda (a minute old) still says nobody, but this member has just taken a side.
         var sided = Side(Sided, "2026-11-19-XVP-0412");
         var followedOnly = Side(Followed, "2026-11-17-XVP-0533");
-        var votedSided = Side(Sided, "voted-77", voteId: 77);
-        var votedFollowedOnly = Side(Followed, "voted-78", voteId: 78);
+        var votedSided = Side(Sided, "voted-77", voted: true);
+        var votedFollowedOnly = Side(Followed, "voted-78", voted: true);
 
         sided.FindAll("#home-nobody-2026-11-19-XVP-0412").ShouldBeEmpty("the member's own side contradicts it");
         followedOnly.FindAll("#home-nobody-2026-11-17-XVP-0533").ShouldBeEmpty("the sides stand there instead");
@@ -318,7 +318,7 @@ public sealed class MyAgendaTests : BunitContext
         votedSided.FindAll("#home-nobody-voted-77").ShouldBeEmpty();
         votedFollowedOnly.Find("#home-nobody-voted-78").TextContent.ShouldBe(Text("Agenda.Nobody"), "a vote's row has no buttons: it says so");
         votedSided.FindAll(".tl-ask").ShouldBeEmpty("a vote's row offers no sides");
-        votedSided.Find("a.cta").GetAttribute("href").ShouldBe("/seimas/balsavimai/77");
+        votedSided.FindAll("a").ShouldBeEmpty("a vote's row has no button: its title leads to the vote");
     }
 
     [Fact]

@@ -1,0 +1,28 @@
+@inject IStringLocalizer<AppealText> T
+@inject IStringLocalizer<Lt2.Web.Client.UiText> U
+
+@* Design 8.21: the three views of the tab "Projektai" ("Darbotvarkė", "Aktyvūs", "Uždaryti") as a small segmented control
+   under the tab row (a ruled box, the current view filled), so it reads as one level below the tabs, not as a second row of
+   them; a view of the tab, not a tab of its own. On the ground (design 8.16), no script. *@
+<nav class="views" aria-label="@T["List.Tabs"]">
+    @View(ProjectView.Agenda, "/darbotvarke", "view-agenda", U["Menu.Agenda"].Value)
+    @View(ProjectView.Active, "/projektai", "tab-active", T["List.Tab.Active"].Value)
+    @View(ProjectView.Closed, "/projektai?skirtukas=uzdaryti", "tab-closed", T["List.Tab.Closed"].Value)
+</nav>
+
+@code {
+    /// <summary>The view the page is.</summary>
+    [Parameter, EditorRequired] public ProjectView Current { get; set; }
+
+    private RenderFragment View(ProjectView view, string href, string id, string name) => __builder =>
+    {
+        if (view == Current)
+        {
+            <b aria-current="page" id="@id">@name</b>
+        }
+        else
+        {
+            <a href="@href" id="@id">@name</a>
+        }
+    };
+}

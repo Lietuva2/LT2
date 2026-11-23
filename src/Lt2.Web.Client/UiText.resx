@@ -214,9 +214,8 @@
   <data name="Mp.Mail.Save" xml:space="preserve"><value>Išsaugoti</value></data>
   <data name="Mp.Mail.Saved" xml:space="preserve"><value>Išsaugota. Patvirtinimas išsiųstas oficialiu adresu.</value></data>
   <data name="Menu.Agenda" xml:space="preserve"><value>Darbotvarkė</value></data>
-  <data name="Menu.Agenda.Line" xml:space="preserve"><value>Ką Seimas planuoja svarstyti artimiausiomis dienomis.</value></data>
   <data name="Menu.Bills" xml:space="preserve"><value>Projektai</value></data>
-  <data name="Menu.Bills.Line" xml:space="preserve"><value>Visi projektai, kurių Seimas dar nebaigė svarstyti.</value></data>
+  <data name="Menu.Bills.Line" xml:space="preserve"><value>Seimo darbotvarkė ir visi projektai, kuriuos Seimas svarsto ar jau baigė.</value></data>
   <data name="Menu.Votes" xml:space="preserve"><value>Balsavimai</value></data>
   <data name="Menu.Votes.Line" xml:space="preserve"><value>Kaip Seimas balsavo: visi balsavimai nuo naujausio.</value></data>
   <data name="Menu.Digests" xml:space="preserve"><value>Suvestinės</value></data>
@@ -239,11 +238,12 @@
   <data name="Menu.Organisations.Line" xml:space="preserve"><value>Organizacijos, viešai pasisakančios dėl projektų savo vardu.</value></data>
   <data name="Menu.Feedback" xml:space="preserve"><value>Atsiliepimai</value></data>
   <data name="Menu.Feedback.Line" xml:space="preserve"><value>Parašykite mums, kas neaišku ar neveikia.</value></data>
-  <data name="Menu.Projects.Line" xml:space="preserve"><value>Keturi puslapiai apie tai, ką svarsto Seimas:</value></data>
+  <data name="Menu.Projects.Line" xml:space="preserve"><value>Keturi puslapiai apie Seimą:</value></data>
   <data name="Where.Title" xml:space="preserve"><value>Kur ką rasti</value></data>
   <data name="Where.Menu" xml:space="preserve"><value>Meniu</value></data>
   <data name="Where.Footer" xml:space="preserve"><value>Puslapio apačioje</value></data>
-  <data name="Tabs.Label" xml:space="preserve"><value>Projektai</value></data>
+  <data name="Tabs.Label" xml:space="preserve"><value>Seimas</value></data>
+  <data name="Seimas.Title" xml:space="preserve"><value>Seimas</value></data>
   <data name="Terms.Check.Before" xml:space="preserve"><value>Sutinku su</value></data>
   <data name="Terms.Check.Link" xml:space="preserve"><value>naudojimo taisyklėmis</value></data>
   <data name="Privacy.Sentence.Before" xml:space="preserve"><value>Kaip tvarkome jūsų duomenis, rašoma</value></data>

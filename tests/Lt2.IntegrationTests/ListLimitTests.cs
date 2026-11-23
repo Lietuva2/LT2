@@ -54,7 +54,7 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
         var all = await visitor.GetJsonAsync<BillListResponse>(AppealRoutes.AppealsList(null, false, false, null, limit: BillListLimits.Max));
 
         var html = await PageAsync("/projektai");
-        Regex.Count(html, "<li id=\"bill-").ShouldBe(Math.Min(all.Total, BillListPaging.First));
+        Regex.Count(html, "<li class=\"tl-item\" id=\"bill-").ShouldBe(Math.Min(all.Total, BillListPaging.First));
         html.ShouldContain($"id=\"shown\">Rodoma {Math.Min(all.Total, BillListPaging.First)} iš {all.Total}</p>");
         html.ShouldNotContain("?nuo=", customMessage: "the list grows in place by ?rodyti=, no next page under the cap");
         if (all.Total > BillListPaging.First)
@@ -67,7 +67,7 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
         }
 
         var longer = await PageAsync("/projektai?rodyti=70");
-        Regex.Count(longer, "<li id=\"bill-").ShouldBe(Math.Min(all.Total, 70));
+        Regex.Count(longer, "<li class=\"tl-item\" id=\"bill-").ShouldBe(Math.Min(all.Total, 70));
         longer.ShouldContain($"id=\"shown\">Rodoma {Math.Min(all.Total, 70)} iš {all.Total}</p>");
         if (all.Total > 70)
         {

@@ -69,19 +69,19 @@ public sealed class MenuTests : E2ETest
         await ShootMenuAsync(page, "visitor");
 
         var nav = page.Locator("nav.top__nav");
-        await Assertions.Expect(page.Locator("#nav-projects")).ToHaveTextAsync("Projektai");
-        await Assertions.Expect(nav.Locator("> a")).ToHaveTextAsync(["Seimo nariai", "Statistika", "Prisijungti"]);
+        await Assertions.Expect(page.Locator("#nav-projects")).ToHaveTextAsync("Seimas");
+        await Assertions.Expect(nav.Locator("> a")).ToHaveTextAsync(["Statistika", "Prisijungti"]);
         await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", "true", new() { Timeout = E2ESteps.Slow });
 
-        // Owner, 2026-11-19: with a mouse, "Projektai" shows its dropdown on hover (its four tabs, "Balsavimai" again) and
-        // Escape hides it; the keyboard reaches it by focus; a press on "Projektai" opens the agenda.
+        // Owner, 2026-11-19: with a mouse, "Seimas" shows its dropdown on hover (its four tabs) and
+        // Escape hides it; the keyboard reaches it by focus; a press on "Seimas" opens the agenda.
         await page.GotoAsync(E2ESteps.Base + "/metodika");
         var panel = page.Locator("#projects-panel");
         await Assertions.Expect(panel).ToBeHiddenAsync();
         await page.Locator("#nav-projects").HoverAsync();
         await Assertions.Expect(panel).ToBeVisibleAsync();
-        await Assertions.Expect(panel.Locator(".drop__label")).ToHaveTextAsync(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės"]);
-        await page.Locator("#nav-tab-seimas-balsavimai").HoverAsync();
+        await Assertions.Expect(panel.Locator(".drop__label")).ToHaveTextAsync(["Projektai", "Balsavimai", "Suvestinės", "Seimo nariai"]);
+        await page.Locator("#nav-tab-mps").HoverAsync();
         await Assertions.Expect(panel).ToBeVisibleAsync();
         await page.Keyboard.PressAsync("Escape");
         await Assertions.Expect(panel).ToBeHiddenAsync();
@@ -92,7 +92,7 @@ public sealed class MenuTests : E2ETest
         await Assertions.Expect(page.Locator("#nav-projects")).ToBeFocusedAsync();
         await Assertions.Expect(panel).ToBeVisibleAsync();
         await page.Keyboard.PressAsync("Tab");
-        await Assertions.Expect(page.Locator("#nav-tab-darbotvarke")).ToBeFocusedAsync();
+        await Assertions.Expect(page.Locator("#nav-tab-projektai")).ToBeFocusedAsync();
         await page.Keyboard.PressAsync("Escape");
         await Assertions.Expect(panel).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("#nav-projects")).ToBeFocusedAsync();
@@ -103,7 +103,7 @@ public sealed class MenuTests : E2ETest
     }
 
     /// <summary>
-    /// Owner, 2026-11-19: on a touch screen "Projektai" stays a disclosure, opened by a press (also without script), closed by
+    /// Owner, 2026-11-19: on a touch screen "Seimas" stays a disclosure, opened by a press (also without script), closed by
     /// a press outside; it never leads to a page by itself.
     /// </summary>
     [Fact]
@@ -120,7 +120,7 @@ public sealed class MenuTests : E2ETest
             await page.Locator("#nav-projects-touch").TapAsync();
             await Assertions.Expect(page.Locator("#projects-panel")).ToBeVisibleAsync();
             page.Url.ShouldEndWith("/metodika", customMessage: "a press opens the dropdown, not a page");
-            await Assertions.Expect(page.Locator("#projects-panel .drop__label")).ToHaveTextAsync(["Darbotvarkė", "Projektai", "Balsavimai", "Suvestinės"]);
+            await Assertions.Expect(page.Locator("#projects-panel .drop__label")).ToHaveTextAsync(["Projektai", "Balsavimai", "Suvestinės", "Seimo nariai"]);
             if (script)
             {
                 await page.Locator("footer .foot__groups").TapAsync();
@@ -128,8 +128,8 @@ public sealed class MenuTests : E2ETest
                 await page.Locator("#nav-projects-touch").TapAsync();
             }
 
-            await page.Locator("#nav-tab-projektai").TapAsync();
-            await page.WaitForURLAsync(new Regex("/projektai$"), new() { Timeout = E2ESteps.Slow });
+            await page.Locator("#nav-tab-suvestines").TapAsync();
+            await page.WaitForURLAsync(new Regex("/suvestines$"), new() { Timeout = E2ESteps.Slow });
         }
 
         visitor.ConsoleErrors.ShouldBeEmpty();
@@ -144,7 +144,7 @@ public sealed class MenuTests : E2ETest
         });
 
     /// <summary>
-    /// Design 8.28.2, 8.28.7: the dropdown of "Projektai" shows its four entries, each with its line, opens without script,
+    /// Design 8.28.2, 8.28.7: the dropdown of "Seimas" shows its four entries, each with its line, opens without script,
     /// and fits at 340, 360, 390 and 1280 px with no sideways scroll; the menu is still one line. Screenshots for the owner.
     /// </summary>
     [Fact]
@@ -156,10 +156,10 @@ public sealed class MenuTests : E2ETest
         Directory.CreateDirectory(Shots);
         string[] lines =
         [
-            "Ką Seimas planuoja svarstyti artimiausiomis dienomis.",
-            "Visi projektai, kurių Seimas dar nebaigė svarstyti.",
+            "Seimo darbotvarkė ir visi projektai, kuriuos Seimas svarsto ar jau baigė.",
             "Kaip Seimas balsavo: visi balsavimai nuo naujausio.",
             "Ką apie dalyvių prašymus sužino Seimo nariai.",
+            "Kiekvieno Seimo nario pareigos, balsavimai ir atsakymai.",
         ];
         // On a touch phone (a press) at 340, 360 and 390 px, and with a mouse (hover) at 1280 and 390 px.
         foreach (var (width, touch) in new[] { (340, true), (360, true), (390, true), (1280, false), (390, false) })
@@ -198,7 +198,7 @@ public sealed class MenuTests : E2ETest
         {
             await page.SetViewportSizeAsync(width, 900);
             await page.GotoAsync(E2ESteps.Base + "/metodika#kur-ka-rasti");
-            await Assertions.Expect(page.Locator("#kur-ka-rasti dd")).ToHaveCountAsync(14);
+            await Assertions.Expect(page.Locator("#kur-ka-rasti dd")).ToHaveCountAsync(13);
             await E2ESteps.NoSidewaysScrollAsync(page, $"/metodika at {width} px");
             await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"where-{width}.png"), FullPage = true });
         }
@@ -232,16 +232,16 @@ public sealed class MenuTests : E2ETest
         var page = visitor.Page;
         (string Path, string Tab, string Id)[] tabs =
         [
-            ("/darbotvarke", "Darbotvarkė", "tab-darbotvarke"),
-            ("/projektai", "Projektai", "tab-projektai"),
+            ("/darbotvarke", "Projektai", "tab-projektai"),
             ("/seimas/balsavimai", "Balsavimai", "tab-seimas-balsavimai"),
             ("/suvestines", "Suvestinės", "tab-suvestines"),
+            ("/seimo-nariai", "Seimo nariai", "tab-mps"),
         ];
 
         // From the menu item's dropdown to the agenda, then from every tab to every other by its link.
         await page.GotoAsync(E2ESteps.Base + "/metodika");
         await page.Locator("#nav-projects").HoverAsync();
-        await page.Locator("#nav-tab-darbotvarke").ClickAsync();
+        await page.Locator("#nav-tab-projektai").ClickAsync();
         await page.WaitForURLAsync(new Regex("/darbotvarke$"), new() { Timeout = E2ESteps.Slow });
         foreach (var from in tabs)
         {
@@ -257,11 +257,21 @@ public sealed class MenuTests : E2ETest
             }
         }
 
-        // The link beside the agenda's voted list's heading stays as a second way to the history of votes; its tab row leads back.
-        await page.GotoAsync(E2ESteps.Base + "/darbotvarke");
-        await page.Locator("#agenda-votes-older").ClickAsync();
+        // The views of "Projektai" (a second row under the tab row): the agenda, the open bills, the closed ones.
+        await page.GotoAsync(E2ESteps.Base + "/projektai");
+        await Assertions.Expect(page.Locator("#tab-projektai")).ToHaveAttributeAsync("aria-current", "page");
+        await page.Locator("#tab-closed").ClickAsync();
+        await page.WaitForURLAsync(new Regex("/projektai[?]skirtukas=uzdaryti$"), new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#tab-closed")).ToHaveAttributeAsync("aria-current", "page");
+        await page.Locator("#view-agenda").ClickAsync();
+        await page.WaitForURLAsync(new Regex("/darbotvarke$"), new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#view-agenda")).ToHaveAttributeAsync("aria-current", "page");
+
+        // The history of votes is the tab "Balsavimai": marked there, "Projektai" is not.
+        await page.Locator("#tab-seimas-balsavimai").ClickAsync();
         await page.WaitForURLAsync(new Regex("/seimas/balsavimai$"), new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.Locator("#tab-seimas-balsavimai")).ToHaveAttributeAsync("aria-current", "page");
+        await Assertions.Expect(page.Locator("#tab-projektai")).Not.ToHaveAttributeAsync("aria-current", "page");
         await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", "true");
         await E2ESteps.NoSidewaysScrollAsync(page);
         Directory.CreateDirectory(Shots);

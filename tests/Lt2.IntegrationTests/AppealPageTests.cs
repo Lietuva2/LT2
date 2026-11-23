@@ -322,9 +322,13 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         // Design 8.12.5 (decided 2026-11-14): the menu item, the heading and the title are "Projektai". Design 8.21: the menu
         // item's dropdown holds this page and is current here; this page is the tab "Projektai".
         html.ShouldContain("<title>Projektai · Lietuva 2.0</title>");
-        html.ShouldContain("<h1>Projektai</h1>");
-        html.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>", customMessage: "the menu item");
-        html.ShouldContain("<a href=\"/projektai\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab");
+        html.ShouldContain("<title>Projektai · Lietuva 2.0</title>");
+        html.ShouldContain("<h1 class=\"seimas-title\">Seimas</h1>");
+        html.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>", customMessage: "the menu item");
+        html.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab");
+        html.ShouldContain("<a href=\"/darbotvarke\" id=\"view-agenda\">Darbotvarkė</a>", customMessage: "the views of the tab");
+        html.ShouldContain("<b aria-current=\"page\" id=\"tab-active\">Aktyvūs</b>");
+        html.ShouldContain("<a href=\"/projektai?skirtukas=uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
         html.ShouldNotContain("Kreipimaisi");
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");
@@ -334,24 +338,31 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldNotContain("id=\"older-note\"");
         html.ShouldNotContain("id=\"threshold-what\"");
         html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal), "most activity first");
-        // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's title and its tab row stay
-        // at the top of the screen; the label, the lead, the list's tabs and the search scroll away, the count line is ordinary.
-        var head = ListHeadSteps.PageHead(html);
-        head.ShouldStartWith("<div class=\"stack page-head\" id=\"page-head\"><h1>Projektai</h1>");
+        // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the tab row of Seimas stays at the
+        // top of the screen; the heading, the views, the lead and the search scroll away, the count line is ordinary.
+        var head = ListHeadSteps.SeimasHead(html);
         head.ShouldContain("id=\"project-tabs\"");
         head.ShouldNotContain("Lietuva 2.0");
         head.ShouldNotContain("id=\"tab-active\"");
+        html.ShouldNotContain("<p class=\"label\">Lietuva 2.0</p>");
+        html.ShouldMatch("<div class=\"stack page-head__rest\">\\s*<nav class=\"views\" aria-label=\"Projektų sąrašai\">");
         html.ShouldContain("<p class=\"small num\" role=\"status\" id=\"found\">Rasta projektų: ");
 
-        // Owner, 2026-11-17: the sides' numbers stand beside the bar; two orders; the planned filter is a link. Owner,
-        // 2026-11-21: one number a side, without the count for accounts older than 30 days.
+        // Owner, 2026-11-23: the row is the agenda's: the sides' numbers stand in the side column with the bar (one number a
+        // side, without the count for accounts older than 30 days, owner 2026-11-21), the text line says the participants and
+        // arguments; two orders; the planned filter is a box in the form.
         var row = html[html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal)..];
         row = row[..row.IndexOf("</li>", StringComparison.Ordinal)];
-        var side = row[row.IndexOf("rows__side", StringComparison.Ordinal)..];
-        side.ShouldContain("<span class=\"small num\" id=\"counts-XVP-0618\">už 1 · prieš 0</span>");
+        var side = row[row.IndexOf("tl-item__side", StringComparison.Ordinal)..];
+        side.ShouldMatch("id=\"home-counts-XVP-0618\">\\s*<span class=\"nowrap\"><span class=\"choice choice--for\">už</span> 1 ·</span>\\s*<span class=\"nowrap\"><span class=\"choice choice--against\">prieš</span> 0</span>\\s*</span>");
         side.ShouldNotContain("(0)");
-        side.IndexOf("už 1", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("<svg", StringComparison.Ordinal), "the numbers, then the bar");
-        row[..row.IndexOf("rows__side", StringComparison.Ordinal)].ShouldNotContain("už 1", customMessage: "not in the text line");
+        side.IndexOf("už</span> 1", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("<svg", StringComparison.Ordinal), "the numbers, then the bar");
+        var text = row[..row.IndexOf("tl-item__side", StringComparison.Ordinal)];
+        text.ShouldContain("dalyvių 1 · argumentų 1");
+        text.ShouldNotContain("už</span> 1", customMessage: "not in the text line");
+        text.ShouldContain("<a class=\"tag tag--ink num\" href=\"/seimas/XVP-0618\">XVP-0618</a>", customMessage: "the number tag leads to the bill, as in the agenda");
+        row.ShouldNotContain("id=\"counts-XVP-0618\"", customMessage: "the shared figures replace the list's own counts");
+        row.ShouldNotContain("id=\"reached-XVP-0618\"", customMessage: "nor does the list say the threshold on a line of its own");
         html.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">pagal aktyvumą</b>");
         html.ShouldContain("<a href=\"/projektai?rikiuoti=data\" id=\"sort-data\">pagal planuojamą datą</a>");
         html.ShouldNotContain("rikiuoti=argumentai");

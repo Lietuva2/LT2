@@ -53,7 +53,12 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             // The page, without JavaScript: planned dates in words, never a countdown.
             ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
-            html.ShouldContain("<h1>Seimo darbotvarkė</h1>");
+            html.ShouldContain("<title>Seimo darbotvarkė · Lietuva 2.0</title>");
+            html.ShouldContain("<h1 class=\"seimas-title\">Seimas</h1>");
+            html.ShouldContain("<b aria-current=\"page\" id=\"view-agenda\">Darbotvarkė</b>");
+            html.ShouldContain("<a href=\"/projektai\" id=\"tab-active\">Aktyvūs</a>");
+            html.ShouldContain("<a href=\"/projektai?skirtukas=uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
+            html.ShouldContain("<p class=\"lead\">Planuojama svarstyti artimiausiu metu.</p>");
             html.ShouldContain("Planuojama ");
             html.ShouldMatch("id=\"agenda-\\d{4}-\\d{2}-\\d{2}-" + AppealSteps.SecondBill + "\"");
 
@@ -74,10 +79,15 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             html.ShouldNotContain("/kreipimasis\"");
             Countdown().IsMatch(html).ShouldBeFalse("never a countdown");
 
-            // Owner, 2026-11-21: two sheets with their heading rows (design 8.16.5); the coming list's heading has no link
-            // (this page is the whole agenda). Nothing under the lists: no note, no hint, no "not a representative poll".
-            ReasonsToComeSteps.HeadRow(html, "h-coming").ShouldNotContain("<a ");
-            ReasonsToComeSteps.HeadRow(html, "h-recent").ShouldContain("id=\"agenda-votes-older\"");
+            // The coming list is the only sheet and has no heading row (the tab row of Seimas is the sticky part); the votes
+            // held are the tab "Balsavimai", not a list. Nothing under the list: no note, no hint, no "not a representative poll".
+            html.ShouldContain("<section class=\"sheet stack\" aria-label=\"Planuojami projektai\" id=\"agenda-coming\">");
+            html.ShouldNotContain("list-head");
+            html.ShouldNotContain("id=\"agenda-recent\"");
+            html.ShouldNotContain("id=\"agenda-no-recent\"");
+            html.ShouldNotContain("agenda-votes-older");
+            html.ShouldNotContain("Ankstesni balsavimai");
+            html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"tab-seimas-balsavimai\">Balsavimai</a>");
             html.ShouldNotContain("Tai nėra reprezentatyvi apklausa");
             html.ShouldNotContain("id=\"not-a-poll\"");
             html.ShouldNotContain("id=\"agenda-older-note\"");
@@ -441,7 +451,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     }
 
     [Fact]
-    public async Task The_agenda_shows_the_stage_votes_of_the_last_seven_days_only()
+    public async Task The_agenda_answer_holds_the_stage_votes_of_the_last_seven_days_only_and_the_page_lists_none()
     {
         var old = await Database.MoveVoteAsync(ReasonsToComeSteps.TaxConsiderationVote, DateTimeOffset.UtcNow.AddDays(-2));
         try
@@ -456,8 +466,8 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
 
             ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
-            html.ShouldContain("id=\"recent-" + ReasonsToComeSteps.TaxConsiderationVote + "\"");
-            html.ShouldContain("href=\"/seimas/balsavimai/" + ReasonsToComeSteps.TaxConsiderationVote + "\"");
+            // The votes held are no list of the agenda page: they are in the vote history, the tab "Balsavimai".
+            html.ShouldNotContain("id=\"recent-" + ReasonsToComeSteps.TaxConsiderationVote + "\"");
         }
         finally
         {
@@ -532,16 +542,16 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     }
 
     [Fact]
-    public async Task The_first_menu_item_Projektai_opens_the_agenda()
+    public async Task The_first_menu_item_Seimas_opens_the_agenda()
     {
-        // Design 8.21: "Projektai" is first; its dropdown's first tab is /darbotvarke (owner, 2026-11-17); where the device can
-        // hover, the item itself is a link to it (owner, 2026-11-19).
+        // Design 8.21: "Seimas" is first; its dropdown's first tab, "Projektai", is /darbotvarke (owner, 2026-11-17); where the
+        // device can hover, the item itself is a link to it (owner, 2026-11-19).
         using var visitor = NewBrowser();
-        var html = await visitor.Client.GetStringAsync("/seimo-nariai");
+        var html = await visitor.Client.GetStringAsync("/statistika");
         var nav = html[html.IndexOf("top__nav", StringComparison.Ordinal)..];
-        nav.IndexOf("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\">Projektai</a>", StringComparison.Ordinal).ShouldBeGreaterThan(0);
-        nav.IndexOf("id=\"nav-projects\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("id=\"nav-tab-darbotvarke\"", StringComparison.Ordinal));
-        nav.IndexOf("id=\"nav-tab-darbotvarke\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/seimo-nariai\"", StringComparison.Ordinal));
+        nav.IndexOf("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\">Seimas</a>", StringComparison.Ordinal).ShouldBeGreaterThan(0);
+        nav.IndexOf("id=\"nav-projects\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("id=\"nav-tab-projektai\"", StringComparison.Ordinal));
+        nav.IndexOf("id=\"nav-tab-projektai\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/statistika\"", StringComparison.Ordinal));
     }
 
     /// <summary>The agenda page reads the front page's copy, kept a minute (owner, 2026-11-18): read afresh.</summary>

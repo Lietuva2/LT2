@@ -1,30 +1,29 @@
 namespace Lt2.Web.Client.Components;
 
 /// <summary>
-/// Design 8.21: which menu item a page belongs to, and which of the four tabs under "Projektai" it is. The menu item
-/// "Projektai" opens a dropdown with the four tabs (owner, 2026-11-17; "Balsavimai" back as a tab, owner 2026-11-19) and is
-/// current on the four pages and on everything under them (a bill and its history, a vote, a summary's date page, the
-/// introduction letter's public page); "Seimo nariai" on the list, a profile and its votes, a faction and a committee; "Statistika" on the statistics page
-/// (design 8.26; owner, 2026-11-17: in the main menu, no longer a fourth tab). Paths are site paths with or without the
-/// leading <c>/</c>, query and fragment ignored.
+/// Design 8.21: which menu item a page belongs to, and which of the four tabs under "Seimas" it is. The menu item
+/// "Seimas" opens a dropdown with the four tabs "Projektai", "Balsavimai", "Suvestinės" and "Seimo nariai" and is current on the tab
+/// pages and on everything under them (the agenda, the bills and their pages, the votes, a summary's date page, the
+/// introduction letter's public page, an MP's profile, a faction, a committee); "Statistika" is a menu item of its own (design
+/// 8.26). "Darbotvarkė", "Aktyvūs" and "Uždaryti" are views of the tab "Projektai", not tabs. Paths are site paths with or
+/// without the leading <c>/</c>, query and fragment ignored.
 /// </summary>
 public static class MenuSections
 {
     /// <summary>
     /// Design 8.28.2: the one list of every item of the menu and the footer, in the order they are shown: its address, its
     /// resource keys (the name <c>Menu.{Slug}</c>, the line that says what the page is <c>Menu.{Slug}.Line</c>, both in
-    /// <c>UiText</c>), and where it stands. The menu, the dropdown of "Projektai", the tab row, the footer and "Kur ką rasti"
+    /// <c>UiText</c>), and where it stands. The menu, the dropdown of "Seimas", the tab row, the footer and "Kur ką rasti"
     /// on <c>/metodika</c> are all drawn from it; <c>MenuTests</c> fails for an item without a name or a line. Element ids
     /// are <c>nav-{Slug}</c> (menu and dropdown), <c>{Slug}</c> (the tab row: only the tabs), <c>foot-{Slug}</c> and
     /// <c>where-{Slug}</c>.
     /// </summary>
     public static readonly IReadOnlyList<MenuItem> Items =
     [
-        new("tab-darbotvarke", "/darbotvarke", "Agenda", MenuPlace.Projects, ProjectTab.Agenda),
-        new("tab-projektai", "/projektai", "Bills", MenuPlace.Projects, ProjectTab.Bills),
-        new("tab-seimas-balsavimai", "/seimas/balsavimai", "Votes", MenuPlace.Projects, ProjectTab.Votes),
-        new("tab-suvestines", "/suvestines", "Digests", MenuPlace.Projects, ProjectTab.Digests),
-        new("mps", Mps, "Mps", MenuPlace.Menu),
+        new("tab-projektai", SeimasHome, "Bills", MenuPlace.Seimas, SeimasTab.Projects),
+        new("tab-seimas-balsavimai", VoteHistoryPath, "Votes", MenuPlace.Seimas, SeimasTab.Votes),
+        new("tab-suvestines", "/suvestines", "Digests", MenuPlace.Seimas, SeimasTab.Digests),
+        new("tab-mps", Mps, "Mps", MenuPlace.Seimas, SeimasTab.Mps),
         new("statistics", Statistics, "Statistics", MenuPlace.Menu),
         new("account", AccountScreens.Profile, "Account", MenuPlace.Account),
         new("methodology", "/metodika", "Methodology", MenuPlace.FooterAbout),
@@ -39,18 +38,21 @@ public static class MenuSections
     public static IEnumerable<MenuItem> In(MenuPlace place) => Items.Where(i => i.Place == place);
 
     /// <summary>
-    /// The four tabs, in their order: the dropdown of the menu item "Projektai" and the row under the four pages' headings
-    /// (owner, 2026-11-19: "Balsavimai" a tab again; the link under the agenda's voted list stays).
+    /// The four tabs, in their order: the dropdown of the menu item "Seimas" and the row under the heading "Seimas" on the
+    /// tab pages. The first, "Projektai", links to the agenda, its landing view.
     /// </summary>
-    public static readonly IReadOnlyList<MenuItem> Tabs = [.. In(MenuPlace.Projects)];
+    public static readonly IReadOnlyList<MenuItem> Tabs = [.. In(MenuPlace.Seimas)];
 
     /// <summary>The menu's items in the menu's order, the account item left out: the footer's group "Naršyti" (design 8.21).</summary>
-    public static readonly IReadOnlyList<MenuItem> Browse = [.. In(MenuPlace.Projects), .. In(MenuPlace.Menu)];
+    public static readonly IReadOnlyList<MenuItem> Browse = [.. In(MenuPlace.Seimas), .. In(MenuPlace.Menu)];
 
-    /// <summary>The first of the tabs: what is coming (design 8.21, the designer's proposal: the most useful first view).</summary>
-    public const string ProjectsHome = "/darbotvarke";
+    /// <summary>The first tab's landing view: what is coming (design 8.21, the designer's proposal: the most useful first view).</summary>
+    public const string SeimasHome = "/darbotvarke";
 
-    /// <summary>The list of MPs, "Seimo nariai" in the main menu.</summary>
+    /// <summary>The vote history, the tab "Balsavimai" (the page of one vote, <c>/seimas/balsavimai/{id}</c>, is under it).</summary>
+    public const string VoteHistoryPath = "/seimas/balsavimai";
+
+    /// <summary>The list of MPs, the tab "Seimo nariai".</summary>
     public const string Mps = "/seimo-nariai";
 
     /// <summary>The statistics page, "Statistika" in the main menu (design 8.26).</summary>
@@ -60,43 +62,39 @@ public static class MenuSections
     public static bool InStatistics(string? path) => Normalise(path) == Statistics.TrimStart('/');
 
     /// <summary>The page is one of the four tabs or under one of them.</summary>
-    public static bool InProjects(string? path)
+    public static bool InSeimas(string? path)
     {
         var p = Normalise(path);
         return p == "darbotvarke"
             || Under(p, "projektai")
             || Under(p, "seimas")
             || (Under(p, "suvestines") && !Under(p, "suvestines/nustatymai") && !Under(p, "suvestines/kopijos"))
-            || Under(p, "kreipimaisi");
-    }
-
-    /// <summary>The page belongs to "Seimo nariai": the list, a profile (and its votes), a faction, a committee.</summary>
-    public static bool InMps(string? path)
-    {
-        var p = Normalise(path);
-        return Under(p, "seimo-nariai") || Under(p, "p") || Under(p, "frakcijos") || Under(p, "komitetai");
+            || Under(p, "kreipimaisi")
+            || Under(p, "seimo-nariai")
+            || Under(p, "p")
+            || Under(p, "frakcijos")
+            || Under(p, "komitetai");
     }
 
     /// <summary>
-    /// How an item of the menu's line is marked on a page: <c>page</c> on its own page, <c>true</c> on a page under it
-    /// ("Seimo nariai": a profile, a faction, a committee), nothing elsewhere.
+    /// How an item of the menu's line is marked on a page: <c>page</c> on its own page, nothing elsewhere ("Statistika").
     /// </summary>
-    public static string? CurrentMark(MenuItem item, string? path)
-    {
-        if (string.Equals("/" + Normalise(path), item.Path, StringComparison.Ordinal))
-        {
-            return "page";
-        }
+    public static string? CurrentMark(MenuItem item, string? path) =>
+        string.Equals("/" + Normalise(path), item.Path, StringComparison.Ordinal) ? "page" : null;
 
-        return item.Path == Mps && InMps(path) ? "true" : null;
-    }
-
-    /// <summary>The tab a page is exactly (not a page under it), or null.</summary>
-    public static ProjectTab? TabOf(string? path)
+    /// <summary>
+    /// The tab a page is exactly (not a page under it), or null: "Projektai" on the agenda and the bills' lists (its views),
+    /// "Balsavimai" on the vote history, "Suvestinės" on the list, "Seimo nariai" on the list. A vote's own page is under
+    /// "Balsavimai" and marks no tab.
+    /// </summary>
+    public static SeimasTab? TabOf(string? path) => ("/" + Normalise(path)) switch
     {
-        var p = "/" + Normalise(path);
-        return Tabs.FirstOrDefault(t => string.Equals(p, t.Path, StringComparison.Ordinal))?.Tab;
-    }
+        SeimasHome or "/projektai" => SeimasTab.Projects,
+        VoteHistoryPath => SeimasTab.Votes,
+        "/suvestines" => SeimasTab.Digests,
+        Mps => SeimasTab.Mps,
+        _ => null,
+    };
 
     private static bool Under(string path, string section) =>
         path == section || path.StartsWith(section + "/", StringComparison.Ordinal);
@@ -113,8 +111,8 @@ public static class MenuSections
 /// <param name="Path">Its address.</param>
 /// <param name="Key">Its resource keys: <c>Menu.{Key}</c> the name, <c>Menu.{Key}.Line</c> what the page is.</param>
 /// <param name="Place">Where it stands.</param>
-/// <param name="Tab">The tab it is, for the four entries of "Projektai".</param>
-public sealed record MenuItem(string Slug, string Path, string Key, MenuPlace Place, ProjectTab? Tab = null)
+/// <param name="Tab">The tab it is, for the four entries of "Seimas".</param>
+public sealed record MenuItem(string Slug, string Path, string Key, MenuPlace Place, SeimasTab? Tab = null)
 {
     /// <summary>The resource key of its name.</summary>
     public string NameKey => "Menu." + Key;
@@ -126,10 +124,10 @@ public sealed record MenuItem(string Slug, string Path, string Key, MenuPlace Pl
 /// <summary>Where an item of the menu or the footer stands (design 8.21, 8.28.2).</summary>
 public enum MenuPlace
 {
-    /// <summary>The dropdown of "Projektai" and the tab row.</summary>
-    Projects,
+    /// <summary>The dropdown of "Seimas" and the tab row.</summary>
+    Seimas,
 
-    /// <summary>The menu's one line: "Seimo nariai", "Statistika".</summary>
+    /// <summary>The menu's one line: "Statistika".</summary>
     Menu,
 
     /// <summary>The account item (a member's; a visitor has "Prisijungti" there).</summary>
@@ -142,11 +140,11 @@ public enum MenuPlace
     FooterTakePart,
 }
 
-/// <summary>The four tabs under "Projektai" (design 8.21).</summary>
-public enum ProjectTab
+/// <summary>The four tabs under "Seimas" (design 8.21).</summary>
+public enum SeimasTab
 {
-    Agenda,
-    Bills,
+    Projects,
     Votes,
     Digests,
+    Mps,
 }

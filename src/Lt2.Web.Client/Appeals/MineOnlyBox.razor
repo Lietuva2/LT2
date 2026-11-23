@@ -1,0 +1,73 @@
+@inherits InteractiveBase<AppealUi>
+@implements IAsyncDisposable
+@inject MineOnlyState State
+@inject IJSRuntime JS
+
+@* "Tik mano" in the bills list's search form (design 8.12.5): a signed-in member's box that swaps the public list for their own
+   bills (MineBills, "Mano projektai"), without reloading. It is an island because the list is public and the same for everyone:
+   nothing of the member is in the served page, a visitor and a page without script see no box. Ticked, the page's own list and
+   its order line are hidden by CSS on the attribute data-mine-only of the page's root element (lt2.css); the attribute is
+   taken off when the box goes away (an enhanced navigation keeps the page's root). The box has no name: the form never sends
+   it, and nothing is stored. *@
+@if (_signedIn)
+{
+    <label class="check small"><input type="checkbox" id="mine-only" checked="@State.On" @onchange="ChangedAsync" /><span>@L["Mine.Only"]</span></label>
+}
+
+@code {
+    /// <summary>The attribute of the page's root element that hides the public list while the box is ticked (lt2.css).</summary>
+    public const string Attribute = "data-mine-only";
+
+    private bool _signedIn;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: the server renders no box for anyone.
+        _signedIn = RendererInfo.IsInteractive && await IsSignedInAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _signedIn)
+        {
+            // A box starts clear: the attribute of a page left by an enhanced navigation does not stay.
+            State.Set(false);
+            await SetAttributeAsync(false);
+        }
+    }
+
+    private async Task ChangedAsync(ChangeEventArgs e)
+    {
+        var on = e.Value is true;
+        State.Set(on);
+        await SetAttributeAsync(on);
+    }
+
+    private async Task SetAttributeAsync(bool on)
+    {
+        try
+        {
+            if (on)
+            {
+                await JS.InvokeVoidAsync("document.documentElement.setAttribute", Attribute, "");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("document.documentElement.removeAttribute", Attribute);
+            }
+        }
+        catch (Exception ex) when (ex is JSException or JSDisconnectedException or InvalidOperationException)
+        {
+            // The page is going away or the browser refused: the box and the list still agree after the next render.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_signedIn)
+        {
+            State.Set(false);
+            await SetAttributeAsync(false);
+        }
+    }
+}

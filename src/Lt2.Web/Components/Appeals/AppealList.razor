@@ -1,4 +1,5 @@
 @page "/projektai"
+@using Lt2.Api.Contracts.Agenda
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Web.Client.Appeals
 @inject IStringLocalizer<Lt2.Web.Components.PageText> P
@@ -10,34 +11,24 @@
    active bill, by activity (participants plus published arguments) unless sorted by planned date or by the latest activity
    (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form with the box "Planuojami per 14 dienų", applied with
    "Rodyti" (owner, 2026-11-21); the order (keeping the search and the filter), the closed tab and "Rodyti daugiau" are
-   plain links. Each row shows its participants and
-   arguments, and the sides' numbers beside its bar. Nothing stands under the list: what the numbers are and what "riba" is
-   are said on the bill's page and the methodology (owner, 2026-11-21). *@
+   plain links. Each row is the agenda's (TimelineItem, owner 2026-11-23) with the participants and arguments besides. Nothing
+   stands under the list: what the numbers are and what "riba" is are said on the bill's page and the methodology (owner,
+   2026-11-21). *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@T["List.Title"]" Description="@P["Preview.Projects"]" />
 
-@* Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's head (the title and the tab
-   row) stays at the top of the screen while the list scrolls past; the label above it, the lead, the tabs of the list and
-   the search scroll away. *@
-<p class="label">Lietuva 2.0</p>
-<div class="stack page-head" id="page-head">
-    <h1>@T["List.Title"]</h1>
-    <ProjectTabs Current="ProjectTab.Bills" />
-</div>
+@* Design 8.16.5, 8.21 (owner, 2026-11-21): the list's sheet has no heading of its own, so the tab row of "Seimas" stays at
+   the top of the screen while the list scrolls past; the heading above it, the views of the tab ("Darbotvarkė",
+   "Aktyvūs", "Uždaryti"), the lead and the search scroll away. *@
+<SeimasHead Current="SeimasTab.Projects" />
 <div class="stack page-head__rest">
+    <ProjectViews Current="@(Closed ? ProjectView.Closed : ProjectView.Active)" />
     <p class="lead">@T["List.Lead"]</p>
-    <nav class="row tabs" aria-label="@T["List.Tabs"]">
-        @if (Closed)
-        {
-            <a href="/projektai" id="tab-active">@T["List.Tab.Active"]</a>
-            <b aria-current="page" id="tab-closed">@T["List.Tab.Closed"]</b>
-        }
-        else
-        {
-            <b aria-current="page" id="tab-active">@T["List.Tab.Active"]</b>
-            <a href="/projektai?skirtukas=uzdaryti" id="tab-closed">@T["List.Tab.Closed"]</a>
-        }
-    </nav>
+    <AuthorizeView>
+        <Authorized>
+            <Lt2.Web.Client.Components.NeedsScript />
+        </Authorized>
+    </AuthorizeView>
     <form class="filters" method="get" action="/projektai" role="search" id="bill-search">
         @if (Closed)
         {
@@ -59,6 +50,8 @@
             @* Owner, 2026-11-21: the filter is a box in the search form, right above "Rodyti", applied with it. *@
             <label class="check small"><input type="checkbox" id="planuojami" name="planuojami" value="taip" checked="@Planned" /><span>@T["List.Planned"]</span></label>
         }
+        @* "Tik mano": a member's own bills instead of the list (design 8.12.5); an island, so nothing of any member is in this page. *@
+        <MineOnlyBox @rendermode="InteractiveWebAssembly" />
         <div class="row">
             <button class="btn" type="submit">@T["List.SearchButton"]</button>
             @if (Filtered)
@@ -92,64 +85,35 @@
     </p>
 }
 
+@* "Mano projektai" while "Tik mano" is ticked; the list below and its order line are then hidden by CSS (lt2.css). *@
+<MineBills @rendermode="InteractiveWebAssembly" />
+
 @if (_page is { } page)
 {
     <div class="sheet stack" id="appeal-results">
         <p class="small num" role="status" id="found">@T.Format("List.Found", Display.Number(page.Total))</p>
+        @if (_other > 0)
+        {
+            @* A search says what it found in the other view too (owner, 2026-11-23): one line, shown only when the other view
+               has a match; the order and the filter belong to the active view and are not carried over. *@
+            <p class="small num" id="@(Closed ? "other-active" : "other-closed")"><a href="@OtherLink()">@T.Format(Closed ? "List.OtherActive" : "List.OtherClosed", Display.Number(_other))</a></p>
+        }
         @if (page.Items.Count == 0)
         {
             <p id="no-appeals">@T[Closed ? "List.EmptyClosed" : "List.Empty"]</p>
         }
         else
         {
-            <ul class="rows" id="appeals">
-                @foreach (var item in page.Items.Take(_shown))
-                {
-                    <li id="bill-@item.Bill.Number" @key="item.Bill.Number">
-                        <div class="rows__main">
-                            <a href="/seimas/@Uri.EscapeDataString(item.Bill.Number)"><b>@item.Bill.Title</b></a>
-                            <span class="small num">
-                                @item.Bill.Number@(" · ")
-                                @if (item.Counts.For + item.Counts.Against + item.Arguments == 0)
-                                {
-                                    @T["List.Nobody"]
-                                }
-                                else
-                                {
-                                    @T.Format("List.Activity", Display.Number(item.Counts.For + item.Counts.Against), Display.Number(item.Arguments))
-                                }
-                            </span>
-                            @if (item.Threshold.Reached)
-                            {
-                                @* Design 8.12.2 (owner, 2026-11-21): a reached threshold is said in words, without its number: the
-                                   summary planned that would hold the bill, else the last one really sent, else "riba pasiekta". *@
-                                <span class="small num" id="reached-@item.Bill.Number">@(item.Summary is { } summary ? T.Format("List.Summary." + summary.Kind, Display.Day(summary.Day)) : T["List.Reached"].Value)</span>
-                            }
-                            else if (item.Counts.For + item.Counts.Against > 0)
-                            {
-                                <span class="small num">@T.Format("List.Limit", Display.Number(item.Threshold.Value))</span>
-                            }
-                            @if (item.Planned is { } plan)
-                            {
-                                <span class="small">@T.Format("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
-                            }
-                            @if (Sort == "naujausia" && item.LastActivityAt is { } last)
-                            {
-                                @* Owner, 2026-11-17: in this order each row says when the bill last saw activity. *@
-                                <span class="small num" id="last-@item.Bill.Number">@T.Format("List.LastActivity", Display.DayTime(last))</span>
-                            }
-                        </div>
-                        <div class="rows__side">
-                            @if (item.Counts.For + item.Counts.Against > 0)
-                            {
-                                @* Owner, 2026-11-17: the sides' numbers beside the bar, not in the text line; 2026-11-21: one number a
-                                   side, without the count for accounts older than 30 days (the bill's page has it). *@
-                                <span class="small num" id="counts-@item.Bill.Number">@T.Format("List.Counts", Display.Number(item.Counts.For), Display.Number(item.Counts.Against))</span>
-                            }
-                            <SplitBar For="item.Counts.For" Against="item.Counts.Against" Abstain="0" Small="true" />
-                        </div>
-                    </li>
-                }
+            @* Owner, 2026-11-23: each row is the agenda's and the front page's (TimelineItem): number and stage, title, the
+               organisations, both sides' figures with the bar and the threshold, "Prašau balsuoti" for a visitor (links to sign
+               in and back) and, for a member, the islands of their own mark and side column, filled in the browser; the same
+               HTML for every member (as AgendaPage). A closed record has no sides to take. What only this list says comes as
+               the row's Tags and Details. *@
+            <ul class="tl-items" id="appeals">
+                <AuthorizeView>
+                    <Authorized>@Rows(true)</Authorized>
+                    <NotAuthorized>@Rows(false)</NotAuthorized>
+                </AuthorizeView>
             </ul>
             @* Owner, 2026-11-18: the list grows in place by the address, landing on the first bill added (as 8.18). *@
             <Lt2.Web.Client.Components.ShowMore Id="more" StatusId="shown" Shown="_offset + Math.Min(_shown, page.Items.Count)" Total="page.Total"
@@ -167,6 +131,49 @@
 @code {
     private BillListResponse? _page;
 
+    /// <summary>
+    /// The bills of the rows shown, each once, for a member's islands to ask about in one request (<c>/me/bills</c>, in requests of
+    /// <see cref="Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers"/>); "Rodyti daugiau" adds rows whose islands start in place.
+    /// </summary>
+    private IReadOnlyList<string> _numbers = [];
+
+    private RenderFragment Rows(bool member) => __builder =>
+    {
+        foreach (var item in _page!.Items.Take(_shown))
+        {
+            <TimelineItem @key="item.Bill.Number" Item="AsRow(item)" Member="member" Numbers="_numbers">
+                <Tags>
+                    @if (item.Planned is { } plan)
+                    {
+                        <span class="tag">@T.Format("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
+                    }
+                </Tags>
+                <Details>
+                    <span class="small num">
+                        @if (item.Counts.For + item.Counts.Against + item.Arguments == 0)
+                        {
+                            @T["List.Nobody"]
+                        }
+                        else
+                        {
+                            @T.Format("List.Activity", Display.Number(item.Counts.For + item.Counts.Against), Display.Number(item.Arguments))
+                        }
+                    </span>
+                    @if (Sort == "naujausia" && item.LastActivityAt is { } last)
+                    {
+                        @* Owner, 2026-11-17: in this order each row says when the bill last saw activity. *@
+                        <span class="small num" id="last-@item.Bill.Number">@T.Format("List.LastActivity", Display.DayTime(last))</span>
+                    }
+                </Details>
+            </TimelineItem>
+        }
+    };
+
+    /// <summary>The list's item as the shared row takes it: the stage is the planned item's, the figures the record's public numbers.</summary>
+    private static AgendaItemResponse AsRow(BillListItemResponse item) => new(
+        item.Bill.Number, item.Bill.Title, item.Planned?.Stage, item.Planned?.SetByModerator ?? false, item.Planned?.SourceUrl,
+        new AgendaRecordResponse(item.Id, item.Status, item.Counts, item.Threshold) { Summary = item.Summary }, item.Organisations);
+
     [SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
 
     [SupplyParameterFromQuery(Name = "planuojami")] public string? PlannedFlag { get; set; }
@@ -179,6 +186,9 @@
 
     /// <summary>How many bills the page shows (owner, 2026-11-18: "Rodyti daugiau" grows the list in place).</summary>
     [SupplyParameterFromQuery(Name = "rodyti")] public string? Show { get; set; }
+
+    /// <summary>How many bills the same query finds in the other view (0 without a query).</summary>
+    private int _other;
 
     private int _shown = BillListPaging.First;
     private int _offset;
@@ -208,7 +218,14 @@
         _shown = BillListPaging.Shown(Show);
         _offset = BillListPaging.Offset(From);
         _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort], BillListPaging.Asked(_shown))).Value;
+        _other = string.IsNullOrWhiteSpace(Q)
+            ? 0
+            : (await Appeals.GetAppealsAsync(Q, false, !Closed, null, null, 1)).Value?.Total ?? 0;
+        _numbers = AgendaRules.Asked((_page?.Items ?? []).Take(_shown).Select(i => i.Bill.Number));
     }
+
+    /// <summary>The same search in the other view: only the search is carried, not the order or the filter.</summary>
+    private string OtherLink() => (Closed ? "/projektai?q=" : "/projektai?skirtukas=uzdaryti&q=") + Uri.EscapeDataString(Q!.Trim());
 
     /// <summary>The same search and tab, with the given page (none = the first), order, filter and length (none = the first 20).</summary>
     private string Link(string? next, string sort, bool planned, int? shown = null)
