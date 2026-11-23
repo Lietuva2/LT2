@@ -157,7 +157,7 @@ public sealed class AppealListRowTests(DatabaseFixture database) : ApiTest(datab
                 closing.StatusCode.ShouldBe(HttpStatusCode.NoContent, await closing.Content.ReadAsStringAsync());
             }
 
-            var closed = Row(await PageAsync(visitor, "/projektai?skirtukas=uzdaryti&q=" + Uri.EscapeDataString(Open)), Open);
+            var closed = Row(await PageAsync(visitor, "/projektai/uzdaryti?q=" + Uri.EscapeDataString(Open)), Open);
             closed.ShouldContain($"id=\"home-counts-{Open}\"");
             closed.ShouldNotContain("Į projekto puslapį", customMessage: "the title and the number tag lead to the bill (owner, 2026-11-23)");
             closed.ShouldContain($"href=\"/seimas/{Open}\">{Open}</a>");
@@ -169,7 +169,7 @@ public sealed class AppealListRowTests(DatabaseFixture database) : ApiTest(datab
             // A member's closed row has no island for the side column either; the mark under the title is the only one.
             var (member, _) = await Factory.MemberAsync();
             using var _m = member;
-            var own = Row(await PageAsync(member, "/projektai?skirtukas=uzdaryti&q=" + Uri.EscapeDataString(Open)), Open);
+            var own = Row(await PageAsync(member, "/projektai/uzdaryti?q=" + Uri.EscapeDataString(Open)), Open);
             own.ShouldNotContain($"id=\"home-side-{Open}\"");
             own.ShouldNotContain("Prašau balsuoti");
         }
@@ -273,21 +273,21 @@ public sealed class AppealListRowTests(DatabaseFixture database) : ApiTest(datab
 
             // A query matching both: each view links to the other with the other's count, the query escaped as the list's links do.
             var onActive = await PageAsync(visitor, "/projektai?q=XVP&rikiuoti=data&planuojami=taip");
-            onActive.ShouldContain($"<p class=\"small num\" id=\"other-closed\"><a href=\"/projektai?skirtukas=uzdaryti&q=XVP\">Uždarytuose rasta: {Display.Number(closed)} →</a></p>");
+            onActive.ShouldContain($"<p class=\"small num\" id=\"other-closed\"><a href=\"/projektai/uzdaryti?q=XVP\">Uždarytuose rasta: {Display.Number(closed)} →</a></p>");
             onActive.ShouldNotContain("id=\"other-active\"");
             onActive.IndexOf("id=\"found\"", StringComparison.Ordinal).ShouldBeLessThan(onActive.IndexOf("id=\"other-closed\"", StringComparison.Ordinal), "under the count line");
-            var onClosed = await PageAsync(visitor, "/projektai?skirtukas=uzdaryti&q=XVP");
+            var onClosed = await PageAsync(visitor, "/projektai/uzdaryti?q=XVP");
             onClosed.ShouldContain($"<p class=\"small num\" id=\"other-active\"><a href=\"/projektai?q=XVP\">Aktyviuose rasta: {Display.Number(active)} →</a></p>");
             onClosed.ShouldNotContain("id=\"other-closed\"");
 
             // The closed view has no match for the query, so it is not offered there; the order and the filter of the active view are not carried to the link.
-            (await PageAsync(visitor, "/projektai?skirtukas=uzdaryti&q=" + Uri.EscapeDataString("XVP-0618")))
+            (await PageAsync(visitor, "/projektai/uzdaryti?q=" + Uri.EscapeDataString("XVP-0618")))
                 .ShouldNotContain("id=\"other-closed\"");
             var withOrder = await PageAsync(visitor, "/projektai?q=XVP-0618&rikiuoti=data&planuojami=taip");
-            withOrder.ShouldContain("href=\"/projektai?skirtukas=uzdaryti&q=XVP-0618\"");
+            withOrder.ShouldContain("href=\"/projektai/uzdaryti?q=XVP-0618\"");
 
             // No query (or a blank one): no line on either view.
-            foreach (var address in new[] { "/projektai", "/projektai?skirtukas=uzdaryti", "/projektai?q=", "/projektai?skirtukas=uzdaryti&q=%20" })
+            foreach (var address in new[] { "/projektai", "/projektai/uzdaryti", "/projektai?q=", "/projektai/uzdaryti?q=%20" })
             {
                 var plain = await PageAsync(visitor, address);
                 plain.ShouldNotContain("id=\"other-closed\"", customMessage: address);
@@ -296,14 +296,14 @@ public sealed class AppealListRowTests(DatabaseFixture database) : ApiTest(datab
 
             // Nothing in the other view: no line. XVP-0533 is active only; the closed bill is XVP-0618.
             (await PageAsync(visitor, "/projektai?q=" + Empty)).ShouldNotContain("id=\"other-closed\"");
-            (await PageAsync(visitor, "/projektai?skirtukas=uzdaryti&q=" + Open)).ShouldNotContain("id=\"other-active\"");
+            (await PageAsync(visitor, "/projektai/uzdaryti?q=" + Open)).ShouldNotContain("id=\"other-active\"");
             (await PageAsync(visitor, "/projektai?q=" + Empty)).ShouldNotContain("id=\"other-active\"");
 
             // The count is the closed list's for that query: a query only the closed bill matches says 1 on "Aktyvūs".
             var closedOnly = await PageAsync(visitor, "/projektai?q=" + Open);
             closedOnly.ShouldContain("id=\"other-closed\"");
             closedOnly.ShouldContain("Uždarytuose rasta: 1 →");
-            (await PageAsync(visitor, "/projektai?skirtukas=uzdaryti&q=" + Empty)).ShouldContain("Aktyviuose rasta: 1 →");
+            (await PageAsync(visitor, "/projektai/uzdaryti?q=" + Empty)).ShouldContain("Aktyviuose rasta: 1 →");
 
             // Public and the same for everyone: a member's page holds the same line.
             var (member, _) = await Factory.MemberAsync();

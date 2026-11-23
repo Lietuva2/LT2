@@ -1,4 +1,5 @@
 @page "/projektai"
+@page "/projektai/uzdaryti"
 @using Lt2.Api.Contracts.Agenda
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Web.Client.Appeals
@@ -6,12 +7,14 @@
 @inject IAppealsApi Appeals
 @inject IStringLocalizer<AppealText> T
 @inject Formats F
+@inject NavigationManager Navigation
 
 @* The bills people can take part on (design 8.12.5, GET /appeals), server-rendered and readable without JavaScript: every
    active bill, by activity (participants plus published arguments) unless sorted by planned date or by the latest activity
    (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form with the box "Planuojami per 14 dienų", applied with
-   "Rodyti" (owner, 2026-11-21); the order (keeping the search and the filter), the closed tab and "Rodyti daugiau" are
-   plain links. Each row is the agenda's (TimelineItem, owner 2026-11-23) with the number of arguments added to its participants'
+   "Rodyti" (owner, 2026-11-21); the order (keeping the search and the filter), the closed view and "Rodyti daugiau" are
+   plain links. The closed view is its own address, /projektai/uzdaryti (owner, 2026-11-23), the same page; every address the
+   page builds stays on the view it is on, and no query parameter chooses the view. Each row is the agenda's (TimelineItem, owner 2026-11-23) with the number of arguments added to its participants'
    line in the right column (owner, 2026-11-23). Nothing
    stands under the list: what the numbers are and what "riba" is are said on the bill's page and the methodology (owner,
    2026-11-21). *@
@@ -24,23 +27,16 @@
 <SeimasHead Current="SeimasTab.Projects" />
 <div class="stack page-head__rest">
     <ProjectViews Current="@(Closed ? ProjectView.Closed : ProjectView.Active)" />
-    <p class="lead">@T["List.Lead"]</p>
+    <p class="lead">@(Closed ? T["List.Lead.Closed"] : T["List.Lead.Active"])</p>
     <AuthorizeView>
         <Authorized>
             <Lt2.Web.Client.Components.NeedsScript />
         </Authorized>
     </AuthorizeView>
-    <form class="filters" method="get" action="/projektai" role="search" id="bill-search">
-        @if (Closed)
+    <form class="filters" method="get" action="@Base" role="search" id="bill-search">
+        @if (!Closed && Sort != "aktyvumas")
         {
-            <input type="hidden" name="skirtukas" value="uzdaryti" />
-        }
-        else
-        {
-            @if (Sort != "aktyvumas")
-            {
-                <input type="hidden" name="rikiuoti" value="@Sort" />
-            }
+            <input type="hidden" name="rikiuoti" value="@Sort" />
         }
         <div class="field">
             <label for="q">@T["List.Search"]</label>
@@ -57,7 +53,7 @@
             <button class="btn" type="submit">@T["List.SearchButton"]</button>
             @if (Filtered)
             {
-                <a href="@(Closed ? "/projektai?skirtukas=uzdaryti" : "/projektai")">@T["List.Clear"]</a>
+                <a href="@Base">@T["List.Clear"]</a>
             }
         </div>
     </form>
@@ -169,8 +165,6 @@
 
     [SupplyParameterFromQuery(Name = "planuojami")] public string? PlannedFlag { get; set; }
 
-    [SupplyParameterFromQuery(Name = "skirtukas")] public string? Tab { get; set; }
-
     [SupplyParameterFromQuery(Name = "nuo")] public string? From { get; set; }
 
     [SupplyParameterFromQuery(Name = "rikiuoti")] public string? SortParameter { get; set; }
@@ -197,7 +191,14 @@
 
     private string Sort => SortParameter is { } s && ApiSorts.ContainsKey(s) ? s : "aktyvumas";
 
-    private bool Closed => Tab == "uzdaryti";
+    /// <summary>
+    /// The page is the closed view (owner, 2026-11-23): decided by the address, <c>/projektai/uzdaryti</c> against <c>/projektai</c>;
+    /// no query parameter chooses it. Set with the parameters, so a move between the views by enhanced navigation re-reads it.
+    /// </summary>
+    private bool Closed { get; set; }
+
+    /// <summary>The address of the view the page is: every link and the search form stay on it.</summary>
+    private string Base => Closed ? MenuSections.ClosedProjectsPath : MenuSections.ProjectsPath;
 
     private bool Planned => !Closed && PlannedFlag == "taip";
 
@@ -206,6 +207,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        Closed = string.Equals(new Uri(Navigation.Uri).AbsolutePath.TrimEnd('/'), MenuSections.ClosedProjectsPath, StringComparison.OrdinalIgnoreCase);
         _shown = BillListPaging.Shown(Show);
         _offset = BillListPaging.Offset(From);
         _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort], BillListPaging.Asked(_shown))).Value;
@@ -216,9 +218,9 @@
     }
 
     /// <summary>The same search in the other view: only the search is carried, not the order or the filter.</summary>
-    private string OtherLink() => (Closed ? "/projektai?q=" : "/projektai?skirtukas=uzdaryti&q=") + Uri.EscapeDataString(Q!.Trim());
+    private string OtherLink() => (Closed ? MenuSections.ProjectsPath : MenuSections.ClosedProjectsPath) + "?q=" + Uri.EscapeDataString(Q!.Trim());
 
-    /// <summary>The same search and tab, with the given page (none = the first), order, filter and length (none = the first 20).</summary>
+    /// <summary>The same search and view, with the given page (none = the first), order, filter and length (none = the first 20).</summary>
     private string Link(string? next, string sort, bool planned, int? shown = null)
     {
         var query = new List<string>();
@@ -237,11 +239,6 @@
             query.Add("planuojami=taip");
         }
 
-        if (Closed)
-        {
-            query.Add("skirtukas=uzdaryti");
-        }
-
         if (next is not null)
         {
             query.Add("nuo=" + Uri.EscapeDataString(next));
@@ -252,6 +249,6 @@
             query.Add("rodyti=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
-        return query.Count == 0 ? "/projektai" : "/projektai?" + string.Join("&", query);
+        return query.Count == 0 ? Base : Base + "?" + string.Join("&", query);
     }
 }

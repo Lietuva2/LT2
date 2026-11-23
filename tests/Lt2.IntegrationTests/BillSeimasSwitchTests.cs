@@ -62,6 +62,7 @@ public sealed class BillSeimasSwitchTests(DatabaseFixture database) : ApiTest(da
         panel.ShouldContain("<a href=\"/seimas/balsavimai/99100006\" id=\"seimas-vote-page\">Balsavimo puslapis</a>");
         panel.ShouldContain("data-majority=\"for\"");
         panel.ShouldContain("id=\"hint-seimas-majority\"");
+        AppealPageTests.HintWithIconOf(html, "hint-seimas-majority").Icon.ShouldBeTrue("beside the chip it explains: the circled \"i\"");
         panel.ShouldContain("class=\"figure__num\">74</span>");
         panel.ShouldContain("class=\"figure__num\">44</span>");
         panel.ShouldContain("class=\"figure__num\">10</span>");

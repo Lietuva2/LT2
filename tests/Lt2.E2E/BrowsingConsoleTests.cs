@@ -52,6 +52,8 @@ public sealed class BrowsingConsoleTests : E2ETest
         await StepAsync("front page", () => page.GotoAsync(Base + "/"));
         await ClickAsync("menu: Projektai", "nav a[href='/darbotvarke']");
         await ClickAsync("tab: Aktyvūs", "a[href='/projektai']");
+        await ClickAsync("tab: Uždaryti", "a[href='/projektai/uzdaryti']");
+        await ClickAsync("tab: Aktyvūs again", "a[href='/projektai']");
         await ClickAsync("sort: pagal naujausią veiklą", "main a[href='/projektai?rikiuoti=naujausia']");
         await ClickAsync("a bill", "main a[href='/seimas/XVP-0412']");
 
@@ -71,7 +73,11 @@ public sealed class BrowsingConsoleTests : E2ETest
         await BackAsync("bill");
         await BackAsync("projektai, sorted");
         await BackAsync("projektai");
+        await BackAsync("projektai, closed");
+        await BackAsync("projektai, first visit");
         await BackAsync("agenda");
+        await ForwardAsync("projektai, first visit");
+        await ForwardAsync("projektai, closed");
         await ForwardAsync("projektai");
         await ForwardAsync("projektai, sorted");
         await ForwardAsync("bill");

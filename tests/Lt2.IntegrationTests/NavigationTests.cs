@@ -135,7 +135,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     [Theory]
     [InlineData("/darbotvarke", "tab-projektai")]
     [InlineData("/projektai", "tab-projektai")]
-    [InlineData("/projektai?skirtukas=uzdaryti", "tab-projektai")]
+    [InlineData("/projektai/uzdaryti", "tab-projektai")]
     [InlineData("/seimas/balsavimai", "tab-seimas-balsavimai")]
     [InlineData("/suvestines", "tab-suvestines")]
     [InlineData("/seimo-nariai", "tab-mps")]

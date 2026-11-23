@@ -389,6 +389,10 @@ lt2-logo-spin {
    both, centred on the first line of the text, so a one-line option lines up and a long consent keeps its box at the
    first line. The input takes the label's font, so 1lh is the text's line; a browser without lh keeps the fixed margin. */
 .check { display: flex; align-items: flex-start; gap: var(--sp-2); }
+/* A checkbox and the icon hint after it ("Tik mano" and its "i"): one line, the hint a sibling of the label, not in it. */
+.check-line { gap: var(--sp-1) var(--sp-2); }
+/* A heading and the icon hint beside it ("Riba" and its "i"). */
+.hint-head { gap: var(--sp-1) var(--sp-2); }
 .check input {
   inline-size: 1.125rem; block-size: 1.125rem; flex: none;
   margin: 0.25rem 0 0; margin-block-start: calc((1lh - 1.125rem) / 2);
@@ -684,7 +688,15 @@ body > .page { width: 100%; }
 
 /* MP list filters: a plain GET form that works without JavaScript. */
 .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: var(--sp-4); align-items: end; }
-.filters select { appearance: auto; }
+/* A select keeps the field's look: the browser's own arrow sits hard against the frame, so it is drawn here (two
+   triangles in the text colour, so both themes and a disabled select follow) with room to its right. */
+select.input {
+  appearance: none; cursor: pointer; padding-inline-end: 2.75rem;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 1.4rem) 50%, calc(100% - 1.05rem) 50%;
+  background-size: 0.35rem 0.35rem; background-repeat: no-repeat;
+}
+select.input:disabled { cursor: not-allowed; }
 
 /* Totals of a vote: the three figures side by side, wrapping on a phone. */
 .totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-5); }
@@ -790,6 +802,19 @@ fieldset.stack--tight > legend { margin-block-end: var(--sp-3); }
 .hint__trigger:hover { text-decoration-style: solid; }
 /* Its own rule: a browser without :has() or :popover-open drops only this one. */
 .hint:has(.hint__panel:popover-open) .hint__trigger { text-decoration-style: solid; }
+/* The icon variant (owner, 2026-11-23): a small circled "i" in currentColor, as tall as the line's text; the box around it is
+   24 by 24 px (a touch target), pulled into the line's height by its negative block margin so a line with it is no taller.
+   The question stays in the button as visually hidden text. The focus ring is the page's own (a round one, following the
+   shape); hovered or open it takes the brand tint. */
+.hint__trigger--icon {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 1.5rem; block-size: 1.5rem; margin-block: -0.25rem; vertical-align: middle;
+  border-radius: 50%; line-height: 1; text-decoration: none;
+}
+.hint__icon { display: inline-flex; }
+.hint__icon .icon { inline-size: 1.15em; block-size: 1.15em; }
+.hint__trigger--icon:hover { background: var(--brand-tint); }
+.hint:has(.hint__panel:popover-open) .hint__trigger--icon { background: var(--brand-tint); }
 .hint__panel {
   inline-size: max-content; max-inline-size: min(22rem, 100vw - 1rem); max-block-size: calc(100vh - 1rem);
   margin: auto; padding: var(--sp-3) var(--sp-4);
@@ -1522,7 +1547,7 @@ a.said__name { color: inherit; font-weight: 700; }
    every place that has it (a bill, an MP, an organisation, a member, the account's list of follows). It is the compact
    button (owner, 2026-11-18, option A: about a link's height beside the small text around it). Pressed, it keeps the
    plain button's outline, so "Nebesekti" still reads as a button. */
-.followers { display: inline-flex; gap: var(--sp-2); align-items: baseline; }
+.followers { display: inline-flex; gap: var(--sp-2); align-items: center; }
 /* Owner, 2026-11-17: one compact line under a followed thing's title: its tags, "Sekti", "Sekėjai: n" and the hint. */
 .follow-line { gap: var(--sp-2) var(--sp-5); }
 .follow { gap: var(--sp-2) var(--sp-3); }

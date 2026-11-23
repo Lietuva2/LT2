@@ -49,6 +49,12 @@ public static class MenuSections
     /// <summary>The first tab's landing view: what is coming (design 8.21, the designer's proposal: the most useful first view).</summary>
     public const string SeimasHome = "/darbotvarke";
 
+    /// <summary>The active bills' list, the view "Aktyvūs" of the tab "Projektai" (design 8.12.5, 8.21).</summary>
+    public const string ProjectsPath = "/projektai";
+
+    /// <summary>The closed records' list, the view "Uždaryti" of the tab "Projektai": its own address, same page as <see cref="ProjectsPath"/>.</summary>
+    public const string ClosedProjectsPath = "/projektai/uzdaryti";
+
     /// <summary>The vote history, the tab "Balsavimai" (the page of one vote, <c>/seimas/balsavimai/{id}</c>, is under it).</summary>
     public const string VoteHistoryPath = "/seimas/balsavimai";
 
@@ -83,13 +89,14 @@ public static class MenuSections
         string.Equals("/" + Normalise(path), item.Path, StringComparison.Ordinal) ? "page" : null;
 
     /// <summary>
-    /// The tab a page is exactly (not a page under it), or null: "Projektai" on the agenda and the bills' lists (its views),
+    /// The tab a page is exactly (not a page under it), or null: "Projektai" on the agenda and the bills' lists (its views,
+    /// <c>/projektai</c> and <c>/projektai/uzdaryti</c>),
     /// "Balsavimai" on the vote history, "Suvestinės" on the list, "Seimo nariai" on the list. A vote's own page is under
     /// "Balsavimai" and marks no tab.
     /// </summary>
     public static SeimasTab? TabOf(string? path) => ("/" + Normalise(path)) switch
     {
-        SeimasHome or "/projektai" => SeimasTab.Projects,
+        SeimasHome or ProjectsPath or ClosedProjectsPath => SeimasTab.Projects,
         VoteHistoryPath => SeimasTab.Votes,
         "/suvestines" => SeimasTab.Digests,
         Mps => SeimasTab.Mps,

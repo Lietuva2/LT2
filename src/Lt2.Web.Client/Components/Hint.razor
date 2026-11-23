@@ -7,7 +7,14 @@
    and the place beside the word. Only phrasing content (spans), so a hint can stand inside a paragraph; the panel follows
    the trigger in the markup, so its link comes next when tabbing. One component for every hint, on server pages and in
    islands alike; an island never opens it from code. *@
-<span class="hint"><button type="button" class="hint__trigger" id="@Id" popovertarget="@PanelId" aria-describedby="@SaysId">@Text</button><span class="visually-hidden" id="@SaysId">@T["Hint.Opens"]</span><span class="hint__panel" id="@PanelId" popover="auto"><span class="hint__answer">@Answer</span>@if (More is { Length: > 0 } more)
+@* The icon variant (owner, 2026-11-23): where the hint stands right beside the thing it explains (a heading, a figure, a chip,
+   a count, a filter), the question would only repeat the place, so the trigger is a small circled "i" instead, drawn in
+   currentColor (Icon "info"). The question stays in the button as visually hidden text, so screen readers read it as before;
+   everything else (panel, "Plačiau", aria-describedby, place, the press without script) is the same. *@
+<span class="@(Icon ? "hint hint--icon" : "hint")"><button type="button" class="@(Icon ? "hint__trigger hint__trigger--icon" : "hint__trigger")" id="@Id" popovertarget="@PanelId" aria-describedby="@SaysId">@if (Icon)
+{<span class="hint__icon"><Lt2.Web.Client.Components.Icon Name="info" /></span><span class="visually-hidden">@Text</span>}
+else
+{@Text}</button><span class="visually-hidden" id="@SaysId">@T["Hint.Opens"]</span><span class="hint__panel" id="@PanelId" popover="auto"><span class="hint__answer">@Answer</span>@if (More is { Length: > 0 } more)
 {<a class="hint__more" href="@more">@T["Hint.More"]</a>}</span></span>
 
 @code {
@@ -16,6 +23,12 @@
 
     /// <summary>The word or the short question on the screen, for example "Kas yra riba?".</summary>
     [Parameter, EditorRequired] public string Text { get; set; } = "";
+
+    /// <summary>
+    /// A small circled "i" instead of the words, for a hint that stands right beside the thing it explains; <see cref="Text"/>
+    /// is then visually hidden text in the button. Default: the words.
+    /// </summary>
+    [Parameter] public bool Icon { get; set; }
 
     /// <summary>The answer in one or two sentences: what the thing is and what it does first, a number after it.</summary>
     [Parameter, EditorRequired] public string Answer { get; set; } = "";

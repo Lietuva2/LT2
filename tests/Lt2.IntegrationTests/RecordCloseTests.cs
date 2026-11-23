@@ -275,7 +275,7 @@ public sealed class RecordCloseTests(DatabaseFixture database) : ApiTest(databas
             html.ShouldNotContain("id=\"moderation-panel\"", customMessage: "a visitor sees no moderators' panel");
 
             // The closed tab of /projektai lists it.
-            var tab = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/projektai?skirtukas=uzdaryti"));
+            var tab = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/projektai/uzdaryti"));
             tab.ShouldContain($"id=\"bill-{Bill}\"");
 
             // A moderator sees the panel on the closed record, with "Atšaukti uždarymą" and no close.

@@ -19,7 +19,8 @@
 <data name="Threshold.SetBy.moderator" xml:space="preserve"><value>Šio projekto ribą nustatė moderatorius.</value></data>
 <data name="Threshold.Note" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="List.Title" xml:space="preserve"><value>Projektai</value></data>
-  <data name="List.Lead" xml:space="preserve"><value>Seimo projektai: dėl kiekvieno galite nurodyti, ko prašote Seimo narių, ir parašyti argumentų.</value></data>
+  <data name="List.Lead.Active" xml:space="preserve"><value>Visi projektai, kurių Seimas dar nebaigė svarstyti. Dėl kiekvieno galite nurodyti, ko prašote Seimo narių, ir parašyti argumentų.</value></data>
+  <data name="List.Lead.Closed" xml:space="preserve"><value>Projektai, kuriuos Seimas jau baigė svarstyti: po galutinio balsavimo, atmesti ar atsiimti. Dalyvių skaičiai užfiksuoti ir nebesikeičia.</value></data>
 <data name="List.Sort" xml:space="preserve"><value>Rikiuoti:</value></data>
 <data name="List.Empty" xml:space="preserve"><value>Tokių projektų nerasta.</value></data>
   <data name="List.Further" xml:space="preserve"><value>Tolesni projektai →</value></data>

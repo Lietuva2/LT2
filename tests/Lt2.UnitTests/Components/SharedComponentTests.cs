@@ -71,9 +71,45 @@ public sealed class SharedComponentTests : BunitContext
         panel.QuerySelector("a")!.TextContent.ShouldBe("Plačiau");
         hint.FindAll("div, p").ShouldBeEmpty(customMessage: "only phrasing content, so a hint can stand inside a paragraph");
         hint.FindAll(".hint__trigger + .visually-hidden + .hint__panel").ShouldHaveSingleItem("the panel follows the trigger, so its link comes next when tabbing");
+        hint.FindAll("svg, .hint--icon, .hint__trigger--icon, .hint__icon").ShouldBeEmpty("without Icon nothing changes: the words, no drawing");
+        hint.Find(".hint").ClassName.ShouldBe("hint");
+        trigger.ClassName.ShouldBe("hint__trigger");
 
-        var bare = Render<Hint>(p => p.Add(c => c.Id, "labels-what").Add(c => c.Text, "Ką reiškia žymos?").Add(c => c.Answer, "Žyma sako, ar organizacija patikrinta."));
+        var bare =Render<Hint>(p => p.Add(c => c.Id, "labels-what").Add(c => c.Text, "Ką reiškia žymos?").Add(c => c.Answer, "Žyma sako, ar organizacija patikrinta."));
         bare.FindAll("a").ShouldBeEmpty(customMessage: "no \"Plačiau\" where there is nothing more to say");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-23: where a hint stands right beside the thing it explains, its trigger is a small drawn "i" (inline
+    /// SVG in currentColor, nothing fetched) and the question stays in the button as visually hidden text; the button, the
+    /// description it points to, the panel, the answer and "Plačiau" are the same as for the words.
+    /// </summary>
+    [Fact]
+    public void An_icon_hint_draws_an_i_keeps_the_question_as_hidden_text_and_is_otherwise_the_same_hint()
+    {
+        var hint = Render<Hint>(p => p.Add(c => c.Id, "threshold-what").Add(c => c.Icon, true).Add(c => c.Text, "Kas yra riba?")
+            .Add(c => c.Answer, "Riba – dalyvių skaičius. Dabar – 100.").Add(c => c.More, "/metodika#riba"));
+
+        hint.Find(".hint").ClassName.ShouldBe("hint hint--icon");
+        var trigger = hint.Find("#threshold-what");
+        trigger.TagName.ShouldBe("BUTTON");
+        trigger.GetAttribute("type").ShouldBe("button");
+        trigger.ClassName.ShouldBe("hint__trigger hint__trigger--icon");
+        trigger.GetAttribute("popovertarget").ShouldBe("threshold-what-panel");
+        var icon = trigger.QuerySelector(".hint__icon > svg.icon");
+        icon.ShouldNotBeNull("the drawn \"i\"");
+        icon.GetAttribute("aria-hidden").ShouldBe("true", "the drawing says nothing to a screen reader; the hidden question does");
+        icon.InnerHtml.ShouldContain("currentColor", customMessage: "it takes the text's colour in both themes");
+        trigger.QuerySelectorAll(".visually-hidden").ShouldHaveSingleItem().TextContent.ShouldBe("Kas yra riba?");
+        trigger.QuerySelectorAll(".hint__icon, .visually-hidden").Length.ShouldBe(2, "only the drawing and the hidden question are in the button");
+        hint.Find("#" + trigger.GetAttribute("aria-describedby")).TextContent.ShouldBe(Services.GetRequiredService<IStringLocalizer<UiText>>()["Hint.Opens"]);
+
+        var panel = hint.Find("#threshold-what-panel");
+        panel.GetAttribute("popover").ShouldBe("auto");
+        panel.QuerySelector(".hint__answer")!.TextContent.ShouldBe("Riba – dalyvių skaičius. Dabar – 100.");
+        panel.QuerySelector("a")!.GetAttribute("href").ShouldBe("/metodika#riba");
+        hint.FindAll("div, p").ShouldBeEmpty(customMessage: "still only phrasing content");
+        hint.FindAll(".hint__trigger + .visually-hidden + .hint__panel").ShouldHaveSingleItem("the panel follows the trigger, as for the words");
     }
 
     [Fact]

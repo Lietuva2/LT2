@@ -261,7 +261,7 @@ public sealed class MenuTests : E2ETest
         await page.GotoAsync(E2ESteps.Base + "/projektai");
         await Assertions.Expect(page.Locator("#tab-projektai")).ToHaveAttributeAsync("aria-current", "page");
         await page.Locator("#tab-closed").ClickAsync();
-        await page.WaitForURLAsync(new Regex("/projektai[?]skirtukas=uzdaryti$"), new() { Timeout = E2ESteps.Slow });
+        await page.WaitForURLAsync(new Regex("/projektai/uzdaryti$"), new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.Locator("#tab-closed")).ToHaveAttributeAsync("aria-current", "page");
         await page.Locator("#view-agenda").ClickAsync();
         await page.WaitForURLAsync(new Regex("/darbotvarke$"), new() { Timeout = E2ESteps.Slow });

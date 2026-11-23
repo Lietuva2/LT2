@@ -785,6 +785,8 @@
   <data name="Mine.None" xml:space="preserve"><value>Šiuo metu darbotvarkėje nėra projektų, kuriuos sekate.</value></data>
   <data name="Mine.All" xml:space="preserve"><value>Visi sekami projektai ir Seimo nariai →</value></data>
   <data name="Mine.Only" xml:space="preserve"><value>Tik mano</value></data>
+  <data name="Mine.Hint" xml:space="preserve"><value>Kas yra „Tik mano“?</value></data>
+  <data name="Mine.HintAnswer" xml:space="preserve"><value>Rodo tik jūsų sekamus projektus. Projektas tampa sekamas, kai nurodote, ko prašote, arba paspaudžiate „Sekti“; paieška ir kitos nuostatos šiam sąrašui netaikomos.</value></data>
   <data name="Mine.OnlyTitle" xml:space="preserve"><value>Mano projektai</value></data>
   <data name="Mine.OnlyNone" xml:space="preserve"><value>Dar nesekate nė vieno projekto.</value></data>
   <data name="Agenda.Nobody" xml:space="preserve"><value>Niekas nenurodė, ko prašo</value></data>

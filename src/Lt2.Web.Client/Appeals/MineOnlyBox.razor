@@ -11,7 +11,12 @@
    it, and nothing is stored. *@
 @if (_signedIn)
 {
-    <label class="check small"><input type="checkbox" id="mine-only" checked="@State.On" @onchange="ChangedAsync" /><span>@L["Mine.Only"]</span></label>
+    @* Owner, 2026-11-23: an "i" after the label says what the filter is (design 8.15, the icon hint). A sibling of the label,
+       never inside it: a press on it must not tick the box. *@
+    <div class="row check-line">
+        <label class="check small"><input type="checkbox" id="mine-only" checked="@State.On" @onchange="ChangedAsync" /><span>@L["Mine.Only"]</span></label>
+        <Lt2.Web.Client.Components.Hint Id="mine-only-what" Icon="true" Text="@L["Mine.Hint"]" Answer="@L["Mine.HintAnswer"]" />
+    </div>
 }
 
 @code {

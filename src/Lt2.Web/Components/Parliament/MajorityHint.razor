@@ -2,9 +2,12 @@
 
 @* What the vote rows' majority chip means (design 8.15, 8.18 "The majority"): one hint beside a list of votes, never one
    per row; the agenda's lists (the front page, /darbotvarke) carry none (owner, 2026-11-21). *@
-<Lt2.Web.Client.Components.Hint Id="@Id" Text="@F.T["Majority.Hint"]" Answer="@F.T["Majority.Answer"]" />
+<Lt2.Web.Client.Components.Hint Id="@Id" Icon="Icon" Text="@F.T["Majority.Hint"]" Answer="@F.T["Majority.Answer"]" />
 
 @code {
+    /// <summary>The small circled "i" instead of the question: beside the majority chip it explains, which says what it is about.</summary>
+    [Parameter] public bool Icon { get; set; }
+
     /// <summary>Unique on the page.</summary>
     [Parameter] public string Id { get; set; } = "hint-vote-majority";
 }
