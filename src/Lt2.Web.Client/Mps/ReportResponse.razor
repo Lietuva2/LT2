@@ -8,13 +8,13 @@
    trigger, menu and form are direct children of the row. Owner, 2026-11-17: no "Pranešti" for the MP's own account or office
    on that MP's response, nor for a moderator in a staff-passkey session (who acts in the moderators' panel); decided once the
    island runs, so the served HTML is the same for everyone. *@
-<MoreMenu Id="@MenuId">
-    @if (_signedIn && MayReport)
+<MoreMenu Id="@MenuId" HasItems="@(!_signedIn || MayReport)">
+    @if (_signedIn)
     {
         <button type="button" class="menu__item" id="report-response-@ResponseId.ToString("N")" disabled="@Locked" popovertarget="@MoreMenu.MenuOf(MenuId)" popovertargetaction="hide"
                 @onclick="() => _open = !_open">@L["Report.Open"]</button>
     }
-    else if (!_signedIn)
+    else
     {
         <VisitorReport Contact="@Contact" />
     }

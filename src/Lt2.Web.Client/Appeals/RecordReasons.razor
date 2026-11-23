@@ -54,6 +54,10 @@
                     @for (var i = 0; i < shown.Count; i++)
                     {
                         var reason = shown[i];
+                        var reportable = MayReport(reason);
+                        var editable = MayEdit(reason);
+                        var withdrawable = IsMine(reason) && record.Status == BillRecordStatuses.Open;
+                        var moderated = Moderated(reason.Id);
                         <div class="said @(LinkedReason == reason.Id || _written == reason.Id ? "said--linked" : null)" id="@BillTextLinks.ReasonElement(reason.Id)" @key="reason.Id"
                              tabindex="@(_written == reason.Id || _focusable.Contains(reason.Id) ? "-1" : null)" @ref="_said[reason.Id]">
                             @* The name first, then the text, then the action row (owner, 2026-11-17: as statements, responses and
@@ -97,27 +101,27 @@
                                    server renders, read when first opened for those a later page brought. *@
                                 <CommentThread Kind="@CommentKinds.Reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
                                                Open="@(AskedFor(reason.Id) is not null)" Asked="@AskedFor(reason.Id)" Marked="@CommentPaging.Marked(reason.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
-                                <MoreMenu Id="@($"more-reason-{reason.Id}")">
+                                <MoreMenu Id="@($"more-reason-{reason.Id}")" HasItems="@(!_signedIn || reportable || editable || withdrawable || moderated is not null)">
                                     @if (_signedIn)
                                     {
                                         var menu = MoreMenu.MenuOf($"more-reason-{reason.Id}");
-                                        @if (MayReport(reason))
+                                        @if (reportable)
                                         {
                                             <button class="menu__item" type="button" id="report-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                     @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
                                         }
-                                        @if (MayEdit(reason))
+                                        @if (editable)
                                         {
                                             @* Owner, 2026-11-17: only while nobody reacted, from the never-cached "mine" answer; not shown otherwise. *@
                                             <button class="menu__item" type="button" id="edit-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                     @onclick="() => StartEditingAsync(reason)">@L["Reasons.Edit"]</button>
                                         }
-                                        @if (IsMine(reason) && record.Status == BillRecordStatuses.Open)
+                                        @if (withdrawable)
                                         {
                                             <button class="menu__item" type="button" id="withdraw-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                     @onclick="() => _withdrawing = _withdrawing == reason.Id ? null : reason.Id">@L["Reasons.Withdraw"]</button>
                                         }
-                                        @if (Moderated(reason.Id) is not null)
+                                        @if (moderated is not null)
                                         {
                                             <button class="menu__item" type="button" id="moderate-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                     @onclick="() => _moderating = _moderating == reason.Id ? null : reason.Id">@L["ModReason.Open"]</button>
@@ -181,7 +185,7 @@
                                         <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = null">@L["Cancel"]</button>
                                     </div>
                                 }
-                                @if (_moderating == reason.Id && Moderated(reason.Id) is { } moderated)
+                                @if (_moderating == reason.Id && moderated is not null)
                                 {
                                     <div class="act__panel sheet sheet--quiet moderate" id="moderation-@reason.Id">
                                         <ModerationActions Id="reason.Id" Kind="@ReportTargets.Reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" Seen="moderated.Seen" Reported="moderated.Reports.Count > 0" OnDone="ModeratorActedAsync" OnRestricted="ModeratorActedAsync" />

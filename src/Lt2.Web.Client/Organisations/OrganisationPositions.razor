@@ -295,13 +295,13 @@
         <CommentThread Kind="@CommentKinds.Statement" TargetId="statement.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(statement.Id)" Count="statement.Comments"
                        Open="@(CommentPaging.Asked(CommentsShown, statement.Id, Linked) is not null)" Asked="@CommentPaging.Asked(CommentsShown, statement.Id, Linked)"
                        Marked="@CommentPaging.Marked(statement.Id, Linked)" PagePath="@CommentPaging.PagePath(Number, ResponsesShown)" Contact="@Contact" Moderator="Moderator" />
-        <MoreMenu Id="@($"more-statement-{statement.Id}")">
-            @if (_signedIn && MayReport(statement))
+        <MoreMenu Id="@($"more-statement-{statement.Id}")" HasItems="@(!_signedIn || MayReport(statement))">
+            @if (_signedIn)
             {
                 <button class="menu__item" type="button" id="report-statement-@statement.Id" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"more-statement-{statement.Id}")" popovertargetaction="hide"
                         @onclick="() => _reporting = _reporting == statement.Id ? null : statement.Id">@L["Report.Open"]</button>
             }
-            else if (!_signedIn)
+            else
             {
                 <VisitorReport Contact="@Contact" />
             }

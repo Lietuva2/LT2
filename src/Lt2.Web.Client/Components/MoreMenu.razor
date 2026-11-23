@@ -6,12 +6,18 @@
    or Escape closes it and the focus stays on or goes back to "⋯"; js/lt2-menus.js places it beside "⋯". An item that opens a
    form closes the menu itself (popovertargetaction="hide") and the form opens below the row as a quiet sheet. The trigger is
    never disabled: a visitor's "Pranešti" note works without script; a member's items are disabled until the island runs. *@
-<button type="button" class="act__item act__more" id="@Id" popovertarget="@MenuId" aria-label="@T["Actions.More"]" title="@T["Actions.More"]"><Icon Name="dots" /></button>
-<div class="menu" id="@MenuId" popover="auto" aria-label="@T["Actions.More"]">@ChildContent</div>
+@if (HasItems)
+{
+    <button type="button" class="act__item act__more" id="@Id" popovertarget="@MenuId" aria-label="@T["Actions.More"]" title="@T["Actions.More"]"><Icon Name="dots" /></button>
+    <div class="menu" id="@MenuId" popover="auto" aria-label="@T["Actions.More"]">@ChildContent</div>
+}
 
 @code {
     /// <summary>The trigger's id, unique on the page; the menu is <c>{Id}-menu</c>, which items close with <see cref="MenuId"/>.</summary>
     [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    /// <summary>Whether the menu has an action or a visitor's reporting instructions to show.</summary>
+    [Parameter, EditorRequired] public bool HasItems { get; set; }
 
     /// <summary>The items: <c>button.menu__item</c> with <c>popovertarget</c> set to the menu and <c>popovertargetaction="hide"</c>.</summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }

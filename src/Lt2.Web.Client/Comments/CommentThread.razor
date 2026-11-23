@@ -38,6 +38,7 @@
                 {
                     var c = thread.Items[position - 1];
                     var id = CommentLimits.ElementId(c.Id);
+                    var reportable = MayReport(c.Id);
                     var moderated = Moderated(c.Id);
                     var deletable = _signedIn && _mine?.Deletable.Contains(c.Id) == true && thread.BillOpen;
                     var editable = MayEdit(thread, c.Id);
@@ -78,10 +79,10 @@
                                 <button class="mark act__item" type="button" id="@id-agree" aria-pressed="@(agreed ? "true" : "false")" disabled="@Locked"
                                         title="@(agreed ? null : L["Comments.Agree.Hint"].Value)" @onclick="() => AgreeAsync(c.Id, agreed)"><Icon Name="agree" /><span>@L["Comments.Agree"]</span></button>
                             }
-                            <MoreMenu Id="@($"{id}-more-actions")">
+                            <MoreMenu Id="@($"{id}-more-actions")" HasItems="@(!_signedIn || reportable || editable || deletable || moderated is not null)">
                                 @if (_signedIn)
                                 {
-                                    @if (MayReport(c.Id))
+                                    @if (reportable)
                                     {
                                         <button class="menu__item" type="button" id="@id-report" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
                                                 @onclick="() => _reporting = _reporting == c.Id ? null : c.Id">@L["Report.Open"]</button>

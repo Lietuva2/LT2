@@ -98,13 +98,17 @@ public sealed class CommentThreadTests : BunitContext
         _comments.On("GetMineAsync", ApiResult<MyCommentsResponse>.Ok(new MyCommentsResponse(
             true, false, false, [], [], [], [], 0, new Dictionary<Guid, int>()) { Own = [OrganisationComment] }));
         var thread = RenderThread();
-        thread.FindAll($"#{CommentLimits.ElementId(OrganisationComment)}-report").ShouldBeEmpty("the organisation's own comment");
-        thread.FindAll($"#{CommentLimits.ElementId(PersonComment)}-report").ShouldNotBeEmpty();
+        var organisation = CommentLimits.ElementId(OrganisationComment);
+        var person = CommentLimits.ElementId(PersonComment);
+        thread.Find($"#{organisation}-actions");
+        thread.FindAll($"#{organisation}-more-actions, #{organisation}-more-actions-menu").ShouldBeEmpty();
+        thread.Find($"#{person}-more-actions");
+        thread.Find($"#{person}-more-actions-menu #{person}-report");
 
         _moderation.On("GetOnBillAsync", ApiResult<IReadOnlyList<QueueCommentResponse>>.Ok([]));
         var moderated = Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill).Add(c => c.Thread, Thread())
             .Add(c => c.Count, 3).Add(c => c.PagePath, "/seimas/" + Bill).Add(c => c.Moderator, true));
-        moderated.FindAll("[id$='-report']").ShouldBeEmpty();
+        moderated.FindAll(".act__more, .menu[popover]").ShouldBeEmpty();
     }
 
     /// <summary>Owner, 2026-11-17: the author sees their own hidden comment under its text, quiet, with the moderator's explanation.</summary>
