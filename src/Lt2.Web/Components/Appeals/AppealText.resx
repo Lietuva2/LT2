@@ -8,6 +8,11 @@
 <data name="NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Status.closed" xml:space="preserve"><value>Uždarytas</value></data>
 <data name="Sides.Heading" xml:space="preserve"><value>Ko prašo Lietuva 2.0 naudotojai</value></data>
+<data name="Sides.Switch" xml:space="preserve"><value>Naudotojų ar Seimo skaičiai</value></data>
+<data name="Sides.View.Public" xml:space="preserve"><value>Lietuva 2.0 naudotojai</value></data>
+<data name="Sides.View.Seimas" xml:space="preserve"><value>Seimas</value></data>
+<data name="Sides.View.Consensus" xml:space="preserve"><value>bendru sutarimu</value></data>
+<data name="Sides.Seimas.Heading" xml:space="preserve"><value>Kaip balsavo Seimas</value></data>
 <data name="What.Heading" xml:space="preserve"><value>Apie ką projektas</value></data>
 <data name="What.ESeimas" xml:space="preserve"><value>Projekto tekstas e. seime</value></data>
 <data name="Threshold.Heading" xml:space="preserve"><value>Riba</value></data>

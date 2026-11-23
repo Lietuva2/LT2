@@ -1,7 +1,7 @@
-namespace Lt2.Web.Components.Parliament;
+namespace Lt2.Web.Client.Components;
 
 /// <summary>
-/// Seat positions of a hemicycle for the seat map (design 7.3: SVG rendered on the server). The open data has no seat
+/// Seat positions of a hemicycle for the seat map (design 7.3: SVG, drawn by the server for a vote's page and by the browser on a bill's page). The open data has no seat
 /// positions, so the map places seats itself: rows of arcs, more seats on the longer outer rows, read left to right.
 /// Each seat is a small square turned to face the centre, as in the prototype (design/ui/index.html, drawHemi).
 /// Coordinates are in a 200 × 104 view box with the centre at (100, 100).

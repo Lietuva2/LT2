@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Parliament;
 using Lt2.Appeals;
@@ -104,6 +105,47 @@ public sealed class VoteClassificationTests(DatabaseFixture database) : ApiTest(
         finally
         {
             await ForgetAsync(Amendment);
+        }
+    }
+
+    [Fact]
+    public async Task A_moderators_part_is_the_votes_side_column_and_nobody_else_has_one()
+    {
+        // Design 7.2 (owner, 2026-11-23): as on the bill's page, the part stands in a side column (an aside) that is last in the
+        // page's order, after the ballots, so on a phone it ends the page; only the closing line of the vote follows it.
+        const string path = "/seimas/balsavimai/99100002";
+        using var moderator = await ModeratorAsync();
+        var staffPage = await PageAsync(moderator.Browser, path);
+        var body = staffPage.IndexOf("<div class=\"bill-body\">", StringComparison.Ordinal);
+        var main = staffPage.IndexOf("class=\"stack stack--loose bill-body__main\"", StringComparison.Ordinal);
+        var seats = staffPage.IndexOf("aria-labelledby=\"h-seats\"", StringComparison.Ordinal);
+        var factions = staffPage.IndexOf("aria-labelledby=\"h-factions\"", StringComparison.Ordinal);
+        var ballots = staffPage.IndexOf("id=\"balsai\"", StringComparison.Ordinal);
+        var aside = staffPage.IndexOf("<aside class=\"stack bill-body__aside\" aria-label=\"Moderavimas\">", StringComparison.Ordinal);
+        var panel = staffPage.IndexOf("id=\"vote-moderation\"", StringComparison.Ordinal);
+        var closing = staffPage.LastIndexOf("Posėdžio pradžia:", StringComparison.Ordinal);
+        body.ShouldBeGreaterThanOrEqualTo(0);
+        main.ShouldBeGreaterThan(body);
+        main.ShouldBeLessThan(seats, "the main column holds the result, the seat map and the factions");
+        seats.ShouldBeLessThan(factions);
+        factions.ShouldBeLessThan(ballots, "the ballots stand across both columns below the main one");
+        ballots.ShouldBeLessThan(aside, "the side column is last in the page's order");
+        aside.ShouldBeLessThan(panel, "the panel is inside the side column");
+        panel.ShouldBeLessThan(staffPage.IndexOf("</aside>", StringComparison.Ordinal));
+        staffPage.IndexOf("</aside>", StringComparison.Ordinal).ShouldBeLessThan(closing, "only the closing line follows the side column");
+        Regex.Count(staffPage, "<aside").ShouldBe(1);
+
+        // A member and a visitor: one stack as before, no side column and no part.
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        using var visitor = NewBrowser();
+        foreach (var page in new[] { await PageAsync(member, path), await PageAsync(visitor, path) })
+        {
+            page.ShouldNotContain("<aside");
+            page.ShouldNotContain("<div class=\"bill-body\">", Case.Sensitive, "one stack, no grid");
+            page.ShouldNotContain("id=\"vote-moderation\"");
+            page.ShouldNotContain("id=\"needs-script\"");
+            page.ShouldContain("aria-labelledby=\"h-result\"");
         }
     }
 

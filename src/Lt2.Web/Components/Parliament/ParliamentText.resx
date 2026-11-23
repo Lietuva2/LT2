@@ -123,7 +123,6 @@
   <data name="Vote.Item" xml:space="preserve"><value>Darbotvarkės klausimas</value></data>
   <data name="Vote.Sitting" xml:space="preserve"><value>Posėdžio pradžia</value></data>
   <data name="Vote.SeatMap" xml:space="preserve"><value>Kaip balsavo Seimo nariai</value></data>
-  <data name="Vote.SeatMapAria" xml:space="preserve"><value>Seimo narių balsai: kiekvienas taškas – vienas Seimo narys, sugrupuota pagal frakcijas</value></data>
   <data name="Vote.Factions" xml:space="preserve"><value>Frakcijų pozicijos</value></data>
   <data name="Vote.FactionColumn" xml:space="preserve"><value>Frakcija</value></data>
   <data name="Vote.PositionColumn" xml:space="preserve"><value>Pozicija</value></data>
@@ -209,5 +208,6 @@
   <data name="Responses.More" xml:space="preserve"><value>Rodyti daugiau atsakymų</value></data>
   <data name="Vote.Corrected" xml:space="preserve"><value>Klasifikaciją pataisė moderatoriai</value></data>
   <data name="Vote.Corrected.Answer" xml:space="preserve"><value>Ar balsavimas yra projekto stadijos balsavimas ir kurios stadijos, nustato taisyklės pagal balsavimo formuluotę. Šį balsavimą taisyklės priskyrė klaidingai, todėl jo klasifikaciją pataisė moderatoriai.</value></data>
+  <data name="Vote.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
   <data name="Method.Classification.2" xml:space="preserve"><value>Kai taisyklės balsavimą priskiria klaidingai, moderatoriai jo klasifikaciją pataiso ir nurodo priežastį. Pataisymas išlieka ir tada, kai Seimo duomenys perskaitomi iš naujo, o tokio balsavimo puslapyje parašyta „Klasifikaciją pataisė moderatoriai“. Balsavimas, kuriuo uždarytas projekto kreipimasis, lieka priėmimo stadijos balsavimu.</value></data>
 </root>

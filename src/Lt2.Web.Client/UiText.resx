@@ -328,4 +328,11 @@
   <data name="PublicProfile.ConsentAccept" xml:space="preserve"><value>Sutinku</value></data>
   <data name="PublicProfile.ConsentCancel" xml:space="preserve"><value>Atšaukti</value></data>
   <data name="PublicProfile.ConsentAccepted" xml:space="preserve"><value>Sutikimas su galiojančiu tekstu išsaugotas.</value></data>
+<data name="SeatMap.Aria" xml:space="preserve"><value>Seimo narių balsai: kiekvienas taškas – vienas Seimo narys, sugrupuota pagal frakcijas</value></data>
+<data name="SeatMap.NoFaction" xml:space="preserve"><value>be frakcijos</value></data>
+<data name="SeatMap.Heading" xml:space="preserve"><value>Kaip balsavo Seimo nariai</value></data>
+<data name="SeatMap.Choice.for" xml:space="preserve"><value>Už</value></data>
+<data name="SeatMap.Choice.against" xml:space="preserve"><value>Prieš</value></data>
+<data name="SeatMap.Choice.abstain" xml:space="preserve"><value>Susilaikė</value></data>
+<data name="SeatMap.Choice.did-not-vote" xml:space="preserve"><value>Nebalsavo</value></data>
 </root>

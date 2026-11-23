@@ -1,0 +1,13 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits LiveRecordBase
+
+@* The two sides' counts as one score, "6 800 : 4 280", in the "Lietuva 2.0 naudotojai" segment of the bill's switch (design
+   8.12.1). The same numbers as SideFigures, kept alike as it is: the server's counts at first, the bill's live ones after a
+   side is taken, changed or withdrawn on the page. *@
+<span class="num" id="score-public">@Display.Number(Shown.For) : @Display.Number(Shown.Against)</span>
+
+@code {
+    [Parameter, EditorRequired] public SideCountsResponse Counts { get; set; } = default!;
+
+    private SideCountsResponse Shown => Live?.Counts ?? Counts;
+}

@@ -1346,13 +1346,16 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
 .top__nav .drop__panel--desc .drop__links a[aria-current="page"] .drop__label {
   text-decoration: underline; text-decoration-color: var(--link); text-decoration-thickness: 3px; text-underline-offset: 0.3em; }
 /* "Seimas" is the first of only three items, so it stands near the menu's right end and a 21rem panel hung from its left edge
-   would run past the window (about 45px between 48rem and 64rem, a touch screen up to 48rem). Above 32rem the panel hangs from the
-   menu's right edge instead, under the items, and never leaves the window; under 32rem it is as wide as the page (below). */
+   would run past the window (about 45px between 48rem and 64rem, a touch screen up to 48rem). Above 32rem the panel is as wide as the
+   menu's items and stands exactly under them, from "Seimas" to the last item (owner, 2026-11-23: a panel wider than the items hung
+   off to one side), so it never leaves the window; under 32rem it is as wide as the page (below). */
 @media (min-width: 32.01rem) {
   .top__nav { position: relative; }
   .drop--desc { position: static; }
-  .drop--desc > .drop__panel { inset-inline-start: auto; inset-inline-end: 0; }
+  .drop--desc > .drop__panel { inset-inline: 0; inline-size: auto; min-inline-size: 15rem; max-inline-size: none; }
 }
+/* The menu's items never break inside (design 8.12.5), but an entry's line in the panel is a sentence: it wraps in the panel's width. */
+.top__nav .drop__panel--desc a { white-space: normal; }
 @media (max-width: 32rem) {
   .top { position: relative; }
   .drop--desc { position: static; }
@@ -1407,14 +1410,25 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
   display: inline-flex; flex-wrap: wrap; inline-size: fit-content; max-inline-size: 100%;
   border: 1px solid var(--rule); background: var(--sheet); font-size: var(--fs-1); font-weight: 600;
 }
-.views a, .views b {
+.views a, .views b, .views label {
   padding: var(--sp-2) var(--sp-4); color: var(--ink-2); text-decoration: none; line-height: 1.3;
   border-inline-end: 1px solid var(--rule);
 }
 .views > :last-child { border-inline-end: 0; }
-.views a:hover { color: var(--ink); background: var(--sheet-2); }
-.views b[aria-current="page"] { background: var(--ink); color: var(--sheet); }
-@media (max-width: 24rem) { .views a, .views b { padding-inline: var(--sp-3); } }
+.views a:hover, .views label:hover { color: var(--ink); background: var(--sheet-2); }
+.views b[aria-current="page"], .views input:checked + label { background: var(--ink); color: var(--sheet); }
+@media (max-width: 24rem) { .views a, .views b, .views label { padding-inline: var(--sp-3); } }
+/* The same control over radio inputs (the bill page's "Lietuva 2.0 naudotojai | Seimas", design 8.12.1): each input stands
+   hidden before its label, the label is the segment, the checked one filled; keyboard and screen readers use the radios. The
+   segments share the width where they fit. */
+.views label { cursor: pointer; }
+.views input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; position: relative; z-index: 1; }
+.views--wide { display: flex; inline-size: 100%; }
+.views--wide label { flex: 1 1 auto; text-align: center; }
+@media (forced-colors: active) { .views input:checked + label { outline: 3px solid Highlight; outline-offset: -5px; } }
+/* The bill page's two parts of the sides' sheet: the participants' by default, the Seimas's when its radio is checked. */
+.view-switch:has(#view-seimas:checked) > #public-panel { display: none; }
+.view-switch:not(:has(#view-seimas:checked)) > #seimas-panel { display: none; }
 @media (max-width: 36rem) {
   .project-tabs { column-gap: var(--sp-3); font-size: var(--fs-1); }
 }

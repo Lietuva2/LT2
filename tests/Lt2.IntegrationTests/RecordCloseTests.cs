@@ -265,7 +265,11 @@ public sealed class RecordCloseTests(DatabaseFixture database) : ApiTest(databas
             html.ShouldContain("Skaičiai užfiksuoti");
             html.ShouldContain("id=\"appeal-status\"");
             html.ShouldNotContain("Seimas balsavo galutinai", customMessage: "no vote closed it");
-            html.ShouldNotContain("id=\"each-mp\"");
+            // The decision sheet holds no ballots; the bill's own votes (this one has some) are the Seimas part of the sides' switch.
+            var decision = html[html.IndexOf("id=\"seimas-result\"", StringComparison.Ordinal)..];
+            decision = decision[..decision.IndexOf("</section>", StringComparison.Ordinal)];
+            decision.ShouldNotContain("id=\"each-mp\"");
+            decision.ShouldNotContain("class=\"seatmap\"");
             html.ShouldNotContain("class=\"seatmap\"");
             html.ShouldNotContain("id=\"side-for\"", customMessage: "no side can be taken any more");
             html.ShouldNotContain("id=\"moderation-panel\"", customMessage: "a visitor sees no moderators' panel");

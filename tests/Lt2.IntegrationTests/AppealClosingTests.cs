@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
@@ -60,13 +61,16 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
             using var page = await stranger.Client.GetAsync("/seimas/XVP-0618");
             var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
             html.ShouldContain("Seimas balsavo galutinai; skaičiai užfiksuoti");
-            html.ShouldContain("Seimo sprendimas");
+            // Design 8.12.1 (owner, 2026-11-23): the final vote is the Seimas part of the sides' switch, not a sheet of its own, and
+            // the page carries no seat map: the island reads the vote when the switch is first turned to the Seimas.
+            html.ShouldNotContain("id=\"seimas-result\"");
+            html.ShouldContain("<label for=\"view-seimas\">Seimas · ");
+            Regex.IsMatch(html, "name=\"sides-view\" id=\"view-public\" checked").ShouldBeTrue("a closed bill shows the participants first");
             html.ShouldContain($"<a href=\"/seimas/balsavimai/{FinalVote}#balsai\" id=\"each-mp\">Kaip balsavo kiekvienas Seimo narys</a>");
-            html.ShouldContain("class=\"seatmap\"");
-            var result = html[html.IndexOf("id=\"seimas-result\"", StringComparison.Ordinal)..];
-            result = result[..result.IndexOf("</section>", StringComparison.Ordinal)];
-            result.ShouldNotContain("<ul class=\"rows\"", customMessage: "design 8.17: the list of each MP's ballot is only on the vote's page");
-            result.ShouldNotContain("href=\"/p/", customMessage: "no MP's row on the bill's page");
+            html.ShouldNotContain("class=\"seatmap\"");
+            Regex.Count(html, "<rect [^>]*class=\"seat ").ShouldBe(0);
+            html.ShouldNotContain("id=\"ballot-rows\"", customMessage: "design 8.17: the list of each MP's ballot is only on the vote's page");
+            html.ShouldNotContain("href=\"/p/", customMessage: "no MP's row on the bill's page");
             html.ShouldNotContain("id=\"side-for\"", customMessage: "no side can be taken any more");
         }
         finally
