@@ -142,7 +142,7 @@ public sealed class CommentThreadTests : BunitContext
         // Design 8.16.1: the <details> holds only its summary, which stands in the action row; the discussion is the panel after it.
         thread.Find("details.discuss > summary").TextContent.ShouldBe("Aptarimas (3)");
         thread.Find("details.discuss").ChildElementCount.ShouldBe(1);
-        thread.Find("details.discuss + .discuss__panel").Id.ShouldBe($"aptarimas-panel-{Target:N}");
+        thread.Find("details.discuss + .discuss__panel").Id.ShouldBe($"discussion-panel-{Target:N}");
         thread.FindAll("li.comment .act .act__more[popovertarget]").Count.ShouldBe(3, "every comment's own row ends in \"⋯\"");
         thread.FindAll("li.comment").Select(li => li.Id).ShouldBe([CommentLimits.ElementId(PersonComment), CommentLimits.ElementId(OrganisationComment), CommentLimits.ElementId(MpComment)]);
         var markup = thread.Markup;

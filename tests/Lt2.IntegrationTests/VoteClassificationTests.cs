@@ -74,7 +74,7 @@ public sealed class VoteClassificationTests(DatabaseFixture database) : ApiTest(
             var page = await PageAsync(stranger, $"/seimas/balsavimai/{Amendment}");
             var hint = AppealPageTests.HintOf(page, "classification-corrected");
             hint.Trigger.ShouldBe("Klasifikaciją pataisė moderatoriai");
-            hint.More.ShouldBe("/metodika#stadijos");
+            hint.More.ShouldBe("/metodika#stages");
             page.ShouldContain(" · Priėmimas · ");
             page.ShouldNotContain("id=\"vote-moderation\"");
             page.ShouldNotContain("Tai priėmimo balsavimas", Case.Sensitive, "the statement is the moderators'");
@@ -120,7 +120,7 @@ public sealed class VoteClassificationTests(DatabaseFixture database) : ApiTest(
         var main = staffPage.IndexOf("class=\"stack stack--loose bill-body__main\"", StringComparison.Ordinal);
         var seats = staffPage.IndexOf("aria-labelledby=\"h-seats\"", StringComparison.Ordinal);
         var factions = staffPage.IndexOf("aria-labelledby=\"h-factions\"", StringComparison.Ordinal);
-        var ballots = staffPage.IndexOf("id=\"balsai\"", StringComparison.Ordinal);
+        var ballots = staffPage.IndexOf("id=\"ballots\"", StringComparison.Ordinal);
         var aside = staffPage.IndexOf("<aside class=\"stack bill-body__aside\" aria-label=\"Moderavimas\">", StringComparison.Ordinal);
         var panel = staffPage.IndexOf("id=\"vote-moderation\"", StringComparison.Ordinal);
         var closing = staffPage.LastIndexOf("Posėdžio pradžia:", StringComparison.Ordinal);

@@ -123,20 +123,20 @@ public sealed class ParliamentPageTests : E2ETest
         var ballotSearch = page.Locator("#ballot-search");
         await ballotSearch.GetByLabel("Vardas ar pavardė").FillAsync("azuol");
         await ballotSearch.GetByRole(AriaRole.Button, new() { Name = "Rodyti", Exact = true }).ClickAsync();
-        await AtAsync(page, @"/seimas/balsavimai/99100002\?q=azuol[^#]*#balsai$");
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?q=azuol[^#]*#ballots$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(1);
         await Assertions.Expect(page.Locator("#ballot-rows")).ToContainTextAsync("Marius Ąžuolaitis");
         await page.Locator("#ballot-clear").ClickAsync();
-        await AtAsync(page, @"/seimas/balsavimai/99100002#balsai$");
-        await page.Locator("#ballots-pries").ClickAsync();
-        await AtAsync(page, @"/seimas/balsavimai/99100002\?balsas=pries#balsai$");
+        await AtAsync(page, @"/seimas/balsavimai/99100002#ballots$");
+        await page.Locator("#ballots-against").ClickAsync();
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?balsas=pries#ballots$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(20);
         await Assertions.Expect(page.Locator("#ballots-shown")).ToHaveTextAsync("Rodoma 20 iš 38");
         await ballotSearch.GetByLabel("Frakcija").SelectOptionAsync(new SelectOptionValue { Label = "Pilietinės sąjungos frakcija" });
         await ballotSearch.GetByRole(AriaRole.Button, new() { Name = "Rodyti", Exact = true }).ClickAsync();
-        await AtAsync(page, @"/seimas/balsavimai/99100002\?[^#]*frakcija=pilietines-sajungos-frakcija[^#]*#balsai$");
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?[^#]*frakcija=pilietines-sajungos-frakcija[^#]*#ballots$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(8);
-        await Assertions.Expect(page.Locator("#ballots-pries")).ToHaveAttributeAsync("aria-current", "true");
+        await Assertions.Expect(page.Locator("#ballots-against")).ToHaveAttributeAsync("aria-current", "true");
         await Assertions.Expect(page.Locator("#ballots-shown")).ToHaveTextAsync("Rodoma 8 iš 8");
     }
 

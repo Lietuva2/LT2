@@ -155,7 +155,7 @@
 <data name="List.EmptyClosed" xml:space="preserve"><value>Uždarytų projektų dar nėra.</value></data>
 <data name="List.Found" xml:space="preserve"><value>Rasta projektų: {0}</value></data>
 <data name="List.Planned" xml:space="preserve"><value>Planuojami per 14 dienų</value></data>
-<data name="List.Search" xml:space="preserve"><value>Projekto numeris arba pavadinimas</value></data>
+<data name="List.Search" xml:space="preserve"><value>Projekto Nr. arba pavadinimas</value></data>
 <data name="List.SearchButton" xml:space="preserve"><value>Rodyti</value></data>
 <data name="List.Sort.aktyvumas" xml:space="preserve"><value>pagal aktyvumą</value></data>
 <data name="List.Sort.data" xml:space="preserve"><value>pagal planuojamą datą</value></data>

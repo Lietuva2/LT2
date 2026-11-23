@@ -118,7 +118,7 @@ public static class CommentPaging
     /// first new one, whose own id the link cannot know (design 8.23.14).
     /// </summary>
     public static string PositionAnchor(Guid targetId, int position) =>
-        "komentaras-" + targetId.ToString("N") + "-" + position.ToString(CultureInfo.InvariantCulture);
+        "comment-" + targetId.ToString("N") + "-" + position.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>The page's path with the responses' page parameter kept (design 8.5.6), for the links the islands build.</summary>
     public static string PagePath(string number, string? responsesShown) =>

@@ -459,7 +459,7 @@ public sealed partial class StartPageTests : E2ETest
             var more = page.Locator("#agenda-coming section.tl-day a.show-more__link").First;
             await Assertions.Expect(more).ToHaveCountAsync(1);
             var landing = (await more.GetAttributeAsync("href"))!.Split('#')[1];
-            var day = page.Locator("#diena-" + Regex.Match(landing, @"^agenda-(\d{4}-\d{2}-\d{2})-").Groups[1].Value);
+            var day = page.Locator("#day-" + Regex.Match(landing, @"^agenda-(\d{4}-\d{2}-\d{2})-").Groups[1].Value);
             await Assertions.Expect(day.Locator("li.tl-item")).ToHaveCountAsync(10);
             await more.ClickAsync();
             await page.WaitForURLAsync(new Regex("diena=.*:60#agenda-"), new() { Timeout = E2ESteps.Slow });

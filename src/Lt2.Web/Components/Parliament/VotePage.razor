@@ -27,7 +27,7 @@
         </ol>
         @* Design 7.2: a classification a moderator corrected says so beside the stage, never who. *@
         <p class="label num">@string.Join(" · ", Label(vote))@if (v.ClassificationCorrected)
-            {<text> · </text><Lt2.Web.Client.Components.Hint Id="classification-corrected" Text="@F.T["Vote.Corrected"]" Answer="@F.T["Vote.Corrected.Answer"]" More="/metodika#stadijos" />}</p>
+            {<text> · </text><Lt2.Web.Client.Components.Hint Id="classification-corrected" Text="@F.T["Vote.Corrected"]" Answer="@F.T["Vote.Corrected.Answer"]" More="/metodika#stages" />}</p>
         <h1>@heading</h1>
         @if (_moderator)
         {

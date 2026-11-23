@@ -8,7 +8,7 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Me;
 
 /// <summary>
-/// Changing the account's email address (design 6.2), on "Saugumas ir duomenys" (<c>#el-pastas</c>):
+/// Changing the account's email address (design 6.2), on "Saugumas ir duomenys" (<c>#email-address</c>):
 /// <list type="bullet">
 /// <item><c>POST /api/v1/me/email/proof-code</c>: a code to the address in use, the proof a session not signed in with a passkey
 /// gives (202; limited per client address as every code request, and by the sign-in code's limits);</item>

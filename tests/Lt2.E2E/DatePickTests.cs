@@ -20,7 +20,7 @@ public sealed class DatePickTests : E2ETest
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var session = await PageAsync(1280, 900, javaScript: true);
         var page = session.Page;
-        var (text, button) = (page.Locator("#votes-iki"), page.Locator("button[data-date-pick='votes-iki']"));
+        var (text, button) = (page.Locator("#votes-to"), page.Locator("button[data-date-pick='votes-to']"));
 
         await Assertions.Expect(button).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(button).ToHaveAttributeAsync("aria-label", "Pasirinkti datą iš kalendoriaus");
@@ -50,7 +50,7 @@ public sealed class DatePickTests : E2ETest
 
         await page.Locator("#votes-search button[type=submit]").ClickAsync();
         await page.WaitForURLAsync(u => u.Contains("iki=2026-03-05", StringComparison.Ordinal), new() { Timeout = E2ESteps.Slow });
-        await Assertions.Expect(page.Locator("#votes-iki")).ToHaveValueAsync("2026-03-05");
+        await Assertions.Expect(page.Locator("#votes-to")).ToHaveValueAsync("2026-03-05");
         session.ConsoleErrors.ShouldBeEmpty();
     }
 
@@ -60,17 +60,17 @@ public sealed class DatePickTests : E2ETest
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var session = await PageAsync(1280, 900, javaScript: true);
         var page = session.Page;
-        var (text, button) = (page.Locator("#votes-iki"), page.Locator("button[data-date-pick='votes-iki']"));
+        var (text, button) = (page.Locator("#votes-to"), page.Locator("button[data-date-pick='votes-to']"));
 
         await text.FillAsync("2025-12-31");
         await page.Locator("#votes-search button[type=submit]").ClickAsync();
         await page.WaitForURLAsync(u => u.Contains("iki=2025-12-31", StringComparison.Ordinal), new() { Timeout = E2ESteps.Slow });
-        await Assertions.Expect(page.Locator("#votes-iki")).ToHaveValueAsync("2025-12-31");
+        await Assertions.Expect(page.Locator("#votes-to")).ToHaveValueAsync("2025-12-31");
 
-        await page.Locator("#votes-iki").FillAsync("vakar");
+        await page.Locator("#votes-to").FillAsync("vakar");
         await button.ClickAsync();
         (await page.Locator("input[type=date].date-pick__native").InputValueAsync()).ShouldBe("");
-        await Assertions.Expect(page.Locator("#votes-iki")).ToHaveValueAsync("vakar");
+        await Assertions.Expect(page.Locator("#votes-to")).ToHaveValueAsync("vakar");
         session.ConsoleErrors.ShouldBeEmpty();
     }
 
@@ -81,9 +81,9 @@ public sealed class DatePickTests : E2ETest
         await using var session = await PageAsync(1280, 900, javaScript: false);
         var page = session.Page;
 
-        await Assertions.Expect(page.Locator("#votes-iki")).ToBeVisibleAsync();
-        await Assertions.Expect(page.Locator("button[data-date-pick='votes-iki']")).ToBeHiddenAsync();
-        await page.Locator("#votes-iki").FillAsync("2025-12-31");
+        await Assertions.Expect(page.Locator("#votes-to")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("button[data-date-pick='votes-to']")).ToBeHiddenAsync();
+        await page.Locator("#votes-to").FillAsync("2025-12-31");
         await page.Locator("#votes-search button[type=submit]").ClickAsync();
         await page.WaitForURLAsync(u => u.Contains("iki=2025-12-31", StringComparison.Ordinal), new() { Timeout = E2ESteps.Slow });
     }
@@ -107,7 +107,7 @@ public sealed class DatePickTests : E2ETest
         };
         page.PageError += (_, error) => session.ConsoleErrors.Add("page error: " + error);
         await page.GotoAsync(Base + VotesPath);
-        await Assertions.Expect(page.Locator("#votes-iki")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#votes-to")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         return session;
     }
 

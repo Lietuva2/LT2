@@ -31,5 +31,5 @@ public static class ResponsePaging
         (show is { } n && n != MpResponseLimits.First ? path + "?" + MpResponseLimits.ShowParameter + "=" + n.ToString(CultureInfo.InvariantCulture) : path) + "#" + fragment;
 
     /// <summary>The element id of the item at <paramref name="position"/> (1-based): "Rodyti daugiau" lands on the first new one.</summary>
-    public static string ItemId(int position) => "atsakymas-" + position.ToString(CultureInfo.InvariantCulture);
+    public static string ItemId(int position) => "response-" + position.ToString(CultureInfo.InvariantCulture);
 }

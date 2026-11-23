@@ -191,7 +191,7 @@ public sealed class TermsTests : E2ETest
             await page.GotoAsync(E2ESteps.Base + "/prisijungti?registruotis=true#tikslas=/seimas/XVP-0412");
             await SignUpTests.WaitForInteractivityAsync(page);
             outside.AddRange(await OutsideAsync(page, inventory, "member registering"));
-            (await page.EvaluateAsync<string?>("() => sessionStorage.getItem('lt2.tikslas')")).ShouldBe("/seimas/XVP-0412", "the check sees what the site stores");
+            (await page.EvaluateAsync<string?>("() => sessionStorage.getItem('lt2.return-path')")).ShouldBe("/seimas/XVP-0412", "the check sees what the site stores");
             await E2ESteps.RegisterHereAsync(page, E2ESteps.NewEmail(), "Atminties Narė", SignUpTests.Invitation);
             await page.WaitForURLAsync(new Regex("/seimas/XVP-0412$"), new() { Timeout = E2ESteps.Slow });
             foreach (var path in paths.Concat(["/paskyra", "/paskyra/sekimas", "/paskyra/dalyvavimas", "/paskyra/saugumas"]))

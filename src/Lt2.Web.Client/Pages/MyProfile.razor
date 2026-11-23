@@ -15,7 +15,7 @@
     @if (Mine is { } mine)
     {
         <form class="stack stack--loose" id="profile-form" @onsubmit="SaveAsync" novalidate>
-            <div class="stack" role="group" aria-labelledby="name-title" id="vardas">
+            <div class="stack" role="group" aria-labelledby="name-title" id="name">
                 <h3 id="name-title">@L["Name.Title"]</h3>
                 <div class="field @ErrorClass("displayName")">
                     <label for="display-name">@L["DisplayName.Label"]</label>
@@ -29,7 +29,7 @@
 
             @if (!_mpAccount)
             {
-                <div class="stack" role="group" aria-labelledby="profile-title" id="viesas-profilis">
+                <div class="stack" role="group" aria-labelledby="profile-title" id="public-profile">
                     <h3 id="profile-title">@L["PublicProfile.Title"]</h3>
                     @if (mine.Address is { } address)
                     {

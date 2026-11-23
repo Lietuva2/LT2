@@ -113,7 +113,7 @@ public sealed class RecordReasonsTests : BunitContext
         var answer = served.Find("#endorse-what-panel .hint__answer").TextContent;
         answer.ShouldContain("bet kurios pusės, tik ne savo parašytus");
         answer.ShouldContain("Skaičiuojamos tik žymos prie tos pusės argumentų, kurios prašote patys");
-        served.Find("#endorse-what-panel .hint__more").GetAttribute("href").ShouldBe("/metodika#argumentai");
+        served.Find("#endorse-what-panel .hint__more").GetAttribute("href").ShouldBe("/metodika#arguments");
         served.Find("#h-why + #reasons-endorse-what").ShouldNotBeNull("beside the heading");
 
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -471,7 +471,7 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 2 iš 30");
         var more = reasons.Find("#reasons #reasons-for #reasons-more-for");
         more.TextContent.ShouldBe("Rodyti daugiau argumentų");
-        more.GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=22#argumentai-uz-3");
+        more.GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=22#arguments-for-3");
         reasons.FindAll("#reasons-more-against").ShouldBeEmpty("one argument against: nothing more to show");
 
         more.Click();
@@ -482,10 +482,10 @@ public sealed class RecordReasonsTests : BunitContext
         asked[2].ShouldBe("2", "from where the first page ends");
         asked[3].ShouldBe(20, "owner, 2026-11-19: a list of texts grows by 20");
         reasons.Find($"#reason-{many[2].Id}").GetAttribute("tabindex").ShouldBe("-1", "the first one added");
-        reasons.Find($"#reason-{many[2].Id} > .said__by").Id.ShouldBe("argumentai-uz-3");
+        reasons.Find($"#reason-{many[2].Id} > .said__by").Id.ShouldBe("arguments-for-3");
         JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal));
         reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 22 iš 30");
-        reasons.Find("#reasons-more-for").GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=42#argumentai-uz-23");
+        reasons.Find("#reasons-more-for").GetAttribute("href").ShouldBe($"/seimas/{Bill}?atsakymai=20&argumentai-uz=42#arguments-for-23");
 
         reasons.Find("#reasons-more-for").Click();
         reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Count.ShouldBe(30));

@@ -58,7 +58,7 @@ public sealed class MemberStopLinkTests
         yield return follow.Voted(new FollowVotedEmail(To, Bill, Title, null, new DateOnly(2026, 11, 13), true, null, null, null, null, "/seimas/balsavimai/1", [], Account, token));
         yield return follow.Closed(new FollowClosedEmail(To, Bill, Title, "rejected", new DateOnly(2026, 11, 17), "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas", "/seimas/XVP-0412", Account, token));
         yield return follow.Statement(new FollowStatementEmail(To, "Pavyzdžių asociacija", null, null, Bill, Title, "for", "/seimas/XVP-0412", Account, null, token));
-        yield return follow.Responses(new FollowResponsesEmail(To, Bill, Title, new DateOnly(2026, 11, 15), [new FollowedResponse("Jonas Petraitis", null, "against")], "/seimas/XVP-0412#atsakymai", Account, token));
+        yield return follow.Responses(new FollowResponsesEmail(To, Bill, Title, new DateOnly(2026, 11, 15), [new FollowedResponse("Jonas Petraitis", null, "against")], "/seimas/XVP-0412#responses", Account, token));
         yield return follow.Member(new FollowMemberEmail(To, "Rūta Mockutė", Bill, Title, "/seimas/XVP-0412", "/nariai/ruta-mockute-abcdefghij", Account, StopToken: token));
         yield return follow.Comments(new CommentNoticeEmail(To, [new CommentedArgumentLine(Bill, Title, "/seimas/XVP-0412")], Account, token));
         yield return Gathered(follow, token);
@@ -137,10 +137,10 @@ public sealed class MemberStopLinkTests
         }
     }
 
-    /// <summary>The follows screen renders <c>#laisku-daznis</c> (the account screens' test in <c>SignInComponentTests</c>).</summary>
+    /// <summary>The follows screen renders <c>#email-frequency</c> (the account screens' test in <c>SignInComponentTests</c>).</summary>
     [Fact]
     public void The_footers_link_to_how_often_is_the_follows_screens_part_on_the_choice() =>
-        NoticeDelivery.AccountPath.ShouldBe("/paskyra/sekimas#laisku-daznis");
+        NoticeDelivery.AccountPath.ShouldBe("/paskyra/sekimas#email-frequency");
 
     [Fact]
     public void The_modules_links_and_the_contracts_routes_name_the_same_addresses()

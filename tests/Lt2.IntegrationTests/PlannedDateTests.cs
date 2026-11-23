@@ -50,7 +50,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
                 var hint = AppealPageTests.HintOf(html, "planned-from");
                 hint.Trigger.ShouldBe("Iš kur ši data?");
                 hint.Answer.ShouldBe("Tai Seimo posėdžio data iš darbotvarkės projekto, kurį lrs.lt skelbia maždaug 10–12 dienų į priekį. Tokios datos dažnai keičiasi.");
-                hint.More.ShouldBe("/metodika#planuojamos-datos");
+                hint.More.ShouldBe("/metodika#planned-dates");
                 html.ShouldContain("<a href=\"https://www.lrs.lt/pavyzdys/darbotvarke\" rel=\"external\" id=\"planned-agenda\">Darbotvarkė lrs.lt</a>");
                 html.ShouldNotContain("href=\"https://e-seimas.lrs.lt/pavyzdys\"", Case.Sensitive, "the row's document link shows no date");
                 html.IndexOf("<aside", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"stages\"", StringComparison.Ordinal));

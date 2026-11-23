@@ -514,7 +514,7 @@ public sealed class SignInComponentTests : BunitContext
         // Design 8.15: what is kept and what is deleted is answered in place (a hint), not by leaving the confirmation.
         staffSession.Find("#delete-staff-kept #delete-staff-more").TextContent.ShouldBe(Text("Data.DeleteStaffMore"));
         staffSession.Find("#delete-staff-more-panel .hint__answer").TextContent.ShouldBe(Text("Data.DeleteStaffMoreAnswer"));
-        staffSession.Find("#delete-staff-more-panel a").GetAttribute("href").ShouldBe("/metodika#istrynimas");
+        staffSession.Find("#delete-staff-more-panel a").GetAttribute("href").ShouldBe("/metodika#deletion");
 
         SignedIn(FakeMeApi.Member);
         var member = Render<AccountSecurity>();
@@ -533,10 +533,10 @@ public sealed class SignInComponentTests : BunitContext
         SignedIn(FakeMeApi.Member);
         var screens = new (Func<IRenderedComponent<IComponent>> Render, string Path, string Part, string[] Holds, string[] NotHere)[]
         {
-            (() => Render<Hello>(), "/paskyra", "profilis", ["#vardas", "#viesas-profilis", "#about-text", "#profile-public-switch"], ["#sekami", "#laisku-daznis", "#my-data", "#my-invitation"]),
-            (() => Render<AccountFollows>(), "/paskyra/sekimas", "sekimas-ir-laiskai", ["#sekami", "#follow-notices", "#laisku-daznis", "#rhythm-choices"], ["#vardas", "#my-data", "#my-invitation"]),
-            (() => Render<AccountTaking>(), "/paskyra/dalyvavimas", "dalyvavimas", ["#my-invitation", "#my-organisations"], ["#vardas", "#sekami", "#laisku-daznis", "#my-data"]),
-            (() => Render<AccountSecurity>(), "/paskyra/saugumas", "saugumas-ir-duomenys", ["#zinomos-narsykles", "#my-data", "#export"], ["#vardas", "#sekami", "#laisku-daznis", "#my-invitation"]),
+            (() => Render<Hello>(), "/paskyra", "profile", ["#name", "#public-profile", "#about-text", "#profile-public-switch"], ["#followed-items", "#email-frequency", "#my-data", "#my-invitation"]),
+            (() => Render<AccountFollows>(), "/paskyra/sekimas", "following-and-emails", ["#followed-items", "#follow-notices", "#email-frequency", "#rhythm-choices"], ["#name", "#my-data", "#my-invitation"]),
+            (() => Render<AccountTaking>(), "/paskyra/dalyvavimas", "participation", ["#my-invitation", "#my-organisations"], ["#name", "#followed-items", "#email-frequency", "#my-data"]),
+            (() => Render<AccountSecurity>(), "/paskyra/saugumas", "security-and-data", ["#known-browsers", "#my-data", "#export"], ["#name", "#followed-items", "#email-frequency", "#my-invitation"]),
         };
 
         foreach (var (render, path, part, holds, notHere) in screens)
@@ -628,9 +628,9 @@ public sealed class SignInComponentTests : BunitContext
     [Fact]
     public void The_anchors_emails_and_texts_link_to_live_on_their_screens()
     {
-        AccountScreens.FollowsList.ShouldBe("/paskyra/sekimas#sekami");
-        AccountScreens.EmailRhythm.ShouldBe("/paskyra/sekimas#laisku-daznis", "the footer of every email of the rhythm (design 8.24.1)");
-        AccountScreens.KnownBrowsers.ShouldBe("/paskyra/saugumas#zinomos-narsykles");
+        AccountScreens.FollowsList.ShouldBe("/paskyra/sekimas#followed-items");
+        AccountScreens.EmailRhythm.ShouldBe("/paskyra/sekimas#email-frequency", "the footer of every email of the rhythm (design 8.24.1)");
+        AccountScreens.KnownBrowsers.ShouldBe("/paskyra/saugumas#known-browsers");
         AccountScreens.MyData.ShouldBe("/paskyra/saugumas#my-data");
         AccountScreens.MyInvitation.ShouldBe("/paskyra/dalyvavimas#my-invitation");
         Lt2.SharedKernel.AccountScreens.All.ShouldBe(AccountScreens.All, "the browser's copy and the modules' are one file");
@@ -704,7 +704,7 @@ public sealed class SignInComponentTests : BunitContext
         _profiles.On("AcceptConsentAsync", ApiResult.Ok());
         var page = Render<Hello>();
 
-        page.Find("#viesas-profilis #profile-consent-outdated").TextContent.ShouldBe(Text("PublicProfile.ConsentOutdated"));
+        page.Find("#public-profile #profile-consent-outdated").TextContent.ShouldBe(Text("PublicProfile.ConsentOutdated"));
         page.Find("#profile-public").TextContent.ShouldContain(Text("PublicProfile.IsPublic"), Case.Sensitive, "the profile stays on");
         page.FindAll("#profile-consent").ShouldBeEmpty("the text in force opens only when asked for");
 
@@ -859,7 +859,7 @@ public sealed class SignInComponentTests : BunitContext
     {
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
         var codeSession = Render<AccountTaking>();
-        codeSession.Find("#dalyvavimas #staff-key-note span").TextContent.ShouldBe(Text("Staff.KeyText"));
+        codeSession.Find("#participation #staff-key-note span").TextContent.ShouldBe(Text("Staff.KeyText"));
         codeSession.Find("#staff-key-passkey-step-confirm").TextContent.ShouldBe(Text("PasskeyStep.Confirm"));
         codeSession.FindAll("#staff-links").ShouldBeEmpty();
         Render<AccountSecurity>().FindAll("#delete-staff-passkey-step-confirm").ShouldNotBeEmpty("the one beside the deletion note stays, on its own screen");
@@ -867,8 +867,8 @@ public sealed class SignInComponentTests : BunitContext
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true, ActiveStaffRoles = ["moderator"] });
         var staffSession = Render<AccountTaking>();
         staffSession.FindAll("#staff-links").ShouldBeEmpty("owner, 2026-11-19: from the account item only");
-        staffSession.FindAll("#dalyvavimas a[href='/moderavimas']").ShouldBeEmpty();
-        staffSession.FindAll("#dalyvavimas a[href='/administravimas/nustatymai']").ShouldBeEmpty();
+        staffSession.FindAll("#participation a[href='/moderavimas']").ShouldBeEmpty();
+        staffSession.FindAll("#participation a[href='/administravimas/nustatymai']").ShouldBeEmpty();
         staffSession.FindAll("#staff-key-note").ShouldBeEmpty();
 
         SignedIn(FakeMeApi.Member);
@@ -919,8 +919,8 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#profile-form").Submit();
 
         page.WaitForAssertion(() => page.Find("#display-name").GetAttribute("aria-invalid").ShouldBe("true"));
-        page.Find("#vardas").TextContent.ShouldContain(tooLong);
-        page.Find("#viesas-profilis").TextContent.ShouldContain(code);
+        page.Find("#name").TextContent.ShouldContain(tooLong);
+        page.Find("#public-profile").TextContent.ShouldContain(code);
         page.Find("#about-text").GetAttribute("aria-invalid").ShouldBe("true");
         page.Find("#profile-form .note[role=alert]").TextContent.ShouldBe(Text("Profile.NotSaved"));
         page.Find("#display-name").GetAttribute("value").ShouldBe(new string('a', 61), "what was typed stays");
@@ -942,7 +942,7 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#display-name").Input("Rūta Mockutė");
         page.Find("#profile-form").Submit();
 
-        page.WaitForAssertion(() => page.Find("#vardas .field--error").TextContent.ShouldContain(restricted));
+        page.WaitForAssertion(() => page.Find("#name .field--error").TextContent.ShouldContain(restricted));
         page.Find("#hello-title").TextContent.ShouldContain("Rūta M.");
     }
 

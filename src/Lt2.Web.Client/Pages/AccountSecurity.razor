@@ -5,8 +5,8 @@
 @inject IAuthApi Auth
 @inject Passkeys PasskeyBrowser
 
-@* "Saugumas ir duomenys" (design 8.21): the email address (design 6.2, #el-pastas), passkeys, sessions, known browsers
-   (design 8.20.2, #zinomos-narsykles), the positions consent (design 6.5: a consent about stored data, withdrawn with
+@* "Saugumas ir duomenys" (design 8.21): the email address (design 6.2, #email-address), passkeys, sessions, known browsers
+   (design 8.20.2, #known-browsers), the positions consent (design 6.5: a consent about stored data, withdrawn with
    what it covers; any consent not withdrawn, an older text's too, with a line to accept the text in force), the export
    and deleting the account (#my-data), signing out. *@
 @if (Me is null)
@@ -17,8 +17,8 @@ else
 {
     <AccountHeader Me="Me" Current="@AccountScreens.Security" />
 
-    <section class="stack" aria-labelledby="saugumas-title" id="saugumas-ir-duomenys">
-        <h2 id="saugumas-title">@L["Parts.Security"]</h2>
+    <section class="stack" aria-labelledby="security-title" id="security-and-data">
+        <h2 id="security-title">@L["Parts.Security"]</h2>
 
         @* Design 6.2: the address in use (read in the browser only) and "Keisti adresą"; a change ends the other sessions. *@
         <MyEmail Changed="ReloadSessionsAsync" />
@@ -67,12 +67,12 @@ else
         </div>
 
         @* Design 8.20.2: the browsers known to the account, beside the sessions; forgetting one makes it a stranger again. *@
-        <section class="sheet stack" aria-labelledby="known-browsers-title" id="zinomos-narsykles">
+        <section class="sheet stack" aria-labelledby="known-browsers-title" id="known-browsers">
             <h3 id="known-browsers-title">@L["KnownBrowsers.Title"]</h3>
             <p>@L["KnownBrowsers.Text"]</p>
             @if (KnownBrowsers is { Count: > 0 } known)
             {
-                <ul class="rows" id="known-browsers">
+                <ul class="rows" id="known-browser-list">
                     @foreach (var browser in known)
                     {
                         <li @key="browser.Id">
@@ -140,7 +140,7 @@ else
                 @if (Me.StaffAccount)
                 {
                     @* Design 6.9: what one did as staff outlives the account; said where it cannot be undone (design 8.15). *@
-                    <p class="note" id="delete-staff-kept">@L["Data.DeleteStaffKept"]@(" ")<Hint Id="delete-staff-more" Text="@L["Data.DeleteStaffMore"]" Answer="@L["Data.DeleteStaffMoreAnswer"]" More="/metodika#istrynimas" /></p>
+                    <p class="note" id="delete-staff-kept">@L["Data.DeleteStaffKept"]@(" ")<Hint Id="delete-staff-more" Text="@L["Data.DeleteStaffMore"]" Answer="@L["Data.DeleteStaffMoreAnswer"]" More="/metodika#deletion" /></p>
                 }
                 <div class="row">
                     <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@L["Data.DeleteConfirm"]</button>

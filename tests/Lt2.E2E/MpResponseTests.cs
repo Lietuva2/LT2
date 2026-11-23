@@ -80,7 +80,7 @@ public sealed partial class MpResponseTests : E2ETest
 
             // 3. The form on the bill's page, in the passkey session: published at once.
             await page.GotoAsync($"{Base}/seimas/{Bill}");
-            var form = page.Locator("#mano-atsakymas");
+            var form = page.Locator("#my-response");
             await Assertions.Expect(form).ToContainTextAsync($"Rašote Seimo nario vardu: {Name}.", new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(form).ToContainTextAsync("Seimo narys arba jo biuras");
             await E2ESteps.ShootBothAsync(page, Shots, "form", form);
@@ -88,7 +88,7 @@ public sealed partial class MpResponseTests : E2ETest
             await page.Locator("#my-response-text").FillAsync(First);
             await page.Locator("#my-response-submit").ClickAsync();
             await Assertions.Expect(page.Locator("#my-response-state")).ToContainTextAsync("Atsakymas paskelbtas", new() { Timeout = E2ESteps.Slow });
-            var part = page.Locator("#atsakymai");
+            var part = page.Locator("#responses");
             await Assertions.Expect(part.Locator("#responses-list")).ToContainTextAsync(First, new() { Timeout = E2ESteps.Slow });
             await E2ESteps.ShootBothAsync(page, Shots, "published", part);
 
@@ -100,21 +100,21 @@ public sealed partial class MpResponseTests : E2ETest
             subject.ShouldBeOneOf($"Lietuva 2.0: Seimo narių atsakymai dėl {Bill}", "Lietuva 2.0: naujienos apie tai, ką sekate");
             text.ShouldContain($"{Name}");
             text.ShouldContain("balsuos už");
-            text.ShouldContain($"/seimas/{Bill}#atsakymai");
+            text.ShouldContain($"/seimas/{Bill}#responses");
             text.ShouldNotContain(First, Case.Sensitive, "never the explanation's text");
 
             // 4. A visitor without JavaScript sees it on the bill's page and on the profile, with the mark.
             await using (var visitor = await VisitorAsync())
             {
                 await visitor.Page.GotoAsync($"{Base}/seimas/{Bill}");
-                var shown = visitor.Page.Locator("#atsakymai");
+                var shown = visitor.Page.Locator("#responses");
                 await Assertions.Expect(shown).ToContainTextAsync(First);
                 await Assertions.Expect(shown).ToContainTextAsync(Name);
                 await Assertions.Expect(shown).ToContainTextAsync("Seimo narys arba jo biuras");
                 await Assertions.Expect(shown).ToContainTextAsync("Balsuos už");
                 await E2ESteps.ShootBothAsync(visitor.Page, Shots, "visitor-bill", shown);
                 await visitor.Page.GotoAsync($"{Base}/p/{Slug}");
-                var answers = visitor.Page.Locator("#atsakymai");
+                var answers = visitor.Page.Locator("#responses");
                 await Assertions.Expect(answers).ToContainTextAsync("Atsakymai");
                 await Assertions.Expect(answers).ToContainTextAsync(Bill);
                 await Assertions.Expect(answers).ToContainTextAsync(First);
@@ -147,7 +147,7 @@ public sealed partial class MpResponseTests : E2ETest
             await using (var visitor = await VisitorAsync())
             {
                 await visitor.Page.GotoAsync($"{Base}/seimas/{Bill}");
-                await Assertions.Expect(visitor.Page.Locator("#atsakymai")).ToContainTextAsync("Atsakymas atsiimtas");
+                await Assertions.Expect(visitor.Page.Locator("#responses")).ToContainTextAsync("Atsakymas atsiimtas");
             }
 
             mp.ConsoleErrors.ShouldBeEmpty();

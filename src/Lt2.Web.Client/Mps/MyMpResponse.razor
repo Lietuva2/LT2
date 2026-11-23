@@ -15,7 +15,7 @@
    brings the part's sheet with it (Section); for everyone else it renders nothing. *@
 @if (_mine is not null && Section)
 {
-    <section class="sheet stack" id="atsakymai" aria-labelledby="h-responses">
+    <section class="sheet stack" id="responses" aria-labelledby="h-responses">
         <h2 id="h-responses">@L["MpResponse.Section"]</h2>
         @Form
     </section>
@@ -30,7 +30,7 @@ else if (_mine is not null)
     private RenderFragment Form => __builder =>
     {
         var mine = _mine!;
-    <div class="sheet sheet--quiet stack stack--tight" id="mano-atsakymas" aria-labelledby="my-response-title">
+    <div class="sheet sheet--quiet stack stack--tight" id="my-response" aria-labelledby="my-response-title">
         <h3 id="my-response-title">@L["MpResponse.Title"]</h3>
         <p class="small">@L.Format("MpResponse.For", mine.Mp.FirstName + " " + mine.Mp.LastName)</p>
         <p class="small" id="my-response-public">@L["MpResponse.Public"]</p>

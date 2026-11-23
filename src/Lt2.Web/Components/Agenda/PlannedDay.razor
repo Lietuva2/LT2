@@ -23,7 +23,7 @@
         }
         @if (View.UnknownShown)
         {
-            <UnknownBills Items="View.Unknown" Day="Day" Id="@($"{Id}-nezinomi")" />
+            <UnknownBills Items="View.Unknown" Day="Day" Id="@($"{Id}-unknown")" />
         }
         @if (AgendaRules.Paged(First, View.Known))
         {

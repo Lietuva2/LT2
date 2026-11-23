@@ -93,7 +93,7 @@ public sealed partial class MemberStopLinkTests(DatabaseFixture database) : ApiT
             message.Headers.ShouldNotBeNull();
             message.Headers!["List-Unsubscribe"].ShouldBe($"<{Site}/api/v1/notices/{token}/stop>");
             message.Headers["List-Unsubscribe-Post"].ShouldBe("List-Unsubscribe=One-Click");
-            message.TextBody.ShouldContain($"Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.\nKeisti periodiškumą: {Site}/paskyra/sekimas#laisku-daznis · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{token}\n");
+            message.TextBody.ShouldContain($"Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.\nKeisti periodiškumą: {Site}/paskyra/sekimas#email-frequency · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{token}\n");
             message.HtmlBody.ShouldNotBeNull().ShouldContain($"<a href=\"{Site}/laiskai/nebegauti/{token}\" style=\"color:#64748b;text-decoration:underline\">atsisakyti laiškų</a>");
 
             (await member.GetJsonAsync<NoticeSettingsResponse>(FollowRoutes.Notices)).ShouldBe(AllOn);
@@ -153,7 +153,7 @@ public sealed partial class MemberStopLinkTests(DatabaseFixture database) : ApiT
             token.ShouldBe(Keys.MemberStopToken(await UserIdAsync(email), 0));
             var message = Render("email.gathered-notices", gathered.Payload);
             message.Headers!["List-Unsubscribe"].ShouldBe($"<{Site}/api/v1/notices/{token}/stop>");
-            message.TextBody.ShouldContain($"Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0.\nKeisti periodiškumą: {Site}/paskyra/sekimas#laisku-daznis · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{token}\n");
+            message.TextBody.ShouldContain($"Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0.\nKeisti periodiškumą: {Site}/paskyra/sekimas#email-frequency · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{token}\n");
         }
         finally
         {
@@ -196,7 +196,7 @@ public sealed partial class MemberStopLinkTests(DatabaseFixture database) : ApiT
         posted.StatusCode.ShouldBe(HttpStatusCode.OK, await posted.Content.ReadAsStringAsync());
         var done = WebUtility.HtmlDecode(await posted.Content.ReadAsStringAsync());
         done.ShouldContain("Laiškų apie tai, ką sekate, nebesiųsime.");
-        done.ShouldContain("href=\"/paskyra/sekimas#sekami\"");
+        done.ShouldContain("href=\"/paskyra/sekimas#followed-items\"");
         (await member.GetJsonAsync<NoticeSettingsResponse>(FollowRoutes.Notices)).ShouldBe(AllOff);
     }
 

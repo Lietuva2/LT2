@@ -48,7 +48,7 @@ public sealed class MyEmailTests : BunitContext
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));
         var part = Render(PasskeyMember);
 
-        part.Find("#el-pastas h3").TextContent.ShouldBe("El. pašto adresas");
+        part.Find("#email-address h3").TextContent.ShouldBe("El. pašto adresas");
         part.FindAll("#email-current").ShouldBeEmpty();
         part.Markup.ShouldNotContain(MeFakes.Member.Email);
         part.Find("#email-change-open").HasAttribute("disabled").ShouldBeTrue();

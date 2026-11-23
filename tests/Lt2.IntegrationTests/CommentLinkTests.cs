@@ -63,7 +63,7 @@ public sealed partial class CommentLinkTests(DatabaseFixture database) : ApiTest
     }
 
     private static bool ThreadOpen(string html, Guid reason) =>
-        Regex.IsMatch(html, $"<details[^>]*id=\"aptarimas-{reason:N}\"[^>]*\\sopen[\\s>=]");
+        Regex.IsMatch(html, $"<details[^>]*id=\"discussion-{reason:N}\"[^>]*\\sopen[\\s>=]");
 
     [Fact]
     public async Task A_link_to_the_25th_comment_of_an_argument_beyond_the_first_two_shows_the_argument_its_open_thread_through_30_and_marks_it()
@@ -83,7 +83,7 @@ public sealed partial class CommentLinkTests(DatabaseFixture database) : ApiTest
             place.ShouldBe(new CommentPlaceResponse(linked, "reason", reason, Bill, 25));
 
             var address = BillTextLinks.ToComment(Bill, linked);
-            address.ShouldBe($"/seimas/{Bill}?komentaras={linked:N}#komentaras-{linked:N}");
+            address.ShouldBe($"/seimas/{Bill}?komentaras={linked:N}#comment-{linked:N}");
             var html = await PageAsync(address.Split('#')[0]);
             html.ShouldContain($"id=\"{BillTextLinks.ReasonElement(reason)}\"", Case.Sensitive, "the argument is shown though it is the third of its side");
             html.IndexOf($"id=\"{BillTextLinks.ReasonElement(reason)}\"", StringComparison.Ordinal)

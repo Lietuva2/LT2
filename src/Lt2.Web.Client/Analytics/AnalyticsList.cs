@@ -57,7 +57,7 @@ public static class AnalyticsList
     public const string Path = "/statistika";
 
     /// <summary>The id of the part with the list, where its form lands.</summary>
-    public const string Anchor = "palyginimas";
+    public const string Anchor = "comparison";
 
     public const int First = 10;
 
@@ -83,20 +83,20 @@ public static class AnalyticsList
 
     /// <summary>The state from the address; anything the page would not make is the default.</summary>
     public static AnalyticsListState Read(
-        string? metai, string? paskyros, string? nuo, string? iki, string? q, string? rezultatas, string? dauguma, string? rikiuoti, string? rodyti)
+        string? yearText, string? accounts, string? from, string? to, string? q, string? result, string? majority, string? sort, string? show)
     {
-        int? year = int.TryParse(metai, NumberStyles.None, CultureInfo.InvariantCulture, out var y) ? y : null;
+        int? year = int.TryParse(yearText, NumberStyles.None, CultureInfo.InvariantCulture, out var y) ? y : null;
         var query = string.IsNullOrWhiteSpace(q) || q.Trim().Length > AnalyticsBillQuery.MaxSearchLength ? null : q.Trim();
-        var shown = int.TryParse(rodyti, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
+        var shown = int.TryParse(show, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
         return new AnalyticsListState(
             year,
-            string.Equals(paskyros, OlderValue, StringComparison.Ordinal),
-            string.IsNullOrWhiteSpace(nuo) ? null : nuo.Trim(),
-            string.IsNullOrWhiteSpace(iki) ? null : iki.Trim(),
+            string.Equals(accounts, OlderValue, StringComparison.Ordinal),
+            string.IsNullOrWhiteSpace(from) ? null : from.Trim(),
+            string.IsNullOrWhiteSpace(to) ? null : to.Trim(),
             query,
-            Word(Results, rezultatas),
-            Word(Majorities, dauguma),
-            Word(Sorts, rikiuoti),
+            Word(Results, result),
+            Word(Majorities, majority),
+            Word(Sorts, sort),
             shown);
     }
 
@@ -194,7 +194,7 @@ public static class AnalyticsList
     }
 
     /// <summary>The id of a bill's row in the plot, where "Rodyti daugiau" lands.</summary>
-    public static string Row(string number) => "projektas-" + number;
+    public static string Row(string number) => "bill-" + number;
 
     private static string Word(IReadOnlyList<(string Slug, string ApiValue)> choices, string? word) =>
         choices.Any(c => c.Slug == word) ? word! : "";

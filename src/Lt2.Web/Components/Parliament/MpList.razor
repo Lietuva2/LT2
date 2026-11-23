@@ -23,8 +23,8 @@
             <input class="input" id="q" name="q" type="search" value="@Q" autocomplete="off" />
         </div>
         <div class="field">
-            <label for="frakcija">@F.T["Mps.Faction"]</label>
-            <select class="input" id="frakcija" name="frakcija">
+            <label for="faction">@F.T["Mps.Faction"]</label>
+            <select class="input" id="faction" name="frakcija">
                 <option value="">@F.T["Mps.AllFactions"]</option>
                 @foreach (var f in _factions)
                 {
@@ -33,8 +33,8 @@
             </select>
         </div>
         <div class="field">
-            <label for="komitetas">@F.T["Mps.Committee"]</label>
-            <select class="input" id="komitetas" name="komitetas">
+            <label for="committee">@F.T["Mps.Committee"]</label>
+            <select class="input" id="committee" name="komitetas">
                 <option value="">@F.T["Mps.AllCommittees"]</option>
                 @foreach (var c in _committees)
                 {

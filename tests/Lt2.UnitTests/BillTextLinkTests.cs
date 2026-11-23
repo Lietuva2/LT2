@@ -29,7 +29,7 @@ public sealed class BillTextLinkTests
     [Fact]
     public void The_links_carry_the_page_the_parameter_and_the_elements_own_anchor()
     {
-        BillTextLinks.ToComment("XVP-0412", Comment).ShouldBe($"/seimas/XVP-0412?komentaras={Comment:N}#komentaras-{Comment:N}");
+        BillTextLinks.ToComment("XVP-0412", Comment).ShouldBe($"/seimas/XVP-0412?komentaras={Comment:N}#comment-{Comment:N}");
         BillTextLinks.ToReason("XVP-0412", Comment).ShouldBe($"/seimas/XVP-0412?argumentas={Comment:N}#reason-{Comment:D}");
         CommentLimits.ElementId(Comment).ShouldBe(BillTextLinks.CommentElement(Comment));
         Lt2.SharedKernel.BillTextLinks.ToComment("XVP-0412", Comment).ShouldBe(BillTextLinks.ToComment("XVP-0412", Comment), "the modules' copy is the same file");

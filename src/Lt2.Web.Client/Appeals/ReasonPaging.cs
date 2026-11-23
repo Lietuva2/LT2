@@ -116,7 +116,7 @@ public static class ReasonPaging
     /// without script lands on the first one added, whose own id the link cannot know (as the comments do, design 8.23.14).
     /// </summary>
     public static string PositionAnchor(string side, int position) =>
-        "argumentai-" + (side == Sides.For ? "uz" : "pries") + "-" + position.ToString(CultureInfo.InvariantCulture);
+        "arguments-" + side + "-" + position.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>
     /// The page's own address with the side's count set to <paramref name="count"/> and every other parameter kept, landing on

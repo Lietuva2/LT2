@@ -90,7 +90,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             html.ShouldNotContain("id=\"agenda-no-recent\"");
             html.ShouldNotContain("agenda-votes-older");
             html.ShouldNotContain("Ankstesni balsavimai");
-            html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"tab-seimas-balsavimai\">Balsavimai</a>");
+            html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"tab-seimas-votes\">Balsavimai</a>");
             html.ShouldNotContain("Tai nėra reprezentatyvi apklausa");
             html.ShouldNotContain("id=\"not-a-poll\"");
             html.ShouldNotContain("id=\"agenda-older-note\"");
@@ -133,16 +133,16 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
 
             ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
-            var id = $"diena-{day:yyyy-MM-dd}";
+            var id = $"day-{day:yyyy-MM-dd}";
             var block = html[html.IndexOf($"id=\"{id}\"", StringComparison.Ordinal)..];
             block = block[..block.IndexOf("</section>", StringComparison.Ordinal)];
             block.ShouldContain("projektai</span>", customMessage: "the day's head counts its bills");
             block.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.ThirdBill}\"", StringComparison.Ordinal)
                 .ShouldBeLessThan(block.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.SecondBill}\"", StringComparison.Ordinal));
-            var folded = block[block.IndexOf($"id=\"{id}-nezinomi\"", StringComparison.Ordinal)..];
+            var folded = block[block.IndexOf($"id=\"{id}-unknown\"", StringComparison.Ordinal)..];
             folded.ShouldContain("<summary class=\"linkish small\">Dar 1 projektas, kurio atviruosiuose Seimo duomenyse dar nėra</summary>");
             folded.ShouldContain($"id=\"agenda-{day:yyyy-MM-dd}-{Unknown}\"");
-            block.IndexOf($"id=\"{id}-nezinomi\"", StringComparison.Ordinal).ShouldBeGreaterThan(block.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.SecondBill}\"", StringComparison.Ordinal));
+            block.IndexOf($"id=\"{id}-unknown\"", StringComparison.Ordinal).ShouldBeGreaterThan(block.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.SecondBill}\"", StringComparison.Ordinal));
             block.ShouldContain($"id=\"home-against-{day:yyyy-MM-dd}-{AppealSteps.ThirdBill}\"", customMessage: "the front page's row, with its sides (owner, 2026-11-19)");
             block.ShouldNotContain("class=\"tl-item__side\" id=\"home-side-", customMessage: "a visitor's row has no island: its sides are links");
         }
@@ -180,7 +180,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             var known = items.Where(i => i.Title is not null).ToList();
             known.Count.ShouldBeGreaterThan(60, "a day longer than its first two pages");
             known.Count.ShouldBeLessThanOrEqualTo(110, "three pages hold the day");
-            var id = $"diena-{day:yyyy-MM-dd}";
+            var id = $"day-{day:yyyy-MM-dd}";
 
             var cut = DayBlock(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke")), id);
             Regex.Count(cut, "<li class=\"tl-item\"").ShouldBe(AgendaRules.PagePerDay, "ten rows; the rest is not in the HTML");
@@ -205,7 +205,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
                 last.ShouldContain($"id=\"agenda-{day:yyyy-MM-dd}-{number}\"");
             }
 
-            last.IndexOf($"id=\"{id}-nezinomi\"", StringComparison.Ordinal)
+            last.IndexOf($"id=\"{id}-unknown\"", StringComparison.Ordinal)
                 .ShouldBeGreaterThan(last.IndexOf($"id=\"agenda-{day:yyyy-MM-dd}-{known[^1].Number}\"", StringComparison.Ordinal), "the unknown bills after the last known row");
             last.ShouldContain($"<p class=\"small num\" role=\"status\" id=\"{id}-shown\">Rodoma {items.Count} iš {items.Count}</p>", customMessage: "the folded bills count as shown with their line");
             last.ShouldNotContain("show-more__link", customMessage: "every row shown: no link");
@@ -370,7 +370,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
 
             grown = DayBlock(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/?diena={today:yyyy-MM-dd}:105")), id);
             Regex.Count(grown, "<li class=\"tl-item\"").ShouldBe(known.Count);
-            grown.ShouldContain($"id=\"{id}-nezinomi\"", customMessage: "the last page: the bills the open data does not know yet");
+            grown.ShouldContain($"id=\"{id}-unknown\"", customMessage: "the last page: the bills the open data does not know yet");
             grown.ShouldContain(Unknown);
             grown.ShouldContain($"Rodoma {items.Count} iš {items.Count}</p>");
             grown.ShouldNotContain("show-more__link");
@@ -402,11 +402,11 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             var agenda = await visitor.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda);
             var items = agenda.Days.Single(d => d.Date == day).Items;
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
-            var block = DayBlock(html, $"diena-{day:yyyy-MM-dd}");
+            var block = DayBlock(html, $"day-{day:yyyy-MM-dd}");
             items.Count(i => i.Title is not null).ShouldBeLessThanOrEqualTo(AgendaRules.PagePerDay, "a day whose rows all fit");
             block.ShouldContain($"id=\"agenda-{day:yyyy-MM-dd}-{AppealSteps.SecondBill}\"", customMessage: "the day read is the one planned");
             block.ShouldNotContain("show-more", customMessage: "every row fits: no line");
-            block.ShouldContain($"id=\"diena-{day:yyyy-MM-dd}-nezinomi\"");
+            block.ShouldContain($"id=\"day-{day:yyyy-MM-dd}-unknown\"");
             foreach (var number in unknown)
             {
                 block.ShouldContain(number);
@@ -553,8 +553,8 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
         var html = await visitor.Client.GetStringAsync("/statistika");
         var nav = html[html.IndexOf("top__nav", StringComparison.Ordinal)..];
         nav.IndexOf("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\">Seimas</a>", StringComparison.Ordinal).ShouldBeGreaterThan(0);
-        nav.IndexOf("id=\"nav-projects\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("id=\"nav-tab-projektai\"", StringComparison.Ordinal));
-        nav.IndexOf("id=\"nav-tab-projektai\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/statistika\"", StringComparison.Ordinal));
+        nav.IndexOf("id=\"nav-projects\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("id=\"nav-tab-bills\"", StringComparison.Ordinal));
+        nav.IndexOf("id=\"nav-tab-bills\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/statistika\"", StringComparison.Ordinal));
     }
 
     /// <summary>The agenda page reads the front page's copy, kept a minute (owner, 2026-11-18): read afresh.</summary>

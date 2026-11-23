@@ -154,7 +154,7 @@ public sealed class CommentRuleTests
     {
         // Ten shown, twenty more asked: the link lands on the eleventh, the first new one (its own id is not known yet).
         var address = CommentPaging.Address("/seimas/XVP-0412", Target, 30, CommentPaging.PositionAnchor(Target, 11));
-        address.ShouldBe($"/seimas/XVP-0412?komentarai={Target:N}-30#komentaras-{Target:N}-11");
+        address.ShouldBe($"/seimas/XVP-0412?komentarai={Target:N}-30#comment-{Target:N}-11");
         CommentPaging.PagePath("XVP-0412", "20").ShouldBe("/seimas/XVP-0412?atsakymai=20", "the responses' page is kept");
         CommentPaging.PagePath("XVP-0412", null).ShouldBe("/seimas/XVP-0412");
         CommentPaging.Address("/seimas/XVP-0412?atsakymai=20", Target, 20, "a").ShouldStartWith("/seimas/XVP-0412?atsakymai=20&komentarai=");
@@ -210,10 +210,10 @@ public sealed class CommentRuleTests
         var email = template.Comments(new CommentNoticeEmail(
             "ruta.mockute@pavyzdys.test",
             [new CommentedArgumentLine("XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", $"/seimas/XVP-0412#reason-{Target}")],
-            "/paskyra#sekami"));
+            "/paskyra#followed-items"));
         email.Subject.ShouldBe("Lietuva 2.0: nauji komentarai po jūsų argumentu");
         email.TextBody.ShouldContain($"XVP-0412 · Gyventojų pajamų mokesčio įstatymo pataisa: https://lt2.test/seimas/XVP-0412#reason-{Target}");
-        email.TextBody.ShouldContain("https://lt2.test/paskyra#sekami");
+        email.TextBody.ShouldContain("https://lt2.test/paskyra#followed-items");
     }
 
     /// <summary>
@@ -227,13 +227,13 @@ public sealed class CommentRuleTests
             new StringLocalizer<EmailTemplates>(new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance)),
             Options.Create(new SiteOptions { Address = "https://lt2.test" }));
         CommentedArgumentLine Line(string n) => new($"XVP-{n}", "Pataisa", $"/seimas/XVP-{n}#reason-x", new DateOnly(2026, 11, 15));
-        var one = template.Comments(new CommentNoticeEmail("ruta.mockute@pavyzdys.test", [Line("0412")], "/paskyra/sekimas#sekami")).TextBody;
+        var one = template.Comments(new CommentNoticeEmail("ruta.mockute@pavyzdys.test", [Line("0412")], "/paskyra/sekimas#followed-items")).TextBody;
         one.ShouldContain("nes šis argumentas – jūsų");
         one.ShouldContain("2026-11-15 XVP-0412 · Pataisa:");
-        var many = template.Comments(new CommentNoticeEmail("ruta.mockute@pavyzdys.test", [Line("0412"), Line("0533")], "/paskyra/sekimas#sekami")).TextBody;
+        var many = template.Comments(new CommentNoticeEmail("ruta.mockute@pavyzdys.test", [Line("0412"), Line("0533")], "/paskyra/sekimas#followed-items")).TextBody;
         many.ShouldContain("nes šie argumentai – jūsų");
 
-        var member = template.Member(new FollowMemberEmail("ona@pavyzdys.test", "Eglė Beržinytė", "XVP-0412", "Pataisa", "/seimas/XVP-0412#reason-x", "/nariai/egle-berzinyte-abcdefgh23", "/paskyra/sekimas#sekami", MemberTextKinds.Comment, new DateOnly(2026, 11, 15)));
+        var member = template.Member(new FollowMemberEmail("ona@pavyzdys.test", "Eglė Beržinytė", "XVP-0412", "Pataisa", "/seimas/XVP-0412#reason-x", "/nariai/egle-berzinyte-abcdefgh23", "/paskyra/sekimas#followed-items", MemberTextKinds.Comment, new DateOnly(2026, 11, 15)));
         member.TextBody.ShouldContain("Parašė jūsų sekamas narys: Eglė Beržinytė.");
         member.TextBody.ShouldContain("Paskelbta 2026-11-15.");
         member.TextBody.ShouldNotContain("narys Eglė", Case.Sensitive);

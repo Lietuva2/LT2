@@ -16,8 +16,9 @@
 <div class="sheet stack stack--loose legal" id="legal-text">
     @foreach (var part in Parts)
     {
-        <section class="stack stack--tight" aria-labelledby="h-@Anchor(part)" id="@Anchor(part)">
-            <h2 id="h-@Anchor(part)">@T[$"{Prefix}.{part}"]</h2>
+        var id = part.ToLowerInvariant();
+        <section class="stack stack--tight" aria-labelledby="h-@id" id="@id">
+            <h2 id="h-@id">@T[$"{Prefix}.{part}"]</h2>
             @for (var i = 1; T[$"{Prefix}.{part}.{i}"] is { ResourceNotFound: false } line; i++)
             {
                 <p>@line</p>
@@ -42,16 +43,11 @@
     /// <summary><c>Terms</c> or <c>Privacy</c>: the resource keys' prefix.</summary>
     [Parameter, EditorRequired] public string Prefix { get; set; } = "";
 
-    /// <summary>The parts in order: each a key under <see cref="Prefix"/> and, with <see cref="Anchors"/>, an id to link to.</summary>
+    /// <summary>The parts in order: each a key under <see cref="Prefix"/> and a lowercase id to link to.</summary>
     [Parameter, EditorRequired] public IReadOnlyList<string> Parts { get; set; } = [];
-
-    /// <summary>The id of each part (Lithuanian, for links such as <c>/privatumas#slapukai</c>).</summary>
-    [Parameter, EditorRequired] public IReadOnlyDictionary<string, string> Anchors { get; set; } = new Dictionary<string, string>();
 
     [Parameter, EditorRequired] public string Version { get; set; } = "";
 
     /// <summary>What a page adds at the end of a part: links, the moderators' address, the storage table.</summary>
     [Parameter] public RenderFragment<string>? After { get; set; }
-
-    private string Anchor(string part) => Anchors.TryGetValue(part, out var id) ? id : part.ToLowerInvariant();
 }

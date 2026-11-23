@@ -390,7 +390,7 @@
                 @* Owner, 2026-11-23: the hint is an "i" beside the heading "Riba" it explains (design 8.15, the icon hint). *@
                 <div class="row hint-head">
                     <h3 id="h-reach">@A["Threshold.Heading"]</h3>
-                    <Lt2.Web.Client.Components.Hint Id="threshold-what" Icon="true" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" />
+                    <Lt2.Web.Client.Components.Hint Id="threshold-what" Icon="true" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#threshold" />
                 </div>
                 <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
                                    LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == DigestRunStatuses.Sent)" @rendermode="InteractiveWebAssembly" />
@@ -449,7 +449,7 @@
                 @if (result.Vote is { HasResult: true, IsConsensus: false })
                 {
                     @* Design 8.17: the list of each MP's ballot lives only on the vote's page. *@
-                    <a href="/seimas/balsavimai/@result.Vote.Id#balsai" id="each-mp">@A["Closed.EachMp"]</a>@(" · ")
+                    <a href="/seimas/balsavimai/@result.Vote.Id#ballots" id="each-mp">@A["Closed.EachMp"]</a>@(" · ")
                 }
                 <a href="/seimas/@Uri.EscapeDataString(b.Number)#h-votes" id="all-votes">@F.T["Bill.Votes"]</a>
             </p>
@@ -525,7 +525,7 @@
                    address; the local stand-in's is not). A moderator's date says so instead. *@
                 <p class="small" id="planned-source">
                     <Lt2.Web.Client.Components.Hint Id="planned-from" Text="@A["Planned.Hint"]"
-                        Answer="@(source.SetByModerator ? A["Planned.Answer.moderator"] : A["Planned.Answer.agenda"])" More="/metodika#planuojamos-datos" />
+                        Answer="@(source.SetByModerator ? A["Planned.Answer.moderator"] : A["Planned.Answer.agenda"])" More="/metodika#planned-dates" />
                     @if (!source.SetByModerator && b.PlannedAgendaUrl is { } agendaPage && agendaPage.StartsWith("https://", StringComparison.Ordinal))
                     {
                         @(" · ")<a href="@agendaPage" rel="external" id="planned-agenda">@A["Planned.AgendaLink"]</a>

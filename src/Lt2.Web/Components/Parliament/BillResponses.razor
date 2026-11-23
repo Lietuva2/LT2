@@ -20,7 +20,7 @@
 }
 else if (_view is { Items.Count: > 0 } view)
 {
-    <section class="sheet stack" id="atsakymai" aria-labelledby="h-responses">
+    <section class="sheet stack" id="responses" aria-labelledby="h-responses">
         <div class="row list-head"><h2 id="h-responses">@F.T["Responses.Title"]</h2></div>
         @if (view.Counts.Answered > 0)
         {
@@ -31,7 +31,7 @@ else if (_view is { Items.Count: > 0 } view)
             {
                 var item = view.Items[i];
                 <li id="@ResponsePaging.ItemId(i + 1)">
-                    <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"atsakymas-{i + 1}-")"
+                    <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"response-{i + 1}-")"
                                     Mark="@(item.Response.Status == ResponseStatuses.Published ? Mark(item.Response.Id) : null)">
                         @if (_threads.GetValueOrDefault(item.Response.Id) is { } thread)
                         {

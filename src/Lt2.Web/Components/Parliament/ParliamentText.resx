@@ -169,9 +169,9 @@
   <data name="Votes.Title" xml:space="preserve"><value>Seimo balsavimai</value></data>
   <data name="Votes.Lead" xml:space="preserve"><value>Dėl ko ir kaip balsavo Seimas – pagal dienas, nuo naujausių, iš Seimo atvirųjų duomenų.</value></data>
   <data name="Votes.Kind" xml:space="preserve"><value>Kurie balsavimai</value></data>
-  <data name="Votes.Kind.etapai" xml:space="preserve"><value>Projektų etapų balsavimai</value></data>
-  <data name="Votes.Kind.priemimai" xml:space="preserve"><value>Tik priėmimai</value></data>
-  <data name="Votes.Kind.visi" xml:space="preserve"><value>Visi balsavimai</value></data>
+  <data name="Votes.Kind.stage-results" xml:space="preserve"><value>Projektų etapų balsavimai</value></data>
+  <data name="Votes.Kind.adoptions" xml:space="preserve"><value>Tik priėmimai</value></data>
+  <data name="Votes.Kind.all" xml:space="preserve"><value>Visi balsavimai</value></data>
   <data name="Votes.Until" xml:space="preserve"><value>Iki</value></data>
   <data name="Votes.None" xml:space="preserve"><value>Nerasta nė vieno balsavimo.</value></data>
   <data name="Votes.Older" xml:space="preserve"><value>Senesni balsavimai →</value></data>

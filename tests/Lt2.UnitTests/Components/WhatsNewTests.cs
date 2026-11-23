@@ -89,8 +89,8 @@ public sealed class WhatsNewTests : BunitContext
         toggle.Find("#only-new").Change(true);
 
         reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{Second}", $"reason-{Third}"]));
-        reasons.Find($"#aptarimas-{Second:N}").HasAttribute("open").ShouldBeTrue("its discussion holds a new comment");
-        reasons.Find($"#aptarimas-{Third:N}").HasAttribute("open").ShouldBeFalse();
+        reasons.Find($"#discussion-{Second:N}").HasAttribute("open").ShouldBeTrue("its discussion holds a new comment");
+        reasons.Find($"#discussion-{Third:N}").HasAttribute("open").ShouldBeFalse();
         _comments.Calls.ShouldContain("GetThreadAsync");
 
         toggle.Find("#only-new").Change(false);
@@ -98,7 +98,7 @@ public sealed class WhatsNewTests : BunitContext
         // Owner, 2026-11-19: the new argument beyond the first page was read for the switch, and stays at the end of its column.
         reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{First}", $"reason-{Second}", $"reason-{Third}"]));
         reasons.Find("#reasons-more-for-shown").TextContent.ShouldBe("Rodoma 3 iš 3");
-        reasons.Find($"#aptarimas-{Second:N}").HasAttribute("open").ShouldBeFalse();
+        reasons.Find($"#discussion-{Second:N}").HasAttribute("open").ShouldBeFalse();
     }
 
     [Fact]

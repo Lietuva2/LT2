@@ -41,7 +41,7 @@ public sealed class ExplanatoryTextTests : E2ETest
 
         await more.Locator("summary").ClickAsync();
         await Assertions.Expect(page.Locator("#register-what li")).ToHaveCountAsync(3);
-        await Assertions.Expect(more.Locator("a[href='/metodika#organizacijos']")).ToBeVisibleAsync();
+        await Assertions.Expect(more.Locator("a[href='/metodika#organisations']")).ToBeVisibleAsync();
 
         // Without JavaScript the same disclosure opens: it is the browser's own <details>.
         var browser = page.Context.Browser!;
@@ -109,10 +109,10 @@ public sealed class ExplanatoryTextTests : E2ETest
             }
         }
 
-        anchors.ShouldContain("riba", "the bill's page links \"Kas yra riba?\" there");
-        anchors.ShouldContain("suvestiniu-taisykles", "the summaries page links its rules there");
+        anchors.ShouldContain("threshold", "the bill's page links \"Kas yra riba?\" there");
+        anchors.ShouldContain("digest-rules", "the summaries page links its rules there");
         await page.GotoAsync($"{Base}/metodika");
-        foreach (var anchor in anchors.Concat(["planuojamos-datos", "privatumas", "argumentai", "organizacijos"]))
+        foreach (var anchor in anchors.Concat(["planned-dates", "privacy", "arguments", "organisations"]))
         {
             (await page.Locator($"[id='{anchor}']").CountAsync()).ShouldBe(1, $"/metodika#{anchor} exists");
         }
@@ -169,7 +169,7 @@ public sealed class ExplanatoryTextTests : E2ETest
             await Assertions.Expect(page.Locator("#threshold-what-panel")).ToBeVisibleAsync();
             await page.ScreenshotAsync(new() { Path = Path.Combine(shots, $"bill-threshold-hint-open-{width}.png") });
             await ShootAsync(page, "/metodika", $"methodology-{width}.png");
-            foreach (var part in new[] { "planuojamos-datos", "privatumas", "organizacijos", "suvestiniu-taisykles", "ribos-zmogui" })
+            foreach (var part in new[] { "planned-dates", "privacy", "organisations", "digest-rules", "per-person-limits" })
             {
                 await page.Locator($"[id='{part}']").ScreenshotAsync(new() { Path = Path.Combine(shots, $"methodology-{part}-{width}.png") });
             }

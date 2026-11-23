@@ -67,7 +67,7 @@ public sealed class BillSeimasSwitchTests(DatabaseFixture database) : ApiTest(da
         panel.ShouldContain("class=\"figure__num\">44</span>");
         panel.ShouldContain("class=\"figure__num\">10</span>");
         panel.ShouldContain("<svg class=\"splitbar ");
-        panel.ShouldContain("<a href=\"/seimas/balsavimai/99100006#balsai\" id=\"each-mp\">Kaip balsavo kiekvienas Seimo narys</a>");
+        panel.ShouldContain("<a href=\"/seimas/balsavimai/99100006#ballots\" id=\"each-mp\">Kaip balsavo kiekvienas Seimo narys</a>");
         panel.ShouldContain("<a href=\"/seimas/XVP-0412#h-votes\" id=\"all-votes\">Visi balsavimai dėl projekto</a>");
 
         // The seat map comes from an island, read when the switch is first turned to the Seimas; the page holds no ballot.

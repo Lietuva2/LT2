@@ -22,7 +22,7 @@ Read before changing a page, a component or an island. The rules behind it are d
   `ErrorClass`/`Invalid`/`DescribedBy` with `<FieldError For="input-id">` for field errors. A text with placeholders is
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
   server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to a part of the
-  same page carries the page's path (`/metodika#sekimas`, never a bare `#sekimas`): the pages carry `<base href="/">`, so
+  same page carries the page's path (`/metodika#following`, never a bare `#following`): the pages carry `<base href="/">`, so
   a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. Under every member's text (argument, statement, MP's response, comment) the
   actions are one action row (design 8.16.1, the designer's proposal of 2026-11-17): `<div class="act">` holding the toggles
   ("Man svarbu", `CommentThread`'s "Aptarimas" summary, "Sutinku" as `.act__item`) and `<MoreMenu>` ("⋯", the browser's

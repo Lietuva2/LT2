@@ -9,14 +9,14 @@
    A profile without responses has no such part, so it says nothing about whether anyone joined (8.5.2). *@
 @if (_view is { Items.Count: > 0 } view)
 {
-    <section class="sheet stack" id="atsakymai" aria-labelledby="h-answers">
+    <section class="sheet stack" id="responses" aria-labelledby="h-answers">
         <div class="row list-head"><h2 id="h-answers">@F.T["Responses.ProfileTitle"]</h2></div>
         <ol class="stack" id="answers-list">
             @for (var i = 0; i < _shown; i++)
             {
                 var item = view.Items[i];
                 <li id="@ResponsePaging.ItemId(i + 1)">
-                    <MpResponseItem Response="item.Response" Bill="item.Bill" AuthorName="@Name" IdPrefix="@($"atsakymas-{i + 1}-")" />
+                    <MpResponseItem Response="item.Response" Bill="item.Bill" AuthorName="@Name" IdPrefix="@($"response-{i + 1}-")" />
                 </li>
             }
         </ol>

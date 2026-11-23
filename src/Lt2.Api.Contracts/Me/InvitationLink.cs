@@ -4,7 +4,7 @@ namespace Lt2.Api.Contracts.Me;
 /// The registration link with an invitation code (design 6.2). Design 6.8: the code is after the <c>#</c>
 /// (<c>/prisijungti#kodas=…</c>), so the browser never sends it and no proxy or application log can hold it. A share line's
 /// link carries it the same way after a bill's address (<see cref="LandingPath.ShareLink"/>). In the browser
-/// <c>js/lt2-invitation.js</c> takes it from any page's address into session storage (design 8.22.1, <c>lt2.kodas</c>) and the
+/// <c>js/lt2-invitation.js</c> takes it from any page's address into session storage (design 8.22.1, <c>lt2.invitation-code</c>) and the
 /// registration form sends it to the API in a request body.
 /// </summary>
 public static class InvitationLink

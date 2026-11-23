@@ -100,8 +100,8 @@ public sealed class MpResponseRuleTests
         ResponsePaging.More(10, 45).ShouldBe(30, "owner, 2026-11-19: a list of texts grows by 20");
         ResponsePaging.More(30, 45).ShouldBe(45);
         ResponsePaging.More(45, 45).ShouldBeNull();
-        ResponsePaging.Address("/seimas/XVP-0412", 30, ResponsePaging.ItemId(11)).ShouldBe("/seimas/XVP-0412?atsakymai=30#atsakymas-11");
-        ResponsePaging.Address("/p/jonas-petraitis", 10, "atsakymai").ShouldBe("/p/jonas-petraitis#atsakymai");
+        ResponsePaging.Address("/seimas/XVP-0412", 30, ResponsePaging.ItemId(11)).ShouldBe("/seimas/XVP-0412?atsakymai=30#response-11");
+        ResponsePaging.Address("/p/jonas-petraitis", 10, "responses").ShouldBe("/p/jonas-petraitis#responses");
     }
 
     /// <summary>Owner, 2026-11-17: a response just published that stands beyond the shown ones is shown through it.</summary>

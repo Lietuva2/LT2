@@ -20,9 +20,9 @@ public static class MenuSections
     /// </summary>
     public static readonly IReadOnlyList<MenuItem> Items =
     [
-        new("tab-projektai", SeimasHome, "Bills", MenuPlace.Seimas, SeimasTab.Projects),
-        new("tab-seimas-balsavimai", VoteHistoryPath, "Votes", MenuPlace.Seimas, SeimasTab.Votes),
-        new("tab-suvestines", "/suvestines", "Digests", MenuPlace.Seimas, SeimasTab.Digests),
+        new("tab-bills", SeimasHome, "Bills", MenuPlace.Seimas, SeimasTab.Projects),
+        new("tab-seimas-votes", VoteHistoryPath, "Votes", MenuPlace.Seimas, SeimasTab.Votes),
+        new("tab-digests", "/suvestines", "Digests", MenuPlace.Seimas, SeimasTab.Digests),
         new("tab-mps", Mps, "Mps", MenuPlace.Seimas, SeimasTab.Mps),
         new("statistics", Statistics, "Statistics", MenuPlace.Menu),
         new("account", AccountScreens.Profile, "Account", MenuPlace.Account),

@@ -23,8 +23,8 @@ public static class MpVotePaging
     public const int Cap = MpVoteLimits.Max;
 
     /// <summary>How many the page shows: <c>rodyti</c> when it is a whole number from <see cref="First"/> to <see cref="Cap"/>.</summary>
-    public static int Shown(string? rodyti) =>
-        int.TryParse(rodyti, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
+    public static int Shown(string? show) =>
+        int.TryParse(show, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
 
     /// <summary>"Rodyti daugiau": the next value of <c>rodyti</c>; null when the API has no more or the page is full.</summary>
     public static int? More(int shown, bool hasMore) => hasMore && shown < Cap ? Lt2.Api.Contracts.ListPaging.Next(shown, Step, Cap) : null;
@@ -33,7 +33,7 @@ public static class MpVotePaging
     public static string? Older(int shown, string? nextCursor) => shown >= Cap ? nextCursor : null;
 
     /// <summary>The id of the <paramref name="number"/>-th row, where "Rodyti daugiau" lands.</summary>
-    public static string Row(int number) => "balsavimas-" + number.ToString(CultureInfo.InvariantCulture);
+    public static string Row(int number) => "vote-" + number.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>The votes by Vilnius day, newest day first, each day once (the votes come newest first).</summary>
     public static IReadOnlyList<MpVoteDay> Days(IReadOnlyList<MpVoteResponse> votes)

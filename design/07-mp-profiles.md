@@ -90,7 +90,7 @@ stands only on the profile, orders no list and is never added up per faction or 
   (`IClosingVotes`).
 - **Readers know.** The vote's page says "Klasifikaciją pataisė moderatoriai" beside the stage: a hint (8.15) whose
   answer says the rules classify a vote by its wording and that the moderators corrected this one, "Plačiau" to the
-  methodology (`/metodika#stadijos`, which says moderators correct a wrong classification and that the correction
+  methodology (`/metodika#stages`, which says moderators correct a wrong classification and that the correction
   survives re-reading the data). Never who or why. The API's vote answer carries `classificationCorrected`.
 - Data quirks are first-class: consensus votes are stored with `is_consensus` and no ballots; the official "per-MP votes
   do not match the protocol" note is stored and shown next to the result.

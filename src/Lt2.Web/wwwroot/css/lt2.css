@@ -1077,7 +1077,7 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   .home-head lt2-logo-spin { grid-area: logo; width: min(15rem, 100%); justify-self: center; align-self: center; }
 }
 
-/* "Kaip tai veikia": four numbered steps (also at the top of /metodika#kaip-tai-veikia). */
+/* "Kaip tai veikia": four numbered steps (also at the top of /metodika#how-it-works). */
 .home-how { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
 .intro-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-5); counter-reset: step; list-style: none; padding: 0; margin: 0; }
 .intro-steps > li { display: flex; flex-direction: column; gap: var(--sp-2); }
@@ -1596,7 +1596,7 @@ a.said__name { color: inherit; font-weight: 700; }
 /* Design 8.11.8: under "Rodyti tik naujus" a server-rendered response that is neither new nor has new comments leaves, and the
    responses' part with it when none stands (NewMark leaves the markers; the islands filter their own lists). */
 #responses-list > li:has(.new-out) { display: none; }
-#atsakymai:has(.new-out):not(:has(.new-keep)) { display: none; }
+#responses:has(.new-out):not(:has(.new-keep)) { display: none; }
 
 /* Design 8.5.3 (owner, 2026-11-17): the sign-in steps on the office invitation's page, as narrow as on the sign-in page. */
 .office-sign-in { max-inline-size: 30rem; }

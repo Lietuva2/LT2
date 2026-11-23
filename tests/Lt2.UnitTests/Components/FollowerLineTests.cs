@@ -29,7 +29,7 @@ public sealed class FollowerLineTests : BunitContext
         line.Find("#followers-hint").ClassList.ShouldContain("hint__trigger--icon");
         line.Find("#followers-hint .visually-hidden").TextContent.ShouldBe("Kas yra sekėjai?");
         line.FindAll("#followers-hint svg.icon").ShouldHaveSingleItem();
-        line.Find("#followers-hint-panel a").GetAttribute("href").ShouldBe("/metodika#sekimas");
+        line.Find("#followers-hint-panel a").GetAttribute("href").ShouldBe("/metodika#following");
     }
 
     /// <summary>The browser look of 2026-11-16: "Sekti" moves the number at once, without a reload.</summary>
@@ -87,7 +87,7 @@ public sealed class FollowerLineTests : BunitContext
         line.Find($"#follow-what-{kind} .visually-hidden").TextContent.ShouldBe("Kas yra sekimas?");
         line.Find($"#follow-what-{kind}-panel .hint__answer").TextContent.ShouldBe(
             what + " Kas ką seka, niekas kitas nemato. „Sekėjai“ – tiek Lietuva 2.0 narių paprašė šių laiškų; tai ne palaikymas ir ne reprezentatyvi apklausa.");
-        line.Find($"#follow-what-{kind}-panel a").GetAttribute("href").ShouldBe("/metodika#sekimas");
+        line.Find($"#follow-what-{kind}-panel a").GetAttribute("href").ShouldBe("/metodika#following");
         line.FindAll("#followers-hint").ShouldBeEmpty("one hint on the line");
     }
 

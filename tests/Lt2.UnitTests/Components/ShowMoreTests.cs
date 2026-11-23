@@ -23,13 +23,13 @@ public sealed class ShowMoreTests : BunitContext
     {
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));
         var more = Render<ShowMore>(p => p.Add(c => c.Id, "votes-more").Add(c => c.Shown, 30).Add(c => c.Total, 1234)
-            .Add(c => c.Href, "/seimas/balsavimai?rodyti=60#balsavimas-31").Add(c => c.OnMore, () => { }));
+            .Add(c => c.Href, "/seimas/balsavimai?rodyti=60#vote-31").Add(c => c.OnMore, () => { }));
 
         more.Find("#votes-more-line").ClassList.ShouldContain("show-more");
         more.Find("#votes-more-shown").TextContent.ShouldBe("Rodoma 30 iš 1 234");
         var link = more.Find("a#votes-more");
         // Owner, 2026-11-19: a plain text link, not a button's look (it clashed with the buttons under a list).
-        (link.TextContent, link.GetAttribute("href"), link.ClassName).ShouldBe(("Rodyti daugiau", "/seimas/balsavimai?rodyti=60#balsavimas-31", "show-more__link"));
+        (link.TextContent, link.GetAttribute("href"), link.ClassName).ShouldBe(("Rodyti daugiau", "/seimas/balsavimai?rodyti=60#vote-31", "show-more__link"));
         link.HasAttribute("data-enhance-nav").ShouldBeFalse("enhanced navigation fetches it");
     }
 

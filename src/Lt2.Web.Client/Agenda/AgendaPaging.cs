@@ -33,8 +33,8 @@ public static class AgendaPaging
     /// <summary>At most this many days of each kind are read from the address (the agenda reaches 10–12 days ahead, the votes seven back).</summary>
     public const int MaxDays = 31;
 
-    /// <summary>The agenda page, <c>/darbotvarke</c>: <c>#diena-…</c>, <c>#balsuota-…</c>.</summary>
-    public static readonly AgendaPagingPage Agenda = new("/darbotvarke", "diena-", "balsuota-");
+    /// <summary>The agenda page, <c>/darbotvarke</c>: <c>#day-…</c>, <c>#voted-day-…</c>.</summary>
+    public static readonly AgendaPagingPage Agenda = new("/darbotvarke", "day-", "voted-day-");
 
     /// <summary>The front page's timeline: <c>#home-day-…</c>, <c>#home-voted-…</c>.</summary>
     public static readonly AgendaPagingPage Front = new("/", "home-day-", "home-voted-");

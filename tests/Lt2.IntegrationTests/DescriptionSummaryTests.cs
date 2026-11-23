@@ -162,7 +162,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         using var visitor = NewBrowser();
         (await visitor.GetJsonAsync<AppealRulesResponse>(AppealRoutes.Rules)).AiSummaries.ShouldBeFalse();
         var method = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/metodika"));
-        method.ShouldContain("id=\"aprasymai\"");
+        method.ShouldContain("id=\"descriptions\"");
         method.ShouldContain("Sukurta DI · žmonių neperžiūrėta", customMessage: "the labels are explained");
         method.ShouldNotContain("id=\"ai-summaries\"", customMessage: "nothing promises a summary");
         method.ShouldContain("src/Modules/Lt2.Appeals/Ai/description-draft.prompt.md", customMessage: "the page names both public prompts (8.13)");

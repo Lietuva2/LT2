@@ -92,7 +92,7 @@ public sealed class MenuTests : E2ETest
         await Assertions.Expect(page.Locator("#nav-projects")).ToBeFocusedAsync();
         await Assertions.Expect(panel).ToBeVisibleAsync();
         await page.Keyboard.PressAsync("Tab");
-        await Assertions.Expect(page.Locator("#nav-tab-projektai")).ToBeFocusedAsync();
+        await Assertions.Expect(page.Locator("#nav-tab-bills")).ToBeFocusedAsync();
         await page.Keyboard.PressAsync("Escape");
         await Assertions.Expect(panel).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("#nav-projects")).ToBeFocusedAsync();
@@ -128,7 +128,7 @@ public sealed class MenuTests : E2ETest
                 await page.Locator("#nav-projects-touch").TapAsync();
             }
 
-            await page.Locator("#nav-tab-suvestines").TapAsync();
+            await page.Locator("#nav-tab-digests").TapAsync();
             await page.WaitForURLAsync(new Regex("/suvestines$"), new() { Timeout = E2ESteps.Slow });
         }
 
@@ -197,8 +197,8 @@ public sealed class MenuTests : E2ETest
         foreach (var width in new[] { 390, 1280 })
         {
             await page.SetViewportSizeAsync(width, 900);
-            await page.GotoAsync(E2ESteps.Base + "/metodika#kur-ka-rasti");
-            await Assertions.Expect(page.Locator("#kur-ka-rasti dd")).ToHaveCountAsync(13);
+            await page.GotoAsync(E2ESteps.Base + "/metodika#where-to-find");
+            await Assertions.Expect(page.Locator("#where-to-find dd")).ToHaveCountAsync(13);
             await E2ESteps.NoSidewaysScrollAsync(page, $"/metodika at {width} px");
             await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"where-{width}.png"), FullPage = true });
         }
@@ -232,16 +232,16 @@ public sealed class MenuTests : E2ETest
         var page = visitor.Page;
         (string Path, string Tab, string Id)[] tabs =
         [
-            ("/darbotvarke", "Projektai", "tab-projektai"),
-            ("/seimas/balsavimai", "Balsavimai", "tab-seimas-balsavimai"),
-            ("/suvestines", "Suvestinės", "tab-suvestines"),
+            ("/darbotvarke", "Projektai", "tab-bills"),
+            ("/seimas/balsavimai", "Balsavimai", "tab-seimas-votes"),
+            ("/suvestines", "Suvestinės", "tab-digests"),
             ("/seimo-nariai", "Seimo nariai", "tab-mps"),
         ];
 
         // From the menu item's dropdown to the agenda, then from every tab to every other by its link.
         await page.GotoAsync(E2ESteps.Base + "/metodika");
         await page.Locator("#nav-projects").HoverAsync();
-        await page.Locator("#nav-tab-projektai").ClickAsync();
+        await page.Locator("#nav-tab-bills").ClickAsync();
         await page.WaitForURLAsync(new Regex("/darbotvarke$"), new() { Timeout = E2ESteps.Slow });
         foreach (var from in tabs)
         {
@@ -259,7 +259,7 @@ public sealed class MenuTests : E2ETest
 
         // The views of "Projektai" (a second row under the tab row): the agenda, the open bills, the closed ones.
         await page.GotoAsync(E2ESteps.Base + "/projektai");
-        await Assertions.Expect(page.Locator("#tab-projektai")).ToHaveAttributeAsync("aria-current", "page");
+        await Assertions.Expect(page.Locator("#tab-bills")).ToHaveAttributeAsync("aria-current", "page");
         await page.Locator("#tab-closed").ClickAsync();
         await page.WaitForURLAsync(new Regex("/projektai/uzdaryti$"), new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.Locator("#tab-closed")).ToHaveAttributeAsync("aria-current", "page");
@@ -268,10 +268,10 @@ public sealed class MenuTests : E2ETest
         await Assertions.Expect(page.Locator("#view-agenda")).ToHaveAttributeAsync("aria-current", "page");
 
         // The history of votes is the tab "Balsavimai": marked there, "Projektai" is not.
-        await page.Locator("#tab-seimas-balsavimai").ClickAsync();
+        await page.Locator("#tab-seimas-votes").ClickAsync();
         await page.WaitForURLAsync(new Regex("/seimas/balsavimai$"), new() { Timeout = E2ESteps.Slow });
-        await Assertions.Expect(page.Locator("#tab-seimas-balsavimai")).ToHaveAttributeAsync("aria-current", "page");
-        await Assertions.Expect(page.Locator("#tab-projektai")).Not.ToHaveAttributeAsync("aria-current", "page");
+        await Assertions.Expect(page.Locator("#tab-seimas-votes")).ToHaveAttributeAsync("aria-current", "page");
+        await Assertions.Expect(page.Locator("#tab-bills")).Not.ToHaveAttributeAsync("aria-current", "page");
         await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", "true");
         await E2ESteps.NoSidewaysScrollAsync(page);
         Directory.CreateDirectory(Shots);
@@ -346,7 +346,7 @@ public sealed class MenuTests : E2ETest
         await Assertions.Expect(follows).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await follows.ClickAsync();
         await page.WaitForURLAsync(new Regex("/paskyra/sekimas$"), new() { Timeout = E2ESteps.Slow });
-        await Assertions.Expect(page.Locator("#sekimas-title")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("#following-title")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#part-follows")).ToHaveAttributeAsync("aria-current", "page");
         await Assertions.Expect(page.Locator("#account-parts")).ToBeVisibleAsync();
         member.ConsoleErrors.ShouldBeEmpty();

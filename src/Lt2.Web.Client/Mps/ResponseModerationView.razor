@@ -23,7 +23,7 @@
             {
                 <article class="sheet stack stack--tight" id="queue-response-@r.Id" aria-label="@L["RespMod.Item"]" @key="r.Id">
                     <div class="row">
-                        <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(r.Bill.Number)#atsakymai">@r.Bill.Number</a>
+                        <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(r.Bill.Number)#responses">@r.Bill.Number</a>
                         <b>@r.Mp.FirstName @r.Mp.LastName</b>
                         <span class="tag">@L["RespMod.Status." + r.Status]</span>
                         @foreach (var flag in r.Flags)

@@ -1,7 +1,7 @@
 /*
  * Design 8.11.5, 6.8, 8.22.1: a link with an invitation code carries it after the '#' (a share line's link
  * /seimas/XVP-0412#kodas=…, an invitation link /prisijungti#kodas=…), which the browser never sends. On whatever page such a
- * link opens, this takes the code into the tab's session storage under the one key the inventory lists for it ('lt2.kodas',
+ * link opens, this takes the code into the tab's session storage under the one key the inventory lists for it ('lt2.invitation-code',
  * BrowserKeys.InvitationCode) and removes it from the address bar, so the address copied from there or shared again
  * carries no code. The registration form (SignInFlow) fills itself in from it and forgets it once used. Anything else after
  * the '#' (a page part, 'tikslas') stays. Storage may be refused (private windows, settings): then the code is simply not kept.
@@ -9,7 +9,7 @@
 (function () {
   'use strict';
 
-  var KEY = 'lt2.kodas';
+  var KEY = 'lt2.invitation-code';
   var PARAMETER = 'kodas';
 
   function take() {

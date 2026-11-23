@@ -62,7 +62,7 @@ public sealed partial class ReasonsToComeTests : E2ETest
         var href = (await dayMore.GetAttributeAsync("href"))!;
         var link = Regex.Match(href, @"^/darbotvarke\?diena=(\d{4}-\d{2}-\d{2}):60#(agenda-\1-.+)$");
         link.Success.ShouldBeTrue(href);
-        var dayId = "diena-" + link.Groups[1].Value;
+        var dayId = "day-" + link.Groups[1].Value;
         var dayRows = page.Locator($"#{dayId} li.tl-item");
         (await dayRows.CountAsync()).ShouldBe(10, "ten rows of a long day, and no more in the page");
         await Assertions.Expect(page.Locator($"#{dayId}-shown")).ToHaveTextAsync(new Regex(@"^Rodoma 10 iš \d+$"));
@@ -93,7 +93,7 @@ public sealed partial class ReasonsToComeTests : E2ETest
             var side = (await more.GetAttributeAsync("id"))!["reasons-more-".Length..];
             var shown = await page.Locator($"#reasons-{side} .said").CountAsync();
             var to = (await more.GetAttributeAsync("href"))!;
-            to.ShouldMatch(@"^/seimas/XVP-0412\?argumentai-(uz|pries)=22#argumentai-(uz|pries)-3$");
+            to.ShouldMatch(@"^/seimas/XVP-0412\?argumentai-(uz|pries)=22#arguments-(for|against)-3$");
             await more.ClickAsync();
             await page.WaitForURLAsync(new Regex("argumentai-(uz|pries)=22"), new() { Timeout = E2ESteps.Slow });
             (await page.Locator($"#reasons-{side} .said").CountAsync()).ShouldBeGreaterThan(shown);
@@ -205,7 +205,7 @@ public sealed partial class ReasonsToComeTests : E2ETest
         {
             // The code left the address bar at once and waits in the tab; the visitor's side button signs in and comes back.
             await page.WaitForFunctionAsync("() => location.hash === ''", null, new() { Timeout = E2ESteps.Slow });
-            (await page.EvaluateAsync<string?>("() => sessionStorage.getItem('lt2.kodas')")).ShouldBe(SignUpTests.Invitation);
+            (await page.EvaluateAsync<string?>("() => sessionStorage.getItem('lt2.invitation-code')")).ShouldBe(SignUpTests.Invitation);
             await page.Locator("a.btn--for").First.ClickAsync();
             await page.WaitForURLAsync(new Regex("/prisijungti"), new() { Timeout = E2ESteps.Slow });
         }

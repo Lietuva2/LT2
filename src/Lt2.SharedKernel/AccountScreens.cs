@@ -25,16 +25,16 @@ public static class AccountScreens
     public const string Security = "/paskyra/saugumas";
 
     /// <summary>The follows and their switches; every follow email links here (design 8.11.2).</summary>
-    public const string FollowsList = Follows + "#sekami";
+    public const string FollowsList = Follows + "#followed-items";
 
     /// <summary>
     /// How often the emails come (design 8.24): "Keisti periodiškumą" in the footer of every email of the member's rhythm links
     /// here (design 8.24.1, owner 2026-11-17).
     /// </summary>
-    public const string EmailRhythm = Follows + "#laisku-daznis";
+    public const string EmailRhythm = Follows + "#email-frequency";
 
     /// <summary>"El. pašto adresas": the address in use and changing it (design 6.2).</summary>
-    public const string Email = Security + "#el-pastas";
+    public const string Email = Security + "#email-address";
 
     /// <summary>
     /// The page the old address's link opens to put it back (design 6.2), its one-time code after the <c>#</c>. It needs no session;
@@ -43,7 +43,7 @@ public static class AccountScreens
     public const string EmailRestore = "/paskyra/el-pastas/grazinti";
 
     /// <summary>The known browsers (design 8.20.2).</summary>
-    public const string KnownBrowsers = Security + "#zinomos-narsykles";
+    public const string KnownBrowsers = Security + "#known-browsers";
 
     /// <summary>The export and deleting the account (design 6.5); the legal texts link here.</summary>
     public const string MyData = Security + "#my-data";

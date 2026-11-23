@@ -33,7 +33,7 @@
         {
             @foreach (var day in MpVotePaging.Days(votes.Items))
             {
-                <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="diena-@Display.Day(day.Day)">
+                <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="day-@Display.Day(day.Day)">
                     <TimelineDate Label="@F.T.Format("Votes.Year", day.Day.Year)" Day="day.Day" />
                     <div class="tl-rows">
                         <MpVoteRows Votes="day.Rows.Select(r => r.Vote).ToList()" First="day.Rows[0].Number" ShowDate="false" />

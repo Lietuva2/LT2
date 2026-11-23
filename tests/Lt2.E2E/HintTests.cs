@@ -31,7 +31,7 @@ public sealed class HintTests : E2ETest
         await panel.HoverAsync();
         await page.WaitForTimeoutAsync(800);
         await Assertions.Expect(panel).ToBeVisibleAsync();
-        await Assertions.Expect(panel.Locator("a[href='/metodika#riba']")).ToBeVisibleAsync();
+        await Assertions.Expect(panel.Locator("a[href='/metodika#threshold']")).ToBeVisibleAsync();
 
         await page.Mouse.MoveAsync(5, 5);
         await Assertions.Expect(panel).ToBeHiddenAsync();

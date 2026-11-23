@@ -81,7 +81,7 @@ public sealed class MyStartTests : BunitContext
         start.Find("#h-starter").TextContent.ShouldBe("Pradėkite nuo vieno projekto");
         start.FindAll("#home-start-full > li").Count.ShouldBe(4);
         start.FindAll("#home-start-short > li").Count.ShouldBe(4);
-        start.Find("#home-start-how").GetAttribute("href").ShouldBe("/metodika#kaip-tai-veikia");
+        start.Find("#home-start-how").GetAttribute("href").ShouldBe("/metodika#how-it-works");
         _bills.Calls.ShouldBe(["GetAsync"], "the rows' own answer, no request of its own");
     }
 

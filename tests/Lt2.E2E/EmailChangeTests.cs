@@ -26,7 +26,7 @@ public sealed partial class EmailChangeTests : E2ETest
         {
             // 1. Registered and signed in by a code; the part shows the address in use, read in the browser.
             email = await PasskeyTests.RegisterAsync(page, "Rūta Mockutė");
-            var part = page.Locator("#el-pastas");
+            var part = page.Locator("#email-address");
             await Assertions.Expect(part.Locator("#email-current")).ToHaveTextAsync(email, new() { Timeout = E2ESteps.Slow });
             var open = part.GetByRole(AriaRole.Button, new() { Name = "Keisti adresą" });
             await Assertions.Expect(open).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });

@@ -45,7 +45,7 @@
         @if (!Closed)
         {
             @* Owner, 2026-11-21: the filter is a box in the search form, right above "Rodyti", applied with it. *@
-            <label class="check small"><input type="checkbox" id="planuojami" name="planuojami" value="taip" checked="@Planned" /><span>@T["List.Planned"]</span></label>
+            <label class="check small"><input type="checkbox" id="planned-only" name="planuojami" value="taip" checked="@Planned" /><span>@T["List.Planned"]</span></label>
         }
         @* "Tik mano": a member's own bills instead of the list (design 8.12.5); an island, so nothing of any member is in this page. *@
         <MineOnlyBox @rendermode="InteractiveWebAssembly" />

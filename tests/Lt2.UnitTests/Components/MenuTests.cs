@@ -19,9 +19,9 @@ public sealed class MenuTests : BunitContext
     }
 
     [Theory]
-    [InlineData(SeimasTab.Projects, "tab-projektai")]
-    [InlineData(SeimasTab.Votes, "tab-seimas-balsavimai")]
-    [InlineData(SeimasTab.Digests, "tab-suvestines")]
+    [InlineData(SeimasTab.Projects, "tab-bills")]
+    [InlineData(SeimasTab.Votes, "tab-seimas-votes")]
+    [InlineData(SeimasTab.Digests, "tab-digests")]
     [InlineData(SeimasTab.Mps, "tab-mps")]
     public void The_head_shows_the_heading_and_the_tab_row_marking_the_page_it_stands_on(SeimasTab current, string currentId)
     {
@@ -44,7 +44,7 @@ public sealed class MenuTests : BunitContext
     [InlineData("projektai?rikiuoti=dalyviai", SeimasTab.Projects)]
     [InlineData("/projektai/uzdaryti", SeimasTab.Projects)]
     [InlineData("/projektai/uzdaryti/?q=x", SeimasTab.Projects)]
-    [InlineData("/seimas/balsavimai?kas=visi#balsavimai", SeimasTab.Votes)]
+    [InlineData("/seimas/balsavimai?kas=visi#votes", SeimasTab.Votes)]
     [InlineData("/seimas/balsavimai/", SeimasTab.Votes)]
     [InlineData("/suvestines/", SeimasTab.Digests)]
     [InlineData("/seimo-nariai?q=jonas", SeimasTab.Mps)]

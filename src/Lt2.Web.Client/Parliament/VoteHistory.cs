@@ -44,18 +44,18 @@ public static class VoteHistory
     public const string DefaultKind = "etapai";
 
     /// <summary>The id of the list's sheet, where "Senesni balsavimai" lands.</summary>
-    public const string ListId = "balsavimai";
+    public const string ListId = "votes";
 
     /// <summary>The choices of the dropdown in its order, with their words in the address and the API's kinds.</summary>
     public static IReadOnlyList<(string Slug, string ApiKind)> Kinds { get; } =
         [(DefaultKind, VoteListQuery.StageResults), ("priemimai", VoteListQuery.Adoptions), ("visi", VoteListQuery.All)];
 
     /// <summary>The state from the address; anything the page would not make is the default.</summary>
-    public static VoteHistoryState Read(string? q, string? kas, string? iki, string? rodyti)
+    public static VoteHistoryState Read(string? q, string? kindSlug, string? until, string? show)
     {
-        var kind = Kinds.Any(k => k.Slug == kas) ? kas! : DefaultKind;
-        var shown = int.TryParse(rodyti, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
-        return new VoteHistoryState(VoteListQuery.Query(q), kind, VoteListQuery.Until(iki), shown);
+        var kind = Kinds.Any(k => k.Slug == kindSlug) ? kindSlug! : DefaultKind;
+        var shown = int.TryParse(show, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
+        return new VoteHistoryState(VoteListQuery.Query(q), kind, VoteListQuery.Until(until), shown);
     }
 
     /// <summary>The page's address with this state, landing on <paramref name="fragment"/>; defaults are left out.</summary>
@@ -145,5 +145,5 @@ public static class VoteHistory
     }
 
     /// <summary>The id of the <paramref name="number"/>-th row, where "Rodyti daugiau" lands.</summary>
-    public static string Row(int number) => "balsavimas-" + number.ToString(CultureInfo.InvariantCulture);
+    public static string Row(int number) => "vote-" + number.ToString(CultureInfo.InvariantCulture);
 }

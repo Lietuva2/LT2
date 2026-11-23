@@ -19,11 +19,11 @@ public static class BillListPaging
     public const int Cap = Lt2.Api.Contracts.Appeals.BillListLimits.Max;
 
     /// <summary>How many the page shows: <c>rodyti</c> when it is a whole number from <see cref="First"/> to <see cref="Cap"/>.</summary>
-    public static int Shown(string? rodyti) =>
-        int.TryParse(rodyti, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
+    public static int Shown(string? show) =>
+        int.TryParse(show, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n >= First && n <= Cap ? n : First;
 
     /// <summary>Where the page starts: <c>nuo</c> when it is a whole number, else the first bill.</summary>
-    public static int Offset(string? nuo) => int.TryParse(nuo, NumberStyles.None, CultureInfo.InvariantCulture, out var n) ? n : 0;
+    public static int Offset(string? from) => int.TryParse(from, NumberStyles.None, CultureInfo.InvariantCulture, out var n) ? n : 0;
 
     /// <summary>How many to ask for: one more than shown while the page may grow, so "Rodyti daugiau" can land on the next bill.</summary>
     public static int Asked(int shown) => shown < Cap ? shown + 1 : shown;

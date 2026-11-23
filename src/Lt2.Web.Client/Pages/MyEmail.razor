@@ -3,13 +3,13 @@
 @inject IAuthApi Auth
 @inject Passkeys PasskeyBrowser
 
-@* Design 6.2, "Changing the email address", on "Saugumas ir duomenys" (#el-pastas). The address in use is read by the island in the
+@* Design 6.2, "Changing the email address", on "Saugumas ir duomenys" (#email-address). The address in use is read by the island in the
    browser: the page the server renders holds nothing of it. "Keisti adresą" opens the form in place: first proving it is the
    person (a passkey session, made here by "Patvirtinti prieigos raktu", or a code sent to the address in use, typed in the
    same form; a staff account needs its staff passkey, confirmed in the last ten minutes, and the MP's own account a passkey
    session), then the new address, then the code sent to it. The answer to the address is the same whether it is free or not.
    On success the address shown is the new one and the island tells the page (Changed): the account's other sessions ended. *@
-<section class="sheet stack" aria-labelledby="email-title" id="el-pastas">
+<section class="sheet stack" aria-labelledby="email-title" id="email-address">
     <h3 id="email-title">@L["EmailPart.Title"]</h3>
     @if (_me is null)
     {
