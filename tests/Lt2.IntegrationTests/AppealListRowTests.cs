@@ -138,8 +138,8 @@ public sealed class AppealListRowTests(DatabaseFixture database) : ApiTest(datab
             row.ShouldContain("Prašau balsuoti");
             row.ShouldContain($"<a class=\"btn btn--for cta\" id=\"home-for-{Empty}\" href=\"/prisijungti#tikslas=%2Fseimas%2F{Empty}\"");
             row.ShouldContain($"<a class=\"btn btn--against cta\" id=\"home-against-{Empty}\" href=\"/prisijungti#tikslas=%2Fseimas%2F{Empty}\"");
-            row.ShouldNotContain("dar niekas nedalyvauja", customMessage: "the participants are said once, in the right column; a bill without arguments has no text line");
-            row.ShouldNotContain("argumentų", customMessage: "no arguments, no count of them");
+            row.ShouldNotContain("dar niekas nedalyvauja", customMessage: "the participants are said once, in the right column");
+            row.ShouldNotContain("argumentų", customMessage: "a bill without arguments says nothing of them, in the right column either");
             html.ShouldNotContain("id=\"home-side-", customMessage: "a visitor's row has no island: its sides are links");
             html.ShouldNotContain("id=\"home-mine-");
             html.ShouldNotContain("id=\"needs-script\"");

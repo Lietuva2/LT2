@@ -145,7 +145,6 @@
 <data name="What.Source.ai" xml:space="preserve"><value>Sukurta DI · žmonių neperžiūrėta</value></data>
 <data name="What.MadeOn" xml:space="preserve"><value>Parengta {0}</value></data>
 <data name="What.MadeFrom" xml:space="preserve"><value>Oficialus tekstas, iš kurio parengta</value></data>
-<data name="List.Arguments" xml:space="preserve"><value>argumentų {0}</value></data>
 <data name="List.Clear" xml:space="preserve"><value>Išvalyti</value></data>
 <data name="List.EmptyClosed" xml:space="preserve"><value>Uždarytų projektų dar nėra.</value></data>
 <data name="List.Found" xml:space="preserve"><value>Rasta projektų: {0}</value></data>
