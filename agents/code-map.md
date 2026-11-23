@@ -28,7 +28,7 @@ src/Lt2.Hosting            what the web host and the worker set up the same way:
 src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients (logging at Warning
                            and above only, owner 2026-11-17: no console line per request); the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
-                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
+                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js), DatePick (the calendar button of a typed date, js/lt2-dates.js),
                            ProjectTabs and MenuSections (design 8.21: the one list of the menu's and the footer's items
                            with their lines, 8.28.2), MoreMenu and Icon (the action row, design 8.16.1,
                            js/lt2-menus.js), Appeals/ModerationMenu with ModerationChoice, and ActionHeading (a moderator's

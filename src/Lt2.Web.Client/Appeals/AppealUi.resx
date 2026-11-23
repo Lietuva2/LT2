@@ -289,7 +289,6 @@
 <data name="Mod.Done.close" xml:space="preserve"><value>Atlikta: projektas uždarytas.</value></data>
 <data name="Mod.Done.reopen" xml:space="preserve"><value>Atlikta: uždarymas atšauktas.</value></data>
 <data name="Mod.Refresh" xml:space="preserve"><value>Atnaujinti eilę</value></data>
-<data name="Date.Hint" xml:space="preserve"><value>Data skaičiais, pvz., {0}</value></data>
 <data name="Date.Invalid" xml:space="preserve"><value>Įrašykite datą skaičiais: metai-mėnuo-diena, pvz., {0}.</value></data>
 <data name="Admin.PageTitle" xml:space="preserve"><value>Nustatymai · Lietuva 2.0</value></data>
 <data name="Admin.Title" xml:space="preserve"><value>Nustatymai</value></data>

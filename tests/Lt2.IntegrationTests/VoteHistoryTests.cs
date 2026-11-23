@@ -210,6 +210,11 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         html.ShouldNotContain("id=\"view-agenda\"", customMessage: "no views row: the page is reached by a link");
         html.ShouldNotContain("id=\"to-agenda\"", customMessage: "the tab row leads back to the agenda; no breadcrumb");
         html.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimas/balsavimai\" role=\"search\" id=\"votes-search\">");
+        // "Iki" is a text field with the calendar button right after it, in one row; the field is never type=date.
+        Regex.IsMatch(html, "<div class=\"date-row\">[\r\n ]*<input [^>]*id=\"votes-iki\"[^>]*type=\"text\"[^>]*/?>[\r\n ]*<button type=\"button\" class=\"date-pick\" data-date-pick=\"votes-iki\" aria-label=\"Pasirinkti datą iš kalendoriaus\" hidden>")
+            .ShouldBeTrue("the calendar button is hidden until js/lt2-dates.js shows it");
+        html.ShouldNotContain("type=\"date\"");
+        html.ShouldNotContain("votes-iki-hint", customMessage: "no hint line under the date field: the placeholder shows the form");
         html.IndexOf("id=\"votes-search\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"balsavimai\"", StringComparison.Ordinal), "the controls lie above the list's sheet");
         var list = List(html);
         // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the tab row stays at the top of

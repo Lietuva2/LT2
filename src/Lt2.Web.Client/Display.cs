@@ -5,7 +5,8 @@ namespace Lt2.Web.Client;
 /// <summary>
 /// How every page writes numbers and dates (<c>AGENTS.md</c> "Wording", design/ui/README.md): tabular figures with a
 /// no-break space for thousands; dates in numbers as <c>yyyy-MM-dd</c>, with <c>HH:mm</c> in Vilnius time; a typed date
-/// is a text field in <c>yyyy-MM-dd</c>, never the browser's date control. The one formatting class of the interface,
+/// is a text field in <c>yyyy-MM-dd</c> with a calendar button beside it (<c>DatePick</c>); the field itself is never the
+/// browser's date control. The one formatting class of the interface,
 /// used by the WebAssembly islands and the server-rendered pages alike (the browser cannot use
 /// <c>Lt2.SharedKernel.VilniusTime</c>, so the zone is looked up here for the interface).
 /// </summary>

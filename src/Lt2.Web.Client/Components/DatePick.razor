@@ -1,0 +1,19 @@
+@inject IStringLocalizer<UiText> T
+
+@* The calendar button beside a typed date field (owner, 2026-11-23: the field stays a text field in yyyy-MM-dd, manual entry
+   unchanged; the button only opens the browser's own date picker and writes the picked day back into the text field). It is
+   only the button: put it directly after the text input, both inside one <div class="date-row">, and give the input an id
+   that is passed as InputId. Without JavaScript the button would do nothing, so it is rendered hidden and js/lt2-dates.js
+   shows it (as lt2-theme.js shows the theme switch), also for buttons an island or an enhanced navigation renders later,
+   and leaves it hidden in a browser without showPicker(). The native date input the script uses is made there, on the first
+   press, never rendered by a page: the field itself is never a date control. One component for every date field, on server
+   pages and in islands alike. *@
+<button type="button" class="date-pick" data-date-pick="@InputId" aria-label="@T["Date.Pick"]" hidden disabled="@Disabled"><Icon Name="calendar" /></button>
+
+@code {
+    /// <summary>The id of the text input this button fills; the input must have one.</summary>
+    [Parameter, EditorRequired] public string InputId { get; set; } = "";
+
+    /// <summary>The button is disabled with its field (a form that is sending).</summary>
+    [Parameter] public bool Disabled { get; set; }
+}

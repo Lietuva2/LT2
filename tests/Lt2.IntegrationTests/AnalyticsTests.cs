@@ -93,6 +93,15 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             // The filters are closed until one is set; with no bill in the plot, the table is open at once.
             Regex.Match(html, "<details[^>]*id=\"compare-filters-box\"[^>]*>").Value.ShouldNotContain("open");
             html.ShouldContain("id=\"compare-filters-toggle\">Filtrai</summary>");
+
+            // Each typed day is a text field with the calendar button right after it, in one row; the field is never type=date.
+            foreach (var field in new[] { "compare-nuo", "compare-iki" })
+            {
+                Regex.IsMatch(html, $"<div class=\"date-row\">[\r\n ]*<input [^>]*id=\"{field}\"[^>]*type=\"text\"[^>]*/?>[\r\n ]*<button type=\"button\" class=\"date-pick\" data-date-pick=\"{field}\" aria-label=\"Pasirinkti datą iš kalendoriaus\" hidden>")
+                    .ShouldBeTrue($"{field} has its calendar button, hidden until js/lt2-dates.js shows it");
+            }
+
+            html.ShouldNotContain("type=\"date\"");
             var alone = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/statistika?q={Bill}"));
             Regex.Match(alone, "<details[^>]*id=\"compare-filters-box\"[^>]*>").Value.ShouldContain("open");
             alone.ShouldContain("id=\"compare-filters-toggle\">Filtrai (1)</summary>");

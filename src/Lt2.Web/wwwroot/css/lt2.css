@@ -63,7 +63,7 @@
   --note-bg: #fdeebf;
   --note-ink: #5a4200;
   --error: #b3261e;
-  --focus: #ffb000;
+  --focus: var(--ink);
 
   /* Initials badges (design 8.25.4): eight neutral colour pairs, none a party colour or a red, green or amber state; the
      letters are at least 4.5:1 against their background in both themes. */
@@ -119,7 +119,7 @@
     --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
     --for: #217740; --for-tint: #23462d; --against: #b4433f; --against-tint: #59302d;
     --abstain: #7a857f; --absent: #38433d;
-    --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
+    --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: var(--ink);
 
     --badge-0-bg: #233a5a; --badge-0-ink: #cfe0fa;
     --badge-1-bg: #2b2e5c; --badge-1-ink: #d3d5f7;
@@ -142,7 +142,7 @@
   --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
   --for: #217740; --for-tint: #23462d; --against: #b4433f; --against-tint: #59302d;
   --abstain: #7a857f; --absent: #38433d;
-  --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
+  --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: var(--ink);
 
   --badge-0-bg: #233a5a; --badge-0-ink: #cfe0fa;
   --badge-1-bg: #2b2e5c; --badge-1-ink: #d3d5f7;
@@ -384,6 +384,25 @@ lt2-logo-spin {
 .textarea { min-height: 7rem; resize: vertical; font-family: var(--font-voice); font-size: var(--fs-3); }
 .input--code { font: 700 2rem/1 var(--font-display); letter-spacing: 0.35em; max-width: 14rem; }
 .field--error .input { border-color: var(--error); }
+/* A typed date and its calendar button (DatePick, js/lt2-dates.js): one row, the button as tall as the field with the same
+   frame and square corners. The button is hidden until the script shows it. The native date input the script makes on
+   the first press lies over the text field, invisible, so the browser's popup opens at the field. */
+.date-row { position: relative; display: flex; align-items: stretch; }
+.date-row > .input { flex: 1 1 auto; inline-size: auto; min-inline-size: 0; }
+/* The field and its button are one control: the focus ring goes round both, not round the field alone over the button's frame. */
+.date-row > .input:focus-visible, .date-pick:focus-visible { outline: none; }
+.date-row:has(:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.date-pick {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  inline-size: 3rem; padding: 0; margin: 0;
+  border: 2px solid var(--ink-2); border-inline-start: 0; border-radius: 0;
+  background: var(--sheet); color: var(--ink); cursor: pointer;
+}
+.date-pick[hidden] { display: none; }
+.date-pick:hover:not(:disabled) { background: var(--brand-tint); }
+.date-pick:disabled { cursor: not-allowed; }
+.field--error .date-pick { border-color: var(--error); }
+.date-pick__native { position: absolute; left: 0; top: 0; margin: 0; padding: 0; border: 0; opacity: 0; pointer-events: none; }
 .field__error { font-weight: 600; color: var(--error); }
 /* A checkbox or a radio beside its text (owner, 2026-11-17: "the radios are so large, they don't line up"): one size for
    both, centred on the first line of the text, so a one-line option lines up and a long consent keeps its box at the

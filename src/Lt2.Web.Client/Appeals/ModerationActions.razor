@@ -105,9 +105,11 @@
                     <div class="pair">
                         <div class="field @ErrorClass("date")">
                             <label for="planned-@Key">@L["Mod.PlannedDate"]</label>
-                            <p class="field__hint" id="planned-hint-@Key">@L.Format("Date.Hint", Display.DateExample)</p>
-                            <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
-                                   id="planned-@Key" aria-describedby="@DescribedBy("date", $"planned-{Key}", $"planned-hint-{Key}")" aria-invalid="@Invalid("date")" @bind="_planned" disabled="@Locked" />
+                            <div class="date-row">
+                                <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                                       id="planned-@Key" aria-describedby="@DescribedBy("date", $"planned-{Key}")" aria-invalid="@Invalid("date")" @bind="_planned" disabled="@Locked" />
+                                <DatePick InputId="@($"planned-{Key}")" Disabled="Locked" />
+                            </div>
                             <FieldError Errors="Errors" Field="date" For="@($"planned-{Key}")" />
                         </div>
                         <div class="field">
@@ -122,8 +124,8 @@
                 }
                 @if (_open == "close")
                 {
-                    @* Design 8.1 step 6 (owner, 2026-11-19): what happened, the day of that decision (a typed date, never the
-                       browser's control) and the source on lrs.lt, with the statement below. *@
+                    @* Design 8.1 step 6 (owner, 2026-11-19): what happened, the day of that decision (a typed date with a
+                       calendar button, the field itself never the browser's control) and the source on lrs.lt, with the statement below. *@
                     <fieldset class="stack stack--tight @ErrorClass("reason")" id="close-reason-@Key">
                         <legend class="label">@L["Mod.Close.Reason"]</legend>
                         @foreach (var reason in ClosingReasons.ByModerator)
@@ -138,10 +140,12 @@
                     </fieldset>
                     <div class="field @ErrorClass("decidedOn")">
                         <label for="close-date-@Key">@L["Mod.Close.Date"]</label>
-                        <p class="field__hint" id="close-date-hint-@Key">@L.Format("Date.Hint", Display.DateExample)</p>
-                        <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
-                               id="close-date-@Key" aria-describedby="@DescribedBy("decidedOn", $"close-date-{Key}", $"close-date-hint-{Key}")" aria-invalid="@Invalid("decidedOn")"
-                               @bind="_decidedOn" disabled="@Locked" />
+                        <div class="date-row">
+                            <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                                   id="close-date-@Key" aria-describedby="@DescribedBy("decidedOn", $"close-date-{Key}")" aria-invalid="@Invalid("decidedOn")"
+                                   @bind="_decidedOn" disabled="@Locked" />
+                            <DatePick InputId="@($"close-date-{Key}")" Disabled="Locked" />
+                        </div>
                         <FieldError Errors="Errors" Field="decidedOn" For="@($"close-date-{Key}")" />
                     </div>
                     <div class="field @ErrorClass("sourceUrl")">

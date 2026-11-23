@@ -6,7 +6,6 @@
 @inject IMetaApi Meta
 @inject Formats F
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
-@inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> U
 
 @* Design 8.18: the history of the Seimas's votes, the long form of the start page's "Balsuota", the tab "Balsavimai" of "Seimas" (also reached
    by the links "Ankstesni balsavimai" of the start page). Public, server-rendered, the same for everyone: no island, no script, nothing about the caller and no
@@ -38,9 +37,11 @@
         </div>
         <div class="field">
             <label for="votes-iki">@F.T["Votes.Until"]</label>
-            <p class="field__hint" id="votes-iki-hint">@U.Format("Date.Hint", Display.DateExample)</p>
-            <input class="input num" id="votes-iki" name="iki" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern"
-                   placeholder="@Display.DateExample" value="@(_state.Until is { } until ? Display.Day(until) : null)" aria-describedby="votes-iki-hint" />
+            <div class="date-row">
+                <input class="input num" id="votes-iki" name="iki" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern"
+                       placeholder="@Display.DateExample" value="@(_state.Until is { } until ? Display.Day(until) : null)" />
+                <DatePick InputId="votes-iki" />
+            </div>
         </div>
         <div class="row">
             <button class="btn" type="submit">@F.T["Mps.Show"]</button>
