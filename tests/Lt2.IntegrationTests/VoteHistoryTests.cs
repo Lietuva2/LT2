@@ -308,10 +308,15 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         amendment.ShouldContain($"<a class=\"tl-item__title\" href=\"/seimas/balsavimai/{Amendment}\">{BillTitle}</a>");
 
         var billPage = await OkAsync($"/seimas/{Bill}");
-        var dayStart = billPage.IndexOf("id=\"day-2001-12-31\"", StringComparison.Ordinal);
-        dayStart.ShouldBeGreaterThan(0);
-        var day = billPage[dayStart..billPage.IndexOf("</section>", dayStart, StringComparison.Ordinal)];
-        var billAmendment = RowOf(day, Amendment);
+        var voteListStart = billPage.IndexOf("aria-labelledby=\"h-votes\"", StringComparison.Ordinal);
+        voteListStart.ShouldBeGreaterThan(0);
+        var billVotes = billPage[voteListStart..billPage.IndexOf("</section>", voteListStart, StringComparison.Ordinal)];
+        billVotes.ShouldNotContain("class=\"tl-day");
+        const string VilniusVoteDate = "<time class=\"tag num\" datetime=\"2001-12-31\">2001-12-31</time>";
+        var billAmendment = RowOf(billVotes, Amendment);
+        billAmendment.ShouldContain(VilniusVoteDate);
+        RowOf(billVotes, Midnight).ShouldContain(VilniusVoteDate, customMessage: "the vote just after midnight is dated in Vilnius");
+        amendment.ShouldNotContain("<time", customMessage: "the Seimas history dates the group");
         billAmendment.ShouldContain($"<a class=\"tl-item__title\" href=\"/seimas/balsavimai/{Amendment}\">Dėl pasiūlymo Nr. 3</a>");
         const string ResultColumn = "<div class=\"tl-item__side\">";
         billAmendment[billAmendment.IndexOf(ResultColumn, StringComparison.Ordinal)..]

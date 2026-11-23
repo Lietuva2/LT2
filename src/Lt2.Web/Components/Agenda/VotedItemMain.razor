@@ -22,6 +22,11 @@
         {
             <span class="tag">@F.Kind(Kind)</span>
         }
+        @if (Day is { } day)
+        {
+            var date = Display.Day(day);
+            <time class="tag num" datetime="@date">@date</time>
+        }
     </span>
     <a class="tl-item__title" href="/seimas/balsavimai/@VoteId">@Title</a>
     @if (Wording is not null)
@@ -49,6 +54,9 @@
 
     /// <summary>The vote's kind, said when it is not a stage result; null where every row is one (the start page).</summary>
     [Parameter] public string? Kind { get; set; }
+
+    /// <summary>The Vilnius date for rows that do not sit under a day heading.</summary>
+    [Parameter] public DateOnly? Day { get; set; }
 
     /// <summary>What was voted on, for a vote that is not a stage result.</summary>
     [Parameter] public string? Wording { get; set; }
