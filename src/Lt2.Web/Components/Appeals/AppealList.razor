@@ -149,16 +149,12 @@
                     }
                 </Tags>
                 <Details>
-                    <span class="small num">
-                        @if (item.Counts.For + item.Counts.Against + item.Arguments == 0)
-                        {
-                            @T["List.Nobody"]
-                        }
-                        else
-                        {
-                            @T.Format("List.Activity", Display.Number(item.Counts.For + item.Counts.Against), Display.Number(item.Arguments))
-                        }
-                    </span>
+                    @* Owner, 2026-11-23: the participants are said once, in the right column; the one number only this line has is the
+                       arguments', and nothing stands here for a bill without any. *@
+                    @if (item.Arguments > 0)
+                    {
+                        <span class="small num">@T.Format("List.Arguments", Display.Number(item.Arguments))</span>
+                    }
                     @if (Sort == "naujausia" && item.LastActivityAt is { } last)
                     {
                         @* Owner, 2026-11-17: in this order each row says when the bill last saw activity. *@
