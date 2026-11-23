@@ -307,6 +307,16 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         amendment.ShouldContain("<span class=\"small\">Dėl pasiūlymo Nr. 3</span>");
         amendment.ShouldContain($"<a class=\"tl-item__title\" href=\"/seimas/balsavimai/{Amendment}\">{BillTitle}</a>");
 
+        var billPage = await OkAsync($"/seimas/{Bill}");
+        var dayStart = billPage.IndexOf("id=\"day-2001-12-31\"", StringComparison.Ordinal);
+        dayStart.ShouldBeGreaterThan(0);
+        var day = billPage[dayStart..billPage.IndexOf("</section>", dayStart, StringComparison.Ordinal)];
+        var billAmendment = RowOf(day, Amendment);
+        billAmendment.ShouldContain($"<a class=\"tl-item__title\" href=\"/seimas/balsavimai/{Amendment}\">Dėl pasiūlymo Nr. 3</a>");
+        const string ResultColumn = "<div class=\"tl-item__side\">";
+        billAmendment[billAmendment.IndexOf(ResultColumn, StringComparison.Ordinal)..]
+            .ShouldBe(amendment[amendment.IndexOf(ResultColumn, StringComparison.Ordinal)..]);
+
         var procedural = RowOf(list, Procedural);
         procedural.ShouldContain("<span class=\"tag\">Procedūrinis balsavimas</span>");
         procedural.ShouldContain("<span class=\"small\">Dėl darbotvarkės papildymo</span>");

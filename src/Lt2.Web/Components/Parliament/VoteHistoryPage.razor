@@ -67,26 +67,7 @@
     }
     else
     {
-        @foreach (var day in VoteHistory.Days(_items))
-        {
-            <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="day-@Display.Day(day.Day)">
-                <div class="tl-date"><span class="label">@F.T.Format("Votes.Year", day.Day.Year)</span><b>@F.DayMonth(day.Day)</b><span class="small">@F.Weekday(day.Day)</span></div>
-                <ul class="tl-items">
-                    @foreach (var row in day.Rows)
-                    {
-                        var vote = row.Vote.Summary.Vote;
-                        var (title, wording) = Describe(row.Vote);
-                        <li class="tl-item" id="@VoteHistory.Row(row.Number)">
-                            <VotedItemMain Number="@vote.Bill?.Number" Title="@title" VoteId="vote.Id" Stage="@vote.Stage" Kind="@vote.Kind" Wording="@wording"
-                                           OfficialNote="@row.Vote.Summary.OfficialNote" />
-                            <div class="tl-item__side">
-                                <VotedItemResult IsConsensus="vote.IsConsensus" HasResult="vote.HasResult" Totals="row.Vote.Summary.Totals" />
-                            </div>
-                        </li>
-                    }
-                </ul>
-            </section>
-        }
+        <VoteTimeline Votes="_items" />
         @* The shared "show more" grows the list in place. "Senesni balsavimai" opens an older page once this one is full. *@
         <Lt2.Web.Client.Components.ShowMore Id="votes-more" StatusId="votes-shown" Shown="_items.Count" Total="_total" Href="@VoteHistory.More(_state, _items.Count, _total)">
             @if (VoteHistory.Older(_state, _items, _total) is { } older)
@@ -122,20 +103,5 @@
         _items = page?.Items ?? [];
         _total = page?.Total ?? 0;
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
-    }
-
-    /// <summary>
-    /// The row's title and the line under it: the bill's title, with the wording for a vote that is not a stage result;
-    /// without a bill, the agenda item's title and the wording, said once when they say the same (as the vote's page).
-    /// </summary>
-    private static (string Title, string? Wording) Describe(VoteListItem item)
-    {
-        var vote = item.Summary.Vote;
-        if (vote.Bill is { } bill)
-        {
-            return (bill.Title, vote.Kind == VoteKinds.StageResult || string.IsNullOrWhiteSpace(vote.Wording) ? null : vote.Wording);
-        }
-
-        return VotePage.Heading(item.AgendaItemTitle, vote.Wording);
     }
 }

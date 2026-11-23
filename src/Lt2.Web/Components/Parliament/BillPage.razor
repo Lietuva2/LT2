@@ -213,14 +213,7 @@
                 }
                 else
                 {
-                    <ul class="rows">
-                        @foreach (var v in b.Votes.Reverse())
-                        {
-                            <VoteRow Vote="v.Vote">
-                                <VoteResultSide Vote="v" />
-                            </VoteRow>
-                        }
-                    </ul>
+                    <VoteTimeline Votes="b.Votes.Reverse().Select(v => new VoteListItem(v, b.Title)).ToList()" OnBillPage="true" />
                     @* Design 8.18, "The majority": what the rows' chip means, once beside the list. *@
                     <p class="small"><MajorityHint Id="hint-votes-majority" /></p>
                 }
