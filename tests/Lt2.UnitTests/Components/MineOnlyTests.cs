@@ -81,6 +81,41 @@ public sealed class MineOnlyTests : BunitContext
         box.FindAll("#mine-only").ShouldBeEmpty();
     }
 
+    /// <summary>
+    /// Owner, 2026-11-23: a small "i" after "Tik mano" says what the filter is. It is a sibling of the label, never inside it
+    /// (a press on it must not tick the box), and a visitor, who has no box, has no hint either.
+    /// </summary>
+    [Fact]
+    public void The_box_has_an_icon_hint_after_the_label_not_inside_it()
+    {
+        SignedIn();
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        var box = Render<MineOnlyBox>();
+
+        var label = box.Find("label.check");
+        label.QuerySelectorAll("button, .hint").Length.ShouldBe(0, "nothing of the hint inside the label");
+        label.NextElementSibling.ShouldNotBeNull().ClassList.ShouldContain("hint");
+        label.NextElementSibling!.ClassList.ShouldContain("hint--icon");
+        label.ParentElement.ShouldBe(label.NextElementSibling!.ParentElement, "side by side on one line");
+        var trigger = box.Find("#mine-only-what");
+        trigger.ClassList.ShouldContain("hint__trigger--icon");
+        trigger.QuerySelector(".visually-hidden")!.TextContent.ShouldBe(Text("Mine.Hint"));
+        trigger.QuerySelector("svg.icon").ShouldNotBeNull();
+        box.Find("#mine-only-what-panel .hint__answer").TextContent.ShouldBe(Text("Mine.HintAnswer"));
+        box.Find("#mine-only-what-panel .hint__answer").TextContent.ShouldStartWith("Rodo tik jūsų sekamus projektus.");
+        box.FindAll("#mine-only-what-panel a").ShouldBeEmpty("no \"Plačiau\": the answer is the whole of it");
+        box.Find("#mine-only").HasAttribute("checked").ShouldBeFalse("the hint is no part of the box");
+    }
+
+    [Fact]
+    public void A_visitor_has_no_box_and_so_no_hint_either()
+    {
+        AddAuthorization();
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+
+        Render<MineOnlyBox>().FindAll("#mine-only-what").ShouldBeEmpty();
+    }
+
     [Fact]
     public void A_member_sees_the_box_clear_and_ticking_it_hides_the_list_and_shows_the_own_bills_with_their_sides()
     {

@@ -53,18 +53,28 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
 
     /// <summary>
     /// A hint as the page renders it (design 8.15): a button with the trigger's id opening its own popover panel, the
-    /// answer, and the "Plačiau" address (null when there is none).
+    /// answer, and the "Plačiau" address (null when there is none). The trigger is the words on the button or, for the icon
+    /// variant (the circled "i"), the visually hidden question inside it.
     /// </summary>
     internal static (string Trigger, string Answer, string? More) HintOf(string html, string id)
     {
+        var (trigger, answer, more, _) = HintWithIconOf(html, id);
+        return (trigger, answer, more);
+    }
+
+    /// <summary><see cref="HintOf"/> and whether the trigger is the icon variant (the circled "i" with the question hidden).</summary>
+    internal static (string Trigger, string Answer, string? More, bool Icon) HintWithIconOf(string html, string id)
+    {
         var at = Regex.Escape(id);
         var match = Regex.Match(html,
-            $"<button type=\"button\" class=\"hint__trigger\" id=\"{at}\" popovertarget=\"{at}-panel\" aria-describedby=\"{at}-says\">(?<trigger>[^<]*)</button>"
+            $"<button type=\"button\" class=\"hint__trigger(?<icon> hint__trigger--icon)?\" id=\"{at}\" popovertarget=\"{at}-panel\" aria-describedby=\"{at}-says\">"
+            + "(?:<span class=\"hint__icon\"><svg [^>]*>.*?</svg></span><span class=\"visually-hidden\">)?(?<trigger>[^<]*)(?:</span>)?</button>"
             + $"<span class=\"visually-hidden\" id=\"{at}-says\">Atveria trumpą paaiškinimą</span>"
-            + $"<span class=\"hint__panel\" id=\"{at}-panel\" popover=\"auto\"><span class=\"hint__answer\">(?<answer>[^<]*)</span>(?:<a class=\"hint__more\" href=\"(?<more>[^\"]*)\">Plačiau</a>)?</span>");
+            + $"<span class=\"hint__panel\" id=\"{at}-panel\" popover=\"auto\"><span class=\"hint__answer\">(?<answer>[^<]*)</span>(?:<a class=\"hint__more\" href=\"(?<more>[^\"]*)\">Plačiau</a>)?</span>",
+            RegexOptions.Singleline);
         match.Success.ShouldBeTrue($"a hint #{id} on the page");
         Regex.Count(html, $"id=\"{at}\"").ShouldBe(1, $"#{id} is unique");
-        return (match.Groups["trigger"].Value, match.Groups["answer"].Value, match.Groups["more"].Success ? match.Groups["more"].Value : null);
+        return (match.Groups["trigger"].Value, match.Groups["answer"].Value, match.Groups["more"].Success ? match.Groups["more"].Value : null, match.Groups["icon"].Success);
     }
 
     /// <summary>The page's own content; the layout's navigation is checked elsewhere.</summary>
@@ -161,6 +171,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldNotContain("<p class=\"label num\">");
         var follow = HintOf(html, "follow-what-bill");
         follow.Trigger.ShouldBe("Kas yra sekimas?");
+        HintWithIconOf(html, "follow-what-bill").Icon.ShouldBeTrue("beside \"Sekti\": the circled \"i\", the question hidden");
         follow.Answer.ShouldStartWith("Prisijungę gausite laišką, kai projektas bus įtrauktas į darbotvarkę");
         Regex.Count(html, "Prisijungę gausite laišką").ShouldBe(1, "the sentence beside \"Sekti\" is only in its hint");
         Regex.IsMatch(html, "<a class=\"mark act__item num\" id=\"mark-[0-9a-f-]+\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">").ShouldBeTrue("a visitor's \"Man svarbu\" signs in and comes back");
@@ -264,7 +275,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         {
             ("/kreipimaisi", "/projektai"),
             ("/kreipimaisi?rikiuoti=dalyviai&q=x", "/projektai?rikiuoti=dalyviai&q=x"),
-            ("/kreipimaisi?skirtukas=uzdaryti", "/projektai?skirtukas=uzdaryti"),
+            ("/kreipimaisi?q=pajamu&nuo=2", "/projektai?q=pajamu&nuo=2"),
         })
         {
             using var response = await stranger.Client.GetAsync(from);
@@ -293,6 +304,9 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         // no sentence of its own.
         HintOf(html, "threshold-what").ShouldBe(("Kas yra riba?", "Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100.", "/metodika#riba"));
         html.ShouldNotContain("<a href=\"/metodika#riba\" id=\"threshold-what\"", customMessage: "no link leaves the page only to explain the term");
+        // Owner, 2026-11-23: the hint is the circled "i" right after the heading "Riba" it explains; the question stays as hidden text.
+        HintWithIconOf(html, "threshold-what").Icon.ShouldBeTrue("the icon variant");
+        Regex.IsMatch(html, "<h3 id=\"h-reach\">Riba</h3>\\s*<span class=\"hint hint--icon\"><button [^>]*id=\"threshold-what\"").ShouldBeTrue("beside the heading");
         html.ShouldNotContain("Riba ta pati visiems projektams.");
         html.ShouldNotContain("Pranešti apie klaidą", customMessage: "no description, nothing to report");
         foreach (var gone in new[] { "Noriu kreipimosi", "kreipimosi dar nėra", "Atidaryti kreipimąsi", "pasiūl", "iniciator" })
@@ -328,7 +342,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab");
         html.ShouldContain("<a href=\"/darbotvarke\" id=\"view-agenda\">Darbotvarkė</a>", customMessage: "the views of the tab");
         html.ShouldContain("<b aria-current=\"page\" id=\"tab-active\">Aktyvūs</b>");
-        html.ShouldContain("<a href=\"/projektai?skirtukas=uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
+        html.ShouldContain("<a href=\"/projektai/uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
         html.ShouldNotContain("Kreipimaisi");
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");
@@ -407,9 +421,78 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
             await Database.UnplanAsync(AppealSteps.SecondBill);
         }
 
-        var (closedStatus, closed) = await PageAsync(stranger, "/projektai?skirtukas=uzdaryti");
+        var (closedStatus, closed) = await PageAsync(stranger, "/projektai/uzdaryti");
         closedStatus.ShouldBe(HttpStatusCode.OK);
         closed.ShouldNotContain("id=\"bill-XVP-0618\"", customMessage: "an open bill is not on the closed tab");
+
+        // Owner, 2026-11-23: the three views of "Projektai" each lead with their own paragraph, saying what the list is.
+        const string activeLead = "<p class=\"lead\">Visi projektai, kurių Seimas dar nebaigė svarstyti. Dėl kiekvieno galite nurodyti, ko prašote Seimo narių, ir parašyti argumentų.</p>";
+        const string closedLead = "<p class=\"lead\">Projektai, kuriuos Seimas jau baigė svarstyti: po galutinio balsavimo, atmesti ar atsiimti. Dalyvių skaičiai užfiksuoti ir nebesikeičia.</p>";
+        const string agendaLead = "<p class=\"lead\">Projektai, kuriuos Seimas planuoja svarstyti artimiausiomis dienomis. Dėl kiekvieno galite nurodyti, ko prašote Seimo narių.</p>";
+        var (_, active) = await PageAsync(stranger, "/projektai");
+        var (_, agenda) = await PageAsync(stranger, "/darbotvarke");
+        active.ShouldContain(activeLead);
+        active.ShouldNotContain(closedLead);
+        active.ShouldNotContain(agendaLead);
+        closed.ShouldContain(closedLead);
+        closed.ShouldNotContain(activeLead);
+        closed.ShouldNotContain(agendaLead);
+        agenda.ShouldContain(agendaLead);
+        agenda.ShouldNotContain(activeLead);
+        agenda.ShouldNotContain(closedLead);
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-23: the closed view of the list is its own address, <c>/projektai/uzdaryti</c>, the same page; no query
+    /// parameter chooses a view, and an address under <c>/projektai</c> that is not the closed view is a plain 404.
+    /// </summary>
+    [Fact]
+    public async Task The_closed_view_is_its_own_address_and_the_old_query_parameter_chooses_nothing()
+    {
+        using var stranger = NewBrowser();
+        const string closedLead = "Projektai, kuriuos Seimas jau baigė svarstyti";
+        const string activeLead = "Visi projektai, kurių Seimas dar nebaigė svarstyti";
+
+        var (status, closed) = await PageAsync(stranger, "/projektai/uzdaryti");
+        status.ShouldBe(HttpStatusCode.OK);
+        closed.ShouldContain("<title>Projektai · Lietuva 2.0</title>");
+        closed.ShouldContain(closedLead);
+        closed.ShouldNotContain(activeLead);
+        closed.ShouldContain("<b aria-current=\"page\" id=\"tab-closed\">Uždaryti</b>");
+        closed.ShouldContain("<a href=\"/projektai\" id=\"tab-active\">Aktyvūs</a>");
+        closed.ShouldContain("<a href=\"/darbotvarke\" id=\"view-agenda\">Darbotvarkė</a>");
+        closed.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab Projektai stays current");
+        closed.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>");
+        closed.ShouldContain("id=\"nav-tab-projektai\" aria-current=\"page\"", customMessage: "the dropdown marks the tab too");
+        closed.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/projektai/uzdaryti\"");
+        closed.ShouldNotContain("name=\"skirtukas\"");
+        closed.ShouldNotContain("id=\"sort\"", customMessage: "the closed view has no order");
+
+        var (_, active) = await PageAsync(stranger, "/projektai");
+        active.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/projektai\"");
+        active.ShouldContain("<b aria-current=\"page\" id=\"tab-active\">Aktyvūs</b>");
+        active.ShouldContain("<a href=\"/projektai/uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
+
+        // The old query parameter is not read: it is the active view.
+        var (oldStatus, old) = await PageAsync(stranger, "/projektai?skirtukas=uzdaryti");
+        oldStatus.ShouldBe(HttpStatusCode.OK);
+        old.ShouldContain(activeLead);
+        old.ShouldNotContain(closedLead);
+        old.ShouldContain("<b aria-current=\"page\" id=\"tab-active\">Aktyvūs</b>");
+
+        // A search stays on the view it is made on, and its clear link too.
+        var (_, searchedClosed) = await PageAsync(stranger, "/projektai/uzdaryti?q=XVP");
+        searchedClosed.ShouldContain("action=\"/projektai/uzdaryti\"");
+        searchedClosed.ShouldContain("<a href=\"/projektai/uzdaryti\">Išvalyti</a>");
+        var (_, searchedActive) = await PageAsync(stranger, "/projektai?q=XVP");
+        searchedActive.ShouldContain("action=\"/projektai\"");
+        searchedActive.ShouldContain("<a href=\"/projektai\">Išvalyti</a>");
+
+        // Nothing else lives under the list's address.
+        foreach (var address in new[] { "/projektai/xyz", "/projektai/aktyvus", "/projektai/uzdaryti/xyz" })
+        {
+            (await PageAsync(stranger, address)).Status.ShouldBe(HttpStatusCode.NotFound, address);
+        }
     }
 
     [Fact]

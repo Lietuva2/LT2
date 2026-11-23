@@ -182,7 +182,7 @@ public sealed class MpSendingTests(DatabaseFixture database) : ApiTest(database)
             var sentLine = $"suvestinė išsiųsta {monday:yyyy-MM-dd}";
             (await stranger.GetJsonAsync<RecordNextDigestResponse>(DigestRoutes.NextOfRecordOn(bill.Number))).Day.ShouldBeNull("nothing planned that would hold it");
             (await stranger.AgendaRecordAsync(bill.Number)).Summary.ShouldBe(new RecordSummaryResponse("sent", monday));
-            (await Factory.AgendaRowAsync(stranger, bill.Number, monday.AddDays(3))).ShouldContain("1</b> dalyvis ·</span> <span class=\"nowrap\">" + sentLine + "</span>");
+            (await Factory.AgendaRowAsync(stranger, bill.Number, monday.AddDays(3))).ShouldContain("1</b> dalyvis ·</span> <span class=\"nowrap\"><a href=\"" + DigestRoutes.PageOf(monday) + "?" + DigestRoutes.BillParameter + "=" + Uri.EscapeDataString(bill.Number) + "\">" + sentLine + "</a></span>", customMessage: "a summary already sent is a link to its page, open on the bill (owner, 2026-11-23)");
             (await stranger.ProjectsItemAsync(bill.Number)).Summary.ShouldBe(new RecordSummaryResponse("sent", monday));
             (await stranger.ProjectsRowAsync(bill.Number)).ShouldContain(sentLine);
             WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + bill.Number)).ShouldContain("Riba pasiekta – balsuoti prašo 1 dalyvis.", customMessage: "at its threshold");

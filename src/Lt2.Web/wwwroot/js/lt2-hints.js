@@ -8,8 +8,8 @@
  *    Escape, a press elsewhere, a second press or the focus moving elsewhere), with a short grace so the pointer can
  *    travel into the panel and use its link;
  *  - Escape closes it and gives the focus back to the trigger when the focus was in the hint;
- *  - the place beside the trigger: under it, above it when there is no room below, always inside the screen with a
- *    margin; placed again on scroll and resize while open, and closed when its trigger has left the screen.
+ *  - the place beside the trigger (a word, or the small circled "i" of the icon variant: the box of whichever it is):
+ *    under it, above it when there is no room below, always inside the screen with a margin; placed again on scroll and resize while open, and closed when its trigger has left the screen.
  * Listeners sit on the document, so a hint rendered later (Blazor's enhanced navigation, an island replacing its markup)
  * works with nothing to wire. Positions are set through the CSSOM (element.style), which the Content-Security-Policy
  * (style-src 'self') allows; nothing inline is written into the markup.

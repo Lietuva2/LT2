@@ -25,7 +25,10 @@ public sealed class FollowerLineTests : BunitContext
     {
         var line = Render<FollowerLine>(p => p.Add(c => c.Count, 1));
         line.Find("#followers-count").TextContent.ShouldBe("Sekėjai: 1");
-        line.Find("#followers-hint").TextContent.ShouldBe("Kas yra sekėjai?");
+        // Owner, 2026-11-23: the hint stands right after "Sekėjai: n", so it is the circled "i"; the question is hidden text in it.
+        line.Find("#followers-hint").ClassList.ShouldContain("hint__trigger--icon");
+        line.Find("#followers-hint .visually-hidden").TextContent.ShouldBe("Kas yra sekėjai?");
+        line.FindAll("#followers-hint svg.icon").ShouldHaveSingleItem();
         line.Find("#followers-hint-panel a").GetAttribute("href").ShouldBe("/metodika#sekimas");
     }
 
@@ -80,7 +83,8 @@ public sealed class FollowerLineTests : BunitContext
         var row = line.Find($"#follow-{kind}");
         row.Children.Select(e => e.Id is { Length: > 0 } id ? id : e.ClassName).Take(3).ShouldBe([$"follow-toggle-{kind}", "followers", "small"]);
         line.Find($"#follow-toggle-{kind}").ClassName.ShouldBe("btn btn--plain btn--compact", "the compact button (owner, 2026-11-18)");
-        line.Find($"#follow-what-{kind}").TextContent.ShouldBe("Kas yra sekimas?");
+        line.Find($"#follow-what-{kind}").ClassList.ShouldContain("hint__trigger--icon", "the circled \"i\" beside \"Sekti\" (owner, 2026-11-23)");
+        line.Find($"#follow-what-{kind} .visually-hidden").TextContent.ShouldBe("Kas yra sekimas?");
         line.Find($"#follow-what-{kind}-panel .hint__answer").TextContent.ShouldBe(
             what + " Kas ką seka, niekas kitas nemato. „Sekėjai“ – tiek Lietuva 2.0 narių paprašė šių laiškų; tai ne palaikymas ir ne reprezentatyvi apklausa.");
         line.Find($"#follow-what-{kind}-panel a").GetAttribute("href").ShouldBe("/metodika#sekimas");

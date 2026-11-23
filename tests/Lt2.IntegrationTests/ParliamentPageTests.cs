@@ -218,7 +218,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("class=\"figure__num\">38</span>");
         html.ShouldContain("<svg class=\"seatmap\"");
         Regex.Count(html, "<rect [^>]*class=\"seat ").ShouldBe(13);
-        html.ShouldNotContain("<circle");
+        Regex.IsMatch(html, "<circle [^>]*class=\"seat").ShouldBeFalse("a seat is a square, not a circle (the hint's drawn \"i\" has circles of its own)");
         html.ShouldContain("<svg class=\"splitbar");
         html.ShouldContain("Jonas Petraitis (RPF): Prieš");
     }

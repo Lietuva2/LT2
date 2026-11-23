@@ -387,13 +387,16 @@
             <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 
             <div class="stack stack--tight" id="threshold">
-                <h3 id="h-reach">@A["Threshold.Heading"]</h3>
+                @* Owner, 2026-11-23: the hint is an "i" beside the heading "Riba" it explains (design 8.15, the icon hint). *@
+                <div class="row hint-head">
+                    <h3 id="h-reach">@A["Threshold.Heading"]</h3>
+                    <Lt2.Web.Client.Components.Hint Id="threshold-what" Icon="true" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" />
+                </div>
                 <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
                                    LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == DigestRunStatuses.Sent)" @rendermode="InteractiveWebAssembly" />
-                @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
-                   now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
-                   moderator's statement (design 8.12). *@
-                <p class="small"><Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" /></p>
+                @* Design 8.15: what the threshold is and what it does, in place (the hint beside the heading), with the number
+                   that holds now for this bill; the rest on the methodology page. A bill's own threshold stays said here with
+                   the moderator's statement (design 8.12). *@
                 @if (a.Threshold.SetBy == ThresholdSetters.Moderator)
                 {
                     <p class="small" id="threshold-set-by">@A["Threshold.SetBy.moderator"]</p>
@@ -430,7 +433,7 @@
             else
             {
                 @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
-                <p class="row result-line"><VoteMajorityTag HasResult="result.Vote.HasResult" For="result.Totals.For" Against="result.Totals.Against" Abstain="result.Totals.Abstain" /><MajorityHint Id="hint-seimas-majority" /></p>
+                <p class="row result-line"><VoteMajorityTag HasResult="result.Vote.HasResult" For="result.Totals.For" Against="result.Totals.Against" Abstain="result.Totals.Abstain" /><MajorityHint Id="hint-seimas-majority" Icon="true" /></p>
                 <div class="totals">
                     <div class="figure figure--for figure--m"><span class="label">@F.Choice(BallotChoices.For)</span><span class="figure__num">@Display.Number(result.Totals.For)</span></div>
                     <div class="figure figure--against figure--m"><span class="label">@F.Choice(BallotChoices.Against)</span><span class="figure__num">@Display.Number(result.Totals.Against)</span></div>

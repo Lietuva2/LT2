@@ -362,8 +362,13 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         RowOf(list, Presentation).ShouldContain("<span class=\"tag tag--outcome tag--outline tag--dashed\" data-majority=\"none\">Nėra daugumos</span>", customMessage: "exactly half for is no majority");
         list.ShouldNotContain("Priimta");
         Regex.Count(page, "Kas yra balsavusiųjų dauguma\\?").ShouldBe(1, "one hint beside the list, none per row");
+        AppealPageTests.HintWithIconOf(page, "hint-vote-majority").Icon.ShouldBeFalse("under the list it keeps its words: the question says what the rows' chip is");
 
-        (await OkAsync($"/seimas/balsavimai/{Consideration}")).ShouldContain("data-majority=\"against\">Dauguma prieš</span>", customMessage: "the vote's page");
+        var votePage = await OkAsync($"/seimas/balsavimai/{Consideration}");
+        votePage.ShouldContain("data-majority=\"against\">Dauguma prieš</span>", customMessage: "the vote's page");
+        var onVotePage = AppealPageTests.HintWithIconOf(votePage, "hint-vote-majority");
+        onVotePage.Icon.ShouldBeTrue("beside the chip it explains: the circled \"i\"");
+        onVotePage.Trigger.ShouldBe("Kas yra balsavusiųjų dauguma?", "the question stays as hidden text");
         (await OkAsync($"/seimas/{Bill}")).ShouldContain("data-majority=\"none\">Nėra daugumos</span>", customMessage: "the bill's list of votes");
     }
 

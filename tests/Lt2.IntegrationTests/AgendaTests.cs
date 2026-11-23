@@ -59,8 +59,8 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             html.ShouldContain("<h1 class=\"seimas-title\">Seimas</h1>");
             html.ShouldContain("<b aria-current=\"page\" id=\"view-agenda\">Darbotvarkė</b>");
             html.ShouldContain("<a href=\"/projektai\" id=\"tab-active\">Aktyvūs</a>");
-            html.ShouldContain("<a href=\"/projektai?skirtukas=uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
-            html.ShouldContain("<p class=\"lead\">Planuojama svarstyti artimiausiu metu.</p>");
+            html.ShouldContain("<a href=\"/projektai/uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
+            html.ShouldContain("<p class=\"lead\">Projektai, kuriuos Seimas planuoja svarstyti artimiausiomis dienomis. Dėl kiekvieno galite nurodyti, ko prašote Seimo narių.</p>");
             html.ShouldContain("Planuojama ");
             html.ShouldMatch("id=\"agenda-\\d{4}-\\d{2}-\\d{2}-" + AppealSteps.SecondBill + "\"");
 

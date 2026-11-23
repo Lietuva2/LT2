@@ -38,7 +38,7 @@
   <data name="NotFound.Home" xml:space="preserve"><value>Į pradžios puslapį</value></data>
   
   <data name="Agenda.Title" xml:space="preserve"><value>Seimo darbotvarkė</value></data>
-  <data name="Agenda.Lead" xml:space="preserve"><value>Planuojama svarstyti artimiausiu metu.</value></data>
+  <data name="Agenda.Lead" xml:space="preserve"><value>Projektai, kuriuos Seimas planuoja svarstyti artimiausiomis dienomis. Dėl kiekvieno galite nurodyti, ko prašote Seimo narių.</value></data>
   <data name="Agenda.Coming" xml:space="preserve"><value>Planuojami projektai</value></data>
   <data name="Agenda.Source" xml:space="preserve"><value>Darbotvarkių projektai dažnai keičiasi, todėl datos gali pasislinkti.</value></data>
   <data name="Agenda.ReadAt" xml:space="preserve"><value>Paskutinį kartą perskaityta {0}.</value></data>

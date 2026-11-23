@@ -58,7 +58,7 @@
                 else
                 {
                     @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
-                    <p class="row result-line" id="vote-majority"><VoteMajorityTag For="totals.For" Against="totals.Against" Abstain="totals.Abstain" /><MajorityHint /></p>
+                    <p class="row result-line" id="vote-majority"><VoteMajorityTag For="totals.For" Against="totals.Against" Abstain="totals.Abstain" /><MajorityHint Icon="true" /></p>
                     <div class="totals">
                         <div class="figure figure--m figure--for"><span class="label">@F.Choice(BallotChoices.For)</span><span class="figure__num">@Display.Number(totals.For)</span></div>
                         <div class="figure figure--m figure--against"><span class="label">@F.Choice(BallotChoices.Against)</span><span class="figure__num">@Display.Number(totals.Against)</span></div>
