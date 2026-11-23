@@ -1,0 +1,49 @@
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Web.Client.Parliament
+@inject Formats F
+
+@foreach (var day in VoteHistory.Days(Votes))
+{
+    <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="day-@Display.Day(day.Day)">
+        <TimelineDate Label="@F.T.Format("Votes.Year", day.Day.Year)" Day="day.Day" />
+        <ul class="tl-items">
+            @foreach (var row in day.Rows)
+            {
+                var summary = row.Vote.Summary;
+                var vote = summary.Vote;
+                var (title, wording) = Describe(row.Vote);
+                <li class="tl-item" id="@VoteHistory.Row(row.Number)">
+                    <VotedItemMain Number="@(OnBillPage ? null : vote.Bill?.Number)" Title="@title" VoteId="vote.Id" Stage="@vote.Stage"
+                                   Kind="@vote.Kind" Wording="@wording" OfficialNote="@summary.OfficialNote" />
+                    <div class="tl-item__side">
+                        <VotedItemResult IsConsensus="vote.IsConsensus" HasResult="vote.HasResult" Totals="summary.Totals" />
+                    </div>
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<VoteListItem> Votes { get; set; } = [];
+
+    /// <summary>On its own page the bill is already identified, so the vote's wording is the link.</summary>
+    [Parameter] public bool OnBillPage { get; set; }
+
+    private (string Title, string? Wording) Describe(VoteListItem item)
+    {
+        var vote = item.Summary.Vote;
+        var wording = string.IsNullOrWhiteSpace(vote.Wording) ? null : vote.Wording;
+        if (OnBillPage)
+        {
+            return (wording ?? item.AgendaItemTitle, null);
+        }
+
+        if (vote.Bill is { } bill)
+        {
+            return (bill.Title, vote.Kind == VoteKinds.StageResult ? null : wording);
+        }
+
+        return VotePage.Heading(item.AgendaItemTitle, wording);
+    }
+}

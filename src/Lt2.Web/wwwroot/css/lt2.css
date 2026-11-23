@@ -767,7 +767,7 @@ fieldset.stack--tight > legend { margin-block-end: var(--sp-3); }
    children: a paragraph and the .fine link under it would touch. Give them the stack's gap as a margin instead. */
 .more.stack > :not(summary) + :not(summary) { margin-top: var(--sp-5); }
 .more.stack--tight > :not(summary) + :not(summary) { margin-top: var(--sp-3); }
-.report-visitor > summary { display: inline; }
+.report-visitor > .linkish { display: inline; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
 /* "Rodyti daugiau" under a long list (owner, 2026-11-19, ShowMore.razor): one line under the list, "Rodoma N iš M" and the
    link, a plain text link (owner, 2026-11-19: a button's look clashed with the buttons under a list) with the list's further
@@ -1014,8 +1014,7 @@ body { padding-block-end: 4.5rem; }
 .menu__rule { margin: var(--sp-1) 0; border: 0; border-top: 1px solid var(--rule); }
 .action-heading:focus { outline: none; }
 .action-heading:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.menu > .report-visitor { padding: var(--sp-2) var(--sp-4); }
-.menu > .report-visitor > summary { display: flex; align-items: center; min-height: 2.75rem; font-weight: 600; }
+.menu > .report-visitor > p { margin: 0; padding: var(--sp-2) var(--sp-4); }
 
 /* Owner, 2026-11-17: an open "Aptarimas" stays in its own side's column, under its argument; nothing else on the page moves
    (the arguments run at the page's full width below the bill's top part, so a side's column has room for it). */
@@ -1211,7 +1210,7 @@ main > .page-head ~ .sheet > .list-head ~ [id], main > .page-head ~ .sheet > .li
 }
 .tl-date { position: sticky; top: calc(var(--list-head) + var(--sp-4)); display: flex; flex-direction: column; gap: var(--sp-1); }
 .tl-date b { font: 800 var(--fs-5)/0.95 var(--font-display); }
-.tl-past .tl-date b { color: var(--ink-2); }
+.tl-past .tl-date b { color: var(--ink-2); font-size: var(--fs-4); }
 .tl-items { list-style: none; margin: 0; padding: 0; }
 .tl-item {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 15rem); gap: var(--sp-3) var(--sp-5);

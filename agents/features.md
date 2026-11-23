@@ -725,8 +725,8 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   (`Components/Parliament`) shows `AnalyticsRules.SeimasMajority` (the open data has no official outcome) as
   `span.tag.tag--outcome` with `data-majority` (`for` filled, `against` `tag--outline`, `none` also `tag--dashed`;
   `ParliamentText` `Majority.*`: "Dauguma už", "Dauguma prieš", "Nėra daugumos"), the consensus as "Pritarta bendru
-  sutarimu", nothing without numbers; used by `VotedItemMain` (front page, agenda, `/seimas/balsavimai`), `VoteResultSide`
-  (the bill's votes), the bill's closing vote and `VotePage`; `<MajorityHint>` ("Kas yra balsavusiųjų dauguma?") stands once
+  sutarimu", nothing without numbers; used by `VotedItemResult` (front page, agenda and the shared `VoteTimeline` on
+  `/seimas/balsavimai` and the bill page), the bill's closing vote and `VotePage`; `<MajorityHint>` ("Kas yra balsavusiųjų dauguma?") stands once
   beside the history of votes, on the vote's page and on the bill's page; the agenda's lists carry none (owner, 2026-11-21).
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), planned date or the latest activity (owner, 2026-11-17: the page offers these

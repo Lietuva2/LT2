@@ -27,8 +27,10 @@ Read before changing a page, a component or an island. The rules behind it are d
   actions are one action row (design 8.16.1, the designer's proposal of 2026-11-17): `<div class="act">` holding the toggles
   ("Man svarbu", `CommentThread`'s "Aptarimas" summary, "Sutinku" as `.act__item`) and `<MoreMenu>` ("⋯", the browser's
   popover, placed by `js/lt2-menus.js`) whose `button.menu__item`s close it (`popovertargetaction="hide"`) and open their form
-  below the row as `div.act__panel`. The host sets `HasItems` from the actions it offers so an empty menu renders no trigger
-  or popover. `CommentThread` renders `details.discuss` (summary only) plus `.discuss__panel`, which
+  below the row as `div.act__panel`. In a menu, `VisitorReport` takes `InMenu` and styles its native disclosure as a
+  `.menu__item`, so visitors can read the reporting instructions without script. The host sets `HasItems` from the
+  actions it offers so an empty menu renders no trigger or popover. `CommentThread` renders `details.discuss` (summary
+  only) plus `.discuss__panel`, which
   the row lays below itself. **A moderator's actions on an item (design 8.3, "The screen", owner 2026-11-17)** are always
   `<ModerationMenu>` (`Lt2.Web.Client/Appeals`): the host passes its offered actions in order as `ModerationChoice`s (element
   id `…action-{action}-{id}`, the label, a `Group` heading for a bill's record, `Apart` for hiding or blocking) and the

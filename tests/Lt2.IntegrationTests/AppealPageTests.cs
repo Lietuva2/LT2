@@ -220,7 +220,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     }
 
     [Fact]
-    public async Task Everyone_sees_a_report_link_on_the_description_and_every_argument_and_a_visitor_is_told_how_to_report()
+    public async Task Everyone_sees_a_report_action_on_the_description_and_every_argument_and_a_visitor_is_told_how_to_report()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
@@ -236,7 +236,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var (_, html) = await PageAsync(stranger, "/seimas/XVP-0618");
         Regex.Count(html, "<details class=\"more report-visitor\">").ShouldBe(3, "two arguments and the description");
         html.ShouldContain("<summary class=\"linkish small\">Pranešti apie klaidą</summary>", customMessage: "design 8.13: beside the description");
-        Regex.Count(html, "<summary class=\"linkish small\">Pranešti</summary>").ShouldBe(2);
+        Regex.Count(html, "<summary class=\"menu__item\">Pranešti</summary>").ShouldBe(2);
         html.ShouldContain("Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:");
         html.ShouldContain("<a href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">prisijunkite</a>");
         html.ShouldContain("<a href=\"mailto:moderatoriai@lt2.test\">moderatoriai@lt2.test</a>");
