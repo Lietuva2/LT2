@@ -1,4 +1,5 @@
 @using Lt2.Api.Contracts.Agenda
+@using Lt2.Api.Contracts.Digests
 @inject IStringLocalizer<AppealUi> L
 
 @* A bill's public numbers in a row of the timeline (design 8.7, 8.11.1): both sides, one number each (owner, 2026-11-21: a
@@ -31,7 +32,7 @@
                planned that would hold the bill, else the last one really sent; no trial variants), else "riba pasiekta". *@
             <span class="small num">@if (Record.Threshold.Reached)
                 {
-                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L["Agenda.Participants." + NumberForms.Of(Record.Threshold.Participants)] ·</span>@ArgumentsPart@(" ")<span class="nowrap">@(Record.Summary is { } summary ? L.Format("Agenda.Summary." + summary.Kind, Display.Day(summary.Day)) : L["Agenda.Reached"].Value)</span>
+                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L["Agenda.Participants." + NumberForms.Of(Record.Threshold.Participants)] ·</span>@ArgumentsPart@(" ")<span class="nowrap">@StatusPart</span>
                 }
                 else if (Record.Arguments is > 0)
                 {
@@ -63,6 +64,30 @@
         if (Record.Arguments is { } arguments and > 0)
         {
             @(" ")<span class="nowrap">@L.Format("Agenda.Arguments", Display.Number(arguments)) ·</span>
+        }
+    };
+
+    /// <summary>The bill's number, for the link of a summary already sent to the summary's page, open on this bill's item; none: no link.</summary>
+    [Parameter] public string? BillNumber { get; set; }
+
+    /// <summary>
+    /// What a bill whose threshold is reached says in place of the threshold: the summary planned or sent, or "riba pasiekta". A summary
+    /// already sent has a public page (design 8.19), so its text is a link to it, opened on this bill (owner, 2026-11-23); a planned one
+    /// has none yet and stays plain text.
+    /// </summary>
+    private RenderFragment StatusPart => __builder =>
+    {
+        if (Record.Summary is not { } summary)
+        {
+            @L["Agenda.Reached"].Value
+        }
+        else if (summary.Kind == RowSummaryKinds.Sent && !string.IsNullOrEmpty(BillNumber))
+        {
+            <a href="@DigestRoutes.PageAt(summary.Day, Guid.Empty, BillNumber)">@L.Format("Agenda.Summary." + summary.Kind, Display.Day(summary.Day))</a>
+        }
+        else
+        {
+            @L.Format("Agenda.Summary." + summary.Kind, Display.Day(summary.Day))
         }
     };
 

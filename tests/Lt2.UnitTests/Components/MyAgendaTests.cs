@@ -564,6 +564,24 @@ public sealed class MyAgendaTests : BunitContext
     }
 
     [Fact]
+    public void A_summary_already_sent_is_a_link_to_its_page_open_on_this_bill_and_a_planned_one_is_not()
+    {
+        // Owner, 2026-11-23: "suvestinė išsiųsta {day}" leads to the summary's public page with the bill's item first
+        // (/suvestines/{day}?projektas={number}); a planned summary has no page yet, so it stays text; no number, no link.
+        var record = new AgendaRecordResponse(null, "open", new SideCountsResponse(6800, 6195, 4280, 3917), new ThresholdResponse(10000, "default", null, 11080, true, false));
+        var sent = record with { Summary = new("sent", new DateOnly(2026, 11, 16)) };
+
+        var link = Render<RecordFigures>(p => p.Add(c => c.Record, sent).Add(c => c.BillNumber, "XVP-0412")).Find(".nowrap a");
+        link.GetAttribute("href").ShouldBe("/suvestines/2026-11-16?projektas=XVP-0412");
+        Flat(link.TextContent).ShouldBe("suvestinė išsiųsta 2026-11-16");
+
+        Render<RecordFigures>(p => p.Add(c => c.Record, record with { Summary = new("planned", new DateOnly(2026, 11, 30)) }).Add(c => c.BillNumber, "XVP-0412"))
+            .FindAll(".nowrap a").ShouldBeEmpty("a planned summary has no page yet");
+        Render<RecordFigures>(p => p.Add(c => c.Record, sent)).FindAll(".nowrap a").ShouldBeEmpty("no bill number, no link");
+        Render<RecordFigures>(p => p.Add(c => c.Record, record).Add(c => c.BillNumber, "XVP-0412")).FindAll(".nowrap a").ShouldBeEmpty("riba pasiekta is text");
+    }
+
+    [Fact]
     public void A_threshold_first_reached_by_the_members_own_side_asks_the_next_summarys_day_once()
     {
         // Design 8.12.2: the page's copy was under the threshold, so it named no summary; the member's side reaches it, and the
