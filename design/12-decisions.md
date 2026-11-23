@@ -297,6 +297,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 - Dates typed into a form are a text field in the form `yyyy-MM-dd`; dates shown as numbers are `yyyy-MM-dd` (with
   `HH:mm`, Vilnius time); dates written in words in sentences stay as they are (2026-11-13).
+- Every typed date field has a small calendar button beside it that opens the browser's own date picker and writes the
+  picked day back into the text field as `yyyy-MM-dd`; typing stays as it was, the field itself is never `type="date"`,
+  and there is no calendar of our own and no library; the placeholder shows the form and no hint line stands under the field (2026-11-23).
 
 ## 8.16 Surfaces
 

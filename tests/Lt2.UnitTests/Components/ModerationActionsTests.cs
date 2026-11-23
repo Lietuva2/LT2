@@ -442,7 +442,9 @@ public sealed class ModerationActionsTests : BunitContext
         actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.close"));
         actions.FindAll($"input[name=close-reason-{Item}]").Select(r => r.GetAttribute("value")).ShouldBe(["rejected", "withdrawn"]);
         var date = actions.Find($"#close-date-{Item}");
-        date.GetAttribute("type").ShouldBe("text", "never the browser's date control");
+        date.GetAttribute("type").ShouldBe("text", "the field itself is never the browser's date control; the calendar button beside it fills it");
+        actions.Find($"#close-date-{Item} + [data-date-pick]").GetAttribute("data-date-pick").ShouldBe($"close-date-{Item}");
+        actions.FindAll("input[type=date]").ShouldBeEmpty("the picker's date input is made by js/lt2-dates.js on a press, never rendered");
         date.GetAttribute("placeholder").ShouldBe(Display.DateExample);
 
         actions.Find($"#close-reason-withdrawn-{Item}").Change(true);

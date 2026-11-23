@@ -133,6 +133,7 @@
 <data name="Data.DeleteStaffMoreAnswer" xml:space="preserve"><value>Lieka darbuotojų veiksmai – paslėpti ar paskelbti argumentai, jų paaiškinimai, rašymo apribojimai, organizacijų patvirtinimai, – kad būtų aišku, kas ką padarė. Visa kita, ką pateikėte paskyroje, ištrinama.</value></data>
 <data name="Hint.Opens" xml:space="preserve"><value>Atveria trumpą paaiškinimą</value></data>
 <data name="Actions.More" xml:space="preserve"><value>Daugiau veiksmų</value></data>
+<data name="Date.Pick" xml:space="preserve"><value>Pasirinkti datą iš kalendoriaus</value></data>
 <data name="Hint.More" xml:space="preserve"><value>Plačiau</value></data>
 <data name="Text.ShowMore" xml:space="preserve"><value>Rodyti daugiau</value></data>
 <data name="Text.ShowLess" xml:space="preserve"><value>Rodyti mažiau</value></data>

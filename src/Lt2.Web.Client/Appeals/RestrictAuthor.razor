@@ -64,10 +64,12 @@
                 {
                     <div class="field @ErrorClass("until")">
                         <label for="restrict-until-@Key">@L["Restrict.LastDay"]</label>
-                        <p class="field__hint" id="restrict-until-hint-@Key">@L.Format("Date.Hint", Display.DateExample)</p>
-                        <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
-                               id="restrict-until-@Key" aria-describedby="@DescribedBy("until", $"restrict-until-{Key}", $"restrict-until-hint-{Key}")" aria-invalid="@Invalid("until")"
-                               @bind="_until" disabled="@Locked" />
+                        <div class="date-row">
+                            <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                                   id="restrict-until-@Key" aria-describedby="@DescribedBy("until", $"restrict-until-{Key}")" aria-invalid="@Invalid("until")"
+                                   @bind="_until" disabled="@Locked" />
+                            <DatePick InputId="@($"restrict-until-{Key}")" Disabled="Locked" />
+                        </div>
                         <FieldError Errors="Errors" Field="until" For="@($"restrict-until-{Key}")" />
                     </div>
                 }

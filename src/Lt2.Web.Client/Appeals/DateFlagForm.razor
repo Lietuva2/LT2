@@ -5,7 +5,8 @@
 @inject MyBillState State
 
 @* Design 8.4: participants can say the planned date is wrong or the bill is voted sooner, with a link to the source and,
-   when they know it, the right date (owner, 2026-11-17: a text field yyyy-MM-dd, never the browser's date control); a
+   when they know it, the right date (owner, 2026-11-17, 2026-11-23: a text field yyyy-MM-dd with a calendar button that fills it from the browser's picker;
+   the field itself is never the browser's date control); a
    moderator makes the change. Shown only to members who have a side on the bill, in the side column's "Stadijos Seime"
    right under the stages and their planned date (owner, 2026-11-17), so the form that opens lies inside that sheet and is
    a quiet one (8.16). *@
@@ -39,9 +40,11 @@
                 </fieldset>
                 <div class="field @ErrorClass("date")">
                     <label for="flag-date">@L["Flag.Date"]</label>
-                    <p class="field__hint" id="flag-date-hint">@L.Format("Date.Hint", Display.DateExample)</p>
-                    <input class="input num" id="flag-date" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
-                           aria-describedby="@DescribedBy("date", "flag-date", "flag-date-hint")" aria-invalid="@Invalid("date")" @bind="_date" disabled="@Locked" />
+                    <div class="date-row">
+                        <input class="input num" id="flag-date" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                               aria-describedby="@DescribedBy("date", "flag-date")" aria-invalid="@Invalid("date")" @bind="_date" disabled="@Locked" />
+                        <DatePick InputId="flag-date" Disabled="Locked" />
+                    </div>
                     <FieldError Errors="Errors" Field="date" For="flag-date" />
                 </div>
                 <div class="field @ErrorClass("link")">

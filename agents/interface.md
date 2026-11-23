@@ -170,3 +170,11 @@ the trigger. The answer says what the thing is and does first, then the number; 
 explanation, a list of steps or a form stays a `details.more`; how the site works in general stays on `/metodika`; a link
 that would leave the page only to explain a term is a hint instead. In a list, one hint beside the list, never one per
 row; the lists of bills (front page, `/darbotvarke`, `/projektai`) carry none. An island never opens a hint from code; a hint is phrasing content and may stand in a paragraph.
+
+**A typed date (design 12-decisions 8.15).** A date in a form is a `type="text"` field in `yyyy-MM-dd` (`Display.DatePattern`,
+`Display.DateExample`, never `type="date"`), with an id, followed directly by `<DatePick InputId="…" />`, both inside one
+`<div class="date-row">` (`Lt2.Web.Client/Components/DatePick.razor`). The button is rendered `hidden`; `js/lt2-dates.js` (every
+page, one click listener on the document and an observer that shows buttons rendered later) shows it only where
+`showPicker()` exists. A press makes a hidden `input[type=date]` over the text field in the same wrapper, opens the browser's
+picker, and writes the picked day back as `yyyy-MM-dd`, firing `input` and `change` on the text field so `@bind` sees it.
+Pass `Disabled` with the field's. The picker's date input is made by the script, never rendered by a page. The example day is the placeholder (`Display.DateExample`); there is no hint line under the field, only an error line (`Date.Invalid`) when the text is not a day.

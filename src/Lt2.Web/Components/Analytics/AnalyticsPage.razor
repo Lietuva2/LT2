@@ -132,10 +132,12 @@
                             var id = "compare-" + name;
                             <div class="field @(invalid ? "field--error" : null)">
                                 <label for="@id">@T[label]</label>
-                                <p class="field__hint" id="@(id + "-hint")">@U.Format("Date.Hint", Display.DateExample)</p>
-                                <input class="input num" id="@id" name="@name" type="text" inputmode="numeric" autocomplete="off"
-                                       pattern="@Display.DatePattern" placeholder="@Display.DateExample" value="@value" aria-invalid="@(invalid ? "true" : null)"
-                                       aria-describedby="@(id + "-hint" + (invalid ? " " + id + "-error" : ""))" />
+                                <div class="date-row">
+                                    <input class="input num" id="@id" name="@name" type="text" inputmode="numeric" autocomplete="off"
+                                           pattern="@Display.DatePattern" placeholder="@Display.DateExample" value="@value" aria-invalid="@(invalid ? "true" : null)"
+                                           aria-describedby="@(invalid ? id + "-error" : null)" />
+                                    <DatePick InputId="@id" />
+                                </div>
                                 @if (invalid)
                                 {
                                     <p class="field__error" id="@(id + "-error")">@U.Format("Date.Invalid", Display.DateExample)</p>
