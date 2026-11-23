@@ -2,33 +2,51 @@
 @using Lt2.Web.Client.Parliament
 @inject Formats F
 
-@foreach (var day in VoteHistory.Days(Votes))
+@if (OnBillPage)
 {
-    <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="day-@Display.Day(day.Day)">
-        <TimelineDate Label="@F.T.Format("Votes.Year", day.Day.Year)" Day="day.Day" />
-        <ul class="tl-items">
-            @foreach (var row in day.Rows)
-            {
-                var summary = row.Vote.Summary;
-                var vote = summary.Vote;
-                var (title, wording) = Describe(row.Vote);
-                <li class="tl-item" id="@VoteHistory.Row(row.Number)">
-                    <VotedItemMain Number="@(OnBillPage ? null : vote.Bill?.Number)" Title="@title" VoteId="vote.Id" Stage="@vote.Stage"
-                                   Kind="@vote.Kind" Wording="@wording" OfficialNote="@summary.OfficialNote" />
-                    <div class="tl-item__side">
-                        <VotedItemResult IsConsensus="vote.IsConsensus" HasResult="vote.HasResult" Totals="summary.Totals" />
-                    </div>
-                </li>
-            }
-        </ul>
-    </section>
+    <ul class="tl-items">
+        @for (var i = 0; i < Votes.Count; i++)
+        {
+            @Row(Votes[i], i + 1)
+        }
+    </ul>
+}
+else
+{
+    @foreach (var day in VoteHistory.Days(Votes))
+    {
+        <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="day-@Display.Day(day.Day)">
+            <TimelineDate Label="@F.T.Format("Votes.Year", day.Day.Year)" Day="day.Day" />
+            <ul class="tl-items">
+                @foreach (var row in day.Rows)
+                {
+                    @Row(row.Vote, row.Number)
+                }
+            </ul>
+        </section>
+    }
 }
 
 @code {
     [Parameter, EditorRequired] public IReadOnlyList<VoteListItem> Votes { get; set; } = [];
 
-    /// <summary>On its own page the bill is already identified, so the vote's wording is the link.</summary>
+    /// <summary>On the bill page each row has its own date and links by the vote's wording.</summary>
     [Parameter] public bool OnBillPage { get; set; }
+
+    private RenderFragment Row(VoteListItem item, int number) => __builder =>
+    {
+        var summary = item.Summary;
+        var vote = summary.Vote;
+        var (title, wording) = Describe(item);
+        <li class="tl-item" id="@VoteHistory.Row(number)">
+            <VotedItemMain Number="@(OnBillPage ? null : vote.Bill?.Number)" Title="@title" VoteId="vote.Id" Stage="@vote.Stage"
+                           Kind="@vote.Kind" Day="@(OnBillPage ? Display.DayOf(vote.HeldAt) : null)" Wording="@wording"
+                           OfficialNote="@summary.OfficialNote" />
+            <div class="tl-item__side">
+                <VotedItemResult IsConsensus="vote.IsConsensus" HasResult="vote.HasResult" Totals="summary.Totals" />
+            </div>
+        </li>
+    };
 
     private (string Title, string? Wording) Describe(VoteListItem item)
     {
