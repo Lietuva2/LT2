@@ -22,7 +22,7 @@ Read before changing a page, a component or an island. The rules behind it are d
   `ErrorClass`/`Invalid`/`DescribedBy` with `<FieldError For="input-id">` for field errors. A text with placeholders is
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
   server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to a part of the
-  same page carries the page's path (`/metodika#sekimas`, never a bare `#sekimas`): the pages carry `<base href="/">`, so
+  same page carries the page's path (`/metodika#following`, never a bare `#following`): the pages carry `<base href="/">`, so
   a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. Under every member's text (argument, statement, MP's response, comment) the
   actions are one action row (design 8.16.1, the designer's proposal of 2026-11-17): `<div class="act">` holding the toggles
   ("Man svarbu", `CommentThread`'s "Aptarimas" summary, "Sutinku" as `.act__item`) and `<MoreMenu>` ("⋯", the browser's
@@ -98,7 +98,7 @@ Read before changing a page, a component or an island. The rules behind it are d
 - **A list by day is the timeline's day blocks (owner, 2026-11-18):** `section.tl-day` (`tl-past` for votes) with
   `<TimelineDate>` (label, the date in words, the weekday and the day's count) and the rows in `div.tl-rows`; on a narrow
   screen the head is a band of its own (`PlannedDay`, `VotedDay`). A longer day grows by `<ShowMore>` like every list
-  (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press, landing on the first row added). A vote's majority beside its numbers is
+  (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the history of votes; the agenda's lists carry none (owner,
   2026-11-21).
 - **Every public list's heading row stays at the top of the screen (design 8.16.5, owner 2026-11-21):** a new public
@@ -128,16 +128,16 @@ Read before changing a page, a component or an island. The rules behind it are d
 - **Every "show more" is `<ShowMore>` (design 8.16.4, owner 2026-11-19)** (`Lt2.Web.Client/Components`; on server pages
   `<Lt2.Web.Client.Components.ShowMore …/>`): `div.row.show-more` with "Rodoma N iš M" (`Total`, status id `StatusId` or
   `{Id}-shown`) and `a.show-more__link`, a plain text link (owner 2026-11-19: not a button's look), to `Href`, the same page
-  grown by the address landing on the first row added (null: every row shown, no link). How much a press adds is one rule
+  grown by the address (null: every row shown, no link). How much a press adds is one rule
   (design 8.16.4, owner 2026-11-19): the first page as each list states it, then a list of rows +50
   (`ListPaging.RowStep`), a list of members' long texts +20 (`ListPaging.TextStep`; `Lt2.SharedKernel/ListPaging.cs`, linked
   into the contracts as `BillTextLinks` is); a list's own `Step` constant names one of the two, never a literal. Further links of the list (an
   older page) as its child content, plain `<a>` too. Never
   hidden rows in the page. On a server-rendered page that is all: enhanced navigation (blazor.web.js) fetches the link
-  without a reload (`VoteHistory`, `BillListPaging`, `MpVotePaging`, `AnalyticsList`, `ResponsePaging`, `BallotList`, the
+  without a reload or a scroll reset (`VoteHistory`, `BillListPaging`, `MpVotePaging`, `AnalyticsList`, `ResponsePaging`, `BallotList`, the
   member page, the agenda's and the front page's days through `AgendaPaging`). In an island pass `OnMore`: once the island runs the link carries `data-enhance-nav="false"` and
   `@onclick:preventDefault`, and the island reads the next page from the API (`limit`, `cursor`), adds it in place and
-  focuses the first item added (tabindex -1, `FocusAsync`), the `Href` still the grown address (`RecordReasons`,
+  focuses the first item added without scrolling (tabindex -1, `FocusAsync(preventScroll: true)`), the `Href` still the grown address (`RecordReasons`,
   `CommentThread`). A link inside a running island must never be left to enhanced navigation: the island keeps its own
   state and the fetched page changes nothing. The words are "Rodyti daugiau", or "Rodyti daugiau argumentų / komentarų /
   atsakymų" for lists of texts that have their own "Rodyti daugiau".

@@ -80,14 +80,14 @@ public sealed class MpTemplateTests
     public void A_moderators_action_on_a_response_is_told_with_the_bill_and_the_statement(string notice, string subject, string expected)
     {
         var email = new MpTemplates(Texts(), Options.Create(new SiteOptions { Address = "https://lt2.test" }))
-            .Response(new MpResponseNoticeEmail(Official, notice, "Ona Jonaitienė", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", "/seimas/XVP-0412#atsakymai", "Asmens duomenys.", "moderatoriai@pavyzdys.test"));
+            .Response(new MpResponseNoticeEmail(Official, notice, "Ona Jonaitienė", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", "/seimas/XVP-0412#responses", "Asmens duomenys.", "moderatoriai@pavyzdys.test"));
 
         email.To.ShouldBe(Official);
         email.Subject.ShouldBe(subject);
         email.TextBody.ShouldContain(expected);
         email.TextBody.ShouldContain("Seimo narys: Ona Jonaitienė.");
         email.TextBody.ShouldContain("XVP-0412 · Gyventojų pajamų mokesčio įstatymo pataisa");
-        email.TextBody.ShouldContain("https://lt2.test/seimas/XVP-0412#atsakymai");
+        email.TextBody.ShouldContain("https://lt2.test/seimas/XVP-0412#responses");
         email.TextBody.ShouldContain("Moderatoriaus paaiškinimas: Asmens duomenys.");
         email.TextBody.ShouldContain("moderatoriai@pavyzdys.test");
     }

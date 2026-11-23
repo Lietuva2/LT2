@@ -41,13 +41,13 @@ public sealed class GatheredEmailTests
     private static GatheredNoticesEmail Everything(string rhythm) => new(To, rhythm,
     [
         Item(MessageKinds.FollowResponsesEmail, new FollowResponsesEmail(To, Bill, Title, new DateOnly(2026, 11, 15),
-            [new FollowedResponse("Jonas Petraitis", "Reformų partija", "against")], "/seimas/XVP-0412#atsakymai", "/paskyra/sekimas#laisku-daznis")),
+            [new FollowedResponse("Jonas Petraitis", "Reformų partija", "against")], "/seimas/XVP-0412#responses", "/paskyra/sekimas#email-frequency")),
         Item(MessageKinds.FollowStatementEmail, new FollowStatementEmail(To, "Pavyzdžių asociacija", "domain", "pavyzdys.test", Bill, Title, "for",
-            "/seimas/XVP-0412", "/paskyra/sekimas#laisku-daznis", new DateOnly(2026, 11, 14))),
+            "/seimas/XVP-0412", "/paskyra/sekimas#email-frequency", new DateOnly(2026, 11, 14))),
         Item(MessageKinds.FollowVotedEmail, new FollowVotedEmail(To, Bill, Title, "consideration", new DateOnly(2026, 11, 13), false, 74, 44, 10, null,
-            "/seimas/balsavimai/99100006", [new FollowedMpChoice("Ona Jonaitienė", "for")], "/paskyra/sekimas#laisku-daznis")),
-        Item(MessageKinds.FollowPlannedEmail, new FollowPlannedEmail(To, Bill, Title, "adoption", new DateOnly(2026, 11, 19), "/seimas/XVP-0412", "/paskyra/sekimas#laisku-daznis")),
-    ], "/paskyra/sekimas#laisku-daznis");
+            "/seimas/balsavimai/99100006", [new FollowedMpChoice("Ona Jonaitienė", "for")], "/paskyra/sekimas#email-frequency")),
+        Item(MessageKinds.FollowPlannedEmail, new FollowPlannedEmail(To, Bill, Title, "adoption", new DateOnly(2026, 11, 19), "/seimas/XVP-0412", "/paskyra/sekimas#email-frequency")),
+    ], "/paskyra/sekimas#email-frequency");
 
     [Fact]
     public void Each_kind_has_its_part_in_the_switches_order_whatever_order_things_were_found_in()
@@ -71,7 +71,7 @@ public sealed class GatheredEmailTests
         text.ShouldContain("– 2026-11-13 XVP-0412 · " + Title + " (svarstymas). Rezultatas: už 74, prieš 44, susilaikė 10.\n  Balsavimo rezultatai: https://lietuva2.test/seimas/balsavimai/99100006");
         text.ShouldContain("Ona Jonaitienė: už");
         text.ShouldContain("– 2026-11-14 „Pavyzdžių asociacija“ (patvirtinta per el. pašto adresą @pavyzdys.test)");
-        text.ShouldContain("– 2026-11-15 XVP-0412 · " + Title + ": https://lietuva2.test/seimas/XVP-0412#atsakymai");
+        text.ShouldContain("– 2026-11-15 XVP-0412 · " + Title + ": https://lietuva2.test/seimas/XVP-0412#responses");
         text.ShouldContain("Jonas Petraitis (Reformų partija): balsuos prieš");
     }
 
@@ -81,9 +81,9 @@ public sealed class GatheredEmailTests
         var email = Templates().Render(Everything("daily"));
         email.TextBody.ShouldEndWith(
             "Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0.\n"
-            + "Keisti periodiškumą: https://lietuva2.test/paskyra/sekimas#laisku-daznis\n"
+            + "Keisti periodiškumą: https://lietuva2.test/paskyra/sekimas#email-frequency\n"
             + "Kaip tvarkome duomenis, rašoma privatumo pranešime: https://lietuva2.test/privatumas\n");
-        email.HtmlBody!.ShouldContain("<a href=\"https://lietuva2.test/paskyra/sekimas#laisku-daznis\" style=\"color:#64748b;text-decoration:underline\">Keisti periodiškumą</a>");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lietuva2.test/paskyra/sekimas#email-frequency\" style=\"color:#64748b;text-decoration:underline\">Keisti periodiškumą</a>");
         email.HtmlBody!.ShouldNotContain("<img", Case.Insensitive, "no tracking");
     }
 
@@ -107,8 +107,8 @@ public sealed class GatheredEmailTests
     [Fact]
     public void A_kind_without_a_part_is_refused_rather_than_left_out_silently() =>
         Should.Throw<InvalidOperationException>(() => Templates().Render(new GatheredNoticesEmail(To, "immediate",
-            [Item("email.unknown", new { to = To }), Item(MessageKinds.FollowPlannedEmail, new FollowPlannedEmail(To, Bill, Title, null, new DateOnly(2026, 11, 19), "/seimas/XVP-0412", "/paskyra/sekimas#laisku-daznis"))],
-            "/paskyra/sekimas#laisku-daznis")));
+            [Item("email.unknown", new { to = To }), Item(MessageKinds.FollowPlannedEmail, new FollowPlannedEmail(To, Bill, Title, null, new DateOnly(2026, 11, 19), "/seimas/XVP-0412", "/paskyra/sekimas#email-frequency"))],
+            "/paskyra/sekimas#email-frequency")));
 
     /// <summary>
     /// The kinds that joined from the profiles and the comments (design 8.25.5, 8.23.9): their parts come after the four follow
@@ -123,10 +123,10 @@ public sealed class GatheredEmailTests
         {
             Notices =
             [
-                Item(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(To, [new CommentedArgumentLine(Bill, Title, "/seimas/XVP-0412#reason-a")], "/paskyra/sekimas#laisku-daznis")),
+                Item(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(To, [new CommentedArgumentLine(Bill, Title, "/seimas/XVP-0412#reason-a")], "/paskyra/sekimas#email-frequency")),
                 .. everything.Notices,
-                Item(MessageKinds.FollowMemberEmail, new FollowMemberEmail(To, "Rūta Mockutė", Bill, Title, "/seimas/XVP-0412#reason-b", "/nariai/abcd1234", "/paskyra/sekimas#laisku-daznis")),
-                Item(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(To, [new CommentedArgumentLine("XVP-0533", "Kita pataisa", "/seimas/XVP-0533#reason-c")], "/paskyra/sekimas#laisku-daznis")),
+                Item(MessageKinds.FollowMemberEmail, new FollowMemberEmail(To, "Rūta Mockutė", Bill, Title, "/seimas/XVP-0412#reason-b", "/nariai/abcd1234", "/paskyra/sekimas#email-frequency")),
+                Item(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(To, [new CommentedArgumentLine("XVP-0533", "Kita pataisa", "/seimas/XVP-0533#reason-c")], "/paskyra/sekimas#email-frequency")),
             ],
         };
         var text = Templates().Render(email).TextBody;

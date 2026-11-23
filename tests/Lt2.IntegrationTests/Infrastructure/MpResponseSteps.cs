@@ -85,7 +85,7 @@ public static partial class MpResponseSteps
     /// <summary>The part "Seimo narių atsakymai" of a bill's page (or "Atsakymai" of a profile), up to the end of its sheet.</summary>
     public static string ResponsesPart(string html)
     {
-        var start = html.IndexOf("id=\"atsakymai\"", StringComparison.Ordinal);
+        var start = html.IndexOf("id=\"responses\"", StringComparison.Ordinal);
         start.ShouldBeGreaterThan(0, "the responses part is on the page");
         var open = html.LastIndexOf("<section", start, StringComparison.Ordinal);
         var depth = 0;

@@ -610,7 +610,7 @@ internal sealed class ResponseNotices(
                 var day = VilniusTime.DateOf(told.Max(r => r.AnnouncedAt));
                 var listed = Listed(told, mpsOf, factions);
                 due.Add(new DueNotice(f.UserId, mine.Min(s => s.Event.FirstSeen), to => OutboxMessage.Create(MessageKinds.FollowResponsesEmail, new FollowResponsesEmail(
-                    to.To, bill.Number, bill.Title, day, listed, FollowEvents.BillPath(bill.Number) + "#atsakymai", NoticeDelivery.AccountPath, to.StopToken))));
+                    to.To, bill.Number, bill.Title, day, listed, FollowEvents.BillPath(bill.Number) + "#responses", NoticeDelivery.AccountPath, to.StopToken))));
             }
         }
 

@@ -74,8 +74,8 @@ public sealed class ReasonPagingTests
     [Fact]
     public void The_link_is_the_pages_own_path_with_the_sides_count_and_lands_on_the_first_added()
     {
-        ReasonPaging.Address("https://lt2.localhost:8443/seimas/XVP-0412?atsakymai=20&argumentai-uz=12#reasons", "https://lt2.localhost:8443/", ReasonPaging.PositionAnchor("for", 3))
-            .ShouldBe("/seimas/XVP-0412?atsakymai=20&argumentai-uz=12#argumentai-uz-3");
-        ReasonPaging.PositionAnchor("against", 13).ShouldBe("argumentai-pries-13");
+        ReasonPaging.Address("https://lt2.localhost:8443/seimas/XVP-0412?atsakymai=20&argumentai-uz=12#reasons", "https://lt2.localhost:8443/")
+            .ShouldBe("/seimas/XVP-0412?atsakymai=20&argumentai-uz=12");
+        ReasonPaging.PositionAnchor("against", 13).ShouldBe("arguments-against-13");
     }
 }

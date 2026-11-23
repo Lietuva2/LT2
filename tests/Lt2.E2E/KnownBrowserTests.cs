@@ -45,9 +45,9 @@ public sealed class KnownBrowserTests : E2ETest
         {
             // 1. Registered here: the account page lists this browser.
             email = await PasskeyTests.RegisterAsync(page, "Rūta Mockutė");
-            var part = page.Locator("#zinomos-narsykles");
+            var part = page.Locator("#known-browsers");
             await Assertions.Expect(part).ToContainTextAsync("Žinomos naršyklės", new() { Timeout = E2ESteps.Slow });
-            await Assertions.Expect(part.Locator("#known-browsers li")).ToHaveCountAsync(1);
+            await Assertions.Expect(part.Locator("#known-browser-list li")).ToHaveCountAsync(1);
             await Assertions.Expect(part).ToContainTextAsync("Ši naršyklė");
             await E2ESteps.ShootBothAsync(page, Shots, "listed", part);
             await E2ESteps.SignOutOnAccountAsync(page);
@@ -85,7 +85,7 @@ public sealed class KnownBrowserTests : E2ETest
             await TypeCodeAsync(page, code);
             await page.WaitForURLAsync(new Regex(@"^https?://[^/]+/$"), new() { Timeout = E2ESteps.Slow });
             await page.GotoAsync(E2ESteps.Base + "/paskyra/saugumas");
-            await Assertions.Expect(part.Locator("#known-browsers li")).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(part.Locator("#known-browser-list li")).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(part).ToContainTextAsync("Ši naršyklė");
 
             // 6. "Pamiršti": this browser is a stranger again.

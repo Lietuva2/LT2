@@ -2,12 +2,12 @@
 @using Lt2.Web.Client.Parliament
 @inject Formats F
 
-@* Design 8.17: each MP's ballot on a vote, in one place: the vote's page, part #balsai. Searchable by name, by faction and
+@* Design 8.17: each MP's ballot on a vote, in one place: the vote's page, part #ballots. Searchable by name, by faction and
    by ballot, shown a part at a time; the state is the page's address (a GET form like the MP list's, and plain links), so
    it works without JavaScript and a filtered list can be linked to. The filtering is BallotList's; this only draws it. *@
-<section class="sheet stack" id="balsai" aria-labelledby="h-ballots">
+<section class="sheet stack" id="ballots" aria-labelledby="h-ballots">
     <div class="row list-head"><h2 id="h-ballots">@F.T["Vote.Ballots"]</h2></div>
-    <form class="filters" method="get" action="@BallotList.Address(VoteId, null, null, null, null, "balsai")" role="search" id="ballot-search">
+    <form class="filters" method="get" action="@BallotList.Address(VoteId, null, null, null, null)" data-enhance role="search" id="ballot-search">
         @if (BallotList.SlugOf(_view.Choice) is { } slug)
         {
             <input type="hidden" name="balsas" value="@slug" />
@@ -17,8 +17,8 @@
             <input class="input" id="ballot-q" name="q" type="search" value="@_view.Query" maxlength="@BallotList.MaxQueryLength" autocomplete="off" />
         </div>
         <div class="field">
-            <label for="ballot-frakcija">@F.T["Mps.Faction"]</label>
-            <select class="input" id="ballot-frakcija" name="frakcija">
+            <label for="ballot-faction">@F.T["Mps.Faction"]</label>
+            <select class="input" id="ballot-faction" name="frakcija">
                 <option value="">@F.T["Mps.AllFactions"]</option>
                 @foreach (var f in _view.Factions)
                 {
@@ -39,7 +39,7 @@
         @for (var i = 0; i < _view.Counts.Count; i++)
         {
             var c = _view.Counts[i];
-            var id = "ballots-" + (c.Slug ?? "visi");
+            var id = "ballots-" + (c.Choice ?? "all");
             @if (i > 0)
             {
                 @(" · ")
@@ -50,7 +50,7 @@
             }
             else
             {
-                <a href="@BallotList.Address(VoteId, _view.Query, _view.Faction, c.Choice, null, "balsai")" id="@id">@Name(c) <span class="num">@Display.Number(c.Count)</span></a>
+                <a href="@BallotList.Address(VoteId, _view.Query, _view.Faction, c.Choice, null)" id="@id">@Name(c) <span class="num">@Display.Number(c.Count)</span></a>
             }
         }
     </p>
@@ -64,7 +64,7 @@
             @for (var i = 0; i < _view.Shown.Count; i++)
             {
                 var b = _view.Shown[i];
-                <li id="balsas-@(i + 1)">
+                <li id="ballot-@(i + 1)">
                     <div class="rows__main">
                         <a href="/p/@b.Mp.Slug">@b.Mp.FirstName @b.Mp.LastName</a>
                         <span class="small">@(b.FactionLabel ?? F.T["Vote.NoFaction"])</span>
@@ -73,10 +73,9 @@
                 </li>
             }
         </ul>
-        @* The shared "show more" (owner, 2026-11-19): lands on the first row added, not on the top of the list, so the reader goes on
-           where they stopped. *@
+        @* The shared "show more" grows this list in place. *@
         <Lt2.Web.Client.Components.ShowMore Id="ballots-more" StatusId="ballots-shown" Shown="_view.Shown.Count" Total="_view.Matched"
-            Href="@(_view.More is { } more ? BallotList.Address(VoteId, _view.Query, _view.Faction, _view.Choice, more, "balsas-" + (_view.Shown.Count + 1)) : null)" />
+            Href="@(_view.More is { } more ? BallotList.Address(VoteId, _view.Query, _view.Faction, _view.Choice, more) : null)" />
     }
 </section>
 
@@ -98,7 +97,7 @@
     [SupplyParameterFromQuery(Name = "rodyti")] public string? Show { get; set; }
 
     /// <summary>The same list without the search and the faction (the ballot chosen stays).</summary>
-    private string Clear => BallotList.Address(VoteId, null, null, _view.Choice, null, "balsai");
+    private string Clear => BallotList.Address(VoteId, null, null, _view.Choice, null);
 
     protected override void OnParametersSet() => _view = BallotList.Apply(Ballots, Factions, Query, Faction, Ballot, Show);
 

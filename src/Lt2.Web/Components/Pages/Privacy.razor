@@ -5,7 +5,7 @@
 @* Design 8.22.3: "Privatumo pranešimas", a static page. It informs; nobody accepts it. Its part "Slapukai ir naršyklės atmintis"
    is built from BrowserStorage.Inventory, each row naming its cookie or key in data-storage, which the end-to-end storage test
    reads: what the notice lists and what the browser holds cannot drift apart. *@
-<LegalDocument Prefix="Privacy" Parts="Parts" Anchors="Anchors" Version="@LegalVersions.Privacy">
+<LegalDocument Prefix="Privacy" Parts="Parts" Version="@LegalVersions.Privacy">
     <After Context="part">
         @if (part == "Rights")
         {
@@ -41,19 +41,4 @@
 
 @code {
     private static readonly string[] Parts = ["Controller", "Data", "Basis", "Positions", "Mps", "Others", "Retention", "Rights", "Complaints", "Storage", "Changes"];
-
-    private static readonly Dictionary<string, string> Anchors = new()
-    {
-        ["Controller"] = "valdytojas",
-        ["Data"] = "duomenys",
-        ["Basis"] = "pagrindas",
-        ["Positions"] = "pozicijos",
-        ["Mps"] = "seimo-nariai",
-        ["Others"] = "gavejai",
-        ["Retention"] = "saugojimas",
-        ["Rights"] = "teises",
-        ["Complaints"] = "skundai",
-        ["Storage"] = "slapukai",
-        ["Changes"] = "pakeitimai",
-    };
 }

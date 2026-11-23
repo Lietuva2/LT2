@@ -481,16 +481,16 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             order.ShouldBe(order.OrderBy(o => o.Stance switch { "for" => 0, "against" => 1, _ => 2 }).ThenBy(o => o.LastName, StringComparer.Ordinal).ToList());
 
             var page = await PartAsync(visitor, "/seimas/" + Listed);
-            page.ShouldContain("<section class=\"sheet stack\" id=\"atsakymai\"", Case.Sensitive, "its own sheet (design 8.16)");
+            page.ShouldContain("<section class=\"sheet stack\" id=\"responses\"", Case.Sensitive, "its own sheet (design 8.16)");
             page.ShouldContain("Atsakė Seimo narių: 45. Balsuos už: 15 · prieš: 15 · dar neapsisprendė: 15.");
             Shown(page).ShouldBe(10);
             page.ShouldContain("Rodoma 10 iš 45");
-            page.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=30#atsakymas-11\"", customMessage: "owner, 2026-11-19: 20 more a press");
+            page.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=30\"", customMessage: "owner, 2026-11-19: 20 more a press");
 
             var more = await PartAsync(visitor, $"/seimas/{Listed}?atsakymai=30");
             Shown(more).ShouldBe(30);
             more.ShouldContain("Rodoma 30 iš 45");
-            more.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=45#atsakymas-31\"");
+            more.ShouldContain($"href=\"/seimas/{Listed}?atsakymai=45\"");
             var all = await PartAsync(visitor, $"/seimas/{Listed}?atsakymai=45");
             Shown(all).ShouldBe(45);
             all.ShouldNotContain("id=\"responses-more\"");
@@ -511,7 +511,7 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             var profile = await PartAsync(visitor, "/p/" + slug);
             Shown(profile).ShouldBe(10);
             profile.IndexOf("Profilio atsakymas nr. 1.", StringComparison.Ordinal).ShouldBeLessThan(profile.IndexOf("Profilio atsakymas nr. 2.", StringComparison.Ordinal), "newest first");
-            profile.ShouldContain($"href=\"/p/{slug}?atsakymai=12#atsakymas-11\"");
+            profile.ShouldContain($"href=\"/p/{slug}?atsakymai=12\"");
             Shown(await PartAsync(visitor, $"/p/{slug}?atsakymai=12")).ShouldBe(12);
         }
         finally
@@ -651,8 +651,8 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
         return MpResponseSteps.ResponsesPart(WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
     }
 
-    /// <summary>How many responses the part shows (each item is <c>id="atsakymas-{n}"</c>).</summary>
-    private static int Shown(string part) => System.Text.RegularExpressions.Regex.Count(part, "<li id=\"atsakymas-\\d+\"");
+    /// <summary>How many responses the part shows (each item is <c>id="response-{n}"</c>).</summary>
+    private static int Shown(string part) => System.Text.RegularExpressions.Regex.Count(part, "<li id=\"response-\\d+\"");
 
     private static Task<MpResponseModerationResponse> QueueAsync(StaffMember moderator) =>
         moderator.Browser.GetJsonAsync<MpResponseModerationResponse>(MpResponseRoutes.Moderation);

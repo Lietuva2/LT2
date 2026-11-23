@@ -96,6 +96,9 @@ measurements, timing) is deleted, not patched again.
   never reloads the page. UI conventions: `agents/interface.md`.
 - **Counted rules are pure functions** with unit tests named as the rule (statistics, thresholds, eligibility, `GroupRules`).
 - **Runtime settings** live in `config.setting`, every change audited; never hard-code a number the design calls a setting.
+- **Technical names are English** (including element IDs, CSS selectors, and storage and resource keys). Public page paths
+  and their query parameters may be Lithuanian. A fragment targeting an element uses its English ID. Keep the name Seimas
+  and the fields in external data contracts as supplied.
 - **Kinds are constants.** A closed set of string values that crosses layers (a kind, side, stage or status on the
   wire) is one `public static class` of `const string` in `src/Lt2.SharedKernel/<Area>Codes.cs`, linked into
   `Lt2.Api.Contracts` (one source, two copies; `CodeAliases.props` names the contracts' copy where both are seen), used by

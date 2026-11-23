@@ -17,12 +17,12 @@
 
 <div class="sheet stack stack--loose">
     @* Design 8.7: the steps of the visitor's introduction, here for a member's "Kaip tai veikia" on the front page. *@
-    <Lt2.Web.Components.Pages.HowItWorks Id="kaip-tai-veikia" IdPrefix="m-" Sending="@(_rules?.Sending ?? "off")" />
+    <Lt2.Web.Components.Pages.HowItWorks Id="how-it-works" IdPrefix="m-" Sending="@(_rules?.Sending ?? "off")" />
 
     @* Design 8.28.4: where everything is, right under the steps; the new member's "Kaip tai veikia →" lands just above it. *@
     <WhereToFind />
 
-    <section class="stack" aria-labelledby="m-source" id="saltinis">
+    <section class="stack" aria-labelledby="m-source" id="source">
         <h2 id="m-source">@F.T["Method.Source"]</h2>
         <p>@F.T["Method.Source.1"]</p>
         <p>@F.T["Method.Source.2"]</p>
@@ -30,14 +30,14 @@
         <SourceLine UpdatedAt="@_lastSuccess" HideMethodology="true" />
     </section>
 
-    <section class="stack" aria-labelledby="m-participation" id="dalyvavimas">
+    <section class="stack" aria-labelledby="m-participation" id="participation">
         <h2 id="m-participation">@F.T["Method.Participation"]</h2>
         <p>@F.T["Method.Participation.1"]</p>
         <p>@F.T["Method.Participation.2"]</p>
         <p>@F.T["Method.Participation.3"]</p>
     </section>
 
-    <section class="stack" aria-labelledby="m-faction" id="kaip-frakcija">
+    <section class="stack" aria-labelledby="m-faction" id="faction-alignment">
         <h2 id="m-faction">@F.T["Method.WithFaction"]</h2>
         <p>@F.T["Method.WithFaction.1"]</p>
         <p>@F.T["Method.WithFaction.2"]</p>
@@ -52,14 +52,14 @@
         <p>@F.T["Method.Notes.2"]</p>
     </section>
 
-    <section class="stack" aria-labelledby="m-stages" id="stadijos">
+    <section class="stack" aria-labelledby="m-stages" id="stages">
         <h2 id="m-stages">@F.T["Method.Classification"]</h2>
         <p>@F.T["Method.Classification.1"]</p>
         <p id="classification-corrections">@F.T["Method.Classification.2"]</p>
     </section>
 
     @* Design 8.15: why a planned date moves and how a wrong one is corrected (was beside every planned date). *@
-    <section class="stack" aria-labelledby="m-dates" id="planuojamos-datos">
+    <section class="stack" aria-labelledby="m-dates" id="planned-dates">
         <h2 id="m-dates">@A["Method.Dates"]</h2>
         <p>@A["Method.Dates.1"]</p>
     </section>
@@ -67,18 +67,18 @@
     @if (_rules is { } r)
     {
         @* Design 8.4: the rules that decide what MPs would receive, with their current values (runtime settings). *@
-        <section class="stack" aria-labelledby="m-digests" id="suvestiniu-taisykles">
+        <section class="stack" aria-labelledby="m-digests" id="digest-rules">
             <h2 id="m-digests">@A["Method.Digests"]</h2>
             <p>@A["Method.Digests.Lead"]</p>
-            <dl class="facts" id="digest-rules">
+            <dl class="facts" id="digest-rules-details">
                 @* Design 8.15: the row says what the threshold is (the bill page's "Kas yra riba?" without repeating the
                    word the row is named by), then the number as what holds now and who can change it. *@
-                <dt id="riba">@A["Method.Digests.Threshold"]</dt><dd class="num">@A["Method.Digests.ThresholdMeaning"] @A.Format("Method.Digests.ThresholdValue", Display.Number(r.ThresholdDefault), Display.Number(r.ThresholdMinimum))</dd>
+                <dt id="threshold">@A["Method.Digests.Threshold"]</dt><dd class="num">@A["Method.Digests.ThresholdMeaning"] @A.Format("Method.Digests.ThresholdValue", Display.Number(r.ThresholdDefault), Display.Number(r.ThresholdMinimum))</dd>
                 <dt>@A["Method.Digests.Weekly"]</dt><dd class="num">@(r.Weekly == "off" ? A["Method.Digests.Off"] : A.Format("Method.Digests.WeeklyValue", r.Weekly))</dd>
                 <dt>@A["Method.Digests.Notable"]</dt><dd class="num">@A.Format("Method.Digests.NotableValue", Display.Number((int)Math.Round(r.NotableChange * 100)))</dd>
                 <dt>@A["Method.Digests.BeforeVote"]</dt><dd class="num">@(r.BeforeVote == "off" ? A["Method.Digests.Off"] : A.Format("Method.Digests.BeforeVoteValue", r.BeforeVote))</dd>
                 @* Design 8.19.2 (owner, 2026-11-17): prepared Digest:ReviewHours earlier for review; the numbers are as at sending. *@
-                <dt id="perziura">@A["Method.Digests.Review"]</dt><dd class="num" id="digest-review">@A.Format("Method.Digests.ReviewValue", Display.Number(r.ReviewHours))</dd>
+                <dt id="review">@A["Method.Digests.Review"]</dt><dd class="num" id="digest-review">@A.Format("Method.Digests.ReviewValue", Display.Number(r.ReviewHours))</dd>
                 <dt>@A["Method.Digests.Ceiling"]</dt><dd class="num">@A.Format("Method.Digests.CeilingValue", Display.Number(r.MaxPerWeek))</dd>
                 <dt>@A["Method.Digests.Counts"]</dt><dd class="num">@A.Format("Method.Digests.CountsValue", Display.Number(r.OlderThanDays))</dd>
                 <dt>@A["Method.Digests.Reasons"]</dt><dd class="num">@A.Format("Method.Digests.ReasonsValue", Display.Number(r.ReasonsPerSide))</dd>
@@ -86,31 +86,31 @@
                 <dt id="organisations-in-summaries">@A["Method.Digests.Organisations"]</dt><dd>@A["Method.Digests.OrganisationsValue"]</dd>
                 <dt>@A["Method.Digests.Surge"]</dt><dd class="num">@A.Format("Method.Digests.SurgeValue", Display.Number((int)Math.Round(r.SurgeMinimumShare * 100)), Display.Number(r.SurgeWindowHours), Display.Number(r.SurgeMinimumAccounts))</dd>
                 @* Design 8.4 (owner, 2026-11-17): the setting Digest:PartyGroupMinimum; 0 and 1 both show any group of one or more. *@
-                <dt id="grupes">@A["Method.Digests.Groups"]</dt><dd class="num" id="group-minimum">@(r.GroupMinimum <= 1 ? A["Method.Digests.GroupsAny"] : A.Format("Method.Digests.GroupsValue", Display.Number(r.GroupMinimum)))</dd>
+                <dt id="groups">@A["Method.Digests.Groups"]</dt><dd class="num" id="group-minimum">@(r.GroupMinimum <= 1 ? A["Method.Digests.GroupsAny"] : A.Format("Method.Digests.GroupsValue", Display.Number(r.GroupMinimum)))</dd>
                 @* Design 8.15: who would receive a summary and what its public copy holds (were on the summaries page). *@
-                <dt id="kas-gautu">@A["Digests.Who"]</dt><dd>@A["Digests.WhoValue"]</dd>
-                <dt id="viesa-kopija">@A["Method.Digests.PublicCopy"]</dt><dd>@A["Method.Digests.PublicCopyValue"]</dd>
+                <dt id="recipients">@A["Digests.Who"]</dt><dd>@A["Digests.WhoValue"]</dd>
+                <dt id="public-copy">@A["Method.Digests.PublicCopy"]</dt><dd>@A["Method.Digests.PublicCopyValue"]</dd>
                 @* Design 8.19.1: whether summaries really go, as it holds now (Digest:Sending and its locks). *@
-                <dt id="siuntimas">@A["Method.Digests.Sending"]</dt><dd class="num" id="digest-sending">@A["Method.Digests.Sending." + r.Sending]</dd>
-                <dt id="nustatymai">@A["Method.Digests.Preferences"]</dt><dd>@A["Method.Digests.PreferencesValue"]</dd>
+                <dt id="sending">@A["Method.Digests.Sending"]</dt><dd class="num" id="digest-sending">@A["Method.Digests.Sending." + r.Sending]</dd>
+                <dt id="preferences">@A["Method.Digests.Preferences"]</dt><dd>@A["Method.Digests.PreferencesValue"]</dd>
             </dl>
             <p>@(r.Sending == "off" ? A["Method.Digests.NotSent"] : "") <a href="/suvestines">@A["Digests.Title"]</a> · <a href="@Lt2.Api.Contracts.Digests.DigestRoutes.IntroductionPage">@A["Intro.Title"]</a> · <a href="/moderavimo-taisykles">@A["Rules.Title"]</a></p>
         </section>
     }
 
     @* Design 8.15: what is public and what is not, said once here; the screens say only the short part where one acts. *@
-    <section class="stack" aria-labelledby="m-privacy" id="privatumas">
+    <section class="stack" aria-labelledby="m-privacy" id="privacy">
         <h2 id="m-privacy">@A["Method.Privacy"]</h2>
         <p>@A["Method.Privacy.1"]</p>
         @* Design 8.11.2, 8.14.14, 8.20.1: what following sends, the four email switches on the account page (owner,
            2026-11-16: said here, not in the front page's introduction). *@
-        <p id="sekimas">@A["Method.Privacy.Follow"]</p>
+        <p id="following">@A["Method.Privacy.Follow"]</p>
         @* Design 6.9: what deleting an account removes, and what a staff member's account leaves behind. *@
-        <p id="istrynimas">@A["Method.Privacy.2"]</p>
+        <p id="deletion">@A["Method.Privacy.2"]</p>
     </section>
 
     @* Design 8.2 (decided 2026-11-13): an argument is its author's own deliberate publication; no positions consent. *@
-    <section class="stack" aria-labelledby="m-reasons" id="argumentai">
+    <section class="stack" aria-labelledby="m-reasons" id="arguments">
         <h2 id="m-reasons">@A["Method.Reasons"]</h2>
         <p>@A["Method.Reasons.1"]</p>
         @* Owner, 2026-11-18: "Man svarbu" on either side, counted only on one's own; what the hint beside the arguments links to. *@
@@ -118,14 +118,14 @@
     </section>
 
     @* Design 8.23.5, 8.23.10: comments and "Sutinku": public under the name, tied to no side, never counted or sent to MPs. *@
-    <section class="stack" aria-labelledby="m-comments" id="aptarimas">
+    <section class="stack" aria-labelledby="m-comments" id="discussion">
         <h2 id="m-comments">@A["Method.Comments"]</h2>
         <p>@A["Method.Comments.1"]</p>
     </section>
 
     @* Design 8.13: how descriptions are made, what the labels mean, how to report an error. The paragraph on AI summaries
        is shown only while the summary job can make them, so nothing promises a summary otherwise. *@
-    <section class="stack" aria-labelledby="m-descriptions" id="aprasymai">
+    <section class="stack" aria-labelledby="m-descriptions" id="descriptions">
         <h2 id="m-descriptions">@A["Method.Descriptions"]</h2>
         <p>@A["Method.Descriptions.1"]</p>
         <h3 id="m-description-labels">@A["Method.Descriptions.Labels"]</h3>
@@ -146,7 +146,7 @@
 
     @* Design 8.14.9, 8.14.14: what an organisation's statement is, that it is not counted, what "Patvirtinta" means and does
        not, and that nothing is paid for. *@
-    <section class="stack" aria-labelledby="m-organisations" id="organizacijos">
+    <section class="stack" aria-labelledby="m-organisations" id="organisations">
         <h2 id="m-organisations">@A["Method.Organisations"]</h2>
         <p>@A["Method.Organisations.1"]</p>
         <p id="organisations-private">@A["Method.Organisations.Private"]</p>
@@ -165,7 +165,7 @@
     @if (_limits is { } l)
     {
         @* Design 8.2: the per-person limits are runtime settings; 0 means no limit (the default), said in words. *@
-        <section class="stack" aria-labelledby="m-limits" id="ribos-zmogui">
+        <section class="stack" aria-labelledby="m-limits" id="per-person-limits">
             <h2 id="m-limits">@A["Method.Limits"]</h2>
             <dl class="facts" id="person-limits">
                 <dt>@A["Method.Limits.Reasons"]</dt><dd class="num">@(l.ReasonsPerPerson == 0 ? A["Method.Limits.None"] : A.Format("Method.Limits.ReasonsValue", Display.Number(l.ReasonsPerPerson)))</dd>

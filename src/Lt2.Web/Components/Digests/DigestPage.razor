@@ -126,7 +126,7 @@
 
         <aside class="stack">
             @* Design 8.15: who would receive a summary, when and what goes in are on the methodology page. *@
-            <p><a href="/metodika#suvestiniu-taisykles" id="digest-how">@T["Digests.HowLink"]</a></p>
+            <p><a href="/metodika#digest-rules" id="digest-how">@T["Digests.HowLink"]</a></p>
             <p><a href="@DigestRoutes.IntroductionPage" id="digest-introduction">@T["Digests.IntroductionLink"]</a></p>
             @if (Date is null && runs.Count > 1)
             {
@@ -180,7 +180,7 @@ else
     {
         <p class="lead" id="no-digests">@T["Digests.None"]</p>
         @* Design 8.15: before the first summary too, what summaries are and who would get them is one click away. *@
-        <p><a href="/metodika#suvestiniu-taisykles" id="digest-how">@T["Digests.HowLink"]</a></p>
+        <p><a href="/metodika#digest-rules" id="digest-how">@T["Digests.HowLink"]</a></p>
         <p><a href="@DigestRoutes.IntroductionPage" id="digest-introduction">@T["Digests.IntroductionLink"]</a></p>
         <p class="note note--quiet">@T["NotAPoll"]</p>
     };

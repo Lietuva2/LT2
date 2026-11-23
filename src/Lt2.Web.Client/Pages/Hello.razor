@@ -17,8 +17,8 @@ else
 {
     <AccountHeader Me="Me" Current="@AccountScreens.Profile" />
 
-    <section class="stack" aria-labelledby="profilis-title" id="profilis">
-        <h2 id="profilis-title">@L["Parts.Profile"]</h2>
+    <section class="stack" aria-labelledby="account-profile-title" id="profile">
+        <h2 id="account-profile-title">@L["Parts.Profile"]</h2>
         <p class="row" id="account-level">
             <span class="tag @(Me.VerificationLevel == "email" ? "tag--people" : "")">@L["Level." + Me.VerificationLevel]</span>
             @foreach (var role in Me.Roles)

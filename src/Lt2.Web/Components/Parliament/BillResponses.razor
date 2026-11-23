@@ -10,8 +10,7 @@
 @* "Seimo narių atsakymai" on the bill's page (design 8.5.6), its own sheet, the first of the texts below the top part (owner,
    2026-11-17): rendered by the server and the same for everyone, and only when an MP answered. One line says how many MPs
    answered and how they split, then the responses in the order "už", "prieš", "neapsisprendė", each by last name (withdrawn
-   and hidden ones after them); the first 10 and "Rodyti daugiau" by the page's address (?atsakymai=), landing on the first
-   new one, without JavaScript. The linked account's form is an island filled in the browser only, so nothing in this part's
+   and hidden ones after them); the first 10 and "Rodyti daugiau" by the page's address (?atsakymai=), also without JavaScript. The linked account's form is an island filled in the browser only, so nothing in this part's
    HTML depends on who is looking; with no response yet on an open bill the island alone stands here and, for a linked
    account, brings the part with it. *@
 @if (_view is { Items.Count: 0, Open: true })
@@ -20,7 +19,7 @@
 }
 else if (_view is { Items.Count: > 0 } view)
 {
-    <section class="sheet stack" id="atsakymai" aria-labelledby="h-responses">
+    <section class="sheet stack" id="responses" aria-labelledby="h-responses">
         <div class="row list-head"><h2 id="h-responses">@F.T["Responses.Title"]</h2></div>
         @if (view.Counts.Answered > 0)
         {
@@ -31,7 +30,7 @@ else if (_view is { Items.Count: > 0 } view)
             {
                 var item = view.Items[i];
                 <li id="@ResponsePaging.ItemId(i + 1)">
-                    <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"atsakymas-{i + 1}-")"
+                    <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"response-{i + 1}-")"
                                     Mark="@(item.Response.Status == ResponseStatuses.Published ? Mark(item.Response.Id) : null)">
                         @if (_threads.GetValueOrDefault(item.Response.Id) is { } thread)
                         {
@@ -53,7 +52,7 @@ else if (_view is { Items.Count: > 0 } view)
         {
             @* The shared "show more" (owner, 2026-11-19): "Rodyti daugiau atsakymų", a long response having its own "Rodyti daugiau". *@
             <Lt2.Web.Client.Components.ShowMore Id="responses-more" StatusId="responses-shown" Shown="_shown" Total="view.Items.Count" Text="@F.T["Responses.More"]"
-                Href="@(ResponsePaging.More(_shown, view.Items.Count) is { } more ? ResponsePaging.Address(Path, more, ResponsePaging.ItemId(_shown + 1)) : null)" />
+                Href="@(ResponsePaging.More(_shown, view.Items.Count) is { } more ? ResponsePaging.Address(Path, more) : null)" />
         }
         @if (view.Open)
         {

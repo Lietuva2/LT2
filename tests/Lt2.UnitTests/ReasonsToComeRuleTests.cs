@@ -42,10 +42,10 @@ public sealed class AiDraftRuleTests
     public void The_public_prompt_asks_for_neutral_sentences_from_the_source_only()
     {
         var prompt = AiPrompts.DescriptionDraft;
-        prompt.ShouldContain("{{numeris}}");
-        prompt.ShouldContain("{{pavadinimas}}");
-        prompt.ShouldContain("du–keturis");
-        prompt.ShouldContain("Nepateik argumentų");
+        prompt.ShouldContain("{{number}}");
+        prompt.ShouldContain("{{title}}");
+        prompt.ShouldContain("two to four plain Lithuanian sentences");
+        prompt.ShouldContain("Do not give arguments for or against the bill");
         prompt.ShouldContain("Iš pateikto teksto neaišku");
     }
 }
@@ -211,7 +211,7 @@ public sealed class LandingPathTests
 
     [Theory]
     [InlineData("https://lt2.test/seimas/XVP-0412", "/seimas/XVP-0412")]
-    [InlineData("https://lt2.test/seimas/XVP-0412?x=1#argumentai", "/seimas/XVP-0412")]
+    [InlineData("https://lt2.test/seimas/XVP-0412?x=1#arguments", "/seimas/XVP-0412")]
     [InlineData("https://lt2.test/", "/")]
     public void The_page_path_is_read_from_the_address_without_query_or_fragment(string address, string path) =>
         LandingPath.PathOf(address, "https://lt2.test/").ShouldBe(path);

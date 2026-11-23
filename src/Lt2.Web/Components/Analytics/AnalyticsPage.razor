@@ -30,8 +30,8 @@
     <p class="lead">@T["Lead"]</p>
     <form class="filters" method="get" action="@AnalyticsList.Path" id="analytics-filters">
         <div class="field">
-            <label for="analytics-metai">@T["Filter.Period"]</label>
-            <select class="input" id="analytics-metai" name="metai">
+            <label for="analytics-year">@T["Filter.Period"]</label>
+            <select class="input" id="analytics-year" name="metai">
                 <option value="" selected="@(_data?.Year is null)">@TermLabel</option>
                 @foreach (var year in _data?.Years ?? [])
                 {
@@ -40,8 +40,8 @@
             </select>
         </div>
         <div class="field">
-            <label for="analytics-paskyros">@T["Filter.Accounts"]</label>
-            <select class="input" id="analytics-paskyros" name="paskyros">
+            <label for="analytics-accounts">@T["Filter.Accounts"]</label>
+            <select class="input" id="analytics-accounts" name="paskyros">
                 <option value="" selected="@(!_state.Older)">@T["Filter.AllAccounts"]</option>
                 <option value="@AnalyticsList.OlderValue" selected="@_state.Older">@T["Filter.OlderAccounts"]</option>
             </select>
@@ -117,7 +117,7 @@
             @* Closed at first (owner, 2026-11-19); open while any of its fields is set, so the reader sees what applies. *@
             <details class="more stack stack--tight" id="compare-filters-box" open="@_state.Filtered">
                 <summary class="linkish small" id="compare-filters-toggle">@(_state.Active == 0 ? T["Filter.Toggle"] : T.Format("Filter.ToggleCount", Display.Number(_state.Active)))</summary>
-                <form class="filters" method="get" action="@(AnalyticsList.Path + "#" + AnalyticsList.Anchor)" role="search" id="compare-filters">
+                <form class="filters" method="get" action="@AnalyticsList.Path" data-enhance role="search" id="compare-filters">
                     @if (_state.Year is { } chosenYear)
                     {
                         <input type="hidden" name="metai" value="@chosenYear.ToString(CultureInfo.InvariantCulture)" />
@@ -127,9 +127,8 @@
                         <input type="hidden" name="paskyros" value="@AnalyticsList.OlderValue" />
                     }
                     <div class="filters__pair">
-                        @foreach (var (name, label, value, invalid) in DayFields)
+                        @foreach (var (id, name, label, value, invalid) in DayFields)
                         {
-                            var id = "compare-" + name;
                             <div class="field @(invalid ? "field--error" : null)">
                                 <label for="@id">@T[label]</label>
                                 <div class="date-row">
@@ -150,32 +149,32 @@
                         <input class="input" id="compare-q" name="q" type="search" value="@_state.Query" maxlength="@AnalyticsBillQuery.MaxSearchLength" autocomplete="off" />
                     </div>
                     <div class="field">
-                        <label for="compare-rezultatas">@T["Filter.Result"]</label>
-                        <select class="input" id="compare-rezultatas" name="rezultatas">
+                        <label for="compare-outcome">@T["Filter.Result"]</label>
+                        <select class="input" id="compare-outcome" name="rezultatas">
                             <option value="" selected="@(_state.Result == "")">@T["Filter.AllBills"]</option>
-                            @foreach (var (slug, _) in AnalyticsList.Results)
+                            @foreach (var (slug, apiValue) in AnalyticsList.Results)
                             {
-                                <option value="@slug" selected="@(slug == _state.Result)">@T["Filter.Result." + slug]</option>
+                                <option value="@slug" selected="@(slug == _state.Result)">@T["Filter.Result." + apiValue]</option>
                             }
                         </select>
                     </div>
                     <div class="field">
-                        <label for="compare-dauguma">@T["Compare.Majority"]</label>
-                        <select class="input" id="compare-dauguma" name="dauguma">
+                        <label for="compare-majority">@T["Compare.Majority"]</label>
+                        <select class="input" id="compare-majority" name="dauguma">
                             <option value="" selected="@(_state.Majority == "")">@T["Filter.AllBills"]</option>
-                            @foreach (var (slug, _) in AnalyticsList.Majorities)
+                            @foreach (var (slug, apiValue) in AnalyticsList.Majorities)
                             {
-                                <option value="@slug" selected="@(slug == _state.Majority)">@T["Filter.Majority." + slug]</option>
+                                <option value="@slug" selected="@(slug == _state.Majority)">@T["Filter.Majority." + apiValue]</option>
                             }
                         </select>
                     </div>
                     <div class="field">
-                        <label for="compare-rikiuoti">@T["Filter.Sort"]</label>
-                        <select class="input" id="compare-rikiuoti" name="rikiuoti">
+                        <label for="compare-sort">@T["Filter.Sort"]</label>
+                        <select class="input" id="compare-sort" name="rikiuoti">
                             <option value="" selected="@(_state.Sort == "")">@T["Filter.Sort.Latest"]</option>
-                            @foreach (var (slug, _) in AnalyticsList.Sorts)
+                            @foreach (var (slug, apiValue) in AnalyticsList.Sorts)
                             {
-                                <option value="@slug" selected="@(slug == _state.Sort)">@T["Filter.Sort." + slug]</option>
+                                <option value="@slug" selected="@(slug == _state.Sort)">@T["Filter.Sort." + apiValue]</option>
                             }
                         </select>
                     </div>
@@ -183,7 +182,7 @@
                         <button class="btn" type="submit">@T["Filter.Show"]</button>
                         @if (_state.Filtered)
                         {
-                            <a href="@AnalyticsList.Cleared(_state, AnalyticsList.Anchor)" id="compare-clear">@F.T["Ballots.Clear"]</a>
+                            <a href="@AnalyticsList.Cleared(_state)" id="compare-clear">@F.T["Ballots.Clear"]</a>
                         }
                     </div>
                 </form>
@@ -200,13 +199,12 @@
             }
             else if (d.Bills.Count == 0)
             {
-                <p id="compare-none">@T["Compare.NoneFound"] <a href="@AnalyticsList.Cleared(_state, AnalyticsList.Anchor)">@F.T["Ballots.Clear"]</a></p>
+                <p id="compare-none">@T["Compare.NoneFound"] <a href="@AnalyticsList.Cleared(_state)">@F.T["Ballots.Clear"]</a></p>
             }
             else
             {
                 var shown = d.Bills.Take(_state.Shown).ToList();
                 var dots = shown.Where(InPlot).ToList();
-                var next = d.Bills.Count > shown.Count ? d.Bills[shown.Count] : null;
                 if (dots.Count == 0)
                 {
                     <p id="compare-plot-none">@T.Format("Compare.PlotNone", Display.Number(d.SmallSample))</p>
@@ -267,10 +265,9 @@
                     </div>
                     <p class="small" id="compare-plot-note">@T.Format("Compare.PlotNote", Display.Number(d.SmallSample))</p>
                 }
-                @* The shared "show more" (owner, 2026-11-19): lands on the first bill added when the plot has it, so the reader goes on
-                   where they stopped (as the history of votes, 8.18); enhanced navigation swaps the page in without a reload. *@
+                @* The shared "show more" grows the plot and table in place. *@
                 <Lt2.Web.Client.Components.ShowMore Id="compare-more" StatusId="compare-shown" Shown="shown.Count" Total="d.BillsFound"
-                    Href="@AnalyticsList.More(_state, d.BillsFound, next?.Number, next is not null && InPlot(next))" />
+                    Href="@AnalyticsList.More(_state, d.BillsFound)" />
                 @* The same bills as the plot, every one of them, with the exact numbers; open at once when the plot has none. *@
                 <details class="more stack stack--tight" id="compare-table" open="@(dots.Count == 0)">
                     <summary class="linkish small">@T["Compare.Table"]</summary>
@@ -330,11 +327,11 @@
         </section>
     </div>
 
-    <section class="sheet stack" aria-labelledby="h-unity" id="frakciju-vieningumas">
+    <section class="sheet stack" aria-labelledby="h-unity" id="faction-unity">
         <div class="row list-head"><h2 id="h-unity">@T["Unity.Title"]</h2></div>
         <p class="small">
             @T["Unity.Lead"]@(" ")
-            <Lt2.Web.Client.Components.Hint Id="hint-faction-position" Text="@T["Unity.Hint"]" Answer="@T["Unity.Answer"]" More="/metodika#kaip-frakcija" />
+            <Lt2.Web.Client.Components.Hint Id="hint-faction-position" Text="@T["Unity.Hint"]" Answer="@T["Unity.Answer"]" More="/metodika#faction-alignment" />
         </p>
         @if (d.Factions.Count == 0)
         {
@@ -392,7 +389,7 @@
     </section>
 }
 
-<section class="sheet stack" aria-labelledby="h-mine" id="kas-balsuoja-kaip-jus">
+<section class="sheet stack" aria-labelledby="h-mine" id="my-agreement">
     <div class="row list-head"><h2 id="h-mine">@T["Mine.Title"]</h2></div>
     <p class="small">@T["Mine.Lead"]</p>
     <MyAgreement @rendermode="InteractiveWebAssembly" />
@@ -429,11 +426,11 @@
     /// <summary>The whole term by its name ("2024–2028 m. kadencija"), or "Visa kadencija" without one.</summary>
     private string TermLabel => string.IsNullOrEmpty(_data?.TermName) ? T["Filter.Term"] : _data.TermName;
 
-    /// <summary>The two day fields of the list's form: the name in the address, the label, the value as typed, and whether it is not a date.</summary>
-    private IEnumerable<(string Name, string Label, string? Value, bool Invalid)> DayFields =>
+    /// <summary>The two day fields of the list's form: the id, the name in the address, the label, the value as typed, and whether it is not a date.</summary>
+    private IEnumerable<(string Id, string Name, string Label, string? Value, bool Invalid)> DayFields =>
     [
-        ("nuo", "Filter.From", _state.From, _state.FromInvalid),
-        ("iki", "Filter.To", _state.To, _state.ToInvalid),
+        ("compare-from", "nuo", "Filter.From", _state.From, _state.FromInvalid),
+        ("compare-to", "iki", "Filter.To", _state.To, _state.ToInvalid),
     ];
 
     /// <summary>The list's filters as hidden fields of the period's form, so changing the period keeps them (the length starts again).</summary>

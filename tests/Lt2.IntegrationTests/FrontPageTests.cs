@@ -235,7 +235,7 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         html.ShouldContain("Kaip tai veikia");
         html.ShouldContain("href=\"/prisijungti\"");
         html.ShouldContain("href=\"/prisijungti?registruotis=true\"");
-        html.ShouldContain("href=\"/metodika#privatumas\"");
+        html.ShouldContain("href=\"/metodika#privacy\"");
         html.ShouldNotContain("<form class=\"sheet sheet--cut", customMessage: "no sign-in form on the page");
         html.ShouldNotContain("id=\"email\"");
         html.ShouldNotContain("Aktyviausi projektai");
@@ -273,10 +273,10 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
 
         // The member's "Kaip tai veikia" lands on the same steps on the methodology page.
         var method = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/metodika"));
-        method.ShouldContain("id=\"kaip-tai-veikia\"");
+        method.ShouldContain("id=\"how-it-works\"");
 
         // The summary rules' row "Riba" does not repeat its own word.
-        method.ShouldMatch("<dt id=\"riba\">Riba</dt><dd class=\"num\">dalyvių skaičius");
+        method.ShouldMatch("<dt id=\"threshold\">Riba</dt><dd class=\"num\">dalyvių skaičius");
         method.ShouldContain("Seimo nariai sužino");
     }
 

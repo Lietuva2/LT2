@@ -52,8 +52,8 @@ internal static class ClaudeDraftMapping
             prompt = prompt[(end + 3)..];
         }
 
-        return prompt.Replace("{{numeris}}", source.BillNumber, StringComparison.Ordinal)
-            .Replace("{{pavadinimas}}", source.BillTitle, StringComparison.Ordinal)
+        return prompt.Replace("{{number}}", source.BillNumber, StringComparison.Ordinal)
+            .Replace("{{title}}", source.BillTitle, StringComparison.Ordinal)
             .Trim();
     }
 

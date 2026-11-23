@@ -20,10 +20,10 @@
    by the page's address and the writing box. The list is the same for every reader: what the caller may delete, wrote and
    agreed with comes from the never-cached answer (CommentState), read in the browser only. Inside an island (the arguments,
    the statements) this renders with it; on the server-rendered responses part it is an island of its own. *@
-<details class="discuss" id="aptarimas-@Key" open="@(Open || ShowsNew)" @ontoggle="ToggledAsync">
-    <summary class="act__item discuss__toggle" id="aptarimas-summary-@Key" aria-controls="aptarimas-panel-@Key"><Icon Name="chat" /><span class="discuss__word">@L["Comments.Title"]</span>@if (ShownCount > 0) {@(" ")<span class="num">(@Display.Number(ShownCount))</span>}</summary>
+<details class="discuss" id="discussion-@Key" open="@(Open || ShowsNew)" @ontoggle="ToggledAsync">
+    <summary class="act__item discuss__toggle" id="discussion-summary-@Key" aria-controls="discussion-panel-@Key"><Icon Name="chat" /><span class="discuss__word">@L["Comments.Title"]</span>@if (ShownCount > 0) {@(" ")<span class="num">(@Display.Number(ShownCount))</span>}</summary>
 </details>
-<div class="discuss__panel comments stack stack--tight" id="aptarimas-panel-@Key">
+<div class="discuss__panel comments stack stack--tight" id="discussion-panel-@Key">
     @if (_thread is { } thread)
     {
         @* Design 8.25.4: the card of each public profile among this thread's names, once per thread, for js/lt2-cards.js. *@
@@ -184,10 +184,9 @@
         {
             @* The shared "show more" (owner, 2026-11-19): without script, and before the island runs, a link to this page with 20
                more of this discussion (?komentarai=); once the island runs it reads the next 20 from the API and adds them in
-               place, the focus on the first added (until 2026-11-19 the running island let enhanced navigation fetch the page and
-               kept its own list, so nothing changed). "Rodyti daugiau komentarų": a long comment has its own "Rodyti daugiau". *@
+               place, focusing the first added without scrolling. "Rodyti daugiau komentarų": a long comment has its own "Rodyti daugiau". *@
             <ShowMore Id="@($"comments-more-{Key}")" StatusId="@($"comments-shown-{Key}")" Shown="thread.Items.Count" Total="thread.Count" Text="@L["Comments.More"]"
-                      Controls="@($"comments-{Key}")" Href="@CommentPaging.Address(PagePath, TargetId, more, CommentPaging.PositionAnchor(TargetId, thread.Items.Count + 1))"
+                      Controls="@($"comments-{Key}")" Href="@CommentPaging.Address(PagePath, TargetId, more)"
                       OnMore="MoreAsync" />
         }
         @if (!thread.BillOpen)
@@ -415,7 +414,7 @@
             _focusAdded = null;
             try
             {
-                await item.FocusAsync();
+                await item.FocusAsync(preventScroll: true);
             }
             catch (Microsoft.JSInterop.JSException)
             {

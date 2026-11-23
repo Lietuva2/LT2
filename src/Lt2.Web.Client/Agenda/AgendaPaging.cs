@@ -18,8 +18,7 @@ public sealed record AgendaPagingPage(string Path, string PlannedPrefix, string 
 /// front page <see cref="AgendaRules.FrontPerDay"/>), and the shared "Rodyti daugiau" (ShowMore, "Rodoma N iš M") leads to
 /// the same page with that day grown by <see cref="AgendaRules.MorePerDay"/>, by the address: <c>?diena=2026-11-24:60</c> for
 /// a planned day, <c>?balsuota=2026-11-17:60</c> for a voted one (the day, a colon, how many of its known rows to show),
-/// landing on the first row added (its own id, <see cref="PlannedRowId"/>, <see cref="VotedRowId"/>). The served page holds
-/// only the rows it shows. The days already grown stay so (the parameter repeats), so nothing the reader saw goes away; a
+/// and the served page holds only the rows it shows. The days already grown stay so (the parameter repeats), so nothing the reader saw goes away; a
 /// value the page would not make is left out, never an error.
 /// </summary>
 public static class AgendaPaging
@@ -33,13 +32,13 @@ public static class AgendaPaging
     /// <summary>At most this many days of each kind are read from the address (the agenda reaches 10–12 days ahead, the votes seven back).</summary>
     public const int MaxDays = 31;
 
-    /// <summary>The agenda page, <c>/darbotvarke</c>: <c>#diena-…</c>, <c>#balsuota-…</c>.</summary>
-    public static readonly AgendaPagingPage Agenda = new("/darbotvarke", "diena-", "balsuota-");
+    /// <summary>The agenda page, <c>/darbotvarke</c>: <c>#day-…</c>, <c>#voted-day-…</c>.</summary>
+    public static readonly AgendaPagingPage Agenda = new("/darbotvarke", "day-", "voted-day-");
 
     /// <summary>The front page's timeline: <c>#home-day-…</c>, <c>#home-voted-…</c>.</summary>
     public static readonly AgendaPagingPage Front = new("/", "home-day-", "home-voted-");
 
-    /// <summary>A planned row's id (the same on both pages, and in the line of unknown bills): where a grown day lands.</summary>
+    /// <summary>A planned row's id (the same on both pages, and in the line of unknown bills).</summary>
     public static string PlannedRowId(DateOnly day, string number) => "agenda-" + Display.Day(day) + "-" + number;
 
     /// <summary>A voted row's id.</summary>
@@ -78,9 +77,9 @@ public static class AgendaPaging
         return days;
     }
 
-    /// <summary>The page with these days grown, landing on <paramref name="fragment"/>; no parameter for none.</summary>
+    /// <summary>The page with these days grown. Days at their initial length are omitted.</summary>
     public static string Address(
-        AgendaPagingPage page, IReadOnlyDictionary<DateOnly, int> planned, IReadOnlyDictionary<DateOnly, int> voted, string? fragment = null)
+        AgendaPagingPage page, IReadOnlyDictionary<DateOnly, int> planned, IReadOnlyDictionary<DateOnly, int> voted)
     {
         ArgumentNullException.ThrowIfNull(page);
         ArgumentNullException.ThrowIfNull(planned);
@@ -88,19 +87,18 @@ public static class AgendaPaging
         var parts = planned.OrderBy(d => d.Key).Select(d => PlannedParameter + "=" + Value(d.Key, d.Value))
             .Concat(voted.OrderBy(d => d.Key).Select(d => VotedParameter + "=" + Value(d.Key, d.Value)))
             .ToList();
-        var address = parts.Count == 0 ? page.Path : page.Path + "?" + string.Join("&", parts);
-        return fragment is null ? address : address + "#" + fragment;
+        return parts.Count == 0 ? page.Path : page.Path + "?" + string.Join("&", parts);
     }
 
-    /// <summary>"Rodyti daugiau" under a planned day: the page as it is, with that day grown to <paramref name="asked"/> rows, landing on <paramref name="firstAdded"/>.</summary>
+    /// <summary>"Rodyti daugiau" under a planned day: the page as it is, with that day grown to <paramref name="asked"/> rows.</summary>
     public static string MorePlanned(
-        AgendaPagingPage page, IReadOnlyDictionary<DateOnly, int> planned, IReadOnlyDictionary<DateOnly, int> voted, DateOnly day, int asked, string firstAdded) =>
-        Address(page, With(planned, day, asked), voted, firstAdded);
+        AgendaPagingPage page, IReadOnlyDictionary<DateOnly, int> planned, IReadOnlyDictionary<DateOnly, int> voted, DateOnly day, int asked) =>
+        Address(page, With(planned, day, asked), voted);
 
     /// <summary>"Rodyti daugiau" under a voted day.</summary>
     public static string MoreVoted(
-        AgendaPagingPage page, IReadOnlyDictionary<DateOnly, int> planned, IReadOnlyDictionary<DateOnly, int> voted, DateOnly day, int asked, string firstAdded) =>
-        Address(page, planned, With(voted, day, asked), firstAdded);
+        AgendaPagingPage page, IReadOnlyDictionary<DateOnly, int> planned, IReadOnlyDictionary<DateOnly, int> voted, DateOnly day, int asked) =>
+        Address(page, planned, With(voted, day, asked));
 
     /// <summary>
     /// The days a page shows grown beyond their first rows, each with the known rows it shows: what its links carry on, so a

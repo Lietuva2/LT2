@@ -107,7 +107,7 @@ MPs' list and the number in list rows; "Sekėjai: 0"; the methodology only, with
 
 **8.11.5, 8.22.5 The share link and link previews.** Built as proposed; "no" names what changes:
 1. A link's code is taken on any page by the site's own script (`js/lt2-invitation.js`, before Blazor starts) into the
-   session key `lt2.kodas` and removed from the address bar; the sign-in page then opens the registration with it. If
+   session key `lt2.invitation-code` and removed from the address bar; the sign-in page then opens the registration with it. If
    no: only the bill's page takes it (an island, so only once WebAssembly runs).
 2. The kept code opens the sign-in page on the registration form and is forgotten once the person signs in to a
    finished account. If no: the sign-in form first, the code filled in only when "Registruotis" is pressed.
@@ -394,7 +394,7 @@ them all once, before going live.
 - **8.11.2 Follower numbers.** How many follow a bill, an MP, an organisation or a member is public, who follows is not:
   `Privacy.Data.Fact6.Value`, checked with `Terms.Purpose.2` (following as what an account is for), `Terms.Leave.1`
   (deleting the account lowers the shared numbers, follower numbers among them), `Privacy.Rights.Fact5.Value`
-  (unfollowing), and the methodology's `AppealText` `Method.Privacy.1` and `Method.Privacy.Follow` (`/metodika#sekimas`).
+  (unfollowing), and the methodology's `AppealText` `Method.Privacy.1` and `Method.Privacy.Follow` (`/metodika#following`).
 - **8.23 Comments.** Comments carry no side and need no consent, as arguments (8.23.1). The methodology's "Kas matoma
   viešai, o kas ne" (`AppealText` `Method.Privacy` and its part) and the positions consent texts say that "Man svarbu"
   stays private (it tells the side) while "Sutinku" on a comment is public under the name and tied to no side. 8.23.10:

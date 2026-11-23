@@ -21,7 +21,7 @@ public static class BrowserKeys
     /// Session storage: the page a sign-in link comes back to (design 6.9, 8.11.5, <c>tikslas</c>), kept through the sign-in
     /// steps, which reload the page; removed when used.
     /// </summary>
-    public const string Landing = "lt2.tikslas";
+    public const string Landing = "lt2.return-path";
 
     /// <summary>
     /// Session storage: the invitation code of the link the person came by (an invitation link or a share line's link, after
@@ -29,5 +29,5 @@ public static class BrowserKeys
     /// the registration is completed and sent again then (design 8.14.14, stage B); removed when used or once the person is
     /// signed in to a finished account.
     /// </summary>
-    public const string InvitationCode = "lt2.kodas";
+    public const string InvitationCode = "lt2.invitation-code";
 }

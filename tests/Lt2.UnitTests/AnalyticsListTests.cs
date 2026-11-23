@@ -10,9 +10,9 @@ namespace Lt2.UnitTests;
 public sealed class AnalyticsListTests
 {
     private static AnalyticsListState Read(
-        string? metai = null, string? paskyros = null, string? nuo = null, string? iki = null, string? q = null,
-        string? rezultatas = null, string? dauguma = null, string? rikiuoti = null, string? rodyti = null) =>
-        AnalyticsList.Read(metai, paskyros, nuo, iki, q, rezultatas, dauguma, rikiuoti, rodyti);
+        string? yearText = null, string? accounts = null, string? from = null, string? to = null, string? q = null,
+        string? result = null, string? majority = null, string? sort = null, string? show = null) =>
+        AnalyticsList.Read(yearText, accounts, from, to, q, result, majority, sort, show);
 
     [Fact]
     public void The_plain_address_is_every_closed_bill_of_the_term_newest_first_ten_at_a_time()
@@ -21,15 +21,15 @@ public sealed class AnalyticsListTests
         plain.ShouldBe(new AnalyticsListState(null, false, null, null, null, "", "", "", 10));
         plain.Filtered.ShouldBeFalse();
         AnalyticsList.Address(plain).ShouldBe("/statistika");
-        AnalyticsList.Query(plain).ShouldBe(new AnalyticsBillQuery(Limit: 11), "one more than shown, to land on the next");
+        AnalyticsList.Query(plain).ShouldBe(new AnalyticsBillQuery(Limit: 10));
     }
 
     [Fact]
     public void The_lithuanian_words_of_the_address_become_the_apis_values()
     {
-        var state = Read(metai: "2026", paskyros: "senesnes", nuo: "2026-03-01", iki: "2026-10-31", q: " pajamų ", rezultatas: "skyresi", dauguma: "nera", rikiuoti: "skirtumas", rodyti: "30");
+        var state = Read(yearText: "2026", accounts: "senesnes", from: "2026-03-01", to: "2026-10-31", q: " pajamų ", result: "skyresi", majority: "nera", sort: "skirtumas", show: "30");
         AnalyticsList.Query(state).ShouldBe(new AnalyticsBillQuery(
-            new DateOnly(2026, 3, 1), new DateOnly(2026, 10, 31), "pajamų", AnalyticsBillQuery.Differed, "none", AnalyticsBillQuery.Difference, 31));
+            new DateOnly(2026, 3, 1), new DateOnly(2026, 10, 31), "pajamų", AnalyticsBillQuery.Differed, "none", AnalyticsBillQuery.Difference, 30));
         AnalyticsList.Address(state).ShouldBe(
             "/statistika?metai=2026&paskyros=senesnes&nuo=2026-03-01&iki=2026-10-31&q=pajam%C5%B3&rezultatas=skyresi&dauguma=nera&rikiuoti=skirtumas&rodyti=30");
         state.Filtered.ShouldBeTrue();
@@ -38,16 +38,16 @@ public sealed class AnalyticsListTests
     [Fact]
     public void A_value_the_page_would_not_make_is_the_default()
     {
-        var state = Read(rezultatas: "x", dauguma: "taip", rikiuoti: "abc", rodyti: "5", paskyros: "visos");
+        var state = Read(result: "x", majority: "taip", sort: "abc", show: "5", accounts: "visos");
         state.ShouldBe(new AnalyticsListState(null, false, null, null, null, "", "", "", 10));
-        Read(rodyti: "301").Shown.ShouldBe(10);
+        Read(show: "301").Shown.ShouldBe(10);
         Read(q: new string('a', 101)).Query.ShouldBeNull();
     }
 
     [Fact]
     public void A_typed_day_that_is_not_a_date_is_kept_for_its_field_but_not_used()
     {
-        var state = Read(nuo: "2026-13-01", iki: "vakar");
+        var state = Read(from: "2026-13-01", to: "vakar");
         (state.FromInvalid, state.ToInvalid, state.From).ShouldBe((true, true, "2026-13-01"));
         AnalyticsList.Query(state).From.ShouldBeNull();
         AnalyticsList.Address(state).ShouldBe("/statistika", "the next address forgets it");
@@ -56,37 +56,35 @@ public sealed class AnalyticsListTests
     [Fact]
     public void Days_the_wrong_way_round_are_not_used_and_the_page_says_so()
     {
-        var state = Read(nuo: "2026-10-31", iki: "2026-03-01");
+        var state = Read(from: "2026-10-31", to: "2026-03-01");
         state.Reversed.ShouldBeTrue();
         (AnalyticsList.Query(state).From, AnalyticsList.Query(state).To).ShouldBe((null, null));
     }
 
     [Fact]
-    public void Rodyti_daugiau_adds_twenty_and_lands_on_the_first_row_added()
+    public void Rodyti_daugiau_adds_fifty_without_a_fragment()
     {
-        AnalyticsList.More(Read(q: "XVP"), found: 25, next: "XVP-0711").ShouldBe("/statistika?q=XVP&rodyti=60#projektas-XVP-0711");
-        AnalyticsList.More(Read(rodyti: "30"), found: 25, next: null).ShouldBeNull("every bill found is shown");
-        AnalyticsList.More(Read(rodyti: "300"), found: 400, next: "XVP-0999").ShouldBeNull("the list holds as many as it may");
-        AnalyticsList.More(Read(rodyti: "260"), found: 400, next: "XVP-0999")!.ShouldStartWith("/statistika?rodyti=300#", Case.Sensitive, "the last press before the cap adds fewer");
-        AnalyticsList.More(Read(q: "XVP"), found: 25, next: "XVP-0711", nextInPlot: false)
-            .ShouldBe("/statistika?q=XVP&rodyti=60#palyginimas", "a bill without a place in the plot: the part itself, the table stays closed");
+        AnalyticsList.More(Read(q: "XVP"), found: 25).ShouldBe("/statistika?q=XVP&rodyti=60");
+        AnalyticsList.More(Read(show: "30"), found: 25).ShouldBeNull("every bill found is shown");
+        AnalyticsList.More(Read(show: "300"), found: 400).ShouldBeNull("the list holds as many as it may");
+        AnalyticsList.More(Read(show: "260"), found: 400)!.ShouldBe("/statistika?rodyti=300", "the last press before the cap adds fewer");
     }
 
     [Fact]
     public void Filtrai_counts_every_field_set_and_the_newest_first_is_none()
     {
         Read().Active.ShouldBe(0);
-        Read(metai: "2026", paskyros: "senesnes", rodyti: "30").Active.ShouldBe(0, "the period, the accounts and the length are not the list's filters");
-        Read(q: "pajamų", rikiuoti: "skirtumas").Active.ShouldBe(2);
-        Read(nuo: "vakar").Active.ShouldBe(1, "a day that is not a date is set too, so its field and error show");
-        Read(nuo: "2026-03-01", iki: "2026-10-31", q: "x", rezultatas: "sutapo", dauguma: "uz", rikiuoti: "pozicijos").Active.ShouldBe(6);
+        Read(yearText: "2026", accounts: "senesnes", show: "30").Active.ShouldBe(0, "the period, the accounts and the length are not the list's filters");
+        Read(q: "pajamų", sort: "skirtumas").Active.ShouldBe(2);
+        Read(from: "vakar").Active.ShouldBe(1, "a day that is not a date is set too, so its field and error show");
+        Read(from: "2026-03-01", to: "2026-10-31", q: "x", result: "sutapo", majority: "uz", sort: "pozicijos").Active.ShouldBe(6);
     }
 
     [Fact]
     public void Isvalyti_keeps_the_period_and_the_accounts_and_clears_the_list()
     {
-        var state = Read(metai: "2026", paskyros: "senesnes", q: "pajamų", rezultatas: "sutapo", rodyti: "30");
-        AnalyticsList.Cleared(state, AnalyticsList.Anchor).ShouldBe("/statistika?metai=2026&paskyros=senesnes#palyginimas");
+        var state = Read(yearText: "2026", accounts: "senesnes", q: "pajamų", result: "sutapo", show: "30");
+        AnalyticsList.Cleared(state).ShouldBe("/statistika?metai=2026&paskyros=senesnes");
     }
 
     [Fact]

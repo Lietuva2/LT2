@@ -82,7 +82,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     /// <summary>The list's sheet.</summary>
     private static string List(string html)
     {
-        var start = html.IndexOf("<div class=\"sheet stack\" id=\"balsavimai\">", StringComparison.Ordinal);
+        var start = html.IndexOf("<div class=\"sheet stack\" id=\"votes\">", StringComparison.Ordinal);
         start.ShouldBeGreaterThan(0, "the list is on a sheet");
         return html[start..html.IndexOf("<p class=\"fine\">", start, StringComparison.Ordinal)];
     }
@@ -205,17 +205,17 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         html.ShouldContain("<title>Seimo balsavimai · Lietuva 2.0</title>");
         html.ShouldContain("<h1 class=\"seimas-title\">Seimas</h1>");
         html.ShouldNotContain("<h2>Seimo balsavimai</h2>", customMessage: "no heading of its own: the marked tab says where the reader is (design 8.21)");
-        html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"tab-seimas-balsavimai\" aria-current=\"page\">Balsavimai</a>", customMessage: "the page is the tab \"Balsavimai\", with the search in the address too (design 8.21)");
-        html.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-projektai\">Projektai</a>", customMessage: "Projektai is not marked");
+        html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"tab-seimas-votes\" aria-current=\"page\">Balsavimai</a>", customMessage: "the page is the tab \"Balsavimai\", with the search in the address too (design 8.21)");
+        html.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-bills\">Projektai</a>", customMessage: "Projektai is not marked");
         html.ShouldNotContain("id=\"view-agenda\"", customMessage: "no views row: the page is reached by a link");
         html.ShouldNotContain("id=\"to-agenda\"", customMessage: "the tab row leads back to the agenda; no breadcrumb");
         html.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimas/balsavimai\" role=\"search\" id=\"votes-search\">");
         // "Iki" is a text field with the calendar button right after it, in one row; the field is never type=date.
-        Regex.IsMatch(html, "<div class=\"date-row\">[\r\n ]*<input [^>]*id=\"votes-iki\"[^>]*type=\"text\"[^>]*/?>[\r\n ]*<button type=\"button\" class=\"date-pick\" data-date-pick=\"votes-iki\" aria-label=\"Pasirinkti datą iš kalendoriaus\" hidden>")
+        Regex.IsMatch(html, "<div class=\"date-row\">[\r\n ]*<input [^>]*id=\"votes-to\"[^>]*type=\"text\"[^>]*/?>[\r\n ]*<button type=\"button\" class=\"date-pick\" data-date-pick=\"votes-to\" aria-label=\"Pasirinkti datą iš kalendoriaus\" hidden>")
             .ShouldBeTrue("the calendar button is hidden until js/lt2-dates.js shows it");
         html.ShouldNotContain("type=\"date\"");
-        html.ShouldNotContain("votes-iki-hint", customMessage: "no hint line under the date field: the placeholder shows the form");
-        html.IndexOf("id=\"votes-search\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"balsavimai\"", StringComparison.Ordinal), "the controls lie above the list's sheet");
+        html.ShouldNotContain("votes-to-hint", customMessage: "no hint line under the date field: the placeholder shows the form");
+        html.IndexOf("id=\"votes-search\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"votes\"", StringComparison.Ordinal), "the controls lie above the list's sheet");
         var list = List(html);
         // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the tab row stays at the top of
         // the screen; the heading "Seimas", the lead and the form scroll away.
@@ -226,17 +226,17 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
 
         Row().Count(list).ShouldBe(30);
         list.ShouldContain("Rodoma 30 iš 331");
-        list.ShouldContain("href=\"/seimas/balsavimai?iki=2001-12-31&rodyti=80#balsavimas-31\" id=\"votes-more\"");
-        list.ShouldContain("<section class=\"tl-day tl-past\" aria-label=\"2001 m. gruodžio 31 d.\" id=\"diena-2001-12-31\">");
+        list.ShouldContain("href=\"/seimas/balsavimai?iki=2001-12-31&rodyti=80\" id=\"votes-more\"");
+        list.ShouldContain("<section class=\"tl-day tl-past\" aria-label=\"2001 m. gruodžio 31 d.\" id=\"day-2001-12-31\">");
         list.ShouldContain("<span class=\"label\">2001 m.</span><b>gruodžio 31 d.</b><span class=\"small\">pirmadienis</span>");
         RowsOf(list, "2001-12-31").ShouldBe(4);
         RowsOf(list, "2001-12-22").ShouldBe(2, "the part shown cuts the tenth day");
 
         var more = List(await OkAsync("/seimas/balsavimai?iki=" + Until + "&rodyti=80"));
         Row().Count(more).ShouldBe(80);
-        more.ShouldContain("id=\"balsavimas-31\"");
+        more.ShouldContain("id=\"vote-31\"");
         more.ShouldContain("Rodoma 80 iš 331");
-        more.ShouldContain("?iki=2001-12-31&rodyti=130#balsavimas-81");
+        more.ShouldContain("?iki=2001-12-31&rodyti=130");
         RowsOf(more, "2001-12-22").ShouldBe(3, "a cut day continues when more is shown");
         foreach (var page in new[] { list, more })
         {
@@ -256,7 +256,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         Row().Count(list).ShouldBe(300);
         list.ShouldContain("Rodoma 300 iš 331");
         list.ShouldNotContain("id=\"votes-more\"");
-        list.ShouldContain($"href=\"/seimas/balsavimai?iki={lastDay:yyyy-MM-dd}#balsavimai\" id=\"votes-older\">Senesni balsavimai →</a>");
+        list.ShouldContain($"href=\"/seimas/balsavimai?iki={lastDay:yyyy-MM-dd}#votes\" id=\"votes-older\">Senesni balsavimai →</a>");
         (await OkAsync("/seimas/balsavimai?iki=" + Until + "&rodyti=330")).ShouldContain("Rodoma 30 iš 331", customMessage: "beyond 300 is the default");
 
         var older = List(await OkAsync($"/seimas/balsavimai?iki={lastDay:yyyy-MM-dd}"));
@@ -284,7 +284,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     {
         var found = List(await OkAsync("/seimas/balsavimai?q=zuvininkystes&iki=" + Until));
         found.ShouldContain("Rodoma 30 iš 331");
-        found.ShouldContain("href=\"/seimas/balsavimai?q=zuvininkystes&iki=2001-12-31&rodyti=80#balsavimas-31\"");
+        found.ShouldContain("href=\"/seimas/balsavimai?q=zuvininkystes&iki=2001-12-31&rodyti=80\"");
 
         var none = await OkAsync("/seimas/balsavimai?q=nera-tokio-projekto");
         none.ShouldContain("value=\"nera-tokio-projekto\"");
@@ -504,7 +504,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     /// <summary>How many rows the day's section of the list holds.</summary>
     private static int RowsOf(string list, string day)
     {
-        var start = list.IndexOf($"id=\"diena-{day}\"", StringComparison.Ordinal);
+        var start = list.IndexOf($"id=\"day-{day}\"", StringComparison.Ordinal);
         start.ShouldBeGreaterThan(0, day);
         return Row().Count(list[start..list.IndexOf("</section>", start, StringComparison.Ordinal)]);
     }
@@ -518,10 +518,10 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         return list[start..list.IndexOf("</li>", at, StringComparison.Ordinal)];
     }
 
-    [GeneratedRegex("<li class=\"tl-item\" id=\"balsavimas-\\d+\">")]
+    [GeneratedRegex("<li class=\"tl-item\" id=\"vote-\\d+\">")]
     private static partial Regex Row();
 
-    [GeneratedRegex("id=\"diena-(\\d{4}-\\d{2}-\\d{2})\"")]
+    [GeneratedRegex("id=\"day-(\\d{4}-\\d{2}-\\d{2})\"")]
     private static partial Regex Day();
 
     [GeneratedRegex("<span class=\"tag\">([^<]+)</span>")]

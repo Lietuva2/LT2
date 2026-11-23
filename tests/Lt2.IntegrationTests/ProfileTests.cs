@@ -279,7 +279,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         first.More.ShouldBeTrue();
         first.Items[0].Text.ShouldContain("numeris 11");
         var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id, "Rūta Mockutė"), TestContext.Current.CancellationToken));
-        page.ShouldContain($"href=\"/nariai/ruta-mockute-{id}?rodyti=60#argumentai\"");
+        page.ShouldContain($"href=\"/nariai/ruta-mockute-{id}?rodyti=60\"");
         (await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(id, 60))).Items.Count.ShouldBe(11);
 
         // A waiting (flagged) argument and a withdrawn one are not listed.

@@ -99,9 +99,9 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         agenda.ShouldContain("<div class=\"drop__panel drop__panel--start drop__panel--desc\" id=\"projects-panel\">");
         agenda.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>");
         var entries = WebUtility.HtmlDecode(agenda);
-        entries.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-projektai\" aria-current=\"page\"><span class=\"drop__label\">Projektai</span><span class=\"drop__desc\">Seimo darbotvarkė ir visi projektai, kuriuos Seimas svarsto ar jau baigė.</span></a>");
-        entries.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\"><span class=\"drop__label\">Balsavimai</span><span class=\"drop__desc\">Kaip Seimas balsavo: visi balsavimai nuo naujausio.</span></a>");
-        entries.ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-suvestines\"><span class=\"drop__label\">Suvestinės</span><span class=\"drop__desc\">Ką apie dalyvių prašymus sužino Seimo nariai.</span></a>");
+        entries.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-bills\" aria-current=\"page\"><span class=\"drop__label\">Projektai</span><span class=\"drop__desc\">Seimo darbotvarkė ir visi projektai, kuriuos Seimas svarsto ar jau baigė.</span></a>");
+        entries.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-votes\"><span class=\"drop__label\">Balsavimai</span><span class=\"drop__desc\">Kaip Seimas balsavo: visi balsavimai nuo naujausio.</span></a>");
+        entries.ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-digests\"><span class=\"drop__label\">Suvestinės</span><span class=\"drop__desc\">Ką apie dalyvių prašymus sužino Seimo nariai.</span></a>");
         entries.ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-tab-mps\"><span class=\"drop__label\">Seimo nariai</span><span class=\"drop__desc\">Kiekvieno Seimo nario pareigos, balsavimai ir atsakymai.</span></a>");
         Regex.Matches(agenda, "id=\"nav-tab-([a-z-]+)\"").Select(m => m.Groups[1].Value)
             .ShouldBe(["projektai", "seimas-balsavimai", "suvestines", "mps"], "four entries in the dropdown");
@@ -118,8 +118,8 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         // The vote history is the tab "Balsavimai": it is the marked entry there, "Projektai" is not.
         var votes = HeaderOf(await visitor.Client.GetStringAsync("/seimas/balsavimai"));
         votes.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>");
-        votes.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\" aria-current=\"page\">");
-        votes.ShouldNotContain("id=\"nav-tab-projektai\" aria-current");
+        votes.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-votes\" aria-current=\"page\">");
+        votes.ShouldNotContain("id=\"nav-tab-bills\" aria-current");
         Regex.Count(votes, "aria-current=\"page\"").ShouldBe(1);
         HeaderOf(await visitor.Client.GetStringAsync("/seimo-nariai"))
             .ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-tab-mps\" aria-current=\"page\">");
@@ -133,11 +133,11 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     }
 
     [Theory]
-    [InlineData("/darbotvarke", "tab-projektai")]
-    [InlineData("/projektai", "tab-projektai")]
-    [InlineData("/projektai/uzdaryti", "tab-projektai")]
-    [InlineData("/seimas/balsavimai", "tab-seimas-balsavimai")]
-    [InlineData("/suvestines", "tab-suvestines")]
+    [InlineData("/darbotvarke", "tab-bills")]
+    [InlineData("/projektai", "tab-bills")]
+    [InlineData("/projektai/uzdaryti", "tab-bills")]
+    [InlineData("/seimas/balsavimai", "tab-seimas-votes")]
+    [InlineData("/suvestines", "tab-digests")]
     [InlineData("/seimo-nariai", "tab-mps")]
     public async Task Each_of_the_tab_pages_has_the_heading_and_the_tab_row_with_its_own_tab_marked(string path, string tab)
     {
@@ -164,9 +164,9 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         using var visitor = NewBrowser();
         var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/metodika"));
 
-        var part = Regex.Match(html, "<section class=\"stack\" aria-labelledby=\"where-title\" id=\"kur-ka-rasti\">.*?</section>", RegexOptions.Singleline);
+        var part = Regex.Match(html, "<section class=\"stack\" aria-labelledby=\"where-title\" id=\"where-to-find\">.*?</section>", RegexOptions.Singleline);
         part.Success.ShouldBeTrue("the part is on the page");
-        html.IndexOf("id=\"kaip-tai-veikia\"", StringComparison.Ordinal).ShouldBeLessThan(part.Index, "under the four steps");
+        html.IndexOf("id=\"how-it-works\"", StringComparison.Ordinal).ShouldBeLessThan(part.Index, "under the four steps");
         part.Value.ShouldContain("<h2 id=\"where-title\">Kur ką rasti</h2>");
         var links = Regex.Matches(part.Value, "<a href=\"([^\"]+)\" id=\"where-[a-z-]+\">([^<]+)</a></dt>\\s*<dd>([^<]+)</dd>")
             .Select(m => (Path: m.Groups[1].Value, Name: m.Groups[2].Value, Line: m.Groups[3].Value)).ToList();
@@ -270,9 +270,9 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
                 .Select(m => (m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value))
                 .ShouldBe(
                 [
-                    ("/darbotvarke", "foot-tab-projektai", "Projektai"),
-                    ("/seimas/balsavimai", "foot-tab-seimas-balsavimai", "Balsavimai"),
-                    ("/suvestines", "foot-tab-suvestines", "Suvestinės"),
+                    ("/darbotvarke", "foot-tab-bills", "Projektai"),
+                    ("/seimas/balsavimai", "foot-tab-seimas-votes", "Balsavimai"),
+                    ("/suvestines", "foot-tab-digests", "Suvestinės"),
                     ("/seimo-nariai", "foot-tab-mps", "Seimo nariai"),
                     ("/statistika", "foot-statistics", "Statistika"),
                 ],
@@ -288,7 +288,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
 
     [Theory]
     [InlineData("/taisykles", "Naudojimo taisyklės", "id=\"kaip-iseiti\"")]
-    [InlineData("/privatumas", "Privatumo pranešimas", "id=\"slapukai\"")]
+    [InlineData("/privatumas", "Privatumo pranešimas", "id=\"storage\"")]
     public async Task The_terms_and_the_privacy_notice_are_static_pages_with_a_version(string path, string title, string part)
     {
         using var visitor = NewBrowser();
@@ -318,8 +318,8 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
             ("__Host-lt2.device", "cookie"),
             ("lt2-theme", "local"),
             ("blazor-resource-hash:Lt2.Web.Client", "local"),
-            ("lt2.tikslas", "session"),
-            ("lt2.kodas", "session"),
+            ("lt2.return-path", "session"),
+            ("lt2.invitation-code", "session"),
         ]);
     }
 
@@ -329,7 +329,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     /// <summary>
     /// Every page carries <c>&lt;base href="/"&gt;</c>, so a link whose address is only a fragment ("#part") resolves against
     /// the site's root and leads to the front page, not to a part of the page it is on (the account page's row of parts did).
-    /// A link to a part of the same page carries the page's path ("/paskyra#profilis"). This walks the pages as the server
+    /// A link to a part of the same page carries the page's path ("/paskyra#profile"). This walks the pages as the server
     /// renders them, as a visitor, a member, a moderator and an administrator: every routed page without parameters, then the
     /// site's own links found on them (a few of each kind), and fails on any <c>&lt;a href&gt;</c> or
     /// <c>&lt;form action&gt;</c> that starts with "#". SVG references (<c>&lt;use href&gt;</c>) are no navigation and are

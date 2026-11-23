@@ -66,7 +66,7 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
             html.ShouldNotContain("id=\"seimas-result\"");
             html.ShouldContain("<label for=\"view-seimas\">Seimas · ");
             Regex.IsMatch(html, "name=\"sides-view\" id=\"view-public\" checked").ShouldBeTrue("a closed bill shows the participants first");
-            html.ShouldContain($"<a href=\"/seimas/balsavimai/{FinalVote}#balsai\" id=\"each-mp\">Kaip balsavo kiekvienas Seimo narys</a>");
+            html.ShouldContain($"<a href=\"/seimas/balsavimai/{FinalVote}#ballots\" id=\"each-mp\">Kaip balsavo kiekvienas Seimo narys</a>");
             html.ShouldNotContain("class=\"seatmap\"");
             Regex.Count(html, "<rect [^>]*class=\"seat ").ShouldBe(0);
             html.ShouldNotContain("id=\"ballot-rows\"", customMessage: "design 8.17: the list of each MP's ballot is only on the vote's page");

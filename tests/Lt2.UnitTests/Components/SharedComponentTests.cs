@@ -56,7 +56,7 @@ public sealed class SharedComponentTests : BunitContext
     public void A_hint_is_a_button_that_opens_its_own_popover_with_the_answer_and_more_only_when_given()
     {
         var hint = Render<Hint>(p => p.Add(c => c.Id, "threshold-what").Add(c => c.Text, "Kas yra riba?")
-            .Add(c => c.Answer, "Riba – dalyvių skaičius. Dabar – 100.").Add(c => c.More, "/metodika#riba"));
+            .Add(c => c.Answer, "Riba – dalyvių skaičius. Dabar – 100.").Add(c => c.More, "/metodika#threshold"));
 
         var trigger = hint.Find("#threshold-what");
         trigger.TagName.ShouldBe("BUTTON");
@@ -67,7 +67,7 @@ public sealed class SharedComponentTests : BunitContext
         var panel = hint.Find("#threshold-what-panel");
         panel.GetAttribute("popover").ShouldBe("auto");
         panel.QuerySelector(".hint__answer")!.TextContent.ShouldBe("Riba – dalyvių skaičius. Dabar – 100.");
-        panel.QuerySelector("a")!.GetAttribute("href").ShouldBe("/metodika#riba");
+        panel.QuerySelector("a")!.GetAttribute("href").ShouldBe("/metodika#threshold");
         panel.QuerySelector("a")!.TextContent.ShouldBe("Plačiau");
         hint.FindAll("div, p").ShouldBeEmpty(customMessage: "only phrasing content, so a hint can stand inside a paragraph");
         hint.FindAll(".hint__trigger + .visually-hidden + .hint__panel").ShouldHaveSingleItem("the panel follows the trigger, so its link comes next when tabbing");
@@ -88,7 +88,7 @@ public sealed class SharedComponentTests : BunitContext
     public void An_icon_hint_draws_an_i_keeps_the_question_as_hidden_text_and_is_otherwise_the_same_hint()
     {
         var hint = Render<Hint>(p => p.Add(c => c.Id, "threshold-what").Add(c => c.Icon, true).Add(c => c.Text, "Kas yra riba?")
-            .Add(c => c.Answer, "Riba – dalyvių skaičius. Dabar – 100.").Add(c => c.More, "/metodika#riba"));
+            .Add(c => c.Answer, "Riba – dalyvių skaičius. Dabar – 100.").Add(c => c.More, "/metodika#threshold"));
 
         hint.Find(".hint").ClassName.ShouldBe("hint hint--icon");
         var trigger = hint.Find("#threshold-what");
@@ -107,7 +107,7 @@ public sealed class SharedComponentTests : BunitContext
         var panel = hint.Find("#threshold-what-panel");
         panel.GetAttribute("popover").ShouldBe("auto");
         panel.QuerySelector(".hint__answer")!.TextContent.ShouldBe("Riba – dalyvių skaičius. Dabar – 100.");
-        panel.QuerySelector("a")!.GetAttribute("href").ShouldBe("/metodika#riba");
+        panel.QuerySelector("a")!.GetAttribute("href").ShouldBe("/metodika#threshold");
         hint.FindAll("div, p").ShouldBeEmpty(customMessage: "still only phrasing content");
         hint.FindAll(".hint__trigger + .visually-hidden + .hint__panel").ShouldHaveSingleItem("the panel follows the trigger, as for the words");
     }
@@ -231,7 +231,7 @@ public sealed class SharedComponentTests : BunitContext
         var check = form.Find("label.check span").TextContent;
         check.ShouldBe(Text("Consent.Check"));
         check.ShouldContain("mano pozicijas dėl įstatymų projektų ir „Man svarbu“ žymas");
-        form.Find("#r-consent-privacy").GetAttribute("href").ShouldBe("/privatumas#pozicijos");
+        form.Find("#r-consent-privacy").GetAttribute("href").ShouldBe("/privatumas#positions");
         form.Find("#r-consent-submit").TextContent.ShouldBe(Text(submit));
         form.Find("#r-consent-submit").HasAttribute("disabled").ShouldBeTrue("not before the box is checked");
     }

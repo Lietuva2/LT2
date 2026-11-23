@@ -95,7 +95,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             html.ShouldContain("id=\"compare-filters-toggle\">Filtrai</summary>");
 
             // Each typed day is a text field with the calendar button right after it, in one row; the field is never type=date.
-            foreach (var field in new[] { "compare-nuo", "compare-iki" })
+            foreach (var field in new[] { "compare-from", "compare-to" })
             {
                 Regex.IsMatch(html, $"<div class=\"date-row\">[\r\n ]*<input [^>]*id=\"{field}\"[^>]*type=\"text\"[^>]*/?>[\r\n ]*<button type=\"button\" class=\"date-pick\" data-date-pick=\"{field}\" aria-label=\"Pasirinkti datą iš kalendoriaus\" hidden>")
                     .ShouldBeTrue($"{field} has its calendar button, hidden until js/lt2-dates.js shows it");
@@ -310,7 +310,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             response.Headers.CacheControl?.NoStore.ShouldBe(true);
             mine.Mps.ShouldNotBeEmpty("the answer the page is checked against holds rows");
             var page = await member.Client.GetStringAsync("/statistika");
-            page.ShouldContain("id=\"kas-balsuoja-kaip-jus\"");
+            page.ShouldContain("id=\"my-agreement\"");
             foreach (var marker in new[] { "mine-mp-", "mine-faction-", "mine-basis", "id=\"mine\"", "mine-sign-in" })
             {
                 page.ShouldNotContain(marker, customMessage: "the member's part is filled only in the browser");
@@ -526,22 +526,22 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
                 .ShouldBe((null, null, null, AnalyticsBillQuery.Latest, AnalyticsBillQuery.DefaultLimit, 12), "a value the API would not make is the default");
 
             // The page: ten bills in the plot and the same ten in the table, then "Rodyti daugiau" to the same address with
-            // more, landing on the first bill added in the plot.
+            // more.
             var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T"));
-            Regex.Count(page, "<li class=\"dotplot__row\" id=\"projektas-").ShouldBe(10);
+            Regex.Count(page, "<li class=\"dotplot__row\" id=\"bill-").ShouldBe(10);
             Regex.Count(page, "<tr id=\"row-").ShouldBe(10);
-            Regex.Matches(page, "<li class=\"dotplot__row\" id=\"projektas-([^\"]+)\"").Select(m => m.Groups[1].Value)
+            Regex.Matches(page, "<li class=\"dotplot__row\" id=\"bill-([^\"]+)\"").Select(m => m.Groups[1].Value)
                 .ShouldBe(Regex.Matches(page, "<tr id=\"row-([^\"]+)\"").Select(m => m.Groups[1].Value), "the plot and the table hold the same bills in the same order");
             Regex.IsMatch(page, @"id=""compare-shown"">Rodoma\s10\siš\s12<").ShouldBeTrue();
-            page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=60#projektas-XVP-T011\" id=\"compare-more\"");
+            page.ShouldContain("href=\"/statistika?q=XVP-T&rodyti=60\" id=\"compare-more\"");
             var more = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rodyti=60"));
-            Regex.Count(more, "<li class=\"dotplot__row\" id=\"projektas-").ShouldBe(12);
+            Regex.Count(more, "<li class=\"dotplot__row\" id=\"bill-").ShouldBe(12);
             Regex.Count(more, "<tr id=\"row-").ShouldBe(12);
             more.ShouldNotContain("id=\"compare-more\"");
 
             // The plot follows the chosen order too: by the most positions, XVP-T012 (36) comes first.
             var byPositions = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=XVP-T&rikiuoti=pozicijos"));
-            Regex.Match(byPositions, "<li class=\"dotplot__row\" id=\"projektas-([^\"]+)\"").Groups[1].Value.ShouldBe("XVP-T012");
+            Regex.Match(byPositions, "<li class=\"dotplot__row\" id=\"bill-([^\"]+)\"").Groups[1].Value.ShouldBe("XVP-T012");
             byPositions.ShouldContain("id=\"compare-filters-toggle\">Filtrai (2)</summary>");
 
             // The period's form keeps the list's filters; the list's form keeps the period; the figures are the same as without filters.
@@ -554,13 +554,14 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
 
             // A malformed day is ignored and its field says so; days the wrong way round are ignored and the page says so.
             var badDay = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?nuo=2026-13-01&q=XVP-T"));
-            badDay.ShouldContain("id=\"compare-nuo-error\"");
+            badDay.ShouldContain("id=\"compare-from-error\"");
             badDay.ShouldContain("value=\"2026-13-01\"", customMessage: "the field keeps what was typed");
             Regex.IsMatch(badDay, @"id=""compare-shown"">Rodoma\s10\siš\s12<").ShouldBeTrue();
             (await visitor.Client.GetStringAsync($"/statistika?nuo={votedOn.AddDays(1):yyyy-MM-dd}&iki={votedOn:yyyy-MM-dd}")).ShouldContain("id=\"compare-reversed\"");
             var none = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika?q=nera-tokio-projekto"));
             none.ShouldContain("id=\"compare-none\"");
-            none.ShouldContain("id=\"compare-clear\"");
+            none.ShouldContain("href=\"/statistika\" id=\"compare-clear\"");
+            Regex.Match(none, "<form[^>]*id=\\\"compare-filters\\\"[^>]*>").Value.ShouldContain("action=\"/statistika\" data-enhance");
         }
         finally
         {

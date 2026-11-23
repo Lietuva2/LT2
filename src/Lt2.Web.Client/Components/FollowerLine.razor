@@ -7,7 +7,7 @@
    member's own page) it keeps its own hint, "Kas yra sekėjai?". *@
 @if (Count > 0)
 {
-    <p class="small followers" id="followers"><span class="num" id="followers-count">@L.Format("Followers.Line", Display.Number(Count))</span>@if (WithHint) {@(" ")<Hint Id="followers-hint" Icon="true" Text="@L["Followers.Hint"]" Answer="@L["Followers.Answer"]" More="/metodika#sekimas" />}</p>
+    <p class="small followers" id="followers"><span class="num" id="followers-count">@L.Format("Followers.Line", Display.Number(Count))</span>@if (WithHint) {@(" ")<Hint Id="followers-hint" Icon="true" Text="@L["Followers.Hint"]" Answer="@L["Followers.Answer"]" More="/metodika#following" />}</p>
 }
 
 @code {

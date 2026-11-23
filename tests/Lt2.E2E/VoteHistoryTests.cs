@@ -21,7 +21,7 @@ public sealed partial class VoteHistoryTests : E2ETest
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
         await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT" });
         var page = await context.NewPageAsync();
-        var history = page.Locator("#tab-seimas-balsavimai[aria-current=page]");
+        var history = page.Locator("#tab-seimas-votes[aria-current=page]");
 
         await page.GotoAsync(Base + "/");
         await page.Locator("#home-votes-older").ClickAsync();
@@ -29,12 +29,12 @@ public sealed partial class VoteHistoryTests : E2ETest
         await Assertions.Expect(history).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
 
         await page.GotoAsync(Base + "/darbotvarke");
-        await page.Locator("#tab-seimas-balsavimai").ClickAsync();
+        await page.Locator("#tab-seimas-votes").ClickAsync();
         await page.WaitForURLAsync(Base + "/seimas/balsavimai", new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(history).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
 
         // The newest stage result: its vote, back up to the history, then its bill.
-        var first = page.Locator("#balsavimas-1");
+        var first = page.Locator("#vote-1");
         var vote = await first.Locator("a.tl-item__title").GetAttributeAsync("href");
         var bill = await first.Locator("a.tag").First.GetAttributeAsync("href");
         vote.ShouldNotBeNull().ShouldMatch("^/seimas/balsavimai/\\d+$");
@@ -48,7 +48,7 @@ public sealed partial class VoteHistoryTests : E2ETest
         await page.Locator("#to-vote-history").ClickAsync();
         await Assertions.Expect(history).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
 
-        await page.Locator("#balsavimas-1 a.tag").First.ClickAsync();
+        await page.Locator("#vote-1 a.tag").First.ClickAsync();
         await page.WaitForURLAsync(Base + bill, new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync(title, new() { Timeout = E2ESteps.Slow });
     }
@@ -65,7 +65,7 @@ public sealed partial class VoteHistoryTests : E2ETest
         });
         var page = await context.NewPageAsync();
         var form = page.Locator("#votes-search");
-        var rows = page.Locator("#balsavimai li.tl-item");
+        var rows = page.Locator("#votes li.tl-item");
 
         await page.GotoAsync(Base + "/seimas/balsavimai");
         await E2ESteps.NoSidewaysScrollAsync(page);
@@ -94,21 +94,21 @@ public sealed partial class VoteHistoryTests : E2ETest
 
         // The search without diacritics, back on the stage results.
         await form.GetByLabel("Kurie balsavimai").SelectOptionAsync(new SelectOptionValue { Label = "Projektų etapų balsavimai" });
-        await form.GetByLabel("Projekto numeris arba pavadinimas").FillAsync("gyventoju pajamu mokescio istatymo pataisa");
+        await form.GetByLabel("Projekto Nr. arba pavadinimas").FillAsync("gyventoju pajamu mokescio istatymo pataisa");
         await form.GetByRole(AriaRole.Button, new() { Name = "Rodyti" }).ClickAsync();
         await page.WaitForURLAsync("**/seimas/balsavimai?q=gyventoju+pajamu+mokescio+istatymo+pataisa*");
         (await rows.CountAsync()).ShouldBeGreaterThan(0);
         (await rows.Locator("a.tag--ink").AllInnerTextsAsync()).ShouldAllBe(n => n == "XVP-0412");
 
         // "Iki": only that day's and earlier votes.
-        await form.GetByLabel("Projekto numeris arba pavadinimas").FillAsync(string.Empty);
+        await form.GetByLabel("Projekto Nr. arba pavadinimas").FillAsync(string.Empty);
         await form.GetByLabel("Iki").FillAsync("2026-04-30");
         await form.GetByRole(AriaRole.Button, new() { Name = "Rodyti" }).ClickAsync();
         await page.WaitForURLAsync("**/seimas/balsavimai?*iki=2026-04-30*");
         await Assertions.Expect(form.GetByLabel("Iki")).ToHaveValueAsync("2026-04-30");
-        var days = await page.Locator("#balsavimai section.tl-day").EvaluateAllAsync<string[]>("s => s.map(e => e.id)");
+        var days = await page.Locator("#votes section.tl-day").EvaluateAllAsync<string[]>("s => s.map(e => e.id)");
         days.ShouldNotBeEmpty();
-        days.ShouldAllBe(d => string.CompareOrdinal(d, "diena-2026-04-30") <= 0);
+        days.ShouldAllBe(d => string.CompareOrdinal(d, "day-2026-04-30") <= 0);
         await E2ESteps.NoSidewaysScrollAsync(page);
 
         // Clearing goes back to the plain list.

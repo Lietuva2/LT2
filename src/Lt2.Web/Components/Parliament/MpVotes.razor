@@ -23,7 +23,7 @@
     </div>
 
     @* Owner, 2026-11-18: by day, as the history of votes (design 8.18): the first fifty, then "Rodyti daugiau" in place by the
-       address, landing on the first vote added; once the page holds 300, "Ankstesni balsavimai" goes on from there. *@
+       address. Once the page holds 300, "Ankstesni balsavimai" goes on from there. *@
     <div class="sheet stack" id="mp-votes">
         @if (votes.Items.Count == 0)
         {
@@ -33,7 +33,7 @@
         {
             @foreach (var day in MpVotePaging.Days(votes.Items))
             {
-                <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="diena-@Display.Day(day.Day)">
+                <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="day-@Display.Day(day.Day)">
                     <TimelineDate Label="@F.T.Format("Votes.Year", day.Day.Year)" Day="day.Day" />
                     <div class="tl-rows">
                         <MpVoteRows Votes="day.Rows.Select(r => r.Vote).ToList()" First="day.Rows[0].Number" ShowDate="false" />
@@ -42,7 +42,7 @@
             }
             @* The shared "show more" (owner, 2026-11-19); the votes come by a cursor without a total, so no "Rodoma N iš M". *@
             <Lt2.Web.Client.Components.ShowMore Id="mp-votes-more" Shown="votes.Items.Count"
-                Href="@(MpVotePaging.More(_shown, votes.NextCursor is not null) is { } more ? Address(Cursor, more) + "#" + MpVotePaging.Row(_shown + 1) : null)" />
+                Href="@(MpVotePaging.More(_shown, votes.NextCursor is not null) is { } more ? Address(Cursor, more) : null)" />
         }
     </div>
 

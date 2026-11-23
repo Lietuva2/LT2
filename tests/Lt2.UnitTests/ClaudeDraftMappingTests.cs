@@ -21,9 +21,9 @@ public sealed class ClaudeDraftMappingTests
     public void The_system_prompt_is_the_public_prompt_with_the_bill_filled_in_and_without_the_readers_comment()
     {
         var prompt = ClaudeDraftMapping.SystemPrompt(Source);
-        prompt.ShouldStartWith("Esi pagalbininkas");
-        prompt.ShouldContain("Projekto numeris: XVP-0412");
-        prompt.ShouldContain("Projekto pavadinimas: Gyventojų pajamų mokesčio įstatymo pataisa");
+        prompt.ShouldStartWith("You are helping");
+        prompt.ShouldContain("Bill number: XVP-0412");
+        prompt.ShouldContain("Bill title: Gyventojų pajamų mokesčio įstatymo pataisa");
         prompt.ShouldNotContain("<!--");
         prompt.ShouldNotContain("{{");
         prompt.ShouldNotContain(Source.SourceText);
@@ -33,14 +33,14 @@ public sealed class ClaudeDraftMappingTests
     public void The_moderators_draft_is_sent_with_the_draft_prompt_and_the_summary_job_with_its_own()
     {
         var draft = ClaudeDraftMapping.SystemPrompt(Source);
-        draft.ShouldStartWith("Esi pagalbininkas, padedantis Lietuva 2.0 moderatoriui");
-        draft.ShouldNotContain("Jei abejoji");
+        draft.ShouldStartWith("You are helping a Lietuva 2.0 moderator prepare a neutral description of a Seimas bill.");
+        draft.ShouldNotContain("If you are unsure");
 
         var summary = ClaudeDraftMapping.SystemPrompt(Source with { Purpose = DraftPurpose.Summary });
         summary.ShouldStartWith(
-            "Esi pagalbininkas, rengiantis trumpą neutralų Seimo teisės akto projekto aprašymą svetainei „Lietuva 2.0“. Aprašymas bus rodomas lankytojams iš karto, žmogaus neperžiūrėtas.");
-        summary.ShouldContain("- Jei abejoji, ar iš teksto aišku, ką projektas keičia, rašyk tik tą vieną sakinį: geriau jokio aprašymo negu netikslus.");
-        summary.ShouldContain("Projekto numeris: XVP-0412");
+            "You are preparing a brief, neutral description of a Seimas bill for Lietuva 2.0. Visitors will see the description immediately without human review.");
+        summary.ShouldContain("- If you are unsure whether the source makes clear what the bill changes, write only that same sentence. An inaccurate description is worse than no description.");
+        summary.ShouldContain("Bill number: XVP-0412");
         summary.ShouldNotContain("{{");
         summary.ShouldNotContain("<!--");
         JsonSerializer.SerializeToElement(ClaudeDraftMapping.Request(Source with { Purpose = DraftPurpose.Summary }, "claude-sonnet-5-5"))
@@ -55,10 +55,10 @@ public sealed class ClaudeDraftMappingTests
         var summary = Lines(DraftPurpose.Summary);
 
         // Everything after the opening line, placeholders and the "not enough" rule included, is the same.
-        summary.Skip(1).Where(l => !l.StartsWith("- Jei abejoji", StringComparison.Ordinal)).ShouldBe(draft.Skip(1));
-        summary.Count(l => l.StartsWith("- Jei abejoji", StringComparison.Ordinal)).ShouldBe(1);
-        AiPrompts.DescriptionSummary.ShouldContain("{{numeris}}");
-        AiPrompts.DescriptionSummary.ShouldContain("{{pavadinimas}}");
+        summary.Skip(1).Where(l => !l.StartsWith("- If you are unsure", StringComparison.Ordinal)).ShouldBe(draft.Skip(1));
+        summary.Count(l => l.StartsWith("- If you are unsure", StringComparison.Ordinal)).ShouldBe(1);
+        AiPrompts.DescriptionSummary.ShouldContain("{{number}}");
+        AiPrompts.DescriptionSummary.ShouldContain("{{title}}");
     }
 
     [Fact]

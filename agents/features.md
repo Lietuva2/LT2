@@ -62,7 +62,7 @@ Voting with delegation is not designed; do not build towards it.
 (`Lt2.Web.Client/Components`), holds every item of the menu and the footer: its address, its `MenuPlace` (the dropdown of
 "Projektai", the menu's line, the account item, the footer's "Apie" and "Dalyvauti"), and its texts in `UiText`:
 `Menu.{Key}` the name and `Menu.{Key}.Line` the one line that says what the page is. The dropdown, the menu's line, the tab
-row, the footer and "Kur ką rasti" on `/metodika` (`Components/Parliament/WhereToFind`, `#kur-ka-rasti`, 8.28.4) are drawn
+row, the footer and "Kur ką rasti" on `/metodika` (`Components/Parliament/WhereToFind`, `#where-to-find`, 8.28.4) are drawn
 from it; element ids are `nav-{Slug}`, `{Slug}` (tab row), `foot-{Slug}`, `where-{Slug}`. Unit `MenuTests` fails for an item
 without a name or a line. Each dropdown entry shows its line under its name (`.drop__label`, `.drop__desc`; `.drop--desc`, the
 panel as wide as the page under 32rem); the menu's line, the tab row and the footer show names only. The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
@@ -160,7 +160,7 @@ other links back, its codes and every session (and signs the asking browser out 
 `account.email-restored` (no actor, no address) and tells the address it replaced (`email.email-restored`). The four emails are
 `EmailChangeTemplates` (Notifications). The maintenance job deletes change rows after a day and links back once used or
 expired; both tables go with the account and are withheld from `lt2_readonly`; the export holds only the address in use.
-The part is `MyEmail` (`Lt2.Web.Client/Pages`, `#el-pastas`, first on "Saugumas ir duomenys"): it reads `GET /me` in the
+The part is `MyEmail` (`Lt2.Web.Client/Pages`, `#email-address`, first on "Saugumas ir duomenys"): it reads `GET /me` in the
 browser only (nothing personal in the served page), "Keisti adresą" opens the steps in place (proof: `PasskeyStep` with its
 `Text`, or "Siųsti kodą"; a staff account's step is the staff `PasskeyStep`; then the address; then the code), a staff
 account's `passkey.confirmation-required` is answered by a passkey confirmation and the same press again, and on success the
@@ -220,9 +220,9 @@ list ("Užrakintos paskyros": `Reasons.Anonymous` for a person without a name, `
 **The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
 parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, change it"; `/sveiki` is gone, no redirect).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
-"Profilis" `/paskyra` (level and roles, then one form, `MyProfile`, below), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/paskyra/dalyvavimas`
+"Profilis" `/paskyra` (level and roles, then one form, `MyProfile`, below), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList`, `#followed-items`; `EmailRhythm`, `#email-frequency`), "Dalyvavimas" `/paskyra/dalyvavimas`
 (`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/paskyra/saugumas`
-(the email address `MyEmail` `#el-pastas`, passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent
+(the email address `MyEmail` `#email-address`, passkeys, sessions, known browsers `#known-browsers`, the positions consent
 `#positions-consent` for any consent not withdrawn, export and deletion `#my-data`, signing out).
 The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
 written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Without a page to
@@ -233,7 +233,7 @@ take-over on "Dalyvavimas". Every screen is
 `no-store` and carries `<NeedsScript />`; `IslandsBeforeStartTests` walks all four.
 
 **"Profilis", one form (design 8.28.5).** `MyProfile` (`Lt2.Web.Client/Pages`) is one `.sheet` holding one form with one
-button (`#profile-save`): the display name (`#vardas`), "Apie mane" and "Viešas profilis" (`#viesas-profilis`, gone for the MP's
+button (`#profile-save`): the display name (`#name`), "Apie mane" and "Viešas profilis" (`#public-profile`, gone for the MP's
 own account), the party with its consent box and "Rodyti viešame profilyje" (`#party-support`, offered while the form's switch
 is ticked). Each consent is its own box, unticked until ticked, with its text inline before it is given. `GET /me/profile`
 answers the whole form (`MyProfileResponse`: the name, "Apie mane" and its hiding, the public id and address, both consent
@@ -318,7 +318,7 @@ participation (share of recorded votes in which the MP voted for, against or abs
 (only votes where at least two thirds of the faction's voting members chose the same option; free votes are excluded
 and their count shown). No expenses, rankings or scorecards. An MP takes over a profile through a link sent only to the
 official `@lrs.lt` address from open data; the link is tied to the Seimas person id (details below). Each MP's ballot on a vote is listed
-in one place, the vote's page (`/seimas/balsavimai/{id}#balsai`, design 8.17: `VoteBallots`, filtered by `BallotList` in
+in one place, the vote's page (`/seimas/balsavimai/{id}#ballots`, design 8.17: `VoteBallots`, filtered by `BallotList` in
 Lt2.Web.Client): a name search without case or diacritics, a faction dropdown (with "Be frakcijos"), the ballot, 20 rows
 then 50 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) with no script; a closed bill's page only
 links to it. The history of votes (`/seimas/balsavimai`, design 8.18: `VoteHistoryPage`, its address state in
@@ -359,7 +359,7 @@ record is Appeals' `ClosingVotes` (`IClosingVotes` in SharedKernel: any record w
 `reclassify`/`reset`, the form `#vote-action-form`, radios `#vote-kind-{code}`/`#vote-stage-{code}`, `#vote-statement`;
 `#vote-classification-closing` in place of the actions on a record's closing vote; `AppealUi` `VoteMod.*`); everyone sees
 the hint `#classification-corrected` ("Klasifikaciją pataisė moderatoriai", `VoteResponse.ClassificationCorrected`,
-`ParliamentText` `Vote.Corrected*`) beside the stage, and `/metodika#stadijos` says so (`Method.Classification.2`). Tests:
+`ParliamentText` `Vote.Corrected*`) beside the stage, and `/metodika#stages` says so (`Method.Classification.2`). Tests:
 unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
 `ImportTests.A_moderators_correction_of_a_votes_classification_survives_a_re_parse_and_a_full_re_import`.
 
@@ -428,7 +428,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   before the organisations and the arguments, and only when an MP answered (owner, 2026-11-17); server-rendered and the
   same for everyone; the counts line; "už", "prieš", "neapsisprendė", by last name, then withdrawn and hidden ones) and the
   profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau atsakymų" (`<ShowMore>`, +20, `MpResponseLimits.Step`) by `?atsakymai=` landing
-  on `#atsakymas-{n}` (`ResponsePaging`). Each item is `MpResponseItem` with the one mark "Seimo narys arba jo biuras". The
+  on `#response-{n}` (`ResponsePaging`). Each item is `MpResponseItem` with the one mark "Seimo narys arba jo biuras". The
   linked account's form is the island `MyMpResponse`, filled in the browser only (on an open bill nobody answered yet it
   stands alone with `Section`, bringing the part's sheet and heading for a linked account); reports are `ReportResponse` islands.
 - `/seimo-narys/projektai` (8.5.7, `MpBills`, linked from `MyMp`; `GET /me/mp/bills`): the bills in summaries now in the
@@ -533,8 +533,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `ReasonPaging`, unit-tested): the address asks how many (`?argumentai-uz=` / `?argumentai-pries=`, `ReasonLimits.Parameter`,
   read on the server, and in the browser up to it should enhanced navigation have grown it before the island started);
   "Rodyti daugiau argumentų" under each column is `<ShowMore>` (`#reasons-more-{side}`, status `#reasons-more-{side}-shown`),
-  the island's `MoreAsync` reads 20 more (`ReasonLimits.Step`) in place and focuses the first added; the name line carries
-  `#argumentai-uz-{n}` where the link lands without script. The linked argument (`?argumentas=`), one a comment link or
+  the island's `MoreAsync` reads 20 more (`ReasonLimits.Step`) in place and focuses the first added without scrolling. The linked argument (`?argumentas=`), one a comment link or
   `?komentarai=` names, and the one just published are pinned first in their side (`ReasonPaging.Pin`), read alone when
   their pages would not bring them; "Rodyti tik naujus" reads the new ones the pages lack (`NewTexts.Reasons`) and adds them
   last. The server renders the discussions of every argument it shows; one a later page brought reads its own on opening.
@@ -546,7 +545,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   of the same look. One hint beside the arguments' heading, "Kas yra „Man svarbu“?" (`Reasons.EndorseWhat`, owner
   2026-11-17), says when it can be marked (either side, not one's own argument, counted only on the side one asks for; owner,
   2026-11-18), "Plačiau" to
-  `/metodika#argumentai`; the same served markup for everyone, gone for the MP's own account once the island runs.
+  `/metodika#arguments`; the same served markup for everyone, gone for the MP's own account once the island runs.
 - **The bill's page (design 8.12.1, owner 2026-11-17).** The header: "Projektai / Įstatymo projektas XVP-0412" (no label
   line), the title, one `.follow-line` (the stage tags, "Planuojama …", then `FollowButton`); header and body in a
   `.stack--snug` (16px apart, owner 2026-11-18). Beside the side column: what it is about, the sides (with `#not-a-poll`
@@ -634,7 +633,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   cacheable answer that holds nothing about the caller, and show both sides for every bill (a bill nobody took part in
   says so only in a row without side buttons, owner 2026-11-19); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
   counted). The front page (design 8.7, reworked 2026-11-15; mockup `design/ui/pradzia.html`) is that agenda as a
-  timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#kaip-tai-veikia`) and
+  timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#how-it-works`) and
   links to register or sign in, never a form; a member gets "Jūsų projektai" (the bills they follow, and only those: owner,
   2026-11-17, "followed only"; a side alone shows in its row) and their marks in the rows, islands filled
   in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
@@ -692,9 +691,8 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   line `#{day}-more` (status `#{day}-shown`, "Rodoma N iš M") stands under a day with more known rows than its first page
   (`AgendaRules.Paged`) and links to `AgendaPaging.MorePlanned` / `MoreVoted`: the same page with the day grown by
   `AgendaRules.MorePerDay` (50, `ListPaging.RowStep`; `NextAsked`), `?diena=2026-11-24:60` / `?balsuota=2026-11-17:60` (pages `AgendaPaging.Agenda`,
-  blocks `#diena-…`/`#balsuota-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`; the parameter repeats for every
-  day grown, `AgendaPaging.Grown` carrying on only days shown beyond their first rows), landing on the first row added by its
-  own id (`AgendaPaging.PlannedRowId` `#agenda-{day}-{number}`, `VotedRowId` `#recent-{vote}`). `AgendaPaging.Read` takes
+  blocks `#day-…`/`#voted-day-…`, and `AgendaPaging.Front`, `#home-day-…`/`#home-voted-…`; the parameter repeats for every
+  day grown, `AgendaPaging.Grown` carrying on only days shown beyond their first rows). `AgendaPaging.Read` takes
   `day:N` only (a bare day, a word, a number ≤ 0 dropped); `AgendaRules.ShownKnown` ignores a number not above the first
   rows and caps at the day (and `MaxAsked`). N is `AgendaDayView.ShownCount`: the known rows shown, plus the unknown bills
   once their line shows; M is the head's count; the last page has the status and no link. Enhanced navigation swaps it in
@@ -715,7 +713,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   **The greeting and the new member's start (design 8.28.3).** `MyStart` (`Lt2.Web.Client/Agenda`, an island) renders the
   member's `h1#home-title`: "Sveiki" as served and before the island runs, then "Sveiki prisijungę" with the start
   (`#home-start`: the full steps `.intro-steps.starter__full`, the short `.starter__short` under 54rem, "Kaip tai veikia →" to
-  `/metodika#kaip-tai-veikia`) while `MyAgendaState.ShowsStart` (positions consent not given, not the MP's own account; from
+  `/metodika#how-it-works`) while `MyAgendaState.ShowsStart` (positions consent not given, not the MP's own account; from
   the rows' `/me/bills` answer, or `GET /me` through `MyAccountState` when the agenda is empty), else "Sveiki sugrįžę". It
   follows `MyAgendaState.Changed`, so a first side takes it away without a reload. Step 4 is the same text as "Kaip tai
   veikia" (`HowItWorks.4.*` in `AppealUi`, which `HowItWorks.razor` reads for its fourth step); the steps name the controls
@@ -734,17 +732,17 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   plus published arguments; the default), planned date or the latest activity (owner, 2026-11-17: the page offers these
   three, `rikiuoti` = `aktyvumas`, `data`, `naujausia`; another value falls back to the default; the API's `sort` has
   `activity`, `participants`, `arguments`, `planned`, `latest`), with a search and the box "Planuojami per 14 dienų"
-  (`input#planuojami` in the search form above "Rodyti", applied with it; owner 2026-11-21); each row has "už … · prieš …" beside its bar (`List.Counts`,
+  (`input#planned-only` in the search form above "Rodyti", applied with it; owner 2026-11-21); each row has "už … · prieš …" beside its bar (`List.Counts`,
   one number a side; nothing under the list: no note, hint or `#not-a-poll`, owner 2026-11-21; the sheet has no heading,
   so the h1 and `ProjectTabs` are its sticky `div.page-head#page-head`, design 8.16.5; `p#found` is an ordinary line), and in
   the latest-activity order "Paskutinė veikla {yyyy-MM-dd HH:mm}". The last activity is one time per bill,
   `appeals.bill_record.last_activity_at`, set by `RecordActivity` (Appeals) in the same transaction as a side taken, changed or
   withdrawn, an argument published, a comment written, an organisation's statement or an MP's response made public or
   changed; never who acted. The page shows 20 and grows in place by `?rodyti=` (`Lt2.Web.Client/Appeals/BillListPaging`:
-  +50, landing on `#bill-{next}`, which it knows by asking one more; at most 200, then "Tolesni projektai" `?nuo=`); the API's
+  +50, up to 200, then "Tolesni projektai" `?nuo=`); the API's
   `limit` (`BillListLimits`, 20, 1–200). The list is composed in memory (`AppealsService.ListAsync`): the bills are the
   Parliament module's, the activity the Appeals module's. An MP's votes (`/p/{slug}/balsavimai`, `MpVotePaging`) are by day,
-  50 then +50 by `?rodyti=` (rows `#balsavimas-{n}`), at most 300, then `?nuo=`; `GET /mps/{slug}/votes` takes `limit`
+  50 then +50 by `?rodyti=` (rows `#vote-{n}`), at most 300, then `?nuo=`; `GET /mps/{slug}/votes` takes `limit`
   (`MpVoteLimits`). Every "show more" is `<ShowMore>` (design 8.16.4, below); a press adds 50 rows or 20 texts (`ListPaging`,
   `ListPagingTests`). Every moderators' list keeps its hundred
   and carries its total (`ModerationQueueResponse.RecordsTotal` etc.); `<QueueCut>` says "Rodoma 100 iš N".
@@ -761,19 +759,19 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
 - **One compact follow line (owner, 2026-11-17)** under the title of a bill, an MP, an organisation and a member: the page's
   tags in a `.follow-line` row, then `FollowButton`: "Sekti" (a visitor's a sign-in link back), "Sekėjai: n", and one hint
   "Kas yra sekimas?" (`Follow.Hint`); the button and the account list's "Nebesekti" are `.btn--compact` (owner, 2026-11-18) whose answer is the kind's `Follow.What.*` (a visitor's `Follow.SignIn.*`) and
-  `Follow.Private` (nobody sees who follows; what the number is), "Plačiau" to `/metodika#sekimas`. `FollowerLine` keeps its
+  `Follow.Private` (nobody sees who follows; what the number is), "Plačiau" to `/metodika#following`. `FollowerLine` keeps its
   own "Kas yra sekėjai?" only where it stands without the button (`WithHint`: a closed organisation, the member's own page).
 - "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`), in the person's rhythm (design 8.24): one part per
   followed bill listing the MPs whose response became public or changed stance (`appeals.mp_response.announced_at`,
   `ResponseRules.Announces`; a changed explanation with the same stance is no event) and are still public, with name,
-  faction and stance and the link to `#atsakymai`, never the explanation. Read through `IMpResponseFeed` (Appeals); each
+  faction and stance and the link to `#responses`, never the explanation. Read through `IMpResponseFeed` (Appeals); each
   person is told only about answers from after they followed (`FollowRules.ResponsesFor`), and the MP's own account and
   office members never about their own MP (`IMpLinks.SpeaksForAsync`). Recorded in `bill_event` kind `response`, one per
   answer (key: `FollowRules.ResponseKey`, the person number and the moment), with the three-day rule of votes.
 - **How often emails come (design 8.24, the designer's proposals in section 12 await the owner).** A member chooses "Iš karto"
   (the default), "Kartą per dieną" or "Kartą per savaitę ir artėjant balsavimui" (`notice_setting.frequency`,
   `GET|PUT /me/notices/frequency`, the island `EmailRhythm` on the follows screen `/paskyra/sekimas`, its own sheet
-  `#laisku-daznis` after the switches; audited `notices.frequency-changed` without the choice). One place decides and sends:
+  `#email-frequency` after the switches; audited `notices.frequency-changed` without the choice). One place decides and sends:
   `Rhythm/NoticeDelivery` (Notifications) makes, each run, the run's emails, the "planned" dates that cannot wait, the daily
   email from `Follows:ResponsesAt` ("Rytinių laiškų laikas", 08:00) and Monday's, and gathers everything for one person into
   one email per run (`GatheredNoticesEmail`; one thing alone keeps its own email). The rules are `RhythmRules` (pure); going
@@ -789,7 +787,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
 - **The stop link (design 8.24.1, owner 2026-11-17; what one press stops is the designer's proposal awaiting the owner).**
   Every email of the rhythm carries `List-Unsubscribe` (`/api/v1/notices/{token}/stop`) with `List-Unsubscribe-Post`
   (`EmailLayout.StopHeaders`) and, in the footer (owner, 2026-11-17), "Keisti periodiškumą" to `AccountScreens.EmailRhythm`
-  (`/paskyra/sekimas#laisku-daznis`, the payloads' `AccountPath`) "arba atsisakyti laiškų" to `/laiskai/nebegauti/{token}`
+  (`/paskyra/sekimas#email-frequency`, the payloads' `AccountPath`) "arba atsisakyti laiškų" to `/laiskai/nebegauti/{token}`
   (`EmailLayout.BuildNotice`); paths in `MemberMailLinks` (SharedKernel) and `NoticeStopRoutes` (contracts). The token is one
   per account, `MailKeys.MemberStopToken` (the mail key, account id, generation 0), its hash in `notify.member_mail_token`
   (withheld, deleted with the account, not exported), made by `NoticeDelivery` with the first email; the clear token travels
@@ -822,7 +820,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   member's code after the `#` (`LandingPath.ShareLink(code, path)`: `/seimas/XVP-0412#kodas=…`; the plain address when the
   code is off or used up, with `Share.NoLink`); the same link whichever side. The front page's "Jūsų projektai" and an
   organisation's per-bill links (`OrganisationBillLinkResponse.Link`, its own code) are made the same way.
-  `js/lt2-invitation.js` (every page, before blazor.web.js) moves a `#kodas=` into session storage `lt2.kodas` and out of the
+  `js/lt2-invitation.js` (every page, before blazor.web.js) moves a `#kodas=` into session storage `lt2.invitation-code` and out of the
   address bar (`history.replaceState`, other `#` parameters kept); `SignInFlow` fills the registration in from it (or from
   its own `#kodas=`) and forgets it after the registration or a sign-in to a finished account. The old query forms
   (`?kodas=`, `?tikslas=`) are not read (owner: "we don't need old links to work").
@@ -847,7 +845,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
 **Analytics (design 8.26, owner 2026-11-16).** "Statistika", `/statistika` (`MenuSections.Statistics`; owner 2026-11-17: in the main menu, no tab row) (`Components/Analytics/AnalyticsPage`), public and
 server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the four figures, the
 Seimas's share "for" beside the members' frozen counts on closed bills, faction unity (`FactionUnityRule` in Parliament).
-The closed bills are one dot plot (`#compare-plot`: rows `li.dotplot__row#projektas-{nr}`, a label column with the
+The closed bills are one dot plot (`#compare-plot`: rows `li.dotplot__row#bill-{nr}`, a label column with the
 number and the title cut by CSS, a per-row SVG track on one shared axis) and "Rodyti lentelę" (`#compare-table`, rows `row-{nr}`,
 title column) over the same bills (owner, 2026-11-19, back from the rows of 2026-11-18), with their own GET form in
 `details#compare-filters-box` ("Filtrai (n)", `AnalyticsListState.Active`; open while a field is set) (`nuo`, `iki`, `q`,
@@ -1037,7 +1035,7 @@ under responses), the caller's answer `CommentState` (browser only), reports tar
 outbox kind `email.comment-notice` alone, its own part of the gathered email; switch
 `comments`, the last on the follows screen). A person's name links to their public profile when they have one (8.25.4).
 A link to a comment or an argument (design 8.23.6, the designer's proposal of 2026-11-17) is made only by `BillTextLinks`
-(`ToComment`, `ToReason`; one file in SharedKernel compiled also into the contracts): `?komentaras={id}#komentaras-{id}` or
+(`ToComment`, `ToReason`; one file in SharedKernel compiled also into the contracts): `?komentaras={id}#comment-{id}` or
 `?argumentas={id}#reason-{id}`. `BillPage` resolves the comment once (`GET /comments/{id}/place`, public, one 404
 `comment.not-found` for hidden and unknown) and hands `Linked` to `RecordReasons`, `OrganisationPositions` and
 `BillResponses` as a parameter (so an island starts in the same state): the target is shown even beyond its side's first
@@ -1046,7 +1044,7 @@ page (first in its side's column) or the responses' paging, its "Aptarimas" open
 changes nothing. The thread's API pages by `limit` and `cursor` (`CommentRules.Limit`, the first page at least ten, a later one 20 when not asked; the answer's
 `NextCursor`); "Rodyti daugiau komentarų" is `<ShowMore>` (`#comments-more-{target}`, `#comments-shown-{target}`): by the
 address (`?komentarai=`, `CommentPaging`) without script and before the island runs, and once it runs `CommentThread.MoreAsync`
-reads the next 20 (`CommentLimits.Step`) in place and focuses the first added (owner, 2026-11-19: the running island had let enhanced navigation
+reads the next 20 (`CommentLimits.Step`) in place and focuses the first added without scrolling (owner, 2026-11-19: the running island had let enhanced navigation
 fetch the page and kept its own list, so nothing changed).
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.

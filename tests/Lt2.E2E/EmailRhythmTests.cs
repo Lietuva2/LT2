@@ -23,20 +23,20 @@ public sealed class EmailRhythmTests : E2ETest
         await PasskeyTests.RegisterAsync(page, "Laiškų Skaitytoja");
 
         // Design 8.21, 8.24: on the follows screen, its own sheet after the switches.
-        await page.GotoAsync($"{Base}/paskyra/sekimas#laisku-daznis");
+        await page.GotoAsync($"{Base}/paskyra/sekimas#email-frequency");
         var immediate = page.Locator("#rhythm-immediate");
         var daily = page.Locator("#rhythm-daily");
         await Assertions.Expect(immediate).ToBeCheckedAsync(new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.Locator("#rhythm-weekly")).Not.ToBeCheckedAsync();
-        await Assertions.Expect(page.Locator("#laisku-daznis")).ToContainTextAsync("Kartą per savaitę ir artėjant balsavimui");
+        await Assertions.Expect(page.Locator("#email-frequency")).ToContainTextAsync("Kartą per savaitę ir artėjant balsavimui");
 
         // Enabled once the island runs; before that its start replaces the prerendered markup.
         await Assertions.Expect(daily).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
-        await page.Locator("#laisku-daznis").ScrollIntoViewIfNeededAsync();
-        await E2ESteps.ShootBothAsync(page, Shots, "account-rhythm", page.Locator("#laisku-daznis"));
+        await page.Locator("#email-frequency").ScrollIntoViewIfNeededAsync();
+        await E2ESteps.ShootBothAsync(page, Shots, "account-rhythm", page.Locator("#email-frequency"));
 
         await daily.CheckAsync();
-        await Assertions.Expect(page.Locator("#laisku-daznis")).ToContainTextAsync("Išsaugota.", new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#email-frequency")).ToContainTextAsync("Išsaugota.", new() { Timeout = E2ESteps.Slow });
         var (status, body) = await E2ESteps.ApiAsync(page, "GET", "/api/v1/me/notices/frequency", null);
         status.ShouldBe(200, body);
         JsonDocument.Parse(body).RootElement.GetProperty("frequency").GetString().ShouldBe("daily");

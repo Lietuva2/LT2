@@ -92,7 +92,7 @@ public sealed class OrganisationInvitationFlowTests(AdministratorFixture adminis
             await Assertions.Expect(follow).ToHaveTextAsync("Nebesekti");
 
             // The account page lists it with the three switches.
-            await m.GotoAsync($"{Base}/paskyra/sekimas#sekami");
+            await m.GotoAsync($"{Base}/paskyra/sekimas#followed-items");
             await Assertions.Expect(m.Locator("#follows-organisations")).ToContainTextAsync(name, new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(m.Locator("#notice-statements")).ToBeCheckedAsync();
             await Assertions.Expect(m.Locator("#notice-planned")).ToBeCheckedAsync();
@@ -101,8 +101,8 @@ public sealed class OrganisationInvitationFlowTests(AdministratorFixture adminis
             // The switches are enabled once the island runs: before that its start replaces the prerendered markup, and an
             // element taken for scrolling would no longer be in the page.
             await Assertions.Expect(m.Locator("#notice-statements")).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
-            await m.Locator("#sekami").ScrollIntoViewIfNeededAsync();
-            await E2ESteps.ShootBothAsync(m, Shots, "account-follows", m.Locator("#sekami"));
+            await m.Locator("#followed-items").ScrollIntoViewIfNeededAsync();
+            await E2ESteps.ShootBothAsync(m, Shots, "account-follows", m.Locator("#followed-items"));
 
             // 6. The administrators' invitations page lists the organisation's code by its name.
             var admin = await administrator.PageAsync();

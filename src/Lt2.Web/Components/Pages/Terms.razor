@@ -4,7 +4,7 @@
 
 @* Design 8.22.2: "Naudojimo taisyklės", a static page. Members accept this version (TermsOfUse.Version) at registration and, after
    a change, on /taisykles/sutikimas. *@
-<LegalDocument Prefix="Terms" Parts="Parts" Anchors="Anchors" Version="@LegalVersions.Terms">
+<LegalDocument Prefix="Terms" Parts="Parts" Version="@LegalVersions.Terms">
     <After Context="part">
         @if (part == "Moderation")
         {
@@ -27,16 +27,4 @@
 
 @code {
     private static readonly string[] Parts = ["Purpose", "Who", "Publish", "Moderation", "Summaries", "Leave", "Changes", "Provider"];
-
-    private static readonly Dictionary<string, string> Anchors = new()
-    {
-        ["Purpose"] = "paskirtis",
-        ["Who"] = "kas-gali",
-        ["Publish"] = "ka-skelbti",
-        ["Moderation"] = "moderavimas",
-        ["Summaries"] = "suvestines",
-        ["Leave"] = "kaip-iseiti",
-        ["Changes"] = "pakeitimai",
-        ["Provider"] = "teikejas",
-    };
 }

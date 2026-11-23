@@ -45,7 +45,7 @@
         @if (!Closed)
         {
             @* Owner, 2026-11-21: the filter is a box in the search form, right above "Rodyti", applied with it. *@
-            <label class="check small"><input type="checkbox" id="planuojami" name="planuojami" value="taip" checked="@Planned" /><span>@T["List.Planned"]</span></label>
+            <label class="check small"><input type="checkbox" id="planned-only" name="planuojami" value="taip" checked="@Planned" /><span>@T["List.Planned"]</span></label>
         }
         @* "Tik mano": a member's own bills instead of the list (design 8.12.5); an island, so nothing of any member is in this page. *@
         <MineOnlyBox @rendermode="InteractiveWebAssembly" />
@@ -112,9 +112,9 @@
                     <NotAuthorized>@Rows(false)</NotAuthorized>
                 </AuthorizeView>
             </ul>
-            @* Owner, 2026-11-18: the list grows in place by the address, landing on the first bill added (as 8.18). *@
+            @* Owner, 2026-11-18: the list grows in place by the address (as 8.18). *@
             <Lt2.Web.Client.Components.ShowMore Id="more" StatusId="shown" Shown="_offset + Math.Min(_shown, page.Items.Count)" Total="page.Total"
-                Href="@(BillListPaging.More(_shown, _offset, page.Total) is { } more && page.Items.Count > _shown ? Link(From, Sort, Planned, more) + "#bill-" + page.Items[_shown].Bill.Number : null)">
+                Href="@(BillListPaging.More(_shown, _offset, page.Total) is { } more ? Link(From, Sort, Planned, more) : null)">
                 @if (BillListPaging.Further(_shown, _offset, page.Total) is { } further)
                 {
                     <a href="@Link(further.ToString(System.Globalization.CultureInfo.InvariantCulture), Sort, Planned)" id="further">@T["List.Further"]</a>
@@ -210,7 +210,7 @@
         Closed = string.Equals(new Uri(Navigation.Uri).AbsolutePath.TrimEnd('/'), MenuSections.ClosedProjectsPath, StringComparison.OrdinalIgnoreCase);
         _shown = BillListPaging.Shown(Show);
         _offset = BillListPaging.Offset(From);
-        _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort], BillListPaging.Asked(_shown))).Value;
+        _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort], _shown)).Value;
         _other = string.IsNullOrWhiteSpace(Q)
             ? 0
             : (await Appeals.GetAppealsAsync(Q, false, !Closed, null, null, 1)).Value?.Total ?? 0;

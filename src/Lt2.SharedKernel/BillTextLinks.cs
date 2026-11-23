@@ -28,12 +28,12 @@ public static class BillTextLinks
     public const int First = 10;
 
     /// <summary>The element id of a comment on the page: its stable anchor (design 8.23.6).</summary>
-    public static string CommentElement(Guid commentId) => "komentaras-" + commentId.ToString("N", CultureInfo.InvariantCulture);
+    public static string CommentElement(Guid commentId) => "comment-" + commentId.ToString("N", CultureInfo.InvariantCulture);
 
     /// <summary>The element id of an argument on the page.</summary>
     public static string ReasonElement(Guid reasonId) => "reason-" + reasonId.ToString("D", CultureInfo.InvariantCulture);
 
-    /// <summary><c>/seimas/{number}?komentaras={id}#komentaras-{id}</c>.</summary>
+    /// <summary><c>/seimas/{number}?komentaras={id}#comment-{id}</c>.</summary>
     public static string ToComment(string billNumber, Guid commentId) =>
         Page(billNumber) + "?" + CommentParameter + "=" + commentId.ToString("N", CultureInfo.InvariantCulture) + "#" + CommentElement(commentId);
 

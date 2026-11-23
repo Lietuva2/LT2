@@ -165,7 +165,7 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 ## 8.7 The front page and the lists of the agenda
 
 - The front page's head: a larger logo beside the title and the lead, the trial note under both; no paragraph on
-  following and no "Organizacijos" block; following is explained at `/metodika#sekimas` (8.16, 2026-11-16).
+  following and no "Organizacijos" block; following is explained at `/metodika#following` (8.16, 2026-11-16).
 - The front page shows the next two sitting days and the last two voting days, five rows of each (8.11.1, 2026-11-18).
   No row of links ("Visi projektai", "Suvestinės Seimo nariams", "Seimo nariai") under its agenda (2026-11-19).
 - The front page's planned days and voted days are two sheets, "Artimiausiu metu Seime" and "Neseniai balsuota" (both
@@ -181,8 +181,7 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   combined stage as its furthest), then number; bills the open data does not know yet last, folded into one line.
   Followers never rank anything; a member's followed bills are not moved up ("Jūsų projektai" is their place)
   (8.11.1, 2026-11-18).
-- A longer day grows by the one "show more" ("Rodoma N iš M · Rodyti daugiau", by the address, landing on the first row
-  added), as every list does (8.16.4); M is the day's count; the unknown bills come as the last line once every known
+- A longer day grows by the one "show more" ("Rodoma N iš M · Rodyti daugiau", by the address), as every list does (8.16.4); M is the day's count; the unknown bills come as the last line once every known
   row shows (8.11.1, 2026-11-19).
 - Every voted row says how the vote went in a neutral chip: the majority of those who voted ("Dauguma už", "Dauguma
   prieš", "Nėra daugumos"; a consensus "Pritarta bendru sutarimu"), never "Priimta" read from the numbers, which cannot

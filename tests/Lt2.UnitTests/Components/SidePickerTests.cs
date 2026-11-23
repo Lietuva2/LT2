@@ -249,7 +249,7 @@ public sealed class SidePickerTests : BunitContext
         picker.FindAll("#side-for").ShouldBeEmpty();
         picker.FindAll("#side-against").ShouldBeEmpty();
         var line = picker.Find("#side-mp-account");
-        line.QuerySelector("a")!.GetAttribute("href").ShouldBe("/seimas/XVP-0412#atsakymai");
+        line.QuerySelector("a")!.GetAttribute("href").ShouldBe("/seimas/XVP-0412#responses");
     }
 
     [Fact]

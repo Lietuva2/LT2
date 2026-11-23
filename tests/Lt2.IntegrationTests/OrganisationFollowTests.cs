@@ -114,7 +114,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
             root.GetProperty("billNumber").GetString().ShouldBe(AppealSteps.SecondBill);
             root.GetProperty("stance").GetString().ShouldBe("against");
             root.GetProperty("billPath").GetString().ShouldBe("/seimas/" + AppealSteps.SecondBill);
-            root.GetProperty("accountPath").GetString().ShouldBe("/paskyra/sekimas#laisku-daznis");
+            root.GetProperty("accountPath").GetString().ShouldBe("/paskyra/sekimas#email-frequency");
             root.GetProperty("confirmedBy").ValueKind.ShouldBe(JsonValueKind.Null);
 
             // Exactly these fields: no text, no goal, no count, no side, nobody else. (A substring check failed by chance:

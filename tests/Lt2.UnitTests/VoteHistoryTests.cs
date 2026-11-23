@@ -42,8 +42,8 @@ public sealed class VoteHistoryTests
     [InlineData("priemimai", VoteListQuery.Adoptions)]
     [InlineData("visi", VoteListQuery.All)]
     [InlineData("etapai", VoteListQuery.StageResults)]
-    public void Each_choice_of_the_dropdown_asks_the_api_for_its_kind(string kas, string kind) =>
-        VoteHistory.Read(null, kas, null, null).ApiKind.ShouldBe(kind);
+    public void Each_choice_of_the_dropdown_asks_the_api_for_its_kind(string kindSlug, string kind) =>
+        VoteHistory.Read(null, kindSlug, null, null).ApiKind.ShouldBe(kind);
 
     [Theory]
     [InlineData(null, "nera", "2026-13-01", "abc")]
@@ -52,8 +52,8 @@ public sealed class VoteHistoryTests
     [InlineData(null, "", "2026-11-13T00:00", "60.5")]
     [InlineData(null, null, "", "29")]
     [InlineData(null, null, null, "301")]
-    public void Unknown_malformed_or_oversized_values_fall_back_to_the_defaults(string? q, string? kas, string? iki, string? rodyti) =>
-        VoteHistory.Read(q, kas, iki, rodyti).ShouldBe(Plain);
+    public void Unknown_malformed_or_oversized_values_fall_back_to_the_defaults(string? q, string? kindSlug, string? until, string? show) =>
+        VoteHistory.Read(q, kindSlug, until, show).ShouldBe(Plain);
 
     [Fact]
     public void An_oversized_search_is_no_search() =>
@@ -66,7 +66,7 @@ public sealed class VoteHistoryTests
 
         state.ShouldBe(new VoteHistoryState("Žuvininkystės", "visi", new DateOnly(2026, 5, 19), 90));
         state.Filtered.ShouldBeTrue();
-        VoteHistory.Address(state, "balsavimas-61").ShouldBe("/seimas/balsavimai?q=%C5%BDuvininkyst%C4%97s&kas=visi&iki=2026-05-19&rodyti=90#balsavimas-61");
+        VoteHistory.Address(state, "vote-61").ShouldBe("/seimas/balsavimai?q=%C5%BDuvininkyst%C4%97s&kas=visi&iki=2026-05-19&rodyti=90#vote-61");
         VoteHistory.Read(null, null, null, "300").Shown.ShouldBe(300);
     }
 
@@ -93,11 +93,11 @@ public sealed class VoteHistoryTests
     {
         var state = VoteHistory.Read("pajamu", "visi", "2026-05-19", null);
 
-        VoteHistory.More(state, 30, 95).ShouldBe("/seimas/balsavimai?q=pajamu&kas=visi&iki=2026-05-19&rodyti=80#balsavimas-31");
-        VoteHistory.More(state with { Shown = 80 }, 80, 95).ShouldBe("/seimas/balsavimai?q=pajamu&kas=visi&iki=2026-05-19&rodyti=130#balsavimas-81");
+        VoteHistory.More(state, 30, 95).ShouldBe("/seimas/balsavimai?q=pajamu&kas=visi&iki=2026-05-19&rodyti=80");
+        VoteHistory.More(state with { Shown = 80 }, 80, 95).ShouldBe("/seimas/balsavimai?q=pajamu&kas=visi&iki=2026-05-19&rodyti=130");
         VoteHistory.More(state with { Shown = 130 }, 95, 95).ShouldBeNull("every vote found is shown");
         VoteHistory.More(Plain, 30, 30).ShouldBeNull();
-        VoteHistory.More(Plain with { Shown = 285 }, 285, 1000).ShouldBe("/seimas/balsavimai?rodyti=300#balsavimas-286", "never beyond 300");
+        VoteHistory.More(Plain with { Shown = 285 }, 285, 1000).ShouldBe("/seimas/balsavimai?rodyti=300", "never beyond 300");
         VoteHistory.More(Plain with { Shown = 300 }, 300, 1000).ShouldBeNull("a page shows at most 300");
     }
 
@@ -108,7 +108,7 @@ public sealed class VoteHistoryTests
         var lastDay = Display.DayOf(votes[^1].Summary.Vote.HeldAt);
         var state = VoteHistory.Read("pajamu", "priemimai", null, "300");
 
-        VoteHistory.Older(state, votes, 301).ShouldBe($"/seimas/balsavimai?q=pajamu&kas=priemimai&iki={Display.Day(lastDay)}#balsavimai");
+        VoteHistory.Older(state, votes, 301).ShouldBe($"/seimas/balsavimai?q=pajamu&kas=priemimai&iki={Display.Day(lastDay)}#votes");
         VoteHistory.Older(state, votes, 300).ShouldBeNull("nothing older");
         VoteHistory.Older(state with { Shown = 270 }, votes.Take(270).ToList(), 400).ShouldBeNull("more is offered first");
     }
@@ -118,7 +118,7 @@ public sealed class VoteHistoryTests
     {
         var votes = Votes(300, 400);
 
-        VoteHistory.Older(Plain with { Shown = 300 }, votes, 500).ShouldBe("/seimas/balsavimai?iki=2026-11-12#balsavimai");
+        VoteHistory.Older(Plain with { Shown = 300 }, votes, 500).ShouldBe("/seimas/balsavimai?iki=2026-11-12#votes");
     }
 
     [Theory]

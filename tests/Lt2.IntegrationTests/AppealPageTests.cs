@@ -175,7 +175,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         follow.Answer.ShouldStartWith("Prisijungę gausite laišką, kai projektas bus įtrauktas į darbotvarkę");
         Regex.Count(html, "Prisijungę gausite laišką").ShouldBe(1, "the sentence beside \"Sekti\" is only in its hint");
         Regex.IsMatch(html, "<a class=\"mark act__item num\" id=\"mark-[0-9a-f-]+\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">").ShouldBeTrue("a visitor's \"Man svarbu\" signs in and comes back");
-        html.ShouldNotContain("id=\"atsakymai\"", Case.Sensitive, "nobody answered: no part");
+        html.ShouldNotContain("id=\"responses\"", Case.Sensitive, "nobody answered: no part");
         html.ShouldNotContain("id=\"organisations\"", Case.Sensitive, "no statement: no section");
         // Owner, 2026-11-18: the side column is the page's last part, after the arguments and the votes (on a phone it comes
         // after them; .bill-body puts it beside the main column on a wide screen); only the data source line follows it. The
@@ -302,8 +302,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         Regex.Count(MainOf(html), "Argumentų dar nėra\\.").ShouldBe(2);
         // Design 8.15: what the threshold is, answered in place by a hint with the number that holds now; the default needs
         // no sentence of its own.
-        HintOf(html, "threshold-what").ShouldBe(("Kas yra riba?", "Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100.", "/metodika#riba"));
-        html.ShouldNotContain("<a href=\"/metodika#riba\" id=\"threshold-what\"", customMessage: "no link leaves the page only to explain the term");
+        HintOf(html, "threshold-what").ShouldBe(("Kas yra riba?", "Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100.", "/metodika#threshold"));
+        html.ShouldNotContain("<a href=\"/metodika#threshold\" id=\"threshold-what\"", customMessage: "no link leaves the page only to explain the term");
         // Owner, 2026-11-23: the hint is the circled "i" right after the heading "Riba" it explains; the question stays as hidden text.
         HintWithIconOf(html, "threshold-what").Icon.ShouldBeTrue("the icon variant");
         Regex.IsMatch(html, "<h3 id=\"h-reach\">Riba</h3>\\s*<span class=\"hint hint--icon\"><button [^>]*id=\"threshold-what\"").ShouldBeTrue("beside the heading");
@@ -339,7 +339,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("<title>Projektai · Lietuva 2.0</title>");
         html.ShouldContain("<h1 class=\"seimas-title\">Seimas</h1>");
         html.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>", customMessage: "the menu item");
-        html.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab");
+        html.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-bills\" aria-current=\"page\">Projektai</a>", customMessage: "the tab");
         html.ShouldContain("<a href=\"/darbotvarke\" id=\"view-agenda\">Darbotvarkė</a>", customMessage: "the views of the tab");
         html.ShouldContain("<b aria-current=\"page\" id=\"tab-active\">Aktyvūs</b>");
         html.ShouldContain("<a href=\"/projektai/uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
@@ -385,8 +385,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         // Owner, 2026-11-21: the filter is a box in the search form, right above "Rodyti", applied with it; no link of its own.
         var form = html[html.IndexOf("id=\"bill-search\"", StringComparison.Ordinal)..];
         form = form[..form.IndexOf("</form>", StringComparison.Ordinal)];
-        form.ShouldContain("<label class=\"check small\"><input type=\"checkbox\" id=\"planuojami\" name=\"planuojami\" value=\"taip\" /><span>Planuojami per 14 dienų</span></label>");
-        form.IndexOf("id=\"planuojami\"", StringComparison.Ordinal).ShouldBeLessThan(form.IndexOf("type=\"submit\"", StringComparison.Ordinal), "above the button");
+        form.ShouldContain("<label class=\"check small\"><input type=\"checkbox\" id=\"planned-only\" name=\"planuojami\" value=\"taip\" /><span>Planuojami per 14 dienų</span></label>");
+        form.IndexOf("id=\"planned-only\"", StringComparison.Ordinal).ShouldBeLessThan(form.IndexOf("type=\"submit\"", StringComparison.Ordinal), "above the button");
         html.ShouldNotContain("id=\"planned\"");
         var (_, oldSort) = await PageAsync(stranger, "/projektai?rikiuoti=argumentai");
         oldSort.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">", customMessage: "an old order falls back to the default");
@@ -409,7 +409,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
 
             // While on, the box is ticked and the form keeps the order; the orders keep the search and the filter.
             var (_, searched) = await PageAsync(stranger, "/projektai?rikiuoti=data&q=rinkliav&planuojami=taip");
-            searched.ShouldContain("<input type=\"checkbox\" id=\"planuojami\" name=\"planuojami\" value=\"taip\" checked />");
+            searched.ShouldContain("<input type=\"checkbox\" id=\"planned-only\" name=\"planuojami\" value=\"taip\" checked />");
             searched.ShouldNotContain("type=\"hidden\" name=\"planuojami\"");
             searched.ShouldContain("type=\"hidden\" name=\"rikiuoti\" value=\"data\"");
             searched.ShouldContain("<a href=\"/projektai?q=rinkliav&planuojami=taip\" id=\"sort-aktyvumas\">");
@@ -461,9 +461,9 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         closed.ShouldContain("<b aria-current=\"page\" id=\"tab-closed\">Uždaryti</b>");
         closed.ShouldContain("<a href=\"/projektai\" id=\"tab-active\">Aktyvūs</a>");
         closed.ShouldContain("<a href=\"/darbotvarke\" id=\"view-agenda\">Darbotvarkė</a>");
-        closed.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab Projektai stays current");
+        closed.ShouldContain("<a href=\"/darbotvarke\" id=\"tab-bills\" aria-current=\"page\">Projektai</a>", customMessage: "the tab Projektai stays current");
         closed.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>");
-        closed.ShouldContain("id=\"nav-tab-projektai\" aria-current=\"page\"", customMessage: "the dropdown marks the tab too");
+        closed.ShouldContain("id=\"nav-tab-bills\" aria-current=\"page\"", customMessage: "the dropdown marks the tab too");
         closed.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/projektai/uzdaryti\"");
         closed.ShouldNotContain("name=\"skirtukas\"");
         closed.ShouldNotContain("id=\"sort\"", customMessage: "the closed view has no order");
@@ -573,7 +573,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
 
         var (ownStatus, own) = await PageAsync(stranger, "/seimas/" + AppealSteps.ThirdBill);
         ownStatus.ShouldBe(HttpStatusCode.OK);
-        HintOf(own, "threshold-what").ShouldBe(("Kas yra riba?", Meaning + " Šiam projektui moderatorius nustatė savą ribą: dabar – 150.", "/metodika#riba"));
+        HintOf(own, "threshold-what").ShouldBe(("Kas yra riba?", Meaning + " Šiam projektui moderatorius nustatė savą ribą: dabar – 150.", "/metodika#threshold"));
         own.ShouldContain("id=\"threshold-set-by\"", customMessage: "the moderator's own number is still said beside the progress");
 
         var admin = (await AdministratorAsync()).Browser;
@@ -605,7 +605,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var (_, method) = await PageAsync(stranger, "/metodika");
         method.ShouldContain("Kas patektų į suvestines Seimo nariams");
         // Design 8.15: the row "Riba" says what the threshold is, then its number as what holds now and who can change it.
-        method.ShouldContain("<dt id=\"riba\">Riba</dt><dd class=\"num\">dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – 50).</dd>");
+        method.ShouldContain("<dt id=\"threshold\">Riba</dt><dd class=\"num\">dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – 50).</dd>");
         method.ShouldNotContain("visiems projektams");
         method.ShouldContain("pirmadienį 07:00");
         method.ShouldContain("darbo dieną prieš posėdį, 12:00");

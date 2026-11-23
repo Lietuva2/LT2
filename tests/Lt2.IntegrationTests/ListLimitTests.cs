@@ -59,7 +59,7 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
         html.ShouldNotContain("?nuo=", customMessage: "the list grows in place by ?rodyti=, no next page under the cap");
         if (all.Total > BillListPaging.First)
         {
-            html.ShouldContain($"href=\"/projektai?rodyti=70#bill-{all.Items[BillListPaging.First].Bill.Number}\" id=\"more\">Rodyti daugiau</a>", customMessage: "20, then 50 more (owner, 2026-11-19), landing on the first bill added");
+            html.ShouldContain($"href=\"/projektai?rodyti=70\" id=\"more\">Rodyti daugiau</a>", customMessage: "20, then 50 more (owner, 2026-11-19)");
         }
         else
         {
@@ -71,7 +71,7 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
         longer.ShouldContain($"id=\"shown\">Rodoma {Math.Min(all.Total, 70)} iš {all.Total}</p>");
         if (all.Total > 70)
         {
-            longer.ShouldContain($"href=\"/projektai?rodyti=120#bill-{all.Items[70].Bill.Number}\" id=\"more\">", customMessage: "50 more again");
+            longer.ShouldContain($"href=\"/projektai?rodyti=120\" id=\"more\">", customMessage: "50 more again");
         }
 
         (await visitor.GetJsonAsync<BillListResponse>(AppealRoutes.AppealsList(null, false, false, null, limit: 71))).Items.Count
@@ -94,16 +94,16 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
         var html = await PageAsync($"/p/{Slug}/balsavimai");
         var day = Lt2.Web.Client.Display.DayOf(all.Items[0].Vote.HeldAt);
         html.ShouldContain($"<section class=\"tl-day tl-past\"");
-        html.ShouldContain($"id=\"diena-{day:yyyy-MM-dd}\"");
-        html.ShouldContain("id=\"balsavimas-1\"");
+        html.ShouldContain($"id=\"day-{day:yyyy-MM-dd}\"");
+        html.ShouldContain("id=\"vote-1\"");
         // Design 8.16.5 (owner, 2026-11-21): the list's sheet has no heading of its own, so the page's title stays at the top of
         // the screen; the way back above it scrolls away.
         ListHeadSteps.PageHead(html).ShouldMatch("^<div class=\"page-head\" id=\"page-head\"><h1>[^<]+: balsavimai</h1></div>$");
         html.ShouldContain($"href=\"/seimas/balsavimai/{all.Items[0].Vote.Id}\"");
-        Regex.Count(html, "id=\"balsavimas-\\d+\"").ShouldBe(Math.Min(all.Items.Count, Lt2.Web.Client.Parliament.MpVotePaging.First));
+        Regex.Count(html, "id=\"vote-\\d+\"").ShouldBe(Math.Min(all.Items.Count, Lt2.Web.Client.Parliament.MpVotePaging.First));
         if (all.Items.Count > Lt2.Web.Client.Parliament.MpVotePaging.First)
         {
-            html.ShouldContain($"href=\"/p/{Slug}/balsavimai?rodyti=100#balsavimas-51\" id=\"mp-votes-more\"");
+            html.ShouldContain($"href=\"/p/{Slug}/balsavimai?rodyti=100\" id=\"mp-votes-more\"");
         }
         else
         {
@@ -178,17 +178,17 @@ public sealed partial class ListLimitTests(DatabaseFixture database) : ApiTest(d
                 await none.ShouldBeProblemAsync(HttpStatusCode.NotFound, "reason.not-found");
             }
 
-            // Without script: two a side, the side's count, and the link to the grown page landing on the first one added.
+            // Without script: two a side, the side's count, and the link to the grown page.
             var plain = await PageAsync("/seimas/" + Bill);
             plain.ShouldNotContain($"id=\"{BillTextLinks.ReasonElement(third.Id)}\"", Case.Sensitive, "the third of its side waits for \"Rodyti daugiau argumentų\"");
             plain.ShouldContain("id=\"reasons-more-for-shown\">Rodoma 2 iš 3</p>", Case.Sensitive);
-            plain.ShouldContain($"href=\"/seimas/{Bill}?argumentai-uz=22#argumentai-uz-3\" id=\"reasons-more-for\">Rodyti daugiau argumentų</a>", Case.Sensitive);
+            plain.ShouldContain($"href=\"/seimas/{Bill}?argumentai-uz=22\" id=\"reasons-more-for\">Rodyti daugiau argumentų</a>", Case.Sensitive);
             plain.ShouldNotContain("id=\"reasons-more-against", Case.Sensitive, "no arguments against: nothing to grow");
 
             var grown = await PageAsync($"/seimas/{Bill}?argumentai-uz=22");
             grown.ShouldContain($"id=\"{BillTextLinks.ReasonElement(third.Id)}\"", Case.Sensitive);
-            grown.ShouldContain("id=\"argumentai-uz-3\"", Case.Sensitive, "the first one added carries the place the link lands on");
-            grown.ShouldContain($"id=\"aptarimas-panel-{third.Id:N}\"", Case.Sensitive);
+            grown.ShouldContain("id=\"arguments-for-3\"", Case.Sensitive, "the first extra argument is present");
+            grown.ShouldContain($"id=\"discussion-panel-{third.Id:N}\"", Case.Sensitive);
             grown.ShouldContain("id=\"reasons-more-for-shown\">Rodoma 3 iš 3</p>", Case.Sensitive);
             grown.ShouldNotContain("id=\"reasons-more-for\"", Case.Sensitive, "every argument of the side is shown");
 

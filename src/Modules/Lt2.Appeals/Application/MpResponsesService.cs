@@ -384,7 +384,7 @@ internal sealed class MpResponsesService(
         await outbox.EnqueueAsync(
             OutboxMessage.Create(
                 MessageKinds.MpResponseNoticeEmail,
-                new MpResponseNoticeEmail(address, notice, name, bill.Number, bill.Title, $"/seimas/{Uri.EscapeDataString(bill.Number)}#atsakymai", statement, contact)),
+                new MpResponseNoticeEmail(address, notice, name, bill.Number, bill.Title, $"/seimas/{Uri.EscapeDataString(bill.Number)}#responses", statement, contact)),
             transaction.GetDbTransaction(),
             ct);
     }

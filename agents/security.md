@@ -11,7 +11,7 @@ code review.
 - Group numbers (the supporters of the MP's party on a side, in a summary) are shown only for groups of at least the
   runtime setting `Digest:PartyGroupMinimum` (owner, 2026-11-17: default 10; 0 = no floor, any group of one or more; an
   empty group never), and only when the rest of that side is none or a group as large (`GroupRules`, Appeals). The value
-  is read when a summary is made; `/metodika` ("Grupių skaičiai", `#grupes`) and the party form state it as it holds now,
+  is read when a summary is made; `/metodika` ("Grupių skaičiai", `#groups`) and the party form state it as it holds now,
   the privacy notice points there. It is not extended to organisations, follower numbers or the analytics page's sample.
 - Sign-in has no passwords: an emailed one-time code or a passkey. A staff role works only in a session signed in
   with a staff passkey; a code session is a member session, whatever roles the account has. Politicians need a
@@ -89,7 +89,7 @@ code review.
   embed, no advertising or measurement cookie. What the site keeps is one list, `Security/BrowserStorage.Inventory` (the
   session, the passkey step, the request-forgery and the known-browser cookies; `lt2-theme` in local storage once a theme is
   chosen; the framework's `blazor-resource-hash:Lt2.Web.Client` in local storage (`BrowserKeys.FrameworkResourceHash`);
-  `lt2.tikslas` and `lt2.kodas` in session storage, `Lt2.Web.Client/BrowserKeys`; `lt2.kodas` is written by
+  `lt2.return-path` and `lt2.invitation-code` in session storage, `Lt2.Web.Client/BrowserKeys`; `lt2.invitation-code` is written by
   `SignInFlow` and by `js/lt2-invitation.js`, which takes a link's `#kodas=` on any page, design 8.11.5). The privacy notice's
   "Slapukai ir naršyklės atmintis" is built from it (`data-storage` on each row); `TermsTests` (E2E) visits the site as a
   visitor and as a member and fails on any cookie or storage key outside it, `BrowserStorageTests` (architecture) on any script

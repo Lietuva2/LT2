@@ -7,7 +7,7 @@
    how many bills the day holds), the known rows the page shows, then, once every known row shows, the bills the open data
    does not know yet folded into one line; under a day longer than its first page the shared "show more" (owner,
    2026-11-19: one way for every list): "Rodoma N iš M" and "Rodyti daugiau", a link to the same page with the day grown by
-   50 (AgendaPaging.MorePerDay, ?diena=2026-11-24:60), landing on the first row added. The served page holds only the rows it shows;
+   50 (AgendaPaging.MorePerDay, ?diena=2026-11-24:60), keeping the viewport in place. The served page holds only the rows it shows;
    enhanced navigation swaps the grown page in without a reload, the rows' islands keyed by their place. *@
 <section class="tl-day" aria-label="@($"{T["Agenda.Planned"]} {F.DayMonth(Day)}")" id="@Id">
     <TimelineDate Label="@T["Agenda.Planned"]" Day="Day" Count="@AgendaWords.Bills(T, View.Count)" />
@@ -23,7 +23,7 @@
         }
         @if (View.UnknownShown)
         {
-            <UnknownBills Items="View.Unknown" Day="Day" Id="@($"{Id}-nezinomi")" />
+            <UnknownBills Items="View.Unknown" Day="Day" Id="@($"{Id}-unknown")" />
         }
         @if (AgendaRules.Paged(First, View.Known))
         {
@@ -59,6 +59,6 @@
     private string Id => Page.PlannedDayId(Day);
 
     private string? More => AgendaRules.NextAsked(View.Shown.Count, View.Known) is { } asked
-        ? AgendaPaging.MorePlanned(Page, Planned, Voted, Day, asked, AgendaPaging.PlannedRowId(Day, View.Rest[0].Number))
+        ? AgendaPaging.MorePlanned(Page, Planned, Voted, Day, asked)
         : null;
 }

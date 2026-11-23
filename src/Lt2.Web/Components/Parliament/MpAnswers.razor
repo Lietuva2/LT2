@@ -9,14 +9,14 @@
    A profile without responses has no such part, so it says nothing about whether anyone joined (8.5.2). *@
 @if (_view is { Items.Count: > 0 } view)
 {
-    <section class="sheet stack" id="atsakymai" aria-labelledby="h-answers">
+    <section class="sheet stack" id="responses" aria-labelledby="h-answers">
         <div class="row list-head"><h2 id="h-answers">@F.T["Responses.ProfileTitle"]</h2></div>
         <ol class="stack" id="answers-list">
             @for (var i = 0; i < _shown; i++)
             {
                 var item = view.Items[i];
                 <li id="@ResponsePaging.ItemId(i + 1)">
-                    <MpResponseItem Response="item.Response" Bill="item.Bill" AuthorName="@Name" IdPrefix="@($"atsakymas-{i + 1}-")" />
+                    <MpResponseItem Response="item.Response" Bill="item.Bill" AuthorName="@Name" IdPrefix="@($"response-{i + 1}-")" />
                 </li>
             }
         </ol>
@@ -24,7 +24,7 @@
         {
             @* The shared "show more" (owner, 2026-11-19). *@
             <Lt2.Web.Client.Components.ShowMore Id="answers-more" StatusId="answers-shown" Shown="_shown" Total="view.Items.Count" Text="@F.T["Responses.More"]"
-                Href="@(ResponsePaging.More(_shown, view.Items.Count) is { } more ? ResponsePaging.Address("/p/" + Slug, more, ResponsePaging.ItemId(_shown + 1)) : null)" />
+                Href="@(ResponsePaging.More(_shown, view.Items.Count) is { } more ? ResponsePaging.Address("/p/" + Slug, more) : null)" />
         }
     </section>
 }

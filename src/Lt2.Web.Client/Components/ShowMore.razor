@@ -3,12 +3,10 @@
 @* "Rodyti daugiau" under a long list (owner, 2026-11-19: every "show more" looks and works the same): one line under the list,
    "Rodoma N iš M" where the total is known, then the link, a plain text link (owner, 2026-11-19: not a button's look, which
    clashed with the buttons under a list, such as "Parašyti argumentą"). It is always a link (<a>) whose address is the same page with the list
-   grown, landing on the first row added, so it works without JavaScript; on a server-rendered page the site's enhanced
-   navigation (blazor.web.js) fetches it and swaps the page in without a reload. In an island that passes OnMore, once the island
-   runs, the island fetches the next page from the API instead and adds it in place (the host moves the focus to the first item
-   added): the click is taken from the browser and from enhanced navigation (data-enhance-nav="false" as well, so nothing but
-   the island acts on it), and the address stays where it would lead without script. Before the island runs it is the plain
-   link, as without script. Further links of the list (an older page) go in ChildContent, after it. *@
+   grown, so it works without JavaScript. Enhanced navigation keeps the viewport during the update. When an island
+   handles OnMore, it fetches and appends the next page on its own. It focuses the first item added without scrolling.
+   The browser and enhanced navigation leave the click to the island once it runs. Further links of the list (an older page)
+   go in ChildContent, after it. *@
 <div class="row show-more" id="@(Id + "-line")" aria-busy="@(_busy ? "true" : null)">
     @if (Total is { } total)
     {
@@ -35,7 +33,7 @@
     /// <summary>The link's id; the line is <c>{Id}-line</c>, the status <c>{Id}-shown</c> unless <see cref="StatusId"/> names it.</summary>
     [Parameter, EditorRequired] public string Id { get; set; } = "";
 
-    /// <summary>The same page with the list grown, landing on the first row added; null when every row is shown (no link).</summary>
+    /// <summary>The same page with the list grown; null when every row is shown (no link).</summary>
     [Parameter] public string? Href { get; set; }
 
     /// <summary>How many rows the list shows now, for "Rodoma N iš M".</summary>

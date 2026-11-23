@@ -27,20 +27,20 @@
             <input class="input" id="votes-q" name="q" type="search" value="@_state.Query" maxlength="@VoteListQuery.MaxQueryLength" autocomplete="off" />
         </div>
         <div class="field">
-            <label for="votes-kas">@F.T["Votes.Kind"]</label>
-            <select class="input" id="votes-kas" name="kas">
-                @foreach (var (slug, _) in VoteHistory.Kinds)
+            <label for="votes-kind">@F.T["Votes.Kind"]</label>
+            <select class="input" id="votes-kind" name="kas">
+                @foreach (var (slug, apiKind) in VoteHistory.Kinds)
                 {
-                    <option value="@slug" selected="@(slug == _state.Kind)">@F.T["Votes.Kind." + slug]</option>
+                    <option value="@slug" selected="@(slug == _state.Kind)">@F.T["Votes.Kind." + apiKind]</option>
                 }
             </select>
         </div>
         <div class="field">
-            <label for="votes-iki">@F.T["Votes.Until"]</label>
+            <label for="votes-to">@F.T["Votes.Until"]</label>
             <div class="date-row">
-                <input class="input num" id="votes-iki" name="iki" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern"
+                <input class="input num" id="votes-to" name="iki" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern"
                        placeholder="@Display.DateExample" value="@(_state.Until is { } until ? Display.Day(until) : null)" />
-                <DatePick InputId="votes-iki" />
+                <DatePick InputId="votes-to" />
             </div>
         </div>
         <div class="row">
@@ -69,7 +69,7 @@
     {
         @foreach (var day in VoteHistory.Days(_items))
         {
-            <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="diena-@Display.Day(day.Day)">
+            <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="day-@Display.Day(day.Day)">
                 <div class="tl-date"><span class="label">@F.T.Format("Votes.Year", day.Day.Year)</span><b>@F.DayMonth(day.Day)</b><span class="small">@F.Weekday(day.Day)</span></div>
                 <ul class="tl-items">
                     @foreach (var row in day.Rows)
@@ -87,8 +87,7 @@
                 </ul>
             </section>
         }
-        @* The shared "show more" (owner, 2026-11-19): lands on the first row added, so the reader goes on where they stopped (as the
-           ballot list, 8.17); then "Senesni balsavimai" once the page is full. *@
+        @* The shared "show more" grows the list in place. "Senesni balsavimai" opens an older page once this one is full. *@
         <Lt2.Web.Client.Components.ShowMore Id="votes-more" StatusId="votes-shown" Shown="_items.Count" Total="_total" Href="@VoteHistory.More(_state, _items.Count, _total)">
             @if (VoteHistory.Older(_state, _items, _total) is { } older)
             {
