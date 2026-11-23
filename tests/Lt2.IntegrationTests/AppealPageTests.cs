@@ -357,7 +357,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         side.ShouldNotContain("(0)");
         side.IndexOf("už</span> 1", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("<svg", StringComparison.Ordinal), "the numbers, then the bar");
         var text = row[..row.IndexOf("tl-item__side", StringComparison.Ordinal)];
-        side.ShouldMatch("<b>1</b> dalyvis · riba [\\d\\s]+ ·</span>\\s*<span class=\"nowrap\">argumentų 1</span>");
+        side.ShouldMatch("<b>1</b> dalyvis ·</span>\\s*<span class=\"nowrap\">argumentų 1 ·</span>\\s*<span class=\"nowrap\">riba [\\d\\s]+</span>");
         text.ShouldNotContain("argumentų", customMessage: "the arguments are said in the right column, after the participants (owner, 2026-11-23)");
         text.ShouldNotContain("dalyvių", customMessage: "the participants are said once, in the right column (owner, 2026-11-23)");
         text.ShouldNotContain("už</span> 1", customMessage: "not in the text line");
