@@ -75,9 +75,12 @@
                     {
                         var vote = row.Vote.Summary.Vote;
                         var (title, wording) = Describe(row.Vote);
-                        <li class="tl-item tl-item--single" id="@VoteHistory.Row(row.Number)">
+                        <li class="tl-item" id="@VoteHistory.Row(row.Number)">
                             <VotedItemMain Number="@vote.Bill?.Number" Title="@title" VoteId="vote.Id" Stage="@vote.Stage" Kind="@vote.Kind" Wording="@wording"
-                                           IsConsensus="vote.IsConsensus" HasResult="vote.HasResult" Totals="row.Vote.Summary.Totals" OfficialNote="@row.Vote.Summary.OfficialNote" />
+                                           OfficialNote="@row.Vote.Summary.OfficialNote" />
+                            <div class="tl-item__side">
+                                <VotedItemResult IsConsensus="vote.IsConsensus" HasResult="vote.HasResult" Totals="row.Vote.Summary.Totals" />
+                            </div>
                         </li>
                     }
                 </ul>

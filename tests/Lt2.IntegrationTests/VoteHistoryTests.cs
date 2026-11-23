@@ -329,10 +329,13 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         row.ShouldContain($"<a class=\"tl-item__title\" href=\"/seimas/balsavimai/{vote}\">{BillTitle}</a>");
         row.ShouldNotContain($"href=\"/seimas/{Bill}\">{BillTitle}", customMessage: "the title does not lead to the bill");
         row.ShouldNotContain("Kaip balsavo Seimo nariai");
-        row.ShouldNotContain("tl-item__side");
         list.ShouldNotContain("Kaip balsavo Seimo nariai");
-        row.ShouldContain("už 70 · prieš 30 · susilaikė 10");
-        row.ShouldContain("<svg class=\"splitbar");
+        // Owner, 2026-11-23: the numbers stand in the right column, under the word "Seimas"; what and where stay on the left.
+        var side = row[row.IndexOf("<div class=\"tl-item__side\">", StringComparison.Ordinal)..];
+        side.ShouldContain("<span class=\"label\">Seimas</span>");
+        side.ShouldContain("už 70 · prieš 30 · susilaikė 10");
+        side.ShouldContain("<svg class=\"splitbar");
+        row[..row.IndexOf("tl-item__side", StringComparison.Ordinal)].ShouldNotContain("už 70", customMessage: "the result is not in the main column");
         row.ShouldNotContain("dalyvi", customMessage: "no participants' numbers in the rows (design 8.18)");
         row.ShouldNotContain("riba");
     }
@@ -429,6 +432,14 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
             voted.ShouldNotContain($"<a class=\"tl-item__title\" href=\"/seimas/{AppealSteps.TaxBill}\">");
             voted.ShouldNotContain("Kaip balsavo Seimo nariai");
             voted.ShouldNotContain("btn--plain");
+            // Owner, 2026-11-23: the numbers stand in the right column, each block under the word that says whose it is: the
+            // Seimas's result, then the bill's participants; the main column holds what and where only.
+            var side = voted[voted.IndexOf("<div class=\"tl-item__side\">", StringComparison.Ordinal)..];
+            side.ShouldContain("<span class=\"label\">Seimas</span>");
+            side.ShouldContain("<span class=\"label\">Dalyviai</span>");
+            side.IndexOf("Seimas</span>", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("Dalyviai</span>", StringComparison.Ordinal));
+            side.ShouldContain("<svg class=\"splitbar");
+            voted[..voted.IndexOf("tl-item__side", StringComparison.Ordinal)].ShouldNotContain("splitbar", customMessage: "no numbers in the main column");
             home.ShouldNotContain("Kaip balsavo Seimo nariai");
             // The planned days' sheet ends before the voted days' sheet begins; its heading row holds the link, before the
             // first voted day.
@@ -493,11 +504,11 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     {
         var at = list.IndexOf($"href=\"/seimas/balsavimai/{vote}\"", StringComparison.Ordinal);
         at.ShouldBeGreaterThan(0, vote.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        var start = list.LastIndexOf("<li class=\"tl-item tl-item--single\"", at, StringComparison.Ordinal);
+        var start = list.LastIndexOf("<li class=\"tl-item\"", at, StringComparison.Ordinal);
         return list[start..list.IndexOf("</li>", at, StringComparison.Ordinal)];
     }
 
-    [GeneratedRegex("<li class=\"tl-item tl-item--single\" id=\"balsavimas-\\d+\">")]
+    [GeneratedRegex("<li class=\"tl-item\" id=\"balsavimas-\\d+\">")]
     private static partial Regex Row();
 
     [GeneratedRegex("id=\"diena-(\\d{4}-\\d{2}-\\d{2})\"")]
