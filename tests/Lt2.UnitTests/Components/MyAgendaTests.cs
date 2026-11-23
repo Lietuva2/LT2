@@ -495,19 +495,20 @@ public sealed class MyAgendaTests : BunitContext
     [Fact]
     public void The_bills_list_adds_the_number_of_arguments_as_one_more_part_after_the_participants_line_and_only_when_there_are_any()
     {
-        // Owner, 2026-11-23: "… · riba 100 · argumentų 3", and "… · riba pasiekta · argumentų 3" once the threshold is reached;
+        // Owner, 2026-11-23: "20 dalyvių · argumentų 3 · riba 100", and "… · argumentų 3 · riba pasiekta" once the threshold is reached (the two counts together, the longer text last);
         // a part kept together like the others, nothing for none, and never where nobody took part.
         var under = new AgendaRecordResponse(null, "open", new SideCountsResponse(5, 5, 2, 2), new ThresholdResponse(100, "default", null, 20, false, false)) { Arguments = 3 };
         var line = Render<RecordFigures>(p => p.Add(c => c.Record, under)).FindAll(".nowrap").Skip(2).Select(e => Flat(e.TextContent)).ToList();
-        line.Count.ShouldBe(2, "the participants with the threshold, and the arguments");
-        line[0].ShouldBe(Flat(Display.Number(20) + " " + Text("Threshold.Progress.Many").Replace("{0}", Display.Number(100)) + " ·"));
-        line[1].ShouldBe("argumentų " + Display.Number(3));
+        line.Count.ShouldBe(3, "the participants, the arguments, and the threshold");
+        line[0].ShouldBe(Flat(Display.Number(20) + " " + Text("Agenda.Participants.Many") + " ·"));
+        line[1].ShouldBe("argumentų " + Display.Number(3) + " ·");
+        line[2].ShouldBe(Text("Threshold.Limit").Replace("{0}", Display.Number(100)));
         var all = Render<RecordFigures>(p => p.Add(c => c.Record, under)).FindAll(".small.num");
-        Flat(all[^1].TextContent).ShouldEndWith("· argumentų 3");
+        Flat(all[^1].TextContent).ShouldEndWith("argumentų 3 · riba 100");
 
         var reached = under with { Threshold = under.Threshold with { Participants = 120, Reached = true } };
         var reachedLine = Render<RecordFigures>(p => p.Add(c => c.Record, reached)).FindAll(".nowrap").Skip(2).Select(e => Flat(e.TextContent)).ToList();
-        reachedLine.ShouldBe([Flat(Display.Number(120) + " " + Text("Agenda.Participants.Many") + " ·"), Text("Agenda.Reached") + " ·", "argumentų 3"]);
+        reachedLine.ShouldBe([Flat(Display.Number(120) + " " + Text("Agenda.Participants.Many") + " ·"), "argumentų 3 ·", Text("Agenda.Reached")]);
 
         Render<RecordFigures>(p => p.Add(c => c.Record, under with { Arguments = null })).Markup.ShouldNotContain("argumentų");
         Render<RecordFigures>(p => p.Add(c => c.Record, under with { Arguments = 0 })).Markup.ShouldNotContain("argumentų");
@@ -523,12 +524,12 @@ public sealed class MyAgendaTests : BunitContext
         var side = Render<MyAgendaSide>(p => p
             .Add(c => c.Number, Other).Add(c => c.Place, "2026-11-19-XVP-0618").Add(c => c.Numbers, Numbers)
             .Add(c => c.Record, new AgendaRecordResponse(Guid.CreateVersion7(), "open", new SideCountsResponse(1, 0, 1, 0), new ThresholdResponse(1000, "default", null, 2, false, false)) { Arguments = 4 }));
-        Flat(side.Find("#home-side-2026-11-19-XVP-0618").TextContent).ShouldContain("· argumentų 4", customMessage: "the page's copy");
+        Flat(side.Find("#home-side-2026-11-19-XVP-0618").TextContent).ShouldContain("argumentų 4 ·", customMessage: "the page's copy");
 
         side.Find("#home-for-2026-11-19-XVP-0618").Click();
 
         side.WaitForAssertion(() => side.Find("#home-counts-2026-11-19-XVP-0618").TextContent.ShouldContain("7"));
-        Flat(side.Find("#home-side-2026-11-19-XVP-0618").TextContent).ShouldContain("· argumentų 4", customMessage: "the live numbers keep the list's count of arguments");
+        Flat(side.Find("#home-side-2026-11-19-XVP-0618").TextContent).ShouldContain("argumentų 4 ·", customMessage: "the live numbers keep the list's count of arguments");
     }
 
     [Fact]

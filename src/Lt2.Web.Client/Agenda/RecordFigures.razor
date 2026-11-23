@@ -31,14 +31,16 @@
                planned that would hold the bill, else the last one really sent; no trial variants), else "riba pasiekta". *@
             <span class="small num">@if (Record.Threshold.Reached)
                 {
-                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L["Agenda.Participants." + NumberForms.Of(Record.Threshold.Participants)] ·</span>@(" ")<span class="nowrap">@(Record.Summary is { } summary ? L.Format("Agenda.Summary." + summary.Kind, Display.Day(summary.Day)) : L["Agenda.Reached"].Value)@More</span>
+                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L["Agenda.Participants." + NumberForms.Of(Record.Threshold.Participants)] ·</span>@ArgumentsPart@(" ")<span class="nowrap">@(Record.Summary is { } summary ? L.Format("Agenda.Summary." + summary.Kind, Display.Day(summary.Day)) : L["Agenda.Reached"].Value)</span>
+                }
+                else if (Record.Arguments is > 0)
+                {
+                    @* The two counts stand together, the threshold after them (owner, 2026-11-23). *@
+                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L["Agenda.Participants." + NumberForms.Of(Record.Threshold.Participants)] ·</span>@ArgumentsPart@(" ")<span class="nowrap">@L.Format("Threshold.Limit", Display.Number(Record.Threshold.Value))</span>
                 }
                 else
                 {
-                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress." + NumberForms.Of(Record.Threshold.Participants), Display.Number(Record.Threshold.Value))@More</span>
-                }@if (Record.Arguments is { } arguments and > 0)
-                {
-                    @(" ")<span class="nowrap">@L.Format("Agenda.Arguments", Display.Number(arguments))</span>
+                    <span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress." + NumberForms.Of(Record.Threshold.Participants), Display.Number(Record.Threshold.Value))</span>
                 }</span>
         }
     </div>
@@ -52,8 +54,17 @@
     /// </summary>
     [Parameter] public bool HideNobody { get; set; }
 
-    /// <summary>The " ·" that ends the last part when another follows it: the number of arguments (list rows only).</summary>
-    private string More => Record.Arguments is > 0 ? " ·" : "";
+    /// <summary>
+    /// The number of arguments (list rows only), straight after the participants and before the threshold or the summary, as a
+    /// part that ends in " ·" (owner, 2026-11-23: the two counts on one line, the longer text after them).
+    /// </summary>
+    private RenderFragment ArgumentsPart => __builder =>
+    {
+        if (Record.Arguments is { } arguments and > 0)
+        {
+            @(" ")<span class="nowrap">@L.Format("Agenda.Arguments", Display.Number(arguments)) ·</span>
+        }
+    };
 
     /// <summary>The row's place (see MyAgendaSide), for the ids of the line "nobody yet" and the counts; none when not given.</summary>
     [Parameter] public string? Id { get; set; }
