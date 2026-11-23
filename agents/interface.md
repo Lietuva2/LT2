@@ -14,7 +14,10 @@ Read before changing a page, a component or an island. The rules behind it are d
   last in the markup (only `SourceLine` follows), so a phone shows it after the votes without CSS `order`. A new part of
   the page goes between the main column and the votes, never after the side column.
 - **One way to do each thing in the interface.** An interactive component inherits `InteractiveBase<TText>`
-  (`Lt2.Web.Client/Components`; `TText` is its resource marker): `RunAsync` for every action (one at a time, failures
+  (`Lt2.Web.Client/Components`; `TText` is its resource marker; every API client it injects needs its `Http…Api` in
+  `ClientServices.AddLt2HttpApiClients`, because the browser builds the island from those, not from the server's
+  implementations: a missing one prerenders fine, never starts, and shows as "No root component exists with SSR component ID N"
+  in the console when the page is left; `ClientServicesTests` fails on it, `BrowsingConsoleTests` walks Back and Forward): `RunAsync` for every action (one at a time, failures
   become the message), `Succeeded`/`Show` for an answer, `Valid` for the shared validator, `IsSignedInAsync`, and
   `ErrorClass`/`Invalid`/`DescribedBy` with `<FieldError For="input-id">` for field errors. A text with placeholders is
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the

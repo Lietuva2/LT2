@@ -1,0 +1,116 @@
+@using Lt2.Api.Contracts.Parliament
+@using Microsoft.JSInterop
+@inherits InteractiveBase<UiText>
+@implements IAsyncDisposable
+@inject IParliamentApi Api
+@inject IJSRuntime JS
+
+@* The seat map of a bill's latest Seimas vote, under the figures of the "Seimas" part of the bill's page (design 8.12.1, 7.3).
+   Public and the same for everyone, but it must cost nothing while the page is only read: nothing is fetched when the page
+   loads. The "Seimas" radio of the switch lives in the page's markup, so js/lt2-switch.js tells this island when it is
+   checked (also when it was chosen before the island started); only then is the vote read (GET /votes/{id}, public and
+   cached), once. A failure says so and the next choosing of the radio tries again. Nothing of it is in the served HTML, and
+   nothing is stored; without script the vote's own page is the way to the map. *@
+@if (_ballots is { Count: > 0 } ballots)
+{
+    <div class="stack stack--tight" id="seimas-seats">
+        <h3 class="label" id="h-seimas-seats">@L["SeatMap.Heading"]</h3>
+        <SeatMap Ballots="ballots" />
+    </div>
+}
+else if (_loading)
+{
+    <p class="small" id="seimas-seats-loading">@L["Loading"]</p>
+}
+
+<Messages Message="@Message" />
+
+@code {
+    private IReadOnlyList<BallotResponse>? _ballots;
+    private bool _loading;
+    private bool _watching;
+    private DotNetObjectReference<SeimasSeatMap>? _self;
+
+    /// <summary>The vote whose ballots are drawn: the bill's latest stage result.</summary>
+    [Parameter, EditorRequired] public long VoteId { get; set; }
+
+    /// <summary>The id of the radio whose choosing asks for the map.</summary>
+    [Parameter] public string Radio { get; set; } = "view-seimas";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _self = DotNetObjectReference.Create(this);
+        try
+        {
+            await JS.InvokeVoidAsync("lt2Switch.watch", Radio, _self);
+            _watching = true;
+        }
+        catch (JSException)
+        {
+            // The script did not load: the map stays on the vote's own page, which the panel links to.
+        }
+    }
+
+    /// <summary>Called by js/lt2-switch.js when the radio is checked.</summary>
+    [JSInvokable]
+    public async Task Selected()
+    {
+        if (_loading || _ballots is not null)
+        {
+            return;
+        }
+
+        _loading = true;
+        Message = null;
+        await InvokeAsync(StateHasChanged);
+        try
+        {
+            var answer = await Api.GetVoteAsync(VoteId);
+            if (answer.IsSuccess && answer.Value is { } vote)
+            {
+                _ballots = vote.Ballots;
+            }
+            else
+            {
+                Show(answer.Problem);
+            }
+        }
+        catch (HttpRequestException)
+        {
+            Message = L["Error.Network"];
+        }
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or NotSupportedException)
+        {
+            Message = L["Error.Generic"];
+        }
+        finally
+        {
+            _loading = false;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_watching)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("lt2Switch.unwatch", Radio);
+            }
+            catch (Exception ex) when (ex is JSDisconnectedException or JSException or InvalidOperationException)
+            {
+                // The page is already gone.
+            }
+        }
+
+        _self?.Dispose();
+        GC.SuppressFinalize(this);
+    }
+}

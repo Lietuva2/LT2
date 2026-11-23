@@ -1,22 +1,23 @@
 @using System.Globalization
 @using Lt2.Api.Contracts.Parliament
-@inject Formats F
+@inject IStringLocalizer<UiText> T
 
-@* Design 7.3: the seat map of a vote as SVG rendered on the server. Factions sit together, largest first (the open
-   data has no seat order); each seat is coloured by the MP's choice and named in its title. *@
+@* Design 7.3: the seat map of a vote as SVG. In the client project, so the vote's page (rendered on the server) and the bill's
+   page (SeimasSeatMap, in the browser) draw it alike. Factions sit together, largest first (the open data has no seat order);
+   each seat is coloured by the MP's choice and named in its title. *@
 @if (_seats.Count > 0)
 {
     <figure class="stack stack--tight">
-        <svg class="seatmap" viewBox="0 0 @N(Hemicycle.Width) @N(Hemicycle.Height)" role="img" aria-label="@F.T["Vote.SeatMapAria"]">
+        <svg class="seatmap" viewBox="0 0 @N(Hemicycle.Width) @N(Hemicycle.Height)" role="img" aria-label="@T["SeatMap.Aria"]">
             @foreach (var (seat, ballot) in _seats)
             {
-                <rect x="@N(-_side / 2)" y="@N(-_side / 2)" width="@N(_side)" height="@N(_side)" transform="translate(@N(seat.X) @N(seat.Y)) rotate(@N(90 - seat.Angle * 180 / Math.PI))" class="seat seat--@ballot.Choice"><title>@ballot.Mp.FirstName @ballot.Mp.LastName (@(ballot.FactionLabel ?? F.T["Vote.NoFaction"])): @F.Choice(ballot.Choice)</title></rect>
+                <rect x="@N(-_side / 2)" y="@N(-_side / 2)" width="@N(_side)" height="@N(_side)" transform="translate(@N(seat.X) @N(seat.Y)) rotate(@N(90 - seat.Angle * 180 / Math.PI))" class="seat seat--@ballot.Choice"><title>@ballot.Mp.FirstName @ballot.Mp.LastName (@(ballot.FactionLabel ?? T["SeatMap.NoFaction"])): @T["SeatMap.Choice." + ballot.Choice]</title></rect>
             }
         </svg>
         <figcaption class="row small">
             @foreach (var code in Order.Where(c => Ballots.Any(b => b.Choice == c)))
             {
-                <span class="@Formats.ChoiceClass(code)">@F.Choice(code) <span class="num">@Display.Number(Ballots.Count(b => b.Choice == code))</span></span>
+                <span class="@ChoiceClass(code)">@T["SeatMap.Choice." + code] <span class="num">@Display.Number(Ballots.Count(b => b.Choice == code))</span></span>
             }
         </figcaption>
     </figure>
@@ -44,6 +45,14 @@
         _seats = seats.Zip(ordered).ToList();
         _side = side;
     }
+
+    private static string ChoiceClass(string code) => code switch
+    {
+        BallotChoices.For => "choice choice--for",
+        BallotChoices.Against => "choice choice--against",
+        BallotChoices.DidNotVote => "choice choice--absent",
+        _ => "choice",
+    };
 
     private static string N(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 }

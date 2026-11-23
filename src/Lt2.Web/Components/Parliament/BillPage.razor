@@ -23,7 +23,9 @@
 @* The bill and the record are one page (design 8.12.1), server-rendered and readable without JavaScript. The header: the
    way back ("Projektai / Įstatymo projektas XVP-0412"), the title and one line with the stage tags, "Planuojama …", "Sekti"
    and "Sekėjai: n". Beside the side column: what the bill is about (8.13) with its label; both sides with the counts for
-   accounts older than 30 days, "not a poll" and the threshold and the share line; the Seimas result of a closed bill. The
+   accounts older than 30 days, "not a poll" and the threshold and the share line, with a switch to the Seimas's own latest
+   stage result when there is one (the seat map of its ballots read only when the switch is first turned to it); the decision
+   of a bill closed as rejected or withdrawn. The
    side column: the stages ("Iš kur ši data?" and a participant's "Data neteisinga?" under them), the summaries that held the
    bill (8.7). Then at the page's full width (owner, 2026-11-17): MPs' responses and organisations' statements, each only
    when there is one, then the arguments; then the Seimas votes. The side column is last in the page's order (owner,
@@ -136,77 +138,36 @@
                         }
                     </section>
 
+                    @* Design 8.12.1 (owner, 2026-11-23): a bill the Seimas has voted a stage of has a switch at the top of this sheet,
+                       "Lietuva 2.0 naudotojai | Seimas", each with its "už : prieš"; the participants' part is shown at first, also on
+                       a closed bill. Two radio inputs and their labels, the panels shown by CSS (:has), so it works without script;
+                       both panels are in the served HTML, which holds no ballot: the Seimas panel's seat map is an island that
+                       reads the vote only when its radio is first checked. A bill without such a vote has no switch. *@
                     <section class="sheet sheet--cut stack" aria-labelledby="h-sides" id="sides">
-                        <h2 id="h-sides">@A["Sides.Heading"]</h2>
-                        @* The counts, the surge note and the threshold's progress are islands: a side taken on the page shows in
-                           them at once, without reloading the page (owner, 2026-11-17). A closed record's note, worded here,
-                           stands between the counts and the surge note. *@
-                        <SideFigures Number="@b.Number" Status="@a.Status" Counts="a.Counts" Surge="a.Surge"
-                                     Frozen="@(a.Status == BillRecordStatuses.Closed && a.ClosedAt is { } closedAt ? A.Format(a.ClosingVoteId is null ? "Closed.Frozen.Ended" : "Closed.Frozen", F.Date(closedAt)) : null)"
-                                     @rendermode="InteractiveWebAssembly" />
-                        @if (a.Status == BillRecordStatuses.Open)
+                        @if (SeimasResult(b) is { } seimas)
                         {
-                            <SidePicker Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                            <div class="view-switch stack">
+                                <div class="views views--wide" id="sides-switch" role="radiogroup" aria-label="@A["Sides.Switch"]">
+                                    <input type="radio" class="visually-hidden" name="sides-view" id="view-public" checked />
+                                    <label for="view-public">@A["Sides.View.Public"] · <SideScore Number="@b.Number" Counts="a.Counts" @rendermode="InteractiveWebAssembly" /></label>
+                                    <input type="radio" class="visually-hidden" name="sides-view" id="view-seimas" />
+                                    <label for="view-seimas">@A["Sides.View.Seimas"]@SeimasScore(seimas)</label>
+                                </div>
+                                <div class="stack" id="public-panel">
+                                    @PublicSides(b, a)
+                                </div>
+                                <div class="stack" id="seimas-panel">
+                                    @SeimasSide(b, seimas)
+                                </div>
+                            </div>
                         }
-                        @* Owner, 2026-11-18: "not a representative poll" right under the counts and the side buttons, in the
-                           same sheet on every width (it stood at the side column's end, which on a phone is the page's end). *@
-                        <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
-
-                        <div class="stack stack--tight" id="threshold">
-                            <h3 id="h-reach">@A["Threshold.Heading"]</h3>
-                            <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
-                                               LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == DigestRunStatuses.Sent)" @rendermode="InteractiveWebAssembly" />
-                            @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
-                               now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
-                               moderator's statement (design 8.12). *@
-                            <p class="small"><Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" /></p>
-                            @if (a.Threshold.SetBy == ThresholdSetters.Moderator)
-                            {
-                                <p class="small" id="threshold-set-by">@A["Threshold.SetBy.moderator"]</p>
-                            }
-                            @if (a.Threshold.Note is { } thresholdNote)
-                            {
-                                <p class="small" id="threshold-note">@A.Format("Threshold.Note", thresholdNote)</p>
-                            }
-                            @if (a.Status == BillRecordStatuses.Open)
-                            {
-                                <ShareLine Number="@b.Number" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="InteractiveWebAssembly" />
-                            }
-                        </div>
+                        else
+                        {
+                            @PublicSides(b, a)
+                        }
                     </section>
 
-                    @if (_closingVote is { } vote)
-                    {
-                        <section class="sheet stack" aria-labelledby="h-result" id="seimas-result">
-                            <h2 id="h-result">@A["Closed.Heading"]</h2>
-                            <p class="small">@F.Stage(vote.Summary.Vote.Stage) · @F.Date(vote.Summary.Vote.HeldAt) · <a href="/seimas/balsavimai/@vote.Summary.Vote.Id">@A["Closed.VotePage"]</a></p>
-                            @if (vote.Summary.Vote.IsConsensus)
-                            {
-                                <p><VoteMajorityTag IsConsensus="true" /></p>
-                            }
-                            else
-                            {
-                                @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
-                                <p class="row result-line"><VoteMajorityTag HasResult="vote.Summary.Vote.HasResult" For="vote.Summary.Totals.For" Against="vote.Summary.Totals.Against" Abstain="vote.Summary.Totals.Abstain" /><MajorityHint Id="hint-closing-majority" /></p>
-                                <div class="totals">
-                                    <div class="figure figure--for figure--m"><span class="label">@F.Choice(BallotChoices.For)</span><span class="figure__num">@Display.Number(vote.Summary.Totals.For)</span></div>
-                                    <div class="figure figure--against figure--m"><span class="label">@F.Choice(BallotChoices.Against)</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Against)</span></div>
-                                    <div class="figure figure--m"><span class="label">@F.Choice(BallotChoices.Abstain)</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Abstain)</span></div>
-                                </div>
-                                @if (vote.Summary.OfficialNote is { } officialNote)
-                                {
-                                    <p class="note note--quiet">@officialNote</p>
-                                }
-                                <SeatMap Ballots="vote.Ballots" />
-                                @if (vote.Ballots.Count > 0)
-                                {
-                                    @* Design 8.17: the list of each MP's ballot lives only on the vote's page. *@
-                                    <p class="small"><a href="/seimas/balsavimai/@vote.Summary.Vote.Id#balsai" id="each-mp">@A["Closed.EachMp"]</a></p>
-                                }
-                            }
-                        </section>
-                    }
-                    else if (a is { Status: BillRecordStatuses.Closed, ClosedReason: ClosingReasons.Rejected or ClosingReasons.Withdrawn, ClosedDecidedOn: { } decidedOn })
+                    @if (a is { Status: BillRecordStatuses.Closed, ClosedReason: ClosingReasons.Rejected or ClosingReasons.Withdrawn, ClosedDecidedOn: { } decidedOn })
                     {
                         @* Design 8.1 step 6 (owner, 2026-11-19): a moderator recorded that the Seimas rejected the bill or its
                            initiators withdrew it, which the open data does not say: what happened, the day and the source on lrs.lt,
@@ -321,7 +282,6 @@
     private BillRecordResponse? _record;
     private int _followers;
     private DateTimeOffset? _updatedAt;
-    private VoteResponse? _closingVote;
     private IReadOnlyList<RecordDigestResponse> _digests = [];
 
     /// <summary>The day the next summary holding the bill goes, read once its threshold is reached (design 8.12.2); none known: null.</summary>
@@ -394,11 +354,6 @@
             _moderator = (await Authorization.AuthorizeAsync(http.User, http, Lt2.Web.Security.Policies.Moderator)).Succeeded;
         }
 
-        if (_record?.ClosingVoteId is { } voteId)
-        {
-            _closingVote = (await Api.GetVoteAsync(voteId)).Value;
-        }
-
         // Design 8.23.6, 8.12.1: a link to a comment or an argument lands on it.
         if (Lt2.Api.Contracts.Comments.BillTextLinks.Parse(LinkedComment) is { } commentId
             && (await Comments.GetPlaceAsync(commentId)).Value is { } place
@@ -409,6 +364,113 @@
 
         _linkedReason = Lt2.Api.Contracts.Comments.BillTextLinks.Parse(LinkedArgument);
     }
+
+    /// <summary>
+    /// The sheet's first part, the participants' (design 8.12.1): both sides' counts, the side buttons, "not a poll" and the
+    /// threshold. The sheet as it is without a switch, and the switch's "Lietuva 2.0 naudotojai" panel.
+    /// </summary>
+    private RenderFragment PublicSides(BillResponse b, BillRecordResponse a) =>
+        @<text>
+            <h2 id="h-sides">@A["Sides.Heading"]</h2>
+            @* The counts, the surge note and the threshold's progress are islands: a side taken on the page shows in
+               them at once, without reloading the page (owner, 2026-11-17). A closed record's note, worded here,
+               stands between the counts and the surge note. *@
+            <SideFigures Number="@b.Number" Status="@a.Status" Counts="a.Counts" Surge="a.Surge"
+                         Frozen="@(a.Status == BillRecordStatuses.Closed && a.ClosedAt is { } closedAt ? A.Format(a.ClosingVoteId is null ? "Closed.Frozen.Ended" : "Closed.Frozen", F.Date(closedAt)) : null)"
+                         @rendermode="InteractiveWebAssembly" />
+            @if (a.Status == BillRecordStatuses.Open)
+            {
+                <SidePicker Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+            }
+            @* Owner, 2026-11-18: "not a representative poll" right under the counts and the side buttons, in the
+               same sheet on every width (it stood at the side column's end, which on a phone is the page's end). *@
+            <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
+
+            <div class="stack stack--tight" id="threshold">
+                <h3 id="h-reach">@A["Threshold.Heading"]</h3>
+                <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
+                                   LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == DigestRunStatuses.Sent)" @rendermode="InteractiveWebAssembly" />
+                @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
+                   now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
+                   moderator's statement (design 8.12). *@
+                <p class="small"><Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" /></p>
+                @if (a.Threshold.SetBy == ThresholdSetters.Moderator)
+                {
+                    <p class="small" id="threshold-set-by">@A["Threshold.SetBy.moderator"]</p>
+                }
+                @if (a.Threshold.Note is { } thresholdNote)
+                {
+                    <p class="small" id="threshold-note">@A.Format("Threshold.Note", thresholdNote)</p>
+                }
+                @if (a.Status == BillRecordStatuses.Open)
+                {
+                    <ShareLine Number="@b.Number" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="InteractiveWebAssembly" />
+                }
+            </div>
+        </text>;
+
+    /// <summary>
+    /// The switch's "Seimas" panel (design 8.12.1, 8.18): the bill's latest stage result as the Seimas voted it, from the
+    /// votes the page already has. The majority of those who voted, the totals with their bar and the Seimas's own note,
+    /// the vote's page and the list of votes; the seat map follows once the switch is turned to it (an island that reads
+    /// the vote then, never on page load). A consensus vote has no numbers and no ballots, and one with no result yet says so.
+    /// </summary>
+    private RenderFragment SeimasSide(BillResponse b, VoteSummaryResponse result) =>
+        @<text>
+            <h2 id="h-seimas">@A["Sides.Seimas.Heading"]</h2>
+            <p class="small">@F.Stage(result.Vote.Stage) · @F.Date(result.Vote.HeldAt) · <a href="/seimas/balsavimai/@result.Vote.Id" id="seimas-vote-page">@A["Closed.VotePage"]</a></p>
+            @if (result.Vote.IsConsensus)
+            {
+                <p><VoteMajorityTag IsConsensus="true" /> <span class="small">@F.T["Consensus.NoVotes"]</span></p>
+            }
+            else if (!result.Vote.HasResult)
+            {
+                <p>@F.T["NoResult"]</p>
+            }
+            else
+            {
+                @* Design 8.18, "The majority": the majority of those who voted, with what it is one click away. *@
+                <p class="row result-line"><VoteMajorityTag HasResult="result.Vote.HasResult" For="result.Totals.For" Against="result.Totals.Against" Abstain="result.Totals.Abstain" /><MajorityHint Id="hint-seimas-majority" /></p>
+                <div class="totals">
+                    <div class="figure figure--for figure--m"><span class="label">@F.Choice(BallotChoices.For)</span><span class="figure__num">@Display.Number(result.Totals.For)</span></div>
+                    <div class="figure figure--against figure--m"><span class="label">@F.Choice(BallotChoices.Against)</span><span class="figure__num">@Display.Number(result.Totals.Against)</span></div>
+                    <div class="figure figure--m"><span class="label">@F.Choice(BallotChoices.Abstain)</span><span class="figure__num">@Display.Number(result.Totals.Abstain)</span></div>
+                </div>
+                <SplitBar For="result.Totals.For" Against="result.Totals.Against" Abstain="result.Totals.Abstain" />
+                @if (result.OfficialNote is { } officialNote)
+                {
+                    <p class="note note--quiet">@officialNote</p>
+                }
+            }
+            <p class="small">
+                @if (result.Vote is { HasResult: true, IsConsensus: false })
+                {
+                    @* Design 8.17: the list of each MP's ballot lives only on the vote's page. *@
+                    <a href="/seimas/balsavimai/@result.Vote.Id#balsai" id="each-mp">@A["Closed.EachMp"]</a>@(" · ")
+                }
+                <a href="/seimas/@Uri.EscapeDataString(b.Number)#h-votes" id="all-votes">@F.T["Bill.Votes"]</a>
+            </p>
+            @if (result.Vote is { HasResult: true, IsConsensus: false })
+            {
+                <Lt2.Web.Client.Parliament.SeimasSeatMap VoteId="result.Vote.Id" @rendermode="InteractiveWebAssembly" />
+            }
+        </text>;
+
+    /// <summary>
+    /// The bill's latest stage result by day (the switch's Seimas side), none when the Seimas has voted no stage of it
+    /// (design 8.12.1): then the sheet has no switch.
+    /// </summary>
+    private static VoteSummaryResponse? SeimasResult(BillResponse b) =>
+        b.Votes.Where(v => v.Vote.Kind == VoteKinds.StageResult).MaxBy(v => v.Vote.HeldAt);
+
+    /// <summary>
+    /// What the "Seimas" segment says after its name: " · 93 : 7" (for : against), " · bendru sutarimu" for a consensus
+    /// vote, nothing for a vote without a result.
+    /// </summary>
+    private string SeimasScore(VoteSummaryResponse result) =>
+        result.Vote.IsConsensus ? " · " + A["Sides.View.Consensus"]
+        : result.Vote.HasResult ? $" · {Display.Number(result.Totals.For)} : {Display.Number(result.Totals.Against)}"
+        : "";
 
     /// <summary>
     /// "Stadijos Seime" (design 8.12.1): each stage's result from the open data, or "dar nebalsuota"; the stage a planned

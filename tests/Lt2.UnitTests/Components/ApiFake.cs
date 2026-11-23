@@ -18,6 +18,9 @@ public class ApiFake : DispatchProxy
 
     public void On(string method, ApiResult answer) => _answers[method] = Task.FromResult(answer);
 
+    /// <summary>Answers with a task the test completes itself, for a call that is still going.</summary>
+    public void OnTask<T>(string method, Task<ApiResult<T>> answer) => _answers[method] = answer;
+
     /// <summary>Answers successive calls of <paramref name="method"/> in turn; the last answer repeats.</summary>
     public void OnEach<T>(string method, params ApiResult<T>[] answers) =>
         _answers[method] = new Queue<object>(answers.Select(a => (object)Task.FromResult(a)));
