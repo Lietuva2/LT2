@@ -25,10 +25,11 @@
    votes (Voted) offers no sides, only the numbers; nor does a row for an MP's own account (design 8.5.4,
    known from the browser's answer), which keeps the numbers only.
 
-   Rendered straight into the row (the side column and, while asked, the consent as the row's last part). While the server
+   Rendered straight into the row (the side column and, while asked, the consent as the row's last part; in a vote's row
+   the numbers are a block of the side column that the row holds, under the Seimas's result). While the server
    prerenders and before the island has started the numbers are the page's and the buttons are disabled: the same HTML
    for every member, nothing of the member's own in it. *@
-<div class="tl-item__side" id="home-side-@Place">
+<div class="@(Voted ? "tl-block" : "tl-item__side")" id="home-side-@Place">
     <RecordFigures Record="Shown" HideNobody="@(Asks || _mine?.Side is not null)" Id="@Place" />
     @if (Voted)
     {

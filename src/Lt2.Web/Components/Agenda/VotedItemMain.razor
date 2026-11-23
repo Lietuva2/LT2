@@ -1,12 +1,11 @@
 @using Lt2.Api.Contracts.Parliament
-@inject IStringLocalizer<PageText> T
 @inject Formats F
 
-@* The main column of a voted row of the timeline: the start page's "Balsuota" (design 8.7) and the history of votes (8.18).
-   The bill's number and stage, its title linking to the bill, the majority of those who voted (VoteMajorityTag) and the result with the
-   bar (or the consensus mark), and the
-   official note. The history also names a vote that is not a stage result and shows its wording; a vote without a bill
-   has the agenda item's title in the bill's place. What only the start page has (the member's mark) is the child content.
+@* The main column of a voted row of the timeline: the start page's "Balsuota" (design 8.7) and the history of votes (8.18):
+   what and where. The bill's number and stage, its title linking to the vote's page, the official note. The history also
+   names a vote that is not a stage result and shows its wording; a vote without a bill has the agenda item's title in the
+   bill's place. What only the start page has (the member's mark) is the child content. The numbers stand in the side
+   column (VotedItemResult for the Seimas's result, owner, 2026-11-23: the numbers in the right column of every row).
    Each row is a vote (owner, 2026-11-23): the title leads to the vote's page, also for a vote without a bill, and the
    number tag is the link to the bill; the two pages' rows look the same. *@
 <div class="tl-item__main">
@@ -28,23 +27,6 @@
     @if (Wording is not null)
     {
         <span class="small">@Wording</span>
-    }
-    @if (IsConsensus)
-    {
-        <span class="row result-line"><VoteMajorityTag IsConsensus="true" /></span>
-    }
-    else if (!HasResult)
-    {
-        <span class="small">@F.T["NoResult"]</span>
-    }
-    else
-    {
-        @* Owner, 2026-11-18: how it went, as a chip before the numbers (design 8.18, "The majority"). *@
-        <span class="row result-line">
-            <VoteMajorityTag For="Totals.For" Against="Totals.Against" Abstain="Totals.Abstain" />
-            <span class="small num">@T.Format("Agenda.Result", Display.Number(Totals.For), Display.Number(Totals.Against), Display.Number(Totals.Abstain))</span>
-        </span>
-        <SplitBar For="Totals.For" Against="Totals.Against" Abstain="Totals.Abstain" Small="true" />
     }
     @if (OfficialNote is not null)
     {
@@ -70,13 +52,6 @@
 
     /// <summary>What was voted on, for a vote that is not a stage result.</summary>
     [Parameter] public string? Wording { get; set; }
-
-    [Parameter] public bool IsConsensus { get; set; }
-
-    /// <summary>False until the per-MP results are read; the totals come with them.</summary>
-    [Parameter] public bool HasResult { get; set; } = true;
-
-    [Parameter, EditorRequired] public VoteTotalsResponse Totals { get; set; } = default!;
 
     [Parameter] public string? OfficialNote { get; set; }
 

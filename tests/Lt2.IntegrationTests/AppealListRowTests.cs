@@ -146,6 +146,7 @@ public sealed class AppealListRowTests(DatabaseFixture database) : ApiTest(datab
             var openRow = Row(await PageAsync(visitor, "/projektai?q=" + Uri.EscapeDataString(Open)), Open);
             openRow.ShouldContain($"id=\"home-counts-{Open}\"", customMessage: "the agenda's figures: a number a side and the bar");
             openRow.ShouldContain($"id=\"home-for-{Open}\"");
+            openRow.ShouldContain("<span class=\"label\">Dalyviai</span>", customMessage: "every block of numbers says whose it is, on an open row too");
 
             // The record is closed: its row, on the closed tab, has the figures and the way to the bill, and no side to take.
             using (var closing = await moderator.PostAsync(
@@ -157,7 +158,9 @@ public sealed class AppealListRowTests(DatabaseFixture database) : ApiTest(datab
 
             var closed = Row(await PageAsync(visitor, "/projektai?skirtukas=uzdaryti&q=" + Uri.EscapeDataString(Open)), Open);
             closed.ShouldContain($"id=\"home-counts-{Open}\"");
-            closed.ShouldContain($"<a class=\"small\" href=\"/seimas/{Open}\">Į projekto puslapį →</a>");
+            closed.ShouldNotContain("Į projekto puslapį", customMessage: "the title and the number tag lead to the bill (owner, 2026-11-23)");
+            closed.ShouldContain($"href=\"/seimas/{Open}\">{Open}</a>");
+            closed.ShouldContain("<span class=\"label\">Dalyviai</span>", customMessage: "the closed row's figures say whose numbers they are");
             closed.ShouldNotContain("Prašau balsuoti");
             closed.ShouldNotContain("class=\"btn btn--for");
             closed.ShouldNotContain($"id=\"home-for-{Open}\"");

@@ -493,6 +493,21 @@ public sealed class MyAgendaTests : BunitContext
     }
 
     [Fact]
+    public void The_participants_figures_stand_under_the_word_Dalyviai_and_nothing_stands_where_they_hold_nothing()
+    {
+        // Owner, 2026-11-23: every block of numbers in a row says whose it is; "Dalyviai" for the participants'.
+        var counted = Render<RecordFigures>(p => p.Add(c => c.Record, new AgendaRecordResponse(null, "open", new SideCountsResponse(5, 5, 2, 2), new ThresholdResponse(10000, "default", null, 7, false, false))));
+        counted.Find(".tl-block > .label").TextContent.ShouldBe("Dalyviai");
+        var nobodyClosed = Render<RecordFigures>(p => p.Add(c => c.Record, new AgendaRecordResponse(null, "closed", new SideCountsResponse(0, 0, 0, 0), new ThresholdResponse(10000, "default", null, 0, false, false))));
+        nobodyClosed.Find(".tl-block > .label").TextContent.ShouldBe("Dalyviai");
+        nobodyClosed.Markup.ShouldContain(Text("Agenda.NobodyClosed"));
+        var hidden = Render<RecordFigures>(p => p
+            .Add(c => c.Record, new AgendaRecordResponse(null, "open", new SideCountsResponse(0, 0, 0, 0), new ThresholdResponse(10000, "default", null, 0, false, false)))
+            .Add(c => c.HideNobody, true));
+        hidden.Markup.Trim().ShouldBeEmpty("no label over the side buttons");
+    }
+
+    [Fact]
     public void A_reached_row_names_its_summarys_day_in_place_of_riba_pasiekta_kept_in_one_part()
     {
         // Design 8.12.2 (owner, 2026-11-21): the summary planned that would hold the bill, else the last one really sent; a

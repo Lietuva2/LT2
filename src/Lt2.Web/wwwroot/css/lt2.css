@@ -1174,12 +1174,15 @@ main > .page-head ~ .sheet > .list-head ~ [id], main > .page-head ~ .sheet > .li
   padding-block: var(--sp-4); border-top: 1px solid var(--rule);
 }
 .tl-items > .tl-item:last-child { border-bottom: 1px solid var(--rule); }
-/* A row with the main column only (the votes' history: the title leads to the vote's page). */
-.tl-item--single { grid-template-columns: minmax(0, 1fr); }
 .tl-item__main { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
 .tl-item__title { font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
 .tl-item__side { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; min-width: 0; }
 .tl-item__side .splitbar, .tl-item__main .splitbar { width: 100%; }
+/* A block of numbers in the side column under the word that says whose they are ("Seimas", "Dalyviai"; owner, 2026-11-23);
+   the blocks stand a little further apart than the lines of one. */
+.tl-block { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; align-self: stretch; min-width: 0; }
+.tl-block .splitbar { width: 100%; }
+.tl-block + .tl-block { margin-block-start: var(--sp-2); }
 .tl-item .note { max-width: none; }
 
 /* A vote's majority chip and its numbers on one line (design 8.18, "The majority"). */

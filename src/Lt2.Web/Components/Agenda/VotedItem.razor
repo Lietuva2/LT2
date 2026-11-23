@@ -2,28 +2,31 @@
 
 @* One stage vote of the last seven days in a timeline: the front page's "Balsuota" (design 8.7) and the agenda page's
    recently voted (8.11.1). The vote's main column (VotedItemMain: the title leads to the vote's page, the number to the
-   bill; owner, 2026-11-23: as the history's rows), and beside it the bill's public numbers, when it has any. A member's
-   row, on both pages (owner, 2026-11-19: the rows look the same), also carries the mark under the title and, on a bill nobody took part in yet, the side column that leaves out "nobody yet" for a member with a side of
-   their own (islands filled in the browser, keyed by the row's place). *@
-<li class="@(HasSide ? "tl-item" : "tl-item tl-item--single")" id="@Lt2.Web.Client.Agenda.AgendaPaging.VotedRowId(Vote.VoteId)">
-    <VotedItemMain VoteId="Vote.VoteId" Number="@Vote.Number" Title="@Vote.Title" Stage="@Vote.Stage" IsConsensus="Vote.IsConsensus" Totals="Vote.Totals" OfficialNote="@Vote.OfficialNote">
+   bill; owner, 2026-11-23: as the history's rows), and beside it the numbers (owner, 2026-11-23: the right column of every
+   row): the Seimas's result ("Seimas", VotedItemResult), then the bill's public numbers under "Dalyviai", when it has
+   any. A member's row, on both pages (owner, 2026-11-19: the rows look the same), also carries the mark under the title and,
+   on a bill nobody took part in yet, the participants' block as an island that leaves out "nobody yet" for a member with a
+   side of their own (filled in the browser, keyed by the row's place). *@
+<li class="tl-item" id="@Lt2.Web.Client.Agenda.AgendaPaging.VotedRowId(Vote.VoteId)">
+    <VotedItemMain VoteId="Vote.VoteId" Number="@Vote.Number" Title="@Vote.Title" Stage="@Vote.Stage" OfficialNote="@Vote.OfficialNote">
         @if (Member)
         {
             <MyAgendaMark @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
         }
     </VotedItemMain>
-    @if (Member && Vote.Record is { Status: BillRecordStatuses.Open, Counts: { For: 0, Against: 0 } } nobodyYet)
-    {
-        @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's agenda is up to a minute
-           old); the votes' rows offer no sides (design 8.7). *@
-        <MyAgendaSide @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" Record="nobodyYet" Voted="true" @rendermode="InteractiveWebAssembly" />
-    }
-    else if (Vote.Record is { Status: not BillRecordStatuses.Rejected } record)
-    {
-        <div class="tl-item__side">
+    <div class="tl-item__side">
+        <VotedItemResult IsConsensus="Vote.IsConsensus" Totals="Vote.Totals" />
+        @if (Member && Vote.Record is { Status: BillRecordStatuses.Open, Counts: { For: 0, Against: 0 } } nobodyYet)
+        {
+            @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's agenda is up to a minute
+               old); the votes' rows offer no sides (design 8.7). *@
+            <MyAgendaSide @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" Record="nobodyYet" Voted="true" @rendermode="InteractiveWebAssembly" />
+        }
+        else if (Vote.Record is { Status: not BillRecordStatuses.Rejected } record)
+        {
             <RecordFigures Record="record" Id="@Place" />
-        </div>
-    }
+        }
+    </div>
 </li>
 
 @code {
@@ -36,7 +39,4 @@
     [Parameter] public IReadOnlyList<string> Numbers { get; set; } = [];
 
     private string Place => $"voted-{Vote.VoteId}";
-
-    /// <summary>The bill's numbers (or the member's island, which stands in their place) stand beside the title; a row without them is the main column only.</summary>
-    private bool HasSide => Vote.Record is { Status: not BillRecordStatuses.Rejected };
 }

@@ -22,7 +22,10 @@
 
    The list of bills (/projektai, owner 2026-11-23) has the same row, under no day: its place is the bill's number and its
    anchor "bill-{number}"; what only the list says (the planned date, the participants and arguments, the latest activity)
-   comes as Tags and Details, built by the list. *@
+   comes as Tags and Details, built by the list.
+
+   The numbers stand in the side column of every row, under the word "Dalyviai" (RecordFigures); a closed row has no link to
+   the bill (owner, 2026-11-23: the title and the number tag lead there). *@
 <li class="tl-item" id="@RowId">
     <div class="tl-item__main">
         <span class="row">
@@ -88,16 +91,11 @@
             else if (record.Status == BillRecordStatuses.Rejected)
             {
                 <span class="small">@T["Agenda.TakingPartClosed"]</span>
-                <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
             }
             else
             {
                 <RecordFigures Record="record" HideNobody="@(record.Status == BillRecordStatuses.Open)" Id="@Place" />
-                @if (record.Status == BillRecordStatuses.Closed)
-                {
-                    <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
-                }
-                else
+                @if (record.Status != BillRecordStatuses.Closed)
                 {
                     @* A visitor: the sides lead to signing in and back to the bill's page (design 6.9), where the side is taken. *@
                     <div class="tl-ask">
