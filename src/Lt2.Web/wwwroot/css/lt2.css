@@ -1174,6 +1174,8 @@ main > .page-head ~ .sheet > .list-head ~ [id], main > .page-head ~ .sheet > .li
   padding-block: var(--sp-4); border-top: 1px solid var(--rule);
 }
 .tl-items > .tl-item:last-child { border-bottom: 1px solid var(--rule); }
+/* A row with the main column only (the votes' history: the title leads to the vote's page). */
+.tl-item--single { grid-template-columns: minmax(0, 1fr); }
 .tl-item__main { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
 .tl-item__title { font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
 .tl-item__side { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; min-width: 0; }
@@ -1340,6 +1342,14 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
 .top__nav .drop__panel--desc .drop__links a:hover .drop__label { text-decoration: underline; }
 .top__nav .drop__panel--desc .drop__links a[aria-current="page"] .drop__label {
   text-decoration: underline; text-decoration-color: var(--link); text-decoration-thickness: 3px; text-underline-offset: 0.3em; }
+/* "Seimas" is the first of only three items, so it stands near the menu's right end and a 21rem panel hung from its left edge
+   would run past the window (about 45px between 48rem and 64rem, a touch screen up to 48rem). Above 32rem the panel hangs from the
+   menu's right edge instead, under the items, and never leaves the window; under 32rem it is as wide as the page (below). */
+@media (min-width: 32.01rem) {
+  .top__nav { position: relative; }
+  .drop--desc { position: static; }
+  .drop--desc > .drop__panel { inset-inline-start: auto; inset-inline-end: 0; }
+}
 @media (max-width: 32rem) {
   .top { position: relative; }
   .drop--desc { position: static; }
@@ -1387,8 +1397,32 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
 .project-tabs a { color: var(--ink); text-decoration: none; padding-block: var(--sp-1); border-bottom: 4px solid transparent; }
 .project-tabs a:hover { border-bottom-color: var(--slate); }
 .project-tabs a[aria-current="page"] { border-bottom-color: var(--link); }
+/* The views of "Projektai" (Darbotvarkė, Aktyvūs, Uždaryti): a square segmented control one level under the tab row, the
+   site's own cut corners kept (no radius): a ruled box on the sheet's colour, the current view filled in the ink colour, the
+   others quiet until hovered. It wraps on a very narrow screen with the rule kept between the segments. */
+.views {
+  display: inline-flex; flex-wrap: wrap; inline-size: fit-content; max-inline-size: 100%;
+  border: 1px solid var(--rule); background: var(--sheet); font-size: var(--fs-1); font-weight: 600;
+}
+.views a, .views b {
+  padding: var(--sp-2) var(--sp-4); color: var(--ink-2); text-decoration: none; line-height: 1.3;
+  border-inline-end: 1px solid var(--rule);
+}
+.views > :last-child { border-inline-end: 0; }
+.views a:hover { color: var(--ink); background: var(--sheet-2); }
+.views b[aria-current="page"] { background: var(--ink); color: var(--sheet); }
+@media (max-width: 24rem) { .views a, .views b { padding-inline: var(--sp-3); } }
 @media (max-width: 36rem) {
   .project-tabs { column-gap: var(--sp-3); font-size: var(--fs-1); }
+}
+/* "Projektai · Balsavimai · Suvestinės · Seimo nariai" are 314px wide at --fs-1 with the phone's gap, so the row stays on one
+   line (the sticky head keeps its height, --page-head) down to 346px of screen; narrower, a smaller gap keeps it to 334px,
+   and below 21rem the smaller type to 320px. Measured live at 390, 360, 340 and 320. */
+@media (max-width: 22rem) {
+  .project-tabs { column-gap: var(--sp-2); }
+}
+@media (max-width: 21rem) {
+  .project-tabs { font-size: var(--fs-0); }
 }
 
 /* The terms of use and the privacy notice (design 8.22): long descriptions in the facts lists read as running text; on a phone

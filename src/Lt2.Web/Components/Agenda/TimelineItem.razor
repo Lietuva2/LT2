@@ -18,8 +18,12 @@
    under the title is another (MyAgendaMark), both filled in the browser and keyed by the row's place, so a day grown
    in place ("Rodyti daugiau") keeps each island on its own row and starts those of the rows added; everything here is public and the same for everyone. A closed record
    says "Niekas nedalyvavo" when nobody did; a closed or hidden record and a bill the open data does not know yet have no
-   sides to take; the last shows what the agenda says and its source. *@
-<li class="tl-item" id="@Lt2.Web.Client.Agenda.AgendaPaging.PlannedRowId(Day, Item.Number)">
+   sides to take; the last shows what the agenda says and its source.
+
+   The list of bills (/projektai, owner 2026-11-23) has the same row, under no day: its place is the bill's number and its
+   anchor "bill-{number}"; what only the list says (the planned date, the participants and arguments, the latest activity)
+   comes as Tags and Details, built by the list. *@
+<li class="tl-item" id="@RowId">
     <div class="tl-item__main">
         <span class="row">
             @if (Item.Title is not null)
@@ -38,6 +42,7 @@
             {
                 <span class="tag">@T["Agenda.ByModerator"]</span>
             }
+            @Tags
         </span>
         @if (Item.Title is { } title)
         {
@@ -47,6 +52,7 @@
         {
             <span class="small">@T["Agenda.NoTitle"]</span>
         }
+        @Details
         @if (Item.Organisations.Count > 0)
         {
             <p class="small org-line" id="agenda-organisations-@Item.Number">
@@ -112,8 +118,17 @@
 @code {
     [Parameter, EditorRequired] public AgendaItemResponse Item { get; set; } = default!;
 
-    /// <summary>The sitting day the row is under: part of its id, since a bill may be planned on more than one day.</summary>
-    [Parameter, EditorRequired] public DateOnly Day { get; set; }
+    /// <summary>
+    /// The sitting day the row is under: part of its id, since a bill may be planned on more than one day. None in the list of
+    /// bills, which has no day bands: the row's place is then the bill's number.
+    /// </summary>
+    [Parameter] public DateOnly? Day { get; set; }
+
+    /// <summary>More tags after the stage, in the list the planned date ("Planuojama …"); none when not given.</summary>
+    [Parameter] public RenderFragment? Tags { get; set; }
+
+    /// <summary>More lines under the title, in the list the participants and arguments and the latest activity; none when not given.</summary>
+    [Parameter] public RenderFragment? Details { get; set; }
 
     /// <summary>Rendered for a signed-in member: the mark and the side column become islands. The same HTML for every member.</summary>
     [Parameter] public bool Member { get; set; }
@@ -126,5 +141,7 @@
 
     private string SignInHref => LandingPath.SignInLink(BillPath);
 
-    private string Place => Display.Day(Day) + "-" + Item.Number;
+    private string Place => Day is { } day ? Display.Day(day) + "-" + Item.Number : Item.Number;
+
+    private string RowId => Day is { } day ? Lt2.Web.Client.Agenda.AgendaPaging.PlannedRowId(day, Item.Number) : "bill-" + Item.Number;
 }

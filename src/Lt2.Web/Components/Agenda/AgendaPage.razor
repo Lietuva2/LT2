@@ -7,7 +7,7 @@
 
 @* The agenda (design 8.11.1): public, server-rendered, readable without JavaScript. What the Seimas plans to consider, by
    day, earliest first, from the lrs.lt agenda (10–12 days ahead, changes often: "Planuojama …", never a countdown); the
-   votes already held are one link away, "Ankstesni balsavimai" (the vote history). The rows are the front page's
+   votes already held are the tab "Balsavimai" (the vote history). The rows are the front page's
    (TimelineItem; owner, 2026-11-19: they look the same, one component): a coming bill offers "Prašau balsuoti" in its row, a visitor's sides lead to signing in
    and back to the bill, a member's mark and side column are islands filled in the browser from their own answer
    (MyAgendaState), so the server renders the same page for every member and nothing per person is in it. Without the
@@ -17,12 +17,11 @@
 <LinkPreview Title="@T["Agenda.Title"]" Description="@T["Preview.Agenda"]" />
 
 @* Design 8.21, 8.16.5: the head of the tab "Projektai" (the heading "Seimas", then the tab row, the only part that stays at
-   the top of the screen); the views of the tab, the lead and the link to the earlier votes scroll away. *@
+   the top of the screen); the views of the tab and the lead scroll away. *@
 <SeimasHead Current="SeimasTab.Projects" />
 <div class="stack page-head__rest">
     <ProjectViews Current="ProjectView.Agenda" />
     <p class="lead">@T["Agenda.Lead"]</p>
-    <p class="small"><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path" id="agenda-votes-older">@T["Agenda.Older"]</a></p>
     <AuthorizeView>
         <Authorized>
             <Lt2.Web.Client.Components.NeedsScript />

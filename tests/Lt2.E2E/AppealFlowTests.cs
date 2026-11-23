@@ -491,7 +491,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await page.ScreenshotAsync(new() { Path = Shot("bill-no-javascript-390.png"), FullPage = true });
 
         await page.GotoAsync($"{Base}/projektai");
-        await Assertions.Expect(page.Locator("#appeals a[href='/seimas/XVP-0412']")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("#appeals a.tl-item__title[href='/seimas/XVP-0412']")).ToBeVisibleAsync();
         await page.GotoAsync($"{Base}/projektai?rikiuoti=data");
         await Assertions.Expect(page.Locator("#sort-data")).ToHaveTextAsync("pagal planuojamą datą");
     }

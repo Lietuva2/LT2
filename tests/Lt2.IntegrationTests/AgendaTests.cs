@@ -56,7 +56,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             html.ShouldContain("<title>Seimo darbotvarkė · Lietuva 2.0</title>");
             html.ShouldContain("<h1 class=\"seimas-title\">Seimas</h1>");
             html.ShouldContain("<b aria-current=\"page\" id=\"view-agenda\">Darbotvarkė</b>");
-            html.ShouldContain("<a href=\"/projektai\" id=\"tab-active\">Svarstomi</a>");
+            html.ShouldContain("<a href=\"/projektai\" id=\"tab-active\">Aktyvūs</a>");
             html.ShouldContain("<a href=\"/projektai?skirtukas=uzdaryti\" id=\"tab-closed\">Uždaryti</a>");
             html.ShouldContain("<p class=\"lead\">Planuojama svarstyti artimiausiu metu.</p>");
             html.ShouldContain("Planuojama ");
@@ -80,12 +80,14 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             Countdown().IsMatch(html).ShouldBeFalse("never a countdown");
 
             // The coming list is the only sheet and has no heading row (the tab row of Seimas is the sticky part); the votes
-            // held are one link away, not a list. Nothing under the list: no note, no hint, no "not a representative poll".
+            // held are the tab "Balsavimai", not a list. Nothing under the list: no note, no hint, no "not a representative poll".
             html.ShouldContain("<section class=\"sheet stack\" aria-label=\"Planuojami projektai\" id=\"agenda-coming\">");
             html.ShouldNotContain("list-head");
             html.ShouldNotContain("id=\"agenda-recent\"");
             html.ShouldNotContain("id=\"agenda-no-recent\"");
-            html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"agenda-votes-older\">Ankstesni balsavimai →</a>");
+            html.ShouldNotContain("agenda-votes-older");
+            html.ShouldNotContain("Ankstesni balsavimai");
+            html.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"tab-seimas-balsavimai\">Balsavimai</a>");
             html.ShouldNotContain("Tai nėra reprezentatyvi apklausa");
             html.ShouldNotContain("id=\"not-a-poll\"");
             html.ShouldNotContain("id=\"agenda-older-note\"");
@@ -464,7 +466,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
 
             ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
-            // The votes held are no list of the agenda page: they are in the vote history, one link away.
+            // The votes held are no list of the agenda page: they are in the vote history, the tab "Balsavimai".
             html.ShouldNotContain("id=\"recent-" + ReasonsToComeSteps.TaxConsiderationVote + "\"");
         }
         finally

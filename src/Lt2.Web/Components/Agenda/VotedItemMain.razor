@@ -6,7 +6,9 @@
    The bill's number and stage, its title linking to the bill, the majority of those who voted (VoteMajorityTag) and the result with the
    bar (or the consensus mark), and the
    official note. The history also names a vote that is not a stage result and shows its wording; a vote without a bill
-   has the agenda item's title in the bill's place. What only the start page has (the member's mark) is the child content. *@
+   has the agenda item's title in the bill's place. What only the start page has (the member's mark) is the child content.
+   Each row is a vote (owner, 2026-11-23): the title leads to the vote's page, also for a vote without a bill, and the
+   number tag is the link to the bill; the two pages' rows look the same. *@
 <div class="tl-item__main">
     <span class="row">
         @if (Number is not null)
@@ -22,14 +24,7 @@
             <span class="tag">@F.Kind(Kind)</span>
         }
     </span>
-    @if (Number is not null)
-    {
-        <a class="tl-item__title" href="@BillPath">@Title</a>
-    }
-    else
-    {
-        <b class="tl-item__title">@Title</b>
-    }
+    <a class="tl-item__title" href="/seimas/balsavimai/@VoteId">@Title</a>
     @if (Wording is not null)
     {
         <span class="small">@Wording</span>
@@ -64,6 +59,9 @@
 
     /// <summary>The bill's title, or the agenda item's for a vote without a bill.</summary>
     [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>The vote the row is: its page is where the title leads.</summary>
+    [Parameter, EditorRequired] public long VoteId { get; set; }
 
     [Parameter] public string? Stage { get; set; }
 

@@ -1,10 +1,10 @@
 @inject IStringLocalizer<AppealText> T
 @inject IStringLocalizer<Lt2.Web.Client.UiText> U
 
-@* Design 8.21: the three views of the tab "Projektai" ("Darbotvarkė", "Svarstomi", "Uždaryti") as a row of plain links under
-   the tab row, the current one in bold and marked; a view of the tab, not a tab of its own. On the ground (design 8.16), no
-   script. *@
-<nav class="row tabs" aria-label="@T["List.Tabs"]">
+@* Design 8.21: the three views of the tab "Projektai" ("Darbotvarkė", "Aktyvūs", "Uždaryti") as a small segmented control
+   under the tab row (a ruled box, the current view filled), so it reads as one level below the tabs, not as a second row of
+   them; a view of the tab, not a tab of its own. On the ground (design 8.16), no script. *@
+<nav class="views" aria-label="@T["List.Tabs"]">
     @View(ProjectView.Agenda, "/darbotvarke", "view-agenda", U["Menu.Agenda"].Value)
     @View(ProjectView.Active, "/projektai", "tab-active", T["List.Tab.Active"].Value)
     @View(ProjectView.Closed, "/projektai?skirtukas=uzdaryti", "tab-closed", T["List.Tab.Closed"].Value)

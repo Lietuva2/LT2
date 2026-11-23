@@ -44,7 +44,7 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
         var before = new Dictionary<string, string>();
         foreach (var route in routes)
         {
-            before[route] = Stable(await visitor.Client.GetStringAsync(route));
+            before[route] = Seen(route, await visitor.Client.GetStringAsync(route));
         }
 
         var candidatesBefore = await CandidatesAsync();
@@ -61,7 +61,7 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
 
         foreach (var route in routes)
         {
-            Stable(await visitor.Client.GetStringAsync(route)).ShouldBe(before[route], route);
+            Seen(route, await visitor.Client.GetStringAsync(route)).ShouldBe(before[route], route);
         }
 
         (await CandidatesAsync()).ShouldBe(candidatesBefore, "what the summaries read");
@@ -210,6 +210,15 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
             System.Text.RegularExpressions.Regex.Replace(body, "<!--Blazor[^>]*-->", ""),
             "\"lastActivityAt\":(\"[^\"]*\"|null)",
             "\"lastActivityAt\":…");
+
+    /// <summary>
+    /// <see cref="Stable"/>, and for the lists' answers without each row's <c>organisations</c> (owner, 2026-11-23: a row of
+    /// <c>/projektai</c> names the organisations with a public statement, as the agenda's does; the counts, the order and the rest do not move).
+    /// </summary>
+    private static string Seen(string route, string body) =>
+        route.StartsWith(AppealRoutes.Appeals, StringComparison.Ordinal)
+            ? System.Text.RegularExpressions.Regex.Replace(Stable(body), "\"organisations\":\\[[^\\]]*\\]", "\"organisations\":…")
+            : Stable(body);
 
     private async Task<string> CandidatesAsync()
     {

@@ -8,20 +8,19 @@
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> U
 
-@* Design 8.18: the history of the Seimas's votes, the long form of the start page's "Balsuota", reached from the agenda's link
-   "Ankstesni balsavimai". Public, server-rendered, the same for everyone: no island, no script, nothing about the caller and no
+@* Design 8.18: the history of the Seimas's votes, the long form of the start page's "Balsuota", the tab "Balsavimai" of "Seimas" (also reached
+   by the links "Ankstesni balsavimai" of the start page). Public, server-rendered, the same for everyone: no island, no script, nothing about the caller and no
    participants' numbers in the rows (today's numbers beside an old vote would read as what people asked then). The state
    is the address (VoteHistory reads it); the controls are one GET form on the ground above the list's sheet (8.16). The
    votes are read and counted a part at a time by the API (GET /api/v1/votes), never all loaded. *@
 <PageTitle>@F.T["Votes.Title"] · Lietuva 2.0</PageTitle>
 <LinkPreview Title="@F.T["Votes.Title"]" />
 
-@* Design 8.16.5, 8.21: the list's sheet has no heading of its own, so the tab row of "Seimas" ("Projektai" current: this page is
-   reached by a link from the agenda and the start page, it is no view of the tab) stays at the top of the screen while the
-   list scrolls past; the heading above it, this page's own heading, the lead and the form scroll away. *@
-<SeimasHead Current="SeimasTab.Projects" />
+@* Design 8.16.5, 8.21: this page is the tab "Balsavimai" of "Seimas"; the list's sheet has no heading of its own, so the tab row
+   (the marked tab says where the reader is, as on the other tab pages) stays at the top of the screen while the list scrolls
+   past; the heading "Seimas" above it, the lead and the form scroll away. *@
+<SeimasHead Current="SeimasTab.Votes" />
 <div class="stack page-head__rest">
-    <h2>@F.T["Votes.Title"]</h2>
     <p class="lead">@F.T["Votes.Lead"]</p>
     <form class="filters" method="get" action="@VoteHistory.Path" role="search" id="votes-search">
         <div class="field">
@@ -76,12 +75,9 @@
                     {
                         var vote = row.Vote.Summary.Vote;
                         var (title, wording) = Describe(row.Vote);
-                        <li class="tl-item" id="@VoteHistory.Row(row.Number)">
-                            <VotedItemMain Number="@vote.Bill?.Number" Title="@title" Stage="@vote.Stage" Kind="@vote.Kind" Wording="@wording"
+                        <li class="tl-item tl-item--single" id="@VoteHistory.Row(row.Number)">
+                            <VotedItemMain Number="@vote.Bill?.Number" Title="@title" VoteId="vote.Id" Stage="@vote.Stage" Kind="@vote.Kind" Wording="@wording"
                                            IsConsensus="vote.IsConsensus" HasResult="vote.HasResult" Totals="row.Vote.Summary.Totals" OfficialNote="@row.Vote.Summary.OfficialNote" />
-                            <div class="tl-item__side">
-                                <a class="btn btn--plain cta" href="/seimas/balsavimai/@vote.Id">@U["Agenda.Action.Votes"]</a>
-                            </div>
                         </li>
                     }
                 </ul>

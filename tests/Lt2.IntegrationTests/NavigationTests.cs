@@ -28,7 +28,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
 
     private static readonly string[] FooterLinks =
     [
-        "/darbotvarke", "/suvestines", "/seimo-nariai", "/statistika",
+        "/darbotvarke", "/seimas/balsavimai", "/suvestines", "/seimo-nariai", "/statistika",
         "/metodika", "/moderavimo-taisykles", "/taisykles", "/privatumas", "/organizacijos", "/atsiliepimai",
     ];
 
@@ -88,7 +88,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         using var visitor = NewBrowser();
 
         // Owner, 2026-11-17: the item is a dropdown of its tabs, a disclosure that opens without script; the owner's
-        // restructure: "Seimas" with three tabs ("Projektai", "Suvestinės", "Seimo nariai"). Design 8.28.2: each entry shows its
+        // restructure: "Seimas" with four tabs ("Projektai", "Balsavimai", "Suvestinės", "Seimo nariai"). Design 8.28.2: each entry shows its
         // line under its name, for everyone.
         var agenda = HeaderOf(await visitor.Client.GetStringAsync("/darbotvarke"));
         // Owner, 2026-11-19: where the device can hover, "Seimas" is a link to the agenda with the panel on hover; on a touch
@@ -100,13 +100,14 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         agenda.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>");
         var entries = WebUtility.HtmlDecode(agenda);
         entries.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-projektai\" aria-current=\"page\"><span class=\"drop__label\">Projektai</span><span class=\"drop__desc\">Seimo darbotvarkė ir visi projektai, kuriuos Seimas svarsto ar jau baigė.</span></a>");
+        entries.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\"><span class=\"drop__label\">Balsavimai</span><span class=\"drop__desc\">Kaip Seimas balsavo: visi balsavimai nuo naujausio.</span></a>");
         entries.ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-suvestines\"><span class=\"drop__label\">Suvestinės</span><span class=\"drop__desc\">Ką apie dalyvių prašymus sužino Seimo nariai.</span></a>");
         entries.ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-tab-mps\"><span class=\"drop__label\">Seimo nariai</span><span class=\"drop__desc\">Kiekvieno Seimo nario pareigos, balsavimai ir atsakymai.</span></a>");
         Regex.Matches(agenda, "id=\"nav-tab-([a-z-]+)\"").Select(m => m.Groups[1].Value)
-            .ShouldBe(["projektai", "suvestines", "mps"]);
+            .ShouldBe(["projektai", "seimas-balsavimai", "suvestines", "mps"], "four entries in the dropdown");
         agenda.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\">Statistika</a>");
         agenda.ShouldContain("<a href=\"/prisijungti\" id=\"nav-sign-in\">Prisijungti</a>");
-        Regex.Count(agenda, "<a ").ShouldBe(7, "the logo, Seimas, the three tabs in the dropdown and two items");
+        Regex.Count(agenda, "<a ").ShouldBe(8, "the logo, Seimas, the four tabs in the dropdown and two items");
         agenda.ShouldNotContain("Kaip skaičiuojama");
         agenda.ShouldNotContain("data-theme-switch", customMessage: "the theme switch is in the footer");
 
@@ -114,11 +115,11 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         var bill = HeaderOf(await visitor.Client.GetStringAsync("/seimas/XVP-0412"));
         bill.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>");
         bill.ShouldNotContain("aria-current=\"page\"");
-        // The vote history is no tab or menu entry; "Projektai" is the current tab there.
+        // The vote history is the tab "Balsavimai": it is the marked entry there, "Projektai" is not.
         var votes = HeaderOf(await visitor.Client.GetStringAsync("/seimas/balsavimai"));
         votes.ShouldContain("<a class=\"drop__toggle drop__link\" href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Seimas</a>");
-        votes.ShouldContain("id=\"nav-tab-projektai\" aria-current=\"page\"");
-        votes.ShouldNotContain("nav-tab-seimas-balsavimai");
+        votes.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"nav-tab-seimas-balsavimai\" aria-current=\"page\">");
+        votes.ShouldNotContain("id=\"nav-tab-projektai\" aria-current");
         Regex.Count(votes, "aria-current=\"page\"").ShouldBe(1);
         HeaderOf(await visitor.Client.GetStringAsync("/seimo-nariai"))
             .ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-tab-mps\" aria-current=\"page\">");
@@ -135,7 +136,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     [InlineData("/darbotvarke", "tab-projektai")]
     [InlineData("/projektai", "tab-projektai")]
     [InlineData("/projektai?skirtukas=uzdaryti", "tab-projektai")]
-    [InlineData("/seimas/balsavimai", "tab-projektai")]
+    [InlineData("/seimas/balsavimai", "tab-seimas-balsavimai")]
     [InlineData("/suvestines", "tab-suvestines")]
     [InlineData("/seimo-nariai", "tab-mps")]
     public async Task Each_of_the_tab_pages_has_the_heading_and_the_tab_row_with_its_own_tab_marked(string path, string tab)
@@ -146,7 +147,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         var row = Regex.Match(html, "<nav class=\"row tabs project-tabs\".*?</nav>", RegexOptions.Singleline);
         row.Success.ShouldBeTrue();
         Regex.Matches(row.Value, "href=\"([^\"]+)\"").Select(m => m.Groups[1].Value)
-            .ShouldBe(["/darbotvarke", "/suvestines", "/seimo-nariai"], "the three tabs of Seimas");
+            .ShouldBe(["/darbotvarke", "/seimas/balsavimai", "/suvestines", "/seimo-nariai"], "the four tabs of Seimas");
         row.Value.ShouldNotContain("/statistika", customMessage: "the statistics page is a menu item of its own (owner, 2026-11-17)");
         Regex.Count(row.Value, "aria-current=\"page\"").ShouldBe(1);
         row.Value.ShouldContain($"id=\"{tab}\" aria-current=\"page\"");
@@ -171,14 +172,14 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
             .Select(m => (Path: m.Groups[1].Value, Name: m.Groups[2].Value, Line: m.Groups[3].Value)).ToList();
         links.Select(l => l.Path).ShouldBe(
         [
-            "/darbotvarke", "/suvestines", "/seimo-nariai", "/statistika", "/paskyra",
+            "/darbotvarke", "/seimas/balsavimai", "/suvestines", "/seimo-nariai", "/statistika", "/paskyra",
             "/metodika", "/moderavimo-taisykles", "/taisykles", "/privatumas", "/organizacijos", "/atsiliepimai",
         ]);
         links.Select(l => l.Path).Where(p => p != "/paskyra").ShouldBe(FooterLinks, "the footer's links, the account item besides");
         links.ShouldContain(("/seimo-nariai", "Seimo nariai", "Kiekvieno Seimo nario pareigos, balsavimai ir atsakymai."));
         links.ShouldContain(("/statistika", "Statistika", "Kiek projektų sulaukė dalyvių ir kur jų dauguma sutampa su Seimo dauguma."));
         links.ShouldContain(("/paskyra", "Paskyra", "Jūsų profilis, sekami projektai, laiškai ir duomenys."));
-        Regex.Count(part.Value, "<dt class=\"where__sub\">").ShouldBe(3, "the three tabs of Seimas, indented");
+        Regex.Count(part.Value, "<dt class=\"where__sub\">").ShouldBe(4, "the four tabs of Seimas, indented");
 
         foreach (var (path, _, _) in links)
         {
@@ -242,7 +243,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
 
     /// <summary>
     /// Owner, 2026-11-19: the footer repeats the menu's sections, so the end of a long page needs no scrolling back to the
-    /// top: its first group lists the three tabs of "Seimas" and "Statistika" in the menu's order, with the
+    /// top: its first group lists the four tabs of "Seimas" and "Statistika" in the menu's order, with the
     /// menu's words, as plain links that mark nothing current (the menu does). The front page lost its row of links for it.
     /// </summary>
     [Fact]
@@ -270,6 +271,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
                 .ShouldBe(
                 [
                     ("/darbotvarke", "foot-tab-projektai", "Projektai"),
+                    ("/seimas/balsavimai", "foot-tab-seimas-balsavimai", "Balsavimai"),
                     ("/suvestines", "foot-tab-suvestines", "Suvestinės"),
                     ("/seimo-nariai", "foot-tab-mps", "Seimo nariai"),
                     ("/statistika", "foot-statistics", "Statistika"),
@@ -281,7 +283,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         // The menu holds the same sections in the same order (the dropdown's tabs, then the item).
         var header = WebUtility.HtmlDecode(HeaderOf(await visitor.Client.GetStringAsync("/metodika")));
         Regex.Matches(header, "<a href=\"(/[^\"]+)\" id=\"nav-(?:tab-[a-z-]+|statistics)\"").Select(m => m.Groups[1].Value)
-            .ShouldBe(["/darbotvarke", "/suvestines", "/seimo-nariai", "/statistika"]);
+            .ShouldBe(["/darbotvarke", "/seimas/balsavimai", "/suvestines", "/seimo-nariai", "/statistika"]);
     }
 
     [Theory]

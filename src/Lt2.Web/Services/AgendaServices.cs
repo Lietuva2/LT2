@@ -78,7 +78,14 @@ internal sealed class AgendaReads(
     /// hidden (its page then shows none) or when the bill is not in the catalogue.
     /// </summary>
     private static List<AgendaOrganisationResponse> Organisations(BillRecordState? state, IReadOnlyList<BillOrganisation>? shown) =>
-        state is null || state.Status == BillRecordStatuses.Rejected || shown is null
+        state is null || state.Status == BillRecordStatuses.Rejected ? [] : OrganisationsOf(shown);
+
+    /// <summary>
+    /// The organisations as the rows of the agenda and of <c>/projektai</c> carry them (<see cref="BillListReads"/>): the same
+    /// mapping of what <see cref="IOrganisations.ShownOnBillsAsync"/> says, none when it says nothing of the bill.
+    /// </summary>
+    public static List<AgendaOrganisationResponse> OrganisationsOf(IReadOnlyList<BillOrganisation>? shown) =>
+        shown is null
             ? []
             : shown.Select(o => new AgendaOrganisationResponse(o.Slug, o.Name, new OrganisationLabelResponse(o.Label.ConfirmedBy, o.Label.Domain), o.Stance)).ToList();
 

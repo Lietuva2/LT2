@@ -1,14 +1,12 @@
 @using Lt2.Api.Contracts.Agenda
-@using Lt2.Web.Client.Appeals
-@inject IStringLocalizer<AppealUi> U
 
 @* One stage vote of the last seven days in a timeline: the front page's "Balsuota" (design 8.7) and the agenda page's
-   recently voted (8.11.1). The vote's main column (VotedItemMain), and beside it the bill's public numbers and "Kaip balsavo
-   Seimo nariai". A member's row, on both pages (owner, 2026-11-19: the rows look the same), also carries the mark under the
-   title and, on a bill nobody took part in yet, the side column that leaves out "nobody yet" for a member with a side of
+   recently voted (8.11.1). The vote's main column (VotedItemMain: the title leads to the vote's page, the number to the
+   bill; owner, 2026-11-23: as the history's rows), and beside it the bill's public numbers, when it has any. A member's
+   row, on both pages (owner, 2026-11-19: the rows look the same), also carries the mark under the title and, on a bill nobody took part in yet, the side column that leaves out "nobody yet" for a member with a side of
    their own (islands filled in the browser, keyed by the row's place). *@
-<li class="tl-item" id="@Lt2.Web.Client.Agenda.AgendaPaging.VotedRowId(Vote.VoteId)">
-    <VotedItemMain Number="@Vote.Number" Title="@Vote.Title" Stage="@Vote.Stage" IsConsensus="Vote.IsConsensus" Totals="Vote.Totals" OfficialNote="@Vote.OfficialNote">
+<li class="@(HasSide ? "tl-item" : "tl-item tl-item--single")" id="@Lt2.Web.Client.Agenda.AgendaPaging.VotedRowId(Vote.VoteId)">
+    <VotedItemMain VoteId="Vote.VoteId" Number="@Vote.Number" Title="@Vote.Title" Stage="@Vote.Stage" IsConsensus="Vote.IsConsensus" Totals="Vote.Totals" OfficialNote="@Vote.OfficialNote">
         @if (Member)
         {
             <MyAgendaMark @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
@@ -18,16 +16,12 @@
     {
         @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's agenda is up to a minute
            old); the votes' rows offer no sides (design 8.7). *@
-        <MyAgendaSide @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" Record="nobodyYet" VoteId="Vote.VoteId" @rendermode="InteractiveWebAssembly" />
+        <MyAgendaSide @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" Record="nobodyYet" Voted="true" @rendermode="InteractiveWebAssembly" />
     }
-    else
+    else if (Vote.Record is { Status: not BillRecordStatuses.Rejected } record)
     {
         <div class="tl-item__side">
-            @if (Vote.Record is { Status: not BillRecordStatuses.Rejected } record)
-            {
-                <RecordFigures Record="record" Id="@Place" />
-            }
-            <a class="btn btn--plain cta" href="/seimas/balsavimai/@Vote.VoteId">@U["Agenda.Action.Votes"]</a>
+            <RecordFigures Record="record" Id="@Place" />
         </div>
     }
 </li>
@@ -42,4 +36,7 @@
     [Parameter] public IReadOnlyList<string> Numbers { get; set; } = [];
 
     private string Place => $"voted-{Vote.VoteId}";
+
+    /// <summary>The bill's numbers (or the member's island, which stands in their place) stand beside the title; a row without them is the main column only.</summary>
+    private bool HasSide => Vote.Record is { Status: not BillRecordStatuses.Rejected };
 }

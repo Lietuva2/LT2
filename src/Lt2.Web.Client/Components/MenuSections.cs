@@ -1,11 +1,11 @@
 namespace Lt2.Web.Client.Components;
 
 /// <summary>
-/// Design 8.21: which menu item a page belongs to, and which of the three tabs under "Seimas" it is. The menu item
-/// "Seimas" opens a dropdown with the three tabs "Projektai", "Suvestinės" and "Seimo nariai" and is current on the tab
+/// Design 8.21: which menu item a page belongs to, and which of the four tabs under "Seimas" it is. The menu item
+/// "Seimas" opens a dropdown with the four tabs "Projektai", "Balsavimai", "Suvestinės" and "Seimo nariai" and is current on the tab
 /// pages and on everything under them (the agenda, the bills and their pages, the votes, a summary's date page, the
 /// introduction letter's public page, an MP's profile, a faction, a committee); "Statistika" is a menu item of its own (design
-/// 8.26). "Darbotvarkė", "Svarstomi" and "Uždaryti" are views of the tab "Projektai", not tabs. Paths are site paths with or
+/// 8.26). "Darbotvarkė", "Aktyvūs" and "Uždaryti" are views of the tab "Projektai", not tabs. Paths are site paths with or
 /// without the leading <c>/</c>, query and fragment ignored.
 /// </summary>
 public static class MenuSections
@@ -21,6 +21,7 @@ public static class MenuSections
     public static readonly IReadOnlyList<MenuItem> Items =
     [
         new("tab-projektai", SeimasHome, "Bills", MenuPlace.Seimas, SeimasTab.Projects),
+        new("tab-seimas-balsavimai", VoteHistoryPath, "Votes", MenuPlace.Seimas, SeimasTab.Votes),
         new("tab-suvestines", "/suvestines", "Digests", MenuPlace.Seimas, SeimasTab.Digests),
         new("tab-mps", Mps, "Mps", MenuPlace.Seimas, SeimasTab.Mps),
         new("statistics", Statistics, "Statistics", MenuPlace.Menu),
@@ -37,7 +38,7 @@ public static class MenuSections
     public static IEnumerable<MenuItem> In(MenuPlace place) => Items.Where(i => i.Place == place);
 
     /// <summary>
-    /// The three tabs, in their order: the dropdown of the menu item "Seimas" and the row under the heading "Seimas" on the
+    /// The four tabs, in their order: the dropdown of the menu item "Seimas" and the row under the heading "Seimas" on the
     /// tab pages. The first, "Projektai", links to the agenda, its landing view.
     /// </summary>
     public static readonly IReadOnlyList<MenuItem> Tabs = [.. In(MenuPlace.Seimas)];
@@ -48,6 +49,9 @@ public static class MenuSections
     /// <summary>The first tab's landing view: what is coming (design 8.21, the designer's proposal: the most useful first view).</summary>
     public const string SeimasHome = "/darbotvarke";
 
+    /// <summary>The vote history, the tab "Balsavimai" (the page of one vote, <c>/seimas/balsavimai/{id}</c>, is under it).</summary>
+    public const string VoteHistoryPath = "/seimas/balsavimai";
+
     /// <summary>The list of MPs, the tab "Seimo nariai".</summary>
     public const string Mps = "/seimo-nariai";
 
@@ -57,7 +61,7 @@ public static class MenuSections
     /// <summary>The page is the statistics page.</summary>
     public static bool InStatistics(string? path) => Normalise(path) == Statistics.TrimStart('/');
 
-    /// <summary>The page is one of the three tabs or under one of them.</summary>
+    /// <summary>The page is one of the four tabs or under one of them.</summary>
     public static bool InSeimas(string? path)
     {
         var p = Normalise(path);
@@ -79,12 +83,14 @@ public static class MenuSections
         string.Equals("/" + Normalise(path), item.Path, StringComparison.Ordinal) ? "page" : null;
 
     /// <summary>
-    /// The tab a page is exactly (not a page under it), or null: "Projektai" on the agenda, the bills' lists and the vote
-    /// history (its views and the page reached by a link), "Suvestinės" on the list, "Seimo nariai" on the list.
+    /// The tab a page is exactly (not a page under it), or null: "Projektai" on the agenda and the bills' lists (its views),
+    /// "Balsavimai" on the vote history, "Suvestinės" on the list, "Seimo nariai" on the list. A vote's own page is under
+    /// "Balsavimai" and marks no tab.
     /// </summary>
     public static SeimasTab? TabOf(string? path) => ("/" + Normalise(path)) switch
     {
-        SeimasHome or "/projektai" or "/seimas/balsavimai" => SeimasTab.Projects,
+        SeimasHome or "/projektai" => SeimasTab.Projects,
+        VoteHistoryPath => SeimasTab.Votes,
         "/suvestines" => SeimasTab.Digests,
         Mps => SeimasTab.Mps,
         _ => null,
@@ -105,7 +111,7 @@ public static class MenuSections
 /// <param name="Path">Its address.</param>
 /// <param name="Key">Its resource keys: <c>Menu.{Key}</c> the name, <c>Menu.{Key}.Line</c> what the page is.</param>
 /// <param name="Place">Where it stands.</param>
-/// <param name="Tab">The tab it is, for the three entries of "Seimas".</param>
+/// <param name="Tab">The tab it is, for the four entries of "Seimas".</param>
 public sealed record MenuItem(string Slug, string Path, string Key, MenuPlace Place, SeimasTab? Tab = null)
 {
     /// <summary>The resource key of its name.</summary>
@@ -134,10 +140,11 @@ public enum MenuPlace
     FooterTakePart,
 }
 
-/// <summary>The three tabs under "Seimas" (design 8.21).</summary>
+/// <summary>The four tabs under "Seimas" (design 8.21).</summary>
 public enum SeimasTab
 {
     Projects,
+    Votes,
     Digests,
     Mps,
 }

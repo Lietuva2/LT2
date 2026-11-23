@@ -211,12 +211,21 @@ public sealed record SurgeResponse(int SharePercent, int WindowHours);
 /// <summary>
 /// A bill in <c>/projektai</c> (design 8.12.5); <c>Id</c> null while it has no record; <c>Arguments</c> its published
 /// arguments; <c>LastActivityAt</c> its last activity (owner, 2026-11-17: a side, an argument, a comment, an organisation's
-/// statement or an MP's response), null while there was none. A time per bill, never who.
+/// statement or an MP's response), null while there was none. A time per bill, never who. The row is the agenda's
+/// (design 8.12.5, owner 2026-11-23): <c>Planned.Stage</c> is its stage tag, <c>Status</c> with <c>Counts</c>, <c>Threshold</c> and
+/// <c>Summary</c> are the record's public numbers (<c>open</c>, or <c>closed</c> on the closed tab; a hidden record is not
+/// listed), and <c>Organisations</c> those with a public statement on it.
 /// </summary>
 public sealed record BillListItemResponse(
     Guid? Id, BillRefResponse Bill, string Status, SideCountsResponse Counts, ThresholdResponse Threshold, PlannedDateResponse? Planned, int Arguments,
     DateTimeOffset? LastActivityAt = null)
 {
+    /// <summary>
+    /// The organisations with a public statement on the bill, ordered as on its page (for, against, remarks; within each, in the
+    /// order published), as the agenda's rows have them; never their text and never a count.
+    /// </summary>
+    public IReadOnlyList<Agenda.AgendaOrganisationResponse> Organisations { get; init; } = [];
+
     /// <summary>
     /// For a bill whose threshold is reached, the summary the row names in place of "riba pasiekta" (design 8.12.2): the one
     /// planned that would hold it, else the last one really sent that held it; null otherwise.

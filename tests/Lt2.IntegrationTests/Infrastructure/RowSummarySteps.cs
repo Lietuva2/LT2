@@ -41,7 +41,7 @@ public static class RowSummarySteps
     public static async Task<string> ProjectsRowAsync(this TestBrowser browser, string number)
     {
         var html = WebUtility.HtmlDecode(await browser.Client.GetStringAsync("/projektai?q=" + Uri.EscapeDataString(number)));
-        return Item(html, $"<li id=\"bill-{number}\"");
+        return Item(html, $"<li class=\"tl-item\" id=\"bill-{number}\"");
     }
 
     private static string Item(string html, string start)

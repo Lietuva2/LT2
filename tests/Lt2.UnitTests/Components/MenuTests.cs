@@ -7,9 +7,9 @@ using Microsoft.Extensions.Localization;
 namespace Lt2.UnitTests.Components;
 
 /// <summary>
-/// Design 8.21, 8.26: "Seimas" is one menu item with three tabs, "Projektai", "Suvestinės" and "Seimo nariai" ("Statistika" is
+/// Design 8.21, 8.26: "Seimas" is one menu item with four tabs, "Projektai", "Balsavimai", "Suvestinės" and "Seimo nariai" ("Statistika" is
 /// a menu item of its own); the item is current on the tab pages and everything under them, and the tab row under the
-/// heading "Seimas" marks the page it stands on and reaches the other two.
+/// heading "Seimas" marks the page it stands on and reaches the other three.
 /// </summary>
 public sealed class MenuTests : BunitContext
 {
@@ -20,6 +20,7 @@ public sealed class MenuTests : BunitContext
 
     [Theory]
     [InlineData(SeimasTab.Projects, "tab-projektai")]
+    [InlineData(SeimasTab.Votes, "tab-seimas-balsavimai")]
     [InlineData(SeimasTab.Digests, "tab-suvestines")]
     [InlineData(SeimasTab.Mps, "tab-mps")]
     public void The_head_shows_the_heading_and_the_tab_row_marking_the_page_it_stands_on(SeimasTab current, string currentId)
@@ -28,8 +29,9 @@ public sealed class MenuTests : BunitContext
 
         head.Find("h1.seimas-title").TextContent.ShouldBe("Seimas");
         var links = head.FindAll("#project-tabs a");
-        links.Select(a => a.GetAttribute("href")).ShouldBe(["/darbotvarke", "/suvestines", "/seimo-nariai"]);
-        links.Select(a => a.TextContent).ShouldBe(["Projektai", "Suvestinės", "Seimo nariai"]);
+        links.Select(a => a.GetAttribute("href")).ShouldBe(["/darbotvarke", "/seimas/balsavimai", "/suvestines", "/seimo-nariai"]);
+        links.Select(a => a.TextContent).ShouldBe(["Projektai", "Balsavimai", "Suvestinės", "Seimo nariai"]);
+        links.Count(a => a.GetAttribute("aria-current") == "page").ShouldBe(1);
         head.FindAll("#project-tabs a[aria-current]").ShouldHaveSingleItem().Id.ShouldBe(currentId);
         head.Find($"#{currentId}").GetAttribute("aria-current").ShouldBe("page");
         head.Find("#project-tabs").GetAttribute("aria-label").ShouldBe("Seimas");
@@ -40,7 +42,8 @@ public sealed class MenuTests : BunitContext
     [Theory]
     [InlineData("/darbotvarke", SeimasTab.Projects)]
     [InlineData("projektai?rikiuoti=dalyviai", SeimasTab.Projects)]
-    [InlineData("/seimas/balsavimai?kas=visi#balsavimai", SeimasTab.Projects)]
+    [InlineData("/seimas/balsavimai?kas=visi#balsavimai", SeimasTab.Votes)]
+    [InlineData("/seimas/balsavimai/", SeimasTab.Votes)]
     [InlineData("/suvestines/", SeimasTab.Digests)]
     [InlineData("/seimo-nariai?q=jonas", SeimasTab.Mps)]
     public void Each_tab_covers_its_pages(string path, SeimasTab tab) =>
@@ -104,6 +107,7 @@ public sealed class MenuTests : BunitContext
         }
 
         texts["Menu.Projects.Line"].ResourceNotFound.ShouldBeFalse("the dropdown's own line in Kur ką rasti");
+        texts["Menu.Projects.Line"].Value.ShouldBe("Keturi puslapiai apie Seimą:");
         MenuSections.Items.Select(i => i.Slug).ShouldBeUnique();
         MenuSections.Items.Select(i => i.Path).ShouldBeUnique();
     }
@@ -115,11 +119,11 @@ public sealed class MenuTests : BunitContext
         var texts = Services.GetRequiredService<IStringLocalizer<UiText>>();
         string[] Names(IEnumerable<MenuItem> items) => [.. items.Select(i => texts[i.NameKey].Value)];
 
-        Names(MenuSections.Tabs).ShouldBe(["Projektai", "Suvestinės", "Seimo nariai"]);
-        MenuSections.Tabs.Select(t => t.Tab).ShouldBe([SeimasTab.Projects, SeimasTab.Digests, SeimasTab.Mps]);
+        Names(MenuSections.Tabs).ShouldBe(["Projektai", "Balsavimai", "Suvestinės", "Seimo nariai"]);
+        MenuSections.Tabs.Select(t => t.Tab).ShouldBe([SeimasTab.Projects, SeimasTab.Votes, SeimasTab.Digests, SeimasTab.Mps]);
         Names(MenuSections.In(MenuPlace.Menu)).ShouldBe(["Statistika"]);
         Names(MenuSections.In(MenuPlace.Account)).ShouldBe(["Paskyra"]);
-        Names(MenuSections.Browse).ShouldBe(["Projektai", "Suvestinės", "Seimo nariai", "Statistika"]);
+        Names(MenuSections.Browse).ShouldBe(["Projektai", "Balsavimai", "Suvestinės", "Seimo nariai", "Statistika"]);
         Names(MenuSections.In(MenuPlace.FooterAbout)).ShouldBe(["Metodika", "Moderavimo taisyklės", "Naudojimo taisyklės", "Privatumas"]);
         Names(MenuSections.In(MenuPlace.FooterTakePart)).ShouldBe(["Organizacijos", "Atsiliepimai"]);
     }
