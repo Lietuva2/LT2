@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
      Seimas response. Written by tools/standin_overlay.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
-  <BendriBalsavimoRezultatai balsavimo_id="99100225" balsavimo_laikas="2026-10-27 11:20:03" viso="141" balsavo="108" už="63" prieš="30" susilaikė="15" komentaras=""/>
+  <SeimoNariųBalsavimas balsavimo_id="99100225">
+  <BendriBalsavimoRezultatai balsavimo_laikas="2026-10-27 11:20:03" viso="141" balsavo="108" už="63" prieš="30" susilaikė="15" komentaras=""/>
   <IndividualusBalsavimoRezultatas asmens_id="99000001" vardas="Jonas" pavardė="Petraitis" frakcija="RPF" kaip_balsavo="Už"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000002" vardas="Marius" pavardė="Ąžuolaitis" frakcija="RPF" kaip_balsavo="Už"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000003" vardas="Eglė" pavardė="Beržinytė" frakcija="RPF" kaip_balsavo=""/>
@@ -143,4 +144,5 @@
   <IndividualusBalsavimoRezultatas asmens_id="99000140" vardas="Eimantas" pavardė="Kaštonis" frakcija="MG" kaip_balsavo=""/>
   <IndividualusBalsavimoRezultatas asmens_id="99000141" vardas="Nerijus" pavardė="Varliūnas" frakcija="DSF" kaip_balsavo="Susilaikė"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000142" vardas="Eimantas" pavardė="Mėlynis" frakcija="MG" kaip_balsavo="Susilaikė"/>
+  </SeimoNariųBalsavimas>
 </SeimoInformacija>

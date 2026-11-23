@@ -3,82 +3,86 @@
      Seimas response. {{past:N}} is the N-th Tuesday or Thursday before today (yyyy-MM-dd): the last four sitting days, with their
      votes, shaped after the real Seimas's. Written by tools/standin_overlay.py (fixed seed); do not edit by hand (tools/standin_agenda.py). --><SeimoInformacija>
   <SeimoPosėdis posėdžio_id="99001102" numeris="267" tipas="Rytinis" pradžia="{{past:1}} 10:00" pabaiga="{{past:1}} 12:53">
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010201" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="10:00"/>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010202" numeris="2" pavadinimas="Vietinių rinkliavų įstatymo pataisa" stadija="Svarstymas" laikas_nuo="10:02">
-      <Dokumentas registracijos_numeris="XVP-0533" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0533"/>
+    <DarbotvarkėsKlausimas numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" laikas_nuo="10:00">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010201" pavadinimas="" dokumento_nuoroda=""/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010203" numeris="3" pavadinimas="Geodezijos ir kartografijos įstatymo pakeitimo įstatymo projektas (nauja redakcija)" stadija="Pateikimas" laikas_nuo="10:07">
-      <Dokumentas registracijos_numeris="XVP-1004" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1004"/>
+    <DarbotvarkėsKlausimas numeris="2" pavadinimas="Vietinių rinkliavų įstatymo pataisa (Nr. XVP-0533)" laikas_nuo="10:02">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010202" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0533"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010204" numeris="4" pavadinimas="Konkurencijos įstatymo 23 straipsnio pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="10:22">
-      <Dokumentas registracijos_numeris="XVP-1394" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1394"/>
+    <DarbotvarkėsKlausimas numeris="3" pavadinimas="Geodezijos ir kartografijos įstatymo pakeitimo įstatymo projektas (nauja redakcija) (Nr. XVP-1004)" laikas_nuo="10:07">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010203" pavadinimas="Pateikimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1004"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010205" numeris="5" pavadinimas="Notariato įstatymo 41, 75 ir 77 straipsnių pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="10:27">
-      <Dokumentas registracijos_numeris="XVP-1533" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1533"/>
+    <DarbotvarkėsKlausimas numeris="4" pavadinimas="Konkurencijos įstatymo 23 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1394)" laikas_nuo="10:22">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010204" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1394"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010206" numeris="6" pavadinimas="Socialinio draudimo pensijų įstatymo 11 straipsnio pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="10:32">
-      <Dokumentas registracijos_numeris="XVP-1353" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1353"/>
+    <DarbotvarkėsKlausimas numeris="5" pavadinimas="Notariato įstatymo 41, 75 ir 77 straipsnių pakeitimo įstatymo projektas (Nr. XVP-1533)" laikas_nuo="10:27">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010205" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1533"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010207" numeris="7.1" pavadinimas="Valstybės informacinių išteklių valdymo įstatymo 77 ir 78 straipsnių pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="10:37">
-      <Dokumentas registracijos_numeris="XVP-0967" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0967"/>
+    <DarbotvarkėsKlausimas numeris="6" pavadinimas="Socialinio draudimo pensijų įstatymo 11 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1353)" laikas_nuo="10:32">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010206" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1353"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010208" numeris="7.2" pavadinimas="Elektroninių ryšių įstatymo 70 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="10:37">
-      <Dokumentas registracijos_numeris="XVP-0968" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0968"/>
+    <DarbotvarkėsKlausimas numeris="7.1" pavadinimas="Valstybės informacinių išteklių valdymo įstatymo 77 ir 78 straipsnių pakeitimo įstatymo projektas (Nr. XVP-0967)" laikas_nuo="10:37">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010207" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0967"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010209" numeris="9" pavadinimas="Sveikatos priežiūros įstaigų įstatymo 3 straipsnio pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="10:49">
-      <Dokumentas registracijos_numeris="XVP-1698" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1698"/>
+    <DarbotvarkėsKlausimas numeris="7.2" pavadinimas="Elektroninių ryšių įstatymo 70 straipsnio pakeitimo įstatymo projektas (Nr. XVP-0968)" laikas_nuo="10:37">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010208" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0968"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010210" numeris="10.1" pavadinimas="Neformaliojo suaugusiųjų švietimo ir tęstinio mokymosi įstatymo 16 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="11:04">
-      <Dokumentas registracijos_numeris="XVP-1516" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1516"/>
+    <DarbotvarkėsKlausimas numeris="9" pavadinimas="Sveikatos priežiūros įstaigų įstatymo 3 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1698)" laikas_nuo="10:49">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010209" pavadinimas="Pateikimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1698"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010211" numeris="10.2" pavadinimas="Mokslo ir studijų įstatymo 74 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="11:04">
-      <Dokumentas registracijos_numeris="XVP-1517" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1517"/>
+    <DarbotvarkėsKlausimas numeris="10.1" pavadinimas="Neformaliojo suaugusiųjų švietimo ir tęstinio mokymosi įstatymo 16 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1516)" laikas_nuo="11:04">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010210" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1516"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010212" numeris="10.3" pavadinimas="Profesinio mokymo įstatymo 29 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="11:04">
-      <Dokumentas registracijos_numeris="XVP-1518" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1518"/>
+    <DarbotvarkėsKlausimas numeris="10.2" pavadinimas="Mokslo ir studijų įstatymo 74 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1517)" laikas_nuo="11:04">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010211" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1517"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010213" numeris="10.4" pavadinimas="Jaunimo politikos pagrindų įstatymo 4, 27 ir 46 straipsnių pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="11:04">
-      <Dokumentas registracijos_numeris="XVP-1519" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1519"/>
+    <DarbotvarkėsKlausimas numeris="10.3" pavadinimas="Profesinio mokymo įstatymo 29 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1518)" laikas_nuo="11:04">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010212" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1518"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010214" numeris="10.5" pavadinimas="Švietimo įstatymo 14 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="11:04">
-      <Dokumentas registracijos_numeris="XVP-1520" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1520"/>
+    <DarbotvarkėsKlausimas numeris="10.4" pavadinimas="Jaunimo politikos pagrindų įstatymo 4, 27 ir 46 straipsnių pakeitimo įstatymo projektas (Nr. XVP-1519)" laikas_nuo="11:04">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010213" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1519"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010215" numeris="15" pavadinimas="Šalpos pensijų įstatymo 48 straipsnio pakeitimo įstatymo projektas" stadija="Svarstymas" laikas_nuo="11:22">
-      <Dokumentas registracijos_numeris="XVP-1488" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1488"/>
+    <DarbotvarkėsKlausimas numeris="10.5" pavadinimas="Švietimo įstatymo 14 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1520)" laikas_nuo="11:04">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010214" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1520"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010216" numeris="16" pavadinimas="Konkurencijos įstatymo 65 straipsnio pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="11:27">
-      <Dokumentas registracijos_numeris="XVP-1145" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1145"/>
+    <DarbotvarkėsKlausimas numeris="15" pavadinimas="Šalpos pensijų įstatymo 48 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1488)" laikas_nuo="11:22">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010215" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1488"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010217" numeris="17.1" pavadinimas="Vandens įstatymo 8 straipsnio pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="11:32">
-      <Dokumentas registracijos_numeris="XVP-1813" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1813"/>
+    <DarbotvarkėsKlausimas numeris="16" pavadinimas="Konkurencijos įstatymo 65 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1145)" laikas_nuo="11:27">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010216" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1145"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010218" numeris="17.2" pavadinimas="Miškų įstatymo 67 straipsnio pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="11:32">
-      <Dokumentas registracijos_numeris="XVP-1814" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1814"/>
+    <DarbotvarkėsKlausimas numeris="17.1" pavadinimas="Vandens įstatymo 8 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1813)" laikas_nuo="11:32">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010217" pavadinimas="Pateikimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1813"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010219" numeris="17.3" pavadinimas="Aplinkos apsaugos įstatymo 62 straipsnio pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="11:32">
-      <Dokumentas registracijos_numeris="XVP-1815" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1815"/>
+    <DarbotvarkėsKlausimas numeris="17.2" pavadinimas="Miškų įstatymo 67 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1814)" laikas_nuo="11:32">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010218" pavadinimas="Pateikimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1814"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010220" numeris="17.4" pavadinimas="Saugomų teritorijų įstatymo 26 straipsnio pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="11:32">
-      <Dokumentas registracijos_numeris="XVP-1816" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1816"/>
+    <DarbotvarkėsKlausimas numeris="17.3" pavadinimas="Aplinkos apsaugos įstatymo 62 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1815)" laikas_nuo="11:32">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010219" pavadinimas="Pateikimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1815"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010221" numeris="17.5" pavadinimas="Atliekų tvarkymo įstatymo 40 ir 58 straipsnių pakeitimo įstatymo projektas" stadija="Pateikimas" laikas_nuo="11:32">
-      <Dokumentas registracijos_numeris="XVP-1817" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1817"/>
+    <DarbotvarkėsKlausimas numeris="17.4" pavadinimas="Saugomų teritorijų įstatymo 26 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1816)" laikas_nuo="11:32">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010220" pavadinimas="Pateikimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1816"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010222" numeris="22.1" pavadinimas="Saugomų teritorijų įstatymo 41, 64 ir 70 straipsnių pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="12:13">
-      <Dokumentas registracijos_numeris="XVP-1121" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1121"/>
+    <DarbotvarkėsKlausimas numeris="17.5" pavadinimas="Atliekų tvarkymo įstatymo 40 ir 58 straipsnių pakeitimo įstatymo projektas (Nr. XVP-1817)" laikas_nuo="11:32">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010221" pavadinimas="Pateikimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1817"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010223" numeris="22.2" pavadinimas="Miškų įstatymo 15 straipsnio pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="12:13">
-      <Dokumentas registracijos_numeris="XVP-1122" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1122"/>
+    <DarbotvarkėsKlausimas numeris="22.1" pavadinimas="Saugomų teritorijų įstatymo 41, 64 ir 70 straipsnių pakeitimo įstatymo projektas (Nr. XVP-1121)" laikas_nuo="12:13">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010222" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1121"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010224" numeris="22.3" pavadinimas="Klimato kaitos valdymo įstatymo 18, 28 ir 47 straipsnių pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="12:13">
-      <Dokumentas registracijos_numeris="XVP-1123" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1123"/>
+    <DarbotvarkėsKlausimas numeris="22.2" pavadinimas="Miškų įstatymo 15 straipsnio pakeitimo įstatymo projektas (Nr. XVP-1122)" laikas_nuo="12:13">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010223" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1122"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010225" numeris="22.4" pavadinimas="Aplinkos oro apsaugos įstatymo 22 ir 64 straipsnių pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="12:13">
-      <Dokumentas registracijos_numeris="XVP-1124" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1124"/>
+    <DarbotvarkėsKlausimas numeris="22.3" pavadinimas="Klimato kaitos valdymo įstatymo 18, 28 ir 47 straipsnių pakeitimo įstatymo projektas (Nr. XVP-1123)" laikas_nuo="12:13">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010224" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1123"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010226" numeris="22.5" pavadinimas="Aplinkos apsaugos įstatymo 18 ir 51 straipsnių pakeitimo įstatymo projektas" stadija="Priėmimas" laikas_nuo="12:13">
-      <Dokumentas registracijos_numeris="XVP-1125" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1125"/>
+    <DarbotvarkėsKlausimas numeris="22.4" pavadinimas="Aplinkos oro apsaugos įstatymo 22 ir 64 straipsnių pakeitimo įstatymo projektas (Nr. XVP-1124)" laikas_nuo="12:13">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010225" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1124"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010227" numeris="27" pavadinimas="Seimo narių pareiškimai" stadija="" laikas_nuo="12:38"/>
+    <DarbotvarkėsKlausimas numeris="22.5" pavadinimas="Aplinkos apsaugos įstatymo 18 ir 51 straipsnių pakeitimo įstatymo projektas (Nr. XVP-1125)" laikas_nuo="12:13">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010226" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-1125"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas numeris="27" pavadinimas="Seimo narių pareiškimai" laikas_nuo="12:38">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010227" pavadinimas="" dokumento_nuoroda=""/>
+    </DarbotvarkėsKlausimas>
   </SeimoPosėdis>
 </SeimoInformacija>

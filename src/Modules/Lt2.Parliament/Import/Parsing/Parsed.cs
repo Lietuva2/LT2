@@ -18,7 +18,7 @@ internal sealed record ParsedMember(
     IReadOnlyList<ParsedMembership> Memberships,
     IReadOnlyList<ParsedContact> Contacts);
 
-internal sealed record ParsedMembership(long BodyId, string BodyName, string Role, DateOnly From, DateOnly? To);
+internal sealed record ParsedMembership(long BodyId, string BodyName, BodyKind Kind, string Role, DateOnly From, DateOnly? To);
 
 internal sealed record ParsedContact(string Kind, string Value);
 
@@ -28,8 +28,10 @@ internal sealed record ParsedSitting(long Id, string? Number, string? Kind, Date
 
 internal sealed record ParsedAgendaItem(long Id, string? Number, string Title, string? Stage, string? BillNumber, string? BillUrl);
 
+internal sealed record ParsedProceedings(IReadOnlyList<ParsedAgendaItem> Items, IReadOnlyList<ParsedVoteReference> Votes);
+
 /// <summary>A vote as listed in an item's proceedings.</summary>
-internal sealed record ParsedVoteReference(long VoteId, long AgendaItemId, DateTimeOffset HeldAt, string Wording, string? Type, bool IsConsensus);
+internal sealed record ParsedVoteReference(long VoteId, long AgendaItemId, DateTimeOffset HeldAt, string Wording, bool IsConsensus, string? Stage);
 
 internal sealed record ParsedVoteResult(long VoteId, VoteTotals Totals, string? OfficialNote, IReadOnlyList<ParsedBallot> Ballots);
 

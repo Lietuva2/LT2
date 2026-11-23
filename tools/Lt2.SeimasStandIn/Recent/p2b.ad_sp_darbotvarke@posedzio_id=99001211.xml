@@ -2,15 +2,17 @@
 <!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
      Seimas response. Written by tools/standin_overlay.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><SeimoInformacija>
   <SeimoPosėdis posėdžio_id="99001211" numeris="253" tipas="Rytinis" pradžia="2026-10-27 10:00" pabaiga="2026-10-27 12:35">
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012110" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="10:00"/>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012111" numeris="2" pavadinimas="Tabako, tabako gaminių ir su jais susijusių gaminių kontrolės įstatymo pataisa" stadija="Priėmimas" laikas_nuo="10:39">
-      <Dokumentas registracijos_numeris="XVP-0719" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0719"/>
+    <DarbotvarkėsKlausimas numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" laikas_nuo="10:00">
+      <KlausimoStadija darbotvarkės_klausimo_id="99012110" pavadinimas="" dokumento_nuoroda=""/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012112" numeris="3" pavadinimas="Visuomenės informavimo įstatymo pataisa" stadija="Priėmimas" laikas_nuo="11:08">
-      <Dokumentas registracijos_numeris="XVP-0725" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0725"/>
+    <DarbotvarkėsKlausimas numeris="2" pavadinimas="Tabako, tabako gaminių ir su jais susijusių gaminių kontrolės įstatymo pataisa (Nr. XVP-0719)" laikas_nuo="10:39">
+      <KlausimoStadija darbotvarkės_klausimo_id="99012111" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0719"/>
     </DarbotvarkėsKlausimas>
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99012113" numeris="4" pavadinimas="Alkoholio kontrolės įstatymo pataisa" stadija="Priėmimas" laikas_nuo="11:45">
-      <Dokumentas registracijos_numeris="XVP-0718" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0718"/>
+    <DarbotvarkėsKlausimas numeris="3" pavadinimas="Visuomenės informavimo įstatymo pataisa (Nr. XVP-0725)" laikas_nuo="11:08">
+      <KlausimoStadija darbotvarkės_klausimo_id="99012112" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0725"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas numeris="4" pavadinimas="Alkoholio kontrolės įstatymo pataisa (Nr. XVP-0718)" laikas_nuo="11:45">
+      <KlausimoStadija darbotvarkės_klausimo_id="99012113" pavadinimas="Priėmimas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0718"/>
     </DarbotvarkėsKlausimas>
   </SeimoPosėdis>
 </SeimoInformacija>

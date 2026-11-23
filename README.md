@@ -51,22 +51,31 @@ docker compose -f deploy/compose.yaml up --build
   excludedportrange protocol=tcp`), set another, for example `LT2_HTTP_PORT=8090`, in your shell or `deploy/.env`.
 - Every email lands in Mailpit: <http://localhost:8025>.
 - Trial invitation code: `BANDYMAS-2026` (created by the migrator from `deploy/.env`).
-- Parliament data comes from `seimas-standin`, a stand-in for the Seimas open-data service with invented answers
-  (the real service is closed for maintenance until 16 November 2026). The `local` profile starts it and `deploy/.env`
-  points the worker at it; every page then says the parliament data is invented. To import from the real service
-  instead, empty `LT2_SEIMAS_BASE_ADDRESS` and `LT2_OUTBOUND_EXTRA_HOST` and empty the invented data first; the command
-  refuses if any import so far was real, or while an import is running:
+- Parliament data comes from `https://apps.lrs.lt/sip/`. The first import walks the term's sittings and votes at
+  about one request per second. The separate upcoming-agenda watcher needs its own configured source.
+- Use a clean database for the live stack. If the existing local database holds the stand-in's data, stop the
+  worker and reset the invented parliament data before starting it against the live feed. The reset refuses a
+  database that has imported real data or has an import running:
 
 ```bash
+docker compose -f deploy/compose.yaml stop worker
 docker compose -f deploy/compose.yaml run --rm --no-deps migrator --reset-parliament
+docker compose -f deploy/compose.yaml up --build --remove-orphans
+```
+
+For the demonstration or end-to-end tests, start the stand-in stack separately. This command uses the same ports
+as the live stack, so run one at a time unless you choose different ports:
+
+```bash
+docker compose --env-file deploy/.env --env-file deploy/standin.env -p lt2-standin -f deploy/compose.yaml up --build
 ```
 
 The demonstration record on XVP-0412 (6 800 invented accounts asking to vote for, 4 280 against, the prototype's
 arguments) is written by the migrator on the local stack and the trial only: it refuses unless `LT2_DEMO_DATA=true` (set
-in `deploy/.env`) and the parliament data is the stand-in's. Running it again changes nothing.
+in `deploy/standin.env`) and the parliament data is the stand-in's. Running it again changes nothing.
 
 ```bash
-docker compose -f deploy/compose.yaml run --rm --no-deps migrator --demo-appeal
+docker compose --env-file deploy/.env --env-file deploy/standin.env -p lt2-standin -f deploy/compose.yaml run --rm --no-deps migrator --demo-appeal
 ```
 
 The same command gives the stand-in overlay's invented closed bills (XVP-0707 and thirty more, XVP-0701 to XVP-0731,
@@ -157,7 +166,7 @@ with Testcontainers (Docker must be running). Tests run on Microsoft.Testing.Pla
 single project is chosen with `dotnet test --project tests/Lt2.UnitTests`.
 
 `tests/Lt2.Parliament.ImportTests` also holds the **live contract suite** for the Seimas open data, skipped unless
-`LT2_SEIMAS_LIVE=1` is set. Run it once the service reopens (after 16 November 2026): it saves every response it fetches
+`LT2_SEIMAS_LIVE=1` is set. It saves every response it fetches
 into `tests/Lt2.Parliament.ImportTests/Seimas/Recorded/` and reports on every line of the register of assumptions
 (`Seimas/ASSUMPTIONS.md`) in `Recorded/contract-report.md`, failing on each assumption that was wrong:
 
@@ -178,7 +187,7 @@ dotnet build tests/Lt2.E2E
 pwsh tests/Lt2.E2E/bin/Debug/net10.0/playwright.ps1 install chromium
 ```
 
-Then, with the stack up, set these environment variables in your shell and run the project:
+Then, with the stand-in stack up, set these environment variables in your shell and run the project:
 
 | Variable | Local value |
 |---|---|
@@ -188,6 +197,8 @@ Then, with the stack up, set these environment variables in your shell and run t
 | `LT2_E2E_BROWSER_CHANNEL` | optional: `msedge` to use an installed Edge instead of Playwright's Chromium |
 | `LT2_E2E_HTTP_URL` | optional: `http://lt2.localhost:8080`, to check the redirect to HTTPS |
 | `LT2_E2E_COMPOSE_FILE` | optional: the compose file the tests run `docker compose` against (default `deploy/compose.yaml`) |
+| `COMPOSE_PROJECT_NAME` | `lt2-standin`, matching the stand-in stack's project name |
+| `COMPOSE_ENV_FILES` | the absolute paths to `deploy/.env` and `deploy/standin.env`, separated by a comma |
 
 `python tools/run_tests.py e2e` sets the local stack's addresses (any variable already set wins), builds, runs and prints
 every failure's message; `--order reverse` or `--order random` runs the classes and tests in another order,

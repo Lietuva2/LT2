@@ -18,10 +18,9 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 - 7.3: "appeals in progress" on an MP's profile (the profile shows only the MP's responses); the line was taken out of
   7.3, so whether it stays designed is for the owner.
 - 8.1, 8.6, 8.20.1: telling participants and followers that a bill changed between stages (for example in a committee).
-- 8.1: closing a record automatically when the open data says rejected or withdrawn: once a live run of the Seimas
-  service confirms which field of `p2b.ad_sp_klausimo_svarstymo_eiga` (or the vote's wording) states it, the import
-  closes the record with that reason and the date, a moderator can reopen a wrong close; "returned to the initiators for
-  improvement" is not a rejection. Until then a moderator closes such a record (owner, 2026-11-19).
+- 8.1: closing a record automatically when the open data says rejected or withdrawn. Full sitting proceedings include
+  approved motions to reject, and `p2b.tais_docs` has project events. Settle which events establish terminal bill status
+  and how to handle revisions, group motions and withdrawals. Until then a moderator closes such a record.
 - 8.4, 8.19.6: a sending subdomain with SPF, DKIM and DMARC; complaint and bounce reports from an email provider.
 - 9.1: a second web instance, the backup container (pgBackRest), the telemetry collector, host hardening, CDN and DDoS
   protection, a rehearsed recovery. 9.2: separate staging and production. 9.3: an image per commit in a registry, an
@@ -62,11 +61,12 @@ the owner to switch on; Dependabot and CodeQL start once the workflow files are 
 **6.8 Rules held throughout.** The agenda watcher keeps its items when a parse comes back empty, until the owner
 decides otherwise. One-time codes are limited per address, not per code.
 
-**7.1, 7.5 The Seimas import against the live service.** Every "assumed" line of
-`tests/Lt2.Parliament.ImportTests/Seimas/ASSUMPTIONS.md` waits for one live run (`LT2_SEIMAS_LIVE=1`): the proceedings
-parameter, the totals' attribute names, the per-MP row and `asmens_id`, `lytis`, a body's kind read from its name, where
-"bendru sutarimu" appears. The checks of 7.5 that need the live service: 20 profiles against lrs.lt, 30 votes whose
-ballots sum to their totals, Lighthouse 90 or more.
+**7.1, 7.5 The Seimas import against the live service.** Run the complete live contract suite (`LT2_SEIMAS_LIVE=1`)
+to check the remaining assumptions and record its XML. The checks of 7.5 that need the live stack are 20 profiles
+against lrs.lt, 30 votes whose ballots sum to their totals, and Lighthouse 90 or more.
+
+**8.18 The official outcome in vote lists.** The full proceedings supply the motion and its official outcome together
+in `aprasas`. Choose the labels and where they are shown before replacing a vote row's ballot-majority chip.
 
 **8.2 Editing until someone reacts.** Built as proposed:
 - Every edit of an argument drops the moderator's "seen", flagged or not, and the edited argument is listed in the

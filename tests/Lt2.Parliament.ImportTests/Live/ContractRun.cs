@@ -22,10 +22,7 @@ internal static partial class ContractRun
     /// <summary>The vote the September 2026 notes checked by hand: XVP-1586 presentation, with the mismatch comment.</summary>
     public const long KnownVote = -60034;
 
-    /// <summary>Other names the proceedings parameter might have; tried only when the configured one gives no data.</summary>
-    private static readonly string[] ProceedingsAlternatives = ["darbotvarkes_klausimo_id", "darbotvarkės_klausimo_id", "klausimo_id"];
-
-    public static async Task<ContractResult> RunAsync(ISeimasClient client, string proceedingsParameter, int termId, string saveTo, string source, TimeProvider clock, CancellationToken cancellationToken)
+    public static async Task<ContractResult> RunAsync(ISeimasClient client, int termId, string saveTo, string source, TimeProvider clock, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(saveTo);
         var fetched = new List<Fetched>();
@@ -64,23 +61,20 @@ internal static partial class ContractRun
         var voteIds = new List<long>();
         foreach (var sitting in sittingIds.TakeLast(3))
         {
-            var agenda = await Get(SeimasRequest.Agenda(sitting));
-            var proceedings = await Get(SeimasRequest.Proceedings(proceedingsParameter, sitting));
-            var votes = Ids(proceedings, b => SeimasParsers.Proceedings(b).Where(v => !v.IsConsensus).Select(v => v.VoteId), VoteIdPattern()).ToList();
-            if (votes.Count == 0 && agenda is not null)
+            await Get(SeimasRequest.Agenda(sitting));
+            var proceedings = await Get(SeimasRequest.Proceedings(sitting));
+            if (proceedings is not null)
             {
-                // The configured parameter gave nothing: try the item-level alternatives on the first two items.
-                foreach (var item in ItemIdPattern().Matches(System.Text.Encoding.UTF8.GetString(agenda.Body)).Select(m => long.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture)).Take(2))
+                try
                 {
-                    foreach (var alternative in ProceedingsAlternatives)
-                    {
-                        var tried = await Get(SeimasRequest.Proceedings(alternative, item));
-                        votes.AddRange(Ids(tried, _ => [], VoteIdPattern()));
-                    }
+                    voteIds.AddRange(SeimasParsers.Proceedings(proceedings.Body).Votes.Where(v => !v.IsConsensus).Select(v => v.VoteId).Take(3));
+                }
+                catch (SeimasFormatException)
+                {
+                    voteIds.AddRange(VoteIdPattern().Matches(System.Text.Encoding.UTF8.GetString(proceedings.Body))
+                        .Select(m => long.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture)).Distinct().Take(3));
                 }
             }
-
-            voteIds.AddRange(votes.Take(3));
         }
 
         foreach (var vote in voteIds.Append(KnownVote).Distinct())
@@ -141,9 +135,6 @@ internal static partial class ContractRun
     [GeneratedRegex("pos[eė]d[zž]io_id=\"(-?\\d+)\"")]
     private static partial Regex SittingIdPattern();
 
-    [GeneratedRegex("balsavimo_id=\"(-?\\d+)\"")]
+    [GeneratedRegex("bals_id=\"(-?\\d+)\"")]
     private static partial Regex VoteIdPattern();
-
-    [GeneratedRegex("klausimo_id=\"(-?\\d+)\"")]
-    private static partial Regex ItemIdPattern();
 }

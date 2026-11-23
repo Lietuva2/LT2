@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for tests and the local stand-in. NOT a recorded Seimas response.
+     Shape: assumed from the evidence listed in ../ASSUMPTIONS.md. Every name, identifier and number is fictional. -->
+<posedziai>
+  <posedis pos_id="99001001">
+    <posedzio-eiga>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99100001" kl_stad_id="99010001">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99100001"><nuo>2026-03-17 10:02:11</nuo><aprasas>Dėl posėdžio darbotvarkės patvirtinimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99100002" kl_stad_id="99010002">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99100002"><nuo>2026-03-17 10:41:37</nuo><aprasas>Pritarti projektui po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99100003" kl_stad_id="99010003">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99100003"><nuo>2026-03-17 11:20:05</nuo><aprasas>Pritarta bendru sutarimu</aprasas><antraste>Pritarta bendru sutarimu</antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+    </posedzio-eiga>
+  </posedis>
+</posedziai>

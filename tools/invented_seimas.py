@@ -234,7 +234,7 @@ def build() -> list[Mp]:
     surnames = SURNAMES[:]
     rng.shuffle(surnames)
     used_names: set[str] = {fold(m.first + " " + m.last) for m in base}
-    single_left = 71 - sum(1 for m in seated_base if m.attrs["išrinkimo_būdas"].startswith("Vienmandat"))
+    single_left = 71 - sum(1 for m in seated_base if m.attrs["išrinkimo_būdas"].endswith(" apygardoje"))
     slots = [(g, gender) for g in GROUPS for gender in ("V", "M") for _ in range(need[g.body_id][gender])]
     rng.shuffle(slots)
     single = set(rng.sample(range(len(slots)), single_left))
@@ -261,7 +261,7 @@ def build() -> list[Mp]:
             party = rng.choice(parties)
         how = {"išrinkimo_būdas": "Pagal sąrašą"}
         if i in single:
-            how = {"išrinkimo_būdas": "Vienmandatėje apygardoje", "apygarda": f"{constituencies.pop()} (Nr. {96 + len(CONSTITUENCIES) - len(constituencies) - 1})"}
+            how = {"išrinkimo_būdas": f"{constituencies.pop()} (Nr. {96 + len(CONSTITUENCIES) - len(constituencies) - 1}) apygardoje"}
         terms = rng.choices([1, 2, 3, 4, 5, 6, 7], [40, 25, 15, 9, 6, 3, 2])[0]
         a = {"asmens_id": str(person), "vardas": first, "pavardė": last, "lytis": gender, "data_nuo": TERM_FROM,
              "data_iki": "", "iškėlusi_partija": party, **how, "kadencijų_skaičius": str(terms)}
@@ -449,15 +449,42 @@ def result_file(note: str, vote_id: int, held: str, rows: list[tuple[Mp, str, st
         f'  <IndividualusBalsavimoRezultatas asmens_id="{m.person_id}" vardas="{m.first}" pavardė="{m.last}" frakcija="{lab}" kaip_balsavo="{c}"/>'
         for m, lab, c in rows)
     return (HEADER.format(note=note) + "<SeimoInformacija>\n"
-            f'  <BendriBalsavimoRezultatai balsavimo_id="{vote_id}" balsavimo_laikas="{held}" viso="{SEATS}" balsavo="{f + a + s}" už="{f}" prieš="{a}" susilaikė="{s}" komentaras="{esc(comment)}"/>\n'
-            f"{body}\n</SeimoInformacija>\n")
+            f'  <SeimoNariųBalsavimas balsavimo_id="{vote_id}">\n'
+            f'  <BendriBalsavimoRezultatai balsavimo_laikas="{held}" viso="{SEATS}" balsavo="{f + a + s}" už="{f}" prieš="{a}" susilaikė="{s}" komentaras="{esc(comment)}"/>\n'
+            f"{body}\n  </SeimoNariųBalsavimas>\n</SeimoInformacija>\n")
 
 
 def base_rows(path: pathlib.Path) -> tuple[ET.Element, dict[int, tuple[str, str]]]:
     """A vote result file's totals element and its per-MP rows (person → label, choice)."""
     root = ET.parse(path).getroot()
     rows = {int(e.attrib["asmens_id"]): (e.attrib["frakcija"], e.attrib["kaip_balsavo"]) for e in root.iter("IndividualusBalsavimoRezultatas")}
-    return root.find("BendriBalsavimoRezultatai"), rows
+    return root.find(".//BendriBalsavimoRezultatai"), rows
+
+
+def agenda_item(item_id: int, number: str, title: str, stage: str, at: str, bill: str = "") -> str:
+    suffix = f" (Nr. {bill})" if bill else ""
+    link = f"https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-{bill}" if bill else ""
+    return (
+        f'    <DarbotvarkėsKlausimas numeris="{number}" pavadinimas="{title}{suffix}" laikas_nuo="{at}">\n'
+        f'      <KlausimoStadija darbotvarkės_klausimo_id="{item_id}" pavadinimas="{stage}" dokumento_nuoroda="{link}"/>\n'
+        '    </DarbotvarkėsKlausimas>')
+
+
+def proceedings_vote(item_id: int, vote_id: int, held: str, wording: str) -> str:
+    heading = "Pritarta bendru sutarimu" if "bendru sutarimu" in wording else ""
+    return (
+        f'      <darbotvarkes-klausimas svarst_kl_stad_id="{vote_id}" kl_stad_id="{item_id}">\n'
+        '        <nr/><pavadinimas/><stadija/>\n'
+        f'        <balsavimai><balsavimas bals_id="{vote_id}"><nuo>{held}</nuo><aprasas>{wording}</aprasas>'
+        f'<antraste>{heading}</antraste></balsavimas></balsavimai>\n'
+        '      </darbotvarkes-klausimas>')
+
+
+def proceedings_file(header: str, sitting_id: int, proceedings: list[str]) -> tuple[str, str]:
+    return (
+        f"p2b.ad_seimo_posedzio_eiga_full@posedzio_id={sitting_id}.xml",
+        header + f'<posedziai>\n  <posedis pos_id="{sitting_id}">\n    <posedzio-eiga>\n'
+        + "\n".join(proceedings) + "\n    </posedzio-eiga>\n  </posedis>\n</posedziai>\n")
 
 
 REVOTED_NOTE = (

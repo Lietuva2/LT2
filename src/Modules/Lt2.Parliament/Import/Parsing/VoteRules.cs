@@ -76,6 +76,18 @@ internal static class VoteRules
     public static (VoteKind Kind, BillStage? Stage) Classify(string? wording, BillStage? itemStage)
     {
         var w = Normalise(wording);
+        var separator = w.IndexOf(" – ", StringComparison.Ordinal);
+        var outcome = separator >= 0 ? w[..separator] : w;
+        if (outcome == "sprendimas nepriimtas")
+        {
+            return (VoteKind.Other, null);
+        }
+
+        if (separator >= 0 && outcome is "pritarta" or "nepritarta" or "pritarta bendru sutarimu")
+        {
+            w = w[(separator + 3)..];
+        }
+
         if (w.Contains("darbotvarkė", StringComparison.Ordinal))
         {
             return (VoteKind.Procedural, null);

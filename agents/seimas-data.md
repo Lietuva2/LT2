@@ -4,12 +4,16 @@ Read before touching the Parliament module's client or import. The design is [07
 
 - Base `https://apps.lrs.lt/sip/` (CC BY 4.0; show the attribution). Chain: `p2b.ad_seimo_kadencijos` →
   `p2b.ad_seimo_sesijos?kadencijos_id=` → `p2b.ad_seimo_posedziai?sesijos_id=` → `p2b.ad_sp_darbotvarke?posedzio_id=` →
-  `p2b.ad_sp_klausimo_svarstymo_eiga` → `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=`. MPs:
+  `p2b.ad_seimo_posedzio_eiga_full?posedzio_id=` → `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=`. MPs:
   `p2b.ad_seimo_nariai?kadencijos_id=` (`kadencijos_id=10` is 2024–2028; `asmens_id` is stable across terms).
 - Votes approved by consensus have no per-MP votes: show them without numbers. Some results carry an official note that
   per-MP votes do not match the protocol totals: show it next to the result.
-- Open data lists only sittings that have started. Upcoming agendas are on lrs.lt about 10–12 days ahead and change
-  often.
+- Skip open-data sitting rows without a start time. The upcoming-agenda watcher is a separate source.
+- The sitting agenda's `KlausimoStadija` provides the agenda ID, stage and e-seimas link. The full proceedings
+  link via `kl_stad_id` and include votes on items absent from the agenda and votes on groups of items. Prefer a
+  direct agenda link when a vote is repeated under a group. A group-only vote is recorded once without a bill.
+- The proceedings preserve the official decision as part of `aprasas`. `Sprendimas nepriimtas` reports no decision
+  on the motion and does not count as a stage result. A vote's outcome and the bill's status are distinct (design 8.1).
 - The service is slow at times and drops connections: retry, and never let an outage take the site down.
 - Confirm any field you have not seen in a live response before relying on it.
 - A vote's `kind` and `stage` are the classification in force: `VoteClassification.Effective` of the rules'

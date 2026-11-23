@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for tests and the local stand-in. NOT a recorded Seimas response.
+     Shape: assumed from the evidence listed in ../ASSUMPTIONS.md. Every name, identifier and number is fictional. -->
+<posedziai>
+  <posedis pos_id="99001002">
+    <posedzio-eiga>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99100004" kl_stad_id="99010004">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99100004"><nuo>2026-04-14 10:47:52</nuo><aprasas>Pritarti projektui po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+    </posedzio-eiga>
+  </posedis>
+</posedziai>

@@ -12,7 +12,7 @@ One EU VPS running Docker Compose (`deploy/compose.yaml`, project `lt2`). At lea
 | `worker` | Hangfire server: imports, agenda watcher, summaries, follow emails, outbox. One instance. |
 | `migrator` | Creates roles, applies migrations and grants, then exits; `web` and `worker` start after it succeeds. |
 | `postgres` | PostgreSQL 17, reachable only on the internal network. |
-| `mailpit` | Profile `local` only: catches every email. |
+| `mailpit` | Profiles `local` and `mailpit`: catches every email. |
 | `seimas-standin` | Profile `local` only: the stand-in for the Seimas open data, with invented answers; never built by `deploy/Dockerfile`. |
 
 The .NET containers run with a read-only file system, all capabilities dropped and `no-new-privileges`. Secrets are files
@@ -28,8 +28,10 @@ lost (WAL archiving) and back on a fresh VPS within a few hours from backups and
 
 ## 9.2 Environments
 
-`local`: Docker Compose with the stand-in's invented Seimas data and Mailpit (`deploy/.env`, profile `local`), at
-`https://lt2.localhost:8443`. The trial below is a staging environment. There is no production.
+`local`: Docker Compose with real Seimas open data and Mailpit (`deploy/.env`, profile `mailpit`), at
+`https://lt2.localhost:8443`. The stand-in is opt-in for demonstrations and end-to-end tests
+(`deploy/standin.env`, profile `local`, a separate Compose project). The trial below is a staging environment.
+There is no production.
 
 **The trial on the owner's VPS.** It deploys `master` as an isolated Compose project (`lt2`) on the owner's Hostinger
 VPS, which also runs the owner's other sites:

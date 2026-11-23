@@ -65,6 +65,12 @@ internal static class XmlRead
         return element.Ancestors(name).FirstOrDefault();
     }
 
+    public static string? TextOf(this XElement element, string name)
+    {
+        var value = element.Children(name).FirstOrDefault()?.Value.Trim();
+        return string.IsNullOrEmpty(value) ? null : value;
+    }
+
     /// <summary>An attribute that must be present and not empty.</summary>
     public static string Required(this XElement element, string attribute) =>
         element.Optional(attribute) ?? throw new SeimasFormatException($"<{element.Name.LocalName}> has no {attribute}.");
@@ -101,10 +107,11 @@ internal static class XmlRead
         element.Optional(attribute) is { } text ? Date(element, attribute, text) : null;
 
     /// <summary>Times are Vilnius local time, <c>yyyy-MM-dd HH:mm</c> or with seconds (assumed); returned in UTC.</summary>
-    public static DateTimeOffset RequiredTime(this XElement element, string attribute) => Time(element, attribute, element.Required(attribute));
-
     public static DateTimeOffset? OptionalTime(this XElement element, string attribute) =>
         element.Optional(attribute) is { } text ? Time(element, attribute, text) : null;
+
+    public static DateTimeOffset RequiredTimeOf(this XElement element, string name) =>
+        Time(element, name, element.TextOf(name) ?? throw new SeimasFormatException($"<{element.Name.LocalName}> has no <{name}>."));
 
     private static DateTimeOffset VilniusToUtc(DateTime local)
     {

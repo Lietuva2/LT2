@@ -13,7 +13,7 @@ internal static class SeimasServices
     public const string Sessions = "p2b.ad_seimo_sesijos";
     public const string Sittings = "p2b.ad_seimo_posedziai";
     public const string Agenda = "p2b.ad_sp_darbotvarke";
-    public const string Proceedings = "p2b.ad_sp_klausimo_svarstymo_eiga";
+    public const string Proceedings = "p2b.ad_seimo_posedzio_eiga_full";
     public const string VoteResults = "p2b.ad_sp_balsavimo_rezultatai";
 
     public const string TermParameter = "kadencijos_id";
@@ -41,8 +41,7 @@ internal sealed record SeimasRequest(string Service, string? Parameter = null, s
 
     public static SeimasRequest Agenda(long sittingId) => new(SeimasServices.Agenda, SeimasServices.SittingParameter, Text(sittingId));
 
-    /// <summary>Design 7.1: the parameter name of this service is still to be confirmed, so it is configuration.</summary>
-    public static SeimasRequest Proceedings(string parameter, long sittingId) => new(SeimasServices.Proceedings, parameter, Text(sittingId));
+    public static SeimasRequest Proceedings(long sittingId) => new(SeimasServices.Proceedings, SeimasServices.SittingParameter, Text(sittingId));
 
     public static SeimasRequest VoteResults(long voteId) => new(SeimasServices.VoteResults, SeimasServices.VoteParameter, Text(voteId));
 

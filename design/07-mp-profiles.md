@@ -10,12 +10,13 @@ page). The import reads one chain of services (`SeimasServices`), one query para
 | Terms | `p2b.ad_seimo_kadencijos` |
 | MPs of the term: person id (`asmens_id`), names, gender, mandate dates, nominating party, how elected, constituency, number of terms, memberships with roles and dates (`Pareigos`), contacts (`Kontaktai`, including the `@lrs.lt` address) | `p2b.ad_seimo_nariai?kadencijos_id=` |
 | Sessions, sittings | `p2b.ad_seimo_sesijos?kadencijos_id=`, `p2b.ad_seimo_posedziai?sesijos_id=` |
-| Agenda items with bill number, stage, e-seimas link | `p2b.ad_sp_darbotvarke?posedzio_id=` |
-| Votes of a sitting's agenda items, with wording and type | `p2b.ad_sp_klausimo_svarstymo_eiga?posedzio_id=` (the parameter is the setting `Seimas:ProceedingsParameter`) |
+| Agenda items with the bill number in the title, and the stage's ID, name and e-seimas link in `KlausimoStadija` | `p2b.ad_sp_darbotvarke?posedzio_id=` |
+| Votes of the sitting's items, with the motion and official outcome in `aprasas`, joined to the agenda by `kl_stad_id` when available | `p2b.ad_seimo_posedzio_eiga_full?posedzio_id=` |
 | Totals, the official note, and each MP's vote with faction | `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=` |
 
 The term imported is `Seimas:TermId` (10, 2024–2028). Factions, committees, commissions and groups come from the MPs'
-memberships; a body's kind is read from its name ("…frakcija", "…komitetas", "…komisija", "…grupė"), so the mixed
+memberships. Parliamentary groups have their own ID field. Other bodies' kinds are read from their names
+("…frakcija", "…komitetas", "…komisija", "…grupė"), so the mixed
 group of MPs is a group, not a faction. Every element and attribute the parsers read is a line of the register
 `tests/Lt2.Parliament.ImportTests/Seimas/ASSUMPTIONS.md`, marked seen in a live response or assumed; the live contract
 suite (`LT2_SEIMAS_LIVE=1`) checks every line against the real service.
@@ -58,9 +59,9 @@ stands only on the profile, orders no list and is never added up per faction or 
   Seimas identifiers, so re-running any step changes nothing. A ballot is matched to an MP by `asmens_id`, or by name
   among the term's MPs when the row has none.
 - **Vote classification.** One agenda item can have many votes (amendments, procedure, the stage result). A rule set over
-  the vote wording (`VoteRules.Classify`) marks each vote a stage result, an amendment, a procedural vote or "other";
-  anything the rules cannot classify is "other" and shown without a stage. The rules are tested against recorded real
-  items.
+  the motion's wording (`VoteRules.Classify`) marks each vote a stage result, an amendment, a procedural vote or "other".
+  An attempt reported as `Sprendimas nepriimtas` and anything the rules cannot classify are shown as "other", without a stage.
+  The proceedings can supply an item absent from the agenda. A group-only vote is recorded once, without a bill.
 - **A moderator corrects a classification** (owner, 2026-11-20). A moderator or an administrator in a staff-passkey
   session sees, on the vote's page (`/seimas/balsavimai/{id}`), a "Moderavimas" part: the classification in force
   ("Klasifikacija: Stadijos balsavimas · Priėmimas."), and either "Nustatė taisyklės pagal balsavimo formuluotę." or

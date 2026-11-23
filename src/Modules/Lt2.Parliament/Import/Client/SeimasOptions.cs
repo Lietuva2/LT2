@@ -14,9 +14,6 @@ internal sealed class SeimasOptions
     /// <summary>The term to import (<c>kadencijos_id</c>; 10 is 2024–2028).</summary>
     public int TermId { get; set; } = 10;
 
-    /// <summary>Query parameter of <c>p2b.ad_sp_klausimo_svarstymo_eiga</c>, still to be confirmed (design 7.1).</summary>
-    public string ProceedingsParameter { get; set; } = "posedzio_id";
-
     /// <summary>Time-out of one attempt.</summary>
     public double AttemptTimeoutSeconds { get; set; } = 30;
 

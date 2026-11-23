@@ -57,6 +57,32 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task The_proceedings_supply_a_bill_and_vote_absent_from_the_published_agenda()
+    {
+        var responses = StandInFixture.Responses();
+        responses.Replace("p2b.ad_sp_darbotvarke?posedzio_id=99001101", StandInResponses.EmptyDocument);
+        responses.Replace("p2b.ad_seimo_posedzio_eiga_full?posedzio_id=99001101", """
+            <posedziai><posedis pos_id="99001101"><posedzio-eiga>
+              <darbotvarkes-klausimas kl_stad_id="99010102">
+                <nr>2</nr><pavadinimas>Atliekų tvarkymo įstatymo pataisa (Nr. XVP-0618)</pavadinimas><stadija>Svarstymas</stadija>
+                <balsavimai>
+                  <balsavimas bals_id="99100102"><nuo>2026-09-15 11:05:44</nuo><aprasas>Pritarta – dėl pritarimo po svarstymo</aprasas></balsavimas>
+                </balsavimai>
+              </darbotvarkes-klausimas>
+            </posedzio-eiga></posedis></posedziai>
+            """);
+        await using var import = new ImportHarness(database, responses);
+        var outcome = await import.RunAsync();
+
+        outcome.Status.ShouldBe("succeeded");
+        (await database.RowsAsync("""
+            SELECT v.agenda_item_id, b.number, v.kind, v.stage, v.has_result
+            FROM parliament.vote v JOIN parliament.bill b ON b.id = v.bill_id
+            WHERE v.id = 99100102
+            """)).ShouldBe(["99010102 | XVP-0618 | StageResult | Consideration | True"]);
+    }
+
+    [Fact]
     public async Task Bill_XVP_0412_has_its_stage_votes_and_the_awkward_cases_are_stored_as_the_design_says()
     {
         await using var import = new ImportHarness(database);
@@ -439,7 +465,7 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         var asked = import.TakeRequests();
         asked.Count(r => r.Contains("p2b.ad_seimo_posedziai?", StringComparison.Ordinal)).ShouldBe(2, "both sessions, the closed one too");
         asked.Count(r => r.Contains("p2b.ad_sp_darbotvarke?", StringComparison.Ordinal)).ShouldBe(4);
-        asked.Count(r => r.Contains("p2b.ad_sp_klausimo_svarstymo_eiga?", StringComparison.Ordinal)).ShouldBe(4);
+        asked.Count(r => r.Contains("p2b.ad_seimo_posedzio_eiga_full?", StringComparison.Ordinal)).ShouldBe(4);
         asked.Count.ShouldBe(10, "no MP list and no vote result: those parts keep their own rules");
         (await database.ScalarAsync<string>("SELECT title FROM parliament.agenda_item WHERE id = 99010001")).ShouldBe("Dėl posėdžio darbotvarkės tvirtinimo");
         (await CountAsync("raw_document")).ShouldBe(21, "only the changed response is stored again");

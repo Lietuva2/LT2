@@ -491,15 +491,12 @@ def past_files(past: list[list[Row]]) -> tuple[dict[str, str], list[str], dict]:
             items, proceedings = [], []
             item_base = 99010200 if sid == 99001102 else 99130000 + k * 1000 + (100 if is_evening else 0)
             n = 1
-            items.append(f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_base + n}" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="{start:%H:%M}"/>')
+            items.append(seimas.agenda_item(item_base + n, "1", "Dėl posėdžio darbotvarkės", "", f"{start:%H:%M}"))
             pending: list[tuple[int, str, Row, str]] = []  # (item id, bill, row, title) waiting for the voting block
             since_vote = 0
 
             def recorded(item_id: int, vid: int, held: str, text: str, ballots: list) -> None:
-                proceedings.append(
-                    f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_id}">\n'
-                    f'      <Balsavimas balsavimo_id="{vid}" balsavimo_laikas="{held}" aprašas="{text}" balsavimo_tipas="Atviras"/>\n'
-                    "    </DarbotvarkėsKlausimas>")
+                proceedings.append(seimas.proceedings_vote(item_id, vid, held, text))
                 files[f"p2b.ad_sp_balsavimo_rezultatai@balsavimo_id={vid}.xml"] = seimas.result_file(PAST_NOTE, vid, held, ballots)
 
             # The sitting's agenda is approved by a procedural vote.
@@ -530,10 +527,7 @@ def past_files(past: list[list[Row]]) -> tuple[dict[str, str], list[str], dict]:
                     consensus = bill != "XVP-0533" and rng.random() < CONSENSUS_SHARE.get(row.stage, 0)
                     if consensus:
                         stats["consensus"] += 1
-                        proceedings.append(
-                            f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_id}">\n'
-                            f'      <Balsavimas balsavimo_id="{vid}" balsavimo_laikas="{held}" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>\n'
-                            "    </DarbotvarkėsKlausimas>")
+                        proceedings.append(seimas.proceedings_vote(item_id, vid, held, "Pritarta bendru sutarimu"))
                         continue
                     stats["recorded"] += 1
                     if bill == "XVP-0533":
@@ -549,10 +543,7 @@ def past_files(past: list[list[Row]]) -> tuple[dict[str, str], list[str], dict]:
                 for j, (bill, title) in enumerate(row.unit.bills, start=1):
                     n += 1
                     label = f"r-{n}" if row.reserve else (f"{n - j + 1}.{j}" if len(row.unit.bills) > 1 else f"{n}")
-                    items.append(
-                        f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_base + n}" numeris="{label}" pavadinimas="{seimas.esc(title)}" stadija="{row.stage}" laikas_nuo="{at:%H:%M}">\n'
-                        f'      <Dokumentas registracijos_numeris="{bill}" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-{bill}"/>\n'
-                        "    </DarbotvarkėsKlausimas>")
+                    items.append(seimas.agenda_item(item_base + n, label, seimas.esc(title), row.stage, f"{at:%H:%M}", bill))
                     if reached:
                         pending.append((item_base + n, bill, row, title))
                 at += dt.timedelta(minutes=slot(row))
@@ -563,7 +554,7 @@ def past_files(past: list[list[Row]]) -> tuple[dict[str, str], list[str], dict]:
             at = vote_block(at)
             if not is_evening:
                 n += 1
-                items.append(f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_base + n}" numeris="{n}" pavadinimas="Seimo narių pareiškimai" stadija="" laikas_nuo="{at:%H:%M}"/>')
+                items.append(seimas.agenda_item(item_base + n, str(n), "Seimo narių pareiškimai", "", f"{at:%H:%M}"))
                 at += dt.timedelta(minutes=15)
             assert n < 100, "item identifiers stay within the sitting's hundred"
             kind = "Vakarinis" if is_evening else "Rytinis"
@@ -573,9 +564,8 @@ def past_files(past: list[list[Row]]) -> tuple[dict[str, str], list[str], dict]:
                 header + "<SeimoInformacija>\n"
                 f'  <SeimoPosėdis posėdžio_id="{sid}" numeris="{number}" tipas="{kind}" {times}>\n'
                 + "\n".join(items) + "\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
-            files[f"p2b.ad_sp_klausimo_svarstymo_eiga@posedzio_id={sid}.xml"] = (
-                header + "<SeimoInformacija>\n"
-                f'  <SeimoPosėdis posėdžio_id="{sid}">\n' + "\n".join(proceedings) + "\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
+            name, body = seimas.proceedings_file(header, sid, proceedings)
+            files[name] = body
     return files, sittings, stats
 
 

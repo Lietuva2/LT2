@@ -115,38 +115,28 @@ def files() -> tuple[dict[str, str], list[str]]:
         kind = "Vakarinis" if evening else "Rytinis"
         times = f'pradžia="{start:%Y-%m-%d %H:%M}" pabaiga="{end:%Y-%m-%d %H:%M}"'
         sitting_rows.append(f'    <SeimoPosėdis posėdžio_id="{sitting_id}" numeris="{number}" tipas="{kind}" {times}/>')
-        items = [f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{99012000 + s * 10}" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="{start:%H:%M}"/>']
+        items = [seimas.agenda_item(99012000 + s * 10, "1", "Dėl posėdžio darbotvarkės", "", f"{start:%H:%M}")]
         proceedings = []
         at = start + dt.timedelta(minutes=5)
         for k in range(1, count + 1):
             bill, title = next(queue)
             item_id = 99012000 + s * 10 + k
             at += dt.timedelta(minutes=rng.randint(25, 50))
-            items.append(
-                f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_id}" numeris="{k + 1}" pavadinimas="{title}" stadija="Priėmimas" laikas_nuo="{at:%H:%M}">\n'
-                f'      <Dokumentas registracijos_numeris="{bill}" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-{bill}"/>\n'
-                "    </DarbotvarkėsKlausimas>")
+            items.append(seimas.agenda_item(item_id, str(k + 1), title, "Priėmimas", f"{at:%H:%M}", bill))
             vote_id = 99100200 + int(bill[-2:])
             held = at + dt.timedelta(minutes=rng.randint(12, 24), seconds=rng.randint(0, 59))
             if bill in CONSENSUS:
-                proceedings.append(
-                    f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_id}">\n'
-                    f'      <Balsavimas balsavimo_id="{vote_id}" balsavimo_laikas="{held:%Y-%m-%d %H:%M:%S}" aprašas="Pritarta bendru sutarimu" balsavimo_tipas="Bendru sutarimu"/>\n'
-                    "    </DarbotvarkėsKlausimas>")
+                proceedings.append(seimas.proceedings_vote(item_id, vote_id, f"{held:%Y-%m-%d %H:%M:%S}", "Pritarta bendru sutarimu"))
                 continue
-            proceedings.append(
-                f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="{item_id}">\n'
-                f'      <Balsavimas balsavimo_id="{vote_id}" balsavimo_laikas="{held:%Y-%m-%d %H:%M:%S}" aprašas="Priimti {accusative(title)}" balsavimo_tipas="Atviras"/>\n'
-                "    </DarbotvarkėsKlausimas>")
+            proceedings.append(seimas.proceedings_vote(item_id, vote_id, f"{held:%Y-%m-%d %H:%M:%S}", f"Priimti {accusative(title)}"))
             rows = _adoption(rng, day, bill)
             out[f"p2b.ad_sp_balsavimo_rezultatai@balsavimo_id={vote_id}.xml"] = seimas.result_file(GENERATED, vote_id, f"{held:%Y-%m-%d %H:%M:%S}", rows)
         out[f"p2b.ad_sp_darbotvarke@posedzio_id={sitting_id}.xml"] = (
             header + "<SeimoInformacija>\n"
             f'  <SeimoPosėdis posėdžio_id="{sitting_id}" numeris="{number}" tipas="{kind}" {times}>\n'
             + "\n".join(items) + "\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
-        out[f"p2b.ad_sp_klausimo_svarstymo_eiga@posedzio_id={sitting_id}.xml"] = (
-            header + "<SeimoInformacija>\n"
-            f'  <SeimoPosėdis posėdžio_id="{sitting_id}">\n' + "\n".join(proceedings) + "\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
+        name, body = seimas.proceedings_file(header, sitting_id, proceedings)
+        out[name] = body
 
     # XVP-0707, nine days ago: its per-MP rows keep the base fixture's 14 MPs' choices and the earlier totals.
     bill, title = CLOSED_0707
@@ -156,17 +146,13 @@ def files() -> tuple[dict[str, str], list[str]]:
     out["p2b.ad_sp_darbotvarke@posedzio_id=99001103.xml"] = (
         header + "<SeimoInformacija>\n"
         f'  <SeimoPosėdis posėdžio_id="99001103" numeris="0" tipas="Nenumatytas" {times}>\n'
-        '    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010301" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="17:00"/>\n'
-        f'    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010302" numeris="2" pavadinimas="{title}" stadija="Priėmimas" laikas_nuo="17:05">\n'
-        f'      <Dokumentas registracijos_numeris="{bill}" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-{bill}"/>\n'
-        "    </DarbotvarkėsKlausimas>\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
+        + seimas.agenda_item(99010301, "1", "Dėl posėdžio darbotvarkės", "", "17:00") + "\n"
+        + seimas.agenda_item(99010302, "2", title, "Priėmimas", "17:05", bill)
+        + "\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
     held = "{{day:-9}} 17:14:05"
-    out["p2b.ad_sp_klausimo_svarstymo_eiga@posedzio_id=99001103.xml"] = (
-        header + "<SeimoInformacija>\n"
-        '  <SeimoPosėdis posėdžio_id="99001103">\n'
-        '    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010302">\n'
-        f'      <Balsavimas balsavimo_id="99100104" balsavimo_laikas="{held}" aprašas="Priimti {accusative(title)}" balsavimo_tipas="Atviras"/>\n'
-        "    </DarbotvarkėsKlausimas>\n  </SeimoPosėdis>\n</SeimoInformacija>\n")
+    name, body = seimas.proceedings_file(header, 99001103, [
+        seimas.proceedings_vote(99010302, 99100104, held, f"Priimti {accusative(title)}")])
+    out[name] = body
     rows = seimas.ballots(random.Random(99100104), dt.date(2026, 11, 9), "majority", fixed=KEPT_0707, totals=(58, 41, 13))
     out["p2b.ad_sp_balsavimo_rezultatai@balsavimo_id=99100104.xml"] = seimas.result_file(RELATIVE_0707, 99100104, held, rows)
     return out, sitting_rows

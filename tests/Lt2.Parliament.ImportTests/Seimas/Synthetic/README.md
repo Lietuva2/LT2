@@ -4,10 +4,8 @@ Every file here was written by Lietuva 2.0, not received from the Seimas. Each o
 `LT2-SYNTHETIC`, and the stand-in service (`tools/Lt2.SeimasStandIn`) also sends the header `X-Lt2-Synthetic` with
 it, so whatever the import stores from them is marked as invented and the site says so on every page.
 
-Why they exist: the Seimas open-data service (`https://apps.lrs.lt/sip/`) is closed for maintenance until
-16 November 2026, and nobody holds recorded responses. Their **shape** is taken only from the evidence listed in
-[`../ASSUMPTIONS.md`](../ASSUMPTIONS.md); most of it is assumed there, and the live contract suite will say which
-assumptions were wrong. Real responses go to [`../Recorded/`](../Recorded/), never here.
+These fixtures give the stand-in and tests repeatable input. Their shape comes from the evidence listed in
+[`../ASSUMPTIONS.md`](../ASSUMPTIONS.md). Real responses go to [`../Recorded/`](../Recorded/), never here.
 
 File names: `<service>.xml`, or `<service>@<parameter>=<value>.xml` for a request with a query parameter. The stand-in
 answers a known service asked about an unknown identifier with an empty `<SeimoInformacija/>`.

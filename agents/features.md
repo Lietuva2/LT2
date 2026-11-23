@@ -722,7 +722,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `#profilis-issaugotas` (`AccountScreens.ProfileSavedHome`): `MyStart` says "Profilis išsaugotas." once in a status region and
   takes the mark out of the address (`history.replaceState`). Tests: unit `MyStartTests`; E2E `StartPageTests`.
   **How a vote went (design 8.18, "The majority"; the owner asked for "Priimta", open in 12-open).** `<VoteMajorityTag>`
-  (`Components/Parliament`) shows `AnalyticsRules.SeimasMajority` (the open data has no official outcome) as
+  (`Components/Parliament`) shows `AnalyticsRules.SeimasMajority` calculated from the ballot totals as
   `span.tag.tag--outcome` with `data-majority` (`for` filled, `against` `tag--outline`, `none` also `tag--dashed`;
   `ParliamentText` `Majority.*`: "Dauguma už", "Dauguma prieš", "Nėra daugumos"), the consensus as "Pritarta bendru
   sutarimu", nothing without numbers; used by `VotedItemResult` (front page, agenda and the shared `VoteTimeline` on
