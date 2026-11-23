@@ -24,7 +24,7 @@
         }
         else if (Vote.Record is { Status: not BillRecordStatuses.Rejected } record)
         {
-            <RecordFigures Record="record" Id="@Place" />
+            <RecordFigures Record="record" Id="@Place" BillNumber="@Vote.Number" />
         }
     </div>
 </li>

@@ -30,7 +30,7 @@
    prerenders and before the island has started the numbers are the page's and the buttons are disabled: the same HTML
    for every member, nothing of the member's own in it. *@
 <div class="@(Voted ? "tl-block" : "tl-item__side")" id="home-side-@Place">
-    <RecordFigures Record="Shown" HideNobody="@(Asks || _mine?.Side is not null)" Id="@Place" />
+    <RecordFigures Record="Shown" HideNobody="@(Asks || _mine?.Side is not null)" Id="@Place" BillNumber="@Number" />
     @if (Voted)
     {
         @* A vote's row: the numbers only (the title leads to the vote's page). *@

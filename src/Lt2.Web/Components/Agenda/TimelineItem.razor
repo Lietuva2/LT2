@@ -94,7 +94,7 @@
             }
             else
             {
-                <RecordFigures Record="record" HideNobody="@(record.Status == BillRecordStatuses.Open)" Id="@Place" />
+                <RecordFigures Record="record" HideNobody="@(record.Status == BillRecordStatuses.Open)" Id="@Place" BillNumber="@Item.Number" />
                 @if (record.Status != BillRecordStatuses.Closed)
                 {
                     @* A visitor: the sides lead to signing in and back to the bill's page (design 6.9), where the side is taken. *@
