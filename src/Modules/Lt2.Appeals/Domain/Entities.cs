@@ -43,20 +43,23 @@ internal sealed class BillRecord
 
     public DateTimeOffset? ClosedAt { get; set; }
 
-    /// <summary>The final Seimas vote that closed it; null when a moderator closed it (design 8.1 step 6).</summary>
+    /// <summary>The final adoption-stage vote that closed it; null for a rejection or withdrawal (design 8.1 step 6).</summary>
     public long? ClosingVoteId { get; set; }
 
     /// <summary>Why it closed: one of <see cref="ClosingReasons"/>; null while open.</summary>
     public string? ClosedReason { get; set; }
 
     /// <summary>
-    /// For a record a moderator closed (<see cref="ClosingReasons.Rejected"/> or <see cref="ClosingReasons.Withdrawn"/>): the day
+    /// For a rejection or withdrawal: the day
     /// the Seimas rejected the bill or its initiators withdrew it; null otherwise.
     /// </summary>
     public DateOnly? ClosedDecidedOn { get; set; }
 
-    /// <summary>For a record a moderator closed: the source on lrs.lt that says so (https, at most 500 characters); null otherwise.</summary>
+    /// <summary>For a rejection or withdrawal: the source on lrs.lt (https, at most 500 characters); null otherwise.</summary>
     public string? ClosedSourceUrl { get; set; }
+
+    /// <summary>The last rejection applied automatically. Kept on reopening so the same vote cannot close the record again.</summary>
+    public long? LastAutomaticRejectionVoteId { get; set; }
 
     /// <summary>The counts frozen when the record closed (design 8.1); null while open.</summary>
     public int? ClosedFor { get; set; }

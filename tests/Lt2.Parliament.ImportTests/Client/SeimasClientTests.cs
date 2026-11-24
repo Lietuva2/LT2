@@ -25,7 +25,7 @@ public sealed class SeimasClientTests
         await client.GetAsync(SeimasRequest.Sessions(10), default);
         await client.GetAsync(SeimasRequest.Sittings(-501), default);
         await client.GetAsync(SeimasRequest.Agenda(-502), default);
-        await client.GetAsync(SeimasRequest.Proceedings("posedzio_id", -502), default);
+        await client.GetAsync(SeimasRequest.Proceedings(-502), default);
         await client.GetAsync(SeimasRequest.VoteResults(-60034), default);
 
         handler.Requests.Select(u => u.PathAndQuery).ShouldBe(
@@ -35,21 +35,10 @@ public sealed class SeimasClientTests
             "/sip/p2b.ad_seimo_sesijos?kadencijos_id=10",
             "/sip/p2b.ad_seimo_posedziai?sesijos_id=-501",
             "/sip/p2b.ad_sp_darbotvarke?posedzio_id=-502",
-            "/sip/p2b.ad_sp_klausimo_svarstymo_eiga?posedzio_id=-502",
+            "/sip/p2b.ad_seimo_posedzio_eiga_full?posedzio_id=-502",
             "/sip/p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=-60034",
         ]);
         handler.Requests.ShouldAllBe(u => u.Host == "seimas.test");
-    }
-
-    [Fact]
-    public async Task The_proceedings_request_carries_the_parameter_name_it_is_given_since_the_name_is_still_configuration()
-    {
-        var handler = new ScriptedHandler(_ => Ok(Xml));
-        var client = Build(handler);
-
-        await client.GetAsync(SeimasRequest.Proceedings("darbotvarkes_klausimo_id", 77), default);
-
-        handler.Requests.Single().PathAndQuery.ShouldBe("/sip/p2b.ad_sp_klausimo_svarstymo_eiga?darbotvarkes_klausimo_id=77");
     }
 
     [Fact]

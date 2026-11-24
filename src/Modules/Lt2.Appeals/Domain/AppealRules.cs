@@ -229,16 +229,16 @@ internal static class GroupRules
 }
 
 /// <summary>
-/// Design 8.1 step 6: a record closes when the Seimas takes the final vote on its bill, or when a moderator records that the
-/// Seimas rejected it or its initiators withdrew it (owner, 2026-11-19); the counts are frozen then.
+/// Design 8.1 step 6: a record closes on the final vote or a confirmed rejection, or a moderator records a rejection or withdrawal.
 /// </summary>
 internal static class ClosingRules
 {
-    /// <summary>Only an open record closes, and only on a final vote; a hidden one stays hidden.</summary>
-    public static bool ShouldClose(string status, long? finalVoteId) => status == BillRecordStatuses.Open && finalVoteId is not null;
+    /// <summary>Only an open record closes automatically; a hidden one stays hidden.</summary>
+    public static bool ShouldClose(string status, long? finalVoteId, long? rejectionVoteId = null) =>
+        status == BillRecordStatuses.Open && (finalVoteId is not null || rejectionVoteId is not null);
 
     /// <summary>
-    /// Closes the record with its counts frozen as <paramref name="counts"/> (all four), why, and for a moderator's close the day
+    /// Closes the record with its counts frozen as <paramref name="counts"/> (all four), why, and for rejection or withdrawal the day
     /// and the source; nothing can be taken or changed afterwards and the page shows these numbers.
     /// </summary>
     public static void Close(BillRecord record, SideCounts counts, DateTimeOffset now, string reason, long? closingVoteId, DateOnly? decidedOn, string? sourceUrl)
@@ -257,8 +257,7 @@ internal static class ClosingRules
     }
 
     /// <summary>
-    /// Undoes a moderator's close (design 8.1 step 6): open again, everything of the close cleared; the positions were kept, so
-    /// the live counts come back as they are.
+    /// Undoes a rejection or withdrawal (design 8.1 step 6). The positions and the last automatic rejection's ID are kept.
     /// </summary>
     public static void Reopen(BillRecord record, DateTimeOffset now)
     {

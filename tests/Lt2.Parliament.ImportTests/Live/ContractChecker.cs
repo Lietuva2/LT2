@@ -96,6 +96,11 @@ internal static class ContractChecker
         }
 
         var with = owners.Count(e => e.Attribute(line.Name) is not null);
+        if (with == 0 && line.Id is "M24" or "M25")
+        {
+            return new(line, Verdict.NotObserved, "no parliamentary-group membership in this sample");
+        }
+
         return with > 0
             ? new(line, Verdict.Confirmed, $"on {with} of {owners.Count} <{line.Within}>")
             : new(line, Verdict.Contradicted, $"not on any of {owners.Count} <{line.Within}>; attributes there: {string.Join(", ", owners.SelectMany(e => e.Attributes()).Select(a => a.Name.LocalName).Distinct())}");
@@ -106,7 +111,7 @@ internal static class ContractChecker
         var owners = docs.SelectMany(d => d.Descendants()).Where(e => e.Name.LocalName == line.Within).ToList();
         if (line.Name.Contains("bendru sutarimu", StringComparison.Ordinal))
         {
-            var consensus = owners.Count(e => VoteRules.IsConsensus(e.Attribute(N.VoteType)?.Value, e.Attribute(N.Wording)?.Value));
+            var consensus = owners.Count(e => VoteRules.IsConsensus(e.Element(N.VoteHeading)?.Value, e.Element(N.Wording)?.Value));
             return consensus > 0
                 ? new(line, Verdict.Confirmed, $"{consensus} consensus vote(s)")
                 : new(line, Verdict.NotObserved, "no vote marked \"bendru sutarimu\" in the sample: check one known consensus item by hand");
@@ -199,7 +204,7 @@ internal static class ContractChecker
             case "V4":
                 var wordings = all.Where(f => f.Service == SeimasServices.Proceedings && f.Document is not null)
                     .SelectMany(f => f.Document!.Descendants().Where(e => e.Name.LocalName == N.Vote))
-                    .Select(e => e.Attribute(N.Wording)?.Value ?? "").ToList();
+                    .Select(e => e.Element(N.Wording)?.Value ?? "").ToList();
                 var other = wordings.Where(w => VoteRules.Classify(w, null).Kind == VoteKind.Other).Distinct().Take(15);
                 return new(line, Verdict.Manual, $"{wordings.Count} wordings; unclassified: {string.Join(" | ", other)}");
             default:

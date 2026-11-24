@@ -2,7 +2,8 @@
 <!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
      Seimas response. Written by tools/standin_overlay.py (fixed seed); do not edit by hand: the base fixture's vote with
      the per-MP rows of all 141 seats (the base fixture's 14 rows as they are), adding up to its totals. --><SeimoInformacija>
-  <BendriBalsavimoRezultatai balsavimo_id="99100005" balsavimo_laikas="2026-05-19 15:12:40" viso="141" balsavo="120" už="40" prieš="60" susilaikė="20" komentaras=""/>
+  <SeimoNariųBalsavimas balsavimo_id="99100005">
+  <BendriBalsavimoRezultatai balsavimo_laikas="2026-05-19 15:12:40" viso="141" balsavo="120" už="40" prieš="60" susilaikė="20" komentaras=""/>
   <IndividualusBalsavimoRezultatas asmens_id="99000001" vardas="Jonas" pavardė="Petraitis" frakcija="RPF" kaip_balsavo="Prieš"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000002" vardas="Marius" pavardė="Ąžuolaitis" frakcija="RPF" kaip_balsavo="Prieš"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000003" vardas="Eglė" pavardė="Beržinytė" frakcija="RPF" kaip_balsavo="Prieš"/>
@@ -144,4 +145,5 @@
   <IndividualusBalsavimoRezultatas asmens_id="99000140" vardas="Eimantas" pavardė="Kaštonis" frakcija="MG" kaip_balsavo="Prieš"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000141" vardas="Nerijus" pavardė="Varliūnas" frakcija="DSF" kaip_balsavo="Už"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000142" vardas="Eimantas" pavardė="Mėlynis" frakcija="MG" kaip_balsavo="Prieš"/>
+  </SeimoNariųBalsavimas>
 </SeimoInformacija>

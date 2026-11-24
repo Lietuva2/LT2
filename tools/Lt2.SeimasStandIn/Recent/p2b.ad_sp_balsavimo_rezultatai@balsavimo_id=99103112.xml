@@ -2,7 +2,8 @@
 <!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
      Seimas response. {{past:N}} is the N-th Tuesday or Thursday before today (yyyy-MM-dd): the last four sitting days, with their
      votes, shaped after the real Seimas's. Written by tools/standin_overlay.py (fixed seed); do not edit by hand (tools/standin_agenda.py). --><SeimoInformacija>
-  <BendriBalsavimoRezultatai balsavimo_id="99103112" balsavimo_laikas="{{past:2}} 13:43:26" viso="141" balsavo="123" už="80" prieš="18" susilaikė="25" komentaras=""/>
+  <SeimoNariųBalsavimas balsavimo_id="99103112">
+  <BendriBalsavimoRezultatai balsavimo_laikas="{{past:2}} 13:43:26" viso="141" balsavo="123" už="80" prieš="18" susilaikė="25" komentaras=""/>
   <IndividualusBalsavimoRezultatas asmens_id="99000001" vardas="Jonas" pavardė="Petraitis" frakcija="RPF" kaip_balsavo=""/>
   <IndividualusBalsavimoRezultatas asmens_id="99000002" vardas="Marius" pavardė="Ąžuolaitis" frakcija="RPF" kaip_balsavo="Už"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000003" vardas="Eglė" pavardė="Beržinytė" frakcija="RPF" kaip_balsavo="Už"/>
@@ -144,4 +145,5 @@
   <IndividualusBalsavimoRezultatas asmens_id="99000140" vardas="Eimantas" pavardė="Kaštonis" frakcija="MG" kaip_balsavo="Susilaikė"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000141" vardas="Nerijus" pavardė="Varliūnas" frakcija="DSF" kaip_balsavo="Už"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000142" vardas="Eimantas" pavardė="Mėlynis" frakcija="MG" kaip_balsavo="Už"/>
+  </SeimoNariųBalsavimas>
 </SeimoInformacija>

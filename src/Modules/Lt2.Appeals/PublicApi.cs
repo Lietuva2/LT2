@@ -579,7 +579,7 @@ public interface IAppealsMaintenance
     /// </summary>
     Task<int> AggregateDayAsync(DateOnly day, CancellationToken cancellationToken);
 
-    /// <summary>Closes every open record whose bill had its final Seimas vote, freezing the counts; returns how many.</summary>
+    /// <summary>Closes open records on a final vote or explicit rejection, freezes the counts, and returns how many closed.</summary>
     Task<int> CloseFinishedAsync(CancellationToken cancellationToken);
 }
 

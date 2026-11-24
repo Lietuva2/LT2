@@ -405,7 +405,9 @@ public sealed class ClosingRuleTests
     {
         ClosingRules.ShouldClose(BillRecordStatuses.Open, 99100009).ShouldBeTrue();
         ClosingRules.ShouldClose(BillRecordStatuses.Open, null).ShouldBeFalse();
+        ClosingRules.ShouldClose(BillRecordStatuses.Open, null, 99100009).ShouldBeTrue();
         ClosingRules.ShouldClose(BillRecordStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
+        ClosingRules.ShouldClose(BillRecordStatuses.Rejected, null, 99100009).ShouldBeFalse();
     }
 
     /// <summary>Owner, 2026-11-17: an argument with fewer words than the setting is too short; a word is a run of letters or digits.</summary>

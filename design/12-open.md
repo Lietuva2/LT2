@@ -18,10 +18,8 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 - 7.3: "appeals in progress" on an MP's profile (the profile shows only the MP's responses); the line was taken out of
   7.3, so whether it stays designed is for the owner.
 - 8.1, 8.6, 8.20.1: telling participants and followers that a bill changed between stages (for example in a committee).
-- 8.1: closing a record automatically when the open data says rejected or withdrawn: once a live run of the Seimas
-  service confirms which field of `p2b.ad_sp_klausimo_svarstymo_eiga` (or the vote's wording) states it, the import
-  closes the record with that reason and the date, a moderator can reopen a wrong close; "returned to the initiators for
-  improvement" is not a rejection. Until then a moderator closes such a record (owner, 2026-11-19).
+- 8.1: automatic closure for withdrawals, group motions and rejection wording beyond the confirmed main committee motion.
+  `p2b.tais_docs` has project events. Confirm which events establish terminal bill status and how to link versions.
 - 8.4, 8.19.6: a sending subdomain with SPF, DKIM and DMARC; complaint and bounce reports from an email provider.
 - 9.1: a second web instance, the backup container (pgBackRest), the telemetry collector, host hardening, CDN and DDoS
   protection, a rehearsed recovery. 9.2: separate staging and production. 9.3: an image per commit in a registry, an
@@ -62,11 +60,12 @@ the owner to switch on; Dependabot and CodeQL start once the workflow files are 
 **6.8 Rules held throughout.** The agenda watcher keeps its items when a parse comes back empty, until the owner
 decides otherwise. One-time codes are limited per address, not per code.
 
-**7.1, 7.5 The Seimas import against the live service.** Every "assumed" line of
-`tests/Lt2.Parliament.ImportTests/Seimas/ASSUMPTIONS.md` waits for one live run (`LT2_SEIMAS_LIVE=1`): the proceedings
-parameter, the totals' attribute names, the per-MP row and `asmens_id`, `lytis`, a body's kind read from its name, where
-"bendru sutarimu" appears. The checks of 7.5 that need the live service: 20 profiles against lrs.lt, 30 votes whose
-ballots sum to their totals, Lighthouse 90 or more.
+**7.1, 7.5 The Seimas import against the live service.** Run the complete live contract suite (`LT2_SEIMAS_LIVE=1`)
+to check the remaining assumptions and record its XML. The checks of 7.5 that need the live stack are 20 profiles
+against lrs.lt, 30 votes whose ballots sum to their totals, and Lighthouse 90 or more.
+
+**8.18 The official outcome in vote lists.** The full proceedings supply the motion and its official outcome together
+in `aprasas`. Choose the labels and where they are shown before replacing a vote row's ballot-majority chip.
 
 **8.2 Editing until someone reacts.** Built as proposed:
 - Every edit of an argument drops the moderator's "seen", flagged or not, and the edited argument is listed in the
@@ -437,6 +436,6 @@ them all once, before going live.
 | A followed member watched and pressed (8.25.5) | The profile switch is the consent to being followed and ends every follow at once; only the number of followers shows, nobody (the person included) is told who follows; harassment in comments answered by reports, hiding and the writing restriction. What stays: one particular follower cannot be blocked without showing followers. |
 | The product drifts from "people tell MPs" towards a social network (8.25, 8.11.2) | A number of followers on every thing that can be followed, members included, stands only on the thing's own page and nothing is ranked, sorted or listed by it; who follows is invisible to all but the follower; summaries carry no follower number. What stays: a visible count invites collecting followers, which is what a social network rewards. |
 | MPs' follower numbers read as a popularity score or a scorecard (7.1, 8.11.2) | No ordering (no list sorted by it, no "most followed", no number in list rows), no comparison (no total per faction or party, nothing set beside another MP's number), and the note that these are self-selected users who asked for emails, not supporters and not a representative poll. What stays: anyone can open profiles one by one and build the table elsewhere; the site does not make it. |
-| A bill rejected or withdrawn before its adoption stage stays open, taking sides, until a moderator notices and closes it (8.1 step 6); and it is never compared on the analytics page, having no closing vote (8.26.2) | A moderator closes it with the reason, the day and the lrs.lt source, and can undo a wrong close; followers are told. Closing on the open data's word is designed and waits for a live run of the Seimas service ("Designed, not built", 8.1). The comparison covers bills with an adoption-stage vote, and its page says so ("Seimas balsavo galutinai"). |
+| A withdrawal or a rejection outside the confirmed motion stays open until a moderator records it (8.1 step 6). | Verify other terminal events and their bill links before using them for automatic closure. Analytics covers bills closed by an adoption-stage vote (8.26.2). |
 | A member's comparison kept in server memory (8.26.6) reveals their sides to anyone who can read the web process's memory | Kept only in memory, never in a table, a log or the browser, bounded to 10 000 members and dropped after 12 idle hours, at sign-out, account deletion and withdrawal of the positions consent; the same exposure as the sides themselves in the database. |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |

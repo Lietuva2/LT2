@@ -324,9 +324,9 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
     }
 }
 /// <summary>
-/// A moderator closed a followed bill's record because the Seimas rejected the bill or its initiators withdrew it (design 8.1
-/// step 6, 8.6; kind <c>closed</c>, key: <see cref="FollowRules.ClosedKey"/>): the counterpart of the voted email where the open
-/// data has no vote, under the same switch ("voted") and rhythm. The bill, what happened, the day and the source on lrs.lt; never
+/// A followed bill's record closed because the Seimas rejected the bill or its initiators withdrew it (design 8.1
+/// step 6, 8.6; kind <c>closed</c>, key: <see cref="FollowRules.ClosedKey"/>), under the same switch and rhythm as votes.
+/// The bill, what happened, the day and the source on lrs.lt; never
 /// the counts or anyone's side. Told to those who followed before the close; a close undone (reopened) by the time the email is
 /// made is left out.
 /// </summary>

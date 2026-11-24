@@ -170,7 +170,7 @@ public sealed class DatabaseTests(DatabaseFixture database)
         {
             line.ShouldNotContain(email, Case.Insensitive);
             line.ShouldNotContain("@pavyzdys.test", Case.Insensitive);
-            line.ShouldNotContain("rejected", Case.Insensitive, "the error's text, which quotes the address");
+            line.ShouldNotContain(CapturingTransport.FailureDetail, Case.Insensitive, "the SMTP failure detail must stay out of logs");
         }
 
         await database.ExecuteAsync("DELETE FROM notify.outbox WHERE payload->>'to' = @to", ("to", email));
@@ -253,6 +253,8 @@ public sealed class DatabaseTests(DatabaseFixture database)
     }
     private sealed class CapturingTransport : IEmailTransport
     {
+        public const string FailureDetail = "Synthetic SMTP delivery rejection";
+
         private readonly List<EmailMessage> _sent = [];
 
         public bool Fail { get; init; }
@@ -275,7 +277,7 @@ public sealed class DatabaseTests(DatabaseFixture database)
             await Task.Delay(Delay, cancellationToken);
             if (Fail)
             {
-                throw new InvalidOperationException($"SMTP is down (test): 550 <{message.To}> rejected.");
+                throw new InvalidOperationException($"{FailureDetail}: 550 <{message.To}>.");
             }
 
             lock (_sent)

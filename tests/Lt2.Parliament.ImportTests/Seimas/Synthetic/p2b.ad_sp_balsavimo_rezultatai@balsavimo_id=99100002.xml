@@ -2,7 +2,8 @@
 <!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for tests and the local stand-in. NOT a recorded Seimas response.
      Shape: assumed from the evidence listed in ../ASSUMPTIONS.md. Every name, identifier and number is fictional. -->
 <SeimoInformacija>
-  <BendriBalsavimoRezultatai balsavimo_id="99100002" balsavimo_laikas="2026-03-17 10:41:37" viso="141" balsavo="123" už="71" prieš="38" susilaikė="14" komentaras=""/>
+  <SeimoNariųBalsavimas balsavimo_id="99100002">
+  <BendriBalsavimoRezultatai balsavimo_laikas="2026-03-17 10:41:37" viso="141" balsavo="123" už="71" prieš="38" susilaikė="14" komentaras=""/>
   <IndividualusBalsavimoRezultatas asmens_id="99000001" vardas="Jonas" pavardė="Petraitis" frakcija="RPF" kaip_balsavo="Prieš"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000002" vardas="Marius" pavardė="Ąžuolaitis" frakcija="RPF" kaip_balsavo="Už"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000003" vardas="Eglė" pavardė="Beržinytė" frakcija="RPF" kaip_balsavo="Už"/>
@@ -16,4 +17,5 @@
   <IndividualusBalsavimoRezultatas asmens_id="99000011" vardas="Tadas" pavardė="Alksninis" frakcija="RAF" kaip_balsavo="Už"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000012" vardas="Gintarė" pavardė="Šermukšnytė" frakcija="RAF" kaip_balsavo="Prieš"/>
   <IndividualusBalsavimoRezultatas asmens_id="99000014" vardas="Rasa" pavardė="Ievaitė" frakcija="RPF" kaip_balsavo="Už"/>
+  </SeimoNariųBalsavimas>
 </SeimoInformacija>

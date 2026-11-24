@@ -3,8 +3,8 @@
      Shape: assumed from the evidence listed in ../ASSUMPTIONS.md. Every name, identifier and number is fictional. -->
 <SeimoInformacija>
   <SeimoPosėdis posėdžio_id="99001003" numeris="226" tipas="Vakarinis" pradžia="2026-05-19 14:00" pabaiga="2026-05-19 17:31">
-    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010006" numeris="2" pavadinimas="Gyventojų pajamų mokesčio įstatymo pataisa" stadija="Svarstymas" laikas_nuo="14:05">
-      <Dokumentas registracijos_numeris="XVP-0412" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0412"/>
+    <DarbotvarkėsKlausimas numeris="2" pavadinimas="Gyventojų pajamų mokesčio įstatymo pataisa (Nr. XVP-0412)" laikas_nuo="14:05">
+      <KlausimoStadija darbotvarkės_klausimo_id="99010006" pavadinimas="Svarstymas" dokumento_nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0412"/>
     </DarbotvarkėsKlausimas>
   </SeimoPosėdis>
 </SeimoInformacija>

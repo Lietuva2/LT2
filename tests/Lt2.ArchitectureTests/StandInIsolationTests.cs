@@ -79,12 +79,16 @@ public sealed class StandInIsolationTests
     }
 
     [Fact]
-    public void Only_the_local_env_file_points_the_worker_at_the_stand_in_and_it_keeps_the_local_profile()
+    public void Local_defaults_use_the_live_service_and_the_stand_in_is_opt_in()
     {
         var env = File.ReadAllLines(Path.Combine(Root, "deploy", ".env"));
-        env.ShouldContain("COMPOSE_PROFILES=local");
-        env.ShouldContain("LT2_SEIMAS_BASE_ADDRESS=http://seimas-standin:8080/sip/");
-        env.ShouldContain("LT2_OUTBOUND_EXTRA_HOST=seimas-standin");
+        env.ShouldContain("COMPOSE_PROFILES=mailpit");
+        env.Where(l => !l.TrimStart().StartsWith('#')).ShouldNotContain(l => StandInWord.IsMatch(l));
+
+        var standIn = File.ReadAllLines(Path.Combine(Root, "deploy", "standin.env"));
+        standIn.ShouldContain("COMPOSE_PROFILES=local");
+        standIn.ShouldContain("LT2_SEIMAS_BASE_ADDRESS=http://seimas-standin:8080/sip/");
+        standIn.ShouldContain("LT2_OUTBOUND_EXTRA_HOST=seimas-standin");
     }
 
     /// <summary>Service name → its lines, for the services block of a compose file (two-space indentation).</summary>

@@ -28,7 +28,7 @@ internal sealed class ParliamentImporter(
     ILogger<ParliamentImporter> logger) : IParliamentImport
 {
     /// <summary>Raise when a parser or an upsert changes, so stored responses are applied again.</summary>
-    internal const int ParserVersion = 1;
+    internal const int ParserVersion = 2;
 
     /// <summary>Only one import at a time, across worker instances.</summary>
     internal const long LockKey = 0x4C54_3250_4152_4C;
@@ -85,6 +85,14 @@ internal sealed class ParliamentImporter(
     private async Task<ImportOutcome> RunLockedAsync(CancellationToken cancellationToken)
     {
         var settings = options.Value;
+        if (settings.BaseAddress?.IdnHost == "apps.lrs.lt"
+            && (await db.RawDocuments.AnyAsync(d => d.Synthetic, cancellationToken)
+                || await db.AgendaSnapshots.AnyAsync(d => d.Synthetic, cancellationToken)))
+        {
+            const string error = "The database holds stand-in Seimas data. Start with a clean database or reset the invented parliament data before importing from apps.lrs.lt.";
+            logger.LogError("{Error}", error);
+            return new ImportOutcome(null, "failed", 0, 0, true, error);
+        }
 
         // A run still "running" while this one holds the lock was cut off (the process died): it did not succeed.
         await db.ImportRuns.Where(r => r.Status == "running")
@@ -167,7 +175,7 @@ internal sealed class ParliamentImporter(
         {
             var changing = sitting.StartsAt >= recent;
             await ImportAsync(SeimasRequest.Agenda(sitting.Id), ImportParts.Sittings, _ => changing, body => ApplyAgenda(sitting.Id, body, ct), ct);
-            await ImportAsync(SeimasRequest.Proceedings(settings.ProceedingsParameter, sitting.Id), ImportParts.Sittings, _ => changing, body => ApplyProceedings(sitting.Id, body, ct), ct);
+            await ImportAsync(SeimasRequest.Proceedings(sitting.Id), ImportParts.Sittings, _ => changing, body => ApplyProceedings(sitting.Id, body, ct), ct);
 
             var votes = await (from v in db.Votes.AsNoTracking()
                                join i in db.AgendaItems on v.AgendaItemId equals i.Id
@@ -360,7 +368,7 @@ internal sealed class ParliamentImporter(
                 }
 
                 body2.Name = ms.BodyName;
-                body2.Kind = VoteRules.Body(ms.BodyName);
+                body2.Kind = ms.Kind;
 
                 var membership = memberships.FirstOrDefault(x => x.PersonId == person.Id && x.BodyId == body2.Id && x.From == ms.From);
                 if (membership is null)
@@ -435,10 +443,21 @@ internal sealed class ParliamentImporter(
     private async Task ApplyAgenda(long sittingId, byte[] body, CancellationToken ct)
     {
         var parsed = SeimasParsers.Agenda(body);
-        var numbers = parsed.Where(i => i.BillNumber is not null).Select(i => i.BillNumber!).Distinct().ToList();
-        var bills = await db.Bills.Where(b => numbers.Contains(b.Number)).ToDictionaryAsync(b => b.Number, ct);
         var ids = parsed.Select(i => i.Id).ToList();
         var items = await db.AgendaItems.Where(i => ids.Contains(i.Id)).ToDictionaryAsync(i => i.Id, ct);
+        await UpsertAgendaItems(sittingId, parsed, items, fromAgenda: true, ct);
+    }
+
+    private async Task UpsertAgendaItems(long sittingId, IReadOnlyList<ParsedAgendaItem> parsed, Dictionary<long, AgendaItem> items,
+        bool fromAgenda, CancellationToken ct)
+    {
+        if (parsed.Count == 0)
+        {
+            return;
+        }
+
+        var numbers = parsed.Where(i => i.BillNumber is not null).Select(i => i.BillNumber!).Distinct().ToList();
+        var bills = await db.Bills.Where(b => numbers.Contains(b.Number)).ToDictionaryAsync(b => b.Number, ct);
         foreach (var i in parsed)
         {
             Bill? bill = null;
@@ -451,7 +470,11 @@ internal sealed class ParliamentImporter(
                     bills[number] = bill;
                 }
 
-                bill.Title = i.Title;
+                // A proceedings-only item can have a truncated title and no official document link.
+                if (fromAgenda || bill.Title.Length == 0)
+                {
+                    bill.Title = i.Title;
+                }
                 bill.ESeimasUrl = i.BillUrl ?? bill.ESeimasUrl;
             }
 
@@ -459,6 +482,7 @@ internal sealed class ParliamentImporter(
             {
                 item = new AgendaItem { Id = i.Id };
                 db.AgendaItems.Add(item);
+                items.Add(i.Id, item);
             }
 
             item.SittingId = sittingId;
@@ -472,18 +496,16 @@ internal sealed class ParliamentImporter(
     private async Task ApplyProceedings(long sittingId, byte[] body, CancellationToken ct)
     {
         var parsed = SeimasParsers.Proceedings(body);
-        var itemIds = parsed.Select(v => v.AgendaItemId).Distinct().ToList();
-        var items = await db.AgendaItems.AsNoTracking().Where(i => itemIds.Contains(i.Id) && i.SittingId == sittingId).ToDictionaryAsync(i => i.Id, ct);
-        var voteIds = parsed.Select(v => v.VoteId).ToList();
-        var votes = await db.Votes.Where(v => voteIds.Contains(v.Id)).ToDictionaryAsync(v => v.Id, ct);
-        foreach (var v in parsed)
-        {
-            if (!items.TryGetValue(v.AgendaItemId, out var item))
-            {
-                logger.LogWarning("Vote {VoteId} names agenda item {ItemId}, which the agenda of sitting {SittingId} does not list; skipped", v.VoteId, v.AgendaItemId, sittingId);
-                continue;
-            }
+        var itemIds = parsed.Items.Select(i => i.Id).ToList();
+        var items = await db.AgendaItems.Where(i => itemIds.Contains(i.Id)).ToDictionaryAsync(i => i.Id, ct);
+        var additions = parsed.Items.Where(i => !items.TryGetValue(i.Id, out var item) || (item.BillId is null && i.BillNumber is not null)).ToList();
+        await UpsertAgendaItems(sittingId, additions, items, fromAgenda: false, ct);
 
+        var voteIds = parsed.Votes.Select(v => v.VoteId).ToList();
+        var votes = await db.Votes.Where(v => voteIds.Contains(v.Id)).ToDictionaryAsync(v => v.Id, ct);
+        foreach (var v in parsed.Votes)
+        {
+            var item = items[v.AgendaItemId];
             if (!votes.TryGetValue(v.VoteId, out var vote))
             {
                 vote = new Vote { Id = v.VoteId };
@@ -491,13 +513,12 @@ internal sealed class ParliamentImporter(
             }
 
             // Design 7.2: a moderator's correction wins over the rules on every re-parse; the import never touches it.
-            var (kind, stage) = VoteRules.Classify(v.Wording, VoteRules.Stage(item.Stage));
+            var (kind, stage) = VoteRules.Classify(v.Wording, VoteRules.Stage(v.Stage ?? item.Stage));
             var effective = VoteClassification.Effective(new Classification(kind, stage), VoteClassification.CorrectionOf(vote.KindOverride, vote.StageOverride));
             vote.AgendaItemId = item.Id;
             vote.BillId = item.BillId;
             vote.HeldAt = v.HeldAt;
             vote.Wording = v.Wording;
-            vote.Type = v.Type;
             vote.IsConsensus = v.IsConsensus;
             vote.Kind = effective.Kind;
             vote.Stage = effective.Stage;

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <!--
-    A stand-in for the Seimas open-data service (https://apps.lrs.lt/sip/), which is down for maintenance until
-    2026-11-16. It answers the same paths and query strings with SYNTHETIC canned responses. Local and test use only:
+    A stand-in for the Seimas open-data service (https://apps.lrs.lt/sip/).
+    It answers the same paths and query strings with synthetic canned responses. Local and test use only:
     no project under src/ may reference it, deploy/Dockerfile does not build it, and compose runs it only in the
     "local" profile (tests/Lt2.ArchitectureTests/StandInIsolationTests.cs checks all three).
   -->

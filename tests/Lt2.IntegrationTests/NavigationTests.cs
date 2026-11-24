@@ -104,7 +104,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         entries.ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-digests\"><span class=\"drop__label\">Suvestinės</span><span class=\"drop__desc\">Ką apie dalyvių prašymus sužino Seimo nariai.</span></a>");
         entries.ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-tab-mps\"><span class=\"drop__label\">Seimo nariai</span><span class=\"drop__desc\">Kiekvieno Seimo nario pareigos, balsavimai ir atsakymai.</span></a>");
         Regex.Matches(agenda, "id=\"nav-tab-([a-z-]+)\"").Select(m => m.Groups[1].Value)
-            .ShouldBe(["projektai", "seimas-balsavimai", "suvestines", "mps"], "four entries in the dropdown");
+            .ShouldBe(["bills", "seimas-votes", "digests", "mps"], "four entries in the dropdown");
         agenda.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\">Statistika</a>");
         agenda.ShouldContain("<a href=\"/prisijungti\" id=\"nav-sign-in\">Prisijungti</a>");
         Regex.Count(agenda, "<a ").ShouldBe(8, "the logo, Seimas, the four tabs in the dropdown and two items");
@@ -287,7 +287,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     }
 
     [Theory]
-    [InlineData("/taisykles", "Naudojimo taisyklės", "id=\"kaip-iseiti\"")]
+    [InlineData("/taisykles", "Naudojimo taisyklės", "id=\"leave\"")]
     [InlineData("/privatumas", "Privatumo pranešimas", "id=\"storage\"")]
     public async Task The_terms_and_the_privacy_notice_are_static_pages_with_a_version(string path, string title, string part)
     {

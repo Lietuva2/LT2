@@ -21,7 +21,7 @@ public sealed class StandInTests
             await client.GetAsync(SeimasRequest.Sessions(10), default),
             await client.GetAsync(SeimasRequest.Sittings(99000101), default),
             await client.GetAsync(SeimasRequest.Agenda(99001001), default),
-            await client.GetAsync(SeimasRequest.Proceedings("posedzio_id", 99001001), default),
+            await client.GetAsync(SeimasRequest.Proceedings(99001001), default),
             await client.GetAsync(SeimasRequest.VoteResults(99100002), default),
         };
 

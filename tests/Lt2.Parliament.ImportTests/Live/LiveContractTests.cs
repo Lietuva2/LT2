@@ -12,7 +12,7 @@ namespace Lt2.Parliament.ImportTests.Live;
 /// The contract with the real Seimas open data. Skipped unless <c>LT2_SEIMAS_LIVE=1</c>: it fetches the real chain
 /// (about 25 requests, one a second), saves every response into Seimas/Recorded/, and gives every line of the register a
 /// verdict in Seimas/Recorded/contract-report.md. It fails when a line is contradicted or a parser fails, naming them.
-/// Optional: <c>LT2_SEIMAS_BASE_ADDRESS</c> (default https://apps.lrs.lt/sip/), <c>LT2_SEIMAS_PROCEEDINGS_PARAMETER</c>.
+/// Optional: <c>LT2_SEIMAS_BASE_ADDRESS</c> (default https://apps.lrs.lt/sip/).
 /// </summary>
 public sealed class LiveContractTests(ITestOutputHelper output)
 {
@@ -23,10 +23,9 @@ public sealed class LiveContractTests(ITestOutputHelper output)
             "Set LT2_SEIMAS_LIVE=1 to check the register against the real Seimas open data.");
 
         var baseAddress = Environment.GetEnvironmentVariable("LT2_SEIMAS_BASE_ADDRESS") ?? "https://apps.lrs.lt/sip/";
-        var parameter = Environment.GetEnvironmentVariable("LT2_SEIMAS_PROCEEDINGS_PARAMETER") ?? "posedzio_id";
         var client = LiveClient(new Uri(baseAddress));
 
-        var result = await ContractRun.RunAsync(client, parameter, 10, StandInFixture.RecordedDirectory, baseAddress, TimeProvider.System, TestContext.Current.CancellationToken);
+        var result = await ContractRun.RunAsync(client, 10, StandInFixture.RecordedDirectory, baseAddress, TimeProvider.System, TestContext.Current.CancellationToken);
 
         output.WriteLine(result.Report);
         result.FetchErrors.ShouldBeEmpty();
@@ -35,8 +34,8 @@ public sealed class LiveContractTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// The same run against the stand-in, so the suite itself is known to work before the real service reopens. The
-    /// synthetic data contradicts only R19 by design: its totals are Seimas-wide, its per-MP rows cover 13 MPs.
+    /// The same run against the stand-in. The synthetic data contradicts only R19 by design: its totals are
+    /// Seimas-wide, its per-MP rows cover 13 MPs.
     /// </summary>
     [Fact]
     public async Task The_contract_run_against_the_stand_in_saves_every_response_and_contradicts_nothing_but_the_synthetic_totals()
@@ -46,7 +45,7 @@ public sealed class LiveContractTests(ITestOutputHelper output)
         {
             var client = SeimasClientTests.Build(new StandInHandler(StandInFixture.Responses()));
 
-            var result = await ContractRun.RunAsync(client, "posedzio_id", 10, saveTo, "stand-in", TimeProvider.System, TestContext.Current.CancellationToken);
+            var result = await ContractRun.RunAsync(client, 10, saveTo, "stand-in", TimeProvider.System, TestContext.Current.CancellationToken);
 
             output.WriteLine(result.Report);
             result.FetchErrors.ShouldBeEmpty();

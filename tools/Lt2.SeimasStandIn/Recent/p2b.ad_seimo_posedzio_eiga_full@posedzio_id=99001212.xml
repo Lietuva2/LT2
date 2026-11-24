@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. Written by tools/standin_overlay.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><posedziai>
+  <posedis pos_id="99001212">
+    <posedzio-eiga>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99100212" kl_stad_id="99012121">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99100212"><nuo>2026-10-29 14:42:56</nuo><aprasas>Priimti Energetikos įstatymo pataisą</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99100222" kl_stad_id="99012122">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99100222"><nuo>2026-10-29 15:30:32</nuo><aprasas>Priimti Akcizų įstatymo pataisą</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+    </posedzio-eiga>
+  </posedis>
+</posedziai>

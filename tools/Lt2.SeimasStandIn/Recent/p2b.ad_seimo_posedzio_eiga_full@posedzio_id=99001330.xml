@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. {{past:N}} is the N-th Tuesday or Thursday before today (yyyy-MM-dd): the last four sitting days, with their
+     votes, shaped after the real Seimas's. Written by tools/standin_overlay.py (fixed seed); do not edit by hand (tools/standin_agenda.py). --><posedziai>
+  <posedis pos_id="99001330">
+    <posedzio-eiga>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103043" kl_stad_id="99133001">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103043"><nuo>{{past:3}} 10:01:24</nuo><aprasas>Dėl posėdžio darbotvarkės</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103044" kl_stad_id="99133002">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103044"><nuo>{{past:3}} 11:51:19</nuo><aprasas>Pritarti po svarstymo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103045" kl_stad_id="99133003">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103045"><nuo>{{past:3}} 11:52:12</nuo><aprasas>Pritarti po svarstymo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103046" kl_stad_id="99133004">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103046"><nuo>{{past:3}} 11:53:04</nuo><aprasas>Priimti</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103047" kl_stad_id="99133005">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103047"><nuo>{{past:3}} 11:53:57</nuo><aprasas>Pritarti po svarstymo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103048" kl_stad_id="99133006">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103048"><nuo>{{past:3}} 11:55:09</nuo><aprasas>Pritarti po svarstymo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103049" kl_stad_id="99133007">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103049"><nuo>{{past:3}} 11:56:16</nuo><aprasas>Pritarti po svarstymo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103050" kl_stad_id="99133008">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103050"><nuo>{{past:3}} 11:57:23</nuo><aprasas>Pritarta bendru sutarimu</aprasas><antraste>Pritarta bendru sutarimu</antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103051" kl_stad_id="99133009">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103051"><nuo>{{past:3}} 11:58:26</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103052" kl_stad_id="99133010">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103052"><nuo>{{past:3}} 11:59:49</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103053" kl_stad_id="99133011">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103053"><nuo>{{past:3}} 12:00:48</nuo><aprasas>Pritarti po svarstymo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103054" kl_stad_id="99133012">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103054"><nuo>{{past:3}} 12:01:55</nuo><aprasas>Pritarti po svarstymo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103055" kl_stad_id="99133013">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103055"><nuo>{{past:3}} 12:03:06</nuo><aprasas>Pritarti Seimo nario pasiūlymui</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103056" kl_stad_id="99133013">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103056"><nuo>{{past:3}} 12:04:31</nuo><aprasas>Pritarta bendru sutarimu</aprasas><antraste>Pritarta bendru sutarimu</antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103057" kl_stad_id="99133014">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103057"><nuo>{{past:3}} 12:06:01</nuo><aprasas>Pritarti po svarstymo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103058" kl_stad_id="99133015">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103058"><nuo>{{past:3}} 12:07:19</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103059" kl_stad_id="99133016">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103059"><nuo>{{past:3}} 12:45:32</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103060" kl_stad_id="99133017">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103060"><nuo>{{past:3}} 12:46:26</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103061" kl_stad_id="99133018">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103061"><nuo>{{past:3}} 12:47:42</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103062" kl_stad_id="99133019">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103062"><nuo>{{past:3}} 12:49:10</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103063" kl_stad_id="99133020">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103063"><nuo>{{past:3}} 12:50:06</nuo><aprasas>Pritarta bendru sutarimu</aprasas><antraste>Pritarta bendru sutarimu</antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103064" kl_stad_id="99133021">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103064"><nuo>{{past:3}} 12:51:12</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103065" kl_stad_id="99133022">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103065"><nuo>{{past:3}} 12:52:12</nuo><aprasas>Pritarta bendru sutarimu</aprasas><antraste>Pritarta bendru sutarimu</antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103066" kl_stad_id="99133023">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103066"><nuo>{{past:3}} 12:53:38</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103067" kl_stad_id="99133024">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103067"><nuo>{{past:3}} 12:54:35</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99103068" kl_stad_id="99133025">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99103068"><nuo>{{past:3}} 12:55:25</nuo><aprasas>Pritarti po pateikimo</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+    </posedzio-eiga>
+  </posedis>
+</posedziai>

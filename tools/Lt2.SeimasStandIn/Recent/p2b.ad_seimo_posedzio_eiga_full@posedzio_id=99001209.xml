@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. Written by tools/standin_overlay.py (fixed seed); do not edit by hand: invented closed bills for the analytics page (design 8.26.5). --><posedziai>
+  <posedis pos_id="99001209">
+    <posedzio-eiga>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99100227" kl_stad_id="99012091">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99100227"><nuo>2026-10-06 14:59:15</nuo><aprasas>Priimti Kibernetinio saugumo įstatymo pataisą</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+      <darbotvarkes-klausimas svarst_kl_stad_id="99100231" kl_stad_id="99012092">
+        <nr/><pavadinimas/><stadija/>
+        <balsavimai><balsavimas bals_id="99100231"><nuo>2026-10-06 15:48:15</nuo><aprasas>Priimti Kultūros paveldo apsaugos įstatymo pataisą</aprasas><antraste></antraste></balsavimas></balsavimai>
+      </darbotvarkes-klausimas>
+    </posedzio-eiga>
+  </posedis>
+</posedziai>

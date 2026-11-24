@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Lt2.Parliament.Import.Parsing;
@@ -23,11 +24,12 @@ internal static class N
     public const string Gender = "lytis";
     public const string NominatingParty = "iškėlusi_partija";
     public const string ElectedHow = "išrinkimo_būdas";
-    public const string Constituency = "apygarda";
     public const string TermsServed = "kadencijų_skaičius";
     public const string Membership = "Pareigos";
     public const string BodyId = "padalinio_id";
     public const string BodyName = "padalinio_pavadinimas";
+    public const string GroupId = "parlamentinės_grupės_id";
+    public const string GroupName = "parlamentinės_grupės_pavadinimas";
     public const string Role = "pareigos";
     public const string Contact = "Kontaktai";
     public const string ContactKind = "rūšis";
@@ -46,15 +48,21 @@ internal static class N
     // Agenda and proceedings
     public const string AgendaItem = "DarbotvarkėsKlausimas";
     public const string AgendaItemId = "darbotvarkės_klausimo_id";
+    public const string AgendaStage = "KlausimoStadija";
+    public const string AgendaDocumentLink = "dokumento_nuoroda";
+    public const string Discussion = "darbotvarkes-klausimas";
+    public const string DiscussionId = "svarst_kl_stad_id";
+    public const string DiscussionAgendaId = "kl_stad_id";
+    public const string DiscussionNumber = "nr";
     public const string Stage = "stadija";
-    public const string Document = "Dokumentas";
-    public const string BillNumber = "registracijos_numeris";
-    public const string Link = "nuoroda";
-    public const string Vote = "Balsavimas";
+    public const string Vote = "balsavimas";
+    public const string ProceedingsVoteId = "bals_id";
+    public const string ProceedingsVoteTime = "nuo";
+    public const string Wording = "aprasas";
+    public const string VoteHeading = "antraste";
+    public const string ResultVote = "SeimoNariųBalsavimas";
     public const string VoteId = "balsavimo_id";
     public const string VoteTime = "balsavimo_laikas";
-    public const string Wording = "aprašas";
-    public const string VoteType = "balsavimo_tipas";
 
     // Vote results
     public const string Totals = "BendriBalsavimoRezultatai";
@@ -73,8 +81,16 @@ internal static class N
 /// Thin parsers: one per service, from the raw body to records, no database and no rules beyond reading. Their shapes
 /// are the part most likely to change once live responses are seen, so they stay apart from the import logic.
 /// </summary>
-internal static class SeimasParsers
+internal static partial class SeimasParsers
 {
+    // These IDs come from separate Seimas sequences. Keep them separate from agenda and body IDs locally.
+    private const long DiscussionIdOffset = long.MinValue / 2;
+    private const long GroupIdOffset = long.MinValue / 2;
+    private const string DistrictEnding = " apygardoje";
+
+    [GeneratedRegex(@"\(Nr\.\s*(?<number>[IVX]+P-\d+)(?:\(\d+\))?\)$", RegexOptions.CultureInvariant)]
+    private static partial Regex BillNumberSuffix();
+
     public static IReadOnlyList<ParsedTerm> Terms(byte[] body) =>
         XmlRead.Load(body).All(N.Term)
             .Select(e => new ParsedTerm(checked((int)e.RequiredId(N.TermId)), e.Required(N.Name), e.RequiredDate(N.From), e.OptionalDate(N.To)))
@@ -83,23 +99,45 @@ internal static class SeimasParsers
     public static IReadOnlyList<ParsedMember> Members(byte[] body) =>
         XmlRead.Load(body).All(N.Member).Select(Member).ToList();
 
-    private static ParsedMember Member(XElement e) => new(
-        e.RequiredId(N.PersonId),
-        e.Required(N.FirstName),
-        e.Required(N.LastName),
-        e.Optional(N.Gender),
-        e.RequiredDate(N.From),
-        e.OptionalDate(N.To),
-        e.Optional(N.NominatingParty),
-        e.Optional(N.ElectedHow),
-        e.Optional(N.Constituency),
-        e.OptionalCount(N.TermsServed),
-        e.Children(N.Membership)
-            .Select(m => new ParsedMembership(m.RequiredId(N.BodyId), m.Required(N.BodyName), m.Optional(N.Role) ?? "", m.RequiredDate(N.From), m.OptionalDate(N.To)))
-            .ToList(),
-        e.Children(N.Contact)
-            .Select(c => new ParsedContact(c.Required(N.ContactKind), c.Required(N.ContactValue)))
-            .ToList());
+    private static ParsedMember Member(XElement e)
+    {
+        var elected = e.Optional(N.ElectedHow);
+        var district = elected?.EndsWith(DistrictEnding, StringComparison.Ordinal) == true
+            ? elected[..^DistrictEnding.Length] : null;
+        return new(
+            e.RequiredId(N.PersonId),
+            e.Required(N.FirstName),
+            e.Required(N.LastName),
+            e.Optional(N.Gender),
+            e.RequiredDate(N.From),
+            e.OptionalDate(N.To),
+            e.Optional(N.NominatingParty),
+            district is null ? elected : null,
+            district,
+            e.OptionalCount(N.TermsServed),
+            e.Children(N.Membership)
+                .Select(Membership).OfType<ParsedMembership>()
+                .ToList(),
+            e.Children(N.Contact)
+                .Select(c => (Kind: c.Optional(N.ContactKind), Value: c.Optional(N.ContactValue)))
+                .Where(c => c.Kind is not null && c.Value is not null)
+                .Select(c => new ParsedContact(c.Kind!, c.Value!))
+                .ToList());
+    }
+
+    private static ParsedMembership? Membership(XElement e)
+    {
+        var bodyId = e.OptionalId(N.BodyId);
+        var groupId = e.OptionalId(N.GroupId);
+        var bodyName = e.Optional(N.BodyName);
+        var groupName = e.Optional(N.GroupName);
+        var name = bodyId.HasValue ? bodyName : groupName;
+        var id = bodyId ?? checked(GroupIdOffset + groupId);
+        return id is { } key && name is not null
+            ? new ParsedMembership(key, name, bodyId.HasValue ? VoteRules.Body(name) : BodyKind.Group,
+                e.Optional(N.Role) ?? "", e.RequiredDate(N.From), e.OptionalDate(N.To))
+            : null;
+    }
 
     public static IReadOnlyList<ParsedSession> Sessions(byte[] body) =>
         XmlRead.Load(body).All(N.Session)
@@ -108,35 +146,60 @@ internal static class SeimasParsers
 
     public static IReadOnlyList<ParsedSitting> Sittings(byte[] body) =>
         XmlRead.Load(body).All(N.Sitting)
-            .Select(e => new ParsedSitting(e.RequiredId(N.SittingId), e.Optional(N.Number), e.Optional(N.SittingKind), e.RequiredTime(N.Starts), e.OptionalTime(N.Ends)))
+            .Select(e => (Row: e, StartsAt: e.OptionalTime(N.Starts)))
+            .Where(s => s.StartsAt.HasValue)
+            .Select(s => new ParsedSitting(s.Row.RequiredId(N.SittingId), s.Row.Optional(N.Number), s.Row.Optional(N.SittingKind),
+                s.StartsAt!.Value, s.Row.OptionalTime(N.Ends)))
             .ToList();
 
     public static IReadOnlyList<ParsedAgendaItem> Agenda(byte[] body) =>
         XmlRead.Load(body).All(N.AgendaItem)
-            .Select(e =>
+            .SelectMany(e =>
             {
-                var document = e.Children(N.Document).FirstOrDefault(d => d.Optional(N.BillNumber) is not null);
-                return new ParsedAgendaItem(
-                    e.RequiredId(N.AgendaItemId),
-                    e.Optional(N.Number),
-                    e.Required(N.Name),
-                    e.Optional(N.Stage),
-                    document?.Optional(N.BillNumber),
-                    document?.Optional(N.Link));
+                var (title, number) = BillInTitle(e.Required(N.Name));
+                return e.Children(N.AgendaStage).Select(stage => new ParsedAgendaItem(
+                    stage.RequiredId(N.AgendaItemId), e.Optional(N.Number), title, stage.Optional(N.Name),
+                    number, stage.Optional(N.AgendaDocumentLink)));
             })
             .ToList();
 
-    /// <summary>The votes of a sitting's items. A vote is linked to the agenda item it is nested in.</summary>
-    public static IReadOnlyList<ParsedVoteReference> Proceedings(byte[] body) =>
-        XmlRead.Load(body).All(N.Vote)
-            .Select(e =>
+    /// <summary>The sitting as it happened, including votes on items absent from its published agenda.</summary>
+    public static ParsedProceedings Proceedings(byte[] body)
+    {
+        var items = new Dictionary<long, ParsedAgendaItem>();
+        var votes = new Dictionary<long, (ParsedVoteReference Vote, bool Linked)>();
+        foreach (var e in XmlRead.Load(body).All(N.Vote))
+        {
+            var discussion = e.Enclosing(N.Discussion) ?? throw new SeimasFormatException($"<{N.Vote}> is not inside a <{N.Discussion}>.");
+            var discussionId = discussion.OptionalId(N.DiscussionId);
+            var agendaId = discussion.OptionalId(N.DiscussionAgendaId);
+            var itemId = agendaId ?? (checked(DiscussionIdOffset + discussionId)
+                ?? throw new SeimasFormatException($"<{N.Discussion}> has no {N.DiscussionId} or {N.DiscussionAgendaId}."));
+            var stage = discussion.TextOf(N.Stage);
+            var (title, number) = BillInTitle(discussion.TextOf(N.Name) ?? "");
+            items.TryAdd(itemId, new ParsedAgendaItem(itemId, discussion.TextOf(N.DiscussionNumber), title, stage, number, null));
+
+            var voteId = e.RequiredId(N.ProceedingsVoteId);
+            var wording = e.TextOf(N.Wording) ?? "";
+            var consensus = VoteRules.IsConsensus(e.TextOf(N.VoteHeading), wording);
+            var vote = new ParsedVoteReference(voteId, itemId, e.RequiredTimeOf(N.ProceedingsVoteTime), wording, consensus, stage);
+            // The same vote can also appear under a group of items. Prefer its direct agenda link when one exists.
+            if (!votes.TryGetValue(voteId, out var previous) || (!previous.Linked && agendaId.HasValue))
             {
-                var item = e.Enclosing(N.AgendaItem) ?? throw new SeimasFormatException($"<{N.Vote}> is not inside a <{N.AgendaItem}>.");
-                var wording = e.Optional(N.Wording) ?? "";
-                var type = e.Optional(N.VoteType);
-                return new ParsedVoteReference(e.RequiredId(N.VoteId), item.RequiredId(N.AgendaItemId), e.RequiredTime(N.VoteTime), wording, type, VoteRules.IsConsensus(type, wording));
-            })
-            .ToList();
+                votes[voteId] = (vote, agendaId.HasValue);
+            }
+        }
+
+        var references = votes.Values.Select(v => v.Vote).ToList();
+        var referencedItems = references.Select(v => v.AgendaItemId).ToHashSet();
+        return new ParsedProceedings(items.Values.Where(i => referencedItems.Contains(i.Id)).ToList(), references);
+    }
+
+    private static (string Title, string? Number) BillInTitle(string title)
+    {
+        var match = BillNumberSuffix().Match(title);
+        return match.Success ? (title[..match.Index].TrimEnd(), match.Groups["number"].Value) : (title, null);
+    }
 
     /// <summary>Totals and the per-MP rows of one vote. Without a totals element the document is empty (unknown vote).</summary>
     public static ParsedVoteResult? VoteResult(byte[] body)
@@ -157,7 +220,7 @@ internal static class SeimasParsers
                 VoteRules.Choice(b.Raw(N.Choice))))
             .ToList();
         return new ParsedVoteResult(
-            totals.RequiredId(N.VoteId),
+            (totals.Enclosing(N.ResultVote) ?? throw new SeimasFormatException($"<{N.Totals}> is not inside a <{N.ResultVote}>.")).RequiredId(N.VoteId),
             new VoteTotals(totals.OptionalCount(N.For), totals.OptionalCount(N.Against), totals.OptionalCount(N.Abstain), totals.OptionalCount(N.Voted), totals.OptionalCount(N.Seats)),
             totals.Optional(N.Note),
             ballots);

@@ -12,7 +12,7 @@ namespace Lt2.Appeals.Application;
 /// What members do on a bill (design 8.12.1, 8.2): take or change a side, write and endorse arguments, report. Every active
 /// bill is open: the first side or argument creates the bill's record (<see cref="BillRecords"/>). Every action of one
 /// person runs under that person's lock (<see cref="AdvisoryLocks.PersonAsync"/>), so the limits per person and the consent
-/// check cannot be raced. Taking part ends for everyone when the bill's final vote is recorded (design 6.8).
+/// check cannot be raced. Taking part ends for everyone when a final vote or confirmed rejection is recorded (design 6.8).
 /// </summary>
 internal sealed class AppealsService(
     IDbContextFactory<AppealsDb> contexts,
@@ -64,8 +64,8 @@ internal sealed class AppealsService(
         // Active bills (design 8.12.1): in the catalogue and not finished; a bill whose record is hidden or closed is not
         // offered here. Composed in memory, not paged in the database: the bills, their titles and planned dates are the
         // Parliament module's and the sides and arguments this module's, and no module reads another's tables (AGENTS.md).
-        // A few hundred active bills cost five reads; only the asked part is mapped and sent (owner, 2026-11-18).
-        var active = (await bills.ActiveAsync(cancellationToken)).Where(b => BillListRules.Matches(query.Search, b.Number, b.Title)).ToList();
+        // Only the requested page is mapped and sent.
+        var active = (await records.ActiveAsync(db, cancellationToken)).Where(b => BillListRules.Matches(query.Search, b.Number, b.Title)).ToList();
         var numbers = active.Select(b => b.Number).ToList();
         var recordsOnBills = await db.BillRecords.AsNoTracking().Records()
             .Where(a => numbers.Contains(a.BillNumber))
@@ -956,10 +956,10 @@ internal sealed class AppealsService(
 
     /// <summary>
     /// Taking part on an existing record (design 8.12.1, 6.8): refused with <c>record.not-open</c> unless the record is
-    /// open and the bill's final vote is not recorded, whether or not the hourly job has closed the record yet.
+    /// open and the Seimas has not finished the bill, whether or not the hourly job has closed the record yet.
     /// </summary>
     private async Task<Error?> NotOpenAsync(BillRecord record, CancellationToken ct) =>
-        RecordRules.CheckParticipation(record.Status, await records.IsFinishedAsync(record.Status, record.BillNumber, ct)) is { } refused
+        RecordRules.CheckParticipation(record.Status, await records.IsFinishedAsync(record, record.BillNumber, ct)) is { } refused
             ? RuleErrors.Of(refused)
             : null;
 

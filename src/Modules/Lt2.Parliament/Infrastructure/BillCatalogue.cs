@@ -1,3 +1,4 @@
+using System.Globalization;
 using Lt2.Parliament.Import.Parsing;
 using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,9 @@ namespace Lt2.Parliament.Infrastructure;
 /// <summary><see cref="IBillCatalogue"/> for the Appeals module: bills by number, a context per call.</summary>
 internal sealed class BillCatalogue(IDbContextFactory<ParliamentDb> contexts) : IBillCatalogue
 {
+    // Official wording confirmed in the full proceedings, e.g. vote -60862. The outcome and the motion both matter.
+    private const string ApprovedRejection = "Pritarta – dėl pagrindinio komiteto siūlymo atmesti šį projektą";
+
     public async Task<BillFacts?> FindAsync(string number, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
@@ -49,6 +53,30 @@ internal sealed class BillCatalogue(IDbContextFactory<ParliamentDb> contexts) : 
                       orderby v.HeldAt descending
                       select new BillFinalVote(v.Id, v.HeldAt))
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<string, BillRejection>> RejectionsAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken)
+    {
+        var list = numbers.Select(Normalise).Distinct().ToList();
+        if (list.Count == 0)
+        {
+            return new Dictionary<string, BillRejection>(StringComparer.Ordinal);
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var votes = db.Votes.AsNoTracking();
+        var decisions = await (from bill in db.Bills.AsNoTracking()
+                               join vote in votes on bill.Id equals vote.BillId
+                               where list.Contains(bill.Number) && vote.Wording == ApprovedRejection
+                                   && !votes.Any(later => later.BillId == bill.Id && later.Id != vote.Id
+                                       && (later.HeldAt > vote.HeldAt || (later.HeldAt == vote.HeldAt && later.Wording != ApprovedRejection)))
+                               select new { bill.Number, vote.Id, vote.HeldAt }).ToListAsync(cancellationToken);
+
+        return decisions.OrderBy(v => v.Id).DistinctBy(v => v.Number, StringComparer.Ordinal)
+            .ToDictionary(v => v.Number,
+                v => new BillRejection(v.Id, v.HeldAt, string.Create(CultureInfo.InvariantCulture,
+                    $"https://www.lrs.lt/sip/portal.show?p_r=37067&p_bals_id={v.Id}")),
+                StringComparer.Ordinal);
     }
 
     public async Task<IReadOnlyList<StageVoteFacts>> StageResultsAsync(IReadOnlyCollection<string> numbers, DateTimeOffset since, CancellationToken cancellationToken)

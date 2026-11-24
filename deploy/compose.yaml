@@ -3,8 +3,8 @@
 #   python deploy/init-secrets.py       # once
 #   docker compose -f deploy/compose.yaml up --build
 #
-# Local defaults come from deploy/.env (site https://lt2.localhost:8443, Mailpit on http://localhost:8025, the
-# "local" profile with Mailpit and the Seimas stand-in, a trial invitation code). Production sets its own values:
+# Local defaults come from deploy/.env (site https://lt2.localhost:8443, Mailpit on http://localhost:8025, official
+# Seimas data, a trial invitation code). deploy/standin.env opts into the invented-data profile. Production sets:
 # LT2_SITE_ADDRESS (the domain), LT2_TLS (the ACME contact address), ports 80/443, COMPOSE_PROFILES empty (no Mailpit,
 # no stand-in), real SMTP settings, LT2_SEIMAS_BASE_ADDRESS and LT2_OUTBOUND_EXTRA_HOST empty (the worker then
 # imports from https://apps.lrs.lt/sip/).
@@ -143,7 +143,7 @@ services:
       Email__Caught: ${LT2_MAIL_CAUGHT:-false}
       # The site's own address: links in the emails the worker sends start with it (design 5.6).
       Site__Address: https://${LT2_SITE_ADDRESS:-lt2.localhost}:${LT2_HTTPS_PORT:-8443}
-      # The Seimas open data. Production keeps the default; only the local .env points the worker at the stand-in.
+      # The Seimas open data. A stack using invented data can override the address and allowlist.
       Seimas__BaseAddress: ${LT2_SEIMAS_BASE_ADDRESS:-https://apps.lrs.lt/sip/}
       Outbound__AllowedHosts__1: ${LT2_OUTBOUND_EXTRA_HOST:-}
       # The upcoming plenary agenda (lrs.lt pages). Empty: the watcher is off. The host must be on the allowlist.
@@ -237,7 +237,7 @@ services:
   # Local only: catches every email; web UI and API on http://localhost:8025.
   mailpit:
     image: axllent/mailpit:v1.27
-    profiles: [local]
+    profiles: [local, mailpit]
     restart: unless-stopped
     ports:
       - "127.0.0.1:${LT2_MAILPIT_PORT:-8025}:8025"
@@ -248,8 +248,7 @@ services:
       - no-new-privileges:true
     networks: [backend]
 
-  # Local only: a stand-in for the Seimas open-data service with INVENTED answers (the real one is closed for
-  # maintenance until 2026-11-16). Profile "local" only, built from tools/ and never by deploy/Dockerfile;
+  # Only for stacks with invented data. Profile "local" only, built from tools/ and never by deploy/Dockerfile;
   # tests/Lt2.ArchitectureTests/StandInIsolationTests.cs keeps it that way.
   seimas-standin:
     build:

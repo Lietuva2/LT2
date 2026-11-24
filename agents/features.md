@@ -605,28 +605,31 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `validation` on `statement`. The modules' own `statement.required` already reads "Parašykite paaiškinimą."
   (`ProblemText`). Tests: `ModerationActionsTests`, `AppealContractTests` (unit),
   `ModerationApiTests.A_missing_statement_is_refused_naming_the_author_only_where_the_author_receives_it` (integration).
-- **Closing a rejected or withdrawn bill (design 8.1 step 6, owner 2026-11-19).** The open data has no such status, so
-  a moderator closes the open record: "Uždaryti: projektas atmestas ar atsiimtas" under "Seime" in the record's menu
+- **Closing a rejected or withdrawn bill (design 8.1 step 6).** `BillCatalogue.RejectionsAsync` reads an explicit
+  approved rejection motion from the most recent vote on its bill. `CloseFinishedAsync` freezes the counts and records
+  the date, vote source and system audit. `last_automatic_rejection_vote_id` is kept on reopening so that decision
+  cannot close the record again. A moderator can close the open record with "Uždaryti: projektas atmestas ar atsiimtas"
+  under "Seime" in the record's menu
   (`ModerationActions`, `ClosingReasons` in the contracts), `POST /api/v1/moderation/records/{id}/close`
   (`CloseRecordEndpoint`, `CloseRecordRequest` + `CloseRecordRequestValidator`: `reason` `rejected`|`withdrawn`,
   `decidedOn`, `sourceUrl` by `OfficialTextAddress` and required, `statement`; `IModerationApi.CloseRecordAsync`).
   `ModerationService.CloseRecordAsync` checks `RecordRules.CheckClose` (the day not after today in Vilnius,
-  `closing.date-future`; `closing.reason`, `closing-url.invalid`; `moderation.wrong-state` unless open and the final vote
-  not recorded) under the bill's lock and freezes the counts with `ClosingRules.Close` as `CloseFinishedAsync` does
-  (which sets `closed_reason` `vote`); audited `record.closed` (moderator, reason, day, source, statement) through
+  `closing.date-future`; `closing.reason`, `closing-url.invalid`; `moderation.wrong-state` unless open and the bill has
+  no pending automatic close) under the bill's lock and freezes the counts with `ClosingRules.Close`. Audited
+  `record.closed` (moderator, reason, day, source, statement) through
   `ModerationRecorder`'s `auditAction`, a `moderation_action` row `close`. Columns `closed_reason`, `closed_decided_on`,
   `closed_source_url` (migration `RecordClosedReason`); `BillRecordResponse.ClosedReason|ClosedDecidedOn|ClosedSourceUrl`,
   `ModerationBillResponse.ClosedReason`. The page (`BillPage`, `#seimas-result`) shows "Seimas projektą atmetė {data}."
   or "Iniciatoriai projektą atsiėmė {data}." (`#closed-decision`) with "Šaltinis" (`#closed-source`, `rel="external
   noopener"`) and the frozen counts "Skaičiai užfiksuoti …" (`Closed.Frozen.Ended`); no ballots. "Atšaukti uždarymą"
   (`POST …/reopen`, `ReopenRecordEndpoint`, `StatementRequest`; `RecordRules.CheckReopen`, never `vote`;
-  `ClosingRules.Reopen` clears everything of the close; audited `record.reopened`; nobody told). Analytics and
+  `ClosingRules.Reopen` restores the open state; audited `record.reopened`; nobody told). Analytics and
   `MyClosedSides` keep to records with a `ClosingVoteId`; summaries take open records only (`DigestSource`). Followers
   are told by the follow kind `ClosedNotices` (Notifications; `bill_event` kind `closed`, key `FollowRules.ClosedKey`,
   the moment it closed; read through `IRecordClosureFeed`, Appeals' `RecordClosureFeed`; switch `voted`; a close undone
   before the email is dropped), outbox kind `email.follow-closed` (`FollowClosedEmail`, `FollowTemplates.Closed`, part
   `ClosedPart` "Seimas nebesvarsto:", order 25). Tests: `RecordCloseTests` (integration), `RecordCloseRuleTests` and
-  `ModerationActionsTests` (unit). Closing on the open data's word is designed, not built (design 12-open).
+  `ModerationActionsTests` (unit).
 
 **Reasons to come (design 8.11).**
 - The agenda (`/darbotvarke`, where the menu item "Projektai" leads) and the front page's "Artimiausiu metu Seime" come from one public,
@@ -722,7 +725,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `#profilis-issaugotas` (`AccountScreens.ProfileSavedHome`): `MyStart` says "Profilis išsaugotas." once in a status region and
   takes the mark out of the address (`history.replaceState`). Tests: unit `MyStartTests`; E2E `StartPageTests`.
   **How a vote went (design 8.18, "The majority"; the owner asked for "Priimta", open in 12-open).** `<VoteMajorityTag>`
-  (`Components/Parliament`) shows `AnalyticsRules.SeimasMajority` (the open data has no official outcome) as
+  (`Components/Parliament`) shows `AnalyticsRules.SeimasMajority` calculated from the ballot totals as
   `span.tag.tag--outcome` with `data-majority` (`for` filled, `against` `tag--outline`, `none` also `tag--dashed`;
   `ParliamentText` `Majority.*`: "Dauguma už", "Dauguma prieš", "Nėra daugumos"), the consensus as "Pritarta bendru
   sutarimu", nothing without numbers; used by `VotedItemResult` (front page, agenda and the shared `VoteTimeline` on

@@ -72,6 +72,32 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void A_future_sitting_without_a_start_time_is_skipped()
+    {
+        var sittings = SeimasParsers.Sittings(Xml("""
+            <SeimoInformacija><SeimoPosėdis posėdžio_id="-1" pradžia="2026-11-19 10:00" pabaiga=""/>
+            <SeimoPosėdis posėdžio_id="-2" pradžia="" pabaiga=""/></SeimoInformacija>
+            """));
+
+        sittings.Single().Id.ShouldBe(-1);
+    }
+
+    [Fact]
+    public void A_parliamentary_group_and_a_body_with_the_same_source_id_are_distinct()
+    {
+        var member = SeimasParsers.Members(Xml("""
+            <SeimoInformacija><SeimoNarys asmens_id="1" vardas="Jonas" pavardė="Petraitis" data_nuo="2024-11-14">
+              <Pareigos padalinio_id="" padalinio_pavadinimas="" pareigos="Seimo Pirmininkas" data_nuo="2024-11-14"/>
+              <Pareigos padalinio_id="5" padalinio_pavadinimas="Audito komitetas" pareigos="Narys" data_nuo="2024-11-14"/>
+              <Pareigos parlamentinės_grupės_id="5" parlamentinės_grupės_pavadinimas="Seniūnų sueiga" pareigos="Narys" data_nuo="2024-11-14"/>
+            </SeimoNarys></SeimoInformacija>
+            """)).Single();
+
+        member.Memberships.Select(m => m.Kind).ShouldBe([BodyKind.Committee, BodyKind.Group]);
+        member.Memberships.Select(m => m.BodyId).ShouldBeUnique();
+    }
+
+    [Fact]
     public void Agenda_items_carry_the_bill_number_stage_and_e_seimas_link_and_procedural_items_have_no_bill()
     {
         var items = SeimasParsers.Agenda(Synthetic("p2b.ad_sp_darbotvarke@posedzio_id=99001001"));
@@ -87,7 +113,7 @@ public sealed class ParserTests
     [Fact]
     public void Proceedings_link_each_vote_to_its_agenda_item_and_mark_consensus()
     {
-        var votes = SeimasParsers.Proceedings(Synthetic("p2b.ad_sp_klausimo_svarstymo_eiga@posedzio_id=99001001"));
+        var votes = SeimasParsers.Proceedings(Synthetic("p2b.ad_seimo_posedzio_eiga_full@posedzio_id=99001001")).Votes;
 
         votes.Select(v => (v.VoteId, v.AgendaItemId, v.IsConsensus)).ShouldBe(
         [
@@ -96,6 +122,35 @@ public sealed class ParserTests
             (99100003L, 99010003L, true),
         ]);
         votes[1].HeldAt.ShouldBe(new DateTimeOffset(2026, 3, 17, 8, 41, 37, TimeSpan.Zero));
+    }
+
+    [Fact]
+    public void Proceedings_keep_group_votes_and_prefer_the_direct_agenda_link_for_repeated_votes()
+    {
+        var proceedings = SeimasParsers.Proceedings(Xml("""
+            <posedziai><posedis pos_id="-1"><posedzio-eiga>
+              <darbotvarkes-klausimas svarst_kl_stad_id="-2" kl_gr_id="-3">
+                <pavadinimas>Klausimų grupė</pavadinimas><stadija>Pateikimas</stadija>
+                <balsavimai>
+                  <balsavimas bals_id="-4"><nuo>2026-09-15 10:41:37</nuo><aprasas>Pritarta – dėl pritarimo po pateikimo</aprasas></balsavimas>
+                  <balsavimas bals_id="-5"><nuo>2026-09-15 10:42:04</nuo><aprasas>Pritarta bendru sutarimu – po pateikimo</aprasas></balsavimas>
+                </balsavimai>
+              </darbotvarkes-klausimas>
+              <darbotvarkes-klausimas svarst_kl_stad_id="-6" kl_stad_id="-7">
+                <nr>1 - 1</nr><pavadinimas>Gyventojų pajamų mokesčio įstatymo pataisa (Nr. XVP-0412(2))</pavadinimas><stadija>Pateikimas</stadija>
+                <balsavimai>
+                  <balsavimas bals_id="-4"><nuo>2026-09-15 10:41:37</nuo><aprasas>Pritarta – dėl pritarimo po pateikimo</aprasas></balsavimas>
+                </balsavimai>
+              </darbotvarkes-klausimas>
+            </posedzio-eiga></posedis></posedziai>
+            """));
+
+        proceedings.Votes.Count.ShouldBe(2);
+        proceedings.Votes.Single(v => v.VoteId == -4).AgendaItemId.ShouldBe(-7);
+        proceedings.Items.Single(i => i.Id == -7).BillNumber.ShouldBe("XVP-0412");
+        var groupVote = proceedings.Votes.Single(v => v.VoteId == -5);
+        groupVote.IsConsensus.ShouldBeTrue();
+        proceedings.Items.Single(i => i.Id == groupVote.AgendaItemId).BillNumber.ShouldBeNull();
     }
 
     [Fact]
@@ -130,8 +185,8 @@ public sealed class ParserTests
     public void A_per_mp_row_without_asmens_id_is_read_for_matching_by_name()
     {
         var result = SeimasParsers.VoteResult(Xml(
-            "<SeimoInformacija><BendriBalsavimoRezultatai balsavimo_id=\"-60034\" už=\"68\" prieš=\"14\" susilaikė=\"23\"/>" +
-            "<IndividualusBalsavimoRezultatas vardas=\"Ona\" pavardė=\"Jonaitienė\" frakcija=\"PSF\" kaip_balsavo=\"Už\"/></SeimoInformacija>"))
+            "<SeimoInformacija><SeimoNariųBalsavimas balsavimo_id=\"-60034\"><BendriBalsavimoRezultatai už=\"68\" prieš=\"14\" susilaikė=\"23\"/>" +
+            "<IndividualusBalsavimoRezultatas vardas=\"Ona\" pavardė=\"Jonaitienė\" frakcija=\"PSF\" kaip_balsavo=\"Už\"/></SeimoNariųBalsavimas></SeimoInformacija>"))
             .ShouldNotBeNull();
 
         result.VoteId.ShouldBe(-60034);
@@ -152,7 +207,7 @@ public sealed class ParserTests
     public void A_vote_outside_any_agenda_item_is_a_format_error()
     {
         Should.Throw<SeimasFormatException>(() => SeimasParsers.Proceedings(Xml(
-            "<SeimoInformacija><Balsavimas balsavimo_id=\"1\" balsavimo_laikas=\"2026-03-17 10:00\"/></SeimoInformacija>")));
+            "<posedziai><balsavimas bals_id=\"1\"><nuo>2026-03-17 10:00</nuo></balsavimas></posedziai>")));
     }
 
     [Theory]
@@ -174,6 +229,11 @@ public sealed class ParserTests
     [InlineData("Dėl posėdžio darbotvarkės patvirtinimo", null, VoteKind.Procedural, null)]
     [InlineData("Dėl pertraukos", null, VoteKind.Other, null)]
     [InlineData("Pritarta bendru sutarimu", null, VoteKind.Other, null)]
+    [InlineData("Pritarta – dėl pritarimo po pateikimo", BillStage.Presentation, VoteKind.StageResult, BillStage.Presentation)]
+    [InlineData("Pritarta – dėl šio įstatymo priėmimo", BillStage.Adoption, VoteKind.StageResult, BillStage.Adoption)]
+    [InlineData("Sprendimas nepriimtas – dėl šio įstatymo priėmimo", BillStage.Adoption, VoteKind.Other, null)]
+    [InlineData("Sprendimas nepriimtas", BillStage.Adoption, VoteKind.Other, null)]
+    [InlineData("Pritarta – dėl pagrindinio komiteto siūlymo atmesti šį projektą", BillStage.Consideration, VoteKind.Other, null)]
     public void A_vote_is_classified_from_its_wording_and_what_the_rules_cannot_place_is_other_without_a_stage(
         string wording, object? itemStage, object kind, object? stage) =>
         VoteRules.Classify(wording, (BillStage?)itemStage).ShouldBe(((VoteKind)kind, (BillStage?)stage));

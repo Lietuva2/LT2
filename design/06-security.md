@@ -154,7 +154,7 @@ summary is sent.
   text, the organisation returns to the moderators' queue, as it does for a new name or website (8.14.14).
 - **A report is closed only by an action that answers it.** Keeping, hiding, restoring, publishing, describing and
   confirming answer a report on their target; setting a threshold or a planned date, holding and releasing do not.
-- **A finished bill is finished for everyone at the same moment.** Once the bill's final vote is recorded, taking part
+- **A finished bill is finished for everyone at the same moment.** Once a final vote or confirmed rejection is recorded, taking part
   (a side, an argument, "Man svarbu", a withdrawal) is refused, as an organisation's statement is, whether or not the
   hourly job has closed the record yet.
 - **Writes to one bill's record are serialised.** A moderator's description and the summary job's text cannot
