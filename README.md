@@ -124,10 +124,9 @@ repository's GitHub issues, linked from the feedback panel; nothing shown when e
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 account page (`/paskyra`) appears. From there you can add a passkey and see or end your sessions.
 
-`deploy/.env` raises, for this machine only, the per-address request limits (`LT2_RATE_*`) and, through the migrator's
-`--local-code-limits`, the sign-in code limits per hour and per day (to the highest values the settings allow), so hand
-testing and end-to-end runs do not meet a 429. The defaults in code and production are unchanged; never set these on a
-server. (The fixed local sign-in code described in design 6.2 is not built.)
+`deploy/.env` raises the per-address request limits (`LT2_RATE_*`) for local testing. The invented-data stack also
+raises the hourly and daily sign-in code limits through the migrator's `--local-code-limits` flag in `deploy/standin.env`.
+Keep these overrides local. (The fixed local sign-in code described in design 6.2 is not built.)
 
 To give a registered account the administrator role (needed for `/api/v1/admin/…`). A staff role works only in a session
 signed in with the account's staff passkey (design 6.2), so the command prints a one-time activation code on the console
