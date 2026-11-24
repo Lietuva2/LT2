@@ -272,6 +272,11 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   (2026-11-14).
 - The summary job has its own public prompt; the bill page's "Moderavimas" panel shows the reports about the
   description; a moderator may record the official text's address for a description they write or correct (2026-11-14).
+- A bill may carry a readable title, made and moderated with its description (8.13.1). Lists show it as the link with
+  the official title in fine print under it, the tags keeping their line above in every list (the number beside the
+  title was tried and dropped: it fits only where the number is the row's one tag); an `ai` title is shown on the site too; off the site only one a
+  person wrote or checked, and summaries to MPs keep the official title. Searches of bills match it, not the description
+  (2026-11-24).
 
 ## 8.14 Organisations
 
