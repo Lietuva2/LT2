@@ -72,9 +72,11 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
         jonas.Contacts.ShouldBe([new ContactResponse("El. p.", "pavyzdys.jonas.petraitis@lrs.lt")]);
         jonas.Statistics.ShouldBe(new MpStatisticsResponse(7, 7, 1m, 7, 5, 5m / 7m, 0));
 
-        jonas.RecentVotes.Count.ShouldBe(8);
+        jonas.RecentVotes.Count.ShouldBe(7);
         jonas.RecentVotes[0].Vote.Id.ShouldBe(99100102);
-        var consensus = jonas.RecentVotes.Single(v => v.Vote.IsConsensus);
+        jonas.RecentVotes.ShouldAllBe(v => v.Choice == "for" || v.Choice == "against" || v.Choice == "abstain");
+        var history = await GetAsync<MpVotesResponse>(ParliamentRoutes.MpVotesBySlug("jonas-petraitis"));
+        var consensus = history.Items.Single(v => v.Vote.IsConsensus);
         consensus.Choice.ShouldBeNull();
         consensus.Faction.ShouldBeNull();
         var presentation = jonas.RecentVotes.Single(v => v.Vote.Id == 99100002);
@@ -89,7 +91,7 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
 
         tadas.Mp.Sitting.ShouldBeFalse();
         tadas.Mandate.To.ShouldBe(new DateOnly(2026, 4, 15));
-        tadas.RecentVotes.Select(v => v.Vote.Id).ShouldBe([99100004L, 99100003, 99100002, 99100001]);
+        tadas.RecentVotes.Select(v => v.Vote.Id).ShouldBe([99100002L, 99100001]);
         tadas.Statistics!.Participation.ShouldBe(2m / 3m);
     }
 
@@ -115,6 +117,19 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
 
         votes.Items.Select(v => v.Vote.Id).ShouldBe([99100102L, 99100101, 99100006, 99100005]);
         votes.NextCursor.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Recent_votes_exclude_missed_votes_that_the_full_history_keeps()
+    {
+        const string slug = "darius-liepaitis";
+        var profile = await GetAsync<MpProfileResponse>(ParliamentRoutes.MpBySlug(slug));
+        var history = await GetAsync<MpVotesResponse>(ParliamentRoutes.MpVotesBySlug(slug));
+
+        history.Items.ShouldContain(v => v.Choice == "did-not-vote");
+        profile.RecentVotes.ShouldNotBeEmpty();
+        profile.RecentVotes.Select(v => v.Vote.Id).ShouldBe(history.Items
+            .Where(v => v.Choice is "for" or "against" or "abstain").Select(v => v.Vote.Id));
     }
 
     [Theory]

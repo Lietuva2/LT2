@@ -90,10 +90,13 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
     }
 
     [Fact]
-    public async Task A_consensus_vote_in_a_profile_has_no_choice_and_no_numbers()
+    public async Task A_consensus_vote_is_listed_only_in_the_full_history_and_has_no_choice_or_numbers()
     {
-        var html = await OkAsync("/p/jonas-petraitis");
-        var row = html[html.IndexOf("/seimas/balsavimai/99100003", StringComparison.Ordinal)..];
+        const string vote = "/seimas/balsavimai/99100003";
+        (await OkAsync("/p/jonas-petraitis")).ShouldNotContain(vote);
+        var html = await OkAsync("/p/jonas-petraitis/balsavimai");
+        html.ShouldContain(vote);
+        var row = html[html.IndexOf(vote, StringComparison.Ordinal)..];
         row = row[..row.IndexOf("</li>", StringComparison.Ordinal)];
 
         row.ShouldContain("Pritarta bendru sutarimu");
@@ -124,11 +127,12 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
     }
 
     [Fact]
-    public async Task A_mixed_group_member_shows_the_group_counts_only_the_faction_time_votes_and_no_free_votes_line()
+    public async Task A_mixed_group_member_shows_the_group_under_roles_and_counts_only_the_faction_time_votes()
     {
         var html = await OkAsync("/p/rasa-ievaite");
 
-        html.ShouldContain("<span class=\"tag\">Mišri Seimo narių grupė</span>");
+        html.ShouldContain("<dt>Mišri Seimo narių grupė</dt>");
+        html.ShouldNotContain("<span class=\"tag\">Mišri Seimo narių grupė</span>");
         html.ShouldContain("3 iš 3, kai frakcija turėjo poziciją");
         html.ShouldContain("frakcija balsavo laisvai: 0", Case.Sensitive, "the line shows while the MP has faction-time votes");
     }

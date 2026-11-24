@@ -85,6 +85,7 @@
   <data name="Mp.RecentVotes" xml:space="preserve"><value>Naujausi balsavimai</value></data>
   <data name="Mp.AllVotes" xml:space="preserve"><value>Visi balsavimai</value></data>
   <data name="Mp.NoVotes" xml:space="preserve"><value>Balsavimų mandato metu dar nėra.</value></data>
+  <data name="Mp.NoRecordedChoices" xml:space="preserve"><value>Nėra balsavimų, kuriuose užfiksuotas šio Seimo nario balsas.</value></data>
   <data name="Mp.Mandate" xml:space="preserve"><value>Mandatas</value></data>
   <data name="Mp.ElectedHow" xml:space="preserve"><value>Išrinkimo būdas</value></data>
   <data name="Mp.Constituency" xml:space="preserve"><value>Apygarda</value></data>
