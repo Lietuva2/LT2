@@ -93,8 +93,19 @@ stands only on the profile, orders no list and is never added up per faction or 
   answer says the rules classify a vote by its wording and that the moderators corrected this one, "Plačiau" to the
   methodology (`/metodika#stages`, which says moderators correct a wrong classification and that the correction
   survives re-reading the data). Never who or why. The API's vote answer carries `classificationCorrected`.
-- Data quirks are first-class: consensus votes are stored with `is_consensus` and no ballots; the official "per-MP votes
-  do not match the protocol" note is stored and shown next to the result.
+- Data quirks are first-class: consensus votes are stored with `is_consensus` and no ballots. The Seimas's note on a
+  result (`komentaras`) is stored and shown next to the result, except the standing disclaimer "Elektroninėmis
+  priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų": lrs.lt puts it on
+  every result whether or not the per-MP rows add up to the totals (all 6 295 results of the term, every one adding up,
+  2026-11-24), so on its own it says nothing about the vote beside it. Instead we compare: when a result has per-MP rows
+  and all three totals, and the rows marked už, prieš and susilaikė, counted, differ from the totals, the note is that
+  same sentence (owner, 2026-11-24), followed by any other note the Seimas gives; otherwise the disclaimer is left out
+  and any other text is shown as written. The rows counted are lrs.lt's, not the ballots we matched to MPs (a row
+  matching no MP is our own warning, not a difference in the Seimas's numbers). Pure rules (`VoteRules.RowsAddUp`,
+  `VoteRules.OfficialNote`) decide this when parsing. The invented stand-in data has Seimas-wide totals and 14 MPs, so
+  every one of its votes carries the sentence. The methodology says once, in "Ypatingi atvejai" (`/metodika#vote-notes`),
+  that the Seimas gives this disclaimer, that the official result is the one in the sitting's protocol, and that the
+  sentence is shown beside a vote only when its per-MP votes do not add up.
 - A run the service fails is marked failed and logged as an error for the alerting (9.4); the next period retries, and
   the pages keep showing the last good data with its import time.
 

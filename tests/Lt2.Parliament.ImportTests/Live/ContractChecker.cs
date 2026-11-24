@@ -201,6 +201,12 @@ internal static class ContractChecker
                 return empty > 0 ? new(line, Verdict.Confirmed, $"{empty} empty choices") : new(line, Verdict.NotObserved, "every MP in the sample voted");
             case "R19":
                 return Sums(line, all.Where(f => f.Service == SeimasServices.VoteResults && f.Document is not null).ToList());
+            case "R21":
+                var notes = elements.Where(e => e.Name.LocalName == N.Totals).Select(e => e.Attribute(N.Note)?.Value).ToList();
+                var standing = notes.Count(n => !string.IsNullOrWhiteSpace(n) && VoteRules.OfficialNote(n) is null);
+                return notes.Count == 0 ? new(line, Verdict.NotObserved, "no vote result in the sample")
+                    : standing == notes.Count ? new(line, Verdict.Confirmed, $"{standing} of {notes.Count} result(s) carry the standing disclaimer")
+                    : new(line, Verdict.Contradicted, $"{standing} of {notes.Count} result(s) carry the standing disclaimer; others: {string.Join(" | ", notes.Where(n => VoteRules.OfficialNote(n) is not null).Distinct().Take(5))}");
             case "V4":
                 var wordings = all.Where(f => f.Service == SeimasServices.Proceedings && f.Document is not null)
                     .SelectMany(f => f.Document!.Descendants().Where(e => e.Name.LocalName == N.Vote))
@@ -236,14 +242,14 @@ internal static class ContractChecker
             checkedVotes++;
             var sums = (For: parsed.Ballots.Count(b => b.Choice == BallotChoice.For), Against: parsed.Ballots.Count(b => b.Choice == BallotChoice.Against), Abstain: parsed.Ballots.Count(b => b.Choice == BallotChoice.Abstain));
             var match = sums.For == parsed.Totals.For && sums.Against == parsed.Totals.Against && sums.Abstain == parsed.Totals.Abstain;
-            if (!match && parsed.OfficialNote is null)
+            if (!match)
             {
-                problems.Add($"{parsed.VoteId}: rows {sums.For}:{sums.Against}:{sums.Abstain}, totals {parsed.Totals.For}:{parsed.Totals.Against}:{parsed.Totals.Abstain}, no note");
+                problems.Add($"{parsed.VoteId}: rows {sums.For}:{sums.Against}:{sums.Abstain}, totals {parsed.Totals.For}:{parsed.Totals.Against}:{parsed.Totals.Abstain}, note: {parsed.OfficialNote ?? "none"}");
             }
         }
 
         return checkedVotes == 0 ? new(line, Verdict.NotObserved, "no vote with per-MP rows")
-            : problems.Count == 0 ? new(line, Verdict.Confirmed, $"{checkedVotes} vote(s) sum or carry the note")
+            : problems.Count == 0 ? new(line, Verdict.Confirmed, $"{checkedVotes} vote(s) sum to their totals")
             : new(line, Verdict.Contradicted, string.Join("; ", problems));
     }
 
