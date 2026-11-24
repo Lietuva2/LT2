@@ -55,6 +55,15 @@ public sealed class AgendaParserTests
         AgendaParser.StageOf(text).ShouldBe(stage);
 
     [Fact]
+    public void A_bill_number_with_letters_is_read_as_the_open_data_reads_it()
+    {
+        var parse = AgendaParser.Parse(
+            "<html><body><h2>2026 m. lapkričio 17 d.</h2><table><tr><td>Įstatymo projektas (Nr. XIVP-0412GR(2))</td><td>Svarstymas</td></tr></table></body></html>", "u");
+        parse.Rows.Select(r => r.BillNumber).ShouldBe(["XIVP-0412GR"]);
+        Lt2.Parliament.Import.Parsing.SeimasParsers.BillInTitle("Įstatymo projektas (Nr. XIVP-0412GR(2))").Number.ShouldBe("XIVP-0412GR");
+    }
+
+    [Fact]
     public void A_page_without_a_single_sitting_date_is_refused_as_a_changed_layout()
     {
         var parse = AgendaParser.Parse("<html><body><table><tr><td>XVP-0412</td><td>Priėmimas</td></tr></table></body></html>", "u");

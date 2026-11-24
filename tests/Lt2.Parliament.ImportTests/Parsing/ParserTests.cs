@@ -113,13 +113,26 @@ public sealed class ParserTests
     [Theory]
     [InlineData("Gyventojų pajamų mokesčio įstatymo pataisa (Nr. XVP-0412)", "Gyventojų pajamų mokesčio įstatymo pataisa", "XVP-0412")]
     [InlineData("Gyventojų pajamų mokesčio įstatymo pataisa (Nr. XVP-0412(2))", "Gyventojų pajamų mokesčio įstatymo pataisa", "XVP-0412")]
-    [InlineData("Gyventojų pajamų mokesčio įstatymo pataisa (Nr. XVP-0412(2)ES)", "Gyventojų pajamų mokesčio įstatymo pataisa", "XVP-0412")]
+    [InlineData("Gyventojų pajamų mokesčio įstatymo pataisa (Nr. XIVP-0412GR)", "Gyventojų pajamų mokesčio įstatymo pataisa", "XIVP-0412GR")]
+    [InlineData("Gyventojų pajamų mokesčio įstatymo pataisa (Nr. XIVP-0412GR(2))", "Gyventojų pajamų mokesčio įstatymo pataisa", "XIVP-0412GR")]
+    [InlineData("Gyventojų pajamų mokesčio įstatymo pataisa (Nr. XIVP-0412(2)GR)", "Gyventojų pajamų mokesčio įstatymo pataisa", "XIVP-0412GR")]
     [InlineData("Mokesčių paketas (Nr. XVP-0412(2), XVP-0413 ir XVP-0414(3))", "Mokesčių paketas", "XVP-0412")]
     [InlineData("Įstatymo Nr. IX-123 pakeitimo įstatymo projektas (Nr. XVP-0412) (tęsinys)", "Įstatymo Nr. IX-123 pakeitimo įstatymo projektas (Nr. XVP-0412) (tęsinys)", "XVP-0412")]
     [InlineData("Įstatymo projektas (Nr. XVP-0412) dėl įstatymo (Nr. IX-123)", "Įstatymo projektas (Nr. XVP-0412) dėl įstatymo (Nr. IX-123)", "XVP-0412")]
     [InlineData("Dėl posėdžio darbotvarkės", "Dėl posėdžio darbotvarkės", null)]
     public void The_bill_of_an_item_is_the_first_number_of_its_titles_last_number_part(string title, string shown, string? number) =>
         SeimasParsers.BillInTitle(title).ShouldBe((shown, number));
+
+    [Theory]
+    [InlineData("XVP-0412", "XVP-0412")]
+    [InlineData("XVP-0412(2)", "XVP-0412")]
+    [InlineData("XIVP-0412GR", "XIVP-0412GR")]
+    [InlineData("XIVP-0412GR(3)", "XIVP-0412GR")]
+    [InlineData("XVP-0412 Svarstymas", "XVP-0412")]
+    [InlineData("XVP-0412Svarstymas", "XVP-0412")]
+    [InlineData("Įstatymo Nr. IX-123 pakeitimas", null)]
+    public void A_registration_number_keeps_its_letters_and_drops_its_revision(string text, string? number) =>
+        BillNumbers.First(text).ShouldBe(number);
 
     [Fact]
     public void An_untitled_agenda_item_keeps_its_stage_id_and_the_next_item_is_read()
