@@ -121,6 +121,11 @@ code review.
   Caddyfile's filter), and their pages are `noindex` and `no-store` (`SecurityHeaders`). The account, staff, sign-in, MP
   and one-time-link pages are `noindex, nofollow` too (`SecurityHeaders.IsPrivatePage`, design 8.22.5) and carry no link
   preview.
+- **The jobs command (design 6.3; owner 2026-11-24)**, `Lt2.Jobs/JobsCommand.cs`, run as `dotnet Lt2.Worker.dll jobs list |
+  trigger {id}` inside the worker's container: the worker's configuration and secrets, no Hangfire server, no web address.
+  It needs no sign-in because reaching it already means a shell on the host; it is not a way into the dashboard, which keeps
+  its rule below. A trigger is audited as `jobs.command-trigger` (system, target the job id, no details). Agents use it on
+  local stacks instead of the dashboard, which they cannot open without a staff passkey.
 - **The Hangfire dashboard (design 3, 6.3; owner 2026-11-18)**, `/administravimas/darbai` ("Foniniai darbai" in the account
   item, for administrators), `Lt2.Web/Jobs/JobsDashboard.cs`. Only `Policies.Administrator` (a staff-passkey session): the
   endpoint requires it and `AdministratorDashboardFilter` (Hangfire's `IDashboardAsyncAuthorizationFilter`) evaluates it again;

@@ -22,6 +22,13 @@ Policy-based, with resource handlers where ownership matters.
 | Moderator | Review bills' records and reasons, merge, hide (reported comments too, 8.23.8), correct planned dates, hold a send, approve an urgent send, restrict an account from writing and lift that. |
 | Administrator | Roles, resetting an account, locking and unlocking an account (8.3), ending an MP's link, runtime settings, invitation codes, usage statistics, the MP sending screens, and the jobs dashboard ("Foniniai darbai", `/administravimas/darbai`: the recurring jobs, their runs and failures, "Trigger now"); every moderator action, restricting an account from writing and lifting that included. Cannot read individual positions through any screen. |
 
+The same jobs are reached from the worker's container, for whoever can already run commands there (and so reach the
+database and its secrets): `dotnet Lt2.Worker.dll jobs list` lists them with their schedule ("by hand" for one that never
+fires), next and last run, and `jobs trigger {id}` is "Trigger now", enqueued for the worker and audited
+(`jobs.command-trigger`, by the system, the job's id as the target, no details). No web address serves it, so the
+dashboard keeps its rule; it is how an operator or an agent without a staff passkey runs a job on a local stack
+(`docker exec {project}-worker-1 dotnet Lt2.Worker.dll jobs trigger parliament-members`).
+
 No screen and no API returns another person's position. Group numbers (the supporters of the MP's party on a side, in a
 summary) are published only for groups of at least the runtime setting `Digest:PartyGroupMinimum` (default 10, 0 = no
 floor; 8.4).
