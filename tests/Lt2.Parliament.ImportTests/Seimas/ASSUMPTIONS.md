@@ -75,7 +75,7 @@ name; a namespace on the real elements would contradict every element line.
 | A1 | p2b.ad_sp_darbotvarke | element | DarbotvarkėsKlausimas | (document) | seen | live XML | agenda item |
 | A2 | p2b.ad_sp_darbotvarke | attribute | darbotvarkės_klausimo_id | KlausimoStadija | seen | live XML | agenda stage key |
 | A3 | p2b.ad_sp_darbotvarke | attribute | numeris | DarbotvarkėsKlausimas | seen | live XML | agenda item number |
-| A4 | p2b.ad_sp_darbotvarke | attribute | pavadinimas | DarbotvarkėsKlausimas | seen | live XML | title with the bill number and optional version at the end |
+| A4 | p2b.ad_sp_darbotvarke | attribute | pavadinimas | DarbotvarkėsKlausimas | seen | live XML | title may be blank (sitting -502050, stage -97201); otherwise it may end in a bill number and version |
 | A5 | p2b.ad_sp_darbotvarke | element | KlausimoStadija | DarbotvarkėsKlausimas | seen | live XML | one row per stage of an item |
 | A6 | p2b.ad_sp_darbotvarke | attribute | pavadinimas | KlausimoStadija | seen | live XML | name of the stage |
 | A7 | p2b.ad_sp_darbotvarke | attribute | dokumento_nuoroda | KlausimoStadija | seen | live XML | e-seimas link |

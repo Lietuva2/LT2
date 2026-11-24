@@ -111,6 +111,26 @@ public sealed class ParserTests
     }
 
     [Fact]
+    public void An_untitled_agenda_item_keeps_its_stage_id_and_the_next_item_is_read()
+    {
+        var items = SeimasParsers.Agenda(Xml("""
+            <SeimoInformacija>
+              <DarbotvarkėsKlausimas numeris="r -  2." laikas_nuo="" laikas_iki="" pavadinimas="">
+                <KlausimoStadija darbotvarkės_klausimo_id="-97201" pavadinimas="" dokumento_nuoroda=""/>
+              </DarbotvarkėsKlausimas>
+              <DarbotvarkėsKlausimas numeris="3." pavadinimas="Pertrauka">
+                <KlausimoStadija darbotvarkės_klausimo_id="-97202"/>
+              </DarbotvarkėsKlausimas>
+            </SeimoInformacija>
+            """));
+
+        items.ShouldBe([
+            new ParsedAgendaItem(-97201, "r -  2.", "", null, null, null),
+            new ParsedAgendaItem(-97202, "3.", "Pertrauka", null, null, null),
+        ]);
+    }
+
+    [Fact]
     public void Proceedings_link_each_vote_to_its_agenda_item_and_mark_consensus()
     {
         var votes = SeimasParsers.Proceedings(Synthetic("p2b.ad_seimo_posedzio_eiga_full@posedzio_id=99001001")).Votes;
