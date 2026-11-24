@@ -28,7 +28,7 @@ internal sealed class ParliamentImporter(
     ILogger<ParliamentImporter> logger) : IParliamentImport
 {
     /// <summary>Raise when a parser or an upsert changes, so stored responses are applied again.</summary>
-    internal const int ParserVersion = 6;
+    internal const int ParserVersion = 7;
 
     /// <summary>Only one import at a time, across worker instances.</summary>
     internal const long LockKey = 0x4C54_3250_4152_4C;

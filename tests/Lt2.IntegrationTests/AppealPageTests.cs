@@ -48,6 +48,10 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var seimas = people.IndexOf("aria-labelledby=\"h-votes\"", StringComparison.Ordinal);
         var aside = people.IndexOf("<aside", StringComparison.Ordinal);
         people = seimas < 0 ? people : people[..seimas] + (aside > seimas ? people[aside..] : "");
+
+        // The Seimas panel's note is the Seimas's own text (design 7.2: lrs.lt's sentence when the per-MP votes do not add
+        // up, always for the invented votes, and any note of its own): its words about its vote, not ours about a side.
+        people = Regex.Replace(people, "<p class=\"note note--quiet\" id=\"seimas-note\">[^<]*</p>", "");
         Regex.IsMatch(Regex.Replace(people, "<a [^>]*>[^<]*</a>|href=\"[^\"]*\"", ""), "balsavim", RegexOptions.IgnoreCase).ShouldBeFalse();
     }
 

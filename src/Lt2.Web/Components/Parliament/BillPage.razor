@@ -435,7 +435,7 @@
                 <SplitBar For="result.Totals.For" Against="result.Totals.Against" Abstain="result.Totals.Abstain" />
                 @if (result.OfficialNote is { } officialNote)
                 {
-                    <p class="note note--quiet">@officialNote</p>
+                    <p class="note note--quiet" id="seimas-note">@officialNote</p>
                 }
             }
             <p class="small">

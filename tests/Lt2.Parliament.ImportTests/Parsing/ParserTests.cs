@@ -204,7 +204,7 @@ public sealed class ParserTests
 
         result.VoteId.ShouldBe(99100002);
         result.Totals.ShouldBe(new VoteTotals(71, 38, 14, 123, 141));
-        result.OfficialNote.ShouldBeNull();
+        result.OfficialNote.ShouldBe(VoteRules.MismatchNote, "the synthetic totals are Seimas-wide, its 13 rows cannot add up to them");
         result.Ballots.Count.ShouldBe(13);
         result.Ballots.Single(b => b.PersonId == 99000001).ShouldBe(new ParsedBallot(99000001, "Jonas", "Petraitis", "RPF", BallotChoice.Against));
     }
@@ -228,6 +228,47 @@ public sealed class ParserTests
             .ShouldNotBeNull();
 
         result.OfficialNote.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Rows_that_add_up_drop_the_disclaimer_and_rows_that_do_not_bring_back_its_sentence()
+    {
+        const string disclaimer = "komentaras=\"Elektroninėmis priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų\"";
+        const string rows =
+            "<IndividualusBalsavimoRezultatas vardas=\"Jonas\" pavardė=\"Petraitis\" kaip_balsavo=\"Prieš\"/>" +
+            "<IndividualusBalsavimoRezultatas vardas=\"Ona\" pavardė=\"Jonaitienė\" kaip_balsavo=\"Už\"/>" +
+            "<IndividualusBalsavimoRezultatas vardas=\"Rūta\" pavardė=\"Mockutė\" kaip_balsavo=\"\"/>";
+        static ParsedVoteResult Parse(string totals, string rows) => SeimasParsers.VoteResult(Xml(
+            "<SeimoInformacija><SeimoNariųBalsavimas balsavimo_id=\"-54969\"><BendriBalsavimoRezultatai " + totals + "/>" + rows +
+            "</SeimoNariųBalsavimas></SeimoInformacija>")).ShouldNotBeNull();
+
+        Parse("už=\"1\" prieš=\"1\" susilaikė=\"0\" " + disclaimer, rows).OfficialNote.ShouldBeNull();
+        Parse("už=\"2\" prieš=\"1\" susilaikė=\"0\" " + disclaimer, rows).OfficialNote.ShouldBe(VoteRules.MismatchNote);
+        Parse("už=\"2\" prieš=\"1\" susilaikė=\"0\" komentaras=\"\"", rows).OfficialNote.ShouldBe(VoteRules.MismatchNote, "flagged by our count, not by lrs.lt's comment");
+    }
+
+    [Theory]
+    [InlineData(1, 1, 0, "Už,Prieš,", true)]
+    [InlineData(1, 1, 1, "Už,Prieš,", false)]
+    [InlineData(2, 0, 0, "Už,Prieš", false)]
+    [InlineData(1, 1, 0, "", true)]
+    [InlineData(null, 1, 0, "Prieš", true)]
+    [InlineData(0, 0, 0, ",,", true)]
+    public void Per_mp_rows_add_up_when_their_counts_equal_the_three_totals_and_nothing_to_compare_adds_up(int? @for, int? against, int? abstain, string choices, bool addsUp) =>
+        VoteRules.RowsAddUp(
+            new VoteTotals(@for, against, abstain, null, null),
+            choices.Length == 0 ? [] : choices.Split(',').Select(VoteRules.Choice).ToList()).ShouldBe(addsUp);
+
+    [Fact]
+    public void A_result_that_does_not_add_up_shows_lrs_sentence_before_any_other_note_of_the_seimas()
+    {
+        var totals = new VoteTotals(2, 0, 0, null, null);
+        BallotChoice[] rows = [BallotChoice.For];
+
+        VoteRules.OfficialNote(VoteRules.StandingDisclaimer, totals, rows).ShouldBe(VoteRules.MismatchNote);
+        VoteRules.OfficialNote(" Balsavimas pakartotas. ", totals, rows).ShouldBe(VoteRules.MismatchNote + " Balsavimas pakartotas.");
+        VoteRules.OfficialNote(" Balsavimas pakartotas. ", new VoteTotals(1, 0, 0, null, null), rows).ShouldBe("Balsavimas pakartotas.");
+        VoteRules.MismatchNote.ShouldBe("Elektroninėmis priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų.");
     }
 
     [Theory]
