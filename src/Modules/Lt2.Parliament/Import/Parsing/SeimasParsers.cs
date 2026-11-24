@@ -156,7 +156,7 @@ internal static partial class SeimasParsers
         XmlRead.Load(body).All(N.AgendaItem)
             .SelectMany(e =>
             {
-                var (title, number) = BillInTitle(e.Required(N.Name));
+                var (title, number) = BillInTitle(e.Optional(N.Name) ?? "");
                 return e.Children(N.AgendaStage).Select(stage => new ParsedAgendaItem(
                     stage.RequiredId(N.AgendaItemId), e.Optional(N.Number), title, stage.Optional(N.Name),
                     number, stage.Optional(N.AgendaDocumentLink)));
