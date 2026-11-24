@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="lt"><head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    
+    <link rel="icon" type="image/svg&#x2B;xml" href="favicon.kkjnad509c.svg" />
+    <link rel="stylesheet" href="fonts/fonts.css">
+    <link rel="stylesheet" href="../../src/Lt2.Web/wwwroot/css/lt2.css">
+    
+    <title>balsavimai · trumpi pavadinimai</title><meta name="description" content="Matykite, k&#x105; Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko pra&#x161;ote." />
+    <meta property="og:site_name" content="Lietuva 2.0">
+    <meta property="og:locale" content="lt_LT">
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Seimo balsavimai" />
+    <meta property="og:description" content="Matykite, k&#x105; Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko pra&#x161;ote." /><meta property="og:url" content="https://lt2.localhost:8443/seimas/balsavimai" />
+        <meta property="og:image" content="https://lt2.localhost:8443/img/link-preview.vmh5p4fb3x.png" />
+        <meta property="og:image:type" content="image/png">
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="Lietuva 2.0 &#x17E;enklas ir pavadinimas" /><meta name="twitter:card" content="summary_large_image">
+<style>
+/* Mockup only: what the readable title adds (design 8.13, 8.12.5). */
+.mk-banner { font: 600 12px/1.5 ui-monospace, Consolas, monospace; color: #fff; background: #b0306a; padding: 4px 10px; }
+.tl-item__official { display: block; margin-top: 2px; overflow-wrap: break-word; }
+.bill-official { margin-top: calc(-1 * var(--sp-2)); }
+.mk-panel { outline: 2px dashed #b0306a; outline-offset: 6px; }
+</style>
+<script src="lt2-theme.js"></script>
+<style>
+.tl-item__official { display: block; margin-top: 2px; overflow-wrap: break-word; }
+</style>
+</head>
+<body><div class="mk-banner">Maketas: projektai, jų pavadinimai ir aprašymai išgalvoti</div><header class="page top"><a class="top__brand" href="/"><svg viewBox="28 44 604 474" aria-hidden="true" focusable="false" class="logo"><g stroke-width="10" stroke-linejoin="round"><path class="logo-slate" d="M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z"></path>
+        <path class="logo-leaf" d="M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z"></path>
+        <path class="logo-brand" d="M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z"></path></g></svg><span class="top__name">Lietuva 2.0</span></a>
+    <nav class="top__nav" aria-label="Pagrindinis meniu"><div class="drop drop--desc" id="projects-menu" data-nav-hover><a class="drop__toggle drop__link" href="/darbotvarke" id="nav-projects" aria-current="true">Seimas</a>
+            <details class="drop__touch" id="projects-touch" data-nav-menu><summary class="drop__toggle" id="nav-projects-touch" aria-current="true">Seimas</summary></details>
+            <div class="drop__panel drop__panel--start drop__panel--desc" id="projects-panel"><ul class="drop__links"><li><a href="/darbotvarke" id="nav-tab-bills"><span class="drop__label">Projektai</span><span class="drop__desc">Seimo darbotvark&#x117; ir visi projektai, kuriuos Seimas svarsto ar jau baig&#x117;.</span></a></li><li><a href="/seimas/balsavimai" id="nav-tab-seimas-votes" aria-current="page"><span class="drop__label">Balsavimai</span><span class="drop__desc">Kaip Seimas balsavo: visi balsavimai nuo naujausio.</span></a></li><li><a href="/suvestines" id="nav-tab-digests"><span class="drop__label">Suvestin&#x117;s</span><span class="drop__desc">K&#x105; apie dalyvi&#x173; pra&#x161;ymus su&#x17E;ino Seimo nariai.</span></a></li><li><a href="/seimo-nariai" id="nav-tab-mps"><span class="drop__label">Seimo nariai</span><span class="drop__desc">Kiekvieno Seimo nario pareigos, balsavimai ir atsakymai.</span></a></li></ul></div></div><a href="/statistika" id="nav-statistics">Statistika</a><a href="/prisijungti" id="nav-sign-in">Prisijungti</a></nav></header>
+
+<main class="page stack stack--loose">
+
+
+<h1 class="seimas-title">Seimas</h1>
+<div class="page-head" id="page-head"><nav class="row tabs project-tabs" aria-label="Seimas" id="project-tabs"><a href="/darbotvarke" id="tab-bills">Projektai</a><a href="/seimas/balsavimai" id="tab-seimas-votes" aria-current="page">Balsavimai</a><a href="/suvestines" id="tab-digests">Suvestin&#x117;s</a><a href="/seimo-nariai" id="tab-mps">Seimo nariai</a></nav></div>
+<div class="stack page-head__rest"><p class="lead">D&#x117;l ko ir kaip balsavo Seimas &#x2013; pagal dienas, nuo naujausi&#x173;, i&#x161; Seimo atvir&#x173;j&#x173; duomen&#x173;.</p>
+    <form class="filters" method="get" action="/seimas/balsavimai" role="search" id="votes-search"><div class="field"><label for="votes-q">Projekto Nr. arba pavadinimas</label>
+            <input class="input" id="votes-q" name="q" type="search" maxlength="100" autocomplete="off" /></div>
+        <div class="field"><label for="votes-kind">Kurie balsavimai</label>
+            <select class="input" id="votes-kind" name="kas"><option value="etapai" selected>Projekt&#x173; etap&#x173; balsavimai</option><option value="priemimai">Tik pri&#x117;mimai</option><option value="visi">Visi balsavimai</option></select></div>
+        <div class="field"><label for="votes-to">Iki</label>
+            <div class="date-row"><input class="input num" id="votes-to" name="iki" type="text" inputmode="numeric" autocomplete="off" pattern="\d{4}-\d{2}-\d{2}" placeholder="2026-11-19" />
+                <button type="button" class="date-pick" data-date-pick="votes-to" aria-label="Pasirinkti dat&#x105; i&#x161; kalendoriaus" hidden><svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></rect>
+            <path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></button></div></div>
+        <div class="row"><button class="btn" type="submit">Rodyti</button></div></form></div>
+
+<div class="sheet stack" id="votes"><section class="tl-day tl-past" aria-label="2026 m. lapkri&#x10D;io 19 d." id="day-2026-11-19"><div class="tl-date"><span class="label">2026 m.</span><b>lapkri&#x10D;io 19 d.</b><span class="small">ketvirtadienis</span></div>
+            <ul class="tl-items"><li class="tl-item" id="vote-1"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0533</a><span class="tag">Svarstymas</span></span>
+<a class="tl-item__title" href="/seimas/balsavimai/-60875">Didinamas neapmokestinamųjų pajamų dydis</a><span class="fine tl-item__official">Gyventojų pajamų mokesčio įstatymo Nr. IX-1007 20 straipsnio pakeitimo įstatymo projektas</span></div>
+            <div class="tl-item__side"><div class="tl-block"><span class="label">Seimas</span><span class="row result-line"><span class="tag tag--outcome" data-majority="for">Dauguma u&#x17E;</span>
+            <span class="small num">u&#x17E; 72 &#xB7; prie&#x161; 0 &#xB7; susilaik&#x117; 0</span></span>
+        <svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="72 u&#x17E;, 0 prie&#x161;, 0 susilaik&#x117;"><rect class="splitbar__for" x="0" y="0" width="1000" height="10"></rect>
+        <rect class="splitbar__against" x="1000" y="0" width="0" height="10"></rect>
+        <rect class="splitbar__abstain" x="1000" y="0" width="0" height="10"></rect></svg></div></div></li><li class="tl-item" id="vote-2"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0707</a><span class="tag">Svarstymas</span></span>
+<a class="tl-item__title" href="/seimas/balsavimai/-60871">Mokykla pavėžės mokinius, gyvenančius toliau nei 3 km</a><span class="fine tl-item__official">Švietimo įstatymo Nr. I-1489 36 ir 38 straipsnių pakeitimo įstatymo projektas</span></div>
+            <div class="tl-item__side"><div class="tl-block"><span class="label">Seimas</span><span class="row result-line"><span class="tag tag--outcome" data-majority="for">Dauguma u&#x17E;</span>
+            <span class="small num">u&#x17E; 72 &#xB7; prie&#x161; 0 &#xB7; susilaik&#x117; 1</span></span>
+        <svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="72 u&#x17E;, 0 prie&#x161;, 1 susilaik&#x117;"><rect class="splitbar__for" x="0" y="0" width="986.3" height="10"></rect>
+        <rect class="splitbar__against" x="986.3" y="0" width="0" height="10"></rect>
+        <rect class="splitbar__abstain" x="986.3" y="0" width="13.7" height="10"></rect></svg></div></div></li><li class="tl-item" id="vote-3"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0618</a><span class="tag">Svarstymas</span></span>
+<a class="tl-item__title" href="/seimas/balsavimai/-60869">Elektriniais paspirtukais – tik nuo 14 metų ir su šalmu</a><span class="fine tl-item__official">Saugaus eismo automobilių keliais įstatymo Nr. IX-2002 2, 17 ir 18 straipsnių pakeitimo įstatymo projektas</span></div>
+            <div class="tl-item__side"><div class="tl-block"><span class="label">Seimas</span><span class="row result-line"><span class="tag tag--outcome" data-majority="for">Dauguma u&#x17E;</span>
+            <span class="small num">u&#x17E; 71 &#xB7; prie&#x161; 1 &#xB7; susilaik&#x117; 0</span></span>
+        <svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="71 u&#x17E;, 1 prie&#x161;, 0 susilaik&#x117;"><rect class="splitbar__for" x="0" y="0" width="986.1" height="10"></rect>
+        <rect class="splitbar__against" x="986.1" y="0" width="13.9" height="10"></rect>
+        <rect class="splitbar__abstain" x="1000" y="0" width="0" height="10"></rect></svg></div></div></li><li class="tl-item" id="vote-4"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0745</a><span class="tag">Svarstymas</span></span>
+<a class="tl-item__title" href="/seimas/balsavimai/-60867">Sveikatos priežiūros įstaigų įstatymo Nr. I-1367 52 straipsnio pakeitimo įstatymo projektas</a></div>
+            <div class="tl-item__side"><div class="tl-block"><span class="label">Seimas</span><span class="row result-line"><span class="tag tag--outcome" data-majority="for">Dauguma u&#x17E;</span>
+            <span class="small num">u&#x17E; 75 &#xB7; prie&#x161; 0 &#xB7; susilaik&#x117; 0</span></span>
+        <svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="75 u&#x17E;, 0 prie&#x161;, 0 susilaik&#x117;"><rect class="splitbar__for" x="0" y="0" width="1000" height="10"></rect>
+        <rect class="splitbar__against" x="1000" y="0" width="0" height="10"></rect>
+        <rect class="splitbar__abstain" x="1000" y="0" width="0" height="10"></rect></svg></div></div></li><li class="tl-item" id="vote-5"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0802</a><span class="tag">Svarstymas</span></span>
+<a class="tl-item__title" href="/seimas/balsavimai/-60865">Ilgesnis terminas ginčyti žemės sklypo ribas</a><span class="fine tl-item__official">Žemės įstatymo Nr. I-446 37 straipsnio pakeitimo įstatymo projektas</span></div>
+            <div class="tl-item__side"><div class="tl-block"><span class="label">Seimas</span><span class="row result-line"><span class="tag tag--outcome" data-majority="for">Dauguma u&#x17E;</span>
+            <span class="small num">u&#x17E; 72 &#xB7; prie&#x161; 0 &#xB7; susilaik&#x117; 2</span></span>
+        <svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="72 u&#x17E;, 0 prie&#x161;, 2 susilaik&#x117;"><rect class="splitbar__for" x="0" y="0" width="973" height="10"></rect>
+        <rect class="splitbar__against" x="973" y="0" width="0" height="10"></rect>
+        <rect class="splitbar__abstain" x="973" y="0" width="27" height="10"></rect></svg></div></div></li><li class="tl-item" id="vote-6"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0811</a><span class="tag">Svarstymas</span></span>
+<a class="tl-item__title" href="/seimas/balsavimai/-60863">Užstato sistema ir stikliniams indeliams</a><span class="fine tl-item__official">Atliekų tvarkymo įstatymo Nr. VIII-787 2, 30 ir 34 straipsnių pakeitimo įstatymo projektas</span></div>
+            <div class="tl-item__side"><div class="tl-block"><span class="label">Seimas</span><span class="row result-line"><span class="tag tag--outcome" data-majority="for">Dauguma u&#x17E;</span>
+            <span class="small num">u&#x17E; 74 &#xB7; prie&#x161; 0 &#xB7; susilaik&#x117; 1</span></span>
+        <svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="74 u&#x17E;, 0 prie&#x161;, 1 susilaik&#x117;"><rect class="splitbar__for" x="0" y="0" width="986.7" height="10"></rect>
+        <rect class="splitbar__against" x="986.7" y="0" width="0" height="10"></rect>
+        <rect class="splitbar__abstain" x="986.7" y="0" width="13.3" height="10"></rect></svg></div></div></li><li class="tl-item" id="vote-7"><div class="tl-item__main"><span class="row"><a class="tag tag--ink num" href="#">XVP-0826</a><span class="tag">Pateikimas</span></span>
+<a class="tl-item__title" href="/seimas/balsavimai/-60858">Papildoma laisva diena tėvams, auginantiems neįgalų vaiką</a><span class="fine tl-item__official">Darbo kodekso 112 ir 113 straipsnių pakeitimo įstatymo projektas</span></div>
+            <div class="tl-item__side"><div class="tl-block"><span class="label">Seimas</span><span class="row result-line"><span class="tag tag--outcome" data-majority="consensus">Pritarta bendru sutarimu</span></span></div></div></li></ul></section><section class="tl-day tl-past" aria-label="2026 m. lapkri&#x10D;io 17 d." id="day-2026-11-17"><div class="tl-date"><span class="label">2026 m.</span><b>lapkri&#x10D;io 17 d.</b><span class="small">antradienis</span></div>
+            <ul class="tl-items"></ul></section><div class="row show-more" id="votes-more-line"><p class="small num" role="status" id="votes-shown">Rodoma 30 i&#x161; 2&#xA0;965</p><a class="show-more__link" href="/seimas/balsavimai?rodyti=80" id="votes-more">Rodyti daugiau</a></div><p class="small"><span class="hint"><button type="button" class="hint__trigger" id="hint-vote-majority" popovertarget="hint-vote-majority-panel" aria-describedby="hint-vote-majority-says">Kas yra balsavusi&#x173;j&#x173; dauguma?</button><span class="visually-hidden" id="hint-vote-majority-says">Atveria trump&#x105; paai&#x161;kinim&#x105;</span><span class="hint__panel" id="hint-vote-majority-panel" popover="auto"><span class="hint__answer">&#x201E;Dauguma u&#x17E;&#x201C; &#x2013; kai u&#x17E; balsavo daugiau nei pus&#x117; t&#x173;, kurie balsavo &#x201E;u&#x17E;&#x201C;, &#x201E;prie&#x161;&#x201C; arba susilaik&#x117;; &#x201E;Dauguma prie&#x161;&#x201C; &#x2013; kai prie&#x161; balsavo daugiau nei pus&#x117; j&#x173;; kitaip daugumos n&#x117;ra. Tai n&#x117;ra oficialus Seimo sprendimas: jis skai&#x10D;iuojamas nuo pos&#x117;dyje u&#x17E;siregistravusi&#x173; Seimo nari&#x173;, o kai kuriems sprendimams reikia didesn&#x117;s daugumos.</span></span></span></p></div>
+
+<p class="fine">&#x160;altinis: Lietuvos Respublikos Seimo atvirieji duomenys, <a href="https://creativecommons.org/licenses/by/4.0/deed.lt" rel="license">CC BY 4.0</a>
+    · atnaujinta 2026 m. lapkri&#x10D;io 24 d. 22:36 · <a href="/metodika">Metodika</a></p></main>
+
+<footer class="page foot stack"><nav class="foot__groups" aria-label="Apie svetain&#x119;" id="footer-links"><section class="foot__group" aria-labelledby="foot-browse"><h2 class="label" id="foot-browse">Nar&#x161;yti</h2>
+            <ul><li><a href="/darbotvarke" id="foot-tab-bills">Projektai</a></li><li><a href="/seimas/balsavimai" id="foot-tab-seimas-votes">Balsavimai</a></li><li><a href="/suvestines" id="foot-tab-digests">Suvestin&#x117;s</a></li><li><a href="/seimo-nariai" id="foot-tab-mps">Seimo nariai</a></li><li><a href="/statistika" id="foot-statistics">Statistika</a></li></ul></section>
+        <section class="foot__group" aria-labelledby="foot-about"><h2 class="label" id="foot-about">Apie</h2>
+            <ul><li><a href="/metodika" id="foot-methodology">Metodika</a></li><li><a href="/moderavimo-taisykles" id="foot-moderation-rules">Moderavimo taisykl&#x117;s</a></li><li><a href="/taisykles" id="foot-terms">Naudojimo taisykl&#x117;s</a></li><li><a href="/privatumas" id="foot-privacy">Privatumas</a></li></ul></section>
+        <section class="foot__group" aria-labelledby="foot-take-part"><h2 class="label" id="foot-take-part">Dalyvauti</h2>
+            <ul><li><a href="/organizacijos" id="foot-organisations">Organizacijos</a></li><li><a href="/atsiliepimai" id="foot-feedback">Atsiliepimai</a></li></ul></section></nav>
+    <p><button class="mark" type="button" id="theme-switch" data-theme-switch data-permanent hidden></button></p>
+    <p>Lietuva 2.0 &#xB7; u&#x17E;daras bandymas</p></footer>
+
+<details class="feedback" id="feedback"><summary class="feedback__button" aria-label="Atsiliepimai" title="Atsiliepimai"><svg class="feedback__balloon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6L4.6 21l4.3-2.4c1 .3 2 .4 3.1.4 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"></path></svg>
+        <svg class="feedback__shut" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"></path></svg></summary>
+    <section class="feedback__panel stack stack--tight" aria-labelledby="feedback-title"><div class="feedback__head"><h2 id="feedback-title" tabindex="-1">Atsiliepimai Lietuva 2.0 komandai</h2>
+            <button type="button" class="feedback__close" data-feedback-close hidden>U&#x17E;daryti</button></div>
+        <p class="small">Tai ne pokalbis: &#x17E;inut&#x119; skaito komanda.</p>
+        <p>Atsiliepimus svetain&#x117;je gali palikti prisijung&#x119; Lietuva 2.0 naudotojai.</p><p id="feedback-contact-panel">Nepavyksta prisijungti? Para&#x161;ykite mums: <a href="mailto:moderatoriai@lt2.localhost">moderatoriai@lt2.localhost</a></p><details class="more stack stack--tight" id="feedback-issues-panel"><summary class="linkish small">Prane&#x161;ti vie&#x161;ai GitHub</summary>
+        <p class="small">Darbus komanda tvarko ir GitHub: ten galite prane&#x161;ti apie klaid&#x105; ar pasi&#x16B;lyti patobulinim&#x105;. <a href="https://github.com/Lietuva2/LT2/issues" rel="external noreferrer">Lietuva 2.0 darbai GitHub</a>. Ten para&#x161;ytas prane&#x161;imas yra vie&#x161;as ir rodomas su j&#x16B;s&#x173; GitHub vardu.</p></details></section></details>
+        <blazor-focus-on-navigate selector="h1"></blazor-focus-on-navigate>
+    <div id="blazor-error-ui" role="alert">&#x12E;vyko klaida. <a href class="reload">Perkrauti</a></div>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    </body></html>
