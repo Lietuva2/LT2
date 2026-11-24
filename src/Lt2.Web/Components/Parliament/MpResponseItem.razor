@@ -1,3 +1,4 @@
+@using Lt2.Api.Contracts.Parliament
 @using Lt2.Api.Contracts.Mps
 @inject Formats F
 
@@ -79,7 +80,7 @@
     {
         @* Design 8.5.5: two facts side by side, without a word of judgement; nothing anywhere adds them up. *@
         <p class="small" id="@(IdPrefix)vote">@F.T.Format("Responses.Answered", F.T["Responses.Will." + Response.Stance], F.T["Responses.Ballot." + vote.Ballot])
-            <a href="/seimas/balsavimai/@vote.VoteId">@F.T["Responses.VotePage"]</a></p>
+            <a href="@VoteLinks.Page(vote.VoteId)">@F.T["Responses.VotePage"]</a></p>
     }
     @if (Response.Status != ResponseStatuses.Hidden && Response.Earlier.Count > 0)
     {

@@ -18,6 +18,7 @@
     <Compile Include="..\Lt2.SharedKernel\OrganisationCodes.cs" Link="Organisations\OrganisationCodes.cs" />
     <Compile Include="..\Lt2.SharedKernel\MpCodes.cs" Link="Mps\MpCodes.cs" />
     <Compile Include="..\Lt2.SharedKernel\ParliamentCodes.cs" Link="Parliament\ParliamentCodes.cs" />
+    <Compile Include="..\Lt2.SharedKernel\VoteLinks.cs" Link="Parliament\VoteLinks.cs" />
     <Compile Include="..\Lt2.SharedKernel\DigestCodes.cs" Link="Digests\DigestCodes.cs" />
     <Compile Include="..\Lt2.SharedKernel\FeedbackCodes.cs" Link="Feedback\FeedbackCodes.cs" />
     <Compile Include="..\Lt2.SharedKernel\LockTargets.cs" Link="Admin\LockTargets.cs" />

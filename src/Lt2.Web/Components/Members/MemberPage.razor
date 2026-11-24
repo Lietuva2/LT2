@@ -113,7 +113,7 @@ else if (_profile is { } p)
 
     private string? Contact => Configuration.ModeratorContact();
 
-    private string MoreLink => $"{_profile?.Address}?rodyti={ProfileLimits.More(Shown)}";
+    private string MoreLink => $"{_profile?.Address}?rodyti={ProfileLimits.More(Shown).ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 
     protected override async Task OnInitializedAsync()
     {

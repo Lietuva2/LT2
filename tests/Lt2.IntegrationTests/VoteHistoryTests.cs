@@ -87,6 +87,24 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         return html[start..html.IndexOf("<p class=\"fine\">", start, StringComparison.Ordinal)];
     }
 
+    [Fact]
+    public async Task A_negative_vote_id_in_a_rendered_link_opens_the_vote()
+    {
+        const string path = "/seimas/balsavimai/-99301001";
+        await Database.ExecuteAsync("UPDATE parliament.vote SET id = -99301001 WHERE id = @id", ("id", Midnight));
+        try
+        {
+            var list = List(await OkAsync("/seimas/balsavimai?iki=" + Until));
+            list.ShouldContain($"href=\"{path}\"");
+            var vote = await OkAsync(path);
+            vote.ShouldContain("Pritarti po svarstymo");
+        }
+        finally
+        {
+            await Database.ExecuteAsync("UPDATE parliament.vote SET id = @id WHERE id = -99301001", ("id", Midnight));
+        }
+    }
+
     // ---- The API -----------------------------------------------------------------------------------------------------
 
     [Fact]

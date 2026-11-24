@@ -1,4 +1,5 @@
 @page "/statistika"
+@using Lt2.Api.Contracts.Parliament
 @using System.Globalization
 @using Lt2.Api.Contracts.Analytics
 @using Lt2.Api.Contracts.Meta
@@ -290,7 +291,7 @@
                                         <td class="num analytics-table__number">@bill.Number <span class="small">@Display.Day(bill.VotedAt)</span></td>
                                         <td class="analytics-table__title"><a href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Title</a></td>
                                         <td class="num" data-label="@T["Compare.SeimasFor"]">
-                                            <a href="/seimas/balsavimai/@bill.VoteId">@SeimasShare(bill)</a>
+                                            <a href="@VoteLinks.Page(bill.VoteId)">@SeimasShare(bill)</a>
                                             @if (bill.OfficialNote is { } note)
                                             {
                                                 <span class="small" id="@($"note-{bill.Number}")">@note</span>
@@ -374,7 +375,7 @@
                                     @foreach (var vote in faction.MostSplit)
                                     {
                                         <li class="small">
-                                            <a href="/seimas/balsavimai/@vote.VoteId">@(vote.BillNumber is { } number ? number + " " : "")@vote.Title</a>
+                                            <a href="@VoteLinks.Page(vote.VoteId)">@(vote.BillNumber is { } number ? number + " " : "")@vote.Title</a>
                                             <span class="num">@Display.Day(vote.HeldAt)@(vote.Stage is { } stage ? " · " + F.Stage(stage) : "")</span>
                                             <span class="num">· @F.Position(vote.Position) · @T.Format("Unity.Counts", Display.Number(vote.For), Display.Number(vote.Against), Display.Number(vote.Abstain))</span>
                                         </li>
