@@ -105,6 +105,6 @@ internal static class ModerationRecordEndpoints
     {
         var moderator = await ModeratorEndpoint.ModeratorAsync(context);
         var result = await moderation.DraftDescriptionAsync(number, request.SourceText, moderator, ct);
-        return result.IsSuccess ? TypedResults.Ok(new DescriptionDraftResponse(result.Value)) : errors.ToResult(result.Error!);
+        return result.IsSuccess ? TypedResults.Ok(new DescriptionDraftResponse(result.Value.Draft, result.Value.PlainTitle)) : errors.ToResult(result.Error!);
     }
 }

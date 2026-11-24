@@ -14,16 +14,22 @@ namespace Lt2.IntegrationTests;
 /// <summary>A configured AI assistant that never leaves the process: it records what it was given and answers a fixed draft.</summary>
 public sealed class FakeAiAssistant : IAiAssistant
 {
+    /// <summary>The readable title the fake answers with (design 8.13.1), on the first line, then an empty line, then <see cref="Draft"/>.</summary>
+    public const string Title = "Įvedamas trečias pajamų mokesčio tarifas";
+
     public const string Draft = "Projektas įveda trečią pajamų mokesčio tarifą – 32 % metinėms pajamoms, viršijančioms 60 vidutinių darbo užmokesčių.";
 
     public ConcurrentQueue<DraftSource> Asked { get; } = new();
+
+    /// <summary>The answer a test sets; null is the title, an empty line and <see cref="Draft"/>. A test that sets it puts it back.</summary>
+    public string? Answer { get; set; }
 
     public bool IsConfigured => true;
 
     public Task<Result<string>> DraftDescriptionAsync(DraftSource request, CancellationToken cancellationToken)
     {
         Asked.Enqueue(request);
-        return Task.FromResult<Result<string>>(Draft);
+        return Task.FromResult<Result<string>>(Answer ?? Title + "\n\n" + Draft);
     }
 }
 
@@ -131,7 +137,9 @@ public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
 
         using var drafted = await browser.PostAsync(AppealRoutes.DescriptionDraftOf(AppealSteps.SecondBill), new DescriptionDraftRequest { SourceText = Source });
         drafted.StatusCode.ShouldBe(HttpStatusCode.OK, await drafted.Content.ReadAsStringAsync());
-        (await drafted.ReadAsync<DescriptionDraftResponse>()).Draft.ShouldBe(FakeAiAssistant.Draft);
+        var draft = await drafted.ReadAsync<DescriptionDraftResponse>();
+        draft.Draft.ShouldBe(FakeAiAssistant.Draft);
+        draft.PlainTitle.ShouldBe(FakeAiAssistant.Title);
         var sent = Ai.Assistant.Asked.Last();
         sent.ShouldBe(new DraftSource(AppealSteps.SecondBill, "Vietinių rinkliavų įstatymo pataisa", Source));
 
@@ -163,6 +171,42 @@ public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
         }
 
         (await visitor.RecordAsync(AppealSteps.SecondBill)).DescriptionSource.ShouldBe("ai-draft");
+    }
+
+    [Fact]
+    public async Task A_draft_of_not_enough_has_no_title_and_an_answer_not_in_the_fixed_form_is_a_failure()
+    {
+        using var moderator = await StaffMembers.ActiveAsync(Ai, Database, "moderator");
+        var route = AppealRoutes.DescriptionDraftOf(AppealSteps.SecondBill);
+        try
+        {
+            Ai.Assistant.Answer = $"„{Lt2.Appeals.Domain.SummaryRules.NotEnoughAnswer}“";
+            using (var notEnough = await moderator.Browser.PostAsync(route, new DescriptionDraftRequest { SourceText = Source }))
+            {
+                notEnough.StatusCode.ShouldBe(HttpStatusCode.OK, await notEnough.Content.ReadAsStringAsync());
+                var read = await notEnough.ReadAsync<DescriptionDraftResponse>();
+                read.PlainTitle.ShouldBeNull();
+                read.Draft.ShouldBe(Lt2.Appeals.Domain.SummaryRules.NotEnoughAnswer);
+            }
+
+            foreach (var broken in new[]
+            {
+                FakeAiAssistant.Draft,
+                FakeAiAssistant.Title + "\n" + FakeAiAssistant.Draft,
+                new string('x', 91) + "\n\n" + FakeAiAssistant.Draft,
+                "Pirma eilutė\nAntra eilutė\n\n" + FakeAiAssistant.Draft,
+                FakeAiAssistant.Title + "\n\n" + new string('x', 1501),
+            })
+            {
+                Ai.Assistant.Answer = broken;
+                using var failed = await moderator.Browser.PostAsync(route, new DescriptionDraftRequest { SourceText = Source });
+                await failed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "draft.failed");
+            }
+        }
+        finally
+        {
+            Ai.Assistant.Answer = null;
+        }
     }
 
     [Fact]

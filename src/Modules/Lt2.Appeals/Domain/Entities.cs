@@ -17,6 +17,12 @@ internal sealed class BillRecord
     /// <summary>What the bill is about (design 8.13); empty while no description has been made.</summary>
     public string Description { get; set; } = "";
 
+    /// <summary>
+    /// The readable title beside the description (design 8.13.1): one line of at most 90 characters, kept with the description
+    /// under the same source, day and history; null while there is none. Never without a description.
+    /// </summary>
+    public string? PlainTitle { get; set; }
+
     /// <summary>Who made the description: see <see cref="DescriptionSources"/>; null while there is none.</summary>
     public string? DescriptionSource { get; set; }
 

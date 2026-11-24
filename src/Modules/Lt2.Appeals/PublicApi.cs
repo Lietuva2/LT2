@@ -101,7 +101,8 @@ public sealed record BillRecordInfo(
     ReasonTotals? ReasonTotals = null,
     string? ClosedReason = null,
     DateOnly? ClosedDecidedOn = null,
-    string? ClosedSourceUrl = null);
+    string? ClosedSourceUrl = null,
+    string? PlainTitle = null);
 
 /// <summary>The arguments' pages (design 8.12.1, owner 2026-11-19): the record carries the first of each side, the rest come a page at a time.</summary>
 public static class ReasonPages
@@ -148,7 +149,8 @@ public sealed record SurgeInfo(int SharePercent, int WindowHours, int RecentPosi
 /// there was none.
 /// </summary>
 public sealed record BillListItem(
-    Guid? Id, BillFacts Bill, string Status, SideCounts Counts, ThresholdInfo Threshold, PlannedDate? Planned, int Arguments, DateTimeOffset? LastActivityAt = null);
+    Guid? Id, BillFacts Bill, string Status, SideCounts Counts, ThresholdInfo Threshold, PlannedDate? Planned, int Arguments, DateTimeOffset? LastActivityAt = null,
+    string? PlainTitle = null);
 
 public sealed record BillListPage(IReadOnlyList<BillListItem> Items, int Total, string? NextCursor);
 
@@ -255,7 +257,7 @@ public sealed record QueueRecord(
 public sealed record ModerationBillState(
     Guid? Id, string BillNumber, string Status, string Description, string? DescriptionSource, int Threshold, string ThresholdSetBy, bool Held,
     PlannedDate? Planned, bool HasOpenItems, IReadOnlyList<QueueReason> Reasons, string? DescriptionUrl, IReadOnlyList<QueueReport> DescriptionReports,
-    string? ClosedReason = null);
+    string? ClosedReason = null, string? PlainTitle = null);
 
 /// <summary>
 /// A participant's flag about the planned date (design 8.4), with the date they say is right when they gave one (owner,
@@ -302,7 +304,21 @@ public sealed record ModerationItems(IReadOnlyList<QueueRecord> Records, IReadOn
 /// <c>DescriptionUrl</c>: the official text's address, which becomes the record's; empty or null clears it (decided by the
 /// owner on 2026-11-14).
 /// </summary>
-public sealed record ModeratorDescription(string Description, string Statement, bool FromDraft, string? DescriptionUrl = null);
+public sealed record ModeratorDescription(string Description, string Statement, bool FromDraft, string? DescriptionUrl = null, string? PlainTitle = null);
+
+/// <summary>
+/// One action on a bill's description and readable title (design 8.13.1), public: <c>ChangedAt</c> is shared by what one action changed.
+/// <c>OldText</c>/<c>NewText</c> mean something only when <c>TextChanged</c> (null new text: removed; null old: the first one);
+/// <c>OldTitle</c>/<c>NewTitle</c> only when <c>TitleChanged</c> (null: none).
+/// </summary>
+public sealed record DescriptionRevision(
+    DateTimeOffset ChangedAt, string? OldText, string? NewText, bool TextChanged, string? OldTitle, string? NewTitle, bool TitleChanged);
+
+/// <summary>A bill's readable title with the source of the description it is kept with (design 8.13.1).</summary>
+public sealed record PlainTitleInfo(string Title, string Source);
+
+/// <summary>An AI draft (design 8.11.4): the description and, when the answer had a valid one, the readable title.</summary>
+public sealed record DescriptionDraft(string Draft, string? PlainTitle);
 
 /// <summary>
 /// The Appeals module (design 8). Every operation that acts for a person takes their account id; moderation operations
@@ -335,8 +351,14 @@ public interface IAppealsModule
 
     Task<Result<MyBillRecord>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
 
-    /// <summary>The description's edits (oldest first), public; no editor is named. Empty for a bill without a record.</summary>
-    Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken);
+    /// <summary>The description's and the readable title's edits (oldest first, one entry per action), public; no editor is named. Empty for a bill without a record.</summary>
+    Task<Result<IReadOnlyList<DescriptionRevision>>> HistoryAsync(string billNumber, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The readable titles (design 8.13.1) of the given bills, by number, one query: only bills whose record is open or closed and has
+    /// one, with the source of its description. For composing other modules' lists.
+    /// </summary>
+    Task<IReadOnlyDictionary<string, PlainTitleInfo>> PlainTitlesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
 
     /// <summary>
     /// Takes or changes the person's side. The value is true when the person had no side on the bill before (a first side,
@@ -519,9 +541,10 @@ public interface IAppealsModeration
 
     /// <summary>
     /// An AI draft of a neutral description from the pasted official text (design 8.11.4): <c>draft.not-configured</c>
-    /// without a provider. Audited (who, which bill, when; not the text), at most 20 an hour per moderator.
+    /// without a provider; an answer not in the fixed form is <c>draft.failed</c>, one saying the source is not enough has no title.
+    /// Audited (who, which bill, when; not the text), at most 20 an hour per moderator.
     /// </summary>
-    Task<Result<string>> DraftDescriptionAsync(string billNumber, string sourceText, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Result<DescriptionDraft>> DraftDescriptionAsync(string billNumber, string sourceText, StaffActor moderator, CancellationToken cancellationToken);
 }
 
 /// <summary>

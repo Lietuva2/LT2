@@ -73,6 +73,19 @@ public sealed class RecordRuleTests
     }
 
     [Fact]
+    public void A_description_is_unchanged_only_when_the_text_the_address_and_the_plain_title_all_are()
+    {
+        const string Text = "Tas pats.";
+        const string Url = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas";
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, Text, Text, "Taisau.", Url, Url, "Pavadinimas", "Pavadinimas").ShouldBe("description.unchanged");
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, Text, Text, "Taisau.", Url, Url, "Pavadinimas", "  Pavadinimas ").ShouldBe("description.unchanged", "the title is compared normalised");
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, Text, Text, "Taisau.", Url, Url, null, " ").ShouldBe("description.unchanged", "a blank title is none");
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, Text, Text, "Taisau.", Url, Url, "Pavadinimas", "Kitas pavadinimas").ShouldBeNull();
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, Text, Text, "Taisau.", Url, Url, null, "Pavadinimas").ShouldBeNull("a title added to an untitled text");
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, Text, Text, "Taisau.", Url, Url, "Pavadinimas", null).ShouldBeNull("a title removed");
+    }
+
+    [Fact]
     public void After_the_final_vote_a_moderator_still_corrects_or_removes_the_description_but_does_not_confirm_it()
     {
         RecordRules.CheckDescriptionWrite(BillRecordStatuses.Closed, "Senas.", "Pataisytas.", "Taisau klaidą.").ShouldBeNull();

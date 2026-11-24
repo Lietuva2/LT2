@@ -521,6 +521,160 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         direct.Error.ShouldNotBeNull().Code.ShouldBe("description-url.invalid");
     }
 
+    /// <summary>Design 8.13.1: the readable title is written with the description, shown by the record and the moderator's form, and corrected alone.</summary>
+    [Fact]
+    public async Task A_moderator_writes_a_readable_title_with_the_description_and_corrects_the_title_alone()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var moderator = (await ModeratorAsync()).Browser;
+        var route = AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill);
+        const string Text = "Projektas keičia vietinių rinkliavų tvarką.";
+        const string Title = "Keičiama vietinių rinkliavų tvarka";
+        const string Other = "Savivaldybės galės nustatyti rinkliavas";
+
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Projektas darbotvarkėje.", PlainTitle = "  " + Title + " " }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var stranger = NewBrowser();
+        var described = await stranger.RecordAsync(AppealSteps.SecondBill);
+        (described.Description, described.PlainTitle, described.DescriptionSource).ShouldBe((Text, Title, "moderator"), "stored trimmed, with the text");
+        (await moderator.ModerationBillAsync(AppealSteps.SecondBill)).PlainTitle.ShouldBe(Title, "the form starts from it");
+
+        // Nothing changed, title included: refused. Only the title changed: accepted, and it is the moderator's correction like a text.
+        using (var unchanged = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Be pakeitimų.", PlainTitle = Title }))
+        {
+            await unchanged.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "description.unchanged");
+        }
+
+        await Database.ExecuteAsync("UPDATE appeals.bill_record SET description_source = 'ai' WHERE id = @a", ("a", described.Id!.Value));
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Tik pavadinimas.", PlainTitle = Other }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var corrected = await stranger.RecordAsync(AppealSteps.SecondBill);
+        (corrected.Description, corrected.PlainTitle, corrected.DescriptionSource).ShouldBe((Text, Other, "ai-draft"), "a corrected title is a person's correction of what the AI made");
+        corrected.DescriptionAt!.Value.ShouldBeGreaterThan(described.DescriptionAt!.Value);
+
+        // A title and a text together are one entry of the history; a title alone is an entry without a text change.
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text + " Nuo 2027 metų.", Statement = "Abu.", PlainTitle = Title }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill));
+        history.Count.ShouldBe(3);
+        history.Select(h => (h.TextChanged, h.OldText, h.NewText, h.TitleChanged, h.OldTitle, h.NewTitle)).ShouldBe(
+        [
+            (true, null, Text, true, null, Title),
+            (false, null, null, true, Title, Other),
+            (true, Text, Text + " Nuo 2027 metų.", true, Other, Title),
+        ]);
+        history.Select(h => h.ChangedAt).ShouldBe(history.Select(h => h.ChangedAt).Order(), "oldest first");
+
+        // The audit says the title changed, never what it is.
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM audit.event WHERE action = 'moderation.record.describe' AND target = @t AND details->'extra'->>'plainTitleChanged' = 'true'", ("t", "record:" + described.Id)))
+            .ShouldBe(3);
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM audit.event WHERE action = 'moderation.record.describe' AND coalesce(details::text, '') LIKE '%vietinių rinkliavų tvarka%'")).ShouldBe(0);
+
+        // A title may be left out or taken away; the text stays.
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text + " Nuo 2027 metų.", Statement = "Be pavadinimo." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await stranger.RecordAsync(AppealSteps.SecondBill)).PlainTitle.ShouldBeNull();
+        var last = (await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill)))[^1];
+        (last.TextChanged, last.TitleChanged, last.OldTitle, last.NewTitle).ShouldBe((false, true, Title, (string?)null));
+    }
+
+    [Fact]
+    public async Task A_plain_title_of_two_lines_or_over_ninety_characters_is_refused_by_the_validator_and_by_the_module()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var staff = await ModeratorAsync();
+        var route = AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill);
+        const string Text = "Projektas keičia vietinių rinkliavų tvarką.";
+
+        foreach (var title in new[] { new string('x', 91), "Pirma eilutė\nAntra eilutė" })
+        {
+            using var refused = await staff.Browser.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas.", PlainTitle = title });
+            await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
+            (await refused.ProblemAsync()).GetProperty("errors").TryGetProperty("plainTitle", out _).ShouldBeTrue("the refusal names the field");
+        }
+
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var module = scope.ServiceProvider.GetRequiredService<Lt2.Appeals.IAppealsModeration>();
+        var actor = new Lt2.SharedKernel.StaffActor(await Database.UserIdAsync(staff.Email), "moderator", null);
+        var tooLong = await module.WriteDescriptionAsync(AppealSteps.SecondBill, new Lt2.Appeals.ModeratorDescription(Text, "Bandymas.", false, null, new string('x', 91)), actor, CancellationToken.None);
+        (tooLong.Error.ShouldNotBeNull().Code, tooLong.Error.Field).ShouldBe(("plain-title.too-long", "plainTitle"));
+        var twoLines = await module.WriteDescriptionAsync(AppealSteps.SecondBill, new Lt2.Appeals.ModeratorDescription(Text, "Bandymas.", false, null, "Pirma\nAntra"), actor, CancellationToken.None);
+        (twoLines.Error.ShouldNotBeNull().Code, twoLines.Error.Field).ShouldBe(("plain-title.multiline", "plainTitle"));
+        using var stranger = NewBrowser();
+        using var none = await stranger.Client.GetAsync(AppealRoutes.RecordOf(AppealSteps.SecondBill));
+        (none.StatusCode == HttpStatusCode.NotFound || (await none.Content.ReadAsStringAsync()).Contains("\"plainTitle\":null", StringComparison.Ordinal)).ShouldBeTrue("nothing was stored");
+    }
+
+    [Fact]
+    public async Task Removing_the_description_removes_the_readable_title_and_the_history_shows_both()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var moderator = (await ModeratorAsync()).Browser;
+        const string Text = "Projektas keičia vietinių rinkliavų tvarką.";
+        const string Title = "Keičiama vietinių rinkliavų tvarka";
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill), new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas.", PlainTitle = Title }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using (var removed = await moderator.PostAsync(AppealRoutes.RemoveDescriptionOf(AppealSteps.SecondBill), new StatementRequest { Statement = "Aprašymas klaidino." }))
+        {
+            removed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await removed.Content.ReadAsStringAsync());
+        }
+
+        using var stranger = NewBrowser();
+        var record = await stranger.RecordAsync(AppealSteps.SecondBill);
+        (record.Description, record.PlainTitle, record.DescriptionSource).ShouldBe(("", (string?)null, (string?)null));
+        (await moderator.ModerationBillAsync(AppealSteps.SecondBill)).PlainTitle.ShouldBeNull();
+        var last = (await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill)))[^1];
+        (last.TextChanged, last.OldText, last.NewText, last.TitleChanged, last.OldTitle, last.NewTitle).ShouldBe((true, Text, (string?)null, true, Title, (string?)null));
+    }
+
+    [Fact]
+    public async Task Removing_a_description_that_has_no_readable_title_leaves_no_title_entry()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var moderator = (await ModeratorAsync()).Browser;
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill), new ModeratorDescriptionRequest { Description = "Projektas keičia rinkliavas.", Statement = "Bandymas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PostAsync(AppealRoutes.RemoveDescriptionOf(AppealSteps.SecondBill), new StatementRequest { Statement = "Klaidino." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var stranger = NewBrowser();
+        var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill));
+        history.ShouldAllBe(h => !h.TitleChanged);
+        history.Count.ShouldBe(2);
+    }
+
+    /// <summary>Design 8.13.1: the module gives other modules' lists the readable titles of open and closed records, in one call.</summary>
+    [Fact]
+    public async Task The_module_gives_the_readable_titles_of_open_and_closed_records_only()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        await Database.FreeBillAsync(AppealSteps.TaxBill);
+        var moderator = (await ModeratorAsync()).Browser;
+        const string Text = "Projektas keičia vietinių rinkliavų tvarką.";
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill), new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas.", PlainTitle = "Antro pavadinimas" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.ThirdBill), new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas.", PlainTitle = "Trečio pavadinimas" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.TaxBill), new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await Database.ExecuteAsync("UPDATE appeals.bill_record SET status = 'rejected' WHERE bill_number = @n", ("n", AppealSteps.ThirdBill));
+
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var module = scope.ServiceProvider.GetRequiredService<Lt2.Appeals.IAppealsModule>();
+        string[] asked = [AppealSteps.SecondBill, AppealSteps.ThirdBill, AppealSteps.TaxBill, "XVP-9999"];
+        (await module.PlainTitlesAsync([], CancellationToken.None)).ShouldBeEmpty();
+        var open = await module.PlainTitlesAsync(asked, CancellationToken.None);
+        open.Keys.ShouldBe([AppealSteps.SecondBill], "a hidden record, a record without a title and an unknown bill have none");
+        open[AppealSteps.SecondBill].ShouldBe(new Lt2.Appeals.PlainTitleInfo("Antro pavadinimas", "moderator"));
+
+        await Database.ExecuteAsync("UPDATE appeals.bill_record SET status = 'closed', closed_at = now() WHERE bill_number = @n", ("n", AppealSteps.ThirdBill));
+        var closed = await module.PlainTitlesAsync(asked, CancellationToken.None);
+        closed.Keys.Order().ShouldBe(new[] { AppealSteps.SecondBill, AppealSteps.ThirdBill }.Order());
+        closed[AppealSteps.ThirdBill].Title.ShouldBe("Trečio pavadinimas");
+    }
+
     /// <summary>Design 8.12.3 (decided by the owner on 2026-11-14): arguments are moderated on the bill's page too.</summary>
     [Fact]
     public async Task Arguments_are_moderated_on_the_bills_page_from_the_moderators_only_answer_with_the_queues_actions()

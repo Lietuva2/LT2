@@ -24,7 +24,7 @@ internal static class GetRecordHistoryEndpoint
     {
         var result = await appeals.HistoryAsync(number, ct);
         return result.IsSuccess
-            ? PublicJson.From(http, errors, Result<List<DescriptionRevisionResponse>>.Success(result.Value.Select(r => new DescriptionRevisionResponse(r.ChangedAt, r.OldText, r.NewText)).ToList()), maxAgeSeconds: 0)
+            ? PublicJson.From(http, errors, Result<List<DescriptionRevisionResponse>>.Success(result.Value.Select(AppealMapping.Map).ToList()), maxAgeSeconds: 0)
             : errors.ToResult(result.Error!);
     }
 }

@@ -63,6 +63,7 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.HasKey(a => a.Id);
             e.Property(a => a.BillNumber).HasMaxLength(40);
             e.Property(a => a.Description).HasMaxLength(AppealRules.DescriptionMaxLength);
+            e.Property(a => a.PlainTitle).HasMaxLength(AppealRules.PlainTitleMaxLength);
             e.Property(a => a.DescriptionSource).HasMaxLength(20);
             e.Property(a => a.DescriptionUrl).HasMaxLength(500);
             e.Property(a => a.Status).HasMaxLength(20);

@@ -56,7 +56,7 @@ internal sealed class AppealsService(
             {
                 var shown = shownCounts[a.Id];
                 return new BillListItem(a.Id, closedFacts.GetValueOrDefault(a.BillNumber) ?? new BillFacts(a.BillNumber, a.BillNumber), a.Status, shown,
-                    AppealReads.Threshold(a, shown, threshold), null, closedArguments.GetValueOrDefault(a.Id));
+                    AppealReads.Threshold(a, shown, threshold), null, closedArguments.GetValueOrDefault(a.Id), PlainTitle: a.PlainTitle);
             }).ToList();
             return new BillListPage(closedItems, total, Next(offset, closedPage.Count, total));
         }
@@ -84,7 +84,7 @@ internal sealed class AppealsService(
                 var c = record is null ? SideCounts.None : counts[record.Id];
                 return new BillListItem(
                     record?.Id, b, BillRecordStatuses.Open, c, AppealReads.Threshold(record, c, threshold), planned.GetValueOrDefault(b.Number),
-                    record is null ? 0 : arguments.GetValueOrDefault(record.Id), record?.LastActivityAt);
+                    record is null ? 0 : arguments.GetValueOrDefault(record.Id), record?.LastActivityAt, record?.PlainTitle);
             });
         var ordered = BillListRules.Order(
             candidates, BillSorts.Of(query.Sort), i => i.Counts.Total, i => i.Arguments, i => i.Planned?.Date, i => i.Bill.Number, i => i.LastActivityAt);
@@ -145,7 +145,7 @@ internal sealed class AppealsService(
             (await agenda.ForBillsAsync([bill.Value.Number], cancellationToken)).GetValueOrDefault(bill.Value.Number), null);
     }
 
-    public async Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<DescriptionRevision>>> HistoryAsync(string billNumber, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var record = await AppealReads.FindRecordAsync(db, billNumber, tracking: false, cancellationToken);
@@ -154,7 +154,7 @@ internal sealed class AppealsService(
             var bill = await bills.FindAsync(AppealReads.NormaliseBillNumber(billNumber), cancellationToken);
             return bill is null
                 ? Error.NotFound("bill.not-found")
-                : Result<IReadOnlyList<(DateTimeOffset, string?, string?)>>.Success([]);
+                : Result<IReadOnlyList<DescriptionRevision>>.Success([]);
         }
 
         if (record.Status == BillRecordStatuses.Rejected)
@@ -163,11 +163,34 @@ internal sealed class AppealsService(
         }
 
         var rows = await db.Revisions.AsNoTracking()
-            .Where(r => r.EntityKind == "record" && r.EntityId == record.Id && r.Field == "description")
+            .Where(r => r.EntityKind == "record" && r.EntityId == record.Id && (r.Field == "description" || r.Field == "plain_title"))
             .OrderBy(r => r.ChangedAt)
-            .Select(r => new { r.ChangedAt, r.OldValue, r.NewValue })
+            .Select(r => new { r.ChangedAt, r.Field, r.OldValue, r.NewValue })
             .ToListAsync(cancellationToken);
-        return Result<IReadOnlyList<(DateTimeOffset, string?, string?)>>.Success(rows.Select(r => (r.ChangedAt, r.OldValue, r.NewValue)).ToList());
+
+        // One action writes its rows with one time (design 8.13.1): the rows of a time are one entry.
+        var entries = rows.GroupBy(r => r.ChangedAt).OrderBy(g => g.Key).Select(g =>
+        {
+            var text = g.FirstOrDefault(r => r.Field == "description");
+            var title = g.FirstOrDefault(r => r.Field == "plain_title");
+            return new DescriptionRevision(g.Key, text?.OldValue, text?.NewValue, text is not null, title?.OldValue, title?.NewValue, title is not null);
+        }).ToList();
+        return Result<IReadOnlyList<DescriptionRevision>>.Success(entries);
+    }
+
+    public async Task<IReadOnlyDictionary<string, PlainTitleInfo>> PlainTitlesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
+    {
+        if (billNumbers.Count == 0)
+        {
+            return new Dictionary<string, PlainTitleInfo>();
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var found = await db.BillRecords.AsNoTracking()
+            .Where(r => billNumbers.Contains(r.BillNumber) && (r.Status == BillRecordStatuses.Open || r.Status == BillRecordStatuses.Closed) && r.PlainTitle != null)
+            .Select(r => new { r.BillNumber, r.PlainTitle, r.DescriptionSource })
+            .ToListAsync(cancellationToken);
+        return found.ToDictionary(r => r.BillNumber, r => new PlainTitleInfo(r.PlainTitle!, r.DescriptionSource ?? DescriptionSources.Moderator), StringComparer.Ordinal);
     }
 
     public async Task<Result<MyBillRecord>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken)
@@ -1007,7 +1030,8 @@ internal sealed class AppealsService(
             new ReasonTotals(forPage.Total, againstPage.Total),
             record.Status == BillRecordStatuses.Closed ? record.ClosedReason : null,
             record.Status == BillRecordStatuses.Closed ? record.ClosedDecidedOn : null,
-            record.Status == BillRecordStatuses.Closed ? record.ClosedSourceUrl : null);
+            record.Status == BillRecordStatuses.Closed ? record.ClosedSourceUrl : null,
+            record.Description.Length == 0 ? null : record.PlainTitle);
     }
 
     public async Task<Result<ReasonPage>> ReasonsAsync(string billNumber, string side, string? cursor, int? limit, CancellationToken cancellationToken)

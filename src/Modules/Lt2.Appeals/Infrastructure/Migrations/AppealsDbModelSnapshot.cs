@@ -144,6 +144,11 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("opened_at");
 
+                    b.Property<string>("PlainTitle")
+                        .HasMaxLength(90)
+                        .HasColumnType("character varying(90)")
+                        .HasColumnName("plain_title");
+
                     b.Property<DateTimeOffset?>("PublishedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");

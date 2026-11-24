@@ -49,7 +49,7 @@ public static class InventedRecord
     /// as the job would leave it.
     /// </summary>
     public static async Task<InventedRecordOutcome> SeedAiDescriptionAsync(
-        string connectionString, string billNumber, string text, string? address, DateTimeOffset at, CancellationToken cancellationToken)
+        string connectionString, string billNumber, string text, string plainTitle, string? address, DateTimeOffset at, CancellationToken cancellationToken)
     {
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
@@ -86,12 +86,12 @@ public static class InventedRecord
         var id = recordId ?? Guid.CreateVersion7(at);
         var sql = recordId is null
             ? """
-              INSERT INTO appeals.bill_record (id, bill_number, description, description_source, description_url, description_at, status, opened_at,
+              INSERT INTO appeals.bill_record (id, bill_number, description, plain_title, description_source, description_url, description_at, status, opened_at,
                                           published_at, sending, threshold_set_by, changed_at)
-              VALUES (@id, @bill, @text, 'ai', @url, @at, 'open', @at, @at, 'automatic', 'default', @at)
+              VALUES (@id, @bill, @text, @title, 'ai', @url, @at, 'open', @at, @at, 'automatic', 'default', @at)
               """
             : """
-              UPDATE appeals.bill_record SET description = @text, description_source = 'ai', description_url = @url, description_at = @at, changed_at = @at
+              UPDATE appeals.bill_record SET description = @text, plain_title = @title, description_source = 'ai', description_url = @url, description_at = @at, changed_at = @at
               WHERE id = @id
               """;
 #pragma warning disable CA2100 // One of two constant statements.
@@ -101,6 +101,7 @@ public static class InventedRecord
             write.Parameters.AddWithValue("id", id);
             write.Parameters.AddWithValue("bill", billNumber);
             write.Parameters.AddWithValue("text", text);
+            write.Parameters.AddWithValue("title", plainTitle);
             write.Parameters.AddWithValue("url", (object?)address ?? DBNull.Value);
             write.Parameters.AddWithValue("at", at);
             await write.ExecuteNonQueryAsync(cancellationToken);
@@ -119,6 +120,21 @@ public static class InventedRecord
             revision.Parameters.AddWithValue("text", text);
             revision.Parameters.AddWithValue("at", at);
             await revision.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await using (var titleRevision = new NpgsqlCommand(
+            """
+            INSERT INTO appeals.revision (id, entity_kind, entity_id, field, old_value, new_value, changed_by_user_id, changed_at)
+            VALUES (@id, 'record', @record, 'plain_title', NULL, @title, NULL, @at)
+            """,
+            connection,
+            transaction))
+        {
+            titleRevision.Parameters.AddWithValue("id", Guid.CreateVersion7(at));
+            titleRevision.Parameters.AddWithValue("record", id);
+            titleRevision.Parameters.AddWithValue("title", plainTitle);
+            titleRevision.Parameters.AddWithValue("at", at);
+            await titleRevision.ExecuteNonQueryAsync(cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);
