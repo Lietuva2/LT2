@@ -157,7 +157,7 @@ public static class ProfileRoutes
 
     public static string MemberOf(string id) => $"{ApiRoutes.Prefix}/members/{Uri.EscapeDataString(id)}";
 
-    public static string TextsOf(string id, int shown) => $"{MemberOf(id)}/texts?shown={shown}";
+    public static string TextsOf(string id, int shown) => $"{MemberOf(id)}/texts?shown={shown.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 
     public static string FollowOf(string id) => $"{MemberOf(id)}/follow";
 

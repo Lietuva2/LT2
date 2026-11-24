@@ -304,7 +304,7 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
             var wanted = toldPeople.SelectMany(p => followedMps[p]).Distinct().Where(mpFacts.ContainsKey).ToList();
             var ballots = vote.HasResult && wanted.Count > 0 ? await bills.ChoicesAsync(vote.VoteId, wanted, cancellationToken) : new Dictionary<long, string>();
             var day = VilniusTime.DateOf(vote.HeldAt);
-            var votePath = "/seimas/balsavimai/" + vote.VoteId.ToString(CultureInfo.InvariantCulture);
+            var votePath = VoteLinks.Page(vote.VoteId);
             foreach (var userId in toldPeople)
             {
                 var theirs = followedMps[userId]

@@ -118,7 +118,7 @@ public static class BallotList
             parts.Add("rodyti=" + n.ToString(CultureInfo.InvariantCulture));
         }
 
-        var path = "/seimas/balsavimai/" + voteId.ToString(CultureInfo.InvariantCulture);
+        var path = VoteLinks.Page(voteId);
         return parts.Count == 0 ? path : path + "?" + string.Join("&", parts);
     }
 

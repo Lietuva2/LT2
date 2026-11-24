@@ -4,7 +4,7 @@
 @* One vote in a list: what it was about, bill, stage and date; the side column is the caller's. *@
 <li id="@Id">
     <div class="rows__main">
-        <a href="/seimas/balsavimai/@Vote.Id">@(Vote.Bill?.Title ?? Vote.Wording)</a>
+        <a href="@VoteLinks.Page(Vote.Id)">@(Vote.Bill?.Title ?? Vote.Wording)</a>
         <span class="small num">@string.Join(" · ", Facts())</span>
     </div>
     <div class="rows__side">

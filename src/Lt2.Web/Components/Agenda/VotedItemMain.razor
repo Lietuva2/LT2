@@ -28,7 +28,7 @@
             <time class="tag num" datetime="@date">@date</time>
         }
     </span>
-    <a class="tl-item__title" href="/seimas/balsavimai/@VoteId">@Title</a>
+    <a class="tl-item__title" href="@VoteLinks.Page(VoteId)">@Title</a>
     @if (Wording is not null)
     {
         <span class="small">@Wording</span>

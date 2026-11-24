@@ -414,7 +414,7 @@
     private RenderFragment SeimasSide(BillResponse b, VoteSummaryResponse result) =>
         @<text>
             <h2 id="h-seimas">@A["Sides.Seimas.Heading"]</h2>
-            <p class="small">@F.Stage(result.Vote.Stage) · @F.Date(result.Vote.HeldAt) · <a href="/seimas/balsavimai/@result.Vote.Id" id="seimas-vote-page">@A["Closed.VotePage"]</a></p>
+            <p class="small">@F.Stage(result.Vote.Stage) · @F.Date(result.Vote.HeldAt) · <a href="@VoteLinks.Page(result.Vote.Id)" id="seimas-vote-page">@A["Closed.VotePage"]</a></p>
             @if (result.Vote.IsConsensus)
             {
                 <p><VoteMajorityTag IsConsensus="true" /> <span class="small">@F.T["Consensus.NoVotes"]</span></p>
@@ -442,7 +442,7 @@
                 @if (result.Vote is { HasResult: true, IsConsensus: false })
                 {
                     @* Design 8.17: the list of each MP's ballot lives only on the vote's page. *@
-                    <a href="/seimas/balsavimai/@result.Vote.Id#ballots" id="each-mp">@A["Closed.EachMp"]</a>@(" · ")
+                    <a href="@(VoteLinks.Page(result.Vote.Id))#ballots" id="each-mp">@A["Closed.EachMp"]</a>@(" · ")
                 }
                 <a href="/seimas/@Uri.EscapeDataString(b.Number)#h-votes" id="all-votes">@F.T["Bill.Votes"]</a>
             </p>
@@ -500,12 +500,12 @@
                         }
                         else if (result.Vote.IsConsensus)
                         {
-                            <a href="/seimas/balsavimai/@result.Vote.Id">@F.T["Consensus.Tag"]</a>
+                            <a href="@VoteLinks.Page(result.Vote.Id)">@F.T["Consensus.Tag"]</a>
                             <span class="small num">@F.Date(result.Vote.HeldAt)</span>
                         }
                         else
                         {
-                            <b class="num"><a href="/seimas/balsavimai/@result.Vote.Id">@Display.Number(result.Totals.For) : @Display.Number(result.Totals.Against)</a></b>
+                            <b class="num"><a href="@VoteLinks.Page(result.Vote.Id)">@Display.Number(result.Totals.For) : @Display.Number(result.Totals.Against)</a></b>
                             <span class="small num">@F.Date(result.Vote.HeldAt)</span>
                         }
                     </li>

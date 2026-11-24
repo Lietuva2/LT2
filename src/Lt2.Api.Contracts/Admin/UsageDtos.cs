@@ -36,7 +36,7 @@ public static class UsageRoutes
 
     public const int DefaultRange = 7;
 
-    public static string Api(int days) => $"{ApiRoutes.Admin.Usage}?days={days}";
+    public static string Api(int days) => $"{ApiRoutes.Admin.Usage}?days={days.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 }
 
 /// <summary>"Lankomumas" (design 8.27): administrators in a staff passkey session.</summary>
