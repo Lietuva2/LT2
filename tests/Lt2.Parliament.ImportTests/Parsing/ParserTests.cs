@@ -210,13 +210,37 @@ public sealed class ParserTests
     }
 
     [Fact]
-    public void The_official_mismatch_note_is_kept_and_an_empty_choice_means_did_not_vote()
+    public void A_note_on_this_vote_is_kept_and_an_empty_choice_means_did_not_vote()
     {
         var result = SeimasParsers.VoteResult(Synthetic("p2b.ad_sp_balsavimo_rezultatai@balsavimo_id=99100004")).ShouldNotBeNull();
 
         result.OfficialNote.ShouldNotBeNull().ShouldContain("neatitinka protokole įrašytų suminių rezultatų");
         result.Ballots.Single(b => b.LastName == "Alksninis").Choice.ShouldBe(BallotChoice.DidNotVote);
     }
+
+    [Fact]
+    public void The_standing_disclaimer_on_a_result_is_not_its_official_note()
+    {
+        var result = SeimasParsers.VoteResult(Xml(
+            "<SeimoInformacija><SeimoNariųBalsavimas balsavimo_id=\"-54969\"><BendriBalsavimoRezultatai už=\"28\" prieš=\"60\" susilaikė=\"11\" " +
+            "komentaras=\"Elektroninėmis priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų\"/>" +
+            "</SeimoNariųBalsavimas></SeimoInformacija>"))
+            .ShouldNotBeNull();
+
+        result.OfficialNote.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("Elektroninėmis priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų", null)]
+    [InlineData("  Elektroninėmis priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų. ", null)]
+    [InlineData("ELEKTRONINĖMIS PRIEMONĖMIS GAUTI INDIVIDUALŪS BALSAVIMO REZULTATAI NEATITINKA PROTOKOLE ĮRAŠYTŲ SUMINIŲ REZULTATŲ", null)]
+    [InlineData("", null)]
+    [InlineData("   ", null)]
+    [InlineData(null, null)]
+    [InlineData("Seimo narių individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų.", "Seimo narių individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų.")]
+    [InlineData(" Balsavimas pakartotas. ", "Balsavimas pakartotas.")]
+    public void An_official_note_is_the_seimas_comment_without_its_standing_disclaimer(string? komentaras, string? note) =>
+        VoteRules.OfficialNote(komentaras).ShouldBe(note);
 
     [Fact]
     public void An_empty_answer_is_no_result_not_an_error()

@@ -100,7 +100,7 @@ name; a namespace on the real elements would contradict every element line.
 | R5 | p2b.ad_sp_balsavimo_rezultatai | attribute | susilaikė | BendriBalsavimoRezultatai | seen | fetch_vote; notes (23 abstained) | total abstained |
 | R6 | p2b.ad_sp_balsavimo_rezultatai | attribute | balsavo | BendriBalsavimoRezultatai | seen | live XML | how many voted |
 | R7 | p2b.ad_sp_balsavimo_rezultatai | attribute | viso | BendriBalsavimoRezultatai | seen | live XML | seats (optional) |
-| R8 | p2b.ad_sp_balsavimo_rezultatai | attribute | komentaras | BendriBalsavimoRezultatai | seen | live XML | official note shown with the result |
+| R8 | p2b.ad_sp_balsavimo_rezultatai | attribute | komentaras | BendriBalsavimoRezultatai | seen | live XML | the Seimas's note shown with the result, unless it is only the standing disclaimer (R21) |
 | R9 | p2b.ad_sp_balsavimo_rezultatai | element | IndividualusBalsavimoRezultatas | (document) | seen | live XML | one row per MP |
 | R10 | p2b.ad_sp_balsavimo_rezultatai | attribute | asmens_id | IndividualusBalsavimoRezultatas | assumed | | ballot → person; without it the import matches by name |
 | R11 | p2b.ad_sp_balsavimo_rezultatai | attribute | vardas | IndividualusBalsavimoRezultatas | seen | fetch_vote | name match |
@@ -111,8 +111,9 @@ name; a namespace on the real elements would contradict every element line.
 | R16 | p2b.ad_sp_balsavimo_rezultatai | value | kaip_balsavo= (empty) | IndividualusBalsavimoRezultatas | seen | fetch_vote counts an empty value as "nebalsavo" | did not vote |
 | R17 | p2b.ad_sp_balsavimo_rezultatai | behaviour | every sitting MP has a row, including those who did not vote | IndividualusBalsavimoRezultatas | seen | fetch_vote (empty values); notes (105 of 140 voted) | participation |
 | R18 | p2b.ad_sp_balsavimo_rezultatai | behaviour | a consensus vote has no per-MP rows | IndividualusBalsavimoRezultatas | seen | notes | consensus votes count nowhere |
-| R19 | p2b.ad_sp_balsavimo_rezultatai | behaviour | per-MP rows usually sum to the totals; when they do not, the official note says so | BendriBalsavimoRezultatai | seen | notes (-60034 summed exactly and carried the note) | design 7.5 check |
+| R19 | p2b.ad_sp_balsavimo_rezultatai | behaviour | per-MP rows sum to the totals | BendriBalsavimoRezultatai | seen | notes (-60034 summed exactly); local import 2026-11-24 (all 6 295 results of term 10 summed exactly) | the ballot counts beside the result (design 8.17) |
 | R20 | p2b.ad_sp_balsavimo_rezultatai | value | frakcija=MG | IndividualusBalsavimoRezultatas | seen | fetch_vote only: the September 2026 prototype places "MG" (the mixed group) last; seen nowhere else | nothing: the mixed group is recognised by its membership's body (M23, not a faction), never by this label |
+| R21 | p2b.ad_sp_balsavimo_rezultatai | behaviour | every result carries the same komentaras, "Elektroninėmis priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų", whether or not its rows sum | BendriBalsavimoRezultatai | seen | local import 2026-11-24 (6 295 of 6 295 results of term 10, each summing exactly) | `VoteRules.OfficialNote` drops it: it is not shown beside each vote (design 7.2) |
 | F1 | (all) | format | dates are yyyy-MM-dd | data_nuo, data_iki | assumed | | dates |
 | F2 | (all) | format | times are Vilnius local time, yyyy-MM-dd HH:mm or with seconds | pradžia, pabaiga, balsavimo_laikas, balsavimas/nuo | assumed | | times, stored in UTC |
 | F3 | (all) | format | identifiers are integers and may be negative | *_id | seen | notes: vote -60034 | keys (bigint) |

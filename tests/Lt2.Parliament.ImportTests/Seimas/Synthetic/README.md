@@ -16,7 +16,8 @@ Term 10 (2024–2028). All identifiers start with 99, which no Seimas identifier
 be confused with real ones. Only 14 of the 141 seats are filled: the **totals** of each vote are Seimas-wide numbers
 (XVP-0412: 71 : 38 after presentation, 74 : 44 after consideration), so the per-MP votes here never add up to the
 totals. The per-MP list of a vote includes every sitting MP of the 14, with an empty `kaip_balsavo` for one who did not
-vote.
+vote. The real results all carry the same standing `komentaras` (register R21), which the import drops; the synthetic
+ones leave it empty, except 99100004, whose note stands for one the Seimas gives on a single vote.
 
 | `asmens_id` | MP | Nominated by | Faction (ballot label) | Notes |
 |---|---|---|---|---|

@@ -6,8 +6,9 @@ Read before touching the Parliament module's client or import. The design is [07
   `p2b.ad_seimo_sesijos?kadencijos_id=` → `p2b.ad_seimo_posedziai?sesijos_id=` → `p2b.ad_sp_darbotvarke?posedzio_id=` →
   `p2b.ad_seimo_posedzio_eiga_full?posedzio_id=` → `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=`. MPs:
   `p2b.ad_seimo_nariai?kadencijos_id=` (`kadencijos_id=10` is 2024–2028; `asmens_id` is stable across terms).
-- Votes approved by consensus have no per-MP votes: show them without numbers. Some results carry an official note that
-  per-MP votes do not match the protocol totals: show it next to the result.
+- Votes approved by consensus have no per-MP votes: show them without numbers. Every result carries the same `komentaras`, a
+  standing disclaimer that per-MP votes do not match the protocol totals, even where they add up exactly (register R19,
+  R21): `VoteRules.OfficialNote` drops it, and any other note is shown next to the result (design 7.2).
 - Skip open-data sitting rows without a start time. The upcoming-agenda watcher is a separate source.
 - The sitting agenda's `KlausimoStadija` provides the agenda ID, stage and e-seimas link. The full proceedings
   link via `kl_stad_id` and include votes on items absent from the agenda and votes on groups of items. Prefer a

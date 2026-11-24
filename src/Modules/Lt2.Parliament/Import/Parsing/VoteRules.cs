@@ -53,6 +53,26 @@ internal static class VoteRules
         _ => BallotChoice.DidNotVote,
     };
 
+    /// <summary>
+    /// The standing disclaimer lrs.lt puts in <c>komentaras</c> on every vote result, whether or not the per-MP rows add
+    /// up to the totals (design 7.2). It says nothing about the vote it is on.
+    /// </summary>
+    public const string StandingDisclaimer =
+        "Elektroninėmis priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų";
+
+    /// <summary>Design 7.2: the Seimas's note on a result as shown beside it; null when empty or when it is only the
+    /// <see cref="StandingDisclaimer"/> (case, surrounding spaces and a closing full stop ignored).</summary>
+    public static string? OfficialNote(string? komentaras)
+    {
+        var note = komentaras?.Trim();
+        if (string.IsNullOrEmpty(note))
+        {
+            return null;
+        }
+
+        return Normalise(note.TrimEnd('.')) == Normalise(StandingDisclaimer) ? null : note;
+    }
+
     /// <summary>Approved by consensus ("Pritarta bendru sutarimu"): no per-MP votes exist.</summary>
     public static bool IsConsensus(string? type, string? wording) =>
         Normalise(type).Contains("bendru sutarimu", StringComparison.Ordinal)

@@ -241,7 +241,7 @@ internal static partial class SeimasParsers
         return new ParsedVoteResult(
             (totals.Enclosing(N.ResultVote) ?? throw new SeimasFormatException($"<{N.Totals}> is not inside a <{N.ResultVote}>.")).RequiredId(N.VoteId),
             new VoteTotals(totals.OptionalCount(N.For), totals.OptionalCount(N.Against), totals.OptionalCount(N.Abstain), totals.OptionalCount(N.Voted), totals.OptionalCount(N.Seats)),
-            totals.Optional(N.Note),
+            VoteRules.OfficialNote(totals.Optional(N.Note)),
             ballots);
     }
 }

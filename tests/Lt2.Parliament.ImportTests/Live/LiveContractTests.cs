@@ -34,11 +34,12 @@ public sealed class LiveContractTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// The same run against the stand-in. The synthetic data contradicts only R19 by design: its totals are
-    /// Seimas-wide, its per-MP rows cover 13 MPs.
+    /// The same run against the stand-in. The synthetic data contradicts only R19 and R21 by design: its totals are
+    /// Seimas-wide, its per-MP rows cover 13 MPs, and its results leave out the standing disclaimer so that a note on
+    /// one vote (99100004) stands out.
     /// </summary>
     [Fact]
-    public async Task The_contract_run_against_the_stand_in_saves_every_response_and_contradicts_nothing_but_the_synthetic_totals()
+    public async Task The_contract_run_against_the_stand_in_saves_every_response_and_contradicts_nothing_but_the_synthetic_totals_and_notes()
     {
         var saveTo = Path.Combine(Path.GetTempPath(), "lt2-contract-" + Guid.NewGuid().ToString("N"));
         try
@@ -50,7 +51,7 @@ public sealed class LiveContractTests(ITestOutputHelper output)
             output.WriteLine(result.Report);
             result.FetchErrors.ShouldBeEmpty();
             result.ParseErrors.ShouldBeEmpty();
-            result.Contradicted.Select(v => v.Line.Id).ShouldBe(["R19"]);
+            result.Contradicted.Select(v => v.Line.Id).ShouldBe(["R19", "R21"]);
             result.Verdicts.Count(v => v.Verdict == Verdict.Confirmed).ShouldBeGreaterThan(70);
             File.Exists(Path.Combine(saveTo, "contract-report.md")).ShouldBeTrue();
             File.ReadAllBytes(Path.Combine(saveTo, "p2b.ad_sp_balsavimo_rezultatai@balsavimo_id=99100102.xml"))
