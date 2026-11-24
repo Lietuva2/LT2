@@ -90,14 +90,10 @@ internal static partial class SeimasParsers
 
     /// <summary>
     /// A title's "(Nr. …)" part, found right to left: one or more registration numbers, each perhaps with a revision "(2)" and
-    /// letters such as "ES", separated by commas or "ir".
+    /// letters such as "GR", separated by commas or "ir".
     /// </summary>
     [GeneratedRegex(@"\(Nr\.\s*(?<numbers>[^()]*(?:\(\d+\)[^()]*)*)\)", RegexOptions.CultureInvariant | RegexOptions.RightToLeft)]
     private static partial Regex BillNumbersPart();
-
-    /// <summary>A registration number of a Seimas bill (<c>XVP-0412</c>), without its revision and letters.</summary>
-    [GeneratedRegex(@"\b[IVX]+P-\d+", RegexOptions.CultureInvariant)]
-    private static partial Regex BillNumber();
 
     public static IReadOnlyList<ParsedTerm> Terms(byte[] body) =>
         XmlRead.Load(body).All(N.Term)
@@ -204,19 +200,20 @@ internal static partial class SeimasParsers
     }
 
     /// <summary>
-    /// The bill an item is about, from its title: the first registration number of the title's last "(Nr. …)" part, without
-    /// a revision or letters (<c>(Nr. XVP-1234(2)ES, XVP-1235)</c> is XVP-1234, the package's main bill). The part is cut off the
-    /// title when it ends it; a title without such a part names no bill (a procedural item).
+    /// The bill an item is about, from its title (the open data gives the number nowhere else): the first registration number
+    /// of the title's last "(Nr. …)" part, as lrs.lt writes it but without a revision (<see cref="BillNumbers"/>;
+    /// <c>(Nr. XIVP-4009GR(2), XVP-1235)</c> is XIVP-4009GR, the package's main bill). The part is cut off the title when it
+    /// ends it; a title without such a part names no bill (a procedural item).
     /// </summary>
     internal static (string Title, string? Number) BillInTitle(string title)
     {
         // Right to left: the last part that holds a bill's number (a law's own "(Nr. IX-123)" holds none).
         foreach (Match match in BillNumbersPart().Matches(title))
         {
-            if (BillNumber().Match(match.Groups["numbers"].Value) is { Success: true } number)
+            if (BillNumbers.First(match.Groups["numbers"].Value) is { } number)
             {
                 var ends = string.IsNullOrWhiteSpace(title[(match.Index + match.Length)..]);
-                return (ends ? title[..match.Index].TrimEnd() : title, number.Value);
+                return (ends ? title[..match.Index].TrimEnd() : title, number);
             }
         }
 

@@ -46,10 +46,6 @@ internal static partial class AgendaParser
     [GeneratedRegex(@"(?<y>\d{4})\s*m\.\s*(?<m>\p{L}+)\s+(?<d>\d{1,2})\s*d\.", RegexOptions.CultureInvariant)]
     private static partial Regex SittingDatePattern();
 
-    /// <summary>A2: a bill is named by its registration number, for example XVP-0412 or XIVP-1234(2).</summary>
-    [GeneratedRegex(@"\b(?<n>[XVI]{1,5}P-\d{1,5})(?:\(\d+\))?", RegexOptions.CultureInvariant)]
-    private static partial Regex BillPattern();
-
     /// <summary>
     /// A3: the stage is named in the row: pateikimas, svarstymas or priėmimas, in any grammatical form; several in one
     /// cell, separated by commas ("Pateikimas, svarstymas, priėmimas"), are one combined stage.
@@ -94,18 +90,19 @@ internal static partial class AgendaParser
                 continue;
             }
 
-            var bill = BillPattern().Match(text);
-            if (!bill.Success && DateOf(text) is { } date)
+            // A2: a bill is named by its registration number, as the open data's titles name it (BillNumbers).
+            var bill = BillNumbers.First(text);
+            if (bill is null && DateOf(text) is { } date)
             {
                 sitting = date;
                 sittings++;
                 continue;
             }
 
-            if (bill.Success && sitting is { } day)
+            if (bill is not null && sitting is { } day)
             {
                 var link = SourceLink().Match(segment);
-                rows.Add(new AgendaRow(day, bill.Groups["n"].Value, StageOf(text), link.Success ? WebUtility.HtmlDecode(link.Groups["u"].Value) : pageUrl));
+                rows.Add(new AgendaRow(day, bill, StageOf(text), link.Success ? WebUtility.HtmlDecode(link.Groups["u"].Value) : pageUrl));
             }
         }
 
