@@ -607,8 +607,10 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `ModerationApiTests.A_missing_statement_is_refused_naming_the_author_only_where_the_author_receives_it` (integration).
 - **Closing a rejected or withdrawn bill (design 8.1 step 6).** `BillCatalogue.RejectionsAsync` reads an explicit
   approved rejection motion from the most recent vote on its bill. `CloseFinishedAsync` freezes the counts and records
-  the date, vote source and system audit. `last_automatic_rejection_vote_id` is kept on reopening so that decision
-  cannot close the record again. A moderator can close the open record with "Uždaryti: projektas atmestas ar atsiimtas"
+  the date, vote source and system audit. `last_automatic_rejection_vote_id` is the rejection vote last handled
+  (`ClosingRules.IsPendingRejection`): set by that close, and by a moderator's reopen to the rejection known then
+  (`BillRecords.RejectionAsync`, also when a moderator had closed the record by hand), and kept on reopening so that
+  decision cannot close the record again. A moderator can close the open record with "Uždaryti: projektas atmestas ar atsiimtas"
   under "Seime" in the record's menu
   (`ModerationActions`, `ClosingReasons` in the contracts), `POST /api/v1/moderation/records/{id}/close`
   (`CloseRecordEndpoint`, `CloseRecordRequest` + `CloseRecordRequestValidator`: `reason` `rejected`|`withdrawn`,

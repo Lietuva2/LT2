@@ -28,7 +28,7 @@ internal sealed class ParliamentImporter(
     ILogger<ParliamentImporter> logger) : IParliamentImport
 {
     /// <summary>Raise when a parser or an upsert changes, so stored responses are applied again.</summary>
-    internal const int ParserVersion = 3;
+    internal const int ParserVersion = 4;
 
     /// <summary>Only one import at a time, across worker instances.</summary>
     internal const long LockKey = 0x4C54_3250_4152_4C;
@@ -470,7 +470,7 @@ internal sealed class ParliamentImporter(
                     bills[number] = bill;
                 }
 
-                // A proceedings-only item can have a truncated title and no official document link.
+                // A proceedings item can have a truncated title and no official document link.
                 if (fromAgenda || bill.Title.Length == 0)
                 {
                     bill.Title = i.Title;
@@ -483,6 +483,13 @@ internal sealed class ParliamentImporter(
                 item = new AgendaItem { Id = i.Id };
                 db.AgendaItems.Add(item);
                 items.Add(i.Id, item);
+            }
+            else if (!fromAgenda)
+            {
+                // An item the agenda listed without a bill: the proceedings only add the bill. Its sitting, number, title
+                // and stage stay the agenda's (the proceedings' title can be cut short).
+                item.BillId = bill?.Id ?? item.BillId;
+                continue;
             }
 
             item.SittingId = sittingId;

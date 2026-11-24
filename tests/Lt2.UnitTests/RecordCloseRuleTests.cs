@@ -98,6 +98,32 @@ public sealed class RecordCloseRuleTests
         ClosingRules.Shown(record, live).ShouldBe(live, "the live counts come back");
     }
 
+    [Fact]
+    public void A_reopening_marks_the_rejection_known_then_as_handled_and_keeps_the_last_one_without_it()
+    {
+        var record = new BillRecord { Status = BillRecordStatuses.Open };
+        var now = new DateTimeOffset(2026, 11, 19, 10, 0, 0, TimeSpan.Zero);
+        ClosingRules.Close(record, CountRules.Publish(1, 0, 0, 0), now, ClosingReasons.Rejected, null, Today, Source);
+        ClosingRules.Reopen(record, now.AddHours(1), 99199700);
+        record.LastAutomaticRejectionVoteId.ShouldBe(99199700);
+
+        ClosingRules.Close(record, CountRules.Publish(1, 0, 0, 0), now, ClosingReasons.Withdrawn, null, Today, Source);
+        ClosingRules.Reopen(record, now.AddHours(2));
+        record.LastAutomaticRejectionVoteId.ShouldBe(99199700, "no rejection known: the one handled stays");
+    }
+
+    [Fact]
+    public void A_rejection_is_pending_until_held_and_until_a_close_or_a_reopen_handled_it()
+    {
+        var now = new DateTimeOffset(2026, 11, 19, 10, 0, 0, TimeSpan.Zero);
+        var rejection = new BillRejection(99199700, now.AddMinutes(-5), Source);
+        ClosingRules.IsPendingRejection(null, rejection, now).ShouldBeTrue();
+        ClosingRules.IsPendingRejection(99199700, rejection, now).ShouldBeFalse();
+        ClosingRules.IsPendingRejection(99199699, rejection, now).ShouldBeTrue("an older handled vote does not cover a new one");
+        ClosingRules.IsPendingRejection(null, rejection with { HeldAt = now.AddMinutes(5) }, now).ShouldBeFalse("not held yet");
+        ClosingRules.IsPendingRejection(null, null, now).ShouldBeFalse();
+    }
+
     [Theory]
     [InlineData("rejected", "2026-11-17", Source, "Bandymas.", true)]
     [InlineData("withdrawn", "2026-11-17", Source, "Bandymas.", true)]

@@ -123,6 +123,41 @@ public sealed class RecordCloseTests(DatabaseFixture database) : ApiTest(databas
         }
     }
 
+    [Fact]
+    public async Task A_reopen_after_a_moderators_close_overrules_the_rejection_vote_the_import_brought_later()
+    {
+        var moderator = (await ModeratorAsync()).Browser;
+        var (author, _) = await Factory.MemberAsync();
+        using var _a = author;
+        var record = await Database.PrepareBillAsync(author, moderator, Bill, "against");
+        var held = VilniusTime.StartOf(DecidedOn).AddMinutes(12);
+        try
+        {
+            // A moderator records the rejection by hand; the import brings the vote afterwards.
+            (await CloseAsync(moderator, record.Id, Closing())).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            await PutMotionAsync(RejectionVote, held, ApprovedRejection);
+            (await CloseFinishedAsync()).ShouldBe(0, "the record is closed already");
+
+            // The moderator finds the close wrong and reopens it: the vote known now does not close it again.
+            (await ReopenAsync(moderator, record.Id)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await CloseFinishedAsync()).ShouldBe(0, "the reopen overruled the rejection vote");
+            (await NewBrowser().RecordAsync(Bill)).Status.ShouldBe("open");
+            using (var changed = await author.TakeSideAsync(Bill, "for"))
+            {
+                changed.StatusCode.ShouldBe(HttpStatusCode.NoContent, "taking part is open again");
+            }
+
+            // A later rejection still closes it.
+            await PutMotionAsync(LaterVote, held.AddHours(1), ApprovedRejection);
+            (await CloseFinishedAsync()).ShouldBe(1);
+        }
+        finally
+        {
+            await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id IN (@first, @second)", ("first", RejectionVote), ("second", LaterVote));
+            await Database.FreeBillAsync(Bill);
+        }
+    }
+
     private async Task<int> CloseFinishedAsync()
     {
         await using var scope = Factory.Services.CreateAsyncScope();

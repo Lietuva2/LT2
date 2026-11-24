@@ -9,7 +9,8 @@
    Public and the same for everyone, but it must cost nothing while the page is only read: nothing is fetched when the page
    loads. The "Seimas" radio of the switch lives in the page's markup, so js/lt2-switch.js tells this island when it is
    checked (also when it was chosen before the island started); only then is the vote read (GET /votes/{id}, public and
-   cached), once. A failure says so and the next choosing of the radio tries again. Nothing of it is in the served HTML, and
+   cached), once per vote: an enhanced navigation to another bill keeps the island with the other bill's vote, and the map
+   drawn for the old one is dropped. A failure says so and the next choosing of the radio tries again. Nothing of it is in the served HTML, and
    nothing is stored; without script the vote's own page is the way to the map. *@
 @if (_ballots is { Count: > 0 } ballots)
 {
@@ -37,6 +38,28 @@ else if (_loading)
     /// <summary>The id of the radio whose choosing asks for the map.</summary>
     [Parameter] public string Radio { get; set; } = "view-seimas";
 
+    /// <summary>The vote whose ballots <see cref="_ballots"/> are (or are being read), so a new one is read afresh.</summary>
+    private long _shownVote;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // An enhanced navigation to another bill keeps this island and gives it the other bill's vote: forget the map drawn
+        // for the old one, and read the new one at once if its panel is already open (the server's patch may keep the radio).
+        if (_shownVote == VoteId)
+        {
+            return;
+        }
+
+        var changed = _shownVote != 0;
+        _shownVote = VoteId;
+        _ballots = null;
+        Message = null;
+        if (changed && _self is not null)
+        {
+            await WatchAsync();
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender || !RendererInfo.IsInteractive)
@@ -45,6 +68,12 @@ else if (_loading)
         }
 
         _self = DotNetObjectReference.Create(this);
+        await WatchAsync();
+    }
+
+    /// <summary>Asks js/lt2-switch.js to report the radio; it calls <see cref="Selected"/> at once when the radio is checked now.</summary>
+    private async Task WatchAsync()
+    {
         try
         {
             await JS.InvokeVoidAsync("lt2Switch.watch", Radio, _self);
@@ -65,34 +94,46 @@ else if (_loading)
             return;
         }
 
+        var asked = VoteId;
         _loading = true;
         Message = null;
         await InvokeAsync(StateHasChanged);
+        string? message = null;
+        IReadOnlyList<BallotResponse>? ballots = null;
         try
         {
-            var answer = await Api.GetVoteAsync(VoteId);
+            var answer = await Api.GetVoteAsync(asked);
             if (answer.IsSuccess && answer.Value is { } vote)
             {
-                _ballots = vote.Ballots;
+                ballots = vote.Ballots;
             }
-            else
+            else if (asked == VoteId)
             {
                 Show(answer.Problem);
             }
         }
         catch (HttpRequestException)
         {
-            Message = L["Error.Network"];
+            message = L["Error.Network"];
         }
         catch (Exception ex) when (ex is System.Text.Json.JsonException or NotSupportedException)
         {
-            Message = L["Error.Generic"];
+            message = L["Error.Generic"];
         }
         finally
         {
             _loading = false;
         }
 
+        if (asked != VoteId)
+        {
+            // The page moved to another bill while the answer was on its way: drop it and read the new vote if its panel is open.
+            await WatchAsync();
+            return;
+        }
+
+        _ballots = ballots;
+        Message ??= message;
         await InvokeAsync(StateHasChanged);
     }
 
