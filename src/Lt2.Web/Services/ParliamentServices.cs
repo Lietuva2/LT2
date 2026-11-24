@@ -14,7 +14,7 @@ namespace Lt2.Web.Services;
 /// The parliament reads both the HTTP endpoints and the server-rendered pages use: the module's answers mapped to the
 /// API contracts, or <c>not-found</c>.
 /// </summary>
-internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IBillCards billCards, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians, IFollowerCounts followers)
+internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IBillCards billCards, Lt2.Appeals.IAppealsModule appeals, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians, IFollowerCounts followers)
 {
     public const string ImportSource = "seimas-open-data";
     private static readonly Error NotFound = Error.NotFound("not-found");
@@ -28,19 +28,43 @@ internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IB
         return new MpListResponse(page.Items.Select(Map).ToList(), page.Total, page.NextCursor);
     }
 
-    public async Task<Result<MpProfileResponse>> MpAsync(string slug, CancellationToken ct) =>
-        await queries.MpAsync(slug, ct) is { } p
-            ? new MpProfileResponse(
+    public async Task<Result<MpProfileResponse>> MpAsync(string slug, CancellationToken ct)
+    {
+        if (await queries.MpAsync(slug, ct) is not { } p)
+        {
+            return NotFound;
+        }
+
+        var recent = p.RecentVotes.Select(Map).ToList();
+        var titles = await PlainTitlesAsync(recent.Select(v => v.Vote), ct);
+        return new MpProfileResponse(
                 Map(p.Mp),
                 Map(p.Term),
                 new MandateResponse(p.Mandate.From, p.Mandate.To, p.Mandate.NominatingParty, p.Mandate.ElectedHow, p.Mandate.Constituency, p.Mandate.TermsServed),
                 p.Memberships.Select(m => new MembershipResponse(Map(m.Body), m.Role, m.From, m.To, m.Current)).ToList(),
                 p.Contacts.Select(c => new ContactResponse(c.Kind, c.Value)).ToList(),
                 p.Statistics is { } s ? new MpStatisticsResponse(s.VotesHeld, s.VotesTakenPart, s.Participation, s.VotesWithFactionPosition, s.VotedWithFaction, s.WithFaction, s.FreeVotes) : null,
-                p.RecentVotes.Select(Map).ToList(),
+                recent.Select(v => v with { Vote = Titled(v.Vote, titles) }).ToList(),
                 await ManagedSinceAsync(slug, ct),
-                await FollowersAsync(slug, ct))
-            : NotFound;
+                await FollowersAsync(slug, ct));
+    }
+
+    /// <summary>
+    /// Design 8.13.1: the readable titles of the bills a list of votes names, one read for the answer (open and closed records
+    /// only; a bill without one is not in the answer).
+    /// </summary>
+    private async Task<IReadOnlyDictionary<string, string>> PlainTitlesAsync(IEnumerable<VoteLink> votes, CancellationToken ct)
+    {
+        var numbers = votes.Where(v => v.Bill is not null).Select(v => v.Bill!.Number).Distinct().ToList();
+        return numbers.Count == 0
+            ? new Dictionary<string, string>()
+            : (await appeals.PlainTitlesAsync(numbers, ct)).ToDictionary(t => t.Key, t => t.Value.Title);
+    }
+
+    private static VoteLink Titled(VoteLink v, IReadOnlyDictionary<string, string> titles) =>
+        v.Bill is { } b && titles.TryGetValue(b.Number, out var title) ? v with { Bill = b with { PlainTitle = title } } : v;
+
+    private static VoteSummaryResponse Titled(VoteSummaryResponse v, IReadOnlyDictionary<string, string> titles) => v with { Vote = Titled(v.Vote, titles) };
 
     /// <summary>Design 8.11.2: how many follow the MP, from Notifications; a number only.</summary>
     private async Task<int> FollowersAsync(string slug, CancellationToken ct) =>
@@ -52,20 +76,36 @@ internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IB
             ? since
             : null;
 
-    public async Task<Result<MpVotesResponse>> MpVotesAsync(string slug, string? cursor, int limit, CancellationToken ct) =>
-        await queries.MpVotesAsync(slug, cursor, limit, ct) is { } page ? new MpVotesResponse(page.Items.Select(Map).ToList(), page.NextCursor) : NotFound;
+    public async Task<Result<MpVotesResponse>> MpVotesAsync(string slug, string? cursor, int limit, CancellationToken ct)
+    {
+        if (await queries.MpVotesAsync(slug, cursor, limit, ct) is not { } page)
+        {
+            return NotFound;
+        }
+
+        var items = page.Items.Select(Map).ToList();
+        var titles = await PlainTitlesAsync(items.Select(i => i.Vote), ct);
+        return new MpVotesResponse(items.Select(i => i with { Vote = Titled(i.Vote, titles) }).ToList(), page.NextCursor);
+    }
 
     public async Task<Result<IReadOnlyList<BodyListItem>>> BodiesAsync(string kind, CancellationToken ct) =>
         Result<IReadOnlyList<BodyListItem>>.Success((await queries.BodiesAsync(kind, ct)).Select(Map).ToList());
 
-    public async Task<Result<BodyResponse>> BodyAsync(string kind, string slug, CancellationToken ct) =>
-        await queries.BodyAsync(kind, slug, ct) is { } b
-            ? new BodyResponse(
-                Map(b.Body),
-                Map(b.Term),
-                b.Members.Select(m => new BodyMemberResponse(Map(m.Mp), m.Role, m.From, m.To, m.Current)).ToList(),
-                b.RecentVotes.Select(v => new FactionVoteResponse(Map(v.Vote), Map(v.Split))).ToList())
-            : NotFound;
+    public async Task<Result<BodyResponse>> BodyAsync(string kind, string slug, CancellationToken ct)
+    {
+        if (await queries.BodyAsync(kind, slug, ct) is not { } b)
+        {
+            return NotFound;
+        }
+
+        var recent = b.RecentVotes.Select(v => new FactionVoteResponse(Map(v.Vote), Map(v.Split))).ToList();
+        var titles = await PlainTitlesAsync(recent.Select(v => v.Vote), ct);
+        return new BodyResponse(
+            Map(b.Body),
+            Map(b.Term),
+            b.Members.Select(m => new BodyMemberResponse(Map(m.Mp), m.Role, m.From, m.To, m.Current)).ToList(),
+            recent.Select(v => v with { Vote = Titled(v.Vote, titles) }).ToList());
+    }
 
     public async Task<Result<BillListResponse>> BillsAsync(string? q, string? cursor, CancellationToken ct)
     {
@@ -85,7 +125,9 @@ internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IB
         // Design 8.4 (owner, 2026-11-16): the page a date is published on is the agenda page the watcher reads (one address,
         // assumption A7), kept with every snapshot; the row's own link is the bill's document (A5) and shows no date.
         var agendaPage = planned is { SetByModerator: false } ? (await queries.AgendaReadAsync(ct)).SourceUrl : null;
-        return new BillResponse(b.Number, b.Title, b.ESeimasUrl, b.Votes.Select(Map).ToList(), AppealMapping.Map(planned), agendaPage);
+        var votes = b.Votes.Select(Map).ToList();
+        var titles = await PlainTitlesAsync(votes.Select(v => v.Vote), ct);
+        return new BillResponse(b.Number, b.Title, b.ESeimasUrl, votes.Select(v => Titled(v, titles)).ToList(), AppealMapping.Map(planned), agendaPage);
     }
 
     /// <summary>A vote summary as the API writes it (the agenda's recent stage results use it too).</summary>
@@ -103,7 +145,9 @@ internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IB
         };
         var size = limit is { } n ? Math.Clamp(n, 1, VoteListQuery.MaxLimit) : VoteListQuery.DefaultLimit;
         var page = await queries.VoteHistoryAsync(new VoteHistoryFilter(await billCards.SearchAsync(VoteListQuery.Query(q), ct), historyKind, until, cursor, size), ct);
-        return new VoteListResponse(page.Items.Select(i => new VoteListItem(Map(i.Summary), i.AgendaItemTitle)).ToList(), page.Total, page.NextCursor);
+        var items = page.Items.Select(i => new VoteListItem(Map(i.Summary), i.AgendaItemTitle)).ToList();
+        var titles = await PlainTitlesAsync(items.Select(i => i.Summary.Vote), ct);
+        return new VoteListResponse(items.Select(i => i with { Summary = Titled(i.Summary, titles) }).ToList(), page.Total, page.NextCursor);
     }
 
     public async Task<Result<VoteResponse>> VoteAsync(long id, CancellationToken ct) =>

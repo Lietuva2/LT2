@@ -14,7 +14,7 @@ public sealed record FollowedVoteResponse(long VoteId, string? Stage, DateTimeOf
 /// A bill the caller follows, with its planned date or its last stage result (design 8.11.2, the account page), and what was
 /// written there since they last opened its page (design 8.11.8), null when nothing.
 /// </summary>
-public sealed record FollowedBillResponse(string Number, string Title, PlannedDateResponse? Planned, FollowedVoteResponse? LastStageResult, Me.BillNewsCountsResponse? New = null);
+public sealed record FollowedBillResponse(string Number, string Title, PlannedDateResponse? Planned, FollowedVoteResponse? LastStageResult, Me.BillNewsCountsResponse? New = null, string? PlainTitle = null);
 
 /// <summary>An MP the caller follows.</summary>
 public sealed record FollowedMpResponse(string Slug, string FirstName, string LastName);

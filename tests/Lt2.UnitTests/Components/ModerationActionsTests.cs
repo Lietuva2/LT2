@@ -245,6 +245,106 @@ public sealed class ModerationActionsTests : BunitContext
         actions.Find($"#describe-draft-{Item}").HasAttribute("disabled").ShouldBeTrue("no draft without a source text");
     }
 
+    private IRenderedComponent<ModerationActions> RenderWithTitle(string? plainTitle, bool draft = false)
+    {
+        _api.On("GetAiAsync", ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(draft)));
+        return Render<ModerationActions>(p => p
+            .Add(c => c.Id, Item).Add(c => c.Number, Bill).Add(c => c.Kind, "record").Add(c => c.Status, "open")
+            .Add(c => c.Description, "Projektas keičia rinkliavas.").Add(c => c.DescriptionSource, "moderator").Add(c => c.CurrentPlainTitle, plainTitle));
+    }
+
+    /// <summary>Design 8.13.1: the readable title is a field above the description, starting from the record's own.</summary>
+    [Fact]
+    public void The_description_form_has_the_readable_title_above_the_description_starting_from_the_records()
+    {
+        var actions = RenderWithTitle("Keičiamos vietinės rinkliavos");
+        actions.Find($"#action-describe-{Item}").Click();
+
+        actions.Find($"label[for=describe-title-{Item}]").TextContent.ShouldBe(Text("Mod.PlainTitle"));
+        actions.Find($"#describe-title-hint-{Item}").TextContent.ShouldContain(Text("Mod.PlainTitleHint"));
+        var field = actions.Find($"#describe-title-{Item}");
+        field.GetAttribute("value").ShouldBe("Keičiamos vietinės rinkliavos");
+        field.GetAttribute("maxlength").ShouldBe("90");
+        actions.Markup.IndexOf($"id=\"describe-title-{Item}\"", StringComparison.Ordinal)
+            .ShouldBeLessThan(actions.Markup.IndexOf($"id=\"describe-{Item}\"", StringComparison.Ordinal), "the title comes first");
+        field.ParentElement!.QuerySelector("p.num")!.TextContent.ShouldContain("90");
+
+        var empty = RenderWithTitle(null);
+        empty.Find($"#action-describe-{Item}").Click();
+        empty.Find($"#describe-title-{Item}").GetAttribute("value").ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void The_readable_title_goes_with_the_description_and_a_blank_one_is_sent_as_none()
+    {
+        _api.On("WriteDescriptionAsync", ApiResult.Ok());
+        var actions = RenderWithTitle("Keičiamos vietinės rinkliavos");
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-title-{Item}").Input("Didinamas neapmokestinamųjų pajamų dydis");
+        actions.Find($"#statement-{Item}").Input("Pridėtas trumpas pavadinimas.");
+        actions.Find("form").Submit();
+        ((ModeratorDescriptionRequest)_api.Arguments[_api.Calls.LastIndexOf("WriteDescriptionAsync")][1]!).PlainTitle
+            .ShouldBe("Didinamas neapmokestinamųjų pajamų dydis");
+
+        // Saved, the next opening starts from the title just written.
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-title-{Item}").GetAttribute("value").ShouldBe("Didinamas neapmokestinamųjų pajamų dydis");
+        actions.Find($"#describe-title-{Item}").Input("   ");
+        actions.Find($"#statement-{Item}").Input("Pavadinimas pašalintas.");
+        actions.Find("form").Submit();
+        ((ModeratorDescriptionRequest)_api.Arguments[_api.Calls.LastIndexOf("WriteDescriptionAsync")][1]!).PlainTitle.ShouldBeNull();
+    }
+
+    [Fact]
+    public void The_draft_fills_the_readable_title_and_a_draft_without_one_empties_it()
+    {
+        _api.OnEach("DraftDescriptionAsync",
+            ApiResult<DescriptionDraftResponse>.Ok(new DescriptionDraftResponse("Projektas keičia rinkliavas.", "Keičiamos rinkliavos")),
+            ApiResult<DescriptionDraftResponse>.Ok(new DescriptionDraftResponse("Projektas keičia tvarką.", null)));
+        var actions = RenderWithTitle("Senas pavadinimas", draft: true);
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-source-{Item}").Input("Oficialus tekstas apie rinkliavas.");
+        actions.Find($"#describe-draft-{Item}").Click();
+
+        actions.Find($"#describe-title-{Item}").GetAttribute("value").ShouldBe("Keičiamos rinkliavos");
+        actions.FindAll($"#describe-title-from-draft-{Item}").Count.ShouldBe(1, "the draft's label stands beside the title as beside the description");
+
+        actions.Find($"#describe-draft-{Item}").Click();
+        actions.Find($"#describe-title-{Item}").GetAttribute("value").ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void A_refused_readable_title_is_said_at_its_field_and_nothing_is_sent()
+    {
+        _api.On("WriteDescriptionAsync", ApiResult.Ok());
+        var actions = RenderWithTitle(null);
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-title-{Item}").Input("Pirma eilutė\nantra eilutė");
+        actions.Find($"#statement-{Item}").Input("Bandymas.");
+        actions.Find("form").Submit();
+
+        _api.Calls.ShouldNotContain("WriteDescriptionAsync");
+        var message = Services.GetRequiredService<IStringLocalizer<ValidationMessages>>()["PlainTitle.Multiline"].Value;
+        actions.Find($"#describe-title-{Item}").ParentElement!.ClassList.ShouldContain("field--error");
+        actions.Find($"#describe-title-{Item}").ParentElement!.TextContent.ShouldContain(message);
+    }
+
+    [Fact]
+    public void The_servers_refusal_of_the_title_is_said_at_its_field()
+    {
+        _api.On("WriteDescriptionAsync", ApiResult.Fail(new ApiProblem
+        {
+            Status = 400, Errors = new Dictionary<string, string[]> { ["plainTitle"] = ["Per ilgas trumpas pavadinimas."] },
+        }));
+        var actions = RenderWithTitle(null);
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-title-{Item}").Input("Trumpas pavadinimas");
+        actions.Find($"#statement-{Item}").Input("Bandymas.");
+        actions.Find("form").Submit();
+
+        actions.Find($"#describe-title-{Item}").ParentElement!.TextContent.ShouldContain("Per ilgas trumpas pavadinimas.");
+    }
+
     [Fact]
     public void An_action_on_a_bill_without_a_record_creates_the_record_first()
     {

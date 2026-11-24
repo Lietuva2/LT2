@@ -244,7 +244,8 @@ public sealed record QueueRecord(
     bool Held,
     int Participants,
     string? DescriptionUrl,
-    string Status = BillRecordStatuses.Open);
+    string Status = BillRecordStatuses.Open,
+    string? PlainTitle = null);
 
 /// <summary>
 /// What a moderator's controls on the bill's page need (design 8.12.3): the state that decides which actions apply, and

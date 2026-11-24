@@ -64,7 +64,7 @@ internal static class AppealMapping
         q.Records.Select(a => new QueueRecordResponse(
             a.Id, Map(a.Bill), a.Description, a.DescriptionSource, a.Threshold, a.Reports.Select(Map).ToList(), Map(a.Surge), Map(a.Planned),
             a.DateFlags.Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt, f.Date)).ToList(),
-            a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl, a.Status)).ToList(),
+            a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl, a.Status, a.PlainTitle)).ToList(),
         q.Reasons.Select(Map).ToList(),
         q.RecordsTotal,
         q.ReasonsTotal);

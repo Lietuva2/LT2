@@ -8,9 +8,14 @@ namespace Lt2.Web.Services;
 /// <summary>The caller's follows (design 8.11.2, 8.14.14) from the Notifications module. Only ever the caller's own.</summary>
 internal static class FollowMapping
 {
-    public static async Task<MyFollowsResponse> MineAsync(IFollows follows, IBillNews news, Guid userId, CancellationToken ct)
+    public static async Task<MyFollowsResponse> MineAsync(IFollows follows, IBillNews news, Lt2.Appeals.IAppealsModule appeals, Guid userId, CancellationToken ct)
     {
         var mine = await follows.MineAsync(userId, ct);
+
+        // Design 8.13.1: the readable titles of the followed bills, composed here (Notifications knows only the official title).
+        var plain = mine.Bills.Count == 0
+            ? new Dictionary<string, Lt2.Appeals.PlainTitleInfo>()
+            : (await appeals.PlainTitlesAsync(mine.Bills.Select(b => b.Bill.Number).ToList(), ct)).ToDictionary(t => t.Key, t => t.Value);
 
         // Design 8.11.8: what is new on each followed bill since the person last opened it, in one read for the whole list.
         var since = mine.Bills.ToDictionary(b => b.Bill.Number, b => b.LastSeenAt, StringComparer.Ordinal);
@@ -21,7 +26,8 @@ internal static class FollowMapping
                 b.Bill.Title,
                 AppealMapping.Map(b.Planned),
                 b.LastStageResult is { } v ? new FollowedVoteResponse(v.VoteId, v.Stage, v.HeldAt, v.IsConsensus, v.For, v.Against, v.Abstain) : null,
-                MyBillsReads.Map(counts.GetValueOrDefault(b.Bill.Number)))).ToList(),
+                MyBillsReads.Map(counts.GetValueOrDefault(b.Bill.Number)),
+                plain.TryGetValue(b.Bill.Number, out var title) ? title.Title : null)).ToList(),
             mine.Mps.Select(m => new FollowedMpResponse(m.Slug, m.FirstName, m.LastName)).ToList(),
             mine.Organisations.Select(o => new FollowedOrganisationResponse(
                 o.Slug, o.Name, new Lt2.Api.Contracts.Organisations.OrganisationLabelResponse(o.ConfirmedBy, o.ConfirmedDomain), o.Status)).ToList(),
@@ -30,13 +36,13 @@ internal static class FollowMapping
 }
 
 /// <summary>Server-side <see cref="IFollowsApi"/> for prerendered islands, as the signed-in person of the request.</summary>
-internal sealed class ServerFollowsApi(IFollows follows, IBillNews news, IFollowerCounts followers, IHttpContextAccessor accessor, ErrorMapper errors) : IFollowsApi
+internal sealed class ServerFollowsApi(IFollows follows, IBillNews news, Lt2.Appeals.IAppealsModule appeals, IFollowerCounts followers, IHttpContextAccessor accessor, ErrorMapper errors) : IFollowsApi
 {
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 
     public async Task<ApiResult<MyFollowsResponse>> GetMineAsync(CancellationToken cancellationToken = default) =>
         UserId is { } id
-            ? ApiResult<MyFollowsResponse>.Ok(await FollowMapping.MineAsync(follows, news, id, cancellationToken))
+            ? ApiResult<MyFollowsResponse>.Ok(await FollowMapping.MineAsync(follows, news, appeals, id, cancellationToken))
             : ApiResult<MyFollowsResponse>.Fail(errors.ToProblem(SignInRequired));
 
     public Task<ApiResult> FollowBillAsync(string number, CancellationToken cancellationToken = default) =>

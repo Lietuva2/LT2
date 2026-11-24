@@ -5,7 +5,8 @@
 @inject Formats F
 @inject NavigationManager Navigation
 
-@* Design 8.2, 8.13: the bill's description keeps its edit history, public. Who edited is not shown. *@
+@* Design 8.2, 8.13: the bill's description keeps its edit history, public. Who edited is not shown. Design 8.13.1: the readable
+   title is kept with it, so an entry shows the title's change and the description's, each under its own label when both changed. *@
 @if (_record is { } a)
 {
     <PageTitle>@a.Bill.Number · @T["History.Title"] · Lietuva 2.0</PageTitle>
@@ -17,7 +18,7 @@
             <li>@T["History.Title"]</li>
         </ol>
         <h1>@T["History.Title"]</h1>
-        <p class="lead">@a.Bill.Title</p>
+        <p class="lead">@(a.PlainTitle is { Length: > 0 } plainTitle && a.Status is BillRecordStatuses.Open or BillRecordStatuses.Closed ? plainTitle : a.Bill.Title)</p>
     </div>
     <section class="sheet stack" aria-labelledby="h-now">
         <h2 id="h-now">@T["History.Now"]</h2>
@@ -46,8 +47,24 @@
                 {
                     <li>
                         <div class="rows__main">
-                            <span class="small num">@Display.DayTime(edit.ChangedAt)@(edit.OldText is null ? " · " + T["History.NoneBefore"] : edit.NewText is null ? " · " + T["History.Removed"] : "")</span>
-                            <Lt2.Web.Client.Components.TextChanges Old="@edit.OldText" New="@edit.NewText" />
+                            <span class="small num">@Display.DayTime(edit.ChangedAt)@(!edit.TextChanged ? "" : edit.OldText is null ? " · " + T["History.NoneBefore"] : edit.NewText is null ? " · " + T["History.Removed"] : "")</span>
+                            @if (edit.TitleChanged)
+                            {
+                                <div class="stack stack--tight history-title">
+                                    <span class="label">@T["History.PlainTitle"]</span>
+                                    <Lt2.Web.Client.Components.TextChanges Old="@edit.OldTitle" New="@edit.NewTitle" />
+                                </div>
+                            }
+                            @if (edit.TextChanged)
+                            {
+                                <div class="stack stack--tight history-description">
+                                    @if (edit.TitleChanged)
+                                    {
+                                        <span class="label">@T["History.Description"]</span>
+                                    }
+                                    <Lt2.Web.Client.Components.TextChanges Old="@edit.OldText" New="@edit.NewText" />
+                                </div>
+                            }
                         </div>
                     </li>
                 }

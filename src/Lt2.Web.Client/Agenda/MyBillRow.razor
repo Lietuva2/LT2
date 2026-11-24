@@ -11,7 +11,7 @@
         <span class="tag num">@L.Format("Mine.Planned", Display.Day(planned.Date))</span>
     }
 </span>
-<a class="my-agenda__title" href="@BillPath(Bill.Number)">@Bill.Title</a>
+<BillTitleLink Class="my-agenda__title" Href="@BillPath(Bill.Number)" Title="@Bill.Title" PlainTitle="@Bill.PlainTitle" />
 <span class="small">
     @if (Side is { } side)
     {

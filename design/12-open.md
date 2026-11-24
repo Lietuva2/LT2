@@ -17,7 +17,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
   penetration test. Lock files, Dependabot, CodeQL and `security.txt` are built.
 - 7.3: "appeals in progress" on an MP's profile (the profile shows only the MP's responses); the line was taken out of
   7.3, so whether it stays designed is for the owner.
-- 8.13.1: the readable title of a bill (data, both prompts, the moderator's field, lists, the bill's page, search).
 - 8.1, 8.6, 8.20.1: telling participants and followers that a bill changed between stages (for example in a committee).
 - 8.1: automatic closure for withdrawals, group motions and rejection wording beyond the confirmed main committee motion.
   `p2b.tais_docs` has project events. Confirm which events establish terminal bill status and how to link versions.

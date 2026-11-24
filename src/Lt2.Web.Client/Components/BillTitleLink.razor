@@ -1,0 +1,24 @@
+@* Design 8.13.1: the title of a bill as a list row leads with it. The link is the bill's readable title when its record has one,
+   else the official title; with a readable title the official one stands in fine print right under the link (layout "A": the
+   row's tags keep their line above). Every list row with a bill's title uses this one component, in server-rendered pages
+   and islands alike. Both titles are plain text, encoded on output. *@
+<a class="@(string.IsNullOrEmpty(Class) ? null : Class)" href="@Href" id="@Id">@(PlainTitle ?? Title)</a>
+@if (PlainTitle is not null)
+{
+    <span class="fine tl-item__official">@Title</span>
+}
+
+@code {
+    /// <summary>Where the link leads (the bill's page, or the vote's page in a list of votes).</summary>
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+
+    /// <summary>The bill's official title.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>The readable title (design 8.13.1) of an open or closed record; null for none.</summary>
+    [Parameter] public string? PlainTitle { get; set; }
+
+    [Parameter] public string Class { get; set; } = "tl-item__title";
+
+    [Parameter] public string? Id { get; set; }
+}

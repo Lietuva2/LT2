@@ -23,7 +23,7 @@
         @* The open reports about the description, as the queue shows them, beside its actions (decided 2026-11-14). *@
         <Reports Items="state.DescriptionReports" Description="true" Id="panel-description-reports" />
         <ModerationActions Id="state.Id" Number="@state.Number" Kind="@ReportTargets.Record" Status="@state.Status" Held="state.Held" Threshold="state.Threshold" Planned="state.Planned"
-                           Description="@state.Description" DescriptionSource="@state.DescriptionSource" DescriptionUrl="@state.DescriptionUrl" ESeimasUrl="@ESeimasUrl"
+                           Description="@state.Description" CurrentPlainTitle="@state.PlainTitle" DescriptionSource="@state.DescriptionSource" DescriptionUrl="@state.DescriptionUrl" ESeimasUrl="@ESeimasUrl"
                            HasOpenItems="state.HasOpenItems" ClosedReason="@state.ClosedReason" IdPrefix="panel-" OnDone="Reload" />
 
         @* Arguments that wait or are flagged (decided 2026-11-14): other visitors do not see them; the same actions as the queue. *@

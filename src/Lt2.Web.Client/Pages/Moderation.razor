@@ -89,7 +89,7 @@ else
 
                 <Reports Items="record.Reports" Description="true" />
                 <ModerationActions Id="record.Id" Number="@record.Bill.Number" Kind="@ReportTargets.Record" Status="@record.Status" Held="record.Held" Threshold="record.Threshold" Planned="record.Planned"
-                                   Description="@record.Description" DescriptionSource="@record.DescriptionSource" DescriptionUrl="@record.DescriptionUrl"
+                                   Description="@record.Description" CurrentPlainTitle="@record.PlainTitle" DescriptionSource="@record.DescriptionSource" DescriptionUrl="@record.DescriptionUrl"
                                    HasOpenItems="@(record.Reports.Count > 0 || record.DateFlags.Count > 0)" />
             </article>
         }

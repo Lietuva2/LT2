@@ -40,7 +40,7 @@ public sealed record AgendaOrganisationResponse(string Slug, string Name, Organi
 /// </summary>
 public sealed record AgendaItemResponse(
     string Number, string? Title, string? Stage, bool SetByModerator, string? SourceUrl, AgendaRecordResponse? Record,
-    IReadOnlyList<AgendaOrganisationResponse> Organisations);
+    IReadOnlyList<AgendaOrganisationResponse> Organisations, string? PlainTitle = null);
 
 /// <summary>
 /// The items planned for one sitting day ("Planuojama …"), in the agenda's order (design 8.11.1, owner 2026-11-18): by
@@ -52,7 +52,7 @@ public sealed record AgendaDayResponse(DateOnly Date, IReadOnlyList<AgendaItemRe
 /// <summary>A stage result of the last seven days, with the bill's public numbers.</summary>
 public sealed record AgendaVoteResponse(
     long VoteId, string Number, string Title, string? Stage, DateTimeOffset HeldAt, bool IsConsensus, VoteTotalsResponse Totals, string? OfficialNote,
-    AgendaRecordResponse? Record);
+    AgendaRecordResponse? Record, string? PlainTitle = null);
 
 /// <param name="RecentVotes">By Vilnius day, newest day first; within a day in the agenda's order (as the planned items).</param>
 /// <param name="AgendaReadAt">When the lrs.lt agenda was last read; null when never.</param>

@@ -4,7 +4,15 @@
 @* One vote in a list: what it was about, bill, stage and date; the side column is the caller's. *@
 <li id="@Id">
     <div class="rows__main">
-        <a href="@VoteLinks.Page(Vote.Id)">@(Vote.Bill?.Title ?? Vote.Wording)</a>
+        @if (Vote.Bill is { } bill)
+        {
+            @* Design 8.13.1: the bill's readable title leads, with the official title under it. *@
+            <Lt2.Web.Client.Components.BillTitleLink Href="@VoteLinks.Page(Vote.Id)" Title="@bill.Title" PlainTitle="@bill.PlainTitle" />
+        }
+        else
+        {
+            <a href="@VoteLinks.Page(Vote.Id)">@Vote.Wording</a>
+        }
         <span class="small num">@string.Join(" · ", Facts())</span>
     </div>
     <div class="rows__side">

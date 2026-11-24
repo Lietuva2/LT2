@@ -8,7 +8,7 @@
    on a bill nobody took part in yet, the participants' block as an island that leaves out "nobody yet" for a member with a
    side of their own (filled in the browser, keyed by the row's place). *@
 <li class="tl-item" id="@Lt2.Web.Client.Agenda.AgendaPaging.VotedRowId(Vote.VoteId)">
-    <VotedItemMain VoteId="Vote.VoteId" Number="@Vote.Number" Title="@Vote.Title" Stage="@Vote.Stage" OfficialNote="@Vote.OfficialNote">
+    <VotedItemMain VoteId="Vote.VoteId" Number="@Vote.Number" Title="@Vote.Title" PlainTitle="@Vote.PlainTitle" Stage="@Vote.Stage" OfficialNote="@Vote.OfficialNote">
         @if (Member)
         {
             <MyAgendaMark @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />

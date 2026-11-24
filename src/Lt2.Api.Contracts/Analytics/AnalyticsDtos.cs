@@ -193,7 +193,8 @@ public sealed record BillComparisonResponse(
     bool Compared,
     bool? Agreed,
     decimal? Difference,
-    string? OfficialNote);
+    string? OfficialNote,
+    string? PlainTitle = null);
 
 /// <summary>
 /// A faction's unity over the period (design 8.26.3). <paramref name="SmallSample"/>: fewer than 20 votes with a position, and
@@ -204,7 +205,7 @@ public sealed record FactionUnityResponse(
 
 /// <summary>A vote where the faction split most: the bill (if any), the title to show, its position and its members' counts.</summary>
 public sealed record SplitVoteResponse(
-    long VoteId, DateTimeOffset HeldAt, string? BillNumber, string Title, string? Stage, string Position, int For, int Against, int Abstain);
+    long VoteId, DateTimeOffset HeldAt, string? BillNumber, string Title, string? Stage, string Position, int For, int Against, int Abstain, string? PlainTitle = null);
 
 /// <summary>
 /// Design 8.26.4: the caller's own comparison. <paramref name="Bills"/>: closed bills the caller took a side on;

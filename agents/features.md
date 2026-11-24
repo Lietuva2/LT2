@@ -570,6 +570,24 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   apie klaidą"; a report reaches the queue, where a moderator confirms (an `ai` text becomes `ai-draft`), corrects or
   removes it. A description a person ever wrote, corrected or removed is never written over by the job. Without one the
   page says so and links to the Seimas page. Descriptions never go to MPs.
+- **The readable title** ("Trumpas pavadinimas", design 8.13.1, built; owner, 2026-11-24): `bill_record.plain_title`, at most
+  90 characters and one line, kept with the description (same source, label, day and history; a history entry holds both,
+  `DescriptionRevisionResponse.TextChanged`/`TitleChanged`). The moderator's form (`ModerationActions`, "describe") has the
+  field `describe-title-{Key}` above the description (parameter `CurrentPlainTitle`; the draft fills it) and sends
+  `ModeratorDescriptionRequest.PlainTitle`. A list row is `BillTitleLink` (`Lt2.Web.Client/Components`): the readable title as
+  the link, the official one in `span.tl-item__official` under it, the row's tags above; used by `TimelineItem` (front page,
+  agenda, `/projektai`), `VotedItemMain` (front page and `/seimas/balsavimai` through `VoteTimeline`), `VoteRow` (MP votes,
+  MP profile, faction and committee pages), `MyBillRow` (`Mano projektai`, the front page's own bills) and the statistics
+  list. The titles are composed by the host with `IAppealsModule.PlainTitlesAsync` (one call per answer; open and closed
+  records only): `AgendaReads` (`AgendaItemResponse.PlainTitle`, `AgendaVoteResponse.PlainTitle`), `ParliamentReads`
+  (`BillLink.PlainTitle` on every list of votes), `FollowMapping` (`FollowedBillResponse.PlainTitle`), `AnalyticsReads`
+  (`BillComparisonResponse`, `SplitVoteResponse`); the Appeals lists carry `BillRefResponse.PlainTitle`. Not on the
+  summaries (`DigestPage`), MP responses, the moderation queues' bill lines or emails. The bill's page (`BillPage`): the
+  readable title is the `<h1>` and the `<PageTitle>`, then `#official-title` ("Oficialus pavadinimas: …") and `#title-source`
+  (the tag of an `ai`/`ai-draft` source, the words "Parašė moderatorius" for a moderator's); the link preview uses it only for
+  `moderator` and `ai-draft`. The history page (`RecordHistory`) leads with it and shows a title change under "Trumpas
+  pavadinimas" (and the description under "Aprašymas" when both changed). Tests: `ReadableTitleTests`, `LinkPreviewTests`,
+  `AnalyticsTests` (integration); `BillTitleLinkTests`, `ModerationActionsTests` (unit).
 - **The summary job** (worker, hourly): active bills without a description, planned first (soonest first), then the most
   participants; at most `Ai:SummariesPerDay` a Vilnius day (30; 0 = off); the text comes only through `IBillTextSource`,
   which has **no reader** yet (only the "unavailable" one: e-seimas is unverified, design 7.1), so it makes nothing and

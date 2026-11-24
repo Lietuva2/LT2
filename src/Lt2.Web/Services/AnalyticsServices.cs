@@ -242,6 +242,7 @@ internal sealed class AnalyticsReads(
         var closed = await appeals.ClosedRecordsAsync(ct);
         var votes = await parliament.VotesAsync(closed.Select(c => c.ClosingVoteId).ToList(), ct);
         var bills = new List<BillComparisonResponse>();
+        var plainTitles = await appeals.PlainTitlesAsync(closed.Select(c => c.BillNumber).ToList(), ct); // design 8.13.1
         foreach (var record in closed
                      .Where(c => votes.ContainsKey(c.ClosingVoteId))
                      .Select(c => (Record: c, Vote: votes[c.ClosingVoteId]))
@@ -271,12 +272,16 @@ internal sealed class AnalyticsReads(
                 compared.Compared,
                 compared.Agreed,
                 AnalyticsRules.Difference(compared.SeimasShareFor, compared.MembersShareFor),
-                string.IsNullOrWhiteSpace(vote.OfficialNote) ? null : vote.OfficialNote));
+                string.IsNullOrWhiteSpace(vote.OfficialNote) ? null : vote.OfficialNote,
+                plainTitles.TryGetValue(record.Record.BillNumber, out var plain) ? plain.Title : null));
         }
 
         var comparedCount = bills.Count(b => b.Compared);
         var agreed = bills.Count(b => b.Agreed == true);
-        var factions = (await parliament.FactionUnityAsync(from, to, ct))
+        var factionRows = await parliament.FactionUnityAsync(from, to, ct);
+        var splitNumbers = factionRows.SelectMany(f => f.MostSplit).Select(s => s.Vote.Bill?.Number).OfType<string>().Distinct().ToList();
+        var splitTitles = await appeals.PlainTitlesAsync(splitNumbers, ct);
+        var factions = factionRows
             .Select(f => new FactionUnityResponse(
                 f.Faction.Slug,
                 f.Faction.Name,
@@ -286,7 +291,8 @@ internal sealed class AnalyticsReads(
                 f.Share,
                 f.SmallSample,
                 f.MostSplit.Select(s => new SplitVoteResponse(
-                    s.Vote.Id, s.Vote.HeldAt, s.Vote.Bill?.Number, s.Vote.Bill?.Title ?? s.AgendaItemTitle, s.Vote.Stage, s.Position, s.For, s.Against, s.Abstain)).ToList()))
+                    s.Vote.Id, s.Vote.HeldAt, s.Vote.Bill?.Number, s.Vote.Bill?.Title ?? s.AgendaItemTitle, s.Vote.Stage, s.Position, s.For, s.Against, s.Abstain,
+                    s.Vote.Bill is { } splitBill && splitTitles.TryGetValue(splitBill.Number, out var splitPlain) ? splitPlain.Title : null)).ToList()))
             .ToList();
 
         return new AnalyticsResponse(

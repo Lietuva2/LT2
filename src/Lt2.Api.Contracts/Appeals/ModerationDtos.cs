@@ -22,7 +22,8 @@ public sealed record QueueRecordResponse(
     bool Held,
     int Participants,
     string? DescriptionUrl,
-    string Status = BillRecordStatuses.Open);
+    string Status = BillRecordStatuses.Open,
+    string? PlainTitle = null);
 
 /// <summary>A participant's flag about the planned date (design 8.4), with the date they say is right when they gave one.</summary>
 public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt, DateOnly? Date = null);

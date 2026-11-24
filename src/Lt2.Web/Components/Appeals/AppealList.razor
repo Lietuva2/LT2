@@ -159,7 +159,7 @@
     /// <summary>The list's item as the shared row takes it: the stage is the planned item's, the figures the record's public numbers.</summary>
     private static AgendaItemResponse AsRow(BillListItemResponse item) => new(
         item.Bill.Number, item.Bill.Title, item.Planned?.Stage, item.Planned?.SetByModerator ?? false, item.Planned?.SourceUrl,
-        new AgendaRecordResponse(item.Id, item.Status, item.Counts, item.Threshold) { Summary = item.Summary, Arguments = item.Arguments }, item.Organisations);
+        new AgendaRecordResponse(item.Id, item.Status, item.Counts, item.Threshold) { Summary = item.Summary, Arguments = item.Arguments }, item.Organisations, item.Bill.PlainTitle);
 
     [SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
 

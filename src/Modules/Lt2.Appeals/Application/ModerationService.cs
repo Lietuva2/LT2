@@ -86,7 +86,8 @@ internal sealed class ModerationService(
             a.Sending == "held",
             counts[a.Id].Total,
             a.Description.Length == 0 ? null : a.DescriptionUrl,
-            a.Status)).ToList();
+            a.Status,
+            a.Description.Length == 0 ? null : a.PlainTitle)).ToList();
 
         return new ModerationItems(queueRecords, await QueueReasonsAsync(db, reasons, openReports, cancellationToken))
         {

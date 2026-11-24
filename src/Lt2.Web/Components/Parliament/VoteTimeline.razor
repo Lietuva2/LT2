@@ -39,7 +39,7 @@ else
         var vote = summary.Vote;
         var (title, wording) = Describe(item);
         <li class="tl-item" id="@VoteHistory.Row(number)">
-            <VotedItemMain Number="@(OnBillPage ? null : vote.Bill?.Number)" Title="@title" VoteId="vote.Id" Stage="@vote.Stage"
+            <VotedItemMain Number="@(OnBillPage ? null : vote.Bill?.Number)" Title="@title" PlainTitle="@(OnBillPage ? null : vote.Bill?.PlainTitle)" VoteId="vote.Id" Stage="@vote.Stage"
                            Kind="@vote.Kind" Day="@(OnBillPage ? Display.DayOf(vote.HeldAt) : null)" Wording="@wording"
                            OfficialNote="@summary.OfficialNote" />
             <div class="tl-item__side">
