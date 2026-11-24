@@ -12,7 +12,7 @@ namespace Lt2.Appeals.Application;
 /// day's row is written once after the day ends (<see cref="DailyStatRules.ShouldWrite"/>).
 /// </summary>
 internal sealed class AppealsMaintenance(
-    IDbContextFactory<AppealsDb> contexts, AppealReads reads, IBillCatalogue bills, IAuditLog audit, TimeProvider clock) : IAppealsMaintenance
+    IDbContextFactory<AppealsDb> contexts, AppealReads reads, BillRecords records, IBillCatalogue bills, IAuditLog audit, TimeProvider clock) : IAppealsMaintenance
 {
     public async Task<int> AggregateDayAsync(DateOnly day, CancellationToken cancellationToken)
     {
@@ -77,11 +77,11 @@ internal sealed class AppealsMaintenance(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var open = await db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Open).Select(a => new { a.Id, a.BillNumber }).ToListAsync(cancellationToken);
+        var rejections = await bills.RejectionsAsync(open.Select(r => r.BillNumber).ToList(), cancellationToken);
         var closed = 0;
         foreach (var candidate in open)
         {
-            var final = await bills.FinalVoteAsync(candidate.BillNumber, cancellationToken);
-            if (!ClosingRules.ShouldClose(BillRecordStatuses.Open, final?.VoteId))
+            if (!rejections.ContainsKey(candidate.BillNumber) && await bills.FinalVoteAsync(candidate.BillNumber, cancellationToken) is null)
             {
                 continue;
             }
@@ -89,8 +89,15 @@ internal sealed class AppealsMaintenance(
             // Under the bill's lock, as every write to a record (design 6.8).
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             await AdvisoryLocks.BillAsync(db, candidate.BillNumber, cancellationToken);
-            var record = await db.BillRecords.FirstAsync(a => a.Id == candidate.Id, cancellationToken);
-            if (record.Status != BillRecordStatuses.Open)
+            var record = await db.BillRecords.SingleOrDefaultAsync(a => a.Id == candidate.Id, cancellationToken);
+            if (record?.Status != BillRecordStatuses.Open)
+            {
+                continue;
+            }
+
+            var final = await bills.FinalVoteAsync(record.BillNumber, cancellationToken);
+            var rejection = final is null ? await records.PendingRejectionAsync(record, record.BillNumber, cancellationToken) : null;
+            if (!ClosingRules.ShouldClose(record.Status, final?.VoteId, rejection?.VoteId))
             {
                 continue;
             }
@@ -98,11 +105,22 @@ internal sealed class AppealsMaintenance(
             // Frozen now: once the status is closed no side can be taken or changed, and the page shows these numbers.
             var counts = (await reads.CountsAsync(db, [record.Id], cancellationToken))[record.Id];
             var now = clock.GetUtcNow();
-            ClosingRules.Close(record, counts, now, ClosingReasons.Vote, final!.VoteId, null, null);
+            var reason = ClosingReasons.Vote;
+            DateOnly? decidedOn = null;
+            if (rejection is not null)
+            {
+                reason = ClosingReasons.Rejected;
+                decidedOn = VilniusTime.DateOf(rejection.HeldAt);
+                record.LastAutomaticRejectionVoteId = rejection.VoteId;
+            }
+
+            ClosingRules.Close(record, counts, now, reason, final?.VoteId, decidedOn, rejection?.SourceUrl);
             await db.SaveChangesAsync(cancellationToken);
+            var details = rejection is null
+                ? System.Text.Json.JsonSerializer.SerializeToElement(new { bill = record.BillNumber, reason, vote = final!.VoteId }, System.Text.Json.JsonSerializerOptions.Web)
+                : System.Text.Json.JsonSerializer.SerializeToElement(new { bill = record.BillNumber, reason, vote = rejection.VoteId, decidedOn, sourceUrl = rejection.SourceUrl }, System.Text.Json.JsonSerializerOptions.Web);
             await audit.WriteAsync(
-                new AuditEntry("record.closed", null, "system", "record:" + record.Id,
-                    System.Text.Json.JsonSerializer.SerializeToElement(new { bill = record.BillNumber, reason = ClosingReasons.Vote, vote = final.VoteId }, System.Text.Json.JsonSerializerOptions.Web)),
+                new AuditEntry("record.closed", null, "system", "record:" + record.Id, details),
                 Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction),
                 cancellationToken);
             await transaction.CommitAsync(cancellationToken);

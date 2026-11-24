@@ -169,13 +169,11 @@ internal sealed class ModerationService(
         var reason = closure.Reason?.Trim();
         var source = RecordRules.NormaliseDescriptionUrl(closure.SourceUrl);
 
-        // Design 8.1 step 6 (owner, 2026-11-19): the Seimas rejected the bill or its initiators withdrew it, which the open data
-        // does not say. Under the bill's lock in one transaction, as the closing job's close: the counts frozen, nothing can be
-        // taken or changed afterwards. It answers no report (the description's stay open). Followers hear of it by the follow
-        // job (IRecordClosureFeed), as of a vote.
+        // Design 8.1 step 6: like the closing job, freeze the counts under the bill's lock in one transaction.
+        // The close leaves reports open. The follow job announces it through IRecordClosureFeed.
         return Refused(closure.Statement, required: true) ?? OnRecordAsync(recordId, moderator, "close", closure.Statement, answersReports: false, async (db, record, now) =>
         {
-            var finished = await records.IsFinishedAsync(record.Status, record.BillNumber, cancellationToken);
+            var finished = await records.IsFinishedAsync(record, record.BillNumber, cancellationToken);
             if (RecordRules.CheckClose(record.Status, finished, reason, closure.DecidedOn, VilniusTime.DateOf(now), source, closure.Statement) is { } refused)
             {
                 return RuleErrors.Of(refused);
@@ -191,7 +189,7 @@ internal sealed class ModerationService(
     {
         string? undone = null;
 
-        // Design 8.1 step 6: a moderator's wrong close is undone; one closed by the Seimas's vote never. The positions were kept,
+        // Design 8.1 step 6: a rejected or withdrawn record can reopen. The positions were kept,
         // so the live counts come back as they are. Nobody is told.
         return Refused(statement, required: true) ?? OnRecordAsync(recordId, moderator, "reopen", statement, answersReports: false, (_, record, now) =>
         {

@@ -136,6 +136,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_activity_at");
 
+                    b.Property<long?>("LastAutomaticRejectionVoteId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("last_automatic_rejection_vote_id");
+
                     b.Property<DateTimeOffset>("OpenedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("opened_at");

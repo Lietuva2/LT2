@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Lt2.Appeals.Application;
 
 /// <summary>
-/// <see cref="IRecordClosureFeed"/> for the follow emails (design 8.1 step 6, 8.6): the records closed now because a moderator
-/// recorded that the Seimas rejected the bill or its initiators withdrew it, closed in a window. A record reopened since, or hidden
+/// <see cref="IRecordClosureFeed"/> for the follow emails (design 8.1 step 6, 8.6): the records closed in a window because
+/// the Seimas rejected the bill or its initiators withdrew it. A record reopened since, or hidden
 /// by the moderators, is not closed now and is left out. Nothing about who closed it leaves the module.
 /// </summary>
 internal sealed class RecordClosureFeed(IDbContextFactory<AppealsDb> contexts) : IRecordClosureFeed

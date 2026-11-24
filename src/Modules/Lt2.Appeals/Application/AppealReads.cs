@@ -216,7 +216,7 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
             return Error.NotFound("bill.not-found");
         }
 
-        if (RecordRules.CheckParticipation(null, await bills.FinalVoteAsync(bill.Number, ct) is not null) is { } finished)
+        if (RecordRules.CheckParticipation(null, await IsFinishedAsync(null, bill.Number, ct)) is { } finished)
         {
             return RuleErrors.Of(finished);
         }
@@ -262,15 +262,45 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
             return Error.NotFound("bill.not-found");
         }
 
-        return await bills.FinalVoteAsync(bill.Number, ct) is null ? bill : Error.Conflict("record.not-open");
+        return await IsFinishedAsync(null, bill.Number, ct) ? Error.Conflict("record.not-open") : bill;
     }
 
-    /// <summary>
-    /// Whether the Seimas has finished the bill (design 6.8, <see cref="RecordRules.IsFinished"/>): the one answer for taking
-    /// part and for organisations' statements.
-    /// </summary>
-    public async Task<bool> IsFinishedAsync(string? recordStatus, string billNumber, CancellationToken ct) =>
-        RecordRules.IsFinished(
-            recordStatus,
-            finalVoteRecorded: recordStatus != BillRecordStatuses.Closed && await bills.FinalVoteAsync(AppealReads.NormaliseBillNumber(billNumber), ct) is not null);
+    public async Task<IReadOnlyList<BillFacts>> ActiveAsync(AppealsDb db, CancellationToken ct)
+    {
+        var active = await bills.ActiveAsync(ct);
+        var rejections = await bills.RejectionsAsync(active.Select(b => b.Number).ToList(), ct);
+        if (rejections.Count == 0)
+        {
+            return active;
+        }
+
+        var numbers = rejections.Keys.ToList();
+        var records = await db.BillRecords.AsNoTracking().Records().Where(r => numbers.Contains(r.BillNumber))
+            .ToDictionaryAsync(r => r.BillNumber, ct);
+        var now = clock.GetUtcNow();
+        return active.Where(b => !IsPendingRejection(records.GetValueOrDefault(b.Number), rejections.GetValueOrDefault(b.Number), now)).ToList();
+    }
+
+    /// <summary>Whether the bill has finished, including between the import and the hourly closing job.</summary>
+    public async Task<bool> IsFinishedAsync(BillRecord? record, string billNumber, CancellationToken ct) =>
+        record?.Status == BillRecordStatuses.Closed
+        || await bills.FinalVoteAsync(billNumber, ct) is not null
+        || await PendingRejectionAsync(record, billNumber, ct) is not null;
+
+    public async Task<BillRejection?> PendingRejectionAsync(BillRecord? record, string billNumber, CancellationToken ct)
+    {
+        var number = AppealReads.NormaliseBillNumber(billNumber);
+        var decision = (await bills.RejectionsAsync([number], ct)).GetValueOrDefault(number);
+        return IsPendingRejection(record, decision, clock.GetUtcNow()) ? decision : null;
+    }
+
+    public async Task<IReadOnlyList<BillRecord>> WithoutPendingRejectionsAsync(IReadOnlyList<BillRecord> records, CancellationToken ct)
+    {
+        var rejections = await bills.RejectionsAsync(records.Select(r => r.BillNumber).ToList(), ct);
+        var now = clock.GetUtcNow();
+        return records.Where(r => !IsPendingRejection(r, rejections.GetValueOrDefault(r.BillNumber), now)).ToList();
+    }
+
+    private static bool IsPendingRejection(BillRecord? record, BillRejection? decision, DateTimeOffset now) =>
+        decision is not null && decision.HeldAt <= now && record?.LastAutomaticRejectionVoteId != decision.VoteId;
 }

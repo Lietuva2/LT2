@@ -11,14 +11,16 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 8.1 step 6 (owner, 2026-11-19): the open data says nothing when the Seimas rejects a bill or its initiators withdraw
-/// it, so a moderator closes its record with the reason, the day and the lrs.lt source; the counts freeze, nobody can take or
-/// change a side, the page shows what happened with the source, followers hear of it, and a moderator can undo a wrong close.
+/// Design 8.1 step 6: an explicit rejection from the proceedings or a moderator's decision closes the record with the reason,
+/// day and source. The counts freeze, followers hear of it, and a moderator can reopen an incorrect close.
 /// </summary>
 public sealed class RecordCloseTests(DatabaseFixture database) : ApiTest(database)
 {
     private const string Bill = AppealSteps.ThirdBill;
     private const string Source = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas";
+    private const string ApprovedRejection = "Pritarta – dėl pagrindinio komiteto siūlymo atmesti šį projektą";
+    private const long RejectionVote = 99199700;
+    private const long LaterVote = 99199701;
 
     private static DateOnly DecidedOn => ReasonsToComeSteps.VilniusToday().AddDays(-2);
 
@@ -42,6 +44,98 @@ public sealed class RecordCloseTests(DatabaseFixture database) : ApiTest(databas
         await using var scope = Factory.Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<IDigestSource>().CandidatesAsync(CancellationToken.None);
     }
+
+    [Fact]
+    public async Task An_explicit_rejection_closes_once_and_reopening_ignores_that_vote_but_allows_a_later_rejection()
+    {
+        await Database.ForgetEventsAsync(Bill);
+        var moderator = (await ModeratorAsync()).Browser;
+        var (author, email) = await Factory.MemberAsync();
+        using var _a = author;
+        var record = await Database.PrepareBillAsync(author, moderator, Bill, "against");
+        using var visitor = NewBrowser();
+        var decidedOn = DecidedOn;
+        var held = VilniusTime.StartOf(decidedOn).AddMinutes(12);
+        const string source = "https://www.lrs.lt/sip/portal.show?p_r=37067&p_bals_id=99199700";
+        var activeList = AppealRoutes.AppealsList(Bill, false, false, null, limit: 200);
+
+        try
+        {
+            await PutMotionAsync(RejectionVote, held, "Nepritarta – dėl pagrindinio komiteto siūlymo atmesti šį projektą");
+            (await CloseFinishedAsync()).ShouldBe(0, "the motion to reject was defeated");
+            await PutMotionAsync(RejectionVote, held, "Nepritarta – dėl pritarimo po pateikimo");
+            (await CloseFinishedAsync()).ShouldBe(0, "a failed stage vote isn't a decision to reject the bill");
+            await PutMotionAsync(RejectionVote, held, "Pritarta – už pasiūlymą grąžinti šį projektą iniciatoriams tobulinti");
+            (await CloseFinishedAsync()).ShouldBe(0, "returning the bill does not close it");
+
+            await PutMotionAsync(RejectionVote, held, ApprovedRejection);
+            await PutMotionAsync(LaterVote, held.AddHours(1), "Pritarta – dėl pritarimo po svarstymo");
+            (await CloseFinishedAsync()).ShouldBe(0, "a later vote supersedes the earlier rejection");
+            await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id = @id", ("id", LaterVote));
+            (await visitor.GetJsonAsync<BillListResponse>(activeList)).Items.ShouldNotContain(i => i.Bill.Number == Bill);
+            (await CandidatesAsync()).ShouldNotContain(c => c.RecordId == record.Id);
+            using (var changed = await author.TakeSideAsync(Bill, "for"))
+            {
+                await changed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "record.not-open");
+            }
+
+            (await CloseFinishedAsync()).ShouldBe(1);
+            (await CloseFinishedAsync()).ShouldBe(0);
+            var closed = await visitor.RecordAsync(Bill);
+            (closed.Status, closed.ClosedReason, closed.ClosedDecidedOn, closed.ClosedSourceUrl, closed.ClosingVoteId)
+                .ShouldBe(("closed", "rejected", (DateOnly?)decidedOn, source, (long?)null));
+            closed.Counts.Against.ShouldBe(1);
+            var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/seimas/" + Bill));
+            page.ShouldContain("Seimas projektą atmetė");
+            page.ShouldContain($"href=\"{source}\" rel=\"external noopener\" id=\"closed-source\"");
+            (await Database.ScalarAsync<long>(
+                """
+                SELECT count(*) FROM audit.event
+                WHERE action = 'record.closed' AND target = @t AND actor_role = 'system' AND actor_user_id IS NULL
+                  AND details->>'reason' = 'rejected' AND details->>'vote' = '99199700'
+                """, ("t", "record:" + record.Id))).ShouldBe(1);
+            await RunFollowJobAsync();
+            (await Database.EmailsAsync(MessageKinds.FollowClosedEmail, email)).ShouldBe(1);
+
+            using (var reopened = await ReopenAsync(moderator, record.Id))
+            {
+                reopened.StatusCode.ShouldBe(HttpStatusCode.NoContent, await reopened.Content.ReadAsStringAsync());
+            }
+
+            (await CloseFinishedAsync()).ShouldBe(0, "the same Seimas vote is ignored after reopening");
+            (await visitor.GetJsonAsync<BillListResponse>(activeList)).Items.ShouldContain(i => i.Bill.Number == Bill);
+            using (var changed = await author.TakeSideAsync(Bill, "for"))
+            {
+                changed.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            }
+
+            await PutMotionAsync(LaterVote, held.AddHours(1), ApprovedRejection);
+            (await CloseFinishedAsync()).ShouldBe(1);
+            var closedAgain = await visitor.RecordAsync(Bill);
+            closedAgain.Counts.For.ShouldBe(1);
+            closedAgain.ClosedSourceUrl.ShouldBe("https://www.lrs.lt/sip/portal.show?p_r=37067&p_bals_id=99199701");
+        }
+        finally
+        {
+            await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id IN (@first, @second)", ("first", RejectionVote), ("second", LaterVote));
+            await Database.FreeBillAsync(Bill);
+            await Database.ForgetEventsAsync(Bill);
+        }
+    }
+
+    private async Task<int> CloseFinishedAsync()
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IAppealsMaintenance>().CloseFinishedAsync(TestContext.Current.CancellationToken);
+    }
+
+    private Task PutMotionAsync(long id, DateTimeOffset held, string wording) => Database.ExecuteAsync(
+        """
+        INSERT INTO parliament.vote (id, agenda_item_id, bill_id, held_at, wording, kind, is_consensus, has_result)
+        SELECT @id, agenda_item_id, bill_id, @held, @wording, 'Other', false, false
+        FROM parliament.vote WHERE id = 99100102
+        ON CONFLICT (id) DO UPDATE SET wording = excluded.wording
+        """, ("id", id), ("held", held), ("wording", wording));
 
     [Fact]
     public async Task A_moderator_closes_a_rejected_bill_its_counts_freeze_sides_are_refused_it_leaves_the_summaries_and_the_close_is_audited()

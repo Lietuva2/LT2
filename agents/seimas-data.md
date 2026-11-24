@@ -14,6 +14,8 @@ Read before touching the Parliament module's client or import. The design is [07
   direct agenda link when a vote is repeated under a group. A group-only vote is recorded once without a bill.
 - The proceedings preserve the official decision as part of `aprasas`. `Sprendimas nepriimtas` reports no decision
   on the motion and does not count as a stage result. A vote's outcome and the bill's status are distinct (design 8.1).
+- `BillCatalogue.RejectionsAsync` recognises the confirmed plenary wording for an approved motion to reject a specific
+  bill (for example vote -60862). A later vote on that bill supersedes the rejection for automatic closure.
 - The service is slow at times and drops connections: retry, and never let an outage take the site down.
 - Confirm any field you have not seen in a live response before relying on it.
 - A vote's `kind` and `stage` are the classification in force: `VoteClassification.Effective` of the rules'

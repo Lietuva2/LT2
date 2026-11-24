@@ -49,12 +49,12 @@ internal sealed class OrganisationReads(IBillCatalogue bills, AppealReads reads,
         }
 
         var record = await AppealReads.FindRecordAsync(db, number, tracking: false, ct);
-        return new BillForStatements(bill, record, await records.IsFinishedAsync(record?.Status, number, ct));
+        return new BillForStatements(bill, record, await records.IsFinishedAsync(record, number, ct));
     }
 
     /// <summary>
     /// <see cref="BillAsync"/> for many bills in a few queries: bills not in the catalogue are left out. Finished is read from
-    /// the active bills (those without a final vote), the same rule as <see cref="BillRecords.IsFinishedAsync"/>.
+    /// the active bills, the same rule as <see cref="BillRecords.IsFinishedAsync"/>.
     /// </summary>
     public async Task<IReadOnlyDictionary<string, BillForStatements>> BillsAsync(AppealsDb db, IReadOnlyCollection<string> billNumbers, CancellationToken ct)
     {
@@ -65,7 +65,7 @@ internal sealed class OrganisationReads(IBillCatalogue bills, AppealReads reads,
         }
 
         var facts = await bills.FindManyAsync(numbers, ct);
-        var active = (await bills.ActiveAsync(ct)).Select(b => b.Number).ToHashSet(StringComparer.Ordinal);
+        var active = (await records.ActiveAsync(db, ct)).Select(b => b.Number).ToHashSet(StringComparer.Ordinal);
         var onBills = await db.BillRecords.AsNoTracking().Records().Where(a => numbers.Contains(a.BillNumber)).ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, ct);
         return numbers.Where(facts.ContainsKey).ToDictionary(
             n => n,

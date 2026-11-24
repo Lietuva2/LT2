@@ -10,7 +10,7 @@ namespace Lt2.Appeals.Application;
 /// summary chooses from (design 8.4, 8.19.2); no author, no person.
 /// </summary>
 internal sealed class DigestSource(
-    IDbContextFactory<AppealsDb> contexts, AppealReads reads, IBillCatalogue bills, IPlannedAgenda agenda, IPartySupporters supporters, ISettings settings) : IDigestSource
+    IDbContextFactory<AppealsDb> contexts, AppealReads reads, BillRecords records, IBillCatalogue bills, IPlannedAgenda agenda, IPartySupporters supporters, ISettings settings) : IDigestSource
 {
     public async Task<IReadOnlyList<MpStance>> PublishedResponsesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
     {
@@ -68,7 +68,8 @@ internal sealed class DigestSource(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var open = db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Open);
-        var appeals = await (recordIds is null ? open : open.Where(a => recordIds.Contains(a.Id))).ToListAsync(cancellationToken);
+        var candidates = await (recordIds is null ? open : open.Where(a => recordIds.Contains(a.Id))).ToListAsync(cancellationToken);
+        var appeals = await records.WithoutPendingRejectionsAsync(candidates, cancellationToken);
         if (appeals.Count == 0)
         {
             return [];

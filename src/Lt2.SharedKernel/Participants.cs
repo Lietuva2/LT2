@@ -163,9 +163,12 @@ public interface IBillCatalogue
 
     /// <summary>
     /// The Seimas's final vote on the bill: the latest stage result at the adoption stage, or <c>null</c> while there is
-    /// none. Rejection or withdrawal at an earlier stage is not in the open data (see design 5.1, bill status).
+    /// none. For an explicit motion to reject a bill at an earlier stage, see <see cref="RejectionsAsync"/>.
     /// </summary>
     Task<BillFinalVote?> FinalVoteAsync(string number, CancellationToken cancellationToken);
+
+    /// <summary>Explicit rejections in the full sitting proceedings, keyed by bill number.</summary>
+    Task<IReadOnlyDictionary<string, BillRejection>> RejectionsAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken);
 
     /// <summary>The stage-result votes on the given bills held at or after <paramref name="since"/>, oldest first (design 8.11.2).</summary>
     Task<IReadOnlyList<StageVoteFacts>> StageResultsAsync(IReadOnlyCollection<string> numbers, DateTimeOffset since, CancellationToken cancellationToken);
@@ -192,6 +195,8 @@ public sealed record MpFacts(long SeimasPersonId, string Slug, string FirstName,
 
 /// <summary>The vote that closes a record (design 8.1).</summary>
 public sealed record BillFinalVote(long VoteId, DateTimeOffset HeldAt);
+
+public sealed record BillRejection(long VoteId, DateTimeOffset HeldAt, string SourceUrl);
 
 /// <summary>
 /// A bill's planned date on the Seimas agenda (design 5.1 planned_item, 8.4): from the lrs.lt agenda pages, or entered

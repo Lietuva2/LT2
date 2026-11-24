@@ -45,7 +45,6 @@ internal sealed class DescriptionSummaries(
     IDbContextFactory<AppealsDb> contexts,
     AppealReads reads,
     BillRecords records,
-    IBillCatalogue bills,
     IPlannedAgenda agenda,
     IAiAssistant assistant,
     IBillTextSource texts,
@@ -143,7 +142,7 @@ internal sealed class DescriptionSummaries(
     /// <summary>Active bills the job may take now, in the order of design 8.13.</summary>
     private async Task<IReadOnlyList<BillFacts>> DueAsync(AppealsDb db, DateTimeOffset now, CancellationToken ct)
     {
-        var active = await bills.ActiveAsync(ct);
+        var active = await records.ActiveAsync(db, ct);
         var numbers = active.Select(b => b.Number).ToList();
         var onBills = await db.BillRecords.AsNoTracking().Records()
             .Where(a => numbers.Contains(a.BillNumber))
