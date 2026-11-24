@@ -21,7 +21,8 @@ src/Lt2.Jobs               the Hangfire job classes (import, agenda watcher, agg
                            clean-ups): the worker runs them, the web host only loads their types so the dashboard can
                            enqueue a recurring job; each takes a CancellationToken (the import's jobs also Hangfire's
                            PerformContext, for their job parameters); ParliamentImportPartsJob: the import's four manual
-                           jobs (design 7.2), registered with Cron.Never()
+                           jobs (design 7.2), registered with Cron.Never(); JobsCommand: the worker's "jobs list" and
+                           "jobs trigger {id}" (design 6.3), run in the worker's container without a server
 src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
                            (Observability.AddLt2Observability), with SecretPaths replacing an MP link's or a member's stop
                            link's token in every log line and trace; no module references it

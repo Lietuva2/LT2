@@ -74,6 +74,8 @@ dotnet test --project tests/Lt2.UnitTests             # one project (Microsoft.T
 python tools/run_tests.py e2e --order random          # a project in another order: default, forward, reverse, random[:SEED]
 python deploy/init-secrets.py                         # once, and again when a secret is added
 docker compose -f deploy/compose.yaml up --build      # full stack: https://lt2.localhost:8443, Mailpit :8025
+docker exec lt2-worker-1 dotnet Lt2.Worker.dll jobs list               # the recurring jobs (design 6.3), no sign-in
+docker exec lt2-worker-1 dotnet Lt2.Worker.dll jobs trigger parliament-members   # "Trigger now", audited
 ```
 
 If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose command. End-to-end tests run only with
