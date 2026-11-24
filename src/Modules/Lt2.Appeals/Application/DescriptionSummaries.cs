@@ -46,6 +46,7 @@ internal sealed class DescriptionSummaries(
     AppealReads reads,
     BillRecords records,
     IPlannedAgenda agenda,
+    IBillCatalogue bills,
     IAiAssistant assistant,
     IBillTextSource texts,
     ISettings settings,
@@ -102,21 +103,22 @@ internal sealed class DescriptionSummaries(
 
             asked++;
             var answer = await assistant.DraftDescriptionAsync(new DraftSource(bill.Number, bill.Title, text.Text.Trim(), DraftPurpose.Summary), cancellationToken);
-            if (!answer.IsSuccess || AppealRules.CheckDescription(answer.Value) is not null)
+            var read = answer.IsSuccess ? DraftAnswers.Read(answer.Value) : DraftAnswer.Invalid;
+            if (read.Kind == DraftAnswerKind.Invalid)
             {
                 logger.LogWarning("AI summary for bill {Bill} not made: the provider gave no usable answer", bill.Number);
                 await AttemptAsync(bill.Number, SummaryOutcomes.Failed, askedProvider: true, cancellationToken);
                 continue;
             }
 
-            if (SummaryRules.IsNotEnough(answer.Value!))
+            if (read.Kind == DraftAnswerKind.NotEnough)
             {
                 logger.LogInformation("AI summary for bill {Bill} not made: the official text is not enough", bill.Number);
                 await AttemptAsync(bill.Number, SummaryOutcomes.Insufficient, askedProvider: true, cancellationToken);
                 continue;
             }
 
-            if (await StoreAsync(bill.Number, AppealRules.NormaliseText(answer.Value!), text.Address, cancellationToken))
+            if (await StoreAsync(bill.Number, read.Title!, read.Description!, text.Address, cancellationToken))
             {
                 made++;
             }
@@ -178,7 +180,7 @@ internal sealed class DescriptionSummaries(
     /// meanwhile. Under the bill's lock, so a moderator's description cannot be written over (design 6.8). Audited with
     /// the system as the actor: the bill, the model, the time; never the text.
     /// </summary>
-    private async Task<bool> StoreAsync(string billNumber, string summary, string address, CancellationToken ct)
+    private async Task<bool> StoreAsync(string billNumber, string title, string summary, string address, CancellationToken ct)
     {
         var model = await settings.GetAsync(SettingKeys.AiDraftModel, ct);
         await using var db = await contexts.CreateDbContextAsync(ct);
@@ -196,11 +198,14 @@ internal sealed class DescriptionSummaries(
         }
 
         db.Revisions.Add(AppealsService.Revise("record", record.Id, "description", null, summary, null, now));
+        db.Revisions.Add(AppealsService.Revise("record", record.Id, "plain_title", null, title, null, now));
         record.Description = summary;
+        record.PlainTitle = title;
         record.DescriptionSource = DescriptionSources.Ai;
         record.DescriptionUrl = address.Length <= 500 ? address : null;
         record.DescriptionAt = now;
         record.ChangedAt = now;
+        await BillCards.WriteAsync(db, bills, billNumber, title, ct); // the search copy holds the readable title (design 8.12.5)
         Upsert(db, await db.SummaryAttempts.FirstOrDefaultAsync(a => a.BillNumber == billNumber, ct), billNumber, SummaryOutcomes.Made, true, now);
         await db.SaveChangesAsync(ct);
         var details = JsonSerializer.SerializeToElement(new { bill = billNumber, model }, JsonSerializerOptions.Web);

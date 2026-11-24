@@ -202,6 +202,37 @@ public sealed class AppealRuleTests
         AppealRules.CheckDescription(" ").ShouldBe("description.empty");
         AppealRules.CheckDescription(new string('x', AppealRules.DescriptionMaxLength + 1)).ShouldBe("description.too-long");
     }
+
+    [Fact]
+    public void The_plain_title_is_stored_trimmed_and_a_blank_one_means_none()
+    {
+        AppealRules.NormalisePlainTitle("  Didinamas neapmokestinamųjų pajamų dydis ").ShouldBe("Didinamas neapmokestinamųjų pajamų dydis");
+        AppealRules.NormalisePlainTitle(null).ShouldBeNull();
+        AppealRules.NormalisePlainTitle("").ShouldBeNull();
+        AppealRules.NormalisePlainTitle(" \t ").ShouldBeNull();
+    }
+
+    [Fact]
+    public void The_plain_title_is_optional_one_line_and_at_most_ninety_characters()
+    {
+        AppealRules.PlainTitleMaxLength.ShouldBe(90);
+        AppealRules.CheckPlainTitle(null).ShouldBeNull();
+        AppealRules.CheckPlainTitle("  ").ShouldBeNull("no title is fine");
+        AppealRules.CheckPlainTitle("Didinamas neapmokestinamųjų pajamų dydis").ShouldBeNull();
+        AppealRules.CheckPlainTitle(new string('x', 90)).ShouldBeNull();
+        AppealRules.CheckPlainTitle(" " + new string('x', 90) + " ").ShouldBeNull("the length is of the trimmed title");
+        AppealRules.CheckPlainTitle(new string('x', 91)).ShouldBe("plain-title.too-long");
+        AppealRules.CheckPlainTitle("Pirma eilutė\nAntra eilutė").ShouldBe("plain-title.multiline");
+        AppealRules.CheckPlainTitle("Pirma eilutė\r\nAntra eilutė").ShouldBe("plain-title.multiline");
+        AppealRules.CheckPlainTitle("Pirma eilutė\rAntra eilutė").ShouldBe("plain-title.multiline");
+    }
+
+    [Fact]
+    public void The_plain_titles_refusals_name_the_plain_title_field()
+    {
+        RuleErrors.Of("plain-title.too-long").Field.ShouldBe("plainTitle");
+        RuleErrors.Of("plain-title.multiline").Field.ShouldBe("plainTitle");
+    }
 }
 
 /// <summary>Design 8.12.2: one threshold for all bills, a moderator's override, never below the minimum.</summary>

@@ -11,6 +11,10 @@ namespace Lt2.Api.Contracts.Appeals;
 public static class AppealLimits
 {
     public const int DescriptionMaxLength = 1500;
+
+    /// <summary>The longest readable title a bill's record may carry (<c>bill_record.plain_title</c>, design 8.13.1); not a setting.</summary>
+    public const int PlainTitleMaxLength = 90;
+
     public const int StatementMaxLength = 1000;
     public const int ReportTextMaxLength = 1000;
 
@@ -95,7 +99,8 @@ public sealed record SideCountsResponse(int For, int ForOlderThan30Days, int Aga
 /// <param name="SetBy"><c>default</c> (the same for all bills) or <c>moderator</c> (this bill's own, with <c>Note</c>).</param>
 public sealed record ThresholdResponse(int Value, string SetBy, string? Note, int Participants, bool Reached, bool EnteredSummaries);
 
-public sealed record BillRefResponse(string Number, string Title);
+/// <summary>A bill as a row or a heading names it: its number, the official title and, when its record has one, the readable title (design 8.13.1).</summary>
+public sealed record BillRefResponse(string Number, string Title, string? PlainTitle = null);
 
 /// <summary>
 /// An argument. <c>AuthorProfileId</c> is the public profile id of an author who switched "Viešas profilis" on (design 8.25.4):
@@ -184,7 +189,8 @@ public sealed record BillRecordResponse(
     ReasonTotalsResponse? ReasonTotals = null,
     string? ClosedReason = null,
     DateOnly? ClosedDecidedOn = null,
-    string? ClosedSourceUrl = null);
+    string? ClosedSourceUrl = null,
+    string? PlainTitle = null);
 
 /// <summary>The bill's planned date on the Seimas agenda (design 8.4): shown as "Planuojama …", never a countdown.</summary>
 public sealed record PlannedDateResponse(DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator);
@@ -309,5 +315,11 @@ public sealed record ReportRequest
     public string? Text { get; init; }
 }
 
-/// <summary>One edit of a bill's description (design 8.2: it keeps its edit history). Who edited is not shown.</summary>
-public sealed record DescriptionRevisionResponse(DateTimeOffset ChangedAt, string? OldText, string? NewText);
+/// <summary>
+/// One edit of a bill's description and readable title (design 8.2, 8.13.1: it keeps its edit history; one action is one
+/// entry). Who edited is not shown. <c>OldText</c> and <c>NewText</c> mean something only when <c>TextChanged</c> (a null new
+/// text is a removal, a null old text the first text); <c>OldTitle</c> and <c>NewTitle</c> only when <c>TitleChanged</c> (null
+/// is none).
+/// </summary>
+public sealed record DescriptionRevisionResponse(
+    DateTimeOffset ChangedAt, string? OldText, string? NewText, bool TextChanged, string? OldTitle, string? NewTitle, bool TitleChanged);

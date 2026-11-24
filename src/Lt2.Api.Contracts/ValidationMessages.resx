@@ -30,6 +30,8 @@
 <data name="Description.Required" xml:space="preserve"><value>Trumpai ir neutraliai aprašykite, ką keičia projektas.</value></data>
 <data name="DescriptionUrl.Invalid" xml:space="preserve"><value>Nurodykite oficialaus teksto adresą lrs.lt svetainėje, prasidedantį https://, arba palikite laukelį tuščią.</value></data>
 <data name="Description.TooLong" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
+<data name="PlainTitle.TooLong" xml:space="preserve"><value>Trumpas pavadinimas gali būti iki 90 ženklų.</value></data>
+<data name="PlainTitle.Multiline" xml:space="preserve"><value>Trumpas pavadinimas turi tilpti vienoje eilutėje.</value></data>
 <data name="Threshold.Positive" xml:space="preserve"><value>Riba turi būti teigiamas skaičius.</value></data>
 <data name="Report.Target" xml:space="preserve"><value>Nenurodyta, apie ką pranešate.</value></data>
 <data name="Report.Ground" xml:space="preserve"><value>Pasirinkite, kodėl pranešate.</value></data>

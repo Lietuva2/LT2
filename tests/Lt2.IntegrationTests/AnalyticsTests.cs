@@ -130,6 +130,51 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
         }
     }
 
+    /// <summary>Design 8.13.1: a closed bill's row in the statistics list leads with its readable title, the official one under it.</summary>
+    [Fact]
+    public async Task A_closed_bills_readable_title_leads_its_row_in_the_statistics_list()
+    {
+        const string Readable = "Įvedamas trečias pajamų tarifas";
+        using var moderator = await ModeratorAsync();
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        using var visitor = NewBrowser();
+        await Database.PrepareBillAsync(initiator, moderator.Browser, Bill, "against");
+        (await member.TakeSideAsync(Bill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        try
+        {
+            await CloseAsync();
+            FreshCopies();
+            var plain = await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics);
+            var official = plain.Bills.Single(b => b.Number == Bill).Title;
+            plain.Bills.Single(b => b.Number == Bill).PlainTitle.ShouldBeNull();
+            var withoutTitle = TableRow(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")), Bill);
+            withoutTitle.ShouldContain($"<a href=\"/seimas/{Bill}\">{official}</a>");
+            withoutTitle.ShouldNotContain("tl-item__official");
+
+            // A correction of the closed record's title is a change of the record: the kept copy is made again.
+            (await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(Bill),
+                    new ModeratorDescriptionRequest { Description = AppealSteps.Description + " Pataisyta.", Statement = "Pridėtas trumpas pavadinimas.", PlainTitle = Readable }))
+                .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            var answer = await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics);
+            answer.Bills.Single(b => b.Number == Bill).PlainTitle.ShouldBe(Readable);
+            answer.Bills.Single(b => b.Number == Bill).Title.ShouldBe(official);
+
+            var row = TableRow(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")), Bill);
+            row.ShouldContain($"<a href=\"/seimas/{Bill}\">{Readable}</a><span class=\"fine tl-item__official\">{official}</span>");
+        }
+        finally
+        {
+            await Database.FreeBillAsync(Bill);
+            await RemoveFinalVoteAsync();
+            FreshCopies();
+            await initiator.DeleteAccountAsync();
+            await member.DeleteAccountAsync();
+        }
+    }
+
     [Fact]
     public async Task The_four_figures_count_exactly_what_the_design_says()
     {
@@ -469,6 +514,11 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
                 FROM generate_series(1, 12) AS n
                 """,
                 ("vote", FinalVote));
+
+            // The search reads the catalogue's copy (design 8.12.5), so these records' bills are in the catalogue too.
+            await Database.DeleteBillsAsync(ExtraBills);
+            await Database.ExecuteAsync(
+                "INSERT INTO parliament.bill (id, number, title) SELECT gen_random_uuid(), 'XVP-T' || lpad(n::text, 3, '0'), 'Bandomasis projektas ' || n FROM generate_series(1, 12) AS n");
             FreshCopies();
             var totals = await VoteTotalsAsync(FinalVote);
             var voted = totals.For + totals.Against + totals.Abstain;
@@ -566,6 +616,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
         finally
         {
             await Database.ExecuteAsync("DELETE FROM appeals.bill_record WHERE bill_number LIKE @b", ("b", ExtraBills));
+            await Database.DeleteBillsAsync(ExtraBills);
             await Database.FreeBillAsync(Bill);
             await RemoveFinalVoteAsync();
             await member.DeleteAccountAsync();

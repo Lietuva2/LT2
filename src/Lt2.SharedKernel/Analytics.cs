@@ -222,22 +222,6 @@ public static class AnalyticsRules
         seimasShareFor is { } seimas && membersShareFor is { } members ? Math.Abs(seimas - members) : null;
 
     /// <summary>
-    /// The list's search (design 8.26.1 item 2), as the bill list's (8.12.5): every word of the query, ignoring case, in the
-    /// number or the title. A blank query matches every bill.
-    /// </summary>
-    public static bool MatchesSearch(string? query, string number, string title)
-    {
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return true;
-        }
-
-        var haystack = number + " " + title;
-        return query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .All(word => Lithuanian.IndexOf(haystack, word, CompareOptions.IgnoreCase) >= 0);
-    }
-
-    /// <summary>
     /// The list's result filter: <paramref name="agreedWanted"/> true keeps the compared bills where the two majorities chose
     /// the same, false those where they differed, null every bill. A bill that is not compared (<paramref name="agreed"/>
     /// null: under 20 positions, a tie, a vote without numbers) has neither result.

@@ -36,6 +36,9 @@ public static class DemoAppeal
     /// </summary>
     public const string AiBill = "XVP-0533";
 
+    /// <summary>The invented readable title beside <see cref="AiDescription"/> (design 8.13.1): at most 90 characters, no full stop.</summary>
+    public const string AiPlainTitle = "Savivaldybės galės pačios nustatyti vietinių rinkliavų dydį";
+
     public const string AiDescription =
         "Projektas leistų savivaldybėms pačioms nustatyti vietinių rinkliavų dydį pagal paslaugos sąnaudas, o ne pagal bendrą visai šaliai dydį. " +
         "Rinkliavų dydžius savivaldybės turėtų skelbti iki kitų metų pradžios. Pataisa įsigaliotų 2027 m. sausio 1 d.";
@@ -65,7 +68,7 @@ public static class DemoAppeal
             throw new InvalidOperationException($"Refused: bill {Bill} is not in the parliament data yet; let the worker import from the stand-in first.");
         }
 
-        if (await ParliamentMaintenance.BillTitleAsync(connectionString, AiBill, cancellationToken) is null)
+        if (await ParliamentMaintenance.BillTitleAsync(connectionString, AiBill, cancellationToken) is not { } aiBillTitle)
         {
             throw new InvalidOperationException($"Refused: bill {AiBill} is not in the parliament data yet; let the worker import from the stand-in first.");
         }
@@ -89,7 +92,7 @@ public static class DemoAppeal
 
         // The invented AI summary links to the bill's own e-seimas address from the (invented) parliament data.
         var address = await ParliamentMaintenance.BillAddressAsync(connectionString, AiBill, cancellationToken);
-        var summary = await InventedRecord.SeedAiDescriptionAsync(connectionString, AiBill, AiDescription, address, now.AddDays(-2), cancellationToken);
+        var summary = await InventedRecord.SeedAiDescriptionAsync(connectionString, AiBill, aiBillTitle, AiDescription, AiPlainTitle, address, now.AddDays(-2), cancellationToken);
 
         // Design 8.14.14: invented organisations with statements on the bill, so "Organizacijų pozicijos" can be seen. Their
         // representatives are invented accounts of their own, with no side on any bill.

@@ -25,7 +25,7 @@ internal static class AppealMapping
     public static BillRecordResponse Map(BillRecordInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, Map(a.Counts), Map(a.Threshold),
         a.Reasons.Select(Map).ToList(), Map(a.Surge), a.ClosingVoteId, a.ClosedAt, Map(a.Planned), a.HiddenStatement, a.DescriptionUrl, a.DescriptionAt,
-        a.Cards?.Select(Map).ToList(), Map(a.ReasonTotals ?? ReasonTotals.None), a.ClosedReason, a.ClosedDecidedOn, a.ClosedSourceUrl);
+        a.Cards?.Select(Map).ToList(), Map(a.ReasonTotals ?? ReasonTotals.None), a.ClosedReason, a.ClosedDecidedOn, a.ClosedSourceUrl, a.PlainTitle);
 
     public static AuthorCardResponse Map(AuthorCard c) => new(c.ProfileId, c.Name, c.About);
 
@@ -40,7 +40,7 @@ internal static class AppealMapping
     public static SurgeResponse? Map(SurgeInfo? s) => s is null ? null : new(s.SharePercent, s.WindowHours);
 
     public static BillListResponse Map(BillListPage p) => new(
-        p.Items.Select(i => new BillListItemResponse(i.Id, Map(i.Bill), i.Status, Map(i.Counts), Map(i.Threshold), Map(i.Planned), i.Arguments, i.LastActivityAt)).ToList(),
+        p.Items.Select(i => new BillListItemResponse(i.Id, new BillRefResponse(i.Bill.Number, i.Bill.Title, i.PlainTitle), i.Status, Map(i.Counts), Map(i.Threshold), Map(i.Planned), i.Arguments, i.LastActivityAt)).ToList(),
         p.Total,
         p.NextCursor);
 
@@ -54,7 +54,7 @@ internal static class AppealMapping
 
     public static ModerationBillResponse Map(ModerationBillState s) =>
         new(s.Id, s.BillNumber, s.Status, s.Description, s.DescriptionSource, s.Threshold, s.ThresholdSetBy, s.Held, Map(s.Planned), s.HasOpenItems,
-            s.Reasons.Select(Map).ToList(), s.DescriptionUrl, s.DescriptionReports.Select(Map).ToList(), s.ClosedReason);
+            s.Reasons.Select(Map).ToList(), s.DescriptionUrl, s.DescriptionReports.Select(Map).ToList(), s.ClosedReason, s.PlainTitle);
 
     public static QueueReasonResponse Map(QueueReason r) => new(
         r.Id, r.RecordId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
@@ -64,7 +64,7 @@ internal static class AppealMapping
         q.Records.Select(a => new QueueRecordResponse(
             a.Id, Map(a.Bill), a.Description, a.DescriptionSource, a.Threshold, a.Reports.Select(Map).ToList(), Map(a.Surge), Map(a.Planned),
             a.DateFlags.Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt, f.Date)).ToList(),
-            a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl, a.Status)).ToList(),
+            a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl, a.Status, a.PlainTitle)).ToList(),
         q.Reasons.Select(Map).ToList(),
         q.RecordsTotal,
         q.ReasonsTotal);
@@ -78,7 +78,9 @@ internal static class AppealMapping
 
     public static NewReport ToModule(ReportRequest r) => new(r.TargetKind, r.TargetId, r.Ground, r.Text);
 
-    public static ModeratorDescription ToModule(ModeratorDescriptionRequest r) => new(r.Description, r.Statement, r.FromDraft, r.DescriptionUrl);
+    public static ModeratorDescription ToModule(ModeratorDescriptionRequest r) => new(r.Description, r.Statement, r.FromDraft, r.DescriptionUrl, r.PlainTitle);
+
+    public static DescriptionRevisionResponse Map(DescriptionRevision r) => new(r.ChangedAt, r.OldText, r.NewText, r.TextChanged, r.OldTitle, r.NewTitle, r.TitleChanged);
 
     public static RecordClosure ToModule(CloseRecordRequest r) => new(r.Reason, r.DecidedOn, r.SourceUrl, r.Statement);
 
@@ -126,7 +128,7 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, BillListReads lis
     public async Task<ApiResult<IReadOnlyList<DescriptionRevisionResponse>>> GetHistoryAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(
             await appeals.HistoryAsync(number, cancellationToken),
-            rows => (IReadOnlyList<DescriptionRevisionResponse>)rows.Select(r => new DescriptionRevisionResponse(r.ChangedAt, r.OldText, r.NewText)).ToList());
+            rows => (IReadOnlyList<DescriptionRevisionResponse>)rows.Select(AppealMapping.Map).ToList());
 
     public async Task<ApiResult<ReasonPageResponse>> GetReasonsAsync(string number, string side, string? cursor = null, int? limit = null, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await appeals.ReasonsAsync(number, side, cursor, limit, cancellationToken), AppealMapping.Map);
@@ -316,7 +318,7 @@ internal sealed class ServerModerationApi(
 
         var http = accessor.HttpContext!;
         var moderator = await AppealMapping.ModeratorAsync(identity, http.User, ipHasher.Hash(http), cancellationToken);
-        return errors.ToApiResult(await moderation.DraftDescriptionAsync(number, request.SourceText, moderator, cancellationToken), d => new DescriptionDraftResponse(d));
+        return errors.ToApiResult(await moderation.DraftDescriptionAsync(number, request.SourceText, moderator, cancellationToken), d => new DescriptionDraftResponse(d.Draft, d.PlainTitle));
     }
 
     private Task<bool> IsModeratorAsync() => ServerStaff.IsAllowedAsync(accessor, Policies.Moderator);

@@ -31,10 +31,13 @@ public sealed class SummaryAssistant : IAiAssistant
     /// <summary>The fake's summary of a bill; the marker lets tests find it anywhere it might leak.</summary>
     public static string Summary(string bill) => $"Projektas {bill} keičia rinkliavų nustatymo tvarką (DI santraukos bandymas).";
 
+    /// <summary>The fake's readable title of a bill (design 8.13.1): the answer is this, an empty line and the summary.</summary>
+    public static string Title(string bill) => $"Keičiama rinkliavų nustatymo tvarka ({bill})";
+
     public Task<Result<string>> DraftDescriptionAsync(DraftSource request, CancellationToken cancellationToken)
     {
         Asked.Enqueue(request);
-        return Task.FromResult<Result<string>>(Answers.TryGetValue(request.BillNumber, out var answer) ? answer : Summary(request.BillNumber));
+        return Task.FromResult<Result<string>>(Answers.TryGetValue(request.BillNumber, out var answer) ? answer : Title(request.BillNumber) + "\n\n" + Summary(request.BillNumber));
     }
 }
 
@@ -218,10 +221,15 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             var made = await visitor.RecordAsync(AppealSteps.SecondBill);
             made.Description.ShouldBe(SummaryAssistant.Summary(AppealSteps.SecondBill));
             made.DescriptionSource.ShouldBe("ai");
+            made.PlainTitle.ShouldBe(SummaryAssistant.Title(AppealSteps.SecondBill), "the job stores the title with the description");
+            (await Database.ScalarAsync<string>("SELECT plain_title FROM appeals.bill_card WHERE bill_number = @n", ("n", AppealSteps.SecondBill)))
+                .ShouldBe(SummaryAssistant.Title(AppealSteps.SecondBill), "and the bill's search card holds it (design 8.12.5)");
             made.DescriptionUrl.ShouldBe(FakeBillTexts.Note(AppealSteps.SecondBill).Address);
             made.DescriptionAt.ShouldNotBeNull().ShouldBeGreaterThan(DateTimeOffset.UtcNow.AddMinutes(-5));
-            (await visitor.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill)))
-                .ShouldHaveSingleItem().NewText.ShouldBe(SummaryAssistant.Summary(AppealSteps.SecondBill));
+            var madeHistory = (await visitor.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill))).ShouldHaveSingleItem();
+            madeHistory.NewText.ShouldBe(SummaryAssistant.Summary(AppealSteps.SecondBill));
+            (madeHistory.TextChanged, madeHistory.TitleChanged, madeHistory.OldTitle, madeHistory.NewTitle)
+                .ShouldBe((true, true, (string?)null, SummaryAssistant.Title(AppealSteps.SecondBill)), "one entry holds both");
             (await visitor.RecordAsync(AppealSteps.TaxBill)).Description.ShouldBeEmpty("the daily number was reached");
 
             // Audited with the system as the actor: the bill and the model, never the text.
@@ -276,6 +284,31 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             await AgeAttemptsAsync(1);
             (await RunAsync(Summaries)).ShouldBe(new SummaryRun("done", 2, 1));
             (await Database.ScalarAsync<string>("SELECT description_source FROM appeals.bill_record WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe("ai");
+        }
+        finally
+        {
+            Summaries.Texts.Clear();
+            Summaries.Assistant.Answers.Clear();
+            await FreshAsync();
+        }
+    }
+
+    [Fact]
+    public async Task An_answer_without_a_valid_title_is_a_failure_and_stores_nothing()
+    {
+        await FreshAsync();
+        try
+        {
+            Summaries.Texts[AppealSteps.SecondBill] = FakeBillTexts.Note(AppealSteps.SecondBill);
+            Summaries.Texts[AppealSteps.ThirdBill] = FakeBillTexts.Note(AppealSteps.ThirdBill);
+            Summaries.Texts[AppealSteps.TaxBill] = null;
+            Summaries.Assistant.Answers[AppealSteps.SecondBill] = SummaryAssistant.Summary(AppealSteps.SecondBill);
+            Summaries.Assistant.Answers[AppealSteps.ThirdBill] = new string('x', 91) + "\n\n" + SummaryAssistant.Summary(AppealSteps.ThirdBill);
+
+            (await RunAsync(Summaries)).ShouldBe(new SummaryRun("done", 2, 0));
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.bill_record WHERE bill_number = ANY(@b)", ("b", Bills))).ShouldBe(0, "nothing stored, no record made");
+            (await Database.ScalarAsync<string>("SELECT outcome FROM appeals.summary_attempt WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe("failed");
+            (await Database.ScalarAsync<string>("SELECT outcome FROM appeals.summary_attempt WHERE bill_number = @b", ("b", AppealSteps.ThirdBill))).ShouldBe("failed");
         }
         finally
         {

@@ -227,6 +227,8 @@ h1[tabindex="-1"]:focus { outline: none; }
   align-items: start;
 }
 .bill-body > * { grid-column: 1 / -1; }
+/* Design 8.13.1: the official title right under the bill's readable heading, closer than the header's other lines. */
+.bill-official { margin-top: calc(-1 * var(--sp-2)); }
 .bill-body > .bill-body__main { grid-column: 1; grid-row: 1; }
 .bill-body > .bill-body__aside { grid-column: 2; grid-row: 1; }
 .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5); }
@@ -1219,6 +1221,10 @@ main > .page-head ~ .sheet > .list-head ~ [id], main > .page-head ~ .sheet > .li
 .tl-items > .tl-item:last-child { border-bottom: 1px solid var(--rule); }
 .tl-item__main { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
 .tl-item__title { font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
+/* Design 8.13.1: the official title in fine print under a bill's readable title (BillTitleLink). */
+.tl-item__official { display: block; margin-top: 2px; overflow-wrap: break-word; }
+/* Design 8.13.1: on the description's history, a title change and a text change of one edit stand apart. */
+.history-title + .history-description { margin-block-start: var(--sp-3); }
 .tl-item__side { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; min-width: 0; }
 .tl-item__side .splitbar, .tl-item__main .splitbar { width: 100%; }
 /* A block of numbers in the side column under the word that says whose they are ("Seimas", "Dalyviai"; owner, 2026-11-23);

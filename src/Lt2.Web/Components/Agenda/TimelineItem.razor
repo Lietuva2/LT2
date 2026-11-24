@@ -24,6 +24,8 @@
    anchor "bill-{number}"; what only the list says (the planned date, the participants and arguments, the latest activity)
    comes as Tags and Details, built by the list.
 
+   The title is the bill's readable title when its record has one, with the official title under it (design 8.13.1).
+
    The numbers stand in the side column of every row, under the word "Dalyviai" (RecordFigures); a closed row has no link to
    the bill (owner, 2026-11-23: the title and the number tag lead there). *@
 <li class="tl-item" id="@RowId">
@@ -49,7 +51,7 @@
         </span>
         @if (Item.Title is { } title)
         {
-            <a class="tl-item__title" href="@BillPath">@title</a>
+            <Lt2.Web.Client.Components.BillTitleLink Href="@BillPath" Title="@title" PlainTitle="@Item.PlainTitle" />
         }
         else
         {

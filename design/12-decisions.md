@@ -277,6 +277,10 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   title was tried and dropped: it fits only where the number is the row's one tag); an `ai` title is shown on the site too; off the site only one a
   person wrote or checked, and summaries to MPs keep the official title. Searches of bills match it, not the description
   (2026-11-24).
+- Every search of bills runs in PostgreSQL: a word is found by its stem (`lithuanian` configuration) or inside the
+  text with case and Lithuanian letters ignored; the Appeals module keeps its own copy of the bill catalogue for it
+  (`appeals.bill_card`), refreshed from the Parliament module after every import; the search returns the matching
+  bills, and the lists keep their own order (2026-11-24).
 
 ## 8.14 Organisations
 

@@ -25,6 +25,9 @@ internal static class AdvisoryLocks
     /// <summary>A bill's record (design 6.8): creating it, and every write to it by a moderator, the summary job or the closing job.</summary>
     public static Task BillAsync(AppealsDb db, string billNumber, CancellationToken ct) => TakeAsync(db, "lt2.appeal-bill:" + AppealReads.NormaliseBillNumber(billNumber), ct);
 
+    /// <summary>The refresh of the bill search copy (design 8.12.5): one at a time; it takes no bill's lock.</summary>
+    public static Task BillCardsAsync(AppealsDb db, CancellationToken ct) => TakeAsync(db, "lt2.bill-cards", ct);
+
     /// <summary>An organisation: its representatives and statements change one at a time.</summary>
     public static Task OrganisationAsync(AppealsDb db, Guid organisationId, CancellationToken ct) =>
         TakeAsync(db, "lt2.organisation:" + organisationId.ToString("N"), ct);

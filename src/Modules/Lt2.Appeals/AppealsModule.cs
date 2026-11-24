@@ -40,6 +40,9 @@ public static class AppealsModule
         services.AddSingleton<SummaryJobNotices>();
         services.AddScoped<IDescriptionSummaries, DescriptionSummaries>();
         services.AddScoped<AppealReads>();
+
+        // Design 8.12.5: the search copy of the bill catalogue and the one search of bills.
+        services.AddScoped<IBillCards, BillCards>();
         services.AddScoped<BillRecords>();
         services.AddScoped<ReportNotices>();
         services.AddScoped<ModerationRecorder>();

@@ -26,6 +26,7 @@ public sealed class AppealContractTests
         }
 
         AppealLimits.DescriptionMaxLength.ShouldBe(AppealRules.DescriptionMaxLength);
+        AppealLimits.PlainTitleMaxLength.ShouldBe(AppealRules.PlainTitleMaxLength);
         Sides.All.ShouldBe(["for", "against"], "the wire format; the browser's and the server's copy are the same file");
     }
 
@@ -81,6 +82,25 @@ public sealed class AppealContractTests
         responses.Validate(new Lt2.Api.Contracts.Mps.MpResponseRequest { Stance = "for", Text = new string('a', 1501) }).IsValid.ShouldBeTrue("the setting is checked where it is written");
         responses.Validate(new Lt2.Api.Contracts.Mps.MpResponseRequest { Stance = "for", Text = new string('a', 20_001) })
             .Errors.Single().ErrorMessage.ShouldBe("Atsakymas per ilgas: ne daugiau kaip 20 000 ženklų.");
+    }
+
+    [Fact]
+    public void The_browser_refuses_a_plain_title_of_two_lines_or_over_ninety_characters_and_accepts_none()
+    {
+        var validator = new ModeratorDescriptionRequestValidator(L);
+        ModeratorDescriptionRequest Request(string? title) => new() { Description = "Didinamas neapmokestinamųjų pajamų dydis.", Statement = "Bandymas.", PlainTitle = title };
+
+        validator.Validate(Request(null)).IsValid.ShouldBeTrue();
+        validator.Validate(Request(" ")).IsValid.ShouldBeTrue("a blank title is none");
+        validator.Validate(Request(new string('x', 90))).IsValid.ShouldBeTrue();
+
+        var tooLong = validator.Validate(Request(new string('x', 91))).Errors.Single();
+        tooLong.PropertyName.ShouldBe("plainTitle");
+        tooLong.ErrorMessage.ShouldBe("Trumpas pavadinimas gali būti iki 90 ženklų.");
+
+        var twoLines = validator.Validate(Request("Pirma eilutė\nAntra eilutė")).Errors.Single();
+        twoLines.PropertyName.ShouldBe("plainTitle");
+        twoLines.ErrorMessage.ShouldBe("Trumpas pavadinimas turi tilpti vienoje eilutėje.");
     }
 
     [Fact]

@@ -30,6 +30,8 @@ internal sealed class AgendaReads(
         var numbers = planned.Select(p => p.BillNumber).Concat(recent.Select(v => v.Vote.Bill!.Number)).Distinct().ToList();
         var facts = numbers.Count == 0 ? new Dictionary<string, BillFacts>() : await bills.FindManyAsync(numbers, ct);
         var states = await appeals.BillStatesAsync(numbers, ct);
+        var plainTitles = await appeals.PlainTitlesAsync(numbers, ct); // design 8.13.1: one call for every row
+        string? PlainOf(string number) => plainTitles.TryGetValue(number, out var t) ? t.Title : null;
 
         // Design 8.12.2 (owner, 2026-11-21): a reached bill's row names its summary's day, read once for every row.
         var summaryOf = await summaries.OfAsync(states.Values.Select(s => (s.RecordId, s.Status, s.Threshold.Reached)), ct);
@@ -57,7 +59,7 @@ internal sealed class AgendaReads(
                             var state = states.GetValueOrDefault(p.BillNumber);
                             return new AgendaItemResponse(
                                 p.BillNumber, facts.GetValueOrDefault(p.BillNumber)?.Title, p.Stage, p.SetByModerator, p.SourceUrl, Record(state),
-                                Organisations(state, shown.GetValueOrDefault(p.BillNumber)));
+                                Organisations(state, shown.GetValueOrDefault(p.BillNumber)), PlainOf(p.BillNumber));
                         }),
                         i => i.Title is not null, i => ActivityOf(i.Number), i => i.Stage, i => i.Number)
                     .ToList()))
@@ -65,7 +67,7 @@ internal sealed class AgendaReads(
         var votes = recent
             .Select(v => new AgendaVoteResponse(
                 v.Vote.Id, v.Vote.Bill!.Number, v.Vote.Bill.Title, v.Vote.Stage, v.Vote.HeldAt, v.Vote.IsConsensus, ParliamentReads.Totals(v), v.OfficialNote,
-                Record(states.GetValueOrDefault(v.Vote.Bill.Number))))
+                Record(states.GetValueOrDefault(v.Vote.Bill.Number)), PlainOf(v.Vote.Bill.Number)))
             .GroupBy(v => VilniusTime.DateOf(v.HeldAt))
             .OrderByDescending(g => g.Key)
             .SelectMany(g => AgendaRules.WithinDay(g, _ => true, v => ActivityOf(v.Number), v => v.Stage, v => v.Number))

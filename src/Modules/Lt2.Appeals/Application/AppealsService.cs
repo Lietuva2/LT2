@@ -20,6 +20,7 @@ internal sealed class AppealsService(
     BillRecords records,
     IParticipants participants,
     IBillCatalogue bills,
+    IBillCards cards,
     IPreScreening screening,
     IPlannedAgenda agenda,
     ISettings settings,
@@ -45,10 +46,13 @@ internal sealed class AppealsService(
         var offset = int.TryParse(query.Cursor, NumberStyles.None, CultureInfo.InvariantCulture, out var o) ? o : 0;
         var size = Math.Clamp(query.Limit ?? PageSize, 1, MaxPageSize);
 
+        // The one search of bills (design 8.12.5): the numbers it keeps, or null for no search; each list then filters by them.
+        var found = (await cards.SearchAsync(query.Search, cancellationToken))?.ToHashSet(StringComparer.Ordinal);
+
         if (query.Closed)
         {
             // The closed tab (design 8.12.5): records the Seimas finished, newest first, with their frozen counts.
-            var (closedPage, total) = await ClosedPageAsync(db, query.Search, offset, size, cancellationToken);
+            var (closedPage, total) = await ClosedPageAsync(db, found, offset, size, cancellationToken);
             var closedFacts = await reads.BillsAsync(closedPage.Select(a => a.BillNumber).ToList(), cancellationToken);
             var shownCounts = await reads.ShownCountsAsync(db, closedPage, cancellationToken);
             var closedArguments = await ArgumentCountsAsync(db, closedPage.Select(a => a.Id).ToList(), cancellationToken);
@@ -56,7 +60,7 @@ internal sealed class AppealsService(
             {
                 var shown = shownCounts[a.Id];
                 return new BillListItem(a.Id, closedFacts.GetValueOrDefault(a.BillNumber) ?? new BillFacts(a.BillNumber, a.BillNumber), a.Status, shown,
-                    AppealReads.Threshold(a, shown, threshold), null, closedArguments.GetValueOrDefault(a.Id));
+                    AppealReads.Threshold(a, shown, threshold), null, closedArguments.GetValueOrDefault(a.Id), PlainTitle: a.PlainTitle);
             }).ToList();
             return new BillListPage(closedItems, total, Next(offset, closedPage.Count, total));
         }
@@ -65,7 +69,7 @@ internal sealed class AppealsService(
         // offered here. Composed in memory, not paged in the database: the bills, their titles and planned dates are the
         // Parliament module's and the sides and arguments this module's, and no module reads another's tables (AGENTS.md).
         // Only the requested page is mapped and sent.
-        var active = (await records.ActiveAsync(db, cancellationToken)).Where(b => BillListRules.Matches(query.Search, b.Number, b.Title)).ToList();
+        var active = (await records.ActiveAsync(db, cancellationToken)).Where(b => found is null || found.Contains(b.Number)).ToList();
         var numbers = active.Select(b => b.Number).ToList();
         var recordsOnBills = await db.BillRecords.AsNoTracking().Records()
             .Where(a => numbers.Contains(a.BillNumber))
@@ -84,7 +88,7 @@ internal sealed class AppealsService(
                 var c = record is null ? SideCounts.None : counts[record.Id];
                 return new BillListItem(
                     record?.Id, b, BillRecordStatuses.Open, c, AppealReads.Threshold(record, c, threshold), planned.GetValueOrDefault(b.Number),
-                    record is null ? 0 : arguments.GetValueOrDefault(record.Id), record?.LastActivityAt);
+                    record is null ? 0 : arguments.GetValueOrDefault(record.Id), record?.LastActivityAt, record?.PlainTitle);
             });
         var ordered = BillListRules.Order(
             candidates, BillSorts.Of(query.Sort), i => i.Counts.Total, i => i.Arguments, i => i.Planned?.Date, i => i.Bill.Number, i => i.LastActivityAt);
@@ -93,23 +97,18 @@ internal sealed class AppealsService(
     }
 
     /// <summary>
-    /// One page of the closed tab, newest closing first, and how many there are. Paged in the database; a search, which
-    /// matches the titles the Parliament module holds, first narrows the closed bills' numbers.
+    /// One page of the closed tab, newest closing first, and how many there are. Paged in the database; a search first narrows
+    /// the closed records to the bills it kept (<paramref name="numbers"/>, null for no search).
     /// </summary>
-    private async Task<(List<BillRecord> Page, int Total)> ClosedPageAsync(AppealsDb db, string? search, int offset, int size, CancellationToken ct)
+    private static async Task<(List<BillRecord> Page, int Total)> ClosedPageAsync(AppealsDb db, IReadOnlyCollection<string>? numbers, int offset, int size, CancellationToken ct)
     {
         var closed = db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Closed);
-        if (string.IsNullOrWhiteSpace(search))
+        if (numbers is not null)
         {
-            return (await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Skip(offset).Take(size).ToListAsync(ct), await closed.CountAsync(ct));
+            closed = closed.Where(a => numbers.Contains(a.BillNumber));
         }
 
-        var numbers = await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Select(a => a.BillNumber).ToListAsync(ct);
-        var titles = await reads.BillsAsync(numbers, ct);
-        var matching = numbers.Where(n => BillListRules.Matches(search, n, titles.GetValueOrDefault(n)?.Title ?? "")).ToList();
-        var pageNumbers = matching.Skip(offset).Take(size).ToList();
-        var page = await closed.Where(a => pageNumbers.Contains(a.BillNumber)).OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).ToListAsync(ct);
-        return (page, matching.Count);
+        return (await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Skip(offset).Take(size).ToListAsync(ct), await closed.CountAsync(ct));
     }
 
     /// <summary>How many published arguments each given record has.</summary>
@@ -145,7 +144,7 @@ internal sealed class AppealsService(
             (await agenda.ForBillsAsync([bill.Value.Number], cancellationToken)).GetValueOrDefault(bill.Value.Number), null);
     }
 
-    public async Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken)
+    public async Task<Result<IReadOnlyList<DescriptionRevision>>> HistoryAsync(string billNumber, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var record = await AppealReads.FindRecordAsync(db, billNumber, tracking: false, cancellationToken);
@@ -154,7 +153,7 @@ internal sealed class AppealsService(
             var bill = await bills.FindAsync(AppealReads.NormaliseBillNumber(billNumber), cancellationToken);
             return bill is null
                 ? Error.NotFound("bill.not-found")
-                : Result<IReadOnlyList<(DateTimeOffset, string?, string?)>>.Success([]);
+                : Result<IReadOnlyList<DescriptionRevision>>.Success([]);
         }
 
         if (record.Status == BillRecordStatuses.Rejected)
@@ -163,11 +162,34 @@ internal sealed class AppealsService(
         }
 
         var rows = await db.Revisions.AsNoTracking()
-            .Where(r => r.EntityKind == "record" && r.EntityId == record.Id && r.Field == "description")
+            .Where(r => r.EntityKind == "record" && r.EntityId == record.Id && (r.Field == "description" || r.Field == "plain_title"))
             .OrderBy(r => r.ChangedAt)
-            .Select(r => new { r.ChangedAt, r.OldValue, r.NewValue })
+            .Select(r => new { r.ChangedAt, r.Field, r.OldValue, r.NewValue })
             .ToListAsync(cancellationToken);
-        return Result<IReadOnlyList<(DateTimeOffset, string?, string?)>>.Success(rows.Select(r => (r.ChangedAt, r.OldValue, r.NewValue)).ToList());
+
+        // One action writes its rows with one time (design 8.13.1): the rows of a time are one entry.
+        var entries = rows.GroupBy(r => r.ChangedAt).OrderBy(g => g.Key).Select(g =>
+        {
+            var text = g.FirstOrDefault(r => r.Field == "description");
+            var title = g.FirstOrDefault(r => r.Field == "plain_title");
+            return new DescriptionRevision(g.Key, text?.OldValue, text?.NewValue, text is not null, title?.OldValue, title?.NewValue, title is not null);
+        }).ToList();
+        return Result<IReadOnlyList<DescriptionRevision>>.Success(entries);
+    }
+
+    public async Task<IReadOnlyDictionary<string, PlainTitleInfo>> PlainTitlesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
+    {
+        if (billNumbers.Count == 0)
+        {
+            return new Dictionary<string, PlainTitleInfo>();
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var found = await db.BillRecords.AsNoTracking()
+            .Where(r => billNumbers.Contains(r.BillNumber) && (r.Status == BillRecordStatuses.Open || r.Status == BillRecordStatuses.Closed) && r.PlainTitle != null)
+            .Select(r => new { r.BillNumber, r.PlainTitle, r.DescriptionSource })
+            .ToListAsync(cancellationToken);
+        return found.ToDictionary(r => r.BillNumber, r => new PlainTitleInfo(r.PlainTitle!, r.DescriptionSource ?? DescriptionSources.Moderator), StringComparer.Ordinal);
     }
 
     public async Task<Result<MyBillRecord>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken)
@@ -1007,7 +1029,8 @@ internal sealed class AppealsService(
             new ReasonTotals(forPage.Total, againstPage.Total),
             record.Status == BillRecordStatuses.Closed ? record.ClosedReason : null,
             record.Status == BillRecordStatuses.Closed ? record.ClosedDecidedOn : null,
-            record.Status == BillRecordStatuses.Closed ? record.ClosedSourceUrl : null);
+            record.Status == BillRecordStatuses.Closed ? record.ClosedSourceUrl : null,
+            record.Description.Length == 0 ? null : record.PlainTitle);
     }
 
     public async Task<Result<ReasonPage>> ReasonsAsync(string billNumber, string side, string? cursor, int? limit, CancellationToken cancellationToken)

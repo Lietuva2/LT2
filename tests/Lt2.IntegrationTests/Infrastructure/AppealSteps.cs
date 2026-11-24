@@ -46,6 +46,19 @@ public static class AppealSteps
             ("n", number));
         await database.ExecuteAsync("DELETE FROM appeals.organisation_statement WHERE bill_number = @n", ("n", number));
         await database.ExecuteAsync("DELETE FROM appeals.bill_record WHERE bill_number = @n", ("n", number));
+
+        // The bill's search card (design 8.12.5) held the record's readable title: with the record gone, it holds none.
+        await database.ExecuteAsync("UPDATE appeals.bill_card SET plain_title = NULL, plain_title_folded = NULL WHERE bill_number = @n", ("n", number));
+    }
+
+    /// <summary>
+    /// Deletes the bills of a test's own from the catalogue, those whose number matches the SQL pattern, and their search cards
+    /// (design 8.12.5): the cards are counted against the bills, so a card left behind would hide a bill added later.
+    /// </summary>
+    public static async Task DeleteBillsAsync(this DatabaseFixture database, string numberPattern)
+    {
+        await database.ExecuteAsync("DELETE FROM parliament.bill WHERE number LIKE @p", ("p", numberPattern));
+        await database.ExecuteAsync("DELETE FROM appeals.bill_card WHERE bill_number LIKE @p", ("p", numberPattern));
     }
 
     /// <summary>A completed member with a display name and, unless told otherwise, the consent to store positions.</summary>

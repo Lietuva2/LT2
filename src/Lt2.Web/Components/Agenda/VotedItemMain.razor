@@ -28,7 +28,7 @@
             <time class="tag num" datetime="@date">@date</time>
         }
     </span>
-    <a class="tl-item__title" href="@VoteLinks.Page(VoteId)">@Title</a>
+    <Lt2.Web.Client.Components.BillTitleLink Href="@VoteLinks.Page(VoteId)" Title="@Title" PlainTitle="@PlainTitle" />
     @if (Wording is not null)
     {
         <span class="small">@Wording</span>
@@ -49,6 +49,9 @@
 
     /// <summary>The vote the row is: its page is where the title leads.</summary>
     [Parameter, EditorRequired] public long VoteId { get; set; }
+
+    /// <summary>The bill's readable title (design 8.13.1): the link, with <see cref="Title"/> under it; null for none.</summary>
+    [Parameter] public string? PlainTitle { get; set; }
 
     [Parameter] public string? Stage { get; set; }
 

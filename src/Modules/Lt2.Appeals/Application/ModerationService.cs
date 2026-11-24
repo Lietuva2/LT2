@@ -86,7 +86,8 @@ internal sealed class ModerationService(
             a.Sending == "held",
             counts[a.Id].Total,
             a.Description.Length == 0 ? null : a.DescriptionUrl,
-            a.Status)).ToList();
+            a.Status,
+            a.Description.Length == 0 ? null : a.PlainTitle)).ToList();
 
         return new ModerationItems(queueRecords, await QueueReasonsAsync(db, reasons, openReports, cancellationToken))
         {
@@ -304,13 +305,14 @@ internal sealed class ModerationService(
 
     public async Task<Result<Unit>> WriteDescriptionAsync(string billNumber, ModeratorDescription request, StaffActor moderator, CancellationToken cancellationToken)
     {
-        if ((AppealRules.CheckDescription(request.Description) ?? RecordRules.CheckDescriptionUrl(request.DescriptionUrl) ?? StatementRules.Check(request.Statement, required: true)) is { } broken)
+        if ((AppealRules.CheckDescription(request.Description) ?? RecordRules.CheckDescriptionUrl(request.DescriptionUrl) ?? AppealRules.CheckPlainTitle(request.PlainTitle) ?? StatementRules.Check(request.Statement, required: true)) is { } broken)
         {
             return RuleErrors.Of(broken);
         }
 
         var text = AppealRules.NormaliseText(request.Description);
         var address = RecordRules.NormaliseDescriptionUrl(request.DescriptionUrl);
+        var title = AppealRules.NormalisePlainTitle(request.PlainTitle);
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
@@ -323,7 +325,7 @@ internal sealed class ModerationService(
         }
 
         var record = ensured.Value;
-        if (RecordRules.CheckDescriptionWrite(record.Status, record.Description, text, request.Statement, record.DescriptionUrl, address) is { } refused)
+        if (RecordRules.CheckDescriptionWrite(record.Status, record.Description, text, request.Statement, record.DescriptionUrl, address, record.PlainTitle, title) is { } refused)
         {
             return RuleErrors.Of(refused);
         }
@@ -338,11 +340,25 @@ internal sealed class ModerationService(
         }
 
         // Shown at once and in the public history; the same moderator writes and saves it, no second one (decided 2026-11-14).
-        // A change of the address alone leaves the text, its source (the label), its history and its day as they are.
-        if (record.Description != text)
+        // A change of the address alone leaves the text, its source (the label), its history and its day as they are. The readable
+        // title is kept with the text (design 8.13.1): a change of either is one action, with one time in the history, and makes
+        // the source and the day.
+        var textChanged = record.Description != text;
+        var titleChanged = AppealRules.NormalisePlainTitle(record.PlainTitle) != title;
+        if (textChanged)
         {
             db.Revisions.Add(AppealsService.Revise("record", record.Id, "description", record.Description.Length == 0 ? null : record.Description, text, moderator.UserId, now));
             record.Description = text;
+        }
+
+        if (titleChanged)
+        {
+            db.Revisions.Add(AppealsService.Revise("record", record.Id, "plain_title", record.PlainTitle, title, moderator.UserId, now));
+            record.PlainTitle = title;
+        }
+
+        if (textChanged || titleChanged)
+        {
             record.DescriptionAt = now;
             record.DescriptionSource = RecordRules.SourceOfModeratorText(request.FromDraft, record.DescriptionSource);
         }
@@ -351,9 +367,12 @@ internal sealed class ModerationService(
         // leaving it alone keeps it, and an empty field clears it. Not personal data, so it may be in the audit details.
         record.DescriptionUrl = address;
         record.ChangedAt = now;
+
+        // The search copy of the bill holds the readable title as it is written (design 8.12.5), in this transaction.
+        await BillCards.WriteAsync(db, bills, record.BillNumber, record.PlainTitle, cancellationToken);
         await recorder.RecordAsync(
             db, transaction, ReportTargets.Record, record.Id, "describe", request.Statement.Trim(), moderator, now, record.BillNumber,
-            new { descriptionSource = record.DescriptionSource, descriptionUrl = address }, answersReports: true, cancellationToken);
+            new { descriptionSource = record.DescriptionSource, descriptionUrl = address, plainTitleChanged = titleChanged }, answersReports: true, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
@@ -401,20 +420,27 @@ internal sealed class ModerationService(
         // The removal is in the public history (old text, no new one) and by a person, so the summary job never writes the
         // description of this bill again (design 8.13).
         string? removedSource = null;
-        return await OnRecordAsync(record.Id, moderator, "undescribe", statement, answersReports: true, (inner, record, now) =>
+        return await OnRecordAsync(record.Id, moderator, "undescribe", statement, answersReports: true, async (inner, record, now) =>
         {
             if (RecordRules.CheckRemove(record.Status, record.Description, statement) is { } refused)
             {
-                return Task.FromResult<Result<Unit>>(RuleErrors.Of(refused));
+                return RuleErrors.Of(refused);
             }
 
             removedSource = record.DescriptionSource;
             inner.Revisions.Add(AppealsService.Revise("record", record.Id, "description", record.Description, null, moderator.UserId, now));
+            if (record.PlainTitle is not null)
+            {
+                inner.Revisions.Add(AppealsService.Revise("record", record.Id, "plain_title", record.PlainTitle, null, moderator.UserId, now));
+            }
+
             record.Description = "";
+            record.PlainTitle = null;
             record.DescriptionSource = null;
             record.DescriptionUrl = null;
             record.DescriptionAt = null;
-            return Task.FromResult(Result.Ok());
+            await BillCards.WriteAsync(inner, bills, record.BillNumber, null, cancellationToken);
+            return Result.Ok();
         }, () => new { removedSource }, cancellationToken);
     }
 
@@ -461,7 +487,8 @@ internal sealed class ModerationService(
             record.Id, record.BillNumber, record.Status, record.Description, described ? record.DescriptionSource : null,
             ThresholdRules.Effective(record.Threshold, threshold.Default, threshold.Minimum), record.ThresholdSetBy, record.Sending == "held",
             planned.GetValueOrDefault(record.BillNumber), hasOpenItems, await QueueReasonsAsync(db, reasons, reports, cancellationToken),
-            described ? record.DescriptionUrl : null, descriptionReports, record.Status == BillRecordStatuses.Closed ? record.ClosedReason : null);
+            described ? record.DescriptionUrl : null, descriptionReports, record.Status == BillRecordStatuses.Closed ? record.ClosedReason : null,
+            described ? record.PlainTitle : null);
     }
 
     public async Task<Result<Guid>> EnsureRecordAsync(string billNumber, CancellationToken cancellationToken)
@@ -591,7 +618,7 @@ internal sealed class ModerationService(
 
     public bool DraftAvailable => assistant.IsConfigured;
 
-    public async Task<Result<string>> DraftDescriptionAsync(string billNumber, string sourceText, StaffActor moderator, CancellationToken cancellationToken)
+    public async Task<Result<DescriptionDraft>> DraftDescriptionAsync(string billNumber, string sourceText, StaffActor moderator, CancellationToken cancellationToken)
     {
         if (!assistant.IsConfigured)
         {
@@ -626,7 +653,21 @@ internal sealed class ModerationService(
             await transaction.CommitAsync(cancellationToken);
         }
 
-        return await assistant.DraftDescriptionAsync(new DraftSource(bill.Number, bill.Title, sourceText.Trim()), cancellationToken);
+        var answer = await assistant.DraftDescriptionAsync(new DraftSource(bill.Number, bill.Title, sourceText.Trim()), cancellationToken);
+        if (!answer.IsSuccess)
+        {
+            return answer.Error!;
+        }
+
+        // The prompt asks for the title, an empty line and the description (design 8.11.4); an answer in any other form is a failure,
+        // and "not enough" is the sentence alone, with no title.
+        var read = DraftAnswers.Read(answer.Value);
+        return read.Kind switch
+        {
+            DraftAnswerKind.Valid => new DescriptionDraft(read.Description!, read.Title),
+            DraftAnswerKind.NotEnough => new DescriptionDraft(SummaryRules.NotEnoughAnswer, null),
+            _ => Error.Conflict("draft.failed"),
+        };
     }
 
     /// <summary>The bill's page, where an argument's author is pointed to (design 8.12.1).</summary>

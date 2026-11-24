@@ -241,19 +241,19 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
         return new BodyDetail(new BodySummary(body.Slug, body.Name, Codes.Of(body.Kind), members.Count(m => m.Current)), ToInfo(term), members, recent);
     }
 
-    public async Task<BillPage> BillsAsync(string? query, string? cursor, int limit, CancellationToken cancellationToken)
+    public async Task<BillPage> BillsAsync(IReadOnlyCollection<string>? billNumbers, string? cursor, int limit, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var bills = await db.Bills.AsNoTracking()
+        var kept = db.Bills.AsNoTracking();
+        if (billNumbers is not null)
+        {
+            kept = kept.Where(b => billNumbers.Contains(b.Number));
+        }
+
+        var bills = await kept
             .Select(b => new { b.Number, b.Title, Last = db.Votes.Where(v => v.BillId == b.Id).Max(v => (DateTimeOffset?)v.HeldAt) })
             .ToListAsync(cancellationToken);
         IEnumerable<BillSummary> list = bills.Select(b => new BillSummary(b.Number, b.Title, b.Last));
-        if (!string.IsNullOrWhiteSpace(query))
-        {
-            var q = Fold(query);
-            list = list.Where(b => Fold(b.Number + " " + b.Title).Contains(q, StringComparison.Ordinal));
-        }
-
         var ordered = list.OrderByDescending(b => b.LastVoteAt).ThenBy(b => b.Number, StringComparer.Ordinal).ToList();
         return Page(ordered, cursor, Math.Clamp(limit, 1, 100), (items, total, next) => new BillPage(items, total, next));
     }
@@ -323,13 +323,11 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
             votes = votes.Where(v => v.HeldAt < stop);
         }
 
-        // The search folds the bills in memory, as the bill list does (a few thousand at most), then filters the votes
-        // by them in the database.
-        if (!string.IsNullOrWhiteSpace(filter.Query))
+        // The search of bills (design 8.12.5) is the Appeals module's; the host passes the numbers it kept, and the votes are
+        // filtered by those bills in the database.
+        if (filter.BillNumbers is { } numbers)
         {
-            var q = Fold(filter.Query);
-            var bills = await db.Bills.AsNoTracking().Select(b => new { b.Id, b.Number, b.Title }).ToListAsync(cancellationToken);
-            var found = bills.Where(b => Fold(b.Number + " " + b.Title).Contains(q, StringComparison.Ordinal)).Select(b => (Guid?)b.Id).ToList();
+            var found = await db.Bills.AsNoTracking().Where(b => numbers.Contains(b.Number)).Select(b => (Guid?)b.Id).ToListAsync(cancellationToken);
             votes = votes.Where(v => found.Contains(v.BillId));
         }
 
@@ -503,19 +501,6 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
         return make(items, all.Count, next);
     }
 
-    /// <summary>Lower case without diacritics, for search: "Ąžuolaitis" matches "azuolaitis".</summary>
-    internal static string Fold(string text)
-    {
-        var decomposed = text.Trim().ToLower(Lithuanian).Normalize(NormalizationForm.FormD);
-        var folded = new StringBuilder(decomposed.Length);
-        foreach (var c in decomposed)
-        {
-            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-            {
-                folded.Append(c);
-            }
-        }
-
-        return folded.ToString().Normalize(NormalizationForm.FormC);
-    }
+    /// <summary>Lower case without diacritics, for search: "Ąžuolaitis" matches "azuolaitis" (<see cref="SearchText"/>).</summary>
+    internal static string Fold(string text) => SearchText.Fold(text);
 }

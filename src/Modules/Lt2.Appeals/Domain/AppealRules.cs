@@ -20,6 +20,9 @@ internal static class AppealRules
     /// <summary>The neutral description is short; the design gives no number, this one is a choice.</summary>
     public const int DescriptionMaxLength = 1500;
 
+    /// <summary>The readable title is one short line (design 8.13.1); the same number as <c>AppealLimits.PlainTitleMaxLength</c>, not a setting.</summary>
+    public const int PlainTitleMaxLength = 90;
+
     /// <summary>A side is "for" or "against"; nothing else is a side.</summary>
     public static string? CheckSide(string? side) => Sides.IsSide(side) ? null : "side.invalid";
 
@@ -55,6 +58,28 @@ internal static class AppealRules
         }
 
         return trimmed.Length > DescriptionMaxLength ? "description.too-long" : null;
+    }
+
+    /// <summary>The readable title as stored (design 8.13.1): trimmed, or null for a blank one, which means none.</summary>
+    public static string? NormalisePlainTitle(string? title) => string.IsNullOrWhiteSpace(title) ? null : title.Trim();
+
+    /// <summary>
+    /// The readable title (design 8.13.1) is one line of at most <see cref="PlainTitleMaxLength"/> characters once trimmed; none
+    /// (null or blank) is fine, since a description may have no title.
+    /// </summary>
+    public static string? CheckPlainTitle(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return null;
+        }
+
+        if (title.Contains('\r') || title.Contains('\n'))
+        {
+            return "plain-title.multiline";
+        }
+
+        return title.Trim().Length > PlainTitleMaxLength ? "plain-title.too-long" : null;
     }
 
     /// <summary>
@@ -332,6 +357,7 @@ internal static class RuleErrors
         "side.invalid" => Error.Validation(code, "side"),
         "reason.empty" or "reason.too-long" => Error.Validation(code, "text"),
         "description.empty" or "description.too-long" => Error.Validation(code, "description"),
+        "plain-title.multiline" or "plain-title.too-long" => Error.Validation(code, "plainTitle"),
         "threshold.below-minimum" => Error.Validation(code, "threshold"),
         "closing.reason" => Error.Validation(code, "reason"),
         "closing.date-required" or "closing.date-future" => Error.Validation(code, "decidedOn"),

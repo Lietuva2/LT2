@@ -35,8 +35,8 @@
    panel are WebAssembly islands. Nothing here tells who took part first. *@
 @if (_bill is { } b)
 {
-    <PageTitle>@b.Number · @b.Title · Lietuva 2.0</PageTitle>
-    <LinkPreview Title="@($"{b.Number} · {b.Title}")" Description="@PreviewText(b)" Type="article" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" />
+    <PageTitle>@b.Number · @(PlainTitle ?? b.Title) · Lietuva 2.0</PageTitle>
+    <LinkPreview Title="@($"{b.Number} · {PreviewTitle(b)}")" Description="@PreviewText(b)" Type="article" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" />
     @* Owner, 2026-11-18 (option A): the header stands one step (--sp-4) above the page's first part, the parts below it a
        loose stack apart as on every page (.stack--snug, design 8.12.1). *@
     <div class="stack stack--snug">
@@ -46,7 +46,22 @@
                 <li><a href="/projektai">@A["Nav.Appeals"]</a></li>
                 <li>@F.T["Bill.Label"] <span class="num">@b.Number</span></li>
             </ol>
-            <h1>@b.Title</h1>
+            <h1>@(PlainTitle ?? b.Title)</h1>
+            @if (PlainTitle is not null)
+            {
+                @* Design 8.13.1: the readable title is the heading; the official title and the label of the title's source follow. *@
+                <p class="small bill-official" id="official-title">@A.Format("What.OfficialTitle", b.Title)</p>
+                <p class="fine" id="title-source">
+                    @if (PlainSource is DescriptionSources.AiDraft or DescriptionSources.Ai)
+                    {
+                        <span class="tag">@A["What.Source." + PlainSource]</span>
+                    }
+                    else
+                    {
+                        @A["What.Source.moderator"]
+                    }
+                </p>
+            }
             <Lt2.Web.Client.Components.NeedsScript />
             @* Owner, 2026-11-17: one compact line under the title: the stage tags, then "Sekti" and "Sekėjai: n" (design 8.11.2:
                how many follow, apart from the sides' figures, kept current by the button). *@
@@ -570,6 +585,18 @@
         _record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed } r && r.Description.Length > 0 && r.DescriptionSource != DescriptionSources.Ai
             ? r.Description
             : P.Format(_record?.Status switch { BillRecordStatuses.Open => "Preview.Bill.Open", BillRecordStatuses.Closed => "Preview.Bill.Closed", _ => "Preview.Bill.Other" }, b.Title);
+
+    /// <summary>The bill's readable title (design 8.13.1) when its record is open or closed and has one.</summary>
+    private string? PlainTitle => _record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed, PlainTitle: { Length: > 0 } title } ? title : null;
+
+    private string PlainSource => _record?.DescriptionSource ?? DescriptionSources.Moderator;
+
+    /// <summary>
+    /// The link preview's title (design 8.22.5): the readable title only when a person wrote or checked it (a moderator's or a
+    /// checked draft's), never an AI one nobody read; otherwise the official title.
+    /// </summary>
+    private string PreviewTitle(BillResponse b) =>
+        PlainTitle is { } title && PlainSource is DescriptionSources.Moderator or DescriptionSources.AiDraft ? title : b.Title;
 
     private static int ToGo(ThresholdResponse t) => ShareLine.MissingOf(t);
 

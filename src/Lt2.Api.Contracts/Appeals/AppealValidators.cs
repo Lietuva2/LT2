@@ -127,6 +127,13 @@ public sealed class ModeratorDescriptionRequestValidator : AbstractValidator<Mod
 
         // Design 8.13 (decided 2026-11-14): empty, or https on lrs.lt or under it, no user info, at most 500 characters.
         RuleFor(x => x.DescriptionUrl).Must(OfficialTextAddress.IsAcceptable).WithMessage(l["DescriptionUrl.Invalid"]).OverridePropertyName("descriptionUrl");
+
+        // Design 8.13.1: empty, or one line of at most 90 characters.
+        RuleFor(x => x.PlainTitle)
+            .Cascade(CascadeMode.Stop)
+            .Must(t => string.IsNullOrWhiteSpace(t) || !t.Contains('\r') && !t.Contains('\n')).WithMessage(l["PlainTitle.Multiline"])
+            .Must(t => string.IsNullOrWhiteSpace(t) || t.Trim().Length <= AppealLimits.PlainTitleMaxLength).WithMessage(l["PlainTitle.TooLong"])
+            .OverridePropertyName("plainTitle");
     }
 }
 

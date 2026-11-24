@@ -25,7 +25,8 @@ public sealed record ContactResponse(string Kind, string Value);
 public sealed record MpStatisticsResponse(
     int VotesHeld, int VotesTakenPart, decimal? Participation, int VotesWithFactionPosition, int VotedWithFaction, decimal? WithFaction, int FreeVotes);
 
-public sealed record BillLink(string Number, string Title);
+/// <summary>A bill in a list; <c>PlainTitle</c> is its readable title (design 8.13.1) when its record is open or closed and has one.</summary>
+public sealed record BillLink(string Number, string Title, string? PlainTitle = null);
 
 public sealed record VoteLink(long Id, DateTimeOffset HeldAt, string Wording, string Kind, string? Stage, bool IsConsensus, bool HasResult, BillLink? Bill);
 

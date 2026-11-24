@@ -63,9 +63,9 @@ internal static class RecordRules
 
     /// <summary>
     /// A moderator writes or corrects the description of a bill's open record, or of its closed one (design 8.12.3, 8.13,
-    /// 6.9), with a required statement; the text or the official text's address must differ from what is shown.
+    /// 6.9), with a required statement; the text, the official text's address or the readable title (8.13.1) must differ from what is shown.
     /// </summary>
-    public static string? CheckDescriptionWrite(string recordStatus, string currentText, string newText, string? statement, string? currentUrl = null, string? newUrl = null)
+    public static string? CheckDescriptionWrite(string recordStatus, string currentText, string newText, string? statement, string? currentUrl = null, string? newUrl = null, string? currentTitle = null, string? newTitle = null)
     {
         if (string.IsNullOrWhiteSpace(statement))
         {
@@ -77,7 +77,7 @@ internal static class RecordRules
             return refused;
         }
 
-        return currentText == newText && currentUrl == newUrl ? "description.unchanged" : null;
+        return currentText == newText && currentUrl == newUrl && AppealRules.NormalisePlainTitle(currentTitle) == AppealRules.NormalisePlainTitle(newTitle) ? "description.unchanged" : null;
     }
 
     /// <summary>The address stored: trimmed, or null for an empty field, which clears it.</summary>
@@ -236,21 +236,6 @@ internal static class BillListRules
             .ThenBy(i => planned(i) ?? DateOnly.MaxValue)
             .ThenBy(number, StringComparer.Ordinal)
             .ToList();
-    }
-    /// <summary>
-    /// The search by number or title (design 8.12.5): every word of the query, ignoring case, in the number or the title.
-    /// A blank query matches everything.
-    /// </summary>
-    public static bool Matches(string? query, string number, string title)
-    {
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return true;
-        }
-
-        var haystack = number + " " + title;
-        return query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .All(word => haystack.Contains(word, StringComparison.OrdinalIgnoreCase));
     }
 }
 

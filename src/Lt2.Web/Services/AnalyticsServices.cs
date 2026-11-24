@@ -150,7 +150,7 @@ internal sealed class AnalyticsCopies(IServiceScopeFactory scopes, TimeProvider 
 /// <see cref="AnalyticsRules"/>; kept in <see cref="AnalyticsCopies"/>.
 /// </summary>
 internal sealed class AnalyticsReads(
-    IParliamentQueries parliament, IAppealsModule appeals, IMpDirectory mps, IPoliticians politicians, AnalyticsCopies copies, TimeProvider clock)
+    IParliamentQueries parliament, IAppealsModule appeals, IBillCards billCards, IMpDirectory mps, IPoliticians politicians, AnalyticsCopies copies, TimeProvider clock)
 {
     /// <summary>What a kept copy was made from: the closed records and the last finished import (design 8.26.6).</summary>
     public async Task<string> DataVersionAsync(CancellationToken ct)
@@ -171,15 +171,16 @@ internal sealed class AnalyticsReads(
         var version = await DataVersionAsync(ct);
         var key = string.Create(CultureInfo.InvariantCulture, $"{year?.ToString(CultureInfo.InvariantCulture) ?? "term"}|{olderAccounts}|{version}");
         var whole = await copies.PublicAsync(key, services => services.GetRequiredService<AnalyticsReads>().BuildAsync(year, olderAccounts, CancellationToken.None));
-        return Select(whole, bills);
+        return Select(whole, bills, await billCards.SearchAsync(bills.Search, ct));
     }
 
     /// <summary>
     /// The list's part of the answer (design 8.26.1 item 2): of every closed bill of the period in <paramref name="whole"/>,
     /// those the filters match, in the query's order, the first <see cref="AnalyticsBillQuery.Limit"/> of them. The figures
     /// and the factions are left as they are: they follow the period and the accounts counted, not the list's filters.
+    /// <paramref name="searched"/> is what the one search of bills kept (design 8.12.5), the numbers; null for no search.
     /// </summary>
-    public static AnalyticsResponse Select(AnalyticsResponse whole, AnalyticsBillQuery query)
+    public static AnalyticsResponse Select(AnalyticsResponse whole, AnalyticsBillQuery query, IReadOnlyCollection<string>? searched)
     {
         ArgumentNullException.ThrowIfNull(whole);
         ArgumentNullException.ThrowIfNull(query);
@@ -195,9 +196,10 @@ internal sealed class AnalyticsReads(
             AnalyticsBillQuery.Positions => ComparedBillOrder.Positions,
             _ => ComparedBillOrder.Latest,
         };
+        var numbers = searched?.ToHashSet(StringComparer.Ordinal);
         var found = whole.Bills
             .Where(b => AnalyticsRules.InDays(VilniusTime.DateOf(b.VotedAt), query.From, query.To)
-                        && AnalyticsRules.MatchesSearch(query.Search, b.Number, b.Title)
+                        && (numbers is null || numbers.Contains(b.Number))
                         && AnalyticsRules.MatchesResult(agreed, b.Agreed)
                         && AnalyticsRules.MatchesMajority(query.Majority, b.SeimasMajority))
             .ToList();
@@ -240,6 +242,7 @@ internal sealed class AnalyticsReads(
         var closed = await appeals.ClosedRecordsAsync(ct);
         var votes = await parliament.VotesAsync(closed.Select(c => c.ClosingVoteId).ToList(), ct);
         var bills = new List<BillComparisonResponse>();
+        var plainTitles = await appeals.PlainTitlesAsync(closed.Select(c => c.BillNumber).ToList(), ct); // design 8.13.1
         foreach (var record in closed
                      .Where(c => votes.ContainsKey(c.ClosingVoteId))
                      .Select(c => (Record: c, Vote: votes[c.ClosingVoteId]))
@@ -269,12 +272,16 @@ internal sealed class AnalyticsReads(
                 compared.Compared,
                 compared.Agreed,
                 AnalyticsRules.Difference(compared.SeimasShareFor, compared.MembersShareFor),
-                string.IsNullOrWhiteSpace(vote.OfficialNote) ? null : vote.OfficialNote));
+                string.IsNullOrWhiteSpace(vote.OfficialNote) ? null : vote.OfficialNote,
+                plainTitles.TryGetValue(record.Record.BillNumber, out var plain) ? plain.Title : null));
         }
 
         var comparedCount = bills.Count(b => b.Compared);
         var agreed = bills.Count(b => b.Agreed == true);
-        var factions = (await parliament.FactionUnityAsync(from, to, ct))
+        var factionRows = await parliament.FactionUnityAsync(from, to, ct);
+        var splitNumbers = factionRows.SelectMany(f => f.MostSplit).Select(s => s.Vote.Bill?.Number).OfType<string>().Distinct().ToList();
+        var splitTitles = await appeals.PlainTitlesAsync(splitNumbers, ct);
+        var factions = factionRows
             .Select(f => new FactionUnityResponse(
                 f.Faction.Slug,
                 f.Faction.Name,
@@ -284,7 +291,8 @@ internal sealed class AnalyticsReads(
                 f.Share,
                 f.SmallSample,
                 f.MostSplit.Select(s => new SplitVoteResponse(
-                    s.Vote.Id, s.Vote.HeldAt, s.Vote.Bill?.Number, s.Vote.Bill?.Title ?? s.AgendaItemTitle, s.Vote.Stage, s.Position, s.For, s.Against, s.Abstain)).ToList()))
+                    s.Vote.Id, s.Vote.HeldAt, s.Vote.Bill?.Number, s.Vote.Bill?.Title ?? s.AgendaItemTitle, s.Vote.Stage, s.Position, s.For, s.Against, s.Abstain,
+                    s.Vote.Bill is { } splitBill && splitTitles.TryGetValue(splitBill.Number, out var splitPlain) ? splitPlain.Title : null)).ToList()))
             .ToList();
 
         return new AnalyticsResponse(

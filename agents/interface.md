@@ -103,6 +103,10 @@ Read before changing a page, a component or an island. The rules behind it are d
   (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the history of votes; the agenda's lists carry none (owner,
   2026-11-21).
+- **A bill's title in a list row is `<BillTitleLink Href Title PlainTitle />`** (design 8.13.1; `Lt2.Web.Client/Components`; on server
+  pages `<Lt2.Web.Client.Components.BillTitleLink …/>`): the readable title as the link (`Class`, default `tl-item__title`) and,
+  when there is one, the official title in fine print under it (`span.fine.tl-item__official`); the row's tags keep their line above.
+  Every list row that shows a bill's title uses it; never write that link by hand.
 - **Every public list's heading row stays at the top of the screen (design 8.16.5, owner 2026-11-21):** a new public
   list sheet puts its heading (h2, or h3 in a side column) and any link beside it in `div.row.list-head` as the sheet's
   first child (`position: sticky`, the sheet's colour, a `--rule` line under it, CSS only). The lengths are declared on

@@ -146,9 +146,12 @@
 <data name="Hidden.Heading" xml:space="preserve"><value>Dalyvavimas uždarytas</value></data>
 <data name="Hidden.Lead" xml:space="preserve"><value>Moderatoriai uždarė dalyvavimą dėl šio projekto: nurodyti, ko prašote, ir rašyti argumentų dabar negalima.</value></data>
 <data name="Hidden.Statement" xml:space="preserve"><value>Moderatorių paaiškinimas: {0}</value></data>
+<data name="History.PlainTitle" xml:space="preserve"><value>Trumpas pavadinimas</value></data>
+<data name="History.Description" xml:space="preserve"><value>Aprašymas</value></data>
 <data name="History.NoneBefore" xml:space="preserve"><value>aprašymo nebuvo</value></data>
 <data name="History.Removed" xml:space="preserve"><value>aprašymas pašalintas</value></data>
 <data name="What.Source.ai" xml:space="preserve"><value>Sukurta DI · žmonių neperžiūrėta</value></data>
+<data name="What.OfficialTitle" xml:space="preserve"><value>Oficialus pavadinimas: {0}</value></data>
 <data name="What.MadeOn" xml:space="preserve"><value>Parengta {0}</value></data>
 <data name="What.MadeFrom" xml:space="preserve"><value>Oficialus tekstas, iš kurio parengta</value></data>
 <data name="List.Clear" xml:space="preserve"><value>Išvalyti</value></data>

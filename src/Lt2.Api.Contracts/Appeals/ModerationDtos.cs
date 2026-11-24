@@ -22,7 +22,8 @@ public sealed record QueueRecordResponse(
     bool Held,
     int Participants,
     string? DescriptionUrl,
-    string Status = BillRecordStatuses.Open);
+    string Status = BillRecordStatuses.Open,
+    string? PlainTitle = null);
 
 /// <summary>A participant's flag about the planned date (design 8.4), with the date they say is right when they gave one.</summary>
 public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt, DateOnly? Date = null);
@@ -132,6 +133,9 @@ public sealed record ModeratorDescriptionRequest
     public bool FromDraft { get; init; }
 
     public string? DescriptionUrl { get; init; }
+
+    /// <summary>"Trumpas pavadinimas" (design 8.13.1): one line of at most 90 characters; empty or absent leaves the record without one.</summary>
+    public string? PlainTitle { get; init; }
 }
 
 /// <summary>
@@ -146,7 +150,8 @@ public sealed record ModeratorDescriptionRequest
 public sealed record ModerationBillResponse(
     Guid? Id, string Number, string Status, string Description, string? DescriptionSource, int Threshold, string ThresholdSetBy, bool Held,
     PlannedDateResponse? Planned, bool HasOpenItems, IReadOnlyList<QueueReasonResponse> Reasons,
-    string? DescriptionUrl, IReadOnlyList<QueueReportResponse> DescriptionReports, string? ClosedReason = null);
+    string? DescriptionUrl, IReadOnlyList<QueueReportResponse> DescriptionReports, string? ClosedReason = null,
+    string? PlainTitle = null);
 
 /// <summary>The bill's record a moderator acts on (design 8.12.1: found, or created on an active bill).</summary>
 public sealed record BillRecordIdResponse(Guid Id);
@@ -160,7 +165,8 @@ public sealed record DescriptionDraftRequest
     public string SourceText { get; init; } = "";
 }
 
-public sealed record DescriptionDraftResponse(string Draft);
+/// <summary>The AI's draft: the description and, when the answer had one, the readable title (design 8.11.4, 8.13.1).</summary>
+public sealed record DescriptionDraftResponse(string Draft, string? PlainTitle = null);
 
 public sealed record MergeReasonRequest
 {

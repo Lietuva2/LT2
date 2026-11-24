@@ -496,6 +496,8 @@
 <data name="Admin.Help.Ai:DraftModel" xml:space="preserve"><value>Claude modelio pavadinimas, kuriuo rengiamas aprašymo juodraštis, pvz., claude-sonnet-5-5. Keiskite tik žinodami, kad modelis palaiko tas pačias užklausos parinktis.</value></data>
 <data name="Admin.Unit.Ai:DraftModel" xml:space="preserve"><value>modelio pavadinimas</value></data>
 <data name="Mod.Action.write" xml:space="preserve"><value>Rašyti aprašymą</value></data>
+<data name="Mod.PlainTitle" xml:space="preserve"><value>Trumpas pavadinimas</value></data>
+<data name="Mod.PlainTitleHint" xml:space="preserve"><value>Iki 90 ženklų: kas keičiasi, paprastai ir neutraliai, be vertinimų. Sąrašuose rodomas virš oficialaus pavadinimo.</value></data>
 <data name="Mod.Description" xml:space="preserve"><value>Apie ką projektas</value></data>
 <data name="Mod.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: ką projektas keičia pagal oficialų tekstą. Šį aprašymą skaitys abiejų pusių dalyviai.</value></data>
 <data name="Mod.DescriptionUrl" xml:space="preserve"><value>Oficialaus teksto adresas</value></data>
