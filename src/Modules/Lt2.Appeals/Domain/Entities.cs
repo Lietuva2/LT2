@@ -58,7 +58,10 @@ internal sealed class BillRecord
     /// <summary>For a rejection or withdrawal: the source on lrs.lt (https, at most 500 characters); null otherwise.</summary>
     public string? ClosedSourceUrl { get; set; }
 
-    /// <summary>The last rejection applied automatically. Kept on reopening so the same vote cannot close the record again.</summary>
+    /// <summary>
+    /// The last explicit rejection vote handled: applied by the closing job, or overruled by a moderator's reopen (whoever had
+    /// closed the record). Kept on reopening so the same vote cannot close the record again.
+    /// </summary>
     public long? LastAutomaticRejectionVoteId { get; set; }
 
     /// <summary>The counts frozen when the record closed (design 8.1); null while open.</summary>

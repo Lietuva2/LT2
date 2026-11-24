@@ -190,17 +190,19 @@ internal sealed class ModerationService(
         string? undone = null;
 
         // Design 8.1 step 6: a rejected or withdrawn record can reopen. The positions were kept,
-        // so the live counts come back as they are. Nobody is told.
-        return Refused(statement, required: true) ?? OnRecordAsync(recordId, moderator, "reopen", statement, answersReports: false, (_, record, now) =>
+        // so the live counts come back as they are. Nobody is told. A rejection vote already in the open data is overruled by
+        // the reopen, whether the closing job or a moderator closed the record.
+        return Refused(statement, required: true) ?? OnRecordAsync(recordId, moderator, "reopen", statement, answersReports: false, async (_, record, now) =>
         {
             if (RecordRules.CheckReopen(record.Status, record.ClosedReason, statement) is { } refused)
             {
-                return Task.FromResult<Result<Unit>>(RuleErrors.Of(refused));
+                return RuleErrors.Of(refused);
             }
 
             undone = record.ClosedReason;
-            ClosingRules.Reopen(record, now);
-            return Task.FromResult(Result.Ok());
+            var known = await records.RejectionAsync(record.BillNumber, cancellationToken);
+            ClosingRules.Reopen(record, now, known?.VoteId);
+            return Result.Ok();
         }, () => new { reason = undone }, cancellationToken, auditAction: "record.reopened");
     }
 

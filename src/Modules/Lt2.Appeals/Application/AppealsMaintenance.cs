@@ -76,12 +76,16 @@ internal sealed class AppealsMaintenance(
     public async Task<int> CloseFinishedAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var open = await db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Open).Select(a => new { a.Id, a.BillNumber }).ToListAsync(cancellationToken);
+        var open = await db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Open)
+            .Select(a => new { a.Id, a.BillNumber, a.LastAutomaticRejectionVoteId }).ToListAsync(cancellationToken);
         var rejections = await bills.RejectionsAsync(open.Select(r => r.BillNumber).ToList(), cancellationToken);
+        var startedAt = clock.GetUtcNow();
         var closed = 0;
         foreach (var candidate in open)
         {
-            if (!rejections.ContainsKey(candidate.BillNumber) && await bills.FinalVoteAsync(candidate.BillNumber, cancellationToken) is null)
+            // A rejection already handled (closed on, or overruled by a reopen) takes no lock; only a final vote can close it now.
+            var pending = ClosingRules.IsPendingRejection(candidate.LastAutomaticRejectionVoteId, rejections.GetValueOrDefault(candidate.BillNumber), startedAt);
+            if (!pending && await bills.FinalVoteAsync(candidate.BillNumber, cancellationToken) is null)
             {
                 continue;
             }

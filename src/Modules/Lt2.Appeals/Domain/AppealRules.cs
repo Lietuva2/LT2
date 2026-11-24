@@ -238,6 +238,13 @@ internal static class ClosingRules
         status == BillRecordStatuses.Open && (finalVoteId is not null || rejectionVoteId is not null);
 
     /// <summary>
+    /// A rejection held by <paramref name="now"/> that no close or reopen of the record has handled yet
+    /// (<paramref name="handledVoteId"/>, <see cref="BillRecord.LastAutomaticRejectionVoteId"/>).
+    /// </summary>
+    public static bool IsPendingRejection(long? handledVoteId, BillRejection? decision, DateTimeOffset now) =>
+        decision is not null && decision.HeldAt <= now && handledVoteId != decision.VoteId;
+
+    /// <summary>
     /// Closes the record with its counts frozen as <paramref name="counts"/> (all four), why, and for rejection or withdrawal the day
     /// and the source; nothing can be taken or changed afterwards and the page shows these numbers.
     /// </summary>
@@ -257,10 +264,13 @@ internal static class ClosingRules
     }
 
     /// <summary>
-    /// Undoes a rejection or withdrawal (design 8.1 step 6). The positions and the last automatic rejection's ID are kept.
+    /// Undoes a rejection or withdrawal (design 8.1 step 6). The positions are kept. The explicit rejection the open data holds
+    /// now (<paramref name="knownRejectionVoteId"/>), if any, counts as handled, so the closing job does not close the record again
+    /// on that vote, whoever closed it; without one, the rejection last handled stays.
     /// </summary>
-    public static void Reopen(BillRecord record, DateTimeOffset now)
+    public static void Reopen(BillRecord record, DateTimeOffset now, long? knownRejectionVoteId = null)
     {
+        record.LastAutomaticRejectionVoteId = knownRejectionVoteId ?? record.LastAutomaticRejectionVoteId;
         record.Status = BillRecordStatuses.Open;
         record.ClosedAt = null;
         record.ChangedAt = now;

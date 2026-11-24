@@ -12,6 +12,9 @@ Read before touching the Parliament module's client or import. The design is [07
 - The sitting agenda's `KlausimoStadija` provides the agenda ID, stage and e-seimas link. The full proceedings
   link via `kl_stad_id` and include votes on items absent from the agenda and votes on groups of items. Prefer a
   direct agenda link when a vote is repeated under a group. A group-only vote is recorded once without a bill.
+- An item's bill is read from its title (`SeimasParsers.BillInTitle`): the first registration number in the title's last
+  "(Nr. …)" part that holds one, without revision or letters (`(Nr. XVP-1234(2)ES, XVP-1235)` is XVP-1234). The
+  proceedings only add a bill to an item the agenda listed without one; its title, stage and sitting stay the agenda's.
 - The proceedings preserve the official decision as part of `aprasas`. `Sprendimas nepriimtas` reports no decision
   on the motion and does not count as a stage result. A vote's outcome and the bill's status are distinct (design 8.1).
 - `BillCatalogue.RejectionsAsync` recognises the confirmed plenary wording for an approved motion to reject a specific

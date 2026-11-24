@@ -294,6 +294,18 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
         return IsPendingRejection(record, decision, clock.GetUtcNow()) ? decision : null;
     }
 
+    /// <summary>
+    /// The explicit rejection the open data holds for the bill now, applied or not; null when there is none. A moderator's
+    /// reopen records it as handled (<see cref="ClosingRules.Reopen"/>), so the hourly job does not close the record again on
+    /// it, also when a moderator had closed the record by hand before the import brought the vote.
+    /// </summary>
+    public async Task<BillRejection?> RejectionAsync(string billNumber, CancellationToken ct)
+    {
+        var number = AppealReads.NormaliseBillNumber(billNumber);
+        var decision = (await bills.RejectionsAsync([number], ct)).GetValueOrDefault(number);
+        return decision is not null && decision.HeldAt <= clock.GetUtcNow() ? decision : null;
+    }
+
     public async Task<IReadOnlyList<BillRecord>> WithoutPendingRejectionsAsync(IReadOnlyList<BillRecord> records, CancellationToken ct)
     {
         var rejections = await bills.RejectionsAsync(records.Select(r => r.BillNumber).ToList(), ct);
@@ -302,5 +314,5 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
     }
 
     private static bool IsPendingRejection(BillRecord? record, BillRejection? decision, DateTimeOffset now) =>
-        decision is not null && decision.HeldAt <= now && record?.LastAutomaticRejectionVoteId != decision.VoteId;
+        ClosingRules.IsPendingRejection(record?.LastAutomaticRejectionVoteId, decision, now);
 }

@@ -83,6 +83,42 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task The_proceedings_add_only_the_bill_to_an_agenda_item_listed_without_one()
+    {
+        var responses = StandInFixture.Responses();
+        responses.Replace("p2b.ad_sp_darbotvarke?posedzio_id=99001101", """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <SeimoInformacija>
+              <SeimoPosėdis posėdžio_id="99001101" numeris="241" tipas="Rytinis" pradžia="2026-09-15 10:00" pabaiga="2026-09-15 13:15">
+                <DarbotvarkėsKlausimas numeris="2" pavadinimas="Atliekų tvarkymo įstatymo pataisa, visas pavadinimas" laikas_nuo="10:10">
+                  <KlausimoStadija darbotvarkės_klausimo_id="99010102" pavadinimas="Svarstymas" dokumento_nuoroda=""/>
+                </DarbotvarkėsKlausimas>
+              </SeimoPosėdis>
+            </SeimoInformacija>
+            """);
+        responses.Replace("p2b.ad_seimo_posedzio_eiga_full?posedzio_id=99001101", """
+            <posedziai><posedis pos_id="99001101"><posedzio-eiga>
+              <darbotvarkes-klausimas kl_stad_id="99010102">
+                <nr>2.1</nr><pavadinimas>Atliekų tvarkymo įst. pataisa (Nr. XVP-0618)</pavadinimas><stadija>Priėmimas</stadija>
+                <balsavimai>
+                  <balsavimas bals_id="99100102"><nuo>2026-09-15 11:05:44</nuo><aprasas>Pritarta – dėl pritarimo po svarstymo</aprasas></balsavimas>
+                </balsavimai>
+              </darbotvarkes-klausimas>
+            </posedzio-eiga></posedis></posedziai>
+            """);
+        await using var import = new ImportHarness(database, responses);
+        (await import.RunAsync()).Status.ShouldBe("succeeded");
+
+        (await database.RowsAsync("""
+            SELECT i.sitting_id, i.number, i.title, i.stage, b.number
+            FROM parliament.agenda_item i JOIN parliament.bill b ON b.id = i.bill_id
+            WHERE i.id = 99010102
+            """)).ShouldBe(["99001101 | 2 | Atliekų tvarkymo įstatymo pataisa, visas pavadinimas | Svarstymas | XVP-0618"]);
+        (await database.ScalarAsync<string>("SELECT b.number FROM parliament.vote v JOIN parliament.bill b ON b.id = v.bill_id WHERE v.id = 99100102"))
+            .ShouldBe("XVP-0618");
+    }
+
+    [Fact]
     public async Task Bill_XVP_0412_has_its_stage_votes_and_the_awkward_cases_are_stored_as_the_design_says()
     {
         await using var import = new ImportHarness(database);
