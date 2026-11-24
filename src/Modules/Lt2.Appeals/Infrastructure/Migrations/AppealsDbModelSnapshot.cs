@@ -83,6 +83,13 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnName("search_vector")
                         .HasComputedColumnSql("to_tsvector('lithuanian'::regconfig, bill_number || ' ' || title || ' ' || coalesce(plain_title, ''))", true);
 
+                    b.Property<NpgsqlTsVector>("SearchVectorFolded")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasColumnName("search_vector_folded")
+                        .HasComputedColumnSql("to_tsvector('lithuanian'::regconfig, title_folded || ' ' || coalesce(plain_title_folded, ''))", true);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text")
@@ -106,6 +113,11 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasDatabaseName("ix_bill_card_search_vector");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "gin");
+
+                    b.HasIndex("SearchVectorFolded")
+                        .HasDatabaseName("ix_bill_card_search_vector_folded");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVectorFolded"), "gin");
 
                     b.ToTable("bill_card", "appeals");
                 });

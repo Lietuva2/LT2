@@ -34,8 +34,10 @@ internal sealed class BillCards(IDbContextFactory<AppealsDb> contexts, IBillCata
     private const string SearchSql = """
         SELECT c.bill_number AS "Value" FROM appeals.bill_card c
         WHERE NOT EXISTS (
-            SELECT 1 FROM unnest(@words, @patterns) AS w(word, pattern)
-            WHERE NOT (c.search_vector @@ plainto_tsquery('lithuanian'::regconfig, w.word) OR c.search_folded LIKE w.pattern ESCAPE '\'))
+            SELECT 1 FROM unnest(@words, @folded, @patterns) AS w(word, folded, pattern)
+            WHERE NOT (c.search_vector @@ plainto_tsquery('lithuanian'::regconfig, w.word)
+                OR c.search_vector_folded @@ plainto_tsquery('lithuanian'::regconfig, w.folded)
+                OR c.search_folded LIKE w.pattern ESCAPE '\'))
         """;
 
     public async Task RefreshAsync(CancellationToken cancellationToken)
@@ -116,12 +118,15 @@ internal sealed class BillCards(IDbContextFactory<AppealsDb> contexts, IBillCata
             await RefreshAsync(cancellationToken);
         }
 
-        // Every word is found by its stem (the text search) or as part of the folded text; the words go in as two parameter arrays.
-        var patterns = words.Select(w => "%" + EscapeLike(SearchText.Fold(w)) + "%").ToArray();
+        // Every word is found by its stem (the text search, as typed or with Lithuanian letters left out on both sides) or as part
+        // of the folded text; the words go in as parameter arrays.
+        var folded = words.Select(SearchText.Fold).ToArray();
+        var patterns = folded.Select(w => "%" + EscapeLike(w) + "%").ToArray();
         return await db.Database
             .SqlQueryRaw<string>(
                 SearchSql,
                 new NpgsqlParameter("words", NpgsqlDbType.Array | NpgsqlDbType.Text) { Value = words.ToArray() },
+                new NpgsqlParameter("folded", NpgsqlDbType.Array | NpgsqlDbType.Text) { Value = folded },
                 new NpgsqlParameter("patterns", NpgsqlDbType.Array | NpgsqlDbType.Text) { Value = patterns })
             .ToListAsync(cancellationToken);
     }

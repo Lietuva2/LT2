@@ -95,7 +95,10 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(c => c.SearchFolded).HasColumnType("text").HasComputedColumnSql("title_folded || ' ' || coalesce(plain_title_folded, '')", stored: true);
             e.Property(c => c.SearchVector).HasColumnType("tsvector")
                 .HasComputedColumnSql("to_tsvector('lithuanian'::regconfig, bill_number || ' ' || title || ' ' || coalesce(plain_title, ''))", stored: true);
+            e.Property(c => c.SearchVectorFolded).HasColumnType("tsvector")
+                .HasComputedColumnSql("to_tsvector('lithuanian'::regconfig, title_folded || ' ' || coalesce(plain_title_folded, ''))", stored: true);
             e.HasIndex(c => c.SearchVector).HasMethod("gin").HasDatabaseName("ix_bill_card_search_vector");
+            e.HasIndex(c => c.SearchVectorFolded).HasMethod("gin").HasDatabaseName("ix_bill_card_search_vector_folded");
             e.HasIndex(c => c.SearchFolded).HasMethod("gin").HasOperators("appeals.gin_trgm_ops").HasDatabaseName("ix_bill_card_search_folded");
         });
 

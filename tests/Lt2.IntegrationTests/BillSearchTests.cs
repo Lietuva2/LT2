@@ -67,6 +67,7 @@ public sealed class BillSearchTests(DatabaseFixture database) : ApiTest(database
     public async Task A_word_is_found_by_its_stem()
     {
         (await SearchAsync("mokesčiai")).ShouldContain(AppealSteps.TaxBill, "\"mokesčiai\" finds a title with \"mokesčio\"");
+        (await SearchAsync("mokesciai")).ShouldContain(AppealSteps.TaxBill, "without Lithuanian letters too: both fold to one stem");
         (await SearchAsync("pavėžėti")).ShouldBe([Fares], "\"pavėžėti\" finds \"pavėžės\"");
     }
 
