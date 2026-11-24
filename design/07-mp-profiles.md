@@ -102,10 +102,9 @@ stands only on the profile, orders no list and is never added up per faction or 
 
 The profile is `/p/{slug}`.
 
-- Name, "Seimo narys" / "Seimo narė", or "Buvęs Seimo narys" / "Buvusi Seimo narė" when the mandate has ended; the
-  current faction, committees and groups as tags; how elected, constituency, nominating party, terms served, mandate
-  dates.
-- Committees, commissions and groups with role, and former ones with their dates.
+- Name, "Seimo narys" / "Seimo narė", or "Buvęs Seimo narys" / "Buvusi Seimo narė" when the mandate has ended; linked
+  tags for the current faction and committees; how elected, constituency, nominating party, terms served, mandate dates.
+- All current memberships with their roles under "Pareigos Seime", and former memberships with their dates.
 - Official contacts (the e-mail address as a link).
 - **Dalyvavimas balsavimuose:** of the recorded votes held during the MP's mandate, the share in which the MP voted for,
   against or abstained ("balsavo {n} iš {m}").
@@ -115,8 +114,9 @@ The profile is `/p/{slug}`.
   in the participation figure. The mixed group of MPs is not a faction and has no position: its members, and MPs outside
   any faction at the time of a vote, have no figure for those votes; when the MP's faction memberships do not cover the
   whole mandate, the profile names the periods counted ("Skaičiuojama tik narystės frakcijoje laikotarpiu: …").
-- The ten latest votes: bill, stage, date, the MP's choice, the faction's split, a link to the vote page; "Visi
-  balsavimai" leads to the MP's votes (`/p/{slug}/balsavimai`, 8.18).
+- Up to ten of the latest recorded votes in which the MP voted for, against or abstained: bill, stage, date, the MP's
+  choice, the faction's split and a link to the vote page. "Visi balsavimai" leads to the full mandate history
+  (`/p/{slug}/balsavimai`, 8.18), including missed votes and decisions by consensus.
 - The source line, as on every page of Seimas data: "Šaltinis: Lietuvos Respublikos Seimo atvirieji duomenys, CC BY 4.0
   · atnaujinta {time of the last import} · Metodika".
 - The MP's responses (8.5.6), "Profilį tvarko Seimo narys arba jo biuras" when the profile is taken over (8.5.2), and

@@ -67,6 +67,10 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 ## 7. MP profiles
 
+- The profile header links only the current faction and committees. All current memberships are listed under
+  "Pareigos Seime" (7.3, 2026-11-24).
+- The profile's recent votes show recorded choices by the MP. "Visi balsavimai" leads to the full mandate history
+  (7.3, 2026-11-24).
 - "Balsavo kaip frakcija" counts only votes the MP took part in; an absence shows in the participation figure only
   (7.3, 2026-11-12).
 - The mixed group is not a faction and has no position; its members, and MPs outside any faction at the time of a vote,

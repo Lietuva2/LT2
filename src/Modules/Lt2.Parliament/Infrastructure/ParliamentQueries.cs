@@ -159,7 +159,7 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
         var contacts = await db.Contacts.AsNoTracking().Where(c => c.PersonId == person.Id).OrderBy(c => c.Kind).ThenBy(c => c.Value)
             .Select(c => new ContactInfo(c.Kind, c.Value)).ToListAsync(cancellationToken);
         var stat = await db.MpStats.AsNoTracking().FirstOrDefaultAsync(s => s.PersonId == person.Id && s.TermId == term.Id, cancellationToken);
-        var votes = await VotesOfAsync(db, person, mandate, term.Id, 0, 10, cancellationToken);
+        var votes = await VotesOfAsync(db, person, mandate, term.Id, 0, 10, cancellationToken, participatedOnly: true);
 
         return new MpProfile(
             summaries[person.Id],
@@ -425,7 +425,8 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
     }
 
     /// <summary>The votes of the term held during the mandate, newest first, with the MP's choice and faction split.</summary>
-    private static async Task<MpVotePage> VotesOfAsync(ParliamentDb db, Person person, Mandate mandate, int termId, int offset, int limit, CancellationToken cancellationToken)
+    private static async Task<MpVotePage> VotesOfAsync(ParliamentDb db, Person person, Mandate mandate, int termId, int offset, int limit,
+        CancellationToken cancellationToken, bool participatedOnly = false)
     {
         var start = VilniusTime.StartOf(mandate.From);
         var stop = mandate.To is { } last ? VilniusTime.StartOf(last.AddDays(1)) : new DateTimeOffset(3000, 1, 1, 0, 0, 0, TimeSpan.Zero);
@@ -434,6 +435,8 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
                            join s in db.Sittings on i.SittingId equals s.Id
                            join ses in db.Sessions on s.SessionId equals ses.Id
                            where ses.TermId == termId && v.HeldAt >= start && v.HeldAt < stop
+                             && (!participatedOnly || (v.HasResult && !v.IsConsensus && db.Ballots.Any(b => b.VoteId == v.Id && b.PersonId == person.Id
+                                 && (b.Choice == BallotChoice.For || b.Choice == BallotChoice.Against || b.Choice == BallotChoice.Abstain))))
                            orderby v.HeldAt descending, v.Id descending
                            select v).Skip(offset).Take(limit + 1).ToListAsync(cancellationToken);
         var more = votes.Count > limit;

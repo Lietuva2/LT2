@@ -38,23 +38,17 @@
                 <p class="small" id="managed-by">@F.T["Mp.ManagedBy"] <span class="num">@F.T.Format("Mp.ManagedSince", Display.Day(since))</span></p>
             }
             <Lt2.Web.Client.Components.NeedsScript />
-            @* Owner, 2026-11-17: one compact line under the name, as on a bill's page: the MP's tags, then "Sekti" (design 8.11.2:
-               how they vote on the bills one follows comes in the "voted" email; private) and how many follow, kept current by
-               the button. *@
+            @* The MP's faction and committee links (design 7.3), then "Sekti" and the follower count (design 8.11.2). *@
             <div class="row follow-line">
-                <p class="row">
-                    @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is BodyKinds.Faction or BodyKinds.Committee or BodyKinds.Group))
-                    {
-                        @if (m.Body.Kind == BodyKinds.Group)
-                        {
-                            <span class="tag">@m.Body.Name</span>
-                        }
-                        else
+                @if (p.Memberships.Where(m => m.Current && m.Body.Kind is BodyKinds.Faction or BodyKinds.Committee).ToList() is { Count: > 0 } tags)
+                {
+                    <p class="row">
+                        @foreach (var m in tags)
                         {
                             <a class="tag @(m.Body.Kind == BodyKinds.Faction ? "tag--ink" : "")" href="/@(m.Body.Kind == BodyKinds.Faction ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
                         }
-                    }
-                </p>
+                    </p>
+                }
                 <Lt2.Web.Client.Appeals.FollowButton Kind="@Lt2.Web.Client.Appeals.FollowButton.Mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
             </div>
         </div>
@@ -106,13 +100,13 @@
                     <div class="row list-head"><h2 id="h-votes">@F.T["Mp.RecentVotes"]</h2></div>
                     @if (p.RecentVotes.Count == 0)
                     {
-                        <p>@F.T["Mp.NoVotes"]</p>
+                        <p>@F.T["Mp.NoRecordedChoices"]</p>
                     }
                     else
                     {
                         <MpVoteRows Votes="p.RecentVotes" />
-                        <p><a href="/p/@p.Mp.Slug/balsavimai">@F.T["Mp.AllVotes"]</a></p>
                     }
+                    <p><a href="/p/@p.Mp.Slug/balsavimai">@F.T["Mp.AllVotes"]</a></p>
                 </section>
 
                 @* Design 8.5.6: the MP's responses, after the votes; no part at all when there are none. *@
