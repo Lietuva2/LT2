@@ -68,7 +68,7 @@ public static class DemoAppeal
             throw new InvalidOperationException($"Refused: bill {Bill} is not in the parliament data yet; let the worker import from the stand-in first.");
         }
 
-        if (await ParliamentMaintenance.BillTitleAsync(connectionString, AiBill, cancellationToken) is null)
+        if (await ParliamentMaintenance.BillTitleAsync(connectionString, AiBill, cancellationToken) is not { } aiBillTitle)
         {
             throw new InvalidOperationException($"Refused: bill {AiBill} is not in the parliament data yet; let the worker import from the stand-in first.");
         }
@@ -92,7 +92,7 @@ public static class DemoAppeal
 
         // The invented AI summary links to the bill's own e-seimas address from the (invented) parliament data.
         var address = await ParliamentMaintenance.BillAddressAsync(connectionString, AiBill, cancellationToken);
-        var summary = await InventedRecord.SeedAiDescriptionAsync(connectionString, AiBill, AiDescription, AiPlainTitle, address, now.AddDays(-2), cancellationToken);
+        var summary = await InventedRecord.SeedAiDescriptionAsync(connectionString, AiBill, aiBillTitle, AiDescription, AiPlainTitle, address, now.AddDays(-2), cancellationToken);
 
         // Design 8.14.14: invented organisations with statements on the bill, so "Organizacijų pozicijos" can be seen. Their
         // representatives are invented accounts of their own, with no side on any bill.

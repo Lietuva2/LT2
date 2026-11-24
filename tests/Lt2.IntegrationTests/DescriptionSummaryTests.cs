@@ -222,6 +222,8 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             made.Description.ShouldBe(SummaryAssistant.Summary(AppealSteps.SecondBill));
             made.DescriptionSource.ShouldBe("ai");
             made.PlainTitle.ShouldBe(SummaryAssistant.Title(AppealSteps.SecondBill), "the job stores the title with the description");
+            (await Database.ScalarAsync<string>("SELECT plain_title FROM appeals.bill_card WHERE bill_number = @n", ("n", AppealSteps.SecondBill)))
+                .ShouldBe(SummaryAssistant.Title(AppealSteps.SecondBill), "and the bill's search card holds it (design 8.12.5)");
             made.DescriptionUrl.ShouldBe(FakeBillTexts.Note(AppealSteps.SecondBill).Address);
             made.DescriptionAt.ShouldNotBeNull().ShouldBeGreaterThan(DateTimeOffset.UtcNow.AddMinutes(-5));
             var madeHistory = (await visitor.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill))).ShouldHaveSingleItem();

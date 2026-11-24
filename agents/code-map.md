@@ -41,7 +41,8 @@ src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementation
                            place, design 6.2) and MyAccountState (the browser's one GET /me: whether the caller is an MP's
                            own account, design 8.5.4)
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
-src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
+src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, `SearchText` (the one folding
+                           and word split of every search), connection
                            strings and the one EF Core set-up (Persistence/: UseLt2Npgsql), VilniusTime (the
                            Europe/Vilnius zone and its days), the signed-in account (ClaimsPrincipal.UserId()), the
                            staff actor (StaffActor) and staff statements (StaffStatements), the outbound allowlist
@@ -62,7 +63,10 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
                            by moderators, the AI draft in Ai/ with its public prompt file, the AI summary job
                            (Application/DescriptionSummaries.cs), the "unavailable" IBillTextSource, and organisations
-                           with their statements on bills, design 8.14.14; MPs' responses, 8.5.5). Notifications
+                           with their statements on bills, design 8.14.14; MPs' responses, 8.5.5; the one search of bills: `IBillCards`,
+                           Application/BillCards.cs, over its copy of the catalogue, table `appeals.bill_card`
+                           (Domain/BillCard.cs), design 8.12.5, refreshed by the import jobs in Lt2.Jobs and written with
+                           every readable title). Notifications
                            also owns the summaries (Digests/: preparing, review, sending, ChoiceRules, SendingRules), MP mail (MpMail/:
                            the links' tokens, the MPs' choices, the introduction letter, the suppression list, MpSender)
                            and following (Follows/: follows, email switches, bill

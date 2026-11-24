@@ -60,7 +60,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     private async Task RemoveAsync()
     {
         await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id BETWEEN 99300000 AND 99301999");
-        await Database.ExecuteAsync("DELETE FROM parliament.bill WHERE number = @number", ("number", Bill));
+        await Database.DeleteBillsAsync(Bill);
     }
 
     private async Task<VoteListResponse> VotesAsync(string query)

@@ -204,14 +204,4 @@ public sealed class BillListRuleTests
         Order(BillSorts.Planned, new("A", 9, 9, null), new("B", 0, 0, Later), new("C", 0, 0, Soon), new("D", 1, 0, Later))
             .ShouldBe(["C", "D", "B", "A"]);
     }
-
-    [Theory]
-    [InlineData(null, true)]
-    [InlineData("", true)]
-    [InlineData("xvp-0412", true)]
-    [InlineData("pajamų mokesčio", true)]
-    [InlineData("MOKESČIO pajamų", true)]
-    [InlineData("pajamų rinkliavų", false)]
-    public void The_search_keeps_bills_with_every_word_in_the_number_or_title(string? query, bool found) =>
-        BillListRules.Matches(query, "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBe(found);
 }

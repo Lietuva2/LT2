@@ -17,11 +17,11 @@ public sealed class BillSeimasSwitchTests(DatabaseFixture database) : ApiTest(da
     public async ValueTask InitializeAsync()
     {
         await ParliamentSeed.EnsureAsync(Database);
-        await Database.ExecuteAsync("DELETE FROM parliament.bill WHERE number = @n", ("n", Empty));
+        await Database.DeleteBillsAsync(Empty);
         await Database.ExecuteAsync("INSERT INTO parliament.bill (id, number, title) VALUES (gen_random_uuid(), @n, 'Balsavimų neturintis projektas')", ("n", Empty));
     }
 
-    public async ValueTask DisposeAsync() => await Database.ExecuteAsync("DELETE FROM parliament.bill WHERE number = @n", ("n", Empty));
+    public async ValueTask DisposeAsync() => await Database.DeleteBillsAsync(Empty);
 
     private async Task<string> PageAsync(string number)
     {

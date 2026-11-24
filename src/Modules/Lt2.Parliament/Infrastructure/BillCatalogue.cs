@@ -32,6 +32,21 @@ internal sealed class BillCatalogue(IDbContextFactory<ParliamentDb> contexts) : 
         return found.ToDictionary(b => b.Number, StringComparer.OrdinalIgnoreCase);
     }
 
+    public async Task<IReadOnlyList<BillFacts>> AllAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await db.Bills.AsNoTracking()
+            .OrderBy(b => b.Number)
+            .Select(b => new BillFacts(b.Number, b.Title))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<int> CountAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await db.Bills.AsNoTracking().CountAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<BillFacts>> ActiveAsync(CancellationToken cancellationToken)
     {
         // The same rule as FinalVoteAsync: a bill is finished once it has a stage result at the adoption stage.

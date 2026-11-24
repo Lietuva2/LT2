@@ -14,7 +14,7 @@ namespace Lt2.Web.Services;
 /// The parliament reads both the HTTP endpoints and the server-rendered pages use: the module's answers mapped to the
 /// API contracts, or <c>not-found</c>.
 /// </summary>
-internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians, IFollowerCounts followers)
+internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IBillCards billCards, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians, IFollowerCounts followers)
 {
     public const string ImportSource = "seimas-open-data";
     private static readonly Error NotFound = Error.NotFound("not-found");
@@ -69,7 +69,7 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
 
     public async Task<Result<BillListResponse>> BillsAsync(string? q, string? cursor, CancellationToken ct)
     {
-        var page = await queries.BillsAsync(Blank(q), cursor, 50, ct);
+        var page = await queries.BillsAsync(await billCards.SearchAsync(Blank(q), ct), cursor, 50, ct);
         return new BillListResponse(page.Items.Select(b => new BillListItem(b.Number, b.Title, b.LastVoteAt)).ToList(), page.Total, page.NextCursor);
     }
 
@@ -102,7 +102,7 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
             _ => VoteHistoryKind.StageResults,
         };
         var size = limit is { } n ? Math.Clamp(n, 1, VoteListQuery.MaxLimit) : VoteListQuery.DefaultLimit;
-        var page = await queries.VoteHistoryAsync(new VoteHistoryFilter(VoteListQuery.Query(q), historyKind, until, cursor, size), ct);
+        var page = await queries.VoteHistoryAsync(new VoteHistoryFilter(await billCards.SearchAsync(VoteListQuery.Query(q), ct), historyKind, until, cursor, size), ct);
         return new VoteListResponse(page.Items.Select(i => new VoteListItem(Map(i.Summary), i.AgendaItemTitle)).ToList(), page.Total, page.NextCursor);
     }
 

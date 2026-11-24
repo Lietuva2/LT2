@@ -11,6 +11,8 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
 {
     public DbSet<BillRecord> BillRecords => Set<BillRecord>();
 
+    public DbSet<BillCard> BillCards => Set<BillCard>();
+
     public DbSet<Position> Positions => Set<Position>();
 
     public DbSet<Reason> Reasons => Set<Reason>();
@@ -77,6 +79,24 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.HasIndex(a => a.BillNumber).IsUnique().HasFilter("status IN ('open', 'closed', 'rejected')").HasDatabaseName("ix_bill_record_bill_number");
             e.HasIndex(a => a.Status);
             e.ToTable(t => t.HasCheckConstraint("ck_bill_record_threshold_positive", "threshold > 0"));
+        });
+
+        // The search copy of the bill catalogue (design 8.12.5): the folded texts are written with the row, the two search columns
+        // are generated from them, and the indexes serve the text search and the part-of-a-word search.
+        modelBuilder.Entity<BillCard>(e =>
+        {
+            e.ToTable("bill_card");
+            e.HasKey(c => c.BillNumber);
+            e.Property(c => c.BillNumber).HasColumnType("text");
+            e.Property(c => c.Title).HasColumnType("text");
+            e.Property(c => c.PlainTitle).HasMaxLength(AppealRules.PlainTitleMaxLength);
+            e.Property(c => c.TitleFolded).HasColumnType("text");
+            e.Property(c => c.PlainTitleFolded).HasColumnType("text");
+            e.Property(c => c.SearchFolded).HasColumnType("text").HasComputedColumnSql("title_folded || ' ' || coalesce(plain_title_folded, '')", stored: true);
+            e.Property(c => c.SearchVector).HasColumnType("tsvector")
+                .HasComputedColumnSql("to_tsvector('lithuanian'::regconfig, bill_number || ' ' || title || ' ' || coalesce(plain_title, ''))", stored: true);
+            e.HasIndex(c => c.SearchVector).HasMethod("gin").HasDatabaseName("ix_bill_card_search_vector");
+            e.HasIndex(c => c.SearchFolded).HasMethod("gin").HasOperators("appeals.gin_trgm_ops").HasDatabaseName("ix_bill_card_search_folded");
         });
 
         modelBuilder.Entity<Position>(e =>

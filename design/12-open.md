@@ -36,9 +36,6 @@ speaker or the lawyer, the decisions still to take and the risks. Decisions alre
 
 For the owner to decide in each case: fix the code or change the rule.
 
-- 8.12.5, 8.26: the searches of Projektai and of the statistics list ignore case but not Lithuanian letters
-  (`BillListRules.Matches`, `AnalyticsRules.MatchesSearch`), while the votes' search (8.18) and the MPs' list do; three
-  copies of one search.
 - 8.1: participants were to get one closing email at the final vote; there is no such email, and they hear through
   the follow email about the vote (a first side follows the bill, 8.11.2).
 - 6.4: Caddy was to rate-limit per IP address; the Caddyfile has no rate limiting, only the ASP.NET policies.

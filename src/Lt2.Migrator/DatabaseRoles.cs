@@ -44,7 +44,7 @@ public static class DatabaseRoles
     /// </summary>
     public static readonly string[] ReadableTables =
     [
-        "appeals.ai_draft_request", "appeals.bill_record", "appeals.daily_stat", "appeals.flag", "appeals.moderation_action",
+        "appeals.ai_draft_request", "appeals.bill_card", "appeals.bill_record", "appeals.daily_stat", "appeals.flag", "appeals.moderation_action",
         "appeals.reason", "appeals.report", "appeals.revision", "appeals.summary_attempt",
         "appeals.comment_agreement", // design 8.23.10: public under the name, tells no side, as an argument
         "config.setting",

@@ -90,9 +90,9 @@ public enum VoteHistoryKind
     All,
 }
 
-/// <param name="Query">A bill's number or title, without case or diacritics; a vote without a bill never matches.</param>
+/// <param name="BillNumbers">The bills a search of bills kept (design 8.12.5, found by the Appeals module); a vote without a bill never matches. Null: no search.</param>
 /// <param name="Until">The last Vilnius day included.</param>
-public sealed record VoteHistoryFilter(string? Query, VoteHistoryKind Kind, DateOnly? Until, string? Cursor, int Limit);
+public sealed record VoteHistoryFilter(IReadOnlyCollection<string>? BillNumbers, VoteHistoryKind Kind, DateOnly? Until, string? Cursor, int Limit);
 
 public sealed record VoteHistoryItem(VoteSummary Summary, string AgendaItemTitle);
 
@@ -119,7 +119,8 @@ public interface IParliamentQueries
 
     Task<BodyDetail?> BodyAsync(string kind, string slug, CancellationToken cancellationToken);
 
-    Task<BillPage> BillsAsync(string? query, string? cursor, int limit, CancellationToken cancellationToken);
+    /// <param name="billNumbers">The bills a search of bills kept (design 8.12.5, found by the Appeals module); null for no search.</param>
+    Task<BillPage> BillsAsync(IReadOnlyCollection<string>? billNumbers, string? cursor, int limit, CancellationToken cancellationToken);
 
     Task<BillDetail?> BillAsync(string number, CancellationToken cancellationToken);
 

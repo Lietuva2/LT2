@@ -155,6 +155,12 @@ public interface IBillCatalogue
 
     Task<IReadOnlyDictionary<string, BillFacts>> FindManyAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken);
 
+    /// <summary>Every bill in the catalogue, active or finished, by number: what the Appeals module's search copy is made from (design 8.12.5).</summary>
+    Task<IReadOnlyList<BillFacts>> AllAsync(CancellationToken cancellationToken);
+
+    /// <summary>How many bills the catalogue holds: the cheap check that the search copy has them all.</summary>
+    Task<int> CountAsync(CancellationToken cancellationToken);
+
     /// <summary>
     /// Every active bill (design 8.12.1): in the catalogue and not finished, that is without a final vote
     /// (<see cref="FinalVoteAsync"/>), by number.

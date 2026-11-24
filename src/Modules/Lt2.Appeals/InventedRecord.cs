@@ -49,7 +49,7 @@ public static class InventedRecord
     /// as the job would leave it.
     /// </summary>
     public static async Task<InventedRecordOutcome> SeedAiDescriptionAsync(
-        string connectionString, string billNumber, string text, string plainTitle, string? address, DateTimeOffset at, CancellationToken cancellationToken)
+        string connectionString, string billNumber, string officialTitle, string text, string plainTitle, string? address, DateTimeOffset at, CancellationToken cancellationToken)
     {
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
@@ -135,6 +135,17 @@ public static class InventedRecord
             titleRevision.Parameters.AddWithValue("title", plainTitle);
             titleRevision.Parameters.AddWithValue("at", at);
             await titleRevision.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        // The search copy of the bill (design 8.12.5) holds the readable title as it is written, here as everywhere.
+        await using (var card = new NpgsqlCommand(Application.BillCards.UpsertSql, connection, transaction))
+        {
+            card.Parameters.AddWithValue("number", billNumber);
+            card.Parameters.AddWithValue("title", officialTitle);
+            card.Parameters.AddWithValue("plain", plainTitle);
+            card.Parameters.AddWithValue("titleFolded", SearchText.Fold(billNumber + " " + officialTitle));
+            card.Parameters.AddWithValue("plainFolded", SearchText.Fold(plainTitle));
+            await card.ExecuteNonQueryAsync(cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);

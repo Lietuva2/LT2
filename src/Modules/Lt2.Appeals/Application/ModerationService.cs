@@ -366,6 +366,9 @@ internal sealed class ModerationService(
         // leaving it alone keeps it, and an empty field clears it. Not personal data, so it may be in the audit details.
         record.DescriptionUrl = address;
         record.ChangedAt = now;
+
+        // The search copy of the bill holds the readable title as it is written (design 8.12.5), in this transaction.
+        await BillCards.WriteAsync(db, bills, record.BillNumber, record.PlainTitle, cancellationToken);
         await recorder.RecordAsync(
             db, transaction, ReportTargets.Record, record.Id, "describe", request.Statement.Trim(), moderator, now, record.BillNumber,
             new { descriptionSource = record.DescriptionSource, descriptionUrl = address, plainTitleChanged = titleChanged }, answersReports: true, cancellationToken);
@@ -416,11 +419,11 @@ internal sealed class ModerationService(
         // The removal is in the public history (old text, no new one) and by a person, so the summary job never writes the
         // description of this bill again (design 8.13).
         string? removedSource = null;
-        return await OnRecordAsync(record.Id, moderator, "undescribe", statement, answersReports: true, (inner, record, now) =>
+        return await OnRecordAsync(record.Id, moderator, "undescribe", statement, answersReports: true, async (inner, record, now) =>
         {
             if (RecordRules.CheckRemove(record.Status, record.Description, statement) is { } refused)
             {
-                return Task.FromResult<Result<Unit>>(RuleErrors.Of(refused));
+                return RuleErrors.Of(refused);
             }
 
             removedSource = record.DescriptionSource;
@@ -435,7 +438,8 @@ internal sealed class ModerationService(
             record.DescriptionSource = null;
             record.DescriptionUrl = null;
             record.DescriptionAt = null;
-            return Task.FromResult(Result.Ok());
+            await BillCards.WriteAsync(inner, bills, record.BillNumber, null, cancellationToken);
+            return Result.Ok();
         }, () => new { removedSource }, cancellationToken);
     }
 

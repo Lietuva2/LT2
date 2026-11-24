@@ -20,6 +20,7 @@ internal sealed class AppealsService(
     BillRecords records,
     IParticipants participants,
     IBillCatalogue bills,
+    IBillCards cards,
     IPreScreening screening,
     IPlannedAgenda agenda,
     ISettings settings,
@@ -45,10 +46,13 @@ internal sealed class AppealsService(
         var offset = int.TryParse(query.Cursor, NumberStyles.None, CultureInfo.InvariantCulture, out var o) ? o : 0;
         var size = Math.Clamp(query.Limit ?? PageSize, 1, MaxPageSize);
 
+        // The one search of bills (design 8.12.5): the numbers it keeps, or null for no search; each list then filters by them.
+        var found = (await cards.SearchAsync(query.Search, cancellationToken))?.ToHashSet(StringComparer.Ordinal);
+
         if (query.Closed)
         {
             // The closed tab (design 8.12.5): records the Seimas finished, newest first, with their frozen counts.
-            var (closedPage, total) = await ClosedPageAsync(db, query.Search, offset, size, cancellationToken);
+            var (closedPage, total) = await ClosedPageAsync(db, found, offset, size, cancellationToken);
             var closedFacts = await reads.BillsAsync(closedPage.Select(a => a.BillNumber).ToList(), cancellationToken);
             var shownCounts = await reads.ShownCountsAsync(db, closedPage, cancellationToken);
             var closedArguments = await ArgumentCountsAsync(db, closedPage.Select(a => a.Id).ToList(), cancellationToken);
@@ -65,7 +69,7 @@ internal sealed class AppealsService(
         // offered here. Composed in memory, not paged in the database: the bills, their titles and planned dates are the
         // Parliament module's and the sides and arguments this module's, and no module reads another's tables (AGENTS.md).
         // Only the requested page is mapped and sent.
-        var active = (await records.ActiveAsync(db, cancellationToken)).Where(b => BillListRules.Matches(query.Search, b.Number, b.Title)).ToList();
+        var active = (await records.ActiveAsync(db, cancellationToken)).Where(b => found is null || found.Contains(b.Number)).ToList();
         var numbers = active.Select(b => b.Number).ToList();
         var recordsOnBills = await db.BillRecords.AsNoTracking().Records()
             .Where(a => numbers.Contains(a.BillNumber))
@@ -93,23 +97,18 @@ internal sealed class AppealsService(
     }
 
     /// <summary>
-    /// One page of the closed tab, newest closing first, and how many there are. Paged in the database; a search, which
-    /// matches the titles the Parliament module holds, first narrows the closed bills' numbers.
+    /// One page of the closed tab, newest closing first, and how many there are. Paged in the database; a search first narrows
+    /// the closed records to the bills it kept (<paramref name="numbers"/>, null for no search).
     /// </summary>
-    private async Task<(List<BillRecord> Page, int Total)> ClosedPageAsync(AppealsDb db, string? search, int offset, int size, CancellationToken ct)
+    private static async Task<(List<BillRecord> Page, int Total)> ClosedPageAsync(AppealsDb db, IReadOnlyCollection<string>? numbers, int offset, int size, CancellationToken ct)
     {
         var closed = db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Closed);
-        if (string.IsNullOrWhiteSpace(search))
+        if (numbers is not null)
         {
-            return (await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Skip(offset).Take(size).ToListAsync(ct), await closed.CountAsync(ct));
+            closed = closed.Where(a => numbers.Contains(a.BillNumber));
         }
 
-        var numbers = await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Select(a => a.BillNumber).ToListAsync(ct);
-        var titles = await reads.BillsAsync(numbers, ct);
-        var matching = numbers.Where(n => BillListRules.Matches(search, n, titles.GetValueOrDefault(n)?.Title ?? "")).ToList();
-        var pageNumbers = matching.Skip(offset).Take(size).ToList();
-        var page = await closed.Where(a => pageNumbers.Contains(a.BillNumber)).OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).ToListAsync(ct);
-        return (page, matching.Count);
+        return (await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Skip(offset).Take(size).ToListAsync(ct), await closed.CountAsync(ct));
     }
 
     /// <summary>How many published arguments each given record has.</summary>

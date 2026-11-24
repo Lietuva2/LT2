@@ -237,21 +237,6 @@ internal static class BillListRules
             .ThenBy(number, StringComparer.Ordinal)
             .ToList();
     }
-    /// <summary>
-    /// The search by number or title (design 8.12.5): every word of the query, ignoring case, in the number or the title.
-    /// A blank query matches everything.
-    /// </summary>
-    public static bool Matches(string? query, string number, string title)
-    {
-        if (string.IsNullOrWhiteSpace(query))
-        {
-            return true;
-        }
-
-        var haystack = number + " " + title;
-        return query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .All(word => haystack.Contains(word, StringComparison.OrdinalIgnoreCase));
-    }
 }
 
 /// <summary>Design 8.11.4 as pure functions: when a moderator may ask for an AI draft of a description.</summary>

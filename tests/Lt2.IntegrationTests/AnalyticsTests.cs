@@ -469,6 +469,11 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
                 FROM generate_series(1, 12) AS n
                 """,
                 ("vote", FinalVote));
+
+            // The search reads the catalogue's copy (design 8.12.5), so these records' bills are in the catalogue too.
+            await Database.DeleteBillsAsync(ExtraBills);
+            await Database.ExecuteAsync(
+                "INSERT INTO parliament.bill (id, number, title) SELECT gen_random_uuid(), 'XVP-T' || lpad(n::text, 3, '0'), 'Bandomasis projektas ' || n FROM generate_series(1, 12) AS n");
             FreshCopies();
             var totals = await VoteTotalsAsync(FinalVote);
             var voted = totals.For + totals.Against + totals.Abstain;
@@ -566,6 +571,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
         finally
         {
             await Database.ExecuteAsync("DELETE FROM appeals.bill_record WHERE bill_number LIKE @b", ("b", ExtraBills));
+            await Database.DeleteBillsAsync(ExtraBills);
             await Database.FreeBillAsync(Bill);
             await RemoveFinalVoteAsync();
             await member.DeleteAccountAsync();

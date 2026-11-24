@@ -163,6 +163,7 @@ public sealed class AnalyticsVolumeTests(DatabaseFixture database) : ApiTest(dat
             DELETE FROM parliament.ballot WHERE vote_id BETWEEN 98200001 AND 98205000;
             DELETE FROM parliament.vote WHERE id BETWEEN 98200001 AND 98205000;
             DELETE FROM parliament.agenda_item WHERE id BETWEEN 98100001 AND 98105000;
+            DELETE FROM appeals.bill_card WHERE bill_number LIKE 'XVP-V%';
             DELETE FROM parliament.bill WHERE number LIKE 'XVP-V%';
             DELETE FROM parliament.sitting WHERE session_id = 98000001;
             DELETE FROM parliament.session WHERE id = 98000001;

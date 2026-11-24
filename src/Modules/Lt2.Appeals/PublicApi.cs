@@ -617,3 +617,22 @@ public interface IAuthorLookup
     /// <summary><c>reason.not-found</c>, <c>comment.not-found</c> or <c>statement.not-found</c> when the item or its author's account is gone.</summary>
     Task<Result<Guid>> AuthorOfAsync(string kind, Guid id, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// The search of bills (design 8.12.5): one for every list of bills (the bill list, the votes, the statistics). It reads this
+/// module's copy of the bill catalogue (<c>appeals.bill_card</c>): the number, the official title and the readable title.
+/// </summary>
+public interface IBillCards
+{
+    /// <summary>
+    /// Makes the copy match the Parliament module's catalogue: a card for every bill, the official title current. Called after
+    /// every import and when the worker starts; the readable titles are never touched here.
+    /// </summary>
+    Task RefreshAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The numbers of the bills that match: every word of the query found in the number, the official title or the readable
+    /// title, by stem or as part of a word with case and Lithuanian letters ignored. Null when the query has no words: no filter.
+    /// </summary>
+    Task<IReadOnlyCollection<string>?> SearchAsync(string? query, CancellationToken cancellationToken);
+}

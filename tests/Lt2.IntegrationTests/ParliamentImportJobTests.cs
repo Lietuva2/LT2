@@ -3,6 +3,7 @@ using Hangfire;
 using Hangfire.Common;
 using Hangfire.Server;
 using Hangfire.States;
+using Lt2.Appeals;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Jobs;
 using Lt2.Parliament;
@@ -20,6 +21,7 @@ namespace Lt2.IntegrationTests;
 public sealed class ParliamentImportJobTests(DatabaseFixture database) : ApiTest(database), IDisposable
 {
     private readonly List<string> _jobs = [];
+    private readonly FakeCards _cards = new();
 
     /// <summary>The jobs a test stored are deleted (Hangfire's Deleted state), so nothing of them is left to run.</summary>
     public void Dispose()
@@ -40,7 +42,7 @@ public sealed class ParliamentImportJobTests(DatabaseFixture database) : ApiTest
 
         var id = await PerformAsync<ParliamentImportJob>(
             job => job.RunAsync(null, CancellationToken.None),
-            context => new ParliamentImportJob(import, logs).RunAsync(context, CancellationToken.None));
+            context => new ParliamentImportJob(import, _cards, logs).RunAsync(context, CancellationToken.None));
 
         import.Runs.ShouldBeEmpty();
         logs.Lines.ShouldBe(["Information: Parliament import not due (last start 2026-11-18 14:30); skipped"]);
@@ -57,7 +59,7 @@ public sealed class ParliamentImportJobTests(DatabaseFixture database) : ApiTest
 
         var id = await PerformAsync<ParliamentImportJob>(
             job => job.RunAsync(null, CancellationToken.None),
-            context => new ParliamentImportJob(import, new Logs<ParliamentImportJob>()).RunAsync(context, CancellationToken.None));
+            context => new ParliamentImportJob(import, _cards, new Logs<ParliamentImportJob>()).RunAsync(context, CancellationToken.None));
 
         import.Runs.ShouldBe([ImportParts.None]);
         (await ParameterAsync(id, ParliamentImportJob.SkippedParameter)).ShouldBeNull();
@@ -71,7 +73,7 @@ public sealed class ParliamentImportJobTests(DatabaseFixture database) : ApiTest
     public async Task Each_manual_job_forces_its_part_whatever_the_schedule_and_records_the_outcome(string method, ImportParts part)
     {
         var import = new FakeImport { Due = new ImportDue(false, DateTimeOffset.UtcNow), Outcome = new ImportOutcome(Guid.NewGuid(), "succeeded", 20, 3, false, null) };
-        var job = new ParliamentImportPartsJob(import, new Logs<ParliamentImportPartsJob>());
+        var job = new ParliamentImportPartsJob(import, _cards, new Logs<ParliamentImportPartsJob>());
 
         var id = await PerformAsync<ParliamentImportPartsJob>(
             j => j.MembersAsync(null, CancellationToken.None),
@@ -97,7 +99,7 @@ public sealed class ParliamentImportJobTests(DatabaseFixture database) : ApiTest
         var id = await PerformAsync<ParliamentImportPartsJob>(
             j => j.EverythingAsync(null, CancellationToken.None),
             async context => failure = await Should.ThrowAsync<InvalidOperationException>(
-                () => new ParliamentImportPartsJob(import, logs).EverythingAsync(context, CancellationToken.None)));
+                () => new ParliamentImportPartsJob(import, _cards, logs).EverythingAsync(context, CancellationToken.None)));
 
         failure!.Message.ShouldContain("Another Seimas import is running");
         logs.Lines.ShouldBe(["Warning: Parliament import by hand (All) did not run: another import is running"]);
@@ -113,9 +115,51 @@ public sealed class ParliamentImportJobTests(DatabaseFixture database) : ApiTest
         await PerformAsync<ParliamentImportPartsJob>(
             j => j.VotesAsync(null, CancellationToken.None),
             async context => (await Should.ThrowAsync<InvalidOperationException>(
-                () => new ParliamentImportPartsJob(import, logs).VotesAsync(context, CancellationToken.None))).Message.ShouldContain("The Seimas service did not answer"));
+                () => new ParliamentImportPartsJob(import, _cards, logs).VotesAsync(context, CancellationToken.None))).Message.ShouldContain("The Seimas service did not answer"));
 
         logs.Lines.ShouldBe(["Error: Parliament import by hand (Votes) failed: The Seimas service did not answer"]);
+    }
+
+    [Fact]
+    public async Task The_scheduled_import_refreshes_the_search_copy_of_the_bills_when_it_ran_and_when_it_was_not_due()
+    {
+        await PerformAsync<ParliamentImportJob>(
+            job => job.RunAsync(null, CancellationToken.None),
+            context => new ParliamentImportJob(new FakeImport { Due = new ImportDue(true, null) }, _cards, new Logs<ParliamentImportJob>()).RunAsync(context, CancellationToken.None));
+        _cards.Refreshes.ShouldBe(1, "after an import");
+
+        await PerformAsync<ParliamentImportJob>(
+            job => job.RunAsync(null, CancellationToken.None),
+            context => new ParliamentImportJob(new FakeImport { Due = new ImportDue(false, DateTimeOffset.UtcNow) }, _cards, new Logs<ParliamentImportJob>()).RunAsync(context, CancellationToken.None));
+        _cards.Refreshes.ShouldBe(2, "when not due, as the worker's start-up trigger finds it");
+    }
+
+    [Fact]
+    public async Task A_refresh_of_the_search_copy_that_fails_is_logged_and_does_not_fail_the_import()
+    {
+        _cards.Fail = true;
+        var logs = new Logs<ParliamentImportJob>();
+
+        var id = await PerformAsync<ParliamentImportJob>(
+            job => job.RunAsync(null, CancellationToken.None),
+            context => new ParliamentImportJob(new FakeImport { Due = new ImportDue(true, null) }, _cards, logs).RunAsync(context, CancellationToken.None));
+
+        id.ShouldNotBeNull();
+        logs.Lines.ShouldBe(["Error: The search copy of the bills could not be refreshed after the import"]);
+    }
+
+    [Fact]
+    public async Task A_manual_import_refreshes_the_search_copy_but_one_that_found_another_running_does_not()
+    {
+        var job = new ParliamentImportPartsJob(new FakeImport { Outcome = new ImportOutcome(Guid.NewGuid(), "succeeded", 1, 1, false, null) }, _cards, new Logs<ParliamentImportPartsJob>());
+        await PerformAsync<ParliamentImportPartsJob>(j => j.MembersAsync(null, CancellationToken.None), context => job.MembersAsync(context, CancellationToken.None));
+        _cards.Refreshes.ShouldBe(1);
+
+        var skipped = new ParliamentImportPartsJob(new FakeImport { Outcome = new ImportOutcome(null, "skipped", 0, 0, false, null) }, _cards, new Logs<ParliamentImportPartsJob>());
+        await PerformAsync<ParliamentImportPartsJob>(
+            j => j.MembersAsync(null, CancellationToken.None),
+            async context => await Should.ThrowAsync<InvalidOperationException>(() => skipped.MembersAsync(context, CancellationToken.None)));
+        _cards.Refreshes.ShouldBe(1);
     }
 
     /// <summary>
@@ -152,6 +196,21 @@ public sealed class ParliamentImportJobTests(DatabaseFixture database) : ApiTest
         }
 
         public Task<ImportDue> DueAsync(CancellationToken cancellationToken) => Task.FromResult(Due);
+    }
+
+    private sealed class FakeCards : IBillCards
+    {
+        public int Refreshes { get; private set; }
+
+        public bool Fail { get; set; }
+
+        public Task RefreshAsync(CancellationToken cancellationToken)
+        {
+            Refreshes++;
+            return Fail ? throw new InvalidOperationException("the database is away") : Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyCollection<string>?> SearchAsync(string? query, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyCollection<string>?>(null);
     }
 
     /// <summary>The job's log lines at information level and above, as "Level: message".</summary>

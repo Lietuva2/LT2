@@ -46,6 +46,7 @@ internal sealed class DescriptionSummaries(
     AppealReads reads,
     BillRecords records,
     IPlannedAgenda agenda,
+    IBillCatalogue bills,
     IAiAssistant assistant,
     IBillTextSource texts,
     ISettings settings,
@@ -204,6 +205,7 @@ internal sealed class DescriptionSummaries(
         record.DescriptionUrl = address.Length <= 500 ? address : null;
         record.DescriptionAt = now;
         record.ChangedAt = now;
+        await BillCards.WriteAsync(db, bills, billNumber, title, ct); // the search copy holds the readable title (design 8.12.5)
         Upsert(db, await db.SummaryAttempts.FirstOrDefaultAsync(a => a.BillNumber == billNumber, ct), billNumber, SummaryOutcomes.Made, true, now);
         await db.SaveChangesAsync(ct);
         var details = JsonSerializer.SerializeToElement(new { bill = billNumber, model }, JsonSerializerOptions.Web);

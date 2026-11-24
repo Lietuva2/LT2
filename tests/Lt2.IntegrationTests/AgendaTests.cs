@@ -319,7 +319,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             await Database.UnplanAsync(number);
         }
 
-        await Database.ExecuteAsync("DELETE FROM parliament.bill WHERE number LIKE 'XVP-L%'");
+        await Database.DeleteBillsAsync("XVP-L%");
     }
 
     /// <summary>One day's block of the agenda page.</summary>

@@ -406,15 +406,6 @@ public sealed class ComparedBillListRuleTests
         Ordered(ComparedBillOrder.Positions).ShouldBe(["XVP-0702", "XVP-0701", "XVP-0703", "XVP-0704", "XVP-0705"]);
 
     [Fact]
-    public void The_search_finds_every_word_in_the_number_or_the_title_ignoring_case()
-    {
-        AnalyticsRules.MatchesSearch("pajamų xvp-0412", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBeTrue();
-        AnalyticsRules.MatchesSearch("PAJAMŲ", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBeTrue();
-        AnalyticsRules.MatchesSearch("pajamų pirkimų", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBeFalse();
-        AnalyticsRules.MatchesSearch("  ", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa").ShouldBeTrue("a blank search matches every bill");
-    }
-
-    [Fact]
     public void The_result_filter_keeps_only_compared_bills_with_that_result()
     {
         AnalyticsRules.MatchesResult(true, true).ShouldBeTrue();

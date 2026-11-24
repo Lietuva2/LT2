@@ -398,6 +398,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         ShouldSpeakOfUsersNotThePublic(html, notice: false);
 
         var (_, found) = await PageAsync(stranger, "/projektai?q=pajamu%20mokescio");
+        found.ShouldContain("id=\"bill-XVP-0412\"", customMessage: "Lithuanian letters are ignored (design 8.12.5, one search for every list of bills)");
         found.ShouldNotContain("id=\"bill-XVP-0533\"");
         var (_, foundLt) = await PageAsync(stranger, "/projektai?q=" + Uri.EscapeDataString("pajamų mokesčio"));
         foundLt.ShouldContain("id=\"bill-XVP-0412\"");

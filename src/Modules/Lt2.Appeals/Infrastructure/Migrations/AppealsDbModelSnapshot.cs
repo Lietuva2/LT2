@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 
 #nullable disable
 
@@ -51,6 +52,62 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasDatabaseName("ix_ai_draft_request_moderator_user_id_requested_at");
 
                     b.ToTable("ai_draft_request", "appeals");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.BillCard", b =>
+                {
+                    b.Property<string>("BillNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("bill_number");
+
+                    b.Property<string>("PlainTitle")
+                        .HasMaxLength(90)
+                        .HasColumnType("character varying(90)")
+                        .HasColumnName("plain_title");
+
+                    b.Property<string>("PlainTitleFolded")
+                        .HasColumnType("text")
+                        .HasColumnName("plain_title_folded");
+
+                    b.Property<string>("SearchFolded")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasColumnName("search_folded")
+                        .HasComputedColumnSql("title_folded || ' ' || coalesce(plain_title_folded, '')", true);
+
+                    b.Property<NpgsqlTsVector>("SearchVector")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasColumnName("search_vector")
+                        .HasComputedColumnSql("to_tsvector('lithuanian'::regconfig, bill_number || ' ' || title || ' ' || coalesce(plain_title, ''))", true);
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("TitleFolded")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title_folded");
+
+                    b.HasKey("BillNumber")
+                        .HasName("pk_bill_card");
+
+                    b.HasIndex("SearchFolded")
+                        .HasDatabaseName("ix_bill_card_search_folded");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchFolded"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("SearchFolded"), new[] { "appeals.gin_trgm_ops" });
+
+                    b.HasIndex("SearchVector")
+                        .HasDatabaseName("ix_bill_card_search_vector");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "gin");
+
+                    b.ToTable("bill_card", "appeals");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.BillRecord", b =>

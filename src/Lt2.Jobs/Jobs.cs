@@ -41,6 +41,29 @@ public sealed class OutboxPurgeJob(INotificationsDispatcher dispatcher, IFollows
 }
 
 /// <summary>
+/// Makes the Appeals module's search copy of the bills current after an import (design 8.12.5). A failure is logged and never
+/// fails the import: the next import, or the first search that finds the counts differ, makes the copy again.
+/// </summary>
+internal static class BillCardRefresh
+{
+    public static async Task RunAsync(IBillCards billCards, ILogger logger, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await billCards.RefreshAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "The search copy of the bills could not be refreshed after the import");
+        }
+    }
+}
+
+/// <summary>
 /// Design 7.2: the Seimas open-data import. Asked every 15 minutes; runs when due (every 15 minutes on sitting days,
 /// hourly otherwise, at once if it never succeeded). A Seimas outage fails the run, which Hangfire shows; the site keeps
 /// the last good data and the next run resumes. No Hangfire lock: the import's own advisory lock makes a second run
@@ -53,7 +76,7 @@ public sealed class OutboxPurgeJob(INotificationsDispatcher dispatcher, IFollows
 /// <see cref="ParliamentImportPartsJob"/>'s jobs.
 /// </para>
 /// </summary>
-public sealed class ParliamentImportJob(IParliamentImport import, ILogger<ParliamentImportJob> logger)
+public sealed class ParliamentImportJob(IParliamentImport import, IBillCards billCards, ILogger<ParliamentImportJob> logger)
 {
     /// <summary>The job parameter that says why a run imported nothing.</summary>
     public const string SkippedParameter = "Skipped";
@@ -68,10 +91,18 @@ public sealed class ParliamentImportJob(IParliamentImport import, ILogger<Parlia
             var lastStart = ParliamentImportPartsJob.Vilnius(due.LastStart);
             logger.LogInformation("Parliament import not due (last start {LastStart}); skipped", lastStart);
             context?.SetJobParameter(SkippedParameter, $"Not due (last start {lastStart}). To import now, trigger parliament-members, parliament-sittings, parliament-votes or parliament-everything.");
+
+            // The worker triggers this job when it starts: the search copy of the bills is made current then too (design 8.12.5).
+            await BillCardRefresh.RunAsync(billCards, logger, cancellationToken);
             return;
         }
 
         var outcome = await import.RunAsync(ImportParts.None, cancellationToken);
+        if (outcome.Status != "skipped")
+        {
+            await BillCardRefresh.RunAsync(billCards, logger, cancellationToken);
+        }
+
         if (outcome.Status == "skipped")
         {
             context?.SetJobParameter(SkippedParameter, "Another Seimas import is running.");
@@ -96,7 +127,7 @@ public sealed class ParliamentImportJob(IParliamentImport import, ILogger<Parlia
 /// error the dashboard lists under "Failed"); its outcome is the job parameter <see cref="OutcomeParameter"/> either way.
 /// </para>
 /// </summary>
-public sealed class ParliamentImportPartsJob(IParliamentImport import, ILogger<ParliamentImportPartsJob> logger)
+public sealed class ParliamentImportPartsJob(IParliamentImport import, IBillCards billCards, ILogger<ParliamentImportPartsJob> logger)
 {
     public const string Members = "parliament-members";
     public const string Sittings = "parliament-sittings";
@@ -141,6 +172,11 @@ public sealed class ParliamentImportPartsJob(IParliamentImport import, ILogger<P
     private async Task RunAsync(ImportParts force, PerformContext? context, CancellationToken cancellationToken)
     {
         var outcome = await import.RunAsync(force, cancellationToken);
+        if (outcome.Status != "skipped")
+        {
+            await BillCardRefresh.RunAsync(billCards, logger, cancellationToken);
+        }
+
         context?.SetJobParameter(OutcomeParameter, $"{outcome.Status}: {outcome.Requests} requests, {outcome.Changes} changes");
         switch (outcome.Status)
         {
