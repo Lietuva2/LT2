@@ -597,6 +597,17 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   a bill's record closes taking part on it (sides and arguments kept unseen; "Atkurti" brings them back). A moderator
   in a staff-passkey session gets the queue's argument actions on the bill's page too (owner, 2026-11-14), from the
   moderators-only answer `GET /moderation/bills/{number}`; nobody else sees a control or anything from it.
+- **"Projektai be aprašymo" (design 8.3, owner 2026-11-25).** `/moderavimas/be-aprasymo` (`Pages/UndescribedBills.razor`
+  hosts the list's own component `Appeals/UndescribedList.razor`, so a tabbed moderation page can host it too; linked from the
+  queue's row as `#undescribed-link`), from `GET /moderation/undescribed` (`GetUndescribedEndpoint`,
+  moderators only; `IModerationApi.GetUndescribedAsync`, `IAppealsModeration.UndescribedAsync`, handler
+  `Application/UndescribedBillReads`). Active bills (an open record or none) without a description or with an `ai` one, that
+  have a participant, a published argument or a follower; the rule is `Domain/UndescribedRules` (`WantsDescription`,
+  `Attention` = participants + published arguments + followers, `Order`: most first, then the soonest planned date, then the
+  number; `UndescribedRuleTests`). Followers come through `IFollowerCounts.BillsAsync` (Notifications, numbers only), planned
+  dates through `IPlannedAgenda`. At most 100 rows with the total (`<QueueCut>`); each row `#undescribed-{number}`: the
+  number, `<BillTitleLink>`, "Dalyviai: n · Argumentai: n · Sekėjai: n", the planned date, the `ai` label; the links lead to
+  the bill's page, whose "Moderavimas" panel writes the description. Tests: `UndescribedBillsTests` (integration).
 - **After the final vote** (design 6.9, owner 2026-11-15): a report about an argument or the description of a closed
   record reaches the queue. On a closed record a moderator can only hide and restore an argument, correct or remove the
   description and answer a report with "Palikti" (and hide the whole record, as before, or undo a moderator's close,
@@ -777,7 +788,8 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
 - **Follower numbers (design 8.11.2, owner 2026-11-16, built with the profiles).** "Sekėjai: n", exact from 1, is shown only
   on the thing's own page: the bill's page beside "Sekti" (`GET /bills/{number}/followers`), the MP's profile and the
   organisation's profile (`followers` in their answers) and a member's page; never in list rows, a member's card or beside
-  texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, inside `FollowButton` (`Followers`) so the person's own "Sekti" moves it at once). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
+  texts, never sorted, ranked or added up (the one exception is the moderators' "Projektai be aprašymo", design 8.3, owner
+  2026-11-25), nothing at zero (`FollowerLine`, inside `FollowButton` (`Followers`) so the person's own "Sekti" moves it at once). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
   Notifications): a number only. The last three points are the designer's proposals awaiting the owner.
 - **One compact follow line (owner, 2026-11-17)** under the title of a bill, an MP, an organisation and a member: the page's
   tags in a `.follow-line` row, then `FollowButton`: "Sekti" (a visitor's a sign-in link back), "Sekėjai: n", and one hint

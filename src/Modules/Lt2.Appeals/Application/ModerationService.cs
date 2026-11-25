@@ -24,9 +24,12 @@ internal sealed class ModerationService(
     IPlannedAgenda agenda,
     IBillCatalogue bills,
     IAiAssistant assistant,
+    UndescribedBillReads undescribed,
     TimeProvider clock) : IAppealsModeration
 {
     private const int QueueLimit = 100;
+
+    public Task<UndescribedBills> UndescribedAsync(CancellationToken cancellationToken) => undescribed.ListAsync(cancellationToken);
 
     public async Task<ModerationItems> QueueAsync(CancellationToken cancellationToken)
     {

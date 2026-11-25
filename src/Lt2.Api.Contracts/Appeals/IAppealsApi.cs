@@ -88,6 +88,9 @@ public interface IModerationApi
 {
     Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>"Projektai be aprašymo": where a description is most wanted (design 8.3); forbidden for anyone else.</summary>
+    Task<ApiResult<UndescribedBillsResponse>> GetUndescribedAsync(CancellationToken cancellationToken = default);
+
     /// <summary>The author of an argument, as a moderator sees them before restricting (design 8.3).</summary>
     Task<ApiResult<AuthorViewResponse>> GetAuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken = default);
 

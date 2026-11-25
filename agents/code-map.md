@@ -62,7 +62,9 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            Application/VoteCorrections, design 7.2); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
                            by moderators, the AI draft in Ai/ with its public prompt file, the AI summary job
-                           (Application/DescriptionSummaries.cs), the "unavailable" IBillTextSource, and organisations
+                           (Application/DescriptionSummaries.cs), the moderators' "Projektai be aprašymo"
+                           (Application/UndescribedBillReads.cs, Domain/UndescribedRules.cs; followers through
+                           IFollowerCounts.BillsAsync, design 8.3), the "unavailable" IBillTextSource, and organisations
                            with their statements on bills, design 8.14.14; MPs' responses, 8.5.5; the one search of bills: `IBillCards`,
                            Application/BillCards.cs, over its copy of the catalogue, table `appeals.bill_card`
                            (Domain/BillCard.cs), design 8.12.5, refreshed by the import jobs in Lt2.Jobs and written with

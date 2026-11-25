@@ -1,0 +1,80 @@
+@inherits InteractiveBase<AppealUi>
+@inject IModerationApi ModerationApi
+
+@* The content of "Projektai be aprašymo" (design 8.3, owner 2026-11-25): active bills without a description, or with an AI
+   summary nobody has read, that people already pay attention to, the most attention first; at most a hundred, with the
+   total. Each row leads to the bill's page, where the "Moderavimas" panel has "Rašyti aprašymą"; nothing is moderated here.
+   Its own component so the moderators' pages can host it; the host shows the refusal (Refused). Only numbers the bill's page
+   shows, nothing about who. *@
+<Messages Message="@Message" Info="@Info" />
+
+@if (Undescribed is null)
+{
+    @if (!_refused)
+    {
+        <p class="small">@L["Loading"]</p>
+    }
+}
+else if (Undescribed.Bills.Count == 0)
+{
+    <p class="small" id="undescribed-none">@L["Undescribed.None"]</p>
+}
+else
+{
+    <QueueCut Shown="Undescribed.Bills.Count" Total="Undescribed.Total" Id="undescribed-cut" />
+    <section class="sheet" aria-label="@L["Undescribed.Title"]">
+        <ol class="rows" id="undescribed">
+            @foreach (var row in Undescribed.Bills)
+            {
+                <li id="undescribed-@row.Bill.Number" @key="row.Bill.Number">
+                    <div class="rows__main">
+                        <span class="row">
+                            <a class="tag tag--ink num" href="@BillPath(row.Bill.Number)">@row.Bill.Number</a>
+                            @if (row.DescriptionSource == DescriptionSources.Ai)
+                            {
+                                <span class="tag" id="undescribed-ai-@row.Bill.Number">@L["Mod.Source.ai"]</span>
+                            }
+                        </span>
+                        <BillTitleLink Href="@BillPath(row.Bill.Number)" Title="@row.Bill.Title" PlainTitle="@row.Bill.PlainTitle" />
+                        <span class="small num" id="undescribed-counts-@row.Bill.Number">@L.Format("Undescribed.Counts", Display.Number(row.Participants), Display.Number(row.Arguments), Display.Number(row.Followers))</span>
+                    </div>
+                    @if (row.Planned is { } plan)
+                    {
+                        <div class="rows__side">
+                            <span class="small num">@L.Format("Mod.Planned", Display.Day(plan.Date), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</span>
+                        </div>
+                    }
+                </li>
+            }
+        </ol>
+    </section>
+}
+
+@code {
+    private bool _refused;
+
+    /// <summary>Called when the server refuses the list (not a moderator in a staff-passkey session); the host says why.</summary>
+    [Parameter] public EventCallback Refused { get; set; }
+
+    [PersistentState] public UndescribedBillsResponse? Undescribed { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Undescribed is null)
+        {
+            var list = await ModerationApi.GetUndescribedAsync();
+            _refused = list.Problem?.Status is 401 or 403;
+            Undescribed = list.Value;
+            if (_refused)
+            {
+                await Refused.InvokeAsync();
+            }
+            else if (!list.IsSuccess)
+            {
+                Show(list.Problem);
+            }
+        }
+    }
+
+    private static string BillPath(string number) => "/seimas/" + Uri.EscapeDataString(number);
+}

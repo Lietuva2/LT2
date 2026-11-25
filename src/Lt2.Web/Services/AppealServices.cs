@@ -69,6 +69,11 @@ internal static class AppealMapping
         q.RecordsTotal,
         q.ReasonsTotal);
 
+    public static UndescribedBillsResponse Map(UndescribedBills u) => new(
+        u.Bills.Select(b => new UndescribedBillResponse(
+            new BillRefResponse(b.Bill.Number, b.Bill.Title, b.PlainTitle), b.DescriptionSource, b.Participants, b.Arguments, b.Followers, Map(b.Planned))).ToList(),
+        u.Total);
+
     public static HiddenItemsResponse Map(HiddenItems h) => new(
         h.Records.Select(a => new HiddenRecordResponse(a.Id, Map(a.Bill), a.Description, a.HiddenAt, a.HiddenBy, a.Statement, a.RestoresAs)).ToList(),
         h.Reasons.Select(r => new HiddenReasonResponse(
@@ -226,6 +231,11 @@ internal sealed class ServerModerationApi(
         await IsModeratorAsync()
             ? ApiResult<ModerationQueueResponse>.Ok(AppealMapping.Map(await moderation.QueueAsync(cancellationToken)))
             : ApiResult<ModerationQueueResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public async Task<ApiResult<UndescribedBillsResponse>> GetUndescribedAsync(CancellationToken cancellationToken = default) =>
+        await IsModeratorAsync()
+            ? ApiResult<UndescribedBillsResponse>.Ok(AppealMapping.Map(await moderation.UndescribedAsync(cancellationToken)))
+            : ApiResult<UndescribedBillsResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
     public Task<ApiResult> KeepRecordAsync(Guid recordId, ModerationRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.KeepRecordAsync(recordId, request.Statement, m, cancellationToken));

@@ -445,6 +445,14 @@ public interface IAppealsModeration
 {
     Task<ModerationItems> QueueAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): active bills (an open record or none) without a description
+    /// or with an AI summary nobody has read, that at least one participant, published argument or follower pays attention
+    /// to, most attention first (<c>UndescribedRules</c>); at most a hundred, with the total. Only numbers the bill's page
+    /// shows; nothing about who.
+    /// </summary>
+    Task<UndescribedBills> UndescribedAsync(CancellationToken cancellationToken);
+
     /// <summary>"Palikti": keeps a reported or flagged record as it is; its open reports and date flags close.</summary>
     Task<Result<Unit>> KeepRecordAsync(Guid recordId, string? statement, StaffActor moderator, CancellationToken cancellationToken);
 
@@ -559,6 +567,18 @@ public sealed record HiddenReason(
     Guid Id, BillFacts Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
 public sealed record HiddenItems(IReadOnlyList<HiddenRecord> Records, IReadOnlyList<HiddenReason> Reasons);
+
+/// <summary>
+/// A bill on the moderators' list "Projektai be aprašymo" (design 8.3): an active bill without a description, or with an AI
+/// summary nobody has read (<paramref name="DescriptionSource"/> <c>ai</c>; null without a description), and the numbers its
+/// page shows: participants, published arguments and followers. <paramref name="PlainTitle"/> is the readable title of an
+/// <c>ai</c> summary, null without one.
+/// </summary>
+public sealed record UndescribedBill(
+    BillFacts Bill, string? PlainTitle, string? DescriptionSource, int Participants, int Arguments, int Followers, PlannedDate? Planned);
+
+/// <summary>"Projektai be aprašymo" (design 8.3): at most a hundred bills in the list's order, and how many there are in all.</summary>
+public sealed record UndescribedBills(IReadOnlyList<UndescribedBill> Bills, int Total);
 
 /// <summary>The caller's own writing restriction (design 8.3): its last day (null = until lifted) and the statement.</summary>
 public sealed record MyRestriction(DateOnly? Until, string Statement);

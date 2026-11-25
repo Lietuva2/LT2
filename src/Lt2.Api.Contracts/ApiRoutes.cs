@@ -219,6 +219,9 @@ public static class AppealRoutes
     public static string FlagsOf(string number) => RecordOf(number) + "/flags";
 
     public const string ModerationQueue = ApiRoutes.Prefix + "/moderation/queue";
+
+    /// <summary><c>GET</c>: "Projektai be aprašymo", where a description is most wanted (design 8.3); moderators only.</summary>
+    public const string Undescribed = ApiRoutes.Prefix + "/moderation/undescribed";
     public const string MyRestriction = ApiRoutes.Prefix + "/me/writing-restriction";
     public const string ReasonAuthor = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/author";
 
