@@ -1,6 +1,6 @@
 ---
 name: seimas-agenda
-description: Enter the Seimas's upcoming sitting agendas into Lietuva 2.0. Reads each upcoming day's draft agenda (an e-seimas "posėdžių darbotvarkė" document) in the user's own Chrome and enters it on the Moderavimas page "Seimo darbotvarkė", one day at a time, previewing before saving. Use when asked to "update the agenda", "įvesk darbotvarkę", "atnaujink Seimo darbotvarkę", or on a schedule. Needs Claude in Chrome and a moderator signed in to Lietuva 2.0 with a staff passkey.
+description: Enter the Seimas's upcoming sitting agendas into Lietuva 2.0. Reads each upcoming day's draft agenda (an e-seimas "posėdžių darbotvarkė" document) in the user's own Chrome and enters it on the Moderavimas page "Seimo darbotvarkė", one day at a time, previewing before saving. Use when asked to "update the agenda", "įvesk darbotvarkę", "atnaujink Seimo darbotvarkę", or on a schedule. Takes the Lietuva 2.0 site as its argument, e.g. "/seimas-agenda https://test.lietuva2.lt". Needs Claude in Chrome and a moderator signed in to Lietuva 2.0 with a staff passkey.
 ---
 
 # Enter the Seimas agenda into Lietuva 2.0
@@ -15,9 +15,10 @@ is changed on either site.
 
 ## Inputs
 
-- **Site:** the Lietuva 2.0 host to enter into. Hosts vary (a local stack, the trial, later production): use the one
-  the user names, otherwise the host of the Lietuva 2.0 page the user has open; if neither, ask once. Never assume a
-  host. The staff page `https://<host>/moderavimas/darbotvarke` must exist there: if it answers "not found", that
+- **Site:** the Lietuva 2.0 host to enter into. Hosts vary (a local stack, the trial, later production): use the host
+  of the skill's argument (`/seimas-agenda https://<host>`, or any address on that site) or the one named in the
+  user's message. Claude in Chrome cannot see the tab the user has open, so if none is given, ask once; a scheduled
+  run must carry the site in its prompt. Never assume a host. The staff page `https://<host>/moderavimas/darbotvarke` must exist there: if it answers "not found", that
   site runs a version without the agenda entry; stop and say so.
 - **Sittings page:** by default the current session's sittings list,
   `https://www.lrs.lt/sip/portal.show?p_r=35727&p_k=1&p_a=sale_ses_pos&p_kade_id=10&p_ses_id=145` (term 10, ordinary
