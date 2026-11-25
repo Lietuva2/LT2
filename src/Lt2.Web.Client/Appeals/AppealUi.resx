@@ -512,7 +512,7 @@
 <data name="Mod.Description" xml:space="preserve"><value>Apie ką projektas</value></data>
 <data name="Mod.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: ką projektas keičia pagal oficialų tekstą. Šį aprašymą skaitys abiejų pusių dalyviai.</value></data>
 <data name="Mod.DescriptionUrl" xml:space="preserve"><value>Oficialaus teksto adresas</value></data>
-<data name="Mod.DescriptionUrlHint" xml:space="preserve"><value>Neprivaloma. Oficialaus teksto, iš kurio parengtas aprašymas, adresas lrs.lt svetainėje, pvz., e-seimas.lrs.lt. Jis rodomas po aprašymu; palikus laukelį tuščią, adreso nebus.</value></data>
+<data name="Mod.DescriptionUrlHint" xml:space="preserve"><value>Neprivaloma. Oficialaus teksto, iš kurio parengtas aprašymas, adresas lrs.lt svetainėje. Naujam aprašymui įrašytas projekto adresas e. seime; jei rėmėtės kitu tekstu, pvz., aiškinamuoju raštu, įrašykite jo adresą. Adresas rodomas po aprašymu; ištrynus jį, adreso nebus.</value></data>
 <data name="ModPanel.Reasons" xml:space="preserve"><value>Argumentai, laukiantys peržiūros arba pažymėti</value></data>
 <data name="ModReason.Open" xml:space="preserve"><value>Moderuoti</value></data>
   <data name="Share.Lead" xml:space="preserve"><value>Pakvieskite kitus savo kvietimo nuoroda: ji atveria šį projektą ir neatskleidžia, ko prašote jūs.</value></data>
