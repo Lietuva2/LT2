@@ -28,6 +28,8 @@
     <Using Include="Lt2.Api.Contracts.Organisations.OrganisationStatuses" Alias="OrganisationStatuses" />
     <Using Include="Lt2.Api.Contracts.Organisations.StatementStances" Alias="StatementStances" />
     <Using Include="Lt2.Api.Contracts.Organisations.StatementStatuses" Alias="StatementStatuses" />
+    <Using Include="Lt2.Api.Contracts.Parliament.AgendaEntryChanges" Alias="AgendaEntryChanges" />
+    <Using Include="Lt2.Api.Contracts.Parliament.AgendaEntryRefusals" Alias="AgendaEntryRefusals" />
     <Using Include="Lt2.Api.Contracts.Parliament.BallotChoices" Alias="BallotChoices" />
     <Using Include="Lt2.Api.Contracts.Parliament.BillStages" Alias="BillStages" />
     <Using Include="Lt2.Api.Contracts.Parliament.BodyKinds" Alias="BodyKinds" />

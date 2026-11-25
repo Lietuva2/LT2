@@ -48,7 +48,7 @@ public static class DatabaseRoles
         "appeals.reason", "appeals.report", "appeals.revision", "appeals.summary_attempt",
         "appeals.comment_agreement", // design 8.23.10: public under the name, tells no side, as an argument
         "config.setting",
-        "parliament.agenda_item", "parliament.agenda_snapshot", "parliament.ballot", "parliament.bill", "parliament.body",
+        "parliament.agenda_entry", "parliament.agenda_item", "parliament.agenda_snapshot", "parliament.ballot", "parliament.bill", "parliament.body",
         "parliament.contact", "parliament.faction_position", "parliament.fetch_state", "parliament.import_run", "parliament.mandate",
         "parliament.membership", "parliament.mp_stat", "parliament.person", "parliament.planned_item", "parliament.raw_document",
         "parliament.session", "parliament.sitting", "parliament.term", "parliament.vote",

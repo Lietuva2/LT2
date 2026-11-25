@@ -237,4 +237,9 @@
   <data name="vote-classification.rules" xml:space="preserve"><value>Taip balsavimą klasifikuoja taisyklės: pasirinkite „Grąžinti taisyklių klasifikaciją“.</value></data>
   <data name="vote-classification.not-corrected" xml:space="preserve"><value>Šio balsavimo klasifikacijos moderatoriai netaisė.</value></data>
   <data name="vote-classification.closing-vote" xml:space="preserve"><value>Šiuo balsavimu projekto priėmimo stadijoje uždarytas kreipimasis: balsavimu uždaryto kreipimosi atverti iš naujo negalima, todėl šis balsavimas lieka priėmimo stadijos balsavimu.</value></data>
+  <data name="agenda-entry.day" xml:space="preserve"><value>Posėdžio dieną galima įvesti nuo šiandien iki 31 dienos į priekį.</value></data>
+  <data name="agenda-entry.source" xml:space="preserve"><value>Adresas turi būti https adresas svetainėje e-seimas.lrs.lt arba www.lrs.lt.</value></data>
+  <data name="agenda-entry.lines" xml:space="preserve"><value>Kai kurios eilutės netinka, todėl niekas neįrašyta. Peržiūrėkite eilutes.</value></data>
+  <data name="agenda-entry.empty" xml:space="preserve"><value>Šiai dienai jau įvesta projektų, todėl tuščio sąrašo įrašyti negalima.</value></data>
+  <data name="agenda-entry.too-long" xml:space="preserve"><value>Per ilgas tekstas vienai posėdžio dienai.</value></data>
 </root>

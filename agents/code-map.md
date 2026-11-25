@@ -54,12 +54,13 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and
                            Lt2.Api.Contracts (AppealCodes.cs: Sides, BillRecordStatuses, ClosingReasons, ReasonStatuses,
                            ThresholdSetters, DescriptionSources, ReportTargets, ReportGrounds; CommentCodes.cs;
                            OrganisationCodes.cs; MpCodes.cs; ParliamentCodes.cs: the API codes the Parliament module's
-                           enums map to in Codes; DigestCodes.cs: DigestRunStatuses, RowSummaryKinds; FeedbackCodes.cs; LockTargets.cs; a project that sees
+                           enums map to in Codes, and the entered agenda's AgendaEntryRefusals and AgendaEntryChanges; DigestCodes.cs: DigestRunStatuses, RowSummaryKinds; FeedbackCodes.cs; LockTargets.cs; a project that sees
                            both copies imports Lt2.Api.Contracts/CodeAliases.props); no clock of its own (TimeProvider
                            is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics, a moderator's correction of a vote's classification: Domain/VoteClassification,
-                           Application/VoteCorrections, design 7.2); Lt2.Appeals (bills' records, positions, arguments, endorsements,
+                           Application/VoteCorrections, design 7.2; staff's entry of a day's agenda: Domain/AgendaEntryRules,
+                           Application/AgendaEntries, table agenda_entry, design 8.4); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
                            by moderators, the AI draft in Ai/ with its public prompt file, the AI summary job
                            (Application/DescriptionSummaries.cs), the moderators' "Projektai be aprašymo"

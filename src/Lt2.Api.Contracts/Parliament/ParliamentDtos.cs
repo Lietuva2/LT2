@@ -72,9 +72,10 @@ public sealed record VoteSummaryResponse(VoteLink Vote, VoteTotalsResponse Total
 
 /// <param name="Planned">The bill's current planned date (design 8.11.1: "Planuojama …"), from today on; null when none.</param>
 /// <param name="PlannedAgendaUrl">
-/// Where a date read from the agenda is published: the agenda page it was last read from (design 8.4, owner 2026-11-16),
-/// not <see cref="Appeals.PlannedDateResponse.SourceUrl"/>, which is the row's e-seimas document when it has one
-/// (assumption A5). Null for a moderator's date, without a planned date, or when the agenda was never read.
+/// Where the planned date is published (design 8.4): for a date staff entered, the day's agenda document; for a date read
+/// from the agenda page, the page it was last read from (owner 2026-11-16), not <see cref="Appeals.PlannedDateResponse.SourceUrl"/>,
+/// which is then the row's e-seimas document (assumption A5). Null for a moderator's date, without a planned date, or when
+/// the agenda page was never read.
 /// </param>
 public sealed record BillResponse(
     string Number, string Title, string? ESeimasUrl, IReadOnlyList<VoteSummaryResponse> Votes, Appeals.PlannedDateResponse? Planned = null,

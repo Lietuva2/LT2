@@ -43,6 +43,8 @@ internal sealed class ParliamentDb(DbContextOptions<ParliamentDb> options) : DbC
 
     public DbSet<Import.Agenda.AgendaSnapshot> AgendaSnapshots => Set<Import.Agenda.AgendaSnapshot>();
 
+    public DbSet<AgendaEntry> AgendaEntries => Set<AgendaEntry>();
+
     public DbSet<RawDocument> RawDocuments => Set<RawDocument>();
 
     public DbSet<FetchState> FetchStates => Set<FetchState>();
@@ -67,6 +69,14 @@ internal sealed class ParliamentDb(DbContextOptions<ParliamentDb> options) : DbC
             e.ToTable("agenda_snapshot");
             e.HasKey(s => s.Id);
             e.HasIndex(s => s.FetchedAt);
+        });
+
+        modelBuilder.Entity<AgendaEntry>(e =>
+        {
+            e.ToTable("agenda_entry");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.SourceUrl).HasMaxLength(AgendaEntryRules.SourceMaxLength);
+            e.HasIndex(x => new { x.PlannedDate, x.EnteredAt });
         });
 
         modelBuilder.Entity<Term>(e =>

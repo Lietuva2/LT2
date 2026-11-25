@@ -23,6 +23,65 @@ namespace Lt2.Parliament.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Lt2.Parliament.Domain.AgendaEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Added")
+                        .HasColumnType("integer")
+                        .HasColumnName("added");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("body");
+
+                    b.Property<int>("Changed")
+                        .HasColumnType("integer")
+                        .HasColumnName("changed");
+
+                    b.Property<int>("CreatedBills")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_bills");
+
+                    b.Property<DateTimeOffset>("EnteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("entered_at");
+
+                    b.Property<Guid>("EnteredBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entered_by");
+
+                    b.Property<DateOnly>("PlannedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("planned_date");
+
+                    b.Property<int>("Removed")
+                        .HasColumnType("integer")
+                        .HasColumnName("removed");
+
+                    b.Property<int>("Rows")
+                        .HasColumnType("integer")
+                        .HasColumnName("rows");
+
+                    b.Property<string>("SourceUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("source_url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_agenda_entry");
+
+                    b.HasIndex("PlannedDate", "EnteredAt")
+                        .HasDatabaseName("ix_agenda_entry_planned_date_entered_at");
+
+                    b.ToTable("agenda_entry", "parliament");
+                });
+
             modelBuilder.Entity("Lt2.Parliament.Domain.AgendaItem", b =>
                 {
                     b.Property<long>("Id")

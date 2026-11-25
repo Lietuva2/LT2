@@ -1200,4 +1200,34 @@
   <data name="VoteMod.Stage" xml:space="preserve"><value>Projekto stadija</value></data>
   <data name="VoteMod.Done.reclassify" xml:space="preserve"><value>Klasifikacija pataisyta.</value></data>
   <data name="VoteMod.Done.reset" xml:space="preserve"><value>Grąžinta taisyklių klasifikacija.</value></data>
+  <data name="AgendaEntry.PageTitle" xml:space="preserve"><value>Seimo darbotvarkė · Moderavimas · Lietuva 2.0</value></data>
+  <data name="AgendaEntry.Title" xml:space="preserve"><value>Seimo darbotvarkė</value></data>
+  <data name="AgendaEntry.Lead" xml:space="preserve"><value>Įveskite vienos posėdžio dienos projektus iš tos dienos darbotvarkės dokumento e. seime. Sąrašas – visa diena: ko jame nėra, išimama iš tos dienos, o svetainei nežinomi projektai sukuriami. Pirma peržiūrėkite, tada įrašykite.</value></data>
+  <data name="AgendaEntry.Day" xml:space="preserve"><value>Posėdžio diena</value></data>
+  <data name="AgendaEntry.Source" xml:space="preserve"><value>Darbotvarkės dokumento adresas</value></data>
+  <data name="AgendaEntry.Lines" xml:space="preserve"><value>Projektai, po vieną eilutėje: numeris | stadija | pavadinimas</value></data>
+  <data name="AgendaEntry.Preview" xml:space="preserve"><value>Peržiūrėti</value></data>
+  <data name="AgendaEntry.Save" xml:space="preserve"><value>Įrašyti</value></data>
+  <data name="AgendaEntry.Previewed" xml:space="preserve"><value>Peržiūra · {0}</value></data>
+  <data name="AgendaEntry.Saved" xml:space="preserve"><value>Įrašyta · {0}</value></data>
+  <data name="AgendaEntry.SavedInfo" xml:space="preserve"><value>Diena {0} įrašyta.</value></data>
+  <data name="AgendaEntry.Counts" xml:space="preserve"><value>Pridėta {0} · Pakeista stadija {1} · Nepakeista {2} · Išimta iš dienos {3}</value></data>
+  <data name="AgendaEntry.Refused" xml:space="preserve"><value>Šios eilutės netinka; kol jų yra, nieko įrašyti negalima:</value></data>
+  <data name="AgendaEntry.Line" xml:space="preserve"><value>Eilutė {0}:</value></data>
+  <data name="AgendaEntry.Refusal.fields" xml:space="preserve"><value>reikia trijų dalių, atskirtų ženklu „|“: numeris | stadija | pavadinimas.</value></data>
+  <data name="AgendaEntry.Refusal.number" xml:space="preserve"><value>nerastas projekto numeris (pvz., XVP-0412).</value></data>
+  <data name="AgendaEntry.Refusal.title-empty" xml:space="preserve"><value>nėra pavadinimo.</value></data>
+  <data name="AgendaEntry.Refusal.title-too-long" xml:space="preserve"><value>pavadinimas ilgesnis nei 2 000 simbolių.</value></data>
+  <data name="AgendaEntry.NoStage" xml:space="preserve"><value>stadija nenurodyta</value></data>
+  <data name="AgendaEntry.Change.added" xml:space="preserve"><value>pridėtas</value></data>
+  <data name="AgendaEntry.Change.stage-changed" xml:space="preserve"><value>pakeista stadija</value></data>
+  <data name="AgendaEntry.Change.unchanged" xml:space="preserve"><value>nepakeistas</value></data>
+  <data name="AgendaEntry.WillBeCreated" xml:space="preserve"><value>bus sukurtas</value></data>
+  <data name="AgendaEntry.Created" xml:space="preserve"><value>sukurtas</value></data>
+  <data name="AgendaEntry.RemovedList" xml:space="preserve"><value>Išimta iš dienos:</value></data>
+  <data name="AgendaEntry.Days" xml:space="preserve"><value>Įvestos dienos</value></data>
+  <data name="AgendaEntry.NoDays" xml:space="preserve"><value>Nuo šiandien įvestų dienų nėra.</value></data>
+  <data name="AgendaEntry.DayBills" xml:space="preserve"><value>projektų: {0}</value></data>
+  <data name="AgendaEntry.DaySaved" xml:space="preserve"><value>įrašyta {0}</value></data>
+  <data name="AgendaEntry.Document" xml:space="preserve"><value>Darbotvarkės dokumentas</value></data>
 </root>

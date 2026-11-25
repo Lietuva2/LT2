@@ -1,0 +1,210 @@
+@page "/moderavimas/darbotvarke"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase<AppealUi>
+@inject IAgendaEntryApi AgendaEntryApi
+
+@* Design 8.3, 8.4 ("Entering a day's agenda"): staff enter one sitting day's agenda from its e-seimas document, one line a
+   bill (number | stage | title). "Peržiūrėti" stores nothing and shows what saving would do; "Įrašyti" is offered only while
+   a preview without refused lines is shown for exactly the day, address and text in the form, and sends the same text again.
+   Under the form, the days from today that have entered rows. The element ids are what a browser agent drives
+   (tools/skills/seimas-agenda): keep them. Moderators and administrators in a staff-passkey session; the server refuses
+   anyone else. *@
+<PageTitle>@L["AgendaEntry.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@L["AgendaEntry.Title"]</h1>
+    <NeedsScript />
+    <p class="lead">@L["AgendaEntry.Lead"]</p>
+    <p class="row"><a href="/moderavimas" id="moderation-link">@L["Mod.Title"]</a></p>
+</div>
+
+<Messages Message="@Message" Info="@Info" />
+
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Mod.Refused"]</p>
+    <PasskeyStep Staff="true" />
+}
+else if (Days is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <form class="sheet stack" id="agenda-entry-form" @onsubmit="PreviewAsync" novalidate>
+        <div class="field @ErrorClass("day")">
+            <label for="agenda-day">@L["AgendaEntry.Day"]</label>
+            <div class="date-row">
+                <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                       id="agenda-day" aria-describedby="@DescribedBy("day", "agenda-day")" aria-invalid="@Invalid("day")"
+                       @bind="_day" @bind:event="oninput" disabled="@Locked" />
+                <DatePick InputId="agenda-day" Disabled="Locked" />
+            </div>
+            <FieldError Errors="Errors" Field="day" For="agenda-day" />
+        </div>
+        <div class="field @ErrorClass("sourceUrl")">
+            <label for="agenda-source">@L["AgendaEntry.Source"]</label>
+            <input class="input" type="url" inputmode="url" autocomplete="off" id="agenda-source" maxlength="@AgendaEntryLimits.SourceMaxLength"
+                   placeholder="https://e-seimas.lrs.lt/portal/legalAct/lt/TAK/…"
+                   aria-describedby="@DescribedBy("sourceUrl", "agenda-source")" aria-invalid="@Invalid("sourceUrl")"
+                   @bind="_source" @bind:event="oninput" disabled="@Locked" />
+            <FieldError Errors="Errors" Field="sourceUrl" For="agenda-source" />
+        </div>
+        <div class="field @ErrorClass("lines")">
+            <label for="agenda-lines">@L["AgendaEntry.Lines"]</label>
+            <textarea class="textarea" id="agenda-lines" rows="14" spellcheck="false" maxlength="@AgendaEntryLimits.LinesMaxLength"
+                      placeholder="XVP-0412 | svarstymas | Gyventojų pajamų mokesčio įstatymo pataisa"
+                      aria-describedby="@DescribedBy("lines", "agenda-lines")" aria-invalid="@Invalid("lines")"
+                      @bind="_lines" @bind:event="oninput" disabled="@Locked"></textarea>
+            <FieldError Errors="Errors" Field="lines" For="agenda-lines" />
+        </div>
+        <div class="row">
+            <button class="btn btn--plain" type="submit" id="agenda-preview" disabled="@Locked">@L["AgendaEntry.Preview"]</button>
+            <button class="btn" type="button" id="agenda-save" disabled="@(Locked || !CanSave)" @onclick="SaveAsync">@L["AgendaEntry.Save"]</button>
+        </div>
+    </form>
+
+    @if (_shown is { } result)
+    {
+        <section class="sheet stack" id="agenda-result" aria-labelledby="agenda-result-title" data-saved="@(result.Saved ? "true" : "false")">
+            <h2 id="agenda-result-title">@(result.Saved ? L.Format("AgendaEntry.Saved", Display.Day(result.Day)) : L.Format("AgendaEntry.Previewed", Display.Day(result.Day)))</h2>
+            <p class="num" id="agenda-counts">@L.Format("AgendaEntry.Counts", Display.Number(result.Added), Display.Number(result.StageChanged), Display.Number(result.Unchanged), Display.Number(result.Removed))</p>
+            @if (result.Refused.Count > 0)
+            {
+                <div class="note stack stack--tight" id="agenda-errors" role="alert">
+                    <p>@L["AgendaEntry.Refused"]</p>
+                    <ul>
+                        @foreach (var refusal in result.Refused)
+                        {
+                            <li data-line="@refusal.Line" data-reason="@refusal.Reason">@L.Format("AgendaEntry.Line", Display.Number(refusal.Line)) @L["AgendaEntry.Refusal." + refusal.Reason]</li>
+                        }
+                    </ul>
+                </div>
+            }
+            @if (result.Bills.Count > 0)
+            {
+                <ol class="stack stack--tight" id="agenda-bills">
+                    @foreach (var bill in result.Bills)
+                    {
+                        <li id="agenda-bill-@bill.Number" data-change="@bill.Change" data-created="@(bill.Created ? "true" : "false")">
+                            <b class="num">@bill.Number</b> · @(bill.Stage is { } stage ? L["Mod.Stage." + stage] : L["AgendaEntry.NoStage"]) · @bill.Title
+                            <span class="tag">@L["AgendaEntry.Change." + bill.Change]</span>
+                            @if (bill.Created)
+                            {
+                                <span class="tag">@(result.Saved ? L["AgendaEntry.Created"] : L["AgendaEntry.WillBeCreated"])</span>
+                            }
+                        </li>
+                    }
+                </ol>
+            }
+            @if (result.RemovedNumbers.Count > 0)
+            {
+                <p id="agenda-removed">@L["AgendaEntry.RemovedList"] <span class="num">@string.Join(", ", result.RemovedNumbers)</span></p>
+            }
+        </section>
+    }
+
+    <section class="sheet stack" id="agenda-days" aria-labelledby="agenda-days-title">
+        <h2 id="agenda-days-title">@L["AgendaEntry.Days"]</h2>
+        @if (Days.Count == 0)
+        {
+            <p class="small" id="agenda-days-none">@L["AgendaEntry.NoDays"]</p>
+        }
+        else
+        {
+            <ul class="stack stack--tight">
+                @foreach (var day in Days)
+                {
+                    <li id="agenda-days-@Display.Day(day.Day)" @key="day.Day">
+                        <b class="num">@Display.Day(day.Day)</b> · <span class="num">@L.Format("AgendaEntry.DayBills", Display.Number(day.Bills))</span>
+                        @if (day.LastSaved is { } saved)
+                        {
+                            @(" · ")<span class="num">@L.Format("AgendaEntry.DaySaved", Display.DayTime(saved))</span>
+                        }
+                        @if (day.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
+                        {
+                            @(" · ")<OfficialLink Href="@source">@L["AgendaEntry.Document"]</OfficialLink>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+@code {
+    private bool _refused;
+    private string? _day;
+    private string? _source;
+    private string? _lines;
+
+    /// <summary>The preview or the saved result on the page.</summary>
+    private AgendaEntryResponse? _shown;
+
+    /// <summary>The day, address and text the preview on the page was made from.</summary>
+    private (string? Day, string? Source, string? Lines) _shownFor;
+
+    [PersistentState] public List<AgendaEntryDayResponse>? Days { get; set; }
+
+    /// <summary>"Įrašyti" only for a preview on the page without refused lines, made from exactly what the form holds.</summary>
+    private bool CanSave => _shown is { Saved: false, Refused.Count: 0 } && _shownFor == (_day, _source, _lines);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Days is null)
+        {
+            var days = await AgendaEntryApi.GetDaysAsync();
+            _refused = days.Problem?.Status is 401 or 403;
+            Days = days.Value?.Days.ToList();
+            if (!days.IsSuccess && !_refused)
+            {
+                Show(days.Problem);
+            }
+        }
+    }
+
+    private Task PreviewAsync() => RunAsync(async () =>
+    {
+        _shown = null;
+        if (!Display.TryReadDate(_day, out var day))
+        {
+            FieldFails("day", L.Format("Date.Invalid", Display.DateExample));
+            return;
+        }
+
+        var sent = (_day, _source, _lines);
+        var result = await AgendaEntryApi.PreviewAsync(new AgendaEntryPreviewRequest { Day = day, SourceUrl = _source ?? "", Lines = _lines ?? "" });
+        if (Succeeded(result, "day", "sourceUrl", "lines"))
+        {
+            _shown = result.Value;
+            _shownFor = sent;
+        }
+    });
+
+    private Task SaveAsync() => RunAsync(async () =>
+    {
+        if (!CanSave || !Display.TryReadDate(_day, out var day))
+        {
+            return;
+        }
+
+        var result = await AgendaEntryApi.SaveAsync(day, new AgendaEntryRequest { SourceUrl = _source ?? "", Lines = _lines ?? "" });
+        if (!Succeeded(result, "day", "sourceUrl", "lines"))
+        {
+            return;
+        }
+
+        _shown = result.Value;
+        var days = await AgendaEntryApi.GetDaysAsync();
+        if (days.IsSuccess)
+        {
+            Days = days.Value!.Days.ToList();
+        }
+
+        Info = L.Format("AgendaEntry.SavedInfo", Display.Day(day));
+    });
+}

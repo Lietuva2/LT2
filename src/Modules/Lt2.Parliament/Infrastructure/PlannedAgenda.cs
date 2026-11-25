@@ -1,4 +1,5 @@
 using System.Data.Common;
+using Lt2.Parliament.Domain;
 using Lt2.Parliament.Import.Agenda;
 using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -68,11 +69,14 @@ internal sealed class PlannedAgenda(IDbContextFactory<ParliamentDb> contexts, Ti
         await insert.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    /// <summary>The moderator's row if there is one, otherwise the agenda row seen most recently.</summary>
+    /// <summary>
+    /// The moderator's row if there is one, otherwise the row seen most recently, the watcher's or an entered one (design 8.4:
+    /// between them the one seen last wins).
+    /// </summary>
     internal static PlannedItem Current(IEnumerable<PlannedItem> rows) =>
-        rows.OrderByDescending(p => p.Source == "moderator").ThenByDescending(p => p.LastSeen).ThenBy(p => p.PlannedDate).First();
+        rows.OrderByDescending(p => p.Source == PlannedSources.Moderator).ThenByDescending(p => p.LastSeen).ThenBy(p => p.PlannedDate).First();
 
-    private static PlannedDate ToDate(PlannedItem p) => new(p.BillNumber, p.PlannedDate, p.Stage, p.SourceUrl, p.Source == "moderator");
+    private static PlannedDate ToDate(PlannedItem p) => new(p.BillNumber, p.PlannedDate, p.Stage, p.SourceUrl, p.Source == PlannedSources.Moderator, p.Source == PlannedSources.Entry);
 
     private DateOnly Today() => VilniusTime.Today(clock);
 }

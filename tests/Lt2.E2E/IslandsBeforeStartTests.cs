@@ -170,7 +170,7 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         var mod = await moderator.PageAsync();
-        foreach (var path in new[] { "/moderavimas", "/moderavimas?skiltis=argumentai", "/moderavimas?skiltis=komentarai", "/moderavimas?skiltis=be-aprasymo", "/moderavimas?skiltis=paslepti", "/moderavimas?skiltis=apribojimai", "/moderavimas/atsiliepimai", "/moderavimas/suvestines", "/seimas/XVP-0412", "/seimas/XVP-0533", "/seimas/XVP-0618" })
+        foreach (var path in new[] { "/moderavimas", "/moderavimas?skiltis=argumentai", "/moderavimas?skiltis=komentarai", "/moderavimas?skiltis=be-aprasymo", "/moderavimas?skiltis=paslepti", "/moderavimas?skiltis=apribojimai", "/moderavimas/atsiliepimai", "/moderavimas/suvestines", "/moderavimas/darbotvarke", "/seimas/XVP-0412", "/seimas/XVP-0533", "/seimas/XVP-0618" })
         {
             await NothingUsableBeforeStartAsync(mod.Context, path);
         }

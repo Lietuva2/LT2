@@ -373,7 +373,15 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
             .OrderByDescending(s => s.FetchedAt)
             .Select(s => new { s.FetchedAt, s.Url })
             .FirstOrDefaultAsync(cancellationToken);
-        return new AgendaReadInfo(last?.FetchedAt, last?.Url);
+        var entered = await db.AgendaEntries.AsNoTracking()
+            .OrderByDescending(e => e.EnteredAt)
+            .Select(e => new { e.EnteredAt, e.SourceUrl })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        // Design 8.4: the later of the two, with its address.
+        return entered is not null && (last is null || entered.EnteredAt > last.FetchedAt)
+            ? new AgendaReadInfo(entered.EnteredAt, entered.SourceUrl, last?.Url)
+            : new AgendaReadInfo(last?.FetchedAt, last?.Url, last?.Url);
     }
 
     // ---- Shared pieces ------------------------------------------------------------------------------------------------
