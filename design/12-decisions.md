@@ -281,6 +281,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   description; every link to lrs.lt opens in a new tab. Moderators find the bills that most want a description in
   "Projektai be aprašymo" (8.3): only bills with a participant, an argument or a follower, the most attention first.
   Organisations do not write descriptions (8.14.7): their view goes in their statement (2026-11-25).
+- The moderators' queue is one page of tabs, each list loaded when opened, the tab in the address: work tabs with a
+  neutral count chip only when something waits, then, set apart, "Be aprašymo", "Paslėpti" and "Apribojimai" with
+  muted counts; the page never opens on those. Each list keeps its cut at a hundred, no paging (8.3, 2026-11-25).
 - Every search of bills runs in PostgreSQL: a word is found by its stem (`lithuanian` configuration) or inside the
   text with case and Lithuanian letters ignored; the Appeals module keeps its own copy of the bill catalogue for it
   (`appeals.bill_card`), refreshed from the Parliament module after every import; the search returns the matching

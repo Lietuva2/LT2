@@ -87,7 +87,7 @@ public sealed class RecordCloseTests(DatabaseFixture database) : ApiTest(databas
             closed.Counts.Against.ShouldBe(1);
             var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/seimas/" + Bill));
             page.ShouldContain("Seimas projektą atmetė");
-            page.ShouldContain($"href=\"{source}\" rel=\"external noopener\" id=\"closed-source\"");
+            page.ShouldContain($"href=\"{source}\" id=\"closed-source\" target=\"_blank\" rel=\"external noopener\"");
             (await Database.ScalarAsync<long>(
                 """
                 SELECT count(*) FROM audit.event
@@ -389,7 +389,7 @@ public sealed class RecordCloseTests(DatabaseFixture database) : ApiTest(databas
             var html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + Bill));
             var day = DecidedOn.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
             html.ShouldContain($"Iniciatoriai projektą atsiėmė {day}.");
-            html.ShouldContain($"<a href=\"{Source}\" rel=\"external noopener\" id=\"closed-source\">Šaltinis</a>");
+            html.ShouldContain($"<a href=\"{Source}\" id=\"closed-source\" target=\"_blank\" rel=\"external noopener\">Šaltinis</a>");
             html.ShouldContain("Projektas atsiimtas");
             html.ShouldContain("Skaičiai užfiksuoti");
             html.ShouldContain("id=\"appeal-status\"");

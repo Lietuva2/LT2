@@ -528,7 +528,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             // Owner, 2026-11-18: the e-seimas address once, under "no description yet"; the stages repeat it not.
             var eSeimas = (await visitor.GetJsonAsync<BillResponse>(ParliamentRoutes.BillByNumber(AppealSteps.SecondBill))).ESeimasUrl.ShouldNotBeNull();
             html.Split($"href=\"{eSeimas}\"").Length.ShouldBe(2, "the e-seimas address once on the page");
-            html.ShouldContain($"<a href=\"{eSeimas}\" rel=\"external\">Projekto tekstas e. seime</a>");
+            html.ShouldContain($"<a href=\"{eSeimas}\" target=\"_blank\" rel=\"external noopener\">Projekto tekstas e. seime</a>");
             html.ShouldNotContain("Projektas e-seime");
             html.ShouldContain("id=\"side-picker\"");
             html.ShouldContain("href=\"/prisijungti\"");
