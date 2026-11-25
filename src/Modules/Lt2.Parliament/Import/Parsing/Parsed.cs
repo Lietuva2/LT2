@@ -38,5 +38,8 @@ internal sealed record ParsedVoteResult(long VoteId, VoteTotals Totals, string? 
 /// <summary>Official totals; each may be missing.</summary>
 internal sealed record VoteTotals(int? For, int? Against, int? Abstain, int? Voted, int? Seats);
 
+/// <summary>A Seimas bill among the day's TAIS projects: its number without the revision, its title and e-seimas link as TAIS gives them.</summary>
+internal sealed record ParsedProject(string BillNumber, string? Title, string? Url);
+
 /// <param name="PersonId"><c>asmens_id</c> on the per-MP row: assumed, so the import also matches by name when it is missing.</param>
 internal sealed record ParsedBallot(long? PersonId, string FirstName, string LastName, string? FactionLabel, BallotChoice Choice);

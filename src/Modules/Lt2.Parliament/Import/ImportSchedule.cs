@@ -1,6 +1,6 @@
 namespace Lt2.Parliament.Import;
 
-/// <summary>Design 7.2: when the recurring import should run (the worker asks every 15 minutes), and when a missing vote result is asked for again.</summary>
+/// <summary>Design 7.2: when the recurring import should run (the worker asks every 15 minutes), when a missing vote result is asked for again, and when the TAIS projects are.</summary>
 internal static class ImportSchedule
 {
     /// <summary>A little slack, so a run that started a minute late does not skip a whole period.</summary>
@@ -30,6 +30,12 @@ internal static class ImportSchedule
         var interval = now - heldAt < TimeSpan.FromDays(60) ? TimeSpan.FromDays(1) : TimeSpan.FromDays(7);
         return now - lastFetchedAt >= interval - Slack;
     }
+
+    /// <summary>
+    /// The day's TAIS projects (<c>p2b.tais_docs</c>, design 7.2) are asked for at most once an hour: due when the last
+    /// answer is an hour old, less the slack, so the hourly run on a day without sittings does not skip every other hour.
+    /// </summary>
+    public static bool IsProjectsDue(DateTimeOffset now, DateTimeOffset lastFetchedAt) => now - lastFetchedAt >= TimeSpan.FromHours(1) - Slack;
 
     /// <summary>Whether a request of <paramref name="part"/> is fetched whatever its freshness: its part is forced (owner 2026-11-18).</summary>
     public static bool IsForced(ImportParts force, ImportParts part) => (force & part) != 0;

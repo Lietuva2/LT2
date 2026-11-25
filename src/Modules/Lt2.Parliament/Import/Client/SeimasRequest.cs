@@ -16,6 +16,9 @@ internal static class SeimasServices
     public const string Proceedings = "p2b.ad_seimo_posedzio_eiga_full";
     public const string VoteResults = "p2b.ad_sp_balsavimo_rezultatai";
 
+    /// <summary>The TAIS projects of every institution with an event on the current day; no parameter (design 7.2).</summary>
+    public const string Projects = "p2b.tais_docs";
+
     public const string TermParameter = "kadencijos_id";
     public const string SessionParameter = "sesijos_id";
     public const string SittingParameter = "posedzio_id";
@@ -44,6 +47,8 @@ internal sealed record SeimasRequest(string Service, string? Parameter = null, s
     public static SeimasRequest Proceedings(long sittingId) => new(SeimasServices.Proceedings, SeimasServices.SittingParameter, Text(sittingId));
 
     public static SeimasRequest VoteResults(long voteId) => new(SeimasServices.VoteResults, SeimasServices.VoteParameter, Text(voteId));
+
+    public static SeimasRequest Projects() => new(SeimasServices.Projects);
 
     private static string Text(long value) => value.ToString(CultureInfo.InvariantCulture);
 }

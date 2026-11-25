@@ -56,6 +56,10 @@ Official addresses are `pavyzdys.<vardas>.<pavardė>@lrs.lt`, so no invented add
 
 XVP-0412's adoption is still planned. Open data lists only sittings that have started, so it is not here.
 
+`p2b.tais_docs` (the day's TAIS projects, design 7.2) names XVP-0412 with another title and link, XVP-0618's second
+revision, and a ministry's project (`26-00412`): only known bills, so it creates none and changes nothing (an agenda's
+title and link stand). Import tests give it other answers to create and fill bills.
+
 ## Statistics by hand
 
 Seven votes have per-MP results (99100003 is a consensus vote and counts nowhere). A faction's position is the option at

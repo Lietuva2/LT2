@@ -75,6 +75,12 @@ internal static class N
     public const string Ballot = "IndividualusBalsavimoRezultatas";
     public const string Faction = "frakcija";
     public const string Choice = "kaip_balsavo";
+
+    // TAIS projects (p2b.tais_docs)
+    public const string Project = "Document";
+    public const string ProjectNumber = "projectRegistrationNo";
+    public const string ProjectTitle = "title";
+    public const string ProjectUrl = "url";
 }
 
 /// <summary>
@@ -245,4 +251,24 @@ internal static partial class SeimasParsers
             VoteRules.OfficialNote(totals.Optional(N.Note), counts, ballots.Select(b => b.Choice).ToList()),
             ballots);
     }
+
+    /// <summary>
+    /// The Seimas bills among the day's TAIS projects (design 7.2): each <c>Document</c> whose <c>projectRegistrationNo</c> is
+    /// a bill's number (<see cref="BillNumbers.Whole"/>); other institutions' projects are skipped. One per bill, in the
+    /// answer's order: when the answer holds several revisions of a bill, the highest revision's document wins (its text,
+    /// and so its title and link, is the current one), and of documents with the same revision the first. A missing title
+    /// is null; a link is kept only when it is an absolute https address.
+    /// </summary>
+    public static IReadOnlyList<ParsedProject> Projects(byte[] body) =>
+        XmlRead.Load(body).All(N.Project)
+            .Select((e, order) => (Row: e, Order: order, Bill: BillNumbers.Whole(e.Optional(N.ProjectNumber) ?? "")))
+            .Where(d => d.Bill is not null)
+            .GroupBy(d => d.Bill!.Value.Number, StringComparer.Ordinal)
+            .Select(g => g.OrderByDescending(d => d.Bill!.Value.Revision).ThenBy(d => d.Order).First())
+            .OrderBy(d => d.Order)
+            .Select(d => new ParsedProject(d.Bill!.Value.Number, d.Row.Optional(N.ProjectTitle), HttpsLink(d.Row.Optional(N.ProjectUrl))))
+            .ToList();
+
+    private static string? HttpsLink(string? text) =>
+        Uri.TryCreate(text, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps ? text : null;
 }

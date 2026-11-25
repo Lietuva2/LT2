@@ -134,6 +134,54 @@ public sealed class ParserTests
     public void A_registration_number_keeps_its_letters_and_drops_its_revision(string text, string? number) =>
         BillNumbers.First(text).ShouldBe(number);
 
+    [Theory]
+    [InlineData("XVP-0412", "XVP-0412", 1)]
+    [InlineData(" XVP-0412(2) ", "XVP-0412", 2)]
+    [InlineData("XIVP-0412GR(3)", "XIVP-0412GR", 3)]
+    [InlineData("XIVP-0412(2)GR", "XIVP-0412GR", 2)]
+    [InlineData("26-14366", null, 0)]
+    [InlineData("26-13964(3)", null, 0)]
+    [InlineData("XVP-0412 ir XVP-0413", null, 0)]
+    [InlineData("Nr. XVP-0412", null, 0)]
+    [InlineData("", null, 0)]
+    public void A_tais_project_number_is_a_bill_only_when_it_is_a_registration_number_and_nothing_else(string text, string? number, int revision) =>
+        BillNumbers.Whole(text).ShouldBe(number is null ? null : (number, revision));
+
+    [Fact]
+    public void Tais_projects_give_one_row_per_seimas_bill_the_highest_revision_winning_and_skip_other_institutions_projects()
+    {
+        var projects = SeimasParsers.Projects(Xml("""
+            <TAISProjEvents eventsDate="2026-11-12" creationDate="2026-11-12 15:00:00">
+              <Events><Event action="action.dhs.infoLinkDocument" eventDate="2026-11-12 08:00:00" oid="a1" relatedDocOid="b1" linkName="Projektą lydintis dokumentas"/></Events>
+              <Documents>
+                <Document sort="Įstatymo projektas" title=" Vietos savivaldos įstatymo pakeitimo įstatymo projektas " projectRegistrationNo="XVP-0745" itemType="TAP" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0745">
+                  <Links><Link typeCode="000009"><relatedDoc title="Aiškinamasis raštas" registrationNo="XVP-0999" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAK/SINTETINIS"/></Link></Links>
+                </Document>
+                <Document sort="Įsakymo projektas" title="Dėl išgalvoto tvarkos aprašo patvirtinimo" projectRegistrationNo="26-00412" itemType="TAP" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-26-00412"/>
+                <Document sort="Įstatymo projektas" title="Atliekų tvarkymo įstatymo 5 straipsnio pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0746" itemType="TAP" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0746-1"/>
+                <Document sort="Įstatymo projektas" title="Atliekų tvarkymo įstatymo 5 ir 7 straipsnių pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0746(2)" itemType="TAP" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0746-2"/>
+                <Document sort="Įstatymo projektas" title="Ta pati redakcija, antras dokumentas" projectRegistrationNo="XVP-0746(2)" itemType="TAP" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0746-2B"/>
+                <Document sort="Įstatymo projektas" title="" projectRegistrationNo="XIVP-0412GR(2)" itemType="TAP" url="javascript:alert(1)"/>
+                <Document sort="Įstatymo projektas" title="Be numerio" itemType="TAP"/>
+              </Documents>
+            </TAISProjEvents>
+            """));
+
+        projects.ShouldBe(
+        [
+            new ParsedProject("XVP-0745", "Vietos savivaldos įstatymo pakeitimo įstatymo projektas", "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0745"),
+            new ParsedProject("XVP-0746", "Atliekų tvarkymo įstatymo 5 ir 7 straipsnių pakeitimo įstatymo projektas", "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0746-2"),
+            new ParsedProject("XIVP-0412GR", null, null),
+        ]);
+    }
+
+    [Fact]
+    public void The_stand_ins_tais_projects_hold_two_known_bills_and_one_ministrys_project()
+    {
+        SeimasParsers.Projects(Synthetic("p2b.tais_docs")).Select(p => p.BillNumber).ShouldBe(["XVP-0412", "XVP-0618"]);
+        SeimasParsers.Projects(Xml("<TAISProjEvents eventsDate=\"2026-11-15\"><Events/><Documents/></TAISProjEvents>")).ShouldBeEmpty();
+    }
+
     [Fact]
     public void An_untitled_agenda_item_keeps_its_stage_id_and_the_next_item_is_read()
     {

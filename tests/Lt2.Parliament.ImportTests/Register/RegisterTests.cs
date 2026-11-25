@@ -60,8 +60,8 @@ public sealed class RegisterTests(ITestOutputHelper output)
     /// <summary>The numbers the M1 report gives; change them together with the register.</summary>
     private static class Expected
     {
-        public const int Lines = 94;
-        public const int Seen = 72;
-        public const int Assumed = 22;
+        public const int Lines = 101;
+        public const int Seen = 78;
+        public const int Assumed = 23;
     }
 }

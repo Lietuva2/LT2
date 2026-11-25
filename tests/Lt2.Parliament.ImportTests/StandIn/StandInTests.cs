@@ -23,11 +23,13 @@ public sealed class StandInTests
             await client.GetAsync(SeimasRequest.Agenda(99001001), default),
             await client.GetAsync(SeimasRequest.Proceedings(99001001), default),
             await client.GetAsync(SeimasRequest.VoteResults(99100002), default),
+            await client.GetAsync(SeimasRequest.Projects(), default),
         };
 
         responses.ShouldAllBe(r => r.Synthetic);
         responses.ShouldAllBe(r => Encoding.UTF8.GetString(r.Body).Contains(SyntheticMarker.Comment));
         Encoding.UTF8.GetString(responses[6].Body).ShouldContain("už=\"71\" prieš=\"38\"");
+        Encoding.UTF8.GetString(responses[7].Body).ShouldContain("projectRegistrationNo=\"XVP-0618(2)\"");
     }
 
     [Fact]
