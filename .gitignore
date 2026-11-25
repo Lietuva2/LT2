@@ -16,3 +16,7 @@ tests/Lt2.E2E/output/
 
 # Rendered samples and screenshots
 output/
+
+# Claude Code: local worktrees and personal settings (project skills in .claude/skills are committed)
+.claude/worktrees/
+.claude/settings.local.json
