@@ -18,7 +18,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         using var stranger = NewBrowser();
         var rules = await stranger.GetJsonAsync<AppealRulesResponse>(AppealRoutes.Rules);
-        rules.ShouldBe(new AppealRulesResponse(100, 50, 2000, 0, 0, 1500) { MinReasonWords = 3 }, "no limit per person by default; texts up to the Texts:MaxLength default; three words at least");
+        rules.ShouldBe(new AppealRulesResponse(100, 50, 2000, 0, 0, 3000) { MinReasonWords = 3 }, "no limit per person by default; texts up to the Texts:MaxLength default; three words at least");
     }
 
     [Fact]

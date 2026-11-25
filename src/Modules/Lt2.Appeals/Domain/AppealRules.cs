@@ -18,7 +18,7 @@ internal static class AppealRules
     public static readonly IReadOnlyList<string> CountedReasonStatuses = [ReasonStatuses.Published, ReasonStatuses.Pending];
 
     /// <summary>The neutral description is short; the design gives no number, this one is a choice.</summary>
-    public const int DescriptionMaxLength = 1500;
+    public const int DescriptionMaxLength = 3000;
 
     /// <summary>The readable title is one short line (design 8.13.1); the same number as <c>AppealLimits.PlainTitleMaxLength</c>, not a setting.</summary>
     public const int PlainTitleMaxLength = 90;

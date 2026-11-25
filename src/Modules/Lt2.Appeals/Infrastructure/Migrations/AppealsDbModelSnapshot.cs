@@ -179,8 +179,8 @@ namespace Lt2.Appeals.Infrastructure.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(1500)
-                        .HasColumnType("character varying(1500)")
+                        .HasMaxLength(3000)
+                        .HasColumnType("character varying(3000)")
                         .HasColumnName("description");
 
                     b.Property<DateTimeOffset?>("DescriptionAt")
