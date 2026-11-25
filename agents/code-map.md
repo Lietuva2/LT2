@@ -153,7 +153,7 @@ tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open da
                            votes, the next four on the agenda page ({{sitting:N}}), an adoption vote nine days before
                            today on XVP-0707, and the adoption votes of thirty invented bills (2026-03-24 to 2026-11-03)
                            for the analytics page; all sittings listed under the open autumn session
-tools/skills/<name>/SKILL.md browser-agent skills that drive staff pages in the moderator's Chrome: seimas-agenda (enters
+.claude/skills/<name>/SKILL.md browser-agent skills that drive staff pages in the moderator's Chrome: seimas-agenda (enters
                            the agenda, design 8.4), seimas-project-description (fills a bill's description form, unsaved)
                            and seimas-describe-queue (saves descriptions for the "Be aprašymo" tab as an AI agent, 8.13);
                            they name element ids and labels, so a change to those pages corrects them in the same change

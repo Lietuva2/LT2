@@ -28,7 +28,7 @@ and only those: the queue's rows, or the agenda days' bills that step 2 says to 
 (arguments, hiding, restrictions, other actions or tabs, the agenda itself).
 
 For each bill, follow **seimas-project-description** (load it with the Skill tool; in the repository it is
-`tools/skills/seimas-project-description/SKILL.md`) for reading e-seimas, writing the fields and filling the form, with
+`.claude/skills/seimas-project-description/SKILL.md`) for reading e-seimas, writing the fields and filling the form, with
 the changes below.
 
 ## 1. Collect the bills

@@ -618,8 +618,8 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   `AppealUi` `Mod.WrittenByAi`; it sends `ModeratorDescriptionRequest.WrittenByAi`, and
   `RecordRules.SourceOfModeratorText(fromDraft, writtenByAi, current)` makes a changed text or title `ai`. Two browser
   skills drive this form on the bill page's panel, finding fields by their labels (`{Key}` is the record's id once one
-  exists, else the number): `tools/skills/seimas-project-description` fills it and leaves the box unticked for the
-  moderator to save; `tools/skills/seimas-describe-queue` works through the "Be aprašymo" tab (`#undescribed`,
+  exists, else the number): `.claude/skills/seimas-project-description` fills it and leaves the box unticked for the
+  moderator to save; `.claude/skills/seimas-describe-queue` works through the "Be aprašymo" tab (`#undescribed`,
   `#undescribed-ai-{Number}`), ticks the box and saves, and recognises its own earlier saves by the statement's fixed
   first sentence in `/seimas/{Number}/istorija`. They rely on the labels and messages they quote (the fields, "Veiksmai",
   "Rašyti/Taisyti aprašymą", `Mod.WrittenByAi`, `Mod.Done.describe`, the source labels); keep them in step.
