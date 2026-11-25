@@ -104,8 +104,9 @@ Read before changing a page, a component or an island. The rules behind it are d
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the history of votes; the agenda's lists carry none (owner,
   2026-11-21).
 - **The moderators' page is tabs (design 8.3, owner 2026-11-25):** `nav.project-tabs.mod-tabs#moderation-tabs`, two
-  `.mod-tabs__group`s (work, reference) with a gap and a `--rule` line between them, one row that scrolls sideways on a narrow
-  screen. Each tab is `<a id="tab-{code}" href="/moderavimas?skiltis={code}">` with `aria-current="page"` on the open one; a work
+  `.mod-tabs__group`s (work, reference) with a gap and a `--rule` line between them, one row that scrolls sideways under
+  54rem; from 54rem it wraps, the reference group whole onto the next line when both do not fit, and the rule (each group's
+  `border-inline-start`, the row shifted left and clipped by `clip-path`) shows only between two groups on one line. Each tab is `<a id="tab-{code}" href="/moderavimas?skiltis={code}">` with `aria-current="page"` on the open one; a work
   tab's count is the neutral `.tag.mod-tabs__chip` only when above 0, a reference tab's `.mod-tabs__count` in brackets, muted.
   In the running island a tab opens in place (`data-enhance-nav="false"`, `@onclick:preventDefault`) and replaces the address;
   never enhanced navigation. A list in a tab is its own component that reads its own list; a new action in one calls the

@@ -1453,7 +1453,8 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
 .project-tabs a:hover { border-bottom-color: var(--slate); }
 .project-tabs a[aria-current="page"] { border-bottom-color: var(--link); }
 /* The moderators' tabs (design 8.3, owner 2026-11-25): the tabs of "Projektai" in one row, the work lists, then after a gap
-   and a thin rule the reference lists; a narrow screen scrolls the row sideways, the groups kept apart. A work tab's count is
+   and a thin rule the reference lists; under 54rem the row scrolls sideways, the groups kept apart (from 54rem it wraps,
+   below). A work tab's count is
    the neutral tag, only when something waits; a reference tab's is muted text in brackets. */
 .mod-tabs { display: flex; flex-wrap: nowrap; align-items: stretch; overflow-x: auto; scrollbar-width: thin; padding-bottom: var(--sp-1); }
 .project-tabs.mod-tabs { gap: 0; }
@@ -1465,6 +1466,21 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
 @media (max-width: 36rem) {
   .mod-tabs__group { gap: var(--sp-3); }
   .mod-tabs__group + .mod-tabs__group { margin-inline-start: var(--sp-3); padding-inline-start: var(--sp-3); }
+}
+/* From 54rem the row wraps instead of scrolling: the reference group goes whole onto the next line when the two do not fit
+   (a group too wide for a line alone wraps its own tabs). Every group carries the rule before it, and the row is moved left
+   by that lead and its left part clipped, so the rule shows only between two groups on one line, never alone at a line's
+   start or end. The clip leaves the gap after the rule, and room above and below, for the tabs' focus outlines. */
+@media (min-width: 54rem) {
+  .mod-tabs {
+    flex-wrap: wrap; row-gap: var(--sp-2); overflow: visible;
+    margin-inline-start: calc(-2 * var(--sp-5) - 1px);
+    clip-path: inset(-1rem -1rem -1rem calc(var(--sp-5) + 1px));
+  }
+  .mod-tabs__group, .mod-tabs__group + .mod-tabs__group {
+    flex: 0 1 auto; min-width: 0; flex-wrap: wrap; row-gap: var(--sp-2);
+    margin-inline-start: var(--sp-5); padding-inline-start: var(--sp-5); border-inline-start: 1px solid var(--rule);
+  }
 }
 /* The views of "Projektai" (Darbotvarkė, Aktyvūs, Uždaryti): a square segmented control one level under the tab row, the
    site's own cut corners kept (no radius): a ruled box on the sheet's colour, the current view filled in the ink colour, the
