@@ -294,6 +294,7 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   keeps working as before (8.11.4, 8.13, 2026-11-25).
 - An AI agent writing a description in a moderator's form ticks a box hidden from sight for agents only; the text is
   then `ai`, "Sukurta DI · žmonių neperžiūrėta", until a person confirms or corrects it (8.13, 2026-11-25).
+- A description may be up to 3 000 characters, not 1 500 (8.13, 2026-11-25).
 - Follower numbers may order lists of bills and be counted into their order; the rule against ranking by followers
   stays for MPs, members and organisations, at whom it was aimed. A bill's row still shows no follower number (8.11.2,
   2026-11-25).

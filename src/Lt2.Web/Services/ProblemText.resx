@@ -86,7 +86,7 @@
 <data name="endorsement.own-reason" xml:space="preserve"><value>Savo argumento „Man svarbu“ žymėti negalima.</value></data>
 <data name="endorsement.limit" xml:space="preserve"><value>Dėl šio projekto „Man svarbu“ jau pažymėjote tiek argumentų, kiek dabar leidžiama vienam žmogui.</value></data>
 <data name="description.empty" xml:space="preserve"><value>Trumpai ir neutraliai aprašykite, ką keičia projektas.</value></data>
-<data name="description.too-long" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
+<data name="description.too-long" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 3 000 ženklų.</value></data>
 <data name="plain-title.too-long" xml:space="preserve"><value>Trumpas pavadinimas gali būti iki 90 ženklų.</value></data>
 <data name="plain-title.multiline" xml:space="preserve"><value>Trumpas pavadinimas turi tilpti vienoje eilutėje.</value></data>
 <data name="threshold.below-minimum" xml:space="preserve"><value>Riba negali būti mažesnė už administratoriaus nustatytą mažiausią.</value></data>

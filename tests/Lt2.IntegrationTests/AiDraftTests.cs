@@ -207,7 +207,7 @@ public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
                 FakeAiAssistant.Title + "\n" + FakeAiAssistant.Draft + FakeAiAssistant.Tail,
                 new string('x', 91) + "\n\n" + FakeAiAssistant.Draft + FakeAiAssistant.Tail,
                 "Pirma eilutė\nAntra eilutė\n\n" + FakeAiAssistant.Draft + FakeAiAssistant.Tail,
-                FakeAiAssistant.Title + "\n\n" + new string('x', 1501) + FakeAiAssistant.Tail,
+                FakeAiAssistant.Title + "\n\n" + new string('x', 3001) + FakeAiAssistant.Tail,
                 FakeAiAssistant.Title + "\n\n" + FakeAiAssistant.Draft, // the two-part form without a source or a statement
                 FakeAiAssistant.Title + "\n\n" + FakeAiAssistant.Draft + "\n\nŠaltinis: 2\nPaaiškinimas: " + FakeAiAssistant.Statement, // one document was sent
                 FakeAiAssistant.Title + "\n\n" + FakeAiAssistant.Draft + "\n\nŠaltinis: 1\nPaaiškinimas:",

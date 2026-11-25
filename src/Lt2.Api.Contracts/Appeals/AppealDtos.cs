@@ -10,7 +10,7 @@ namespace Lt2.Api.Contracts.Appeals;
 /// <summary>The limits of taking part, the same numbers the server enforces (design 8.2, <c>AGENTS.md</c>).</summary>
 public static class AppealLimits
 {
-    public const int DescriptionMaxLength = 1500;
+    public const int DescriptionMaxLength = 3000;
 
     /// <summary>The longest readable title a bill's record may carry (<c>bill_record.plain_title</c>, design 8.13.1); not a setting.</summary>
     public const int PlainTitleMaxLength = 90;

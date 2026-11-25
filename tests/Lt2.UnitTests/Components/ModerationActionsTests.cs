@@ -331,6 +331,24 @@ public sealed class ModerationActionsTests : BunitContext
     }
 
     [Fact]
+    public void A_description_over_the_limit_is_said_at_its_field_and_nothing_is_sent()
+    {
+        // An agent sets the value past the textarea's maxlength (owner, 2026-11-25): the refusal must be visible at the field.
+        _api.On("WriteDescriptionAsync", ApiResult.Ok());
+        var actions = RenderWithTitle(null);
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-{Item}").Input(new string('a', AppealLimits.DescriptionMaxLength + 1));
+        actions.Find($"#statement-{Item}").Input("Bandymas.");
+        actions.Find("form").Submit();
+
+        _api.Calls.ShouldNotContain("WriteDescriptionAsync");
+        var message = Services.GetRequiredService<IStringLocalizer<ValidationMessages>>()["Description.TooLong"].Value;
+        actions.Find($"#describe-{Item}").ParentElement!.ClassList.ShouldContain("field--error");
+        actions.Find($"#describe-{Item}").ParentElement!.TextContent.ShouldContain(message);
+        actions.Find($"#describe-{Item}").GetAttribute("aria-describedby")!.ShouldContain(Lt2.Web.Client.Components.FieldError.IdFor($"describe-{Item}"));
+    }
+
+    [Fact]
     public void The_servers_refusal_of_the_title_is_said_at_its_field()
     {
         _api.On("WriteDescriptionAsync", ApiResult.Fail(new ApiProblem

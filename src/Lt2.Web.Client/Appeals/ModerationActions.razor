@@ -99,6 +99,7 @@
                         <textarea class="textarea" id="describe-@Key" rows="10" maxlength="@AppealLimits.DescriptionMaxLength" aria-describedby="@DescribedBy("description", $"describe-{Key}", $"describe-hint-{Key}", $"describe-layout-{Key}")"
                                   aria-invalid="@Invalid("description")" @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
                         <TextLayoutHint Id="@($"describe-layout-{Key}")" />
+                        <FieldError Errors="Errors" Field="description" For="@($"describe-{Key}")" />
                     </div>
                     @* Design 8.13 (decided 2026-11-14): filled in advance with the record's address, so leaving it keeps it;
                        empty clears it. The same rule here and on the server (OfficialTextAddress). *@
