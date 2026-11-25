@@ -15,8 +15,10 @@ is changed on either site.
 
 ## Inputs
 
-- **Site:** the Lietuva 2.0 address to enter into, given by the user (for example `https://lt2.localhost:8443` or
-  `https://test.lietuva2.lt`). If none is given, ask once.
+- **Site:** the Lietuva 2.0 host to enter into. Hosts vary (a local stack, the trial, later production): use the one
+  the user names, otherwise the host of the Lietuva 2.0 page the user has open; if neither, ask once. Never assume a
+  host. The staff page `https://<host>/moderavimas/darbotvarke` must exist there: if it answers "not found", that
+  site runs a version without the agenda entry; stop and say so.
 - **Sittings page:** by default the current session's sittings list,
   `https://www.lrs.lt/sip/portal.show?p_r=35727&p_k=1&p_a=sale_ses_pos&p_kade_id=10&p_ses_id=145` (term 10, ordinary
   session 5). When a new session starts, the page's own list of sessions ("2024–2028 metų kadencija") links the newer
@@ -72,7 +74,7 @@ is changed on either site.
    A day with `count` 0, or a document whose heading does not name the same date, is not entered: note it for the
    report and go on to the next day.
 
-4. **Preview on Lietuva 2.0.** Open `<site>/moderavimas/darbotvarke`. Fill `#agenda-day` with the day (`yyyy-MM-dd`),
+4. **Preview on Lietuva 2.0.** Open `https://<host>/moderavimas/darbotvarke`. Fill `#agenda-day` with the day (`yyyy-MM-dd`),
    `#agenda-source` with the document address, and `#agenda-lines` with the script's `lines`, using `form_input` so
    the page sees the change. Press `#agenda-preview` ("Peržiūrėti") and read `#agenda-result` and `#agenda-errors`.
 
