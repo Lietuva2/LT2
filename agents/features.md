@@ -616,7 +616,13 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
 - **An AI agent in the moderator's form** (design 8.13, owner 2026-11-25): "describe" has a checkbox
   `#describe-by-ai-{Key}` (`name=writtenByAi`, `tabindex=-1`) inside `.visually-hidden` `#describe-by-ai-box-{Key}`, label
   `AppealUi` `Mod.WrittenByAi`; it sends `ModeratorDescriptionRequest.WrittenByAi`, and
-  `RecordRules.SourceOfModeratorText(fromDraft, writtenByAi, current)` makes a changed text or title `ai`.
+  `RecordRules.SourceOfModeratorText(fromDraft, writtenByAi, current)` makes a changed text or title `ai`. Two browser
+  skills drive this form on the bill page's panel, finding fields by their labels (`{Key}` is the record's id once one
+  exists, else the number): `tools/skills/seimas-project-description` fills it and leaves the box unticked for the
+  moderator to save; `tools/skills/seimas-describe-queue` works through the "Be aprašymo" tab (`#undescribed`,
+  `#undescribed-ai-{Number}`), ticks the box and saves, and recognises its own earlier saves by the statement's fixed
+  first sentence in `/seimas/{Number}/istorija`. They rely on the labels and messages they quote (the fields, "Veiksmai",
+  "Rašyti/Taisyti aprašymą", `Mod.WrittenByAi`, `Mod.Done.describe`, the source labels); keep them in step.
 - **The readable title** ("Trumpas pavadinimas", design 8.13.1, built; owner, 2026-11-24): `bill_record.plain_title`, at most
   90 characters and one line, kept with the description (same source, label, day and history; a history entry holds both,
   `DescriptionRevisionResponse.TextChanged`/`TitleChanged`). The moderator's form (`ModerationActions`, "describe") has the
