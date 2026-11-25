@@ -145,6 +145,9 @@ services:
       Site__Address: https://${LT2_SITE_ADDRESS:-lt2.localhost}:${LT2_HTTPS_PORT:-8443}
       # The Seimas open data. A stack using invented data can override the address and allowlist.
       Seimas__BaseAddress: ${LT2_SEIMAS_BASE_ADDRESS:-https://apps.lrs.lt/sip/}
+      # The gap between two requests (design 7.2: about one a second). Only the stand-in stack lowers it, so a fresh stack's
+      # first import is in within seconds, not minutes.
+      Seimas__MinimumIntervalMilliseconds: ${LT2_SEIMAS_INTERVAL_MS:-1000}
       Outbound__AllowedHosts__1: ${LT2_OUTBOUND_EXTRA_HOST:-}
       # The upcoming plenary agenda (lrs.lt pages). Empty: the watcher is off. The host must be on the allowlist.
       Agenda__BaseAddress: ${LT2_AGENDA_BASE_ADDRESS:-}

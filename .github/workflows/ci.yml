@@ -4,6 +4,8 @@ on:
   push:
     branches: [master]
   pull_request:
+  # Run workflow (Actions tab): the same checks plus the end-to-end job.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,6 +28,10 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           global-json-file: global.json
+        # The pinned SDK goes to a directory of its own. In the runner's /usr/share/dotnet it would share the workload
+        # manifests of the newer preinstalled SDK of the same band, which change a pack version the lock files hold.
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
 
       # Design 6.7: the lock files (packages.lock.json) fix every package version, so a restore that would change one fails.
       - name: Restore
@@ -44,7 +50,8 @@ jobs:
           fi
 
       # Unit, architecture and integration tests. Integration tests start PostgreSQL with Testcontainers on the
-      # runner's Docker. The end-to-end tests are skipped here (no LT2_E2E_BASE_URL); the e2e job runs them.
+      # runner's Docker. The end-to-end tests are skipped here (no LT2_E2E_BASE_URL); the e2e job runs them when the
+      # workflow is started by hand.
       - name: Test
         run: dotnet test --solution LT2.sln --configuration Release --no-build
 
@@ -52,6 +59,8 @@ jobs:
     name: End to end (compose stack, Playwright)
     runs-on: ubuntu-24.04
     needs: build-and-test
+    # The end-to-end suite is not a merge gate (AGENTS.md): it runs only when started by hand.
+    if: github.event_name == 'workflow_dispatch'
     timeout-minutes: 30
     env:
       DOTNET_NOLOGO: "1"
@@ -63,6 +72,10 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           global-json-file: global.json
+        # The pinned SDK goes to a directory of its own. In the runner's /usr/share/dotnet it would share the workload
+        # manifests of the newer preinstalled SDK of the same band, which change a pack version the lock files hold.
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
 
       - name: Start the stack
         run: |
@@ -84,7 +97,6 @@ jobs:
         env:
           LT2_E2E_BASE_URL: https://lt2.localhost:8443
           LT2_E2E_MAILPIT_URL: http://localhost:8025
-          LT2_E2E_INVITATION: BANDYMAS-2026
           LT2_E2E_HTTP_URL: http://lt2.localhost:8080
         run: dotnet test --project tests/Lt2.E2E --configuration Release --no-build
 
@@ -96,6 +108,7 @@ jobs:
           path: tests/Lt2.E2E/bin/Release/net10.0/output/
           if-no-files-found: ignore
 
+      # The last lines of each service only: the whole log buries the test results above it past what a log reader shows.
       - name: Stack logs on failure
         if: failure()
-        run: docker compose -f deploy/compose.yaml logs
+        run: docker compose -f deploy/compose.yaml logs --tail 150

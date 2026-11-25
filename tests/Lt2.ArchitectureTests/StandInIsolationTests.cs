@@ -76,6 +76,8 @@ public sealed class StandInIsolationTests
         }
 
         services["worker"].ShouldContain(l => l.Trim() == "Seimas__BaseAddress: ${LT2_SEIMAS_BASE_ADDRESS:-https://apps.lrs.lt/sip/}");
+        // Design 7.2: about one request a second to the Seimas unless a stack sets otherwise (only the stand-in's does).
+        services["worker"].ShouldContain(l => l.Trim() == "Seimas__MinimumIntervalMilliseconds: ${LT2_SEIMAS_INTERVAL_MS:-1000}");
     }
 
     [Fact]

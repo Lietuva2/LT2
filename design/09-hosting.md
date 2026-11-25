@@ -68,7 +68,8 @@ data only, emails captured and never delivered, never receiving production data.
 
 GitHub Actions (`.github/workflows/ci.yml`) on every push to `master` and every pull request: restore, build (warnings
 are errors), a NuGet audit of direct and transitive packages, unit, architecture and integration tests; then a second
-job starts the compose stack and runs the end-to-end tests against it.
+job, only when the workflow is started by hand (the end-to-end suite is not a merge gate), starts the compose stack and
+runs the end-to-end tests against it.
 
 The migrator holds a PostgreSQL advisory lock from its first step to its last, so a second copy started at the same
 time (a hand run during a deploy) waits for the first instead of changing roles and grants alongside it.
