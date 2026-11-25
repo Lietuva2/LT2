@@ -4,6 +4,8 @@ on:
   push:
     branches: [master]
   pull_request:
+  # Run workflow (Actions tab): the same checks plus the end-to-end job.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -48,7 +50,8 @@ jobs:
           fi
 
       # Unit, architecture and integration tests. Integration tests start PostgreSQL with Testcontainers on the
-      # runner's Docker. The end-to-end tests are skipped here (no LT2_E2E_BASE_URL); the e2e job runs them.
+      # runner's Docker. The end-to-end tests are skipped here (no LT2_E2E_BASE_URL); the e2e job runs them when the
+      # workflow is started by hand.
       - name: Test
         run: dotnet test --solution LT2.sln --configuration Release --no-build
 
@@ -56,6 +59,8 @@ jobs:
     name: End to end (compose stack, Playwright)
     runs-on: ubuntu-24.04
     needs: build-and-test
+    # The end-to-end suite is not a merge gate (AGENTS.md): it runs only when started by hand.
+    if: github.event_name == 'workflow_dispatch'
     timeout-minutes: 30
     env:
       DOTNET_NOLOGO: "1"

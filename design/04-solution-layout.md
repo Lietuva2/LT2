@@ -42,7 +42,7 @@ tools/
 deploy/
   compose.yaml  Dockerfile  Caddyfile  .env  init-secrets.py  secrets/
   compose.shared-proxy.yaml  shared-proxy.Caddyfile    behind a server's existing Caddy (9.2)
-.github/workflows/ci.yml       build, NuGet audit, unit, architecture and integration tests; end-to-end on a compose stack
+.github/workflows/ci.yml       build, NuGet audit, unit, architecture and integration tests; end-to-end on a compose stack when started by hand
 ```
 
 Conventions:
