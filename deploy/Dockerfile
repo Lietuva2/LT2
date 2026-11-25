@@ -7,7 +7,7 @@
 
 # The SDK is the one global.json names: the lock files carry the package versions that SDK brings with it (the Blazor
 # build tools), so a newer SDK would fail the locked restore. Change both together (design 6.7).
-FROM mcr.microsoft.com/dotnet/sdk:10.0.402 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0.100 AS build
 WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig LT2.sln ./
 # The project files first, so the restore is a layer of its own that a change to the code does not repeat.
