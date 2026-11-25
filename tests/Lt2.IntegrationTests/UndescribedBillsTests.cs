@@ -84,8 +84,8 @@ public sealed class UndescribedBillsTests(DatabaseFixture database) : ApiTest(da
             (tax.Participants, tax.Arguments, tax.Followers).ShouldBe((1, 1, 2));
             Position(list, AppealSteps.TaxBill).ShouldBeLessThan(Position(list, AppealSteps.SecondBill), "4 before 2");
 
-            // The page renders the same list on the server for a moderator.
-            var page = WebUtility.HtmlDecode(await moderator.Client.GetStringAsync("/moderavimas/be-aprasymo"));
+            // The moderators' tab "Be aprašymo" renders the same list on the server.
+            var page = WebUtility.HtmlDecode(await moderator.Client.GetStringAsync("/moderavimas?skiltis=be-aprasymo"));
             page.ShouldContain($"id=\"undescribed-counts-{AppealSteps.TaxBill}\">Dalyviai: 1 · Argumentai: 1 · Sekėjai: 2</span>");
             page.IndexOf($"id=\"undescribed-{AppealSteps.TaxBill}\"", StringComparison.Ordinal)
                 .ShouldBeLessThan(page.IndexOf($"id=\"undescribed-{AppealSteps.SecondBill}\"", StringComparison.Ordinal));

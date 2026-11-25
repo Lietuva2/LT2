@@ -183,15 +183,21 @@
 <data name="Mod.Note.Optional" xml:space="preserve"><value>Pastaba autoriui (nebūtina)</value></data>
 <data name="Mod.Note.Reporters" xml:space="preserve"><value>Paaiškinimas pranešusiems (nebūtinas)</value></data>
 <data name="Mod.Note.Reporters.Hint" xml:space="preserve"><value>Jį gaus pranešimą pateikę nariai el. paštu.</value></data>
-<data name="Mod.HiddenLink" xml:space="preserve"><value>Paslėpti projektai ir argumentai</value></data>
-<data name="Mod.UndescribedLink" xml:space="preserve"><value>Projektai be aprašymo</value></data>
-<data name="Undescribed.PageTitle" xml:space="preserve"><value>Projektai be aprašymo · Lietuva 2.0</value></data>
 <data name="Undescribed.Title" xml:space="preserve"><value>Projektai be aprašymo</value></data>
 <data name="Undescribed.Lead" xml:space="preserve"><value>Aktyvūs projektai be aprašymo arba su žmonių neperžiūrėta DI santrauka, kuriais žmonės jau domisi: daugiausia dėmesio sulaukę pirmi. Aprašymą galima parašyti projekto puslapyje, skiltyje „Moderavimas“.</value></data>
 <data name="Undescribed.Counts" xml:space="preserve"><value>Dalyviai: {0} · Argumentai: {1} · Sekėjai: {2}</value></data>
 <data name="Undescribed.None" xml:space="preserve"><value>Projektų be aprašymo, kuriais žmonės domisi, nėra.</value></data>
-<data name="Hidden.PageTitle" xml:space="preserve"><value>Paslėpta · Lietuva 2.0</value></data>
-<data name="Hidden.Title" xml:space="preserve"><value>Paslėpti projektai ir argumentai</value></data>
+<data name="Mod.Tabs.Label" xml:space="preserve"><value>Moderavimo sąrašai</value></data>
+<data name="Mod.Tab.Records" xml:space="preserve"><value>Projektai</value></data>
+<data name="Mod.Tab.Reasons" xml:space="preserve"><value>Argumentai</value></data>
+<data name="Mod.Tab.Organisations" xml:space="preserve"><value>Organizacijos</value></data>
+<data name="Mod.Tab.Statements" xml:space="preserve"><value>Pozicijos</value></data>
+<data name="Mod.Tab.Responses" xml:space="preserve"><value>Atsakymai</value></data>
+<data name="Mod.Tab.Profiles" xml:space="preserve"><value>Profiliai</value></data>
+<data name="Mod.Tab.Comments" xml:space="preserve"><value>Komentarai</value></data>
+<data name="Mod.Tab.Undescribed" xml:space="preserve"><value>Be aprašymo</value></data>
+<data name="Mod.Tab.Hidden" xml:space="preserve"><value>Paslėpti</value></data>
+<data name="Mod.Tab.Restrictions" xml:space="preserve"><value>Apribojimai</value></data>
 <data name="Hidden.Lead" xml:space="preserve"><value>Projektai, dėl kurių moderatoriai uždarė dalyvavimą, ir paslėpti argumentai: kas, kada ir kodėl paslėpė. „Atkurti“ grąžina juos tokius, kokie buvo.</value></data>
 <data name="Hidden.Appeals" xml:space="preserve"><value>Projektai</value></data>
 <data name="Hidden.Reasons" xml:space="preserve"><value>Argumentai</value></data>
@@ -294,7 +300,6 @@
 <data name="Mod.Close.UrlHint" xml:space="preserve"><value>Puslapis lrs.lt ar e. seime, kuriame tai matyti; adresas prasideda https://.</value></data>
 <data name="Mod.Done.close" xml:space="preserve"><value>Atlikta: projektas uždarytas.</value></data>
 <data name="Mod.Done.reopen" xml:space="preserve"><value>Atlikta: uždarymas atšauktas.</value></data>
-<data name="Mod.Refresh" xml:space="preserve"><value>Atnaujinti eilę</value></data>
 <data name="Date.Invalid" xml:space="preserve"><value>Įrašykite datą skaičiais: metai-mėnuo-diena, pvz., {0}.</value></data>
 <data name="Admin.PageTitle" xml:space="preserve"><value>Nustatymai · Lietuva 2.0</value></data>
 <data name="Admin.Title" xml:space="preserve"><value>Nustatymai</value></data>

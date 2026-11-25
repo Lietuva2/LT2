@@ -549,7 +549,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         const string Flagged = "Daugiau rasite https://pavyzdys.test/rinkliavos";
         (await writer.WriteReasonAsync(AppealSteps.SecondBill, "for", Flagged)).Dispose();
 
-        var (status, html) = await PageAsync((await ModeratorAsync()).Browser, "/moderavimas");
+        var (status, html) = await PageAsync((await ModeratorAsync()).Browser, "/moderavimas?skiltis=argumentai");
         status.ShouldBe(HttpStatusCode.OK);
         html.ShouldContain(Flagged);
         // Each action is its own control (design 8.3); the fields open only when one is chosen.

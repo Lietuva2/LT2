@@ -287,7 +287,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
             await Assertions.Expect(w.Locator("#taking-part-closed")).ToBeVisibleAsync();
             await Assertions.Expect(w.Locator("#side-picker")).ToHaveCountAsync(0);
             await w.ScreenshotAsync(new() { Path = Shot("bill-closed-by-moderators-1280.png"), FullPage = true });
-            await mod.GotoAsync($"{Base}/moderavimas/paslepti");
+            await mod.GotoAsync($"{Base}/moderavimas?skiltis=paslepti");
             var hidden = mod.Locator("article[id^='hidden-appeal-']").Filter(new() { HasText = Bill });
             await Assertions.Expect(hidden).ToContainTextAsync("Atkūrus vėl bus galima dalyvauti", new() { Timeout = 60_000 });
             var restore = hidden.Locator("button[id^='restore-open-']");
@@ -363,7 +363,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(r.GetByText("Ačiū. Moderatoriai peržiūrės.")).ToBeVisibleAsync();
 
         // The moderators' queue: the bill with its AI summary, its label and the report; "Patvirtinti aprašymą" first.
-        await mod.GotoAsync($"{Base}/moderavimas");
+        await mod.GotoAsync($"{Base}/moderavimas?skiltis=projektai");
         var item = mod.Locator("article[id^='queue-appeal-']").Filter(new() { HasText = Bill });
         await Assertions.Expect(item).ToContainTextAsync("Sukurta DI · žmonių neperžiūrėta", new() { Timeout = 60_000 });
         await Assertions.Expect(item).ToContainTextAsync("Aprašymas netikslus ar klaidingas");
@@ -578,7 +578,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await PublishReasonAsync(w);
 
         // The moderator opens the author's screen from the queue and restricts until lifted.
-        await mod.GotoAsync($"{Base}/moderavimas");
+        await mod.GotoAsync($"{Base}/moderavimas?skiltis=argumentai");
         // The item whose own argument this is (another item may list it as a merge candidate).
         var item = mod.Locator("article").Filter(new() { Has = mod.Locator(".said > p.bubble", new() { HasTextString = Text }) });
         await Assertions.Expect(item).ToBeVisibleAsync(new() { Timeout = 60_000 });
@@ -592,6 +592,9 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await item.Locator("textarea[id^='restrict-statement-']").FillAsync("Bandymas: rašymas apribojamas, kol bus atšauktas.");
         await item.GetByRole(AriaRole.Button, new() { Name = "Riboti rašymą", Exact = true }).ClickAsync();
         await Assertions.Expect(mod.GetByText("Rašymas apribotas; naudotojui išsiųstas laiškas.")).ToBeVisibleAsync();
+        // Design 8.3: the restrictions are the tab "Apribojimai", opened in place; the address keeps it.
+        await mod.Locator("#tab-apribojimai").ClickAsync();
+        await Assertions.Expect(mod).ToHaveURLAsync(new System.Text.RegularExpressions.Regex("skiltis=apribojimai"));
         await Assertions.Expect(mod.Locator("#restrictions article").Filter(new() { HasText = "Ribojama Autorė" }).Last).ToBeVisibleAsync();
         await mod.ScreenshotAsync(new() { Path = Shot("moderator-restricts-1280.png"), FullPage = true });
 

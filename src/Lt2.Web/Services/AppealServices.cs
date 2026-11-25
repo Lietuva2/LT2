@@ -196,7 +196,7 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, BillListReads lis
 /// <summary>Server-side <see cref="IModerationApi"/>, for the prerendered moderation page.</summary>
 internal sealed class ServerModerationApi(
     IAppealsModeration moderation, Lt2.Notifications.IDigests digests, IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors,
-    IConfiguration configuration) : IModerationApi
+    IConfiguration configuration, ModerationCountReads counts) : IModerationApi
 {
     public async Task<ApiResult<AuthorViewResponse>> GetAuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
@@ -227,10 +227,23 @@ internal sealed class ServerModerationApi(
         return errors.ToApiResult(await action(await AppealMapping.ModeratorAsync(identity, http.User, ipHasher.Hash(http), http.RequestAborted)), id => new RestrictionCreatedResponse(id));
     }
 
-    public async Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default) =>
+    public async Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(string? list = null, CancellationToken cancellationToken = default)
+    {
+        if (!await IsModeratorAsync())
+        {
+            return ApiResult<ModerationQueueResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+        }
+
+        return list is null or QueueLists.Records or QueueLists.Reasons
+            ? ApiResult<ModerationQueueResponse>.Ok(AppealMapping.Map(
+                await moderation.QueueAsync(list is null or QueueLists.Records, list is null or QueueLists.Reasons, cancellationToken)))
+            : ApiResult<ModerationQueueResponse>.Fail(errors.ToProblem(Error.Validation("queue.list-invalid", "list")));
+    }
+
+    public async Task<ApiResult<ModerationCountsResponse>> GetCountsAsync(CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
-            ? ApiResult<ModerationQueueResponse>.Ok(AppealMapping.Map(await moderation.QueueAsync(cancellationToken)))
-            : ApiResult<ModerationQueueResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+            ? ApiResult<ModerationCountsResponse>.Ok(await counts.CountsAsync(cancellationToken))
+            : ApiResult<ModerationCountsResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
     public async Task<ApiResult<UndescribedBillsResponse>> GetUndescribedAsync(CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()

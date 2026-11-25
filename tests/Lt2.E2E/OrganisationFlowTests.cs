@@ -128,12 +128,14 @@ public sealed class OrganisationFlowTests(AppealFlowTests.ModeratorFixture moder
 
             // 6. The moderator's queue: the new organisation and the reported statement; blocks the organisation.
             await mod.SetViewportSizeAsync(1280, 900);
-            await mod.GotoAsync($"{Base}/moderavimas");
+            // Design 8.3: the statements and the organisations are tabs of their own ("Pozicijos", "Organizacijos").
+            await mod.GotoAsync($"{Base}/moderavimas?skiltis=pozicijos");
+            var queuedStatement = mod.Locator("#queue-statements > article").Filter(new() { HasText = name });
+            await Assertions.Expect(queuedStatement).ToContainTextAsync("Apsimeta kita organizacija", new() { Timeout = 60_000 });
+            await mod.GotoAsync($"{Base}/moderavimas?skiltis=organizacijos");
             var queued = mod.Locator("#queue-organisations > article").Filter(new() { HasText = name });
             await Assertions.Expect(queued).ToBeVisibleAsync(new() { Timeout = 60_000 });
             await Assertions.Expect(queued).ToContainTextAsync("Nauja");
-            var queuedStatement = mod.Locator("#queue-statements > article").Filter(new() { HasText = name });
-            await Assertions.Expect(queuedStatement).ToContainTextAsync("Apsimeta kita organizacija");
             await queued.ScrollIntoViewIfNeededAsync();
             await E2ESteps.ShootBothAsync(mod, Shots, "moderation-queue-organisations", mod.Locator("#queue-organisations"));
             // Design 8.3 (owner, 2026-11-17): "Užblokuoti" is set apart at the end of "Kiti veiksmai".
@@ -154,7 +156,7 @@ public sealed class OrganisationFlowTests(AppealFlowTests.ModeratorFixture moder
             (await Mailpit.MailAsync(representativeEmail, "užblokuota")).ShouldContain("Bandymas: organizacija blokuojama");
 
             // 8. The block is lifted from the list of hidden items: the statement is back, as it was.
-            await mod.GotoAsync($"{Base}/moderavimas/paslepti");
+            await mod.GotoAsync($"{Base}/moderavimas?skiltis=paslepti");
             var hidden = mod.Locator("#hidden-organisations > article").Filter(new() { HasText = name });
             await Assertions.Expect(hidden).ToBeVisibleAsync(new() { Timeout = 60_000 });
             var restore = hidden.Locator("button[id^='org-restore-open-']");

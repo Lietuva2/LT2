@@ -1,34 +1,12 @@
-@page "/moderavimas/paslepti"
-@attribute [Authorize]
-@rendermode InteractiveWebAssembly
-@using Lt2.Api.Contracts.Appeals
-@using Lt2.Web.Client.Appeals
 @inherits InteractiveBase<AppealUi>
 @inject IModerationApi ModerationApi
 
-@* Hidden bills and reasons (design 8.3, 8.12.3): what was hidden, by whom, when and why, and "Atkurti". A hidden bill has
-   taking part closed; restoring it brings its sides and arguments back. Moderators only, in a staff-passkey session; the
-   server refuses anything else. Nothing here shows who took which side. *@
-<PageTitle>@L["Hidden.PageTitle"]</PageTitle>
-
-<div class="stack">
-    <ol class="crumbs">
-        <li><a href="/moderavimas">@L["Mod.Title"]</a></li>
-        <li>@L["Hidden.Title"]</li>
-    </ol>
-    <h1>@L["Hidden.Title"]</h1>
-    <NeedsScript />
-    <p class="lead">@L["Hidden.Lead"]</p>
-</div>
-
+@* The moderators' tab "Paslėpti" (design 8.3, 8.12.3): hidden bills and arguments, what was hidden, by whom, when and why,
+   and "Atkurti", then the other kinds' hidden items. A hidden bill has taking part closed; restoring it brings its sides and
+   arguments back. Nothing here shows who took which side. *@
 <Messages Message="@Message" Info="@Info" />
 
-@if (_refused)
-{
-    <p class="note" role="alert">@L["Mod.Refused"]</p>
-    <PasskeyStep Staff="true" />
-}
-else if (Items is null)
+@if (Items is null)
 {
     <p class="small">@L["Loading"]</p>
 }
@@ -114,8 +92,6 @@ else
 }
 
 @code {
-    private bool _refused;
-
     [PersistentState] public HiddenItemsResponse? Items { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -123,9 +99,8 @@ else
         if (Items is null)
         {
             var items = await ModerationApi.GetHiddenAsync();
-            _refused = items.Problem?.Status is 401 or 403;
             Items = items.Value;
-            if (!items.IsSuccess && !_refused)
+            if (!items.IsSuccess)
             {
                 Show(items.Problem);
             }

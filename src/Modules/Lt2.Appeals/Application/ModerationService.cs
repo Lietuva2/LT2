@@ -31,10 +31,22 @@ internal sealed class ModerationService(
 
     public Task<UndescribedBills> UndescribedAsync(CancellationToken cancellationToken) => undescribed.ListAsync(cancellationToken);
 
-    public async Task<ModerationItems> QueueAsync(CancellationToken cancellationToken)
+    public async Task<ModerationItems> QueueAsync(bool records, bool reasons, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var openReports = await db.Reports.AsNoTracking().Where(r => r.Status == "open").OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
+        var (queueRecords, recordsTotal) = records ? await DueRecordsAsync(db, openReports, cancellationToken) : (Array.Empty<QueueRecord>(), 0);
+        var (queueReasons, reasonsTotal) = reasons ? await DueReasonsAsync(db, openReports, cancellationToken) : (Array.Empty<QueueReason>(), 0);
+        return new ModerationItems(queueRecords, queueReasons)
+        {
+            RecordsTotal = recordsTotal,
+            ReasonsTotal = reasonsTotal,
+        };
+    }
+
+    /// <summary>The bills' records in the queue: the oldest change first, at most a hundred, and how many there are in all.</summary>
+    private async Task<(IReadOnlyList<QueueRecord> Items, int Total)> DueRecordsAsync(AppealsDb db, List<Report> openReports, CancellationToken cancellationToken)
+    {
         var reportedIds = openReports.Select(r => r.TargetId).ToHashSet();
 
         // Open records come into the queue when reported, flagged about their date, surging (design 6.6), held, or under
@@ -58,19 +70,9 @@ internal sealed class ModerationService(
             .Where(a => reportedIds.Contains(a.Id) || surges.ContainsKey(a.Id) || openFlags.Any(f => f.RecordId == a.Id)
                 || underThresholdOnAgenda.Contains(a.Id) || a.Sending == "held")
             .ToList();
+
+        // Owner, 2026-11-18: the queue shows the first hundred of each list, and says so when there are more.
         var listed = due.OrderBy(a => a.ChangedAt).Take(QueueLimit).ToList();
-
-        // Arguments of open records that wait, are reported or not yet seen; of closed records only reported ones (6.9).
-        var dueReasons = db.Reasons.AsNoTracking()
-            .Where(r => (db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Open)
-                    && (r.Status == ReasonStatuses.Pending
-                        || (r.Status == ReasonStatuses.Published && (r.SeenAt == null || reportedIds.Contains(r.Id)))))
-                || (db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Closed)
-                    && r.Status == ReasonStatuses.Published && reportedIds.Contains(r.Id)));
-        var reasons = await dueReasons.OrderBy(r => r.CreatedAt).Take(QueueLimit).ToListAsync(cancellationToken);
-
-        // Owner, 2026-11-18: the queue still shows the first hundred of each, and says so when there are more.
-        var reasonsTotal = reasons.Count < QueueLimit ? reasons.Count : await dueReasons.CountAsync(cancellationToken);
         var billFacts = await reads.BillsAsync(listed.Select(a => a.BillNumber).Distinct().ToList(), cancellationToken);
         BillFacts Bill(string number) => billFacts.GetValueOrDefault(number) ?? new BillFacts(number, number);
         IReadOnlyList<QueueReport> ReportsOn(Guid id) => openReports.Where(r => r.TargetId == id).Select(r => new QueueReport(r.Id, r.Ground, r.Text, r.CreatedAt)).ToList();
@@ -91,12 +93,25 @@ internal sealed class ModerationService(
             a.Description.Length == 0 ? null : a.DescriptionUrl,
             a.Status,
             a.Description.Length == 0 ? null : a.PlainTitle)).ToList();
+        return (queueRecords, due.Count);
+    }
 
-        return new ModerationItems(queueRecords, await QueueReasonsAsync(db, reasons, openReports, cancellationToken))
-        {
-            RecordsTotal = due.Count,
-            ReasonsTotal = reasonsTotal,
-        };
+    /// <summary>
+    /// The arguments in the queue: of open records those that wait, are reported or not yet seen; of closed records only
+    /// reported ones (6.9). The oldest first, at most a hundred, and how many there are in all.
+    /// </summary>
+    private async Task<(IReadOnlyList<QueueReason> Items, int Total)> DueReasonsAsync(AppealsDb db, List<Report> openReports, CancellationToken cancellationToken)
+    {
+        var reportedIds = openReports.Select(r => r.TargetId).ToHashSet();
+        var dueReasons = db.Reasons.AsNoTracking()
+            .Where(r => (db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Open)
+                    && (r.Status == ReasonStatuses.Pending
+                        || (r.Status == ReasonStatuses.Published && (r.SeenAt == null || reportedIds.Contains(r.Id)))))
+                || (db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Closed)
+                    && r.Status == ReasonStatuses.Published && reportedIds.Contains(r.Id)));
+        var reasons = await dueReasons.OrderBy(r => r.CreatedAt).Take(QueueLimit).ToListAsync(cancellationToken);
+        var total = reasons.Count < QueueLimit ? reasons.Count : await dueReasons.CountAsync(cancellationToken);
+        return (await QueueReasonsAsync(db, reasons, openReports, cancellationToken), total);
     }
 
     /// <summary>
@@ -252,7 +267,7 @@ internal sealed class ModerationService(
             .OrderByDescending(r => r.HiddenAt ?? DateTimeOffset.MinValue)
             .Take(QueueLimit * 2)
             .ToList();
-        return new HiddenItems(hiddenRecords, hiddenReasons);
+        return new HiddenItems(hiddenRecords, hiddenReasons) { RecordsTotal = appeals.Count, ReasonsTotal = reasons.Count };
     }
 
     public Task<Result<Unit>> RestoreRecordAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken) =>

@@ -421,7 +421,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   ballot at it is given beside it ("Atsakė: … Balsavo: …", `nebalsavo`, consensus said so); nothing adds answers and ballots
   up anywhere. Never counted: no count, threshold, list, statistic or summary changes (`MpResponseTests`).
 - Moderation as for statements: flagged by pre-screening and not yet seen, or reported, it is in the queue
-  (`GET /moderation/responses`, `ResponseModerationView` on `/moderavimas` and `/moderavimas/paslepti`); "Palikti" (`keep`),
+  (`GET /moderation/responses`, `ResponseModerationView` in the moderators' tabs `atsakymai` and `paslepti`); "Palikti" (`keep`),
   hide with a statement shown in its place and emailed to the MP's account's own address (`MpResponseNoticeEmail`, through
   `IMpLinks`), restore while the bill is open. Report target `response`.
 - Where it shows (8.5.6): the bill's page part `BillResponses` (its own sheet, the first of the texts at the page's full width
@@ -597,9 +597,25 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   a bill's record closes taking part on it (sides and arguments kept unseen; "Atkurti" brings them back). A moderator
   in a staff-passkey session gets the queue's argument actions on the bill's page too (owner, 2026-11-14), from the
   moderators-only answer `GET /moderation/bills/{number}`; nobody else sees a control or anything from it.
-- **"Projektai be aprašymo" (design 8.3, owner 2026-11-25).** `/moderavimas/be-aprasymo` (`Pages/UndescribedBills.razor`
-  hosts the list's own component `Appeals/UndescribedList.razor`, so a tabbed moderation page can host it too; linked from the
-  queue's row as `#undescribed-link`), from `GET /moderation/undescribed` (`GetUndescribedEndpoint`,
+- **The moderators' page is tabs (design 8.3, owner 2026-11-25).** `/moderavimas` (`Pages/Moderation.razor`), the tab in
+  `?skiltis=` (`Lt2.Web.Client/Appeals/ModerationTabs`: the codes, the order, `Open` the pure rule for the tab without one,
+  `ModerationTabRuleTests`): work tabs `projektai` (`RecordQueueList`), `argumentai` (`ReasonQueueList`), `organizacijos` and
+  `pozicijos` (`OrganisationQueueView`, `Statements`; one answer holds both), `atsakymai`, `profiliai`, `komentarai`; reference
+  tabs `be-aprasymo` (`UndescribedList`), `paslepti` (`HiddenList`, which holds the other kinds' hidden views) and `apribojimai`
+  (`RestrictionList`). The counts come first from
+  `GET /moderation/counts` (`ModerationCountsResponse`, numbers only; `ModerationCountReads` in `Lt2.Web/Services` reads the
+  modules' list methods one after another, so each count is the total its list states: the queue's two totals, the
+  organisations' two, the responses' and comments' queue totals, reported profiles, "Projektai be aprašymo", every hidden item
+  (records, arguments, blocked organisations, hidden statements, organisations kept out of summaries, responses, "Apie mane"
+  texts, comments) and the restrictions). Only the open tab's list is read: the queue answer takes `?list=records|reasons`
+  (`QueueLists`; the other list comes empty with a total of 0; without it, both; another value is `queue.list-invalid`).
+  A tab is a link (`ModerationTabs.Link`); in the running island it opens in place (`data-enhance-nav="false"`, the click
+  prevented) and the address is replaced (`history.replaceState`), so a refresh, Back to the page and a copied link keep it.
+  After an action the item's component calls the cascaded `QueueChanges` (`ModerationActions`, `CommentModerationActions`,
+  `OrgModerationActions`, `RestoreForm`, `RestrictionList`, `ResponseModerationView`, `ProfileModerationView`) and the page
+  reads the counts again. Tests: `ModerationTabsTests` (integration), `ModerationPageTests` (unit, bUnit).
+- **"Projektai be aprašymo" (design 8.3, owner 2026-11-25).** The tab `be-aprasymo` (`Appeals/UndescribedList.razor`), from
+  `GET /moderation/undescribed` (`GetUndescribedEndpoint`,
   moderators only; `IModerationApi.GetUndescribedAsync`, `IAppealsModeration.UndescribedAsync`, handler
   `Application/UndescribedBillReads`). Active bills (an open record or none) without a description or with an `ai` one, that
   have a participant, a published argument or a follower; the rule is `Domain/UndescribedRules` (`WantsDescription`,

@@ -629,13 +629,13 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
         {
             var comment = await writer.CommentOkAsync("statement", bill.StatementId, "Komentaras moderatorių sąraše.");
             await bill.Representative.ReportCommentAsync(comment);
-            using var page = await moderator.Browser.Client.GetAsync("/moderavimas");
+            using var page = await moderator.Browser.Client.GetAsync("/moderavimas?skiltis=komentarai");
             page.StatusCode.ShouldBe(HttpStatusCode.OK, string.Join("\n", sink.Lines.Where(l => l.Contains("xception", StringComparison.Ordinal)).Take(3)));
             var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
             html.ShouldContain("Komentaras moderatorių sąraše.");
             html.ShouldNotContain("Tomas Atstovas", Case.Sensitive, "who reported is never shown");
             await moderator.Browser.ActOnCommentAsync(CommentRoutes.Hide, comment);
-            var hidden = WebUtility.HtmlDecode(await moderator.Browser.Client.GetStringAsync("/moderavimas/paslepti"));
+            var hidden = WebUtility.HtmlDecode(await moderator.Browser.Client.GetStringAsync("/moderavimas?skiltis=paslepti"));
             hidden.ShouldContain("Komentaras moderatorių sąraše.");
         }
         finally

@@ -220,6 +220,12 @@ public static class AppealRoutes
 
     public const string ModerationQueue = ApiRoutes.Prefix + "/moderation/queue";
 
+    /// <summary>One list of the queue (<see cref="Appeals.QueueLists"/>): a tab reads only its own (design 8.3).</summary>
+    public static string ModerationQueueOf(string list) => ModerationQueue + "?list=" + Uri.EscapeDataString(list);
+
+    /// <summary><c>GET</c>: how many wait in each list of the moderators' tabs (design 8.3); numbers only, moderators only.</summary>
+    public const string ModerationCounts = ApiRoutes.Prefix + "/moderation/counts";
+
     /// <summary><c>GET</c>: "Projektai be aprašymo", where a description is most wanted (design 8.3); moderators only.</summary>
     public const string Undescribed = ApiRoutes.Prefix + "/moderation/undescribed";
     public const string MyRestriction = ApiRoutes.Prefix + "/me/writing-restriction";

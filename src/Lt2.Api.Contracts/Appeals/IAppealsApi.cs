@@ -86,7 +86,10 @@ public interface IAppealsApi
 /// <summary>Design 8.3, 8.8: the moderators' queue and actions. Needs an active moderator role (a staff-passkey session).</summary>
 public interface IModerationApi
 {
-    Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default);
+    Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(string? list = null, CancellationToken cancellationToken = default);
+
+    /// <summary>How many wait in each list of the moderators' tabs (design 8.3); forbidden for anyone else.</summary>
+    Task<ApiResult<ModerationCountsResponse>> GetCountsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>"Projektai be aprašymo": where a description is most wanted (design 8.3); forbidden for anyone else.</summary>
     Task<ApiResult<UndescribedBillsResponse>> GetUndescribedAsync(CancellationToken cancellationToken = default);

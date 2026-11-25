@@ -1452,6 +1452,20 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
 .project-tabs a { color: var(--ink); text-decoration: none; padding-block: var(--sp-1); border-bottom: 4px solid transparent; }
 .project-tabs a:hover { border-bottom-color: var(--slate); }
 .project-tabs a[aria-current="page"] { border-bottom-color: var(--link); }
+/* The moderators' tabs (design 8.3, owner 2026-11-25): the tabs of "Projektai" in one row, the work lists, then after a gap
+   and a thin rule the reference lists; a narrow screen scrolls the row sideways, the groups kept apart. A work tab's count is
+   the neutral tag, only when something waits; a reference tab's is muted text in brackets. */
+.mod-tabs { display: flex; flex-wrap: nowrap; align-items: stretch; overflow-x: auto; scrollbar-width: thin; padding-bottom: var(--sp-1); }
+.project-tabs.mod-tabs { gap: 0; }
+.mod-tabs__group { display: flex; flex-wrap: nowrap; gap: var(--sp-5); flex: 0 0 auto; }
+.mod-tabs__group + .mod-tabs__group { margin-inline-start: var(--sp-5); padding-inline-start: var(--sp-5); border-inline-start: 1px solid var(--rule); }
+.mod-tabs a { display: inline-flex; align-items: center; gap: var(--sp-2); white-space: nowrap; }
+.mod-tabs__chip { padding-block: 0; }
+.mod-tabs__count { color: var(--ink-3); font-weight: 400; }
+@media (max-width: 36rem) {
+  .mod-tabs__group { gap: var(--sp-3); }
+  .mod-tabs__group + .mod-tabs__group { margin-inline-start: var(--sp-3); padding-inline-start: var(--sp-3); }
+}
 /* The views of "Projektai" (Darbotvarkė, Aktyvūs, Uždaryti): a square segmented control one level under the tab row, the
    site's own cut corners kept (no radius): a ruled box on the sheet's colour, the current view filled in the ink colour, the
    others quiet until hovered. It wraps on a very narrow screen with the rule kept between the segments. */

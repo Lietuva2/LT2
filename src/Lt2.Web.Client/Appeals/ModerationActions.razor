@@ -213,6 +213,9 @@
 </div>
 
 @code {
+    /// <summary>The moderators' tabs, told after an action so their counts are read again (design 8.3); null elsewhere.</summary>
+    [CascadingParameter] public QueueChanges? QueueChanges { get; set; }
+
     private string? _open;
     private string? _done;
     private bool _administrator;
@@ -461,12 +464,14 @@
         _open = null;
         _done = L["Restrict.Done"];
         await OnRestricted.InvokeAsync();
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     }
 
-    private void LockedAsync()
+    private async Task LockedAsync()
     {
         _open = null;
         _done = L["Lock.Done"];
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     }
 
     private Task DraftAsync() => RunAsync(async () =>
@@ -534,6 +539,7 @@
         _finished = Finishes(action);
         _done = L["Mod.Done." + action];
         await OnDone.InvokeAsync(_done);
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     });
 
     /// <summary>The server's answer when the staff passkey must be confirmed again (design 6.2).</summary>

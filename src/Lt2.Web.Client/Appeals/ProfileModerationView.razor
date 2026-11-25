@@ -88,6 +88,9 @@
 }
 
 @code {
+    /// <summary>The moderators' tabs, told after an action so their counts are read again (design 8.3); null elsewhere.</summary>
+    [CascadingParameter] public QueueChanges? QueueChanges { get; set; }
+
     private Guid? _open;
     private string _action = "keep";
     private string _statement = "";
@@ -133,10 +136,11 @@
         ClearMessages();
     }
 
-    private void LockedAsync(Guid id)
+    private async Task LockedAsync(Guid id)
     {
         _done[id] = L["Lock.Done"];
         _open = null;
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     }
 
     private Task ActAsync(Guid id) => RunAsync(async () =>
@@ -160,5 +164,6 @@
 
         _done[id] = L["ProfileMod.Done." + _action];
         _open = null;
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     });
 }

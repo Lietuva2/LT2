@@ -9,6 +9,7 @@
     <Using Include="Lt2.Api.Contracts.Appeals.BillRecordStatuses" Alias="BillRecordStatuses" />
     <Using Include="Lt2.Api.Contracts.Appeals.ClosingReasons" Alias="ClosingReasons" />
     <Using Include="Lt2.Api.Contracts.Appeals.DescriptionSources" Alias="DescriptionSources" />
+    <Using Include="Lt2.Api.Contracts.Appeals.QueueLists" Alias="QueueLists" />
     <Using Include="Lt2.Api.Contracts.Appeals.ReasonStatuses" Alias="ReasonStatuses" />
     <Using Include="Lt2.Api.Contracts.Appeals.ReportGrounds" Alias="ReportGrounds" />
     <Using Include="Lt2.Api.Contracts.Appeals.ReportTargets" Alias="ReportTargets" />

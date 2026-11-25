@@ -4,7 +4,9 @@
 
 @* The organisations' part of the moderators' queue (design 8.14.9, 8.14.14): new and changed organisations, to be looked at
    and not approved (the website is a link the moderator opens; nothing fetches it), and statements that wait, are flagged,
-   reported or not yet seen. Who registered an organisation or wrote a statement is never shown here. *@
+   reported or not yet seen. Each is a tab of its own on the moderators' page (design 8.3): Statements = false shows the
+   organisations ("Organizacijos"), true the statements ("Pozicijos"); one answer holds both. Who registered an organisation
+   or wrote a statement is never shown here. *@
 @if (_refused)
 {
     <p class="note" role="alert">@L["Mod.Refused"]</p>
@@ -13,7 +15,7 @@ else if (Queue is null)
 {
     <p class="small">@L["Loading"]</p>
 }
-else
+else if (!Statements)
 {
     <section class="stack" aria-labelledby="h-queue-organisations" id="queue-organisations">
         <h2 id="h-queue-organisations">@L["OrgMod.Organisations"]</h2>
@@ -75,7 +77,9 @@ else
             </article>
         }
     </section>
-
+}
+else
+{
     <section class="stack" aria-labelledby="h-queue-statements" id="queue-statements">
         <h2 id="h-queue-statements">@L["OrgMod.Statements"]</h2>
         @if (Queue.Statements.Count == 0)
@@ -93,11 +97,14 @@ else
 @code {
     private bool _refused;
 
+    /// <summary>The statements' list instead of the organisations'.</summary>
+    [Parameter] public bool Statements { get; set; }
+
     [PersistentState] public OrganisationModerationResponse? Queue { get; set; }
 
     /// <summary>
-    /// Asked for only in the browser: while the page prerenders, the arguments' queue and the restrictions ask the server
-    /// too, and the staff check they all make shares one database context per request.
+    /// Asked for only in the browser: while the page prerenders, its counts ask the server too, and the staff check they
+    /// all make shares one database context per request.
     /// </summary>
     protected override async Task OnInitializedAsync()
     {

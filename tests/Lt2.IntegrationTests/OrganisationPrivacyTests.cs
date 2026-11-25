@@ -79,7 +79,8 @@ public sealed class OrganisationPrivacyTests(DatabaseFixture database) : ApiTest
         foreach (var route in new[]
         {
             OrganisationRoutes.ModerationQueue, OrganisationRoutes.ModerationBillOf(AppealSteps.SecondBill), OrganisationRoutes.ModerationHidden,
-            AppealRoutes.ModerationQueue, AppealRoutes.ModerationBillOf(AppealSteps.SecondBill), AppealRoutes.Hidden, "/moderavimas",
+            AppealRoutes.ModerationQueue, AppealRoutes.ModerationBillOf(AppealSteps.SecondBill), AppealRoutes.Hidden, AppealRoutes.ModerationCounts, "/moderavimas",
+            "/moderavimas?skiltis=paslepti",
         })
         {
             var body = WebUtility.HtmlDecode(await moderator.Browser.Client.GetStringAsync(route));

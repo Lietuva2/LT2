@@ -1,0 +1,93 @@
+@inherits InteractiveBase<AppealUi>
+@inject IModerationApi ModerationApi
+
+@* The moderators' tab "Projektai" (design 8.3, 8.12.3): bills' records that need a look (a reported description, date flags,
+   a surge, held, or under the threshold on the agenda with participants), oldest first, at most a hundred with the total.
+   Reads only its own list of the queue. Nothing here shows who took which side. *@
+<Messages Message="@Message" Info="@Info" />
+
+@if (Queue is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="stack" aria-labelledby="h-appeals">
+        <h2 id="h-appeals">@L["Mod.Appeals"]</h2>
+        @if (Queue.Records.Count == 0)
+        {
+            <p class="small">@L["Mod.Empty"]</p>
+        }
+        <QueueCut Shown="Queue.Records.Count" Total="Queue.RecordsTotal" Id="queue-appeals-cut" />
+        @foreach (var record in Queue.Records)
+        {
+            <article class="sheet stack" id="queue-appeal-@record.Id" aria-labelledby="qa-@record.Id" @key="record.Id">
+                <div class="row">
+                    <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(record.Bill.Number)">@record.Bill.Number</a>
+                </div>
+                <h3 id="qa-@record.Id">@record.Bill.Title</h3>
+                @if (record.Planned is { } plan)
+                {
+                    <p class="small num">@L.Format("Mod.Planned", Display.Day(plan.Date), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
+                }
+                @if (record.Held)
+                {
+                    <p class="note note--quiet" id="held-@record.Id">@L["Mod.Held"]</p>
+                }
+                @if (record.UnderThresholdOnAgenda)
+                {
+                    <p class="note note--quiet" id="under-threshold-@record.Id">@L.Format("Mod.UnderThreshold",
+                        record.Planned is { } onAgenda ? Display.Day(onAgenda.Date) : "–",
+                        Display.Number(record.Participants), Display.Number(record.Threshold))</p>
+                }
+                @if (record.DateFlags.Count > 0)
+                {
+                    <p class="note note--quiet num" id="date-flags-@record.Id">@L.Format("Mod.DateFlags", Display.Number(record.DateFlags.Count))</p>
+                    <ul class="rows">
+                        @foreach (var flag in record.DateFlags)
+                        {
+                            <li><div class="rows__main"><b>@L["Flag." + flag.Kind]</b>@if (flag.Date is { } right) {<span class="num" id="date-flag-date-@flag.Id">@L.Format("Mod.FlagDate", Display.Day(right))</span>}<a href="@flag.Link" rel="external noreferrer">@flag.Link</a>@if (flag.Note is { } note) {<span class="small">@note</span>}</div></li>
+                        }
+                    </ul>
+                }
+                @if (record.Surge is { } surge)
+                {
+                    <p class="note" id="surge-@record.Id">@L.Format("Mod.Surge", Display.Number(surge.WindowHours), Display.Number(surge.SharePercent))</p>
+                }
+                @if (record.Description.Length > 0)
+                {
+                    <p class="row">
+                        <span class="label">@L["Mod.Description"]</span>
+                        @if (record.DescriptionSource == DescriptionSources.Ai)
+                        {
+                            <span class="tag" id="queue-ai-label-@record.Id">@L["Mod.Source.ai"]</span>
+                        }
+                    </p>
+                    <TypedText Text="@record.Description" Class="voice typed" />
+                }
+
+                <Reports Items="record.Reports" Description="true" />
+                <ModerationActions Id="record.Id" Number="@record.Bill.Number" Kind="@ReportTargets.Record" Status="@record.Status" Held="record.Held" Threshold="record.Threshold" Planned="record.Planned"
+                                   Description="@record.Description" CurrentPlainTitle="@record.PlainTitle" DescriptionSource="@record.DescriptionSource" DescriptionUrl="@record.DescriptionUrl"
+                                   HasOpenItems="@(record.Reports.Count > 0 || record.DateFlags.Count > 0)" />
+            </article>
+        }
+    </section>
+}
+
+@code {
+    [PersistentState] public ModerationQueueResponse? Queue { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Queue is null)
+        {
+            var queue = await ModerationApi.GetQueueAsync(QueueLists.Records);
+            Queue = queue.Value;
+            if (!queue.IsSuccess)
+            {
+                Show(queue.Problem);
+            }
+        }
+    }
+}

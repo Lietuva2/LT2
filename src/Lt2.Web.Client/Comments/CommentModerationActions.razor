@@ -52,6 +52,9 @@
 </div>
 
 @code {
+    /// <summary>The moderators' tabs, told after an action so their counts are read again (design 8.3); null elsewhere.</summary>
+    [CascadingParameter] public QueueChanges? QueueChanges { get; set; }
+
     private string? _open;
     private string? _done;
     private bool _finished;
@@ -95,10 +98,11 @@
 
     protected override async Task OnInitializedAsync() => _administrator = await Account.IsAdministratorAsync(RendererInfo.IsInteractive);
 
-    private void LockedAsync()
+    private async Task LockedAsync()
     {
         _open = null;
         _done = L["Lock.Done"];
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     }
 
     private async Task RestrictedAsync()
@@ -106,6 +110,7 @@
         _open = null;
         _done = L["Restrict.Done"];
         await OnDone.InvokeAsync(_done);
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     }
 
     private Task SubmitAsync() => RunAsync(async () =>
@@ -127,5 +132,6 @@
         _finished = true;
         _done = L["Comments.Mod.Done." + action];
         await OnDone.InvokeAsync(_done);
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     });
 }

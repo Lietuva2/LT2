@@ -126,7 +126,7 @@ public sealed class UsageRuleTests
     [Theory]
     [InlineData("/administravimas/lankomumas", false)]
     [InlineData("/moderavimas", false)]
-    [InlineData("/moderavimas/paslepti", false)]
+    [InlineData("/moderavimas/atsiliepimai", false)]
     [InlineData("/seimo-narys/projektai", false)]
     [InlineData("/suvestines/nustatymai/***", false)]
     [InlineData("/suvestines/kopijos/***", false)]

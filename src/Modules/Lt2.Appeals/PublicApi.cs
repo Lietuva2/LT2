@@ -443,7 +443,11 @@ public sealed record MyClosedSide(string BillNumber, long ClosingVoteId, string 
 /// <summary>Moderation after the fact (design 8.12.3). Every action is audited; an argument's author is told why.</summary>
 public interface IAppealsModeration
 {
-    Task<ModerationItems> QueueAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// The queue (design 8.3): the bills' records (<paramref name="records"/>) and the arguments (<paramref name="reasons"/>),
+    /// each at most a hundred with its total; a list not asked for is empty with a total of 0, so each tab reads only its own.
+    /// </summary>
+    Task<ModerationItems> QueueAsync(bool records, bool reasons, CancellationToken cancellationToken);
 
     /// <summary>
     /// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): active bills (an open record or none) without a description
@@ -566,7 +570,13 @@ public sealed record HiddenRecord(
 public sealed record HiddenReason(
     Guid Id, BillFacts Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
-public sealed record HiddenItems(IReadOnlyList<HiddenRecord> Records, IReadOnlyList<HiddenReason> Reasons);
+/// <summary>Hidden records and arguments, each list at most two hundred, newest hide first, with how many there are in all.</summary>
+public sealed record HiddenItems(IReadOnlyList<HiddenRecord> Records, IReadOnlyList<HiddenReason> Reasons)
+{
+    public int RecordsTotal { get; init; }
+
+    public int ReasonsTotal { get; init; }
+}
 
 /// <summary>
 /// A bill on the moderators' list "Projektai be aprašymo" (design 8.3): an active bill without a description, or with an AI

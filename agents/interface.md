@@ -103,6 +103,13 @@ Read before changing a page, a component or an island. The rules behind it are d
   (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the history of votes; the agenda's lists carry none (owner,
   2026-11-21).
+- **The moderators' page is tabs (design 8.3, owner 2026-11-25):** `nav.project-tabs.mod-tabs#moderation-tabs`, two
+  `.mod-tabs__group`s (work, reference) with a gap and a `--rule` line between them, one row that scrolls sideways on a narrow
+  screen. Each tab is `<a id="tab-{code}" href="/moderavimas?skiltis={code}">` with `aria-current="page"` on the open one; a work
+  tab's count is the neutral `.tag.mod-tabs__chip` only when above 0, a reference tab's `.mod-tabs__count` in brackets, muted.
+  In the running island a tab opens in place (`data-enhance-nav="false"`, `@onclick:preventDefault`) and replaces the address;
+  never enhanced navigation. A list in a tab is its own component that reads its own list; a new action in one calls the
+  cascaded `QueueChanges` after it succeeds, so the counts are read again. A new moderators' list is a tab, not a page.
 - **A bill's title in a list row is `<BillTitleLink Href Title PlainTitle />`** (design 8.13.1; `Lt2.Web.Client/Components`; on server
   pages `<Lt2.Web.Client.Components.BillTitleLink …/>`): the readable title as the link (`Class`, default `tl-item__title`) and,
   when there is one, the official title in fine print under it (`span.fine.tl-item__official`); the row's tags keep their line above.
