@@ -44,7 +44,7 @@ public sealed record AgendaItemResponse(
 
 /// <summary>
 /// The items planned for one sitting day ("Planuojama …"), in the agenda's order (design 8.11.1, owner 2026-11-18): by
-/// activity (participants plus published arguments), then stage (adoption, consideration, presentation), then number; items
+/// activity (participants plus published arguments plus followers, design 8.12.5; the number is in no row), then stage (adoption, consideration, presentation), then number; items
 /// without a title last.
 /// </summary>
 public sealed record AgendaDayResponse(DateOnly Date, IReadOnlyList<AgendaItemResponse> Items);

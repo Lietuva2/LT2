@@ -95,6 +95,7 @@ internal static class ApiEndpoints
         FlagDateEndpoint.Map(api);
 
         GetModerationQueueEndpoint.Map(api);
+        GetUndescribedEndpoint.Map(api);
         GetReasonAuthorEndpoint.Map(api);
         RestrictAuthorEndpoints.Map(api);
         RestrictionsEndpoints.Map(api);

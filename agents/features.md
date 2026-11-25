@@ -421,7 +421,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   ballot at it is given beside it ("Atsakė: … Balsavo: …", `nebalsavo`, consensus said so); nothing adds answers and ballots
   up anywhere. Never counted: no count, threshold, list, statistic or summary changes (`MpResponseTests`).
 - Moderation as for statements: flagged by pre-screening and not yet seen, or reported, it is in the queue
-  (`GET /moderation/responses`, `ResponseModerationView` on `/moderavimas` and `/moderavimas/paslepti`); "Palikti" (`keep`),
+  (`GET /moderation/responses`, `ResponseModerationView` in the moderators' tabs `atsakymai` and `paslepti`); "Palikti" (`keep`),
   hide with a statement shown in its place and emailed to the MP's account's own address (`MpResponseNoticeEmail`, through
   `IMpLinks`), restore while the bill is open. Report target `response`.
 - Where it shows (8.5.6): the bill's page part `BillResponses` (its own sheet, the first of the texts at the page's full width
@@ -597,6 +597,38 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   a bill's record closes taking part on it (sides and arguments kept unseen; "Atkurti" brings them back). A moderator
   in a staff-passkey session gets the queue's argument actions on the bill's page too (owner, 2026-11-14), from the
   moderators-only answer `GET /moderation/bills/{number}`; nobody else sees a control or anything from it.
+- **The moderators' page is tabs (design 8.3, owner 2026-11-25).** `/moderavimas` (`Pages/Moderation.razor`), the tab in
+  `?skiltis=` (`Lt2.Web.Client/Appeals/ModerationTabs`: the codes, the order, `Open` the pure rule for the tab without one,
+  `ModerationTabRuleTests`): work tabs `projektai` (`RecordQueueList`), `argumentai` (`ReasonQueueList`), `organizacijos` and
+  `pozicijos` (`OrganisationQueueView`, `Statements`; one answer holds both), `atsakymai`, `profiliai`, `komentarai`; reference
+  tabs `be-aprasymo` (`UndescribedList`), `paslepti` (`HiddenList`, which holds the other kinds' hidden views) and `apribojimai`
+  (`RestrictionList`). The counts come first from
+  `GET /moderation/counts` (`ModerationCountsResponse`, numbers only; `ModerationCountReads` in `Lt2.Web/Services` asks each
+  module's counts one after another: `CountsAsync` of `IAppealsModeration`, `IOrganisationModeration`, `IMpResponseModeration`
+  and `ICommentModeration`, and `IMemberProfiles.ModerationCountsAsync`). Each count is its own query, built by the same
+  private builder as its list (`DueReasons`, `HiddenRecords`, `DueOrganisations`, `DueStatements`, `DueResponses`,
+  `ReportedComments`, the profiles' `Reported` and `Hidden`, `WritingRestrictionReads.Unlifted` …), so it is the total the
+  list states without reading the list; a list composed in memory (the records' queue, `DueRecordsOfAsync`; "Projektai be
+  aprašymo", `UndescribedBillReads.ListedAsync`) is decided by one method that the list and the count both call, and the count
+  maps no row. The counts: the queue's two, the organisations' two, the responses' and comments' queues, reported profiles,
+  "Projektai be aprašymo", every hidden item (records, arguments, blocked organisations, hidden statements, organisations kept
+  out of summaries, responses, "Apie mane" texts, comments) and the restrictions. Only the open tab's list is read: the queue answer takes `?list=records|reasons`
+  (`QueueLists`; the other list comes empty with a total of 0; without it, both; another value is `queue.list-invalid`).
+  A tab is a link (`ModerationTabs.Link`); in the running island it opens in place (`data-enhance-nav="false"`, the click
+  prevented) and the address is replaced (`history.replaceState`), so a refresh, Back to the page and a copied link keep it.
+  After an action the item's component calls the cascaded `QueueChanges` (`ModerationActions`, `CommentModerationActions`,
+  `OrgModerationActions`, `RestoreForm`, `RestrictionList`, `ResponseModerationView`, `ProfileModerationView`) and the page
+  reads the counts again. Tests: `ModerationTabsTests` (integration), `ModerationPageTests` (unit, bUnit).
+- **"Projektai be aprašymo" (design 8.3, owner 2026-11-25).** The tab `be-aprasymo` (`Appeals/UndescribedList.razor`), from
+  `GET /moderation/undescribed` (`GetUndescribedEndpoint`,
+  moderators only; `IModerationApi.GetUndescribedAsync`, `IAppealsModeration.UndescribedAsync`, handler
+  `Application/UndescribedBillReads`). Active bills (an open record or none) without a description or with an `ai` one, that
+  have some activity (a participant, a published argument or a follower); the rule is `Domain/UndescribedRules`
+  (`WantsDescription`; `IsListed`: `BillListRules.Activity` above 0; `Order`: `BillListRules.Order` by activity, the most
+  first, then the soonest planned date, then the number; `UndescribedRuleTests`). Followers come through `IFollowerCounts.BillsAsync` (Notifications, numbers only), planned
+  dates through `IPlannedAgenda`. At most 100 rows with the total (`<QueueCut>`); each row `#undescribed-{number}`: the
+  number, `<BillTitleLink>`, "Dalyviai: n · Argumentai: n · Sekėjai: n", the planned date, the `ai` label; the links lead to
+  the bill's page, whose "Moderavimas" panel writes the description. Tests: `UndescribedBillsTests` (integration).
 - **After the final vote** (design 6.9, owner 2026-11-15): a report about an argument or the description of a closed
   record reaches the queue. On a closed record a moderator can only hide and restore an argument, correct or remove the
   description and answer a report with "Palikti" (and hide the whole record, as before, or undo a moderator's close,
@@ -701,8 +733,8 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   the agenda again; other changes wait for the minute. The agenda page reads the same copy (`ServerAgendaApi`; a side marks
   it out of date there too, `FrontPageFreshnessTests`); the bill's page and `GET /api/v1/agenda` stay live.
   **The lists' lengths (owner, 2026-11-18, real-sized parliament).** `AgendaReads` orders each day by
-  `Lt2.Web.Client/Agenda/AgendaRules` (pure, `AgendaRulesTests`): activity (participants + published arguments, from
-  `BillRecordState.Arguments`), then stage (adoption, consideration, presentation; the parser reads a combined stage as its
+  `Lt2.Web.Client/Agenda/AgendaRules` (pure, `AgendaRulesTests`): activity (`BillRecordState.Activity`, which the Appeals
+  module counts by `BillListRules.Activity`: participants + published arguments + followers; 0 for a hidden record), then stage (adoption, consideration, presentation; the parser reads a combined stage as its
   furthest, `AgendaParser.StageOf`), then number, bills without a title last; the votes by Vilnius day, newest first, each
   day the same way. `AgendaRules.Day` cuts a day: the front page (`Home.razor`) shows `FrontDays` (2) planned and voted
   days of `FrontPerDay` (5), on two sheets (owner, 2026-11-21): `section#home-coming` (h2 `#h-home-coming`, "Visa
@@ -752,7 +784,9 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   `/seimas/balsavimai` and the bill page), the bill's closing vote and `VotePage`; `<MajorityHint>` ("Kas yra balsavusiųjų dauguma?") stands once
   beside the history of votes, on the vote's page and on the bill's page; the agenda's lists carry none (owner, 2026-11-21).
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
-  plus published arguments; the default), planned date or the latest activity (owner, 2026-11-17: the page offers these
+  plus published arguments plus followers: `BillListRules.Activity`, the one definition of a bill's activity, which also
+  orders a day's agenda, the front page and "Projektai be aprašymo"; owner, 2026-11-25: followers count, a bill without a
+  record too, and no row shows their number; the default), planned date or the latest activity (owner, 2026-11-17: the page offers these
   three, `rikiuoti` = `aktyvumas`, `data`, `naujausia`; another value falls back to the default; the API's `sort` has
   `activity`, `participants`, `arguments`, `planned`, `latest`), with a search (`IBillCards.SearchAsync`, design 8.12.5: the one search of every list of bills, over `appeals.bill_card`; the votes' and the statistics' lists ask it too and filter by the numbers it returns) and the box "Planuojami per 14 dienų"
   (`input#planned-only` in the search form above "Rodyti", applied with it; owner 2026-11-21); each row has "už … · prieš …" beside its bar (`List.Counts`,
@@ -777,7 +811,9 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
 - **Follower numbers (design 8.11.2, owner 2026-11-16, built with the profiles).** "Sekėjai: n", exact from 1, is shown only
   on the thing's own page: the bill's page beside "Sekti" (`GET /bills/{number}/followers`), the MP's profile and the
   organisation's profile (`followers` in their answers) and a member's page; never in list rows, a member's card or beside
-  texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, inside `FollowButton` (`Followers`) so the person's own "Sekti" moves it at once). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
+  texts; no MP, member or organisation is sorted, ranked or added up by it; bills are the exception (owner, 2026-11-25):
+  a bill's followers count into its activity (`BillListRules.Activity`), which orders `/projektai`, the agenda's days, the
+  front page and the moderators' "Projektai be aprašymo" (the one list of bills that shows the number); nothing at zero (`FollowerLine`, inside `FollowButton` (`Followers`) so the person's own "Sekti" moves it at once). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
   Notifications): a number only. The last three points are the designer's proposals awaiting the owner.
 - **One compact follow line (owner, 2026-11-17)** under the title of a bill, an MP, an organisation and a member: the page's
   tags in a `.follow-line` row, then `FollowButton`: "Sekti" (a visitor's a sign-in link back), "Sekėjai: n", and one hint

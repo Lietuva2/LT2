@@ -45,7 +45,7 @@
         }
         @if (_agenda?.AgendaSourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
         {
-            @(" ")<a href="@source" rel="external">@T["Agenda.SourceLink"]</a>
+            @(" ")<Lt2.Web.Client.Components.OfficialLink Href="@source">@T["Agenda.SourceLink"]</Lt2.Web.Client.Components.OfficialLink>
         }
     </p>
     @if (_agenda is null || _agenda.Days.Count == 0)

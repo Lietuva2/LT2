@@ -56,7 +56,7 @@
                                 @L["ModOpen.SourceHint"]
                                 @if (ESeimasUrl is { } link)
                                 {
-                                    @(" ")<a href="@link" rel="external">@L["ModOpen.ESeimas"]</a>
+                                    @(" ")<OfficialLink Href="@link">@L["ModOpen.ESeimas"]</OfficialLink>
                                 }
                             </p>
                             @* No maxlength: the browser would cut a long paste silently; the length is checked and said instead. *@
@@ -213,6 +213,9 @@
 </div>
 
 @code {
+    /// <summary>The moderators' tabs, told after an action so their counts are read again (design 8.3); null elsewhere.</summary>
+    [CascadingParameter] public QueueChanges? QueueChanges { get; set; }
+
     private string? _open;
     private string? _done;
     private bool _administrator;
@@ -381,6 +384,15 @@
 
     private string? CurrentUrl => _descriptionNow is null ? DescriptionUrl : _urlNow;
 
+    /// <summary>
+    /// What "Oficialaus teksto adresas" starts with (design 8.13): the description's own address; on a bill without a
+    /// description, the bill's e-seimas address when the field would accept it. A description that has text but no address
+    /// keeps the field empty, so correcting its text never adds an address nobody chose.
+    /// </summary>
+    private string? StartingUrl => string.IsNullOrEmpty(CurrentDescription) && OfficialTextAddress.IsAcceptable(ESeimasUrl)
+        ? ESeimasUrl
+        : CurrentUrl;
+
     /// <summary>"Rašyti aprašymą" for a bill without one, "Taisyti aprašymą" for one that has it.</summary>
     private string ActionLabel(string action) =>
         action == "describe" ? (string.IsNullOrEmpty(CurrentDescription) ? "Mod.Action.write" : "Mod.Action.describe") : "Mod.Action." + action;
@@ -430,7 +442,7 @@
         _mergeInto = null;
         _description = CurrentDescription ?? "";
         _plainTitle = PlainTitleNow ?? "";
-        _descriptionUrl = CurrentUrl;
+        _descriptionUrl = StartingUrl;
         _source = "";
         _fromDraft = false;
         _closeReason = null;
@@ -452,12 +464,14 @@
         _open = null;
         _done = L["Restrict.Done"];
         await OnRestricted.InvokeAsync();
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     }
 
-    private void LockedAsync()
+    private async Task LockedAsync()
     {
         _open = null;
         _done = L["Lock.Done"];
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     }
 
     private Task DraftAsync() => RunAsync(async () =>
@@ -525,6 +539,7 @@
         _finished = Finishes(action);
         _done = L["Mod.Done." + action];
         await OnDone.InvokeAsync(_done);
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     });
 
     /// <summary>The server's answer when the staff passkey must be confirmed again (design 6.2).</summary>

@@ -15,6 +15,22 @@ internal sealed class FollowerCounts(IDbContextFactory<NotificationsDb> contexts
     public Task<int> BillAsync(string billNumber, CancellationToken cancellationToken) =>
         CountAsync(FollowKinds.Bill, billNumber.Trim().ToUpperInvariant(), cancellationToken);
 
+    public async Task<IReadOnlyDictionary<string, int>> BillsAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
+    {
+        var keys = billNumbers.Select(n => n.Trim().ToUpperInvariant()).Distinct(StringComparer.Ordinal).ToList();
+        if (keys.Count == 0)
+        {
+            return new Dictionary<string, int>(StringComparer.Ordinal);
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await db.Follows.AsNoTracking()
+            .Where(f => f.Kind == FollowKinds.Bill && keys.Contains(f.Key))
+            .GroupBy(f => f.Key)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count, StringComparer.Ordinal, cancellationToken);
+    }
+
     public Task<int> MpAsync(long seimasPersonId, CancellationToken cancellationToken) =>
         CountAsync(FollowKinds.Mp, FollowRules.MpKey(seimasPersonId), cancellationToken);
 

@@ -45,9 +45,10 @@ internal sealed class AgendaReads(
         var shown = await organisations.ShownOnBillsAsync(plannedNumbers, ct);
         var read = await parliament.AgendaReadAsync(ct);
 
-        // Design 8.11.1 (owner, 2026-11-18): within a day, by activity, then stage, then number; bills the open data does not
-        // know yet last (AgendaRules). The days earliest first; the votes' days newest first.
-        int ActivityOf(string number) => states.GetValueOrDefault(number) is { Status: not BillRecordStatuses.Rejected } s ? AgendaRules.Activity(s.Counts.Total, s.Arguments) : 0;
+        // Design 8.11.1 (owner, 2026-11-18): within a day, by activity (the Appeals module's sum, followers included, design
+        // 8.12.5), then stage, then number; bills the open data does not know yet last (AgendaRules). The days earliest first;
+        // the votes' days newest first.
+        int ActivityOf(string number) => states.GetValueOrDefault(number)?.Activity ?? 0;
         var days = planned
             .GroupBy(p => p.Date)
             .OrderBy(g => g.Key)

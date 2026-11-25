@@ -178,10 +178,10 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   majority) and no "not a representative poll" notice. That notice stays on the bill's page, the summaries (page and
   email), the statistics page and the methodology, and the counts for accounts older than 30 days on the bill's page,
   the summaries, the moderators' summary screen and the statistics (8.7, 8.11.1, 8.12.5, 8.16.5; owner, 2026-11-21).
-- A day's rows go by activity (participants plus published arguments), then stage (priėmimas, svarstymas, pateikimas; a
-  combined stage as its furthest), then number; bills the open data does not know yet last, folded into one line.
-  Followers never rank anything; a member's followed bills are not moved up ("Jūsų projektai" is their place)
-  (8.11.1, 2026-11-18).
+- A day's rows go by activity (participants, published arguments and, since 2026-11-25, followers), then stage
+  (priėmimas, svarstymas, pateikimas; a combined stage as its furthest), then number; bills the open data does not know
+  yet last, folded into one line. A member's own followed bills are not moved up for them ("Jūsų projektai" is their
+  place) (8.11.1, 2026-11-18).
 - A longer day grows by the one "show more" ("Rodoma N iš M · Rodyti daugiau", by the address), as every list does (8.16.4); M is the day's count; the unknown bills come as the last line once every known
   row shows (8.11.1, 2026-11-19).
 - Every voted row says how the vote went in a neutral chip: the majority of those who voted ("Dauguma už", "Dauguma
@@ -243,8 +243,8 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   earlier summary sent, its participants now under the threshold: "Projektas jau buvo suvestinėje Seimo nariams –
   balsuoti prašo {n} dalyvių." (8.12.2, 2026-11-21).
 - Arguments are moderated on the bill's page too, with the queue's actions (8.12.3, 2026-11-14).
-- `/projektai` orders by activity (the default; a plain sum of participants and published arguments, which also picks
-  the front page's cards), by planned date, or by the latest activity: the last side, argument, comment, organisation's
+- `/projektai` orders by activity (the default; a plain sum of participants, published arguments and, since
+  2026-11-25, followers, which also picks the front page's cards), by planned date, or by the latest activity: the last side, argument, comment, organisation's
   statement or MP's response, each row then showing "Paskutinė veikla …"; nothing per person is kept; the same side
   again, a restored argument and a statement or response on a bill without a record are no activity (8.12.5,
   2026-11-14 and 2026-11-17).
@@ -277,6 +277,16 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   title was tried and dropped: it fits only where the number is the row's one tag); an `ai` title is shown on the site too; off the site only one a
   person wrote or checked, and summaries to MPs keep the official title. Searches of bills match it, not the description
   (2026-11-24).
+- The description form fills "Oficialaus teksto adresas" with the bill's e-seimas address on a bill without a
+  description; every link to lrs.lt opens in a new tab. Moderators find the bills that most want a description in
+  "Projektai be aprašymo" (8.3): only bills with a participant, an argument or a follower, the most attention first.
+  Organisations do not write descriptions (8.14.7): their view goes in their statement (2026-11-25).
+- The moderators' queue is one page of tabs, each list loaded when opened, the tab in the address: work tabs with a
+  neutral count chip only when something waits, then, set apart, "Be aprašymo", "Paslėpti" and "Apribojimai" with
+  muted counts; the page never opens on those. Each list keeps its cut at a hundred, no paging (8.3, 2026-11-25).
+- Follower numbers may order lists of bills and be counted into their order; the rule against ranking by followers
+  stays for MPs, members and organisations, at whom it was aimed. A bill's row still shows no follower number (8.11.2,
+  2026-11-25).
 - Every search of bills runs in PostgreSQL: a word is found by its stem (`lithuanian` configuration) or inside the
   text with case and Lithuanian letters ignored; the Appeals module keeps its own copy of the bill catalogue for it
   (`appeals.bill_card`), refreshed from the Parliament module after every import; the search returns the matching

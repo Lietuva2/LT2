@@ -103,10 +103,21 @@ Read before changing a page, a component or an island. The rules behind it are d
   (owner, 2026-11-19; `AgendaPaging`: `?diena=2026-11-24:60`, 50 more a press). A vote's majority beside its numbers is
   `<VoteMajorityTag>`, with one `<MajorityHint>` beside the history of votes; the agenda's lists carry none (owner,
   2026-11-21).
+- **The moderators' page is tabs (design 8.3, owner 2026-11-25):** `nav.project-tabs.mod-tabs#moderation-tabs`, two
+  `.mod-tabs__group`s (work, reference) with a gap and a `--rule` line between them, one row that scrolls sideways under
+  54rem; from 54rem it wraps, the reference group whole onto the next line when both do not fit, and the rule (each group's
+  `border-inline-start`, the row shifted left and clipped by `clip-path`) shows only between two groups on one line. Each tab is `<a id="tab-{code}" href="/moderavimas?skiltis={code}">` with `aria-current="page"` on the open one; a work
+  tab's count is the neutral `.tag.mod-tabs__chip` only when above 0, a reference tab's `.mod-tabs__count` in brackets, muted.
+  In the running island a tab opens in place (`data-enhance-nav="false"`, `@onclick:preventDefault`) and replaces the address;
+  never enhanced navigation. A list in a tab is its own component that reads its own list; a new action in one calls the
+  cascaded `QueueChanges` after it succeeds, so the counts are read again. A new moderators' list is a tab, not a page.
 - **A bill's title in a list row is `<BillTitleLink Href Title PlainTitle />`** (design 8.13.1; `Lt2.Web.Client/Components`; on server
   pages `<Lt2.Web.Client.Components.BillTitleLink …/>`): the readable title as the link (`Class`, default `tl-item__title`) and,
   when there is one, the official title in fine print under it (`span.fine.tl-item__official`); the row's tags keep their line above.
   Every list row that shows a bill's title uses it; never write that link by hand.
+- **A link to the Seimas's own site (lrs.lt, e-seimas) is `<OfficialLink Href Id Class>`** (design 8.13; `Lt2.Web.Client/Components`;
+  on server pages `<Lt2.Web.Client.Components.OfficialLink …/>`): a new tab, `rel="external noopener"`. Never write one by hand.
+  Links people wrote (organisations, comments, profiles) keep `rel="nofollow ugc noopener noreferrer"` and a new tab.
 - **Every public list's heading row stays at the top of the screen (design 8.16.5, owner 2026-11-21):** a new public
   list sheet puts its heading (h2, or h3 in a side column) and any link beside it in `div.row.list-head` as the sheet's
   first child (`position: sticky`, the sheet's colour, a `--rule` line under it, CSS only). The lengths are declared on

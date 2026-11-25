@@ -70,6 +70,9 @@ public sealed record ResponseModerationItems(IReadOnlyList<QueueResponse> Queue,
     public int HiddenTotal { get; init; }
 }
 
+/// <summary>How many MPs' responses the moderators' lists hold (design 8.3, the tabs' counts), each by its own query with its list's filter.</summary>
+public sealed record ResponseModerationCounts(int Queue, int Hidden);
+
 /// <summary>
 /// MPs' responses on bills (design 8.5.5, 8.5.6). The caller (the host) has checked who may speak for which MP: a linked
 /// account in a passkey session, the MP's mandate not ended. Rules about the bill are checked here, where the data is
@@ -105,6 +108,9 @@ public interface IMpResponses
 public interface IMpResponseModeration
 {
     Task<ResponseModerationItems> ItemsAsync(CancellationToken cancellationToken);
+
+    /// <summary>How many responses wait and are hidden (design 8.3), each by its own query, not by reading the lists.</summary>
+    Task<ResponseModerationCounts> CountsAsync(CancellationToken cancellationToken);
 
     Task<Result<Unit>> KeepAsync(Guid responseId, string? note, StaffActor moderator, CancellationToken cancellationToken);
 

@@ -516,7 +516,13 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
             (await a.WriteReasonAsync(AppealSteps.SecondBill, "for", "Argumentas apie rinkliavas nr. " + i)).Dispose();
         }
 
-        // XVP-0618: 2 participants, 1 argument (activity 3); XVP-0533: 0 participants, 3 arguments (activity 3).
+        // Followers count into activity (8.12.5); here nobody follows either bill (a first side follows it, so those go), to
+        // tie the two. XVP-0618: 2 participants, 1 argument (activity 3); XVP-0533: 0 participants, 3 arguments (activity 3).
+        foreach (var bill in new[] { AppealSteps.SecondBill, AppealSteps.ThirdBill })
+        {
+            await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+        }
+
         using var stranger = NewBrowser();
         async Task<string[]> Order(string? sort) => (await stranger.GetJsonAsync<BillListResponse>(AppealRoutes.AppealsList(null, false, false, null, sort)))
             .Items.Select(i => i.Bill.Number).Where(n => n is AppealSteps.SecondBill or AppealSteps.ThirdBill).ToArray();
@@ -549,7 +555,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         const string Flagged = "Daugiau rasite https://pavyzdys.test/rinkliavos";
         (await writer.WriteReasonAsync(AppealSteps.SecondBill, "for", Flagged)).Dispose();
 
-        var (status, html) = await PageAsync((await ModeratorAsync()).Browser, "/moderavimas");
+        var (status, html) = await PageAsync((await ModeratorAsync()).Browser, "/moderavimas?skiltis=argumentai");
         status.ShouldBe(HttpStatusCode.OK);
         html.ShouldContain(Flagged);
         // Each action is its own control (design 8.3); the fields open only when one is chosen.

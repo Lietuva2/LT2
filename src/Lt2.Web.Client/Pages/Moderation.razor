@@ -1,15 +1,19 @@
 @page "/moderavimas"
 @attribute [Authorize]
 @rendermode InteractiveWebAssembly
-@using Lt2.Api.Contracts.Appeals
-@using Lt2.Web.Client.Appeals
 @inherits InteractiveBase<AppealUi>
 @inject IModerationApi ModerationApi
+@inject IJSRuntime JS
 
-@* The moderators' queue (design 8.12.3), moderation after the fact: bills that need a look (a reported description, date
-   flags, a surge, held, or under the threshold on the agenda with participants), and arguments flagged, reported or not
-   yet seen. Every action needs the active moderator role of a staff-passkey session; the server refuses anything else.
-   Nothing here shows who took which side. *@
+@* The moderators' page (design 8.3, owner 2026-11-25): one page of tabs, the tab in ?skiltis=. The work lists first (the
+   bills' records, arguments, organisations, statements, MPs' responses, profiles, comments), each with a small neutral chip
+   saying how many wait, only when some do; then, set apart, the reference lists ("Be aprašymo", "Paslėpti", "Apribojimai")
+   with their counts in brackets. The counts come first (GET /moderation/counts); only the open tab's list is read. Without a
+   tab asked for, the page opens on the first work tab with something waiting (ModerationTabs.Open). In the running island a
+   tab is opened in place and the address is replaced, so a refresh, Back to this page and a copied link keep it; before the
+   island runs the tabs are plain links. An action on a list's item reads the counts again (QueueChanges). Every action
+   needs the active moderator role of a staff-passkey session; the server refuses anything else. Nothing here shows who
+   took which side. *@
 <PageTitle>@L["Mod.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -17,7 +21,7 @@
     <h1>@L["Mod.Title"]</h1>
     <NeedsScript />
     <p class="lead">@L["Mod.Lead"]</p>
-    <p class="row"><a href="/moderavimas" id="queue-refresh">@L["Mod.Refresh"]</a> <a href="/moderavimas/paslepti" id="hidden-link">@L["Mod.HiddenLink"]</a> <a href="@Lt2.Api.Contracts.Digests.DigestRoutes.ModerationPage" id="digests-link">@L["DigMod.Title"]</a> <a href="/moderavimas/atsiliepimai" id="feedback-link">@L["Fb.Title"]</a></p>
+    <p class="row"><a href="@Lt2.Api.Contracts.Digests.DigestRoutes.ModerationPage" id="digests-link">@L["DigMod.Title"]</a> <a href="/moderavimas/atsiliepimai" id="feedback-link">@L["Fb.Title"]</a></p>
 </div>
 
 <Messages Message="@Message" Info="@Info" />
@@ -27,126 +31,140 @@
     <p class="note" role="alert">@L["Mod.Refused"]</p>
     <PasskeyStep Staff="true" />
 }
-else if (Queue is null)
+else if (Counts is null)
 {
     <p class="small">@L["Loading"]</p>
 }
 else
 {
-    <section class="stack" aria-labelledby="h-appeals">
-        <h2 id="h-appeals">@L["Mod.Appeals"]</h2>
-        @if (Queue.Records.Count == 0)
-        {
-            <p class="small">@L["Mod.Empty"]</p>
-        }
-        <QueueCut Shown="Queue.Records.Count" Total="Queue.RecordsTotal" Id="queue-appeals-cut" />
-        @foreach (var record in Queue.Records)
-        {
-            <article class="sheet stack" id="queue-appeal-@record.Id" aria-labelledby="qa-@record.Id" @key="record.Id">
-                <div class="row">
-                    <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(record.Bill.Number)">@record.Bill.Number</a>
-                </div>
-                <h3 id="qa-@record.Id">@record.Bill.Title</h3>
-                @if (record.Planned is { } plan)
-                {
-                    <p class="small num">@L.Format("Mod.Planned", Display.Day(plan.Date), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
-                }
-                @if (record.Held)
-                {
-                    <p class="note note--quiet" id="held-@record.Id">@L["Mod.Held"]</p>
-                }
-                @if (record.UnderThresholdOnAgenda)
-                {
-                    <p class="note note--quiet" id="under-threshold-@record.Id">@L.Format("Mod.UnderThreshold",
-                        record.Planned is { } onAgenda ? Display.Day(onAgenda.Date) : "–",
-                        Display.Number(record.Participants), Display.Number(record.Threshold))</p>
-                }
-                @if (record.DateFlags.Count > 0)
-                {
-                    <p class="note note--quiet num" id="date-flags-@record.Id">@L.Format("Mod.DateFlags", Display.Number(record.DateFlags.Count))</p>
-                    <ul class="rows">
-                        @foreach (var flag in record.DateFlags)
-                        {
-                            <li><div class="rows__main"><b>@L["Flag." + flag.Kind]</b>@if (flag.Date is { } right) {<span class="num" id="date-flag-date-@flag.Id">@L.Format("Mod.FlagDate", Display.Day(right))</span>}<a href="@flag.Link" rel="external noreferrer">@flag.Link</a>@if (flag.Note is { } note) {<span class="small">@note</span>}</div></li>
-                        }
-                    </ul>
-                }
-                @if (record.Surge is { } surge)
-                {
-                    <p class="note" id="surge-@record.Id">@L.Format("Mod.Surge", Display.Number(surge.WindowHours), Display.Number(surge.SharePercent))</p>
-                }
-                @if (record.Description.Length > 0)
-                {
-                    <p class="row">
-                        <span class="label">@L["Mod.Description"]</span>
-                        @if (record.DescriptionSource == DescriptionSources.Ai)
-                        {
-                            <span class="tag" id="queue-ai-label-@record.Id">@L["Mod.Source.ai"]</span>
-                        }
-                    </p>
-                    <TypedText Text="@record.Description" Class="voice typed" />
-                }
+    <nav class="project-tabs mod-tabs" aria-label="@L["Mod.Tabs.Label"]" id="moderation-tabs">
+        <div class="mod-tabs__group" id="moderation-tabs-work">
+            @foreach (var tab in ModerationTabs.Work)
+            {
+                var count = ModerationTabs.Count(Counts, tab);
+                <a href="@ModerationTabs.Link(tab)" id="tab-@tab" aria-current="@(tab == Tab ? "page" : null)"
+                   data-enhance-nav="@(RendererInfo.IsInteractive ? "false" : null)" @onclick="() => OpenAsync(tab)" @onclick:preventDefault="RendererInfo.IsInteractive">@Label(tab)@if (count > 0)
+                    {<span class="tag mod-tabs__chip num" id="tab-count-@tab">@Display.Number(count)</span>}</a>
+            }
+        </div>
+        <div class="mod-tabs__group" id="moderation-tabs-reference">
+            @foreach (var tab in ModerationTabs.Reference)
+            {
+                <a href="@ModerationTabs.Link(tab)" id="tab-@tab" aria-current="@(tab == Tab ? "page" : null)"
+                   data-enhance-nav="@(RendererInfo.IsInteractive ? "false" : null)" @onclick="() => OpenAsync(tab)" @onclick:preventDefault="RendererInfo.IsInteractive">@Label(tab) <span class="mod-tabs__count num" id="tab-count-@tab">(@Display.Number(ModerationTabs.Count(Counts, tab)))</span></a>
+            }
+        </div>
+    </nav>
 
-                <Reports Items="record.Reports" Description="true" />
-                <ModerationActions Id="record.Id" Number="@record.Bill.Number" Kind="@ReportTargets.Record" Status="@record.Status" Held="record.Held" Threshold="record.Threshold" Planned="record.Planned"
-                                   Description="@record.Description" CurrentPlainTitle="@record.PlainTitle" DescriptionSource="@record.DescriptionSource" DescriptionUrl="@record.DescriptionUrl"
-                                   HasOpenItems="@(record.Reports.Count > 0 || record.DateFlags.Count > 0)" />
-            </article>
-        }
-    </section>
-
-    <section class="stack" aria-labelledby="h-reasons">
-        <h2 id="h-reasons">@L["Mod.Reasons"]</h2>
-        @if (Queue.Reasons.Count == 0)
-        {
-            <p class="small">@L["Mod.Empty"]</p>
-        }
-        <QueueCut Shown="Queue.Reasons.Count" Total="Queue.ReasonsTotal" Id="queue-reasons-cut" />
-        @foreach (var reason in Queue.Reasons)
-        {
-            <QueueReasonItem @key="reason.Id" Reason="reason" OnRestricted="RestrictedAsync" />
-        }
-    </section>
-
-    @* Design 8.14.14: new and changed organisations, and statements that wait, are flagged, reported or not yet seen. *@
-    <OrganisationQueueView />
-
-    @* Design 8.5.5: MPs' responses flagged by pre-screening or reported. *@
-    <Lt2.Web.Client.Mps.ResponseModerationView />
-        @* Design 8.25.6: reported public profiles. *@
-        <Lt2.Web.Client.Appeals.ProfileModerationView />
-
-    @* Design 8.23.8: comments, only when reported. *@
-    <Lt2.Web.Client.Comments.CommentModerationView />
-
-    <RestrictionList @ref="_restrictions" />
+    <CascadingValue Value="_changes" IsFixed="true">
+        <div class="stack" id="moderation-tab" @key="Tab">
+            @switch (Tab)
+            {
+                case ModerationTabs.Reasons:
+                    <ReasonQueueList />
+                    break;
+                case ModerationTabs.Organisations:
+                    @* Design 8.14.14: new and changed organisations. *@
+                    <OrganisationQueueView />
+                    break;
+                case ModerationTabs.Statements:
+                    @* Design 8.14.14: statements that wait, are flagged, reported or not yet seen. *@
+                    <OrganisationQueueView Statements="true" />
+                    break;
+                case ModerationTabs.Responses:
+                    @* Design 8.5.5: MPs' responses flagged by pre-screening or reported. *@
+                    <Lt2.Web.Client.Mps.ResponseModerationView />
+                    break;
+                case ModerationTabs.Profiles:
+                    @* Design 8.25.6: reported public profiles. *@
+                    <ProfileModerationView />
+                    break;
+                case ModerationTabs.Comments:
+                    @* Design 8.23.8: comments, only when reported. *@
+                    <Lt2.Web.Client.Comments.CommentModerationView />
+                    break;
+                case ModerationTabs.Undescribed:
+                    <UndescribedList />
+                    break;
+                case ModerationTabs.Hidden:
+                    <HiddenList />
+                    break;
+                case ModerationTabs.Restrictions:
+                    <RestrictionList />
+                    break;
+                default:
+                    <RecordQueueList />
+                    break;
+            }
+        </div>
+    </CascadingValue>
 }
 
 @code {
     private bool _refused;
-    private RestrictionList? _restrictions;
+    private QueueChanges _changes = default!;
 
-    [PersistentState] public ModerationQueueResponse? Queue { get; set; }
+    /// <summary>The tab asked for in the address (<c>?skiltis=</c>), if any.</summary>
+    [SupplyParameterFromQuery(Name = ModerationTabs.Parameter)] public string? Asked { get; set; }
+
+    [PersistentState] public ModerationCountsResponse? Counts { get; set; }
+
+    /// <summary>The open tab: the one asked for, or the one <see cref="ModerationTabs.Open"/> picks; set in place afterwards.</summary>
+    private string Tab { get; set; } = ModerationTabs.Records;
 
     protected override async Task OnInitializedAsync()
     {
-        if (Queue is null)
+        _changes = new QueueChanges(ReadCountsAsync);
+        if (Counts is null)
         {
-            var queue = await ModerationApi.GetQueueAsync();
-            _refused = queue.Problem?.Status is 401 or 403;
-            Queue = queue.Value;
-            if (!queue.IsSuccess && !_refused)
+            var counts = await ModerationApi.GetCountsAsync();
+            _refused = counts.Problem?.Status is 401 or 403;
+            Counts = counts.Value;
+            if (!counts.IsSuccess && !_refused)
             {
-                Show(queue.Problem);
+                Show(counts.Problem);
             }
         }
+
+        Tab = ModerationTabs.Open(Asked, Counts);
     }
 
-    private async Task RestrictedAsync()
+    private string Label(string tab) => tab switch
     {
-        if (_restrictions is not null)
+        ModerationTabs.Reasons => L["Mod.Tab.Reasons"],
+        ModerationTabs.Organisations => L["Mod.Tab.Organisations"],
+        ModerationTabs.Statements => L["Mod.Tab.Statements"],
+        ModerationTabs.Responses => L["Mod.Tab.Responses"],
+        ModerationTabs.Profiles => L["Mod.Tab.Profiles"],
+        ModerationTabs.Comments => L["Mod.Tab.Comments"],
+        ModerationTabs.Undescribed => L["Mod.Tab.Undescribed"],
+        ModerationTabs.Hidden => L["Mod.Tab.Hidden"],
+        ModerationTabs.Restrictions => L["Mod.Tab.Restrictions"],
+        _ => L["Mod.Tab.Records"],
+    };
+
+    /// <summary>
+    /// Opens a tab in place (design 8.3): its list is read when it is shown, and the address is replaced with the tab's, so a
+    /// refresh, Back to this page and a copied link keep it; the island's state stays (no enhanced navigation).
+    /// </summary>
+    private async Task OpenAsync(string tab)
+    {
+        if (!RendererInfo.IsInteractive)
         {
-            await _restrictions.ReloadAsync();
+            return;
+        }
+
+        Tab = tab;
+        await JS.InvokeVoidAsync("history.replaceState", null, "", ModerationTabs.Link(tab));
+    }
+
+    /// <summary>An action took an item out of a list (or changed what a list holds): the counts are read again.</summary>
+    private async Task ReadCountsAsync()
+    {
+        if ((await ModerationApi.GetCountsAsync()).Value is { } counts)
+        {
+            Counts = counts;
+            StateHasChanged();
         }
     }
 }

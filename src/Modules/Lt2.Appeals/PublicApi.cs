@@ -134,8 +134,13 @@ public static class ReasonPages
 /// </summary>
 /// <param name="RecordId">The record; null while the bill has none.</param>
 /// <param name="Status"><c>open</c>, <c>closed</c>, or <c>rejected</c>.</param>
-/// <param name="Arguments">The record's published arguments, for the agenda's order by activity (design 8.11.1); 0 for a hidden record.</param>
-public sealed record BillRecordState(string BillNumber, Guid? RecordId, string Status, SideCounts Counts, ThresholdInfo Threshold, int Arguments = 0);
+/// <param name="Arguments">The record's published arguments; 0 for a hidden record.</param>
+/// <param name="Activity">
+/// The bill's activity, which orders a day's bills on the agenda and the front page (design 8.11.1, 8.12.5): participants,
+/// published arguments and followers added up, as every list of bills counts it; a bill without a record has its followers;
+/// 0 for a hidden record, which shows no numbers. Only an order: no row shows it or the follower number in it.
+/// </param>
+public sealed record BillRecordState(string BillNumber, Guid? RecordId, string Status, SideCounts Counts, ThresholdInfo Threshold, int Arguments = 0, int Activity = 0);
 
 /// <summary>
 /// The surge note (design 6.6): in the last <paramref name="WindowHours"/> hours, <paramref name="SharePercent"/> % of the
@@ -443,7 +448,25 @@ public sealed record MyClosedSide(string BillNumber, long ClosingVoteId, string 
 /// <summary>Moderation after the fact (design 8.12.3). Every action is audited; an argument's author is told why.</summary>
 public interface IAppealsModeration
 {
-    Task<ModerationItems> QueueAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// The queue (design 8.3): the bills' records (<paramref name="records"/>) and the arguments (<paramref name="reasons"/>),
+    /// each at most a hundred with its total; a list not asked for is empty with a total of 0, so each tab reads only its own.
+    /// </summary>
+    Task<ModerationItems> QueueAsync(bool records, bool reasons, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): active bills (an open record or none) without a description
+    /// or with an AI summary nobody has read, that at least one participant, published argument or follower pays attention
+    /// to, most attention first (<c>UndescribedRules</c>); at most a hundred, with the total. Only numbers the bill's page
+    /// shows; nothing about who.
+    /// </summary>
+    Task<UndescribedBills> UndescribedAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// How many items the queue's two lists, "Be aprašymo", the hidden records and arguments and the restrictions hold
+    /// (design 8.3): each by its own query, with the same filter as its list, without reading the lists.
+    /// </summary>
+    Task<AppealsModerationCounts> CountsAsync(CancellationToken cancellationToken);
 
     /// <summary>"Palikti": keeps a reported or flagged record as it is; its open reports and date flags close.</summary>
     Task<Result<Unit>> KeepRecordAsync(Guid recordId, string? statement, StaffActor moderator, CancellationToken cancellationToken);
@@ -558,7 +581,33 @@ public sealed record HiddenRecord(
 public sealed record HiddenReason(
     Guid Id, BillFacts Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
-public sealed record HiddenItems(IReadOnlyList<HiddenRecord> Records, IReadOnlyList<HiddenReason> Reasons);
+/// <summary>Hidden records and arguments, each list at most two hundred, newest hide first, with how many there are in all.</summary>
+public sealed record HiddenItems(IReadOnlyList<HiddenRecord> Records, IReadOnlyList<HiddenReason> Reasons)
+{
+    public int RecordsTotal { get; init; }
+
+    public int ReasonsTotal { get; init; }
+}
+
+/// <summary>
+/// A bill on the moderators' list "Projektai be aprašymo" (design 8.3): an active bill without a description, or with an AI
+/// summary nobody has read (<paramref name="DescriptionSource"/> <c>ai</c>; null without a description), and the numbers its
+/// page shows: participants, published arguments and followers. <paramref name="PlainTitle"/> is the readable title of an
+/// <c>ai</c> summary, null without one.
+/// </summary>
+public sealed record UndescribedBill(
+    BillFacts Bill, string? PlainTitle, string? DescriptionSource, int Participants, int Arguments, int Followers, PlannedDate? Planned);
+
+/// <summary>"Projektai be aprašymo" (design 8.3): at most a hundred bills in the list's order, and how many there are in all.</summary>
+public sealed record UndescribedBills(IReadOnlyList<UndescribedBill> Bills, int Total);
+
+/// <summary>
+/// How many items this module's moderators' lists hold (design 8.3, the tabs' counts): each counted by its own query with the
+/// same filter as its list, numbers only. <paramref name="Records"/> and <paramref name="Reasons"/> are the queue's;
+/// <paramref name="HiddenRecords"/> and <paramref name="HiddenReasons"/> are in "Paslėpti"; <paramref name="Restrictions"/>
+/// are the restrictions that hold now.
+/// </summary>
+public sealed record AppealsModerationCounts(int Records, int Reasons, int Undescribed, int HiddenRecords, int HiddenReasons, int Restrictions);
 
 /// <summary>The caller's own writing restriction (design 8.3): its last day (null = until lifted) and the statement.</summary>
 public sealed record MyRestriction(DateOnly? Until, string Statement);

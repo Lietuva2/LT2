@@ -26,15 +26,59 @@ internal sealed class OrganisationModerationService(
     private const int QueueLimit = 100;
     private static readonly string[] Kinds = [ReportTargets.Organisation, ReportTargets.Statement];
 
+    public async Task<OrganisationModerationCounts> CountsAsync(CancellationToken cancellationToken)
+    {
+        // Design 8.3: each tab's count by its own query, with the filter its list uses (the same builders).
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return new OrganisationModerationCounts(
+            await DueOrganisations(db).CountAsync(cancellationToken),
+            await DueStatements(db).CountAsync(cancellationToken),
+            await Blocked(db).CountAsync(cancellationToken),
+            await HiddenStatements(db).CountAsync(cancellationToken),
+            await KeptOut(db).CountAsync(cancellationToken));
+    }
+
+    /// <summary>
+    /// The organisations in the queue (design 8.14.9): not closed, and new or changed and not yet seen, or reported. The one
+    /// filter of the list and of its count.
+    /// </summary>
+    private static IQueryable<Organisation> DueOrganisations(AppealsDb db)
+    {
+        var reported = OpenReports(db).Select(r => r.TargetId);
+        return db.Organisations.AsNoTracking()
+            .Where(o => o.Status != OrganisationStatuses.Closed
+                && ((o.Status == OrganisationStatuses.Active && o.SeenAt == null) || reported.Contains(o.Id)));
+    }
+
+    /// <summary>
+    /// The statements in the queue (design 8.14.14): an active organisation's, waiting or published, and not yet seen or
+    /// reported. The one filter of the list and of its count.
+    /// </summary>
+    private static IQueryable<OrganisationStatement> DueStatements(AppealsDb db)
+    {
+        var reported = OpenReports(db).Select(r => r.TargetId);
+        return from s in db.OrganisationStatements.AsNoTracking()
+               join o in db.Organisations.AsNoTracking() on s.OrganisationId equals o.Id
+               where o.Status == OrganisationStatuses.Active
+                   && (s.Status == StatementStatuses.Pending || s.Status == StatementStatuses.Published)
+                   && (s.SeenAt == null || reported.Contains(s.Id))
+               select s;
+    }
+
+    private static IQueryable<Organisation> Blocked(AppealsDb db) => db.Organisations.AsNoTracking().Where(o => o.Status == OrganisationStatuses.Blocked);
+
+    private static IQueryable<Organisation> KeptOut(AppealsDb db) =>
+        db.Organisations.AsNoTracking().Where(o => o.KeptOutOfSummariesAt != null && o.Status != OrganisationStatuses.Closed);
+
+    private static IQueryable<OrganisationStatement> HiddenStatements(AppealsDb db) =>
+        db.OrganisationStatements.AsNoTracking().Where(s => s.Status == StatementStatuses.Hidden);
+
     public async Task<OrganisationModerationItems> QueueAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var reports = await OpenReportsAsync(db, cancellationToken);
-        var reported = reports.Select(r => r.TargetId).ToHashSet();
-        var dueOrganisations = (await db.Organisations.AsNoTracking().Where(o => o.Status != OrganisationStatuses.Closed).ToListAsync(cancellationToken))
-            .Where(o => (o.Status == OrganisationStatuses.Active && o.SeenAt == null) || reported.Contains(o.Id))
-            .ToList();
-        var organisations = dueOrganisations.OrderBy(o => o.ChangedAt).Take(QueueLimit).ToList();
+        var dueOrganisations = DueOrganisations(db);
+        var organisations = await dueOrganisations.OrderBy(o => o.ChangedAt).Take(QueueLimit).ToListAsync(cancellationToken);
         var ids = organisations.Select(o => o.Id).ToList();
         var history = (await db.Revisions.AsNoTracking()
                 .Where(r => r.EntityKind == "organisation" && ids.Contains(r.EntityId) && (r.Field == "name" || r.Field == "website"))
@@ -43,12 +87,7 @@ internal sealed class OrganisationModerationService(
             .GroupBy(r => r.EntityId)
             .ToDictionary(g => g.Key, g => (IReadOnlyList<ProfileChange>)g.Select(r => new ProfileChange(r.ChangedAt, r.Field, r.OldValue, r.NewValue)).ToList());
 
-        var dueStatements = from s in db.OrganisationStatements.AsNoTracking()
-                            join o in db.Organisations.AsNoTracking() on s.OrganisationId equals o.Id
-                            where o.Status == OrganisationStatuses.Active
-                                && ((s.Status == StatementStatuses.Pending && (s.SeenAt == null || reported.Contains(s.Id)))
-                                    || (s.Status == StatementStatuses.Published && (s.SeenAt == null || reported.Contains(s.Id))))
-                            select s;
+        var dueStatements = DueStatements(db);
         var statements = await dueStatements.OrderBy(s => s.PublishedAt).Take(QueueLimit).ToListAsync(cancellationToken);
 
         // Owner, 2026-11-18: the lists still show the first hundred, and say so when there are more.
@@ -56,7 +95,7 @@ internal sealed class OrganisationModerationService(
             organisations.Select(o => QueueItem(o, reports, history.GetValueOrDefault(o.Id) ?? [])).ToList(),
             await QueueStatementsAsync(db, statements, reports, cancellationToken))
         {
-            OrganisationsTotal = dueOrganisations.Count,
+            OrganisationsTotal = organisations.Count < QueueLimit ? organisations.Count : await dueOrganisations.CountAsync(cancellationToken),
             StatementsTotal = statements.Count < QueueLimit ? statements.Count : await dueStatements.CountAsync(cancellationToken),
         };
     }
@@ -79,11 +118,9 @@ internal sealed class OrganisationModerationService(
     public async Task<HiddenOrganisationItems> HiddenAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var blocked = await db.Organisations.AsNoTracking().Where(o => o.Status == OrganisationStatuses.Blocked).ToListAsync(cancellationToken);
-        var keptOut = await db.Organisations.AsNoTracking()
-            .Where(o => o.KeptOutOfSummariesAt != null && o.Status != OrganisationStatuses.Closed)
-            .OrderByDescending(o => o.KeptOutOfSummariesAt).ToListAsync(cancellationToken);
-        var hidden = await db.OrganisationStatements.AsNoTracking().Where(s => s.Status == StatementStatuses.Hidden).ToListAsync(cancellationToken);
+        var blocked = await Blocked(db).ToListAsync(cancellationToken);
+        var keptOut = await KeptOut(db).OrderByDescending(o => o.KeptOutOfSummariesAt).ToListAsync(cancellationToken);
+        var hidden = await HiddenStatements(db).ToListAsync(cancellationToken);
         var targets = hidden.Select(s => s.Id).ToList();
         var hides = (await db.ModerationActions.AsNoTracking().Where(m => targets.Contains(m.TargetId) && m.Action == "hide").ToListAsync(cancellationToken))
             .GroupBy(m => m.TargetId)
@@ -315,8 +352,9 @@ internal sealed class OrganisationModerationService(
     private static Task<Result<Unit>>? Refused(string? statement, bool required) =>
         StatementRules.Check(statement, required) is { } broken ? Task.FromResult<Result<Unit>>(RuleErrors.Of(broken)) : null;
 
-    private static Task<List<Report>> OpenReportsAsync(AppealsDb db, CancellationToken ct) =>
-        db.Reports.AsNoTracking().Where(r => r.Status == "open" && Kinds.Contains(r.TargetKind)).OrderBy(r => r.CreatedAt).ToListAsync(ct);
+    private static IQueryable<Report> OpenReports(AppealsDb db) => db.Reports.AsNoTracking().Where(r => r.Status == "open" && Kinds.Contains(r.TargetKind));
+
+    private static Task<List<Report>> OpenReportsAsync(AppealsDb db, CancellationToken ct) => OpenReports(db).OrderBy(r => r.CreatedAt).ToListAsync(ct);
 
     private static List<QueueReport> ReportsOn(IReadOnlyList<Report> reports, Guid id) =>
         reports.Where(r => r.TargetId == id).Select(r => new QueueReport(r.Id, r.Ground, r.Text, r.CreatedAt)).ToList();

@@ -94,10 +94,10 @@ public sealed class StaffSignInPageTests : BunitContext
     public void A_session_that_already_is_a_staff_session_is_sent_on()
     {
         Me.On("GetAsync", ApiResult<MeResponse>.Ok(CodeSession with { ActiveStaffRoles = ["moderator"] }));
-        Navigation.NavigateTo(StaffSessionPage.Link("/moderavimas/paslepti"));
+        Navigation.NavigateTo(StaffSessionPage.Link("/moderavimas/atsiliepimai"));
         Render<StaffSignIn>();
 
-        Navigation.Uri.ShouldEndWith("/moderavimas/paslepti");
+        Navigation.Uri.ShouldEndWith("/moderavimas/atsiliepimai");
         Me.Calls.ShouldBe(["GetAsync"]);
     }
 

@@ -72,6 +72,7 @@
 <data name="terms.outdated" xml:space="preserve"><value>Rodoma ne ta naudojimo taisyklių versija. Perkraukite puslapį ir perskaitykite galiojančias.</value></data>
 <data name="terms.not-accepted" xml:space="preserve"><value>Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.</value></data>
 <data name="registration.pending" xml:space="preserve"><value>Pirmiausia baikite registraciją.</value></data>
+<data name="queue.list-invalid" xml:space="preserve"><value>Tokio moderavimo sąrašo nėra.</value></data>
 <data name="side.invalid" xml:space="preserve"><value>Pasirinkite: prašyti balsuoti už arba prieš.</value></data>
 <data name="reason.empty" xml:space="preserve"><value>Parašykite argumentą.</value></data>
 <data name="reason.too-long" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip {0} ženklų.</value></data>

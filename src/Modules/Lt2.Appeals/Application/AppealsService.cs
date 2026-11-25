@@ -27,6 +27,7 @@ internal sealed class AppealsService(
     IAuditLog audit,
     IMpLinks links,
     ReportNotices notices,
+    IFollowerCounts followers,
     TimeProvider clock) : IAppealsModule
 {
     private const int PageSize = 20;
@@ -55,7 +56,7 @@ internal sealed class AppealsService(
             var (closedPage, total) = await ClosedPageAsync(db, found, offset, size, cancellationToken);
             var closedFacts = await reads.BillsAsync(closedPage.Select(a => a.BillNumber).ToList(), cancellationToken);
             var shownCounts = await reads.ShownCountsAsync(db, closedPage, cancellationToken);
-            var closedArguments = await ArgumentCountsAsync(db, closedPage.Select(a => a.Id).ToList(), cancellationToken);
+            var closedArguments = await AppealReads.ArgumentCountsAsync(db, closedPage.Select(a => a.Id).ToList(), cancellationToken);
             var closedItems = closedPage.Select(a =>
             {
                 var shown = shownCounts[a.Id];
@@ -76,7 +77,11 @@ internal sealed class AppealsService(
             .ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, cancellationToken);
         var openIds = recordsOnBills.Values.Where(a => a.Status == BillRecordStatuses.Open).Select(a => a.Id).ToList();
         var counts = await reads.CountsAsync(db, openIds, cancellationToken);
-        var arguments = await ArgumentCountsAsync(db, openIds, cancellationToken);
+        var arguments = await AppealReads.ArgumentCountsAsync(db, openIds, cancellationToken);
+
+        // Followers count into a bill's activity (design 8.12.5, 8.11.2; owner, 2026-11-25), a bill without a record too; the
+        // number orders the list and is in no row.
+        var following = await followers.BillsAsync(numbers, cancellationToken);
         var planned = await agenda.ForBillsAsync(numbers, cancellationToken);
         var soon = VilniusTime.Today(clock).AddDays(SoonDays);
         var candidates = active
@@ -91,7 +96,8 @@ internal sealed class AppealsService(
                     record is null ? 0 : arguments.GetValueOrDefault(record.Id), record?.LastActivityAt, record?.PlainTitle);
             });
         var ordered = BillListRules.Order(
-            candidates, BillSorts.Of(query.Sort), i => i.Counts.Total, i => i.Arguments, i => i.Planned?.Date, i => i.Bill.Number, i => i.LastActivityAt);
+            candidates, BillSorts.Of(query.Sort), i => i.Counts.Total, i => i.Arguments, i => following.GetValueOrDefault(i.Bill.Number), i => i.Planned?.Date,
+            i => i.Bill.Number, i => i.LastActivityAt);
         var page = ordered.Skip(Math.Min(offset, ordered.Count)).Take(size).ToList();
         return new BillListPage(page, ordered.Count, Next(offset, page.Count, ordered.Count));
     }
@@ -110,14 +116,6 @@ internal sealed class AppealsService(
 
         return (await closed.OrderByDescending(a => a.ClosedAt).ThenBy(a => a.Id).Skip(offset).Take(size).ToListAsync(ct), await closed.CountAsync(ct));
     }
-
-    /// <summary>How many published arguments each given record has.</summary>
-    private static async Task<Dictionary<Guid, int>> ArgumentCountsAsync(AppealsDb db, IReadOnlyCollection<Guid> recordIds, CancellationToken ct) =>
-        await db.Reasons.AsNoTracking()
-            .Where(r => recordIds.Contains(r.RecordId) && r.Status == ReasonStatuses.Published)
-            .GroupBy(r => r.RecordId)
-            .Select(g => new { g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
 
     private static string? Next(int offset, int taken, int total) =>
         offset + taken < total ? (offset + taken).ToString(CultureInfo.InvariantCulture) : null;
@@ -1127,20 +1125,26 @@ internal sealed class AppealsService(
             .ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, cancellationToken);
         var shownRecords = recordsOnBills.Values.Where(a => a.Status != BillRecordStatuses.Rejected).ToList();
         var shownCounts = await reads.ShownCountsAsync(db, shownRecords, cancellationToken);
-        var arguments = await ArgumentCountsAsync(db, shownRecords.Select(a => a.Id).ToList(), cancellationToken);
+        var arguments = await AppealReads.ArgumentCountsAsync(db, shownRecords.Select(a => a.Id).ToList(), cancellationToken);
         var threshold = await reads.ThresholdSettingsAsync(cancellationToken);
+        var following = await followers.BillsAsync(numbers.Where(known.ContainsKey).ToList(), cancellationToken);
         return numbers.Where(known.ContainsKey).ToDictionary(
             n => n,
             n =>
             {
                 if (recordsOnBills.GetValueOrDefault(n) is not { } record)
                 {
-                    return new BillRecordState(n, null, BillRecordStatuses.Open, SideCounts.None, AppealReads.Threshold(null, SideCounts.None, threshold));
+                    return new BillRecordState(
+                        n, null, BillRecordStatuses.Open, SideCounts.None, AppealReads.Threshold(null, SideCounts.None, threshold),
+                        Activity: BillListRules.Activity(0, 0, following.GetValueOrDefault(n)));
                 }
 
-                // A hidden record shows no numbers (design 8.12.3).
+                // A hidden record shows no numbers (design 8.12.3), and has no activity to order by.
                 var shown = shownCounts.GetValueOrDefault(record.Id) ?? SideCounts.None;
-                return new BillRecordState(n, record.Id, record.Status, shown, AppealReads.Threshold(record, shown, threshold), arguments.GetValueOrDefault(record.Id));
+                var argumentCount = arguments.GetValueOrDefault(record.Id);
+                return new BillRecordState(
+                    n, record.Id, record.Status, shown, AppealReads.Threshold(record, shown, threshold), argumentCount,
+                    record.Status == BillRecordStatuses.Rejected ? 0 : BillListRules.Activity(shown.Total, argumentCount, following.GetValueOrDefault(n)));
             },
             StringComparer.Ordinal);
     }

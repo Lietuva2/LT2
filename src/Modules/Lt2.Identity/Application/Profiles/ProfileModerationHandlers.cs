@@ -78,14 +78,31 @@ internal sealed class ProfileModerationHandlers(IDbContextFactory<IdentityDb> co
         return Result.Ok();
     }
 
+    public async Task<ProfileModerationCounts> CountsAsync(CancellationToken cancellationToken)
+    {
+        // Design 8.3: each tab's count by its own query, with the filter the list uses (the same builders).
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return new ProfileModerationCounts(await Reported(db).CountAsync(cancellationToken), await Hidden(db).CountAsync(cancellationToken));
+    }
+
+    private static IQueryable<ProfileReport> OpenReports(IdentityDb db) => db.ProfileReports.AsNoTracking().Where(r => r.Status == Open);
+
+    /// <summary>Profiles with an open report: one filter of the moderators' list and of its count.</summary>
+    private static IQueryable<Profile> Reported(IdentityDb db)
+    {
+        var reported = OpenReports(db).Select(r => r.TargetUserId);
+        return db.Profiles.AsNoTracking().Where(p => reported.Contains(p.UserId));
+    }
+
+    /// <summary>Profiles whose "Apie mane" is hidden: the other filter of the moderators' list and of its count.</summary>
+    private static IQueryable<Profile> Hidden(IdentityDb db) => db.Profiles.AsNoTracking().Where(p => p.AboutHiddenAt != null);
+
     public async Task<IReadOnlyList<ProfileModerationItem>> QueueAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var reports = await db.ProfileReports.AsNoTracking().Where(r => r.Status == Open).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
-        var reported = reports.Select(r => r.TargetUserId).Distinct().ToList();
-        var profiles = await db.Profiles.AsNoTracking()
-            .Where(p => reported.Contains(p.UserId) || p.AboutHiddenAt != null)
-            .ToListAsync(cancellationToken);
+        var reports = await OpenReports(db).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
+        var reported = reports.Select(r => r.TargetUserId).ToHashSet();
+        var profiles = (await Reported(db).Concat(Hidden(db)).ToListAsync(cancellationToken)).DistinctBy(p => p.UserId);
         return profiles
             .OrderBy(p => reported.Contains(p.UserId) ? 0 : 1)
             .ThenByDescending(p => p.AboutHiddenAt)

@@ -89,6 +89,16 @@ public static class DescriptionSources
 }
 
 /// <summary>
+/// The two lists of the moderators' queue answer (design 8.3, the tabs Projektai and Argumentai):
+/// <c>GET /api/v1/moderation/queue?list=</c> reads only that one; without it, both.
+/// </summary>
+public static class QueueLists
+{
+    public const string Records = "records";
+    public const string Reasons = "reasons";
+}
+
+/// <summary>
 /// What a report is about, and what a moderator's action and its notice to the reporters are about: a bill's description
 /// (<see cref="Record"/>), an argument, an organisation or its statement (design 8.14.14), an MP's response (design 8.5.5), a
 /// comment (design 8.23.8) or a member's public profile (design 8.25).

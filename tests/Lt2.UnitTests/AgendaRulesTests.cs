@@ -1,4 +1,5 @@
 using Lt2.Api.Contracts.Me;
+using Lt2.Appeals.Domain;
 using Lt2.Web.Client.Agenda;
 
 namespace Lt2.UnitTests;
@@ -10,14 +11,21 @@ namespace Lt2.UnitTests;
 /// </summary>
 public sealed class AgendaRulesTests
 {
-    private sealed record Row(string Number, bool Known, int Participants, int Arguments, string? Stage);
+    private sealed record Row(string Number, bool Known, int Participants, int Arguments, string? Stage, int Followers = 0);
 
     private static List<string> Order(params Row[] rows) =>
-        AgendaRules.WithinDay(rows, r => r.Known, r => AgendaRules.Activity(r.Participants, r.Arguments), r => r.Stage, r => r.Number)
+        AgendaRules.WithinDay(rows, r => r.Known, r => BillListRules.Activity(r.Participants, r.Arguments, r.Followers), r => r.Stage, r => r.Number)
             .Select(r => r.Number).ToList();
 
     [Fact]
-    public void Activity_is_participants_plus_published_arguments() => AgendaRules.Activity(6800 + 4280, 12).ShouldBe(11092);
+    public void A_day_counts_followers_into_activity_as_participants_and_arguments()
+    {
+        Order(
+                new Row("XVP-0001", true, 2, 0, "adoption"),
+                new Row("XVP-0002", true, 0, 0, "presentation", Followers: 3),
+                new Row("XVP-0003", true, 1, 1, "adoption", Followers: 0))
+            .ShouldBe(["XVP-0002", "XVP-0001", "XVP-0003"]);
+    }
 
     [Fact]
     public void A_day_puts_the_most_activity_first_counting_arguments_as_participants()

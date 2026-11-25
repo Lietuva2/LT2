@@ -82,6 +82,12 @@ public interface IFollowerCounts
 {
     Task<int> BillAsync(string billNumber, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// How many follow each of many bills at once (design 8.3, "Projektai be aprašymo"), by the bill's number as
+    /// <see cref="BillAsync"/> counts it; a bill nobody follows is not in the answer.
+    /// </summary>
+    Task<IReadOnlyDictionary<string, int>> BillsAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
+
     Task<int> MpAsync(long seimasPersonId, CancellationToken cancellationToken);
 
     Task<int> OrganisationAsync(Guid organisationId, CancellationToken cancellationToken);

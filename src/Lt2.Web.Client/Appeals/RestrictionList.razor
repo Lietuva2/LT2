@@ -47,6 +47,9 @@
 </section>
 
 @code {
+    /// <summary>The moderators' tabs, told after an action so their counts are read again (design 8.3); null elsewhere.</summary>
+    [CascadingParameter] public QueueChanges? QueueChanges { get; set; }
+
     private Guid? _lifting;
     private string _statement = "";
 
@@ -82,5 +85,6 @@
         _statement = "";
         Info = L["Restrict.Lifted"];
         await ReloadAsync();
+        await (QueueChanges?.ChangedAsync() ?? Task.CompletedTask);
     });
 }

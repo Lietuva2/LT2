@@ -248,16 +248,36 @@ internal sealed class MpResponsesService(
         return Result.Ok();
     }
 
+    public async Task<ResponseModerationCounts> CountsAsync(CancellationToken cancellationToken)
+    {
+        // Design 8.3: each tab's count by its own query, with the filter its list uses (the same builders).
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return new ResponseModerationCounts(await DueResponses(db).CountAsync(cancellationToken), await HiddenResponses(db).CountAsync(cancellationToken));
+    }
+
+    private static IQueryable<Report> OpenResponseReports(AppealsDb db) => db.Reports.AsNoTracking().Where(r => r.Status == "open" && r.TargetKind == Kind);
+
+    /// <summary>
+    /// The responses in the queue (design 8.5.5): public or withdrawn, and flagged by pre-screening and not yet seen, or
+    /// reported. The one filter of the list and of its count.
+    /// </summary>
+    private static IQueryable<MpResponse> DueResponses(AppealsDb db)
+    {
+        var reported = OpenResponseReports(db).Select(r => r.TargetId);
+        return db.MpResponses.AsNoTracking()
+            .Where(r => (r.Status == ResponseStatuses.Published || r.Status == ResponseStatuses.Withdrawn)
+                && ((r.SeenAt == null && r.ScreeningFlags.Length > 0) || reported.Contains(r.Id)));
+    }
+
+    private static IQueryable<MpResponse> HiddenResponses(AppealsDb db) => db.MpResponses.AsNoTracking().Where(r => r.Status == ResponseStatuses.Hidden);
+
     public async Task<ResponseModerationItems> ItemsAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var reports = await db.Reports.AsNoTracking().Where(r => r.Status == "open" && r.TargetKind == Kind).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
-        var reported = reports.Select(r => r.TargetId).Distinct().ToList();
-        var due = db.MpResponses.AsNoTracking()
-            .Where(r => (r.Status == ResponseStatuses.Published || r.Status == ResponseStatuses.Withdrawn)
-                && ((r.SeenAt == null && r.ScreeningFlags.Length > 0) || reported.Contains(r.Id)));
+        var reports = await OpenResponseReports(db).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
+        var due = DueResponses(db);
         var queued = await due.OrderBy(r => r.EditedAt ?? r.PublishedAt).Take(QueueLimit).ToListAsync(cancellationToken);
-        var allHidden = db.MpResponses.AsNoTracking().Where(r => r.Status == ResponseStatuses.Hidden);
+        var allHidden = HiddenResponses(db);
         var hidden = await allHidden.OrderByDescending(r => r.HiddenAt).Take(QueueLimit).ToListAsync(cancellationToken);
 
         // Owner, 2026-11-18: the lists still show the first hundred, and say so when there are more.

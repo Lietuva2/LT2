@@ -67,8 +67,8 @@ public sealed class TermsRuleTests
         StaffSessionPage.Back("/\\kitas.pavyzdys.test").ShouldBeNull();
         StaffSessionPage.Back(StaffSessionPage.Path).ShouldBeNull("never back to itself");
         StaffSessionPage.Link("https://kitas.pavyzdys.test/").ShouldBe(StaffSessionPage.Path);
-        StaffSessionPage.Back(InvitationLink.FromFragment(StaffSessionPage.Link("/moderavimas/paslepti"), StaffSessionPage.BackParameter))
-            .ShouldBe("/moderavimas/paslepti", "what the link carries, the page reads back");
+        StaffSessionPage.Back(InvitationLink.FromFragment(StaffSessionPage.Link("/moderavimas/atsiliepimai"), StaffSessionPage.BackParameter))
+            .ShouldBe("/moderavimas/atsiliepimai", "what the link carries, the page reads back");
     }
 
     [Fact]

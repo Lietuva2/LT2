@@ -47,6 +47,7 @@ public static class AppealsModule
         services.AddScoped<ReportNotices>();
         services.AddScoped<ModerationRecorder>();
         services.AddScoped<IAppealsModule, AppealsService>();
+        services.AddScoped<UndescribedBillReads>();
         services.AddScoped<ModerationService>();
         services.AddScoped<IAppealsModeration>(sp => sp.GetRequiredService<ModerationService>());
 

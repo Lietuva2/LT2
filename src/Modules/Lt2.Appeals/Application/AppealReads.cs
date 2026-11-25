@@ -138,6 +138,14 @@ internal sealed class AppealReads(
     public async Task<IReadOnlyDictionary<string, BillFacts>> BillsAsync(IReadOnlyCollection<string> numbers, CancellationToken ct) =>
         numbers.Count == 0 ? new Dictionary<string, BillFacts>() : await bills.FindManyAsync(numbers, ct);
 
+    /// <summary>How many published arguments each given record has (a record without any is not in the answer).</summary>
+    public static async Task<Dictionary<Guid, int>> ArgumentCountsAsync(AppealsDb db, IReadOnlyCollection<Guid> recordIds, CancellationToken ct) =>
+        await db.Reasons.AsNoTracking()
+            .Where(r => recordIds.Contains(r.RecordId) && r.Status == ReasonStatuses.Published)
+            .GroupBy(r => r.RecordId)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
+
     /// <summary>
     /// The counted "Man svarbu" of the given arguments (owner, 2026-11-18, <see cref="AppealRules.MarkCounts"/>): only marks
     /// whose giver's current side on the bill is the argument's side, joined with the positions when read, so a changed side

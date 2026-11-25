@@ -91,7 +91,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         // Owner, 2026-11-18: no "Apie ką projektas" here, so the full-width "Stadijos Seime" keeps the e-seimas link.
         var eSeimas = (await stranger.GetJsonAsync<Lt2.Api.Contracts.Parliament.BillResponse>(ParliamentRoutes.BillByNumber(AppealSteps.ThirdBill))).ESeimasUrl.ShouldNotBeNull();
         page.ShouldNotContain("id=\"about\"");
-        page[page.IndexOf("id=\"stages\"", StringComparison.Ordinal)..].ShouldContain($"<a href=\"{eSeimas}\" rel=\"external\">Projektas e-seime</a>");
+        page[page.IndexOf("id=\"stages\"", StringComparison.Ordinal)..].ShouldContain($"<a href=\"{eSeimas}\" target=\"_blank\" rel=\"external noopener\">Projektas e-seime</a>");
 
         using (var side = await member.TakeSideAsync(AppealSteps.ThirdBill, "for"))
         {
@@ -491,7 +491,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         (described.Description, described.DescriptionSource, described.DescriptionUrl).ShouldBe((Text, "moderator", Address));
         (await moderator.ModerationBillAsync(AppealSteps.SecondBill)).DescriptionUrl.ShouldBe(Address);
         var page = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.SecondBill));
-        page.ShouldContain($"<a href=\"{Address}\" rel=\"external\" id=\"description-from\">Oficialus tekstas, iš kurio parengta</a>");
+        page.ShouldContain($"<a href=\"{Address}\" id=\"description-from\" target=\"_blank\" rel=\"external noopener\">Oficialus tekstas, iš kurio parengta</a>");
         (await Database.ScalarAsync<long>(
             "SELECT count(*) FROM audit.event WHERE action = 'moderation.record.describe' AND target = @t AND details->'extra'->>'descriptionUrl' = @u",
             ("t", "record:" + described.Id), ("u", Address))).ShouldBe(1, "the address is not personal data and is in the audit details");

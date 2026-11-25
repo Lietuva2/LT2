@@ -156,8 +156,14 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
 
 internal sealed class HttpModerationApi(ApiHttp http) : IModerationApi
 {
-    public Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default) =>
-        http.SendAsync<ModerationQueueResponse>(HttpMethod.Get, AppealRoutes.ModerationQueue, null, cancellationToken);
+    public Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(string? list = null, CancellationToken cancellationToken = default) =>
+        http.SendAsync<ModerationQueueResponse>(HttpMethod.Get, list is null ? AppealRoutes.ModerationQueue : AppealRoutes.ModerationQueueOf(list), null, cancellationToken);
+
+    public Task<ApiResult<ModerationCountsResponse>> GetCountsAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<ModerationCountsResponse>(HttpMethod.Get, AppealRoutes.ModerationCounts, null, cancellationToken);
+
+    public Task<ApiResult<UndescribedBillsResponse>> GetUndescribedAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<UndescribedBillsResponse>(HttpMethod.Get, AppealRoutes.Undescribed, null, cancellationToken);
 
     public Task<ApiResult<AuthorViewResponse>> GetAuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
         http.SendAsync<AuthorViewResponse>(HttpMethod.Get, AppealRoutes.With(AppealRoutes.ReasonAuthor, reasonId), null, cancellationToken);

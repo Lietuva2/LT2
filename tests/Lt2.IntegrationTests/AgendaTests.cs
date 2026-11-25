@@ -116,6 +116,12 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
         using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
+        // Followers count into activity (8.12.5): of these bills only the third is followed, by its participant (a first side follows).
+        foreach (var bill in new[] { AppealSteps.SecondBill, AppealSteps.ThirdBill })
+        {
+            await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+        }
+
         await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "for");
         await Database.FreeBillAsync(AppealSteps.SecondBill);
         const string Unknown = "XVP-9871";
@@ -528,7 +534,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             // Owner, 2026-11-18: the e-seimas address once, under "no description yet"; the stages repeat it not.
             var eSeimas = (await visitor.GetJsonAsync<BillResponse>(ParliamentRoutes.BillByNumber(AppealSteps.SecondBill))).ESeimasUrl.ShouldNotBeNull();
             html.Split($"href=\"{eSeimas}\"").Length.ShouldBe(2, "the e-seimas address once on the page");
-            html.ShouldContain($"<a href=\"{eSeimas}\" rel=\"external\">Projekto tekstas e. seime</a>");
+            html.ShouldContain($"<a href=\"{eSeimas}\" target=\"_blank\" rel=\"external noopener\">Projekto tekstas e. seime</a>");
             html.ShouldNotContain("Projektas e-seime");
             html.ShouldContain("id=\"side-picker\"");
             html.ShouldContain("href=\"/prisijungti\"");

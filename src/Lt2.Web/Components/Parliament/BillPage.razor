@@ -130,12 +130,12 @@
                                 }
                                 @if (a.DescriptionUrl is { } from)
                                 {
-                                    @(" · ")<a href="@from" rel="external" id="description-from">@A["What.MadeFrom"]</a>
+                                    @(" · ")<Lt2.Web.Client.Components.OfficialLink Href="@from" Id="description-from">@A["What.MadeFrom"]</Lt2.Web.Client.Components.OfficialLink>
                                 }
                                 @(" · ")<a href="/seimas/@Uri.EscapeDataString(b.Number)/istorija">@A["History.Link"]</a>
                                 @if (b.ESeimasUrl is { } link && link != a.DescriptionUrl)
                                 {
-                                    @(" · ")<a href="@link" rel="external">@A["What.ESeimas"]</a>
+                                    @(" · ")<Lt2.Web.Client.Components.OfficialLink Href="@link">@A["What.ESeimas"]</Lt2.Web.Client.Components.OfficialLink>
                                 }
                             </p>
                             @if (a.Id is { } describedRecord)
@@ -148,7 +148,7 @@
                             <p id="no-description">@A["What.None"]</p>
                             @if (b.ESeimasUrl is { } link)
                             {
-                                <p class="fine"><a href="@link" rel="external">@A["What.ESeimas"]</a></p>
+                                <p class="fine"><Lt2.Web.Client.Components.OfficialLink Href="@link">@A["What.ESeimas"]</Lt2.Web.Client.Components.OfficialLink></p>
                             }
                         }
                     </section>
@@ -191,7 +191,7 @@
                             <h2 id="h-result">@A[a.ClosedReason == ClosingReasons.Withdrawn ? "Closed.Heading.withdrawn" : "Closed.Heading"]</h2>
                             <p id="closed-decision">@A.Format("Closed.Decision." + a.ClosedReason, Display.Day(decidedOn))@if (a.ClosedSourceUrl is { } closedSource)
                                 {
-                                    @(" ")<a href="@closedSource" rel="external noopener" id="closed-source">@A["Closed.Source"]</a>
+                                    @(" ")<Lt2.Web.Client.Components.OfficialLink Href="@closedSource" Id="closed-source">@A["Closed.Source"]</Lt2.Web.Client.Components.OfficialLink>
                                 }</p>
                         </section>
                     }
@@ -536,7 +536,7 @@
                         Answer="@(source.SetByModerator ? A["Planned.Answer.moderator"] : A["Planned.Answer.agenda"])" More="/metodika#planned-dates" />
                     @if (!source.SetByModerator && b.PlannedAgendaUrl is { } agendaPage && agendaPage.StartsWith("https://", StringComparison.Ordinal))
                     {
-                        @(" · ")<a href="@agendaPage" rel="external" id="planned-agenda">@A["Planned.AgendaLink"]</a>
+                        @(" · ")<Lt2.Web.Client.Components.OfficialLink Href="@agendaPage" Id="planned-agenda">@A["Planned.AgendaLink"]</Lt2.Web.Client.Components.OfficialLink>
                     }
                 </p>
             }
@@ -552,7 +552,7 @@
                    page has "Apie ką projektas", whose small line always carries it ("Projekto tekstas e. seime", or
                    "Oficialus tekstas, iš kurio parengta" when that is the same address); without one (a hidden record, a
                    finished bill nobody took part in) this sheet does. *@
-                <p class="fine"><a href="@documents" rel="external">@F.T["Bill.ESeimas"]</a></p>
+                <p class="fine"><Lt2.Web.Client.Components.OfficialLink Href="@documents">@F.T["Bill.ESeimas"]</Lt2.Web.Client.Components.OfficialLink></p>
             }
         </section>;
 

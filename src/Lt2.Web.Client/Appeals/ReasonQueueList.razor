@@ -1,0 +1,43 @@
+@inherits InteractiveBase<AppealUi>
+@inject IModerationApi ModerationApi
+
+@* The moderators' tab "Argumentai" (design 8.3, 8.12.3): arguments flagged by pre-screening, reported or not yet seen,
+   oldest first, at most a hundred with the total. Reads only its own list of the queue. Never a side of a person. *@
+<Messages Message="@Message" Info="@Info" />
+
+@if (Queue is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="stack" aria-labelledby="h-reasons">
+        <h2 id="h-reasons">@L["Mod.Reasons"]</h2>
+        @if (Queue.Reasons.Count == 0)
+        {
+            <p class="small">@L["Mod.Empty"]</p>
+        }
+        <QueueCut Shown="Queue.Reasons.Count" Total="Queue.ReasonsTotal" Id="queue-reasons-cut" />
+        @foreach (var reason in Queue.Reasons)
+        {
+            <QueueReasonItem @key="reason.Id" Reason="reason" />
+        }
+    </section>
+}
+
+@code {
+    [PersistentState] public ModerationQueueResponse? Queue { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Queue is null)
+        {
+            var queue = await ModerationApi.GetQueueAsync(QueueLists.Reasons);
+            Queue = queue.Value;
+            if (!queue.IsSuccess)
+            {
+                Show(queue.Problem);
+            }
+        }
+    }
+}

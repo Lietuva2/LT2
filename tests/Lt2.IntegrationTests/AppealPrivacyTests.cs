@@ -136,7 +136,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             AppealRoutes.Appeals, AppealRoutes.RecordOf(AppealSteps.ThirdBill), AppealRoutes.HistoryOf(AppealSteps.ThirdBill),
             Lt2.Api.Contracts.Digests.DigestRoutes.Digests, AppealRoutes.ModerationQueue,
         };
-        var pages = new[] { "/seimas/XVP-0618", "/projektai", "/moderavimas" };
+        var pages = new[] { "/seimas/XVP-0618", "/projektai", "/moderavimas?skiltis=argumentai" };
 
         foreach (var (who, browser) in viewers)
         {

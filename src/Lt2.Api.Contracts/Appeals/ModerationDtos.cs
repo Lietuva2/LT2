@@ -80,6 +80,31 @@ public sealed record HiddenItemsResponse(IReadOnlyList<HiddenRecordResponse> Rec
 public sealed record ModerationQueueResponse(
     IReadOnlyList<QueueRecordResponse> Records, IReadOnlyList<QueueReasonResponse> Reasons, int RecordsTotal = 0, int ReasonsTotal = 0);
 
+/// <summary>
+/// A bill on "Projektai be aprašymo" (design 8.3): no description, or an AI summary nobody has read
+/// (<c>DescriptionSource</c> <c>ai</c>; null without a description), with the numbers its page shows. <c>Bill.PlainTitle</c> is
+/// the readable title of such a summary, if it has one.
+/// </summary>
+public sealed record UndescribedBillResponse(
+    BillRefResponse Bill, string? DescriptionSource, int Participants, int Arguments, int Followers, PlannedDateResponse? Planned);
+
+/// <summary>
+/// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): active bills people pay attention to that still want a
+/// description, the most attention first; at most a hundred, with how many there are in all. Holds nothing about who.
+/// </summary>
+public sealed record UndescribedBillsResponse(IReadOnlyList<UndescribedBillResponse> Bills, int Total);
+
+/// <summary>
+/// How many items each list of the moderators' tabs holds (design 8.3, owner 2026-11-25): numbers only, each the whole
+/// total, not the hundred a list shows. The work lists: the bills' records and the arguments of the queue, new and changed
+/// organisations, organisations' statements, MPs' responses, reported profiles, reported comments. The reference lists:
+/// "Projektai be aprašymo", every hidden item (records, arguments, blocked organisations, hidden statements, organisations
+/// kept out of summaries, responses, "Apie mane" texts, comments) and the writing restrictions.
+/// </summary>
+public sealed record ModerationCountsResponse(
+    int Records, int Reasons, int Organisations, int Statements, int Responses, int Profiles, int Comments,
+    int Undescribed, int Hidden, int Restrictions);
+
 /// <summary>Publishing an argument or keeping something as it is: the statement is optional.</summary>
 public sealed record ModerationRequest
 {

@@ -481,6 +481,9 @@ public sealed record ProfileReportInfo(Guid Id, string Ground, string? Text, Dat
 public sealed record ProfileModerationItem(
     Guid Id, string? ProfileId, string? DisplayName, string? About, DateTimeOffset? HiddenAt, string? HiddenStatement, bool Restorable, IReadOnlyList<ProfileReportInfo> Reports);
 
+/// <summary>How many profiles the moderators' lists hold (design 8.3, the tabs' counts): with an open report, and with "Apie mane" hidden; each by its own query with its list's filter.</summary>
+public sealed record ProfileModerationCounts(int Reported, int Hidden);
+
 /// <summary>Public profiles: the person's own form (design 8.25), reports and moderation (design 8.25.6).</summary>
 public interface IMemberProfiles
 {
@@ -515,6 +518,9 @@ public interface IMemberProfiles
 
     /// <summary>Profiles with open reports, then hidden texts, for the moderators.</summary>
     Task<IReadOnlyList<ProfileModerationItem>> QueueAsync(CancellationToken cancellationToken);
+
+    /// <summary>How many profiles are reported and have "Apie mane" hidden (design 8.3), each by its own query, not by reading the list.</summary>
+    Task<ProfileModerationCounts> ModerationCountsAsync(CancellationToken cancellationToken);
 
     /// <summary>Hides "Apie mane" with a statement emailed to the person; its open reports close; audited without the text.</summary>
     Task<Result<Unit>> HideAboutAsync(Guid id, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
