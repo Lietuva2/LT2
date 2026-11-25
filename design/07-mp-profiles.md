@@ -13,6 +13,7 @@ page). The import reads one chain of services (`SeimasServices`), one query para
 | Agenda items with the bill number in the title, and the stage's ID, name and e-seimas link in `KlausimoStadija` | `p2b.ad_sp_darbotvarke?posedzio_id=` |
 | Votes of the sitting's items, with the motion and official outcome in `aprasas`, joined to the agenda by `kl_stad_id` when available | `p2b.ad_seimo_posedzio_eiga_full?posedzio_id=` |
 | Totals, the official note, and each MP's vote with faction | `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=` |
+| Bills registered or changed in TAIS today: registration number, title, the e-seimas project link | `p2b.tais_docs` (no parameter) |
 
 The term imported is `Seimas:TermId` (10, 2024–2028). Factions, committees, commissions and groups come from the MPs'
 memberships. Parliamentary groups have their own ID field. Other bodies' kinds are read from their names
@@ -22,7 +23,8 @@ group of MPs is a group, not a faction. Every element and attribute the parsers 
 suite (`LT2_SEIMAS_LIVE=1`) checks every line against the real service.
 
 The MP's photo, birth date and biography are not imported: a profile shows the MP's initials. The bill's e-seimas link
-comes from the agenda item; nothing is read from e-seimas pages, the Central Electoral Commission (VRK) or the Chief
+comes from the agenda item, or from TAIS for a bill no agenda item has linked yet; the upcoming agenda is entered by
+staff from the e-seimas agenda documents (8.4), and otherwise nothing is read from e-seimas pages, the Central Electoral Commission (VRK) or the Chief
 Official Ethics Commission (VTEK).
 
 Deliberately not shown: parliamentary expenses and anything else that grades the MP's work, and no ranking or comparison
@@ -55,6 +57,14 @@ stands only on the profile, orders no list and is never added up per faction or 
   address in its source, statistics recomputed). Ballots are matched to the MPs already imported, so the MPs come before
   the votes, and `parliament-everything` walks MPs, then sittings, then votes. A manual run that finds another import
   running, or that the service fails, fails the job, listed with its reason; its outcome is the job's parameter "Outcome".
+- **TAIS projects** (`p2b.tais_docs`, owner, 2026-11-25). One answer without parameters: the projects of every
+  institution with an event in TAIS on the current day (registered, a document linked, a new revision), made anew during
+  the day. The walk asks for it on every run, at most once an hour, after the sittings, and stores it like every
+  response. Each `Document` whose `projectRegistrationNo` is a Seimas bill's number (`BillNumbers`, its revision
+  dropped) creates the bill when the site does not know it, with its `title` and its `url` as the e-seimas link; a known
+  bill takes the link and the title only where it has none (an agenda's title stands). Other institutions' projects are
+  skipped. It holds only that day's events, so a day not read is not read later: the bills registered earlier come from
+  the agendas (the open data's, or entered, 8.4).
 - Every response is stored in `raw_document` with its hash; parsing is a separate, repeatable step. Upserts are keyed by
   Seimas identifiers, so re-running any step changes nothing. A ballot is matched to an MP by `asmens_id`, or by name
   among the term's MPs when the row has none.

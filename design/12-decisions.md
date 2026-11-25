@@ -80,6 +80,8 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   votes); the scheduled job triggered when not due says so in the log and on its dashboard page (7.2, 2026-11-18).
 - A bill's number and title are one link in an MP's list of bills and in the follow list, as on a member's page
   (2026-11-17).
+- The bills registered or changed in TAIS are imported periodically from `p2b.tais_docs`, the latest data in a readable
+  form (7.2, 2026-11-25).
 - A moderator corrects a vote's classification (7.2, 2026-11-20: "build it"). The designer's choices as built: a moderator
   or an administrator in a staff-passkey session, on the vote's page under "Moderavimas", with a required statement,
   audited (`vote.reclassified`, `vote.classification-reset`), undone by "Grąžinti taisyklių klasifikaciją"; only the kind
@@ -139,6 +141,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 
 ## 8.4 Summaries to MPs
 
+- The upcoming agenda is entered by staff a day at a time from the e-seimas agenda documents, through a browser agent,
+  until the Seimas gives programmatic access to TAIS; the watcher stays as built and will replace the entry then. An
+  entered day creates the bills the site does not know (8.4, 2026-11-25).
 - The timing of a summary is changed by a moderator, on flags from people (2026-11-12). "Data neteisinga?" takes an
   optional "Tikroji data (jei žinote)", shown to the moderators (2026-11-17).
 - A dry-run summary does not count as a summary sent (2026-11-13).
