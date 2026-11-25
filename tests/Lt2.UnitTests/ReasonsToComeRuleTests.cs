@@ -2,6 +2,7 @@ using Lt2.Api.Contracts.Me;
 using Lt2.Appeals.Ai;
 using Lt2.Appeals.Domain;
 using Lt2.Notifications.Follows;
+using Lt2.SharedKernel;
 
 namespace Lt2.UnitTests;
 
@@ -14,17 +15,76 @@ public sealed class AiDraftRuleTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Without_a_source_text_there_is_no_draft(string? source) => AiDraftRules.CheckRequest(source, 0).ShouldBe("draft.source-required");
+    public void Without_a_source_text_and_without_a_reader_there_is_no_draft(string? source) =>
+        AiDraftRules.CheckRequest(source, canRead: false, 0).ShouldBe("draft.source-required");
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Without_a_source_text_but_with_a_reader_the_draft_may_be_asked_for(string? source)
+    {
+        AiDraftRules.CheckRequest(source, canRead: true, 0).ShouldBeNull();
+        AiDraftRules.CheckRequest(source, canRead: true, 20).ShouldBe("draft.too-many", "the hourly limit still holds");
+    }
 
     [Fact]
-    public void A_source_over_twenty_thousand_characters_is_refused_not_cut() =>
-        AiDraftRules.CheckRequest(new string('a', 20_001), 0).ShouldBe("draft.source-too-long");
+    public void A_source_over_twenty_thousand_characters_is_refused_not_cut()
+    {
+        AiDraftRules.CheckRequest(new string('a', 20_001), canRead: false, 0).ShouldBe("draft.source-too-long");
+        AiDraftRules.CheckRequest(new string('a', 20_001), canRead: true, 0).ShouldBe("draft.source-too-long");
+        AiDraftRules.CheckRequest(new string('a', 20_000), canRead: false, 0).ShouldBeNull();
+    }
 
     [Fact]
     public void A_moderator_may_ask_for_twenty_drafts_an_hour()
     {
-        AiDraftRules.CheckRequest("Aiškinamasis raštas.", 19).ShouldBeNull();
-        AiDraftRules.CheckRequest("Aiškinamasis raštas.", 20).ShouldBe("draft.too-many");
+        AiDraftRules.CheckRequest("Aiškinamasis raštas.", canRead: false, 19).ShouldBeNull();
+        AiDraftRules.CheckRequest("Aiškinamasis raštas.", canRead: false, 20).ShouldBe("draft.too-many");
+    }
+
+    private static BillDocument Note(string text, string? address = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys-ar") =>
+        new(BillDocumentKinds.ExplanatoryNote, text, address);
+
+    private static BillDocument BillText(string text, string? address = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys") =>
+        new(BillDocumentKinds.BillText, text, address);
+
+    [Fact]
+    public void The_documents_sent_keep_the_readers_order_trimmed()
+    {
+        var sent = AiDraftRules.Sendable([Note("  Aiškinamasis raštas. \n"), BillText("\nProjekto tekstas.")]);
+        sent.Select(d => d.Kind).ShouldBe([BillDocumentKinds.ExplanatoryNote, BillDocumentKinds.BillText]);
+        sent.Select(d => d.Text).ShouldBe(["Aiškinamasis raštas.", "Projekto tekstas."]);
+        sent[0].Address.ShouldBe("https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys-ar");
+    }
+
+    [Fact]
+    public void An_empty_document_is_not_sent_and_none_read_is_none_sent()
+    {
+        AiDraftRules.Sendable([Note("   "), BillText("Projekto tekstas.")]).Select(d => d.Kind).ShouldBe([BillDocumentKinds.BillText]);
+        AiDraftRules.Sendable([Note(""), BillText(" \n ")]).ShouldBeEmpty();
+        AiDraftRules.Sendable([]).ShouldBeEmpty();
+        AiDraftRules.Sendable(null).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_document_that_would_pass_twenty_thousand_characters_is_left_out_whole_and_a_later_small_one_is_kept()
+    {
+        var note = Note(new string('a', 15_000));
+        var longText = BillText(new string('b', 6_000));
+        var small = new BillDocument(BillDocumentKinds.BillText, new string('c', 5_000), null);
+        var sent = AiDraftRules.Sendable([note, longText, small]);
+
+        sent.Select(d => d.Text.Length).ShouldBe([15_000, 5_000], "nothing is cut");
+        sent.Select(d => d.Text[0]).ShouldBe(['a', 'c']);
+        sent.Sum(d => d.Text.Length).ShouldBe(AiDraftRules.SourceMaxLength);
+    }
+
+    [Fact]
+    public void One_document_over_twenty_thousand_characters_is_not_sent_at_all()
+    {
+        AiDraftRules.Sendable([Note(new string('a', 20_001))]).ShouldBeEmpty();
+        AiDraftRules.Sendable([Note(new string('a', 20_000))]).Single().Text.Length.ShouldBe(20_000);
     }
 
     [Fact]

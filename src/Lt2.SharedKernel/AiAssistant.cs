@@ -12,10 +12,16 @@ public enum DraftPurpose
 }
 
 /// <summary>
-/// What a description draft is made from (design 8.11.4): the bill's number and title and the official text a moderator
-/// pasted, or the bill's explanatory note for the summary job (8.13). No personal data.
+/// What a description draft is made from (design 8.11.4, 8.13): the bill's number and title and the official documents,
+/// numbered from 1 in this order: the text a moderator pasted, or the bill's explanatory note and its text as the reader
+/// gives them. The answer names the one the description rests on by that number. No personal data.
 /// </summary>
-public sealed record DraftSource(string BillNumber, string BillTitle, string SourceText, DraftPurpose Purpose = DraftPurpose.ModeratorDraft);
+public sealed record DraftSource(string BillNumber, string BillTitle, IReadOnlyList<BillDocument> Documents, DraftPurpose Purpose = DraftPurpose.ModeratorDraft)
+{
+    /// <summary>One pasted official text, as the moderator's form sends it.</summary>
+    public static DraftSource Pasted(string billNumber, string billTitle, string text) =>
+        new(billNumber, billTitle, [new BillDocument(BillDocumentKinds.Pasted, text, null)]);
+}
 
 /// <summary>
 /// The one interface to an AI provider (design 3, 8.11.4): the Claude API (decided by the owner on 2026-11-13), on only with
@@ -28,8 +34,9 @@ public interface IAiAssistant
     bool IsConfigured { get; }
 
     /// <summary>
-    /// Two to four plain Lithuanian sentences on what the source says the bill changes, following the public prompt in the
-    /// repository; <c>draft.not-configured</c> without a provider.
+    /// The provider's answer in the public prompt's fixed form (a title, two to four plain Lithuanian sentences on what the
+    /// source says the bill changes, the document they rest on and a public statement), read by the module;
+    /// <c>draft.not-configured</c> without a provider.
     /// </summary>
     Task<Result<string>> DraftDescriptionAsync(DraftSource request, CancellationToken cancellationToken);
 }

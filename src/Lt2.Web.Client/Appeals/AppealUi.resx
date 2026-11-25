@@ -247,14 +247,13 @@
 <data name="Mod.Sentence.appeal.keep" xml:space="preserve"><value>Projektas liks toks, koks yra; pranešimai apie aprašymą ir pastabos apie datą bus uždaryti.</value></data>
 <data name="Mod.Sentence.appeal.hide" xml:space="preserve"><value>Dalyvavimas dėl projekto bus uždarytas: puslapyje liks tik projektas ir jūsų paaiškinimas. Pozicijos ir argumentai išsaugomi nematomi ir atkūrus grįžta.</value></data>
 <data name="Mod.Sentence.appeal.threshold" xml:space="preserve"><value>Projektas turės savo ribą vietoj bendros visiems projektams; ji liks, kol moderatorius jos nepakeis. Paaiškinimas rodomas projekto puslapyje.</value></data>
-<data name="Mod.Sentence.appeal.describe" xml:space="preserve"><value>Aprašymas bus rodomas iš karto projekto puslapyje su žyma „Parašė moderatorius“ (arba „Sukurta DI · taisė žmonės“, jei pradėjote nuo juodraščio ar taisote DI sukurtą aprašymą), o ankstesnis liks keitimų istorijoje. Paaiškinimas įrašomas į moderavimo žurnalą.</value></data>
-<data name="Mod.Sentence.appeal.confirm" xml:space="preserve"><value>Jūs perskaitėte DI sukurtą aprašymą ir jis tikslus. Tekstas liks toks pat, o žyma pasikeis į „Sukurta DI · taisė žmonės“. Pranešimai apie aprašymą bus uždaryti.</value></data>
+<data name="Mod.Sentence.appeal.describe" xml:space="preserve"><value>Aprašymas bus rodomas iš karto projekto puslapyje su žyma „Parašė moderatorius“ (arba „Sukurta DI · taisė žmonės“, jei pradėjote nuo juodraščio ar taisote DI sukurtą aprašymą), o ankstesnis liks keitimų istorijoje.</value></data>
+<data name="Mod.Sentence.appeal.confirm" xml:space="preserve"><value>Jūs perskaitėte DI sukurtą aprašymą ir jis tikslus. Tekstas liks toks pat, o žyma pasikeis į „Sukurta DI · taisė žmonės“. Pranešimai apie aprašymą bus uždaryti. Patvirtinimas bus matyti keitimų istorijoje.</value></data>
 <data name="Mod.Sentence.appeal.undescribe" xml:space="preserve"><value>Aprašymas bus pašalintas: puslapyje bus parašyta, kad aprašymo dar nėra, o pašalintas tekstas liks keitimų istorijoje. DI šiam projektui aprašymo nebekurs; naują galės parašyti moderatorius.</value></data>
 <data name="Mod.Action.confirm" xml:space="preserve"><value>Patvirtinti aprašymą</value></data>
 <data name="Mod.Action.undescribe" xml:space="preserve"><value>Pašalinti aprašymą</value></data>
 <data name="Mod.Done.confirm" xml:space="preserve"><value>Atlikta: aprašymas patvirtintas.</value></data>
 <data name="Mod.Done.undescribe" xml:space="preserve"><value>Atlikta: aprašymas pašalintas.</value></data>
-<data name="Mod.Note.Record" xml:space="preserve"><value>Pastaba moderavimo žurnalui (nebūtina)</value></data>
 <data name="Mod.Source.ai" xml:space="preserve"><value>Sukurta DI · žmonių neperžiūrėta</value></data>
 <data name="Report.Ground.inaccurate" xml:space="preserve"><value>Aprašymas netikslus ar klaidingas</value></data>
 <data name="Mod.Sentence.appeal.planned" xml:space="preserve"><value>Data ir stadija, kada Seimas planuoja svarstyti projektą. Puslapyje rodoma „Planuojama …“, o pastabos apie datą uždaromos.</value></data>
@@ -273,7 +272,9 @@
 <data name="Mod.Statement.Public.Hint.organisation" xml:space="preserve"><value>Rodomas organizacijos puslapyje. Jį gaus ir organizacijos atstovai el. paštu.</value></data>
 <data name="Mod.Statement.Staff" xml:space="preserve"><value>Paaiškinimas moderatoriams (privalomas)</value></data>
 <data name="Mod.Statement.Staff.Hint" xml:space="preserve"><value>Mato tik moderatoriai ir administratoriai.</value></data>
-<data name="Mod.Statement.Staff.Hint.description" xml:space="preserve"><value>Mato moderatoriai ir administratoriai; jei apie aprašymą pranešta, jį el. paštu gaus ir pranešimą pateikę nariai.</value></data>
+<data name="Mod.Statement.Public.Hint.description" xml:space="preserve"><value>Rodomas keitimų istorijoje. Jį el. paštu gaus ir apie aprašymą pranešę nariai.</value></data>
+<data name="Mod.Statement.Public.Optional" xml:space="preserve"><value>Viešas paaiškinimas (nebūtinas)</value></data>
+<data name="Mod.WrittenByAi" xml:space="preserve"><value>Tik DI agentams: pažymėkite, jei šį aprašymą parengėte ir siunčiate jūs, DI agentas, o ne žmogus. Jis bus rodomas su žyma „Sukurta DI · žmonių neperžiūrėta“, kol moderatorius jo nepatvirtins ar nepataisys.</value></data>
 <data name="Mod.MergeChoose" xml:space="preserve"><value>Pasirinkite argumentą, su kuriuo sujungti.</value></data>
 <data name="Mod.Done.publish" xml:space="preserve"><value>Atlikta: paskelbta.</value></data>
 <data name="Mod.Done.keep" xml:space="preserve"><value>Atlikta: palikta, pranešimai uždaryti.</value></data>
@@ -493,10 +494,11 @@
 <data name="Follows.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
 <data name="ModOpen.Source" xml:space="preserve"><value>Šaltinio tekstas</value></data>
 <data name="ModOpen.SourceHint" xml:space="preserve"><value>Įklijuokite tik oficialų tekstą, pavyzdžiui, aiškinamojo rašto dalį apie tai, ką projektas keičia, ne asmens duomenis.</value></data>
+<data name="ModOpen.SourceHintReader" xml:space="preserve"><value>Palikite tuščią, ir DI pats perskaitys projekto tekstą ir aiškinamąjį raštą e. seime.</value></data>
 <data name="ModOpen.SourceLength" xml:space="preserve"><value>{0} iš {1} ženklų</value></data>
 <data name="ModOpen.ESeimas" xml:space="preserve"><value>Projektas e. seime</value></data>
 <data name="ModOpen.Draft" xml:space="preserve"><value>Parengti juodraštį</value></data>
-<data name="ModOpen.DraftReady" xml:space="preserve"><value>Juodraštis įrašytas į aprašymą. Perskaitykite ir pataisykite prieš įrašydami.</value></data>
+<data name="ModOpen.DraftReady" xml:space="preserve"><value>Juodraštis įrašytas į pavadinimą, aprašymą ir viešą paaiškinimą. Perskaitykite ir pataisykite prieš įrašydami.</value></data>
 <data name="ModOpen.FromDraft" xml:space="preserve"><value>Sukurta DI · taisė žmonės</value></data>
 <data name="Admin.Group.ai" xml:space="preserve"><value>Dirbtinis intelektas</value></data>
 <data name="Admin.GroupNote.ai" xml:space="preserve"><value>Dirbtinis intelektas naudojamas tik projektų aprašymams: moderatoriaus juodraščiui ir automatinėms santraukoms. Abu veikia tik kai paslauga prijungta (Ai:Provider ir raktas serverio paslaptyse); santraukoms dar reikia, kad būtų galima perskaityti oficialų projekto tekstą.</value></data>

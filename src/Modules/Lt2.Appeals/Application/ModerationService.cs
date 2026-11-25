@@ -24,6 +24,7 @@ internal sealed class ModerationService(
     IPlannedAgenda agenda,
     IBillCatalogue bills,
     IAiAssistant assistant,
+    IBillTextSource texts,
     UndescribedBillReads undescribed,
     TimeProvider clock) : IAppealsModeration
 {
@@ -404,9 +405,9 @@ internal sealed class ModerationService(
         }
 
         // Shown at once and in the public history; the same moderator writes and saves it, no second one (decided 2026-11-14).
-        // A change of the address alone leaves the text, its source (the label), its history and its day as they are. The readable
-        // title is kept with the text (design 8.13.1): a change of either is one action, with one time in the history, and makes
-        // the source and the day.
+        // A change of the address alone leaves the text, its source (the label) and its day as they are. The readable title is
+        // kept with the text (design 8.13.1): a change of either is one action, with one time in the history, and makes the
+        // source and the day; text an AI agent sent from the form is "ai", read by nobody (design 8.13, owner 2026-11-25).
         var textChanged = record.Description != text;
         var titleChanged = AppealRules.NormalisePlainTitle(record.PlainTitle) != title;
         if (textChanged)
@@ -424,11 +425,18 @@ internal sealed class ModerationService(
         if (textChanged || titleChanged)
         {
             record.DescriptionAt = now;
-            record.DescriptionSource = RecordRules.SourceOfModeratorText(request.FromDraft, record.DescriptionSource);
+            record.DescriptionSource = RecordRules.SourceOfModeratorText(request.FromDraft, request.WrittenByAi, record.DescriptionSource);
         }
 
         // The form's address decides (decided by the owner on 2026-11-14): it is filled in advance with the record's, so
         // leaving it alone keeps it, and an empty field clears it. Not personal data, so it may be in the audit details.
+        // Its change is in the public history, and so is the statement, under the same entry (design 8.13, 2026-11-25).
+        if (record.DescriptionUrl != address)
+        {
+            db.Revisions.Add(AppealsService.Revise("record", record.Id, "description_url", record.DescriptionUrl, address, moderator.UserId, now));
+        }
+
+        db.Revisions.Add(AppealsService.Revise("record", record.Id, "statement", null, request.Statement.Trim(), moderator.UserId, now));
         record.DescriptionUrl = address;
         record.ChangedAt = now;
 
@@ -456,11 +464,18 @@ internal sealed class ModerationService(
         }
 
         // The text stays as it is; a person has now read it, so it is "Sukurta DI · taisė žmonės" for its whole life (design 8.13).
-        return await OnRecordAsync(record.Id, moderator, "confirm", note, answersReports: true, (_, record, _) =>
+        // The label's change is an entry of the public history, with the statement when there is one.
+        return await OnRecordAsync(record.Id, moderator, "confirm", note, answersReports: true, (inner, record, now) =>
         {
             if (RecordRules.CheckConfirm(record.Status, record.Description.Length == 0 ? null : record.DescriptionSource) is { } refused)
             {
                 return Task.FromResult<Result<Unit>>(RuleErrors.Of(refused));
+            }
+
+            inner.Revisions.Add(AppealsService.Revise("record", record.Id, "description_source", record.DescriptionSource, DescriptionSources.AiDraft, moderator.UserId, now));
+            if (!string.IsNullOrWhiteSpace(note))
+            {
+                inner.Revisions.Add(AppealsService.Revise("record", record.Id, "statement", null, note.Trim(), moderator.UserId, now));
             }
 
             record.DescriptionSource = DescriptionSources.AiDraft;
@@ -498,6 +513,7 @@ internal sealed class ModerationService(
                 inner.Revisions.Add(AppealsService.Revise("record", record.Id, "plain_title", record.PlainTitle, null, moderator.UserId, now));
             }
 
+            inner.Revisions.Add(AppealsService.Revise("record", record.Id, "statement", null, statement.Trim(), moderator.UserId, now));
             record.Description = "";
             record.PlainTitle = null;
             record.DescriptionSource = null;
@@ -682,6 +698,8 @@ internal sealed class ModerationService(
 
     public bool DraftAvailable => assistant.IsConfigured;
 
+    public bool ReadsOfficialTexts => texts.CanRead;
+
     public async Task<Result<DescriptionDraft>> DraftDescriptionAsync(string billNumber, string sourceText, StaffActor moderator, CancellationToken cancellationToken)
     {
         if (!assistant.IsConfigured)
@@ -695,6 +713,22 @@ internal sealed class ModerationService(
             return Error.NotFound("bill.not-found");
         }
 
+        // The source first, so a request that has nothing to send is not counted, audited or taken as a draft (design 8.11.4).
+        if (AiDraftRules.CheckRequest(sourceText, texts.CanRead, askedInLastHour: 0) is { } noSource)
+        {
+            return RuleErrors.Of(noSource);
+        }
+
+        // Pasted text is one document whose address the assistant does not know; an empty field, where a reader exists,
+        // sends the bill's documents as read, and the draft then names the address of the one it rests on (design 8.11.4, 8.13).
+        IReadOnlyList<BillDocument> documents = string.IsNullOrWhiteSpace(sourceText)
+            ? AiDraftRules.Sendable(await texts.ReadAsync(bill.Number, cancellationToken))
+            : [new BillDocument(BillDocumentKinds.Pasted, sourceText.Trim(), null)];
+        if (documents.Count == 0)
+        {
+            return Error.Validation("draft.source-unavailable", "sourceText");
+        }
+
         var now = clock.GetUtcNow();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
@@ -702,7 +736,7 @@ internal sealed class ModerationService(
             // Serialised per moderator so the hourly limit holds under parallel requests.
             await AdvisoryLocks.AiDraftsAsync(db, moderator.UserId, cancellationToken);
             var lastHour = await db.AiDraftRequests.CountAsync(d => d.ModeratorUserId == moderator.UserId && d.RequestedAt > now.AddHours(-1), cancellationToken);
-            if (AiDraftRules.CheckRequest(sourceText, lastHour) is { } refused)
+            if (AiDraftRules.CheckRequest(sourceText, texts.CanRead, lastHour) is { } refused)
             {
                 return RuleErrors.Of(refused);
             }
@@ -717,22 +751,26 @@ internal sealed class ModerationService(
             await transaction.CommitAsync(cancellationToken);
         }
 
-        var answer = await assistant.DraftDescriptionAsync(new DraftSource(bill.Number, bill.Title, sourceText.Trim()), cancellationToken);
+        var answer = await assistant.DraftDescriptionAsync(new DraftSource(bill.Number, bill.Title, documents), cancellationToken);
         if (!answer.IsSuccess)
         {
             return answer.Error!;
         }
 
-        // The prompt asks for the title, an empty line and the description (design 8.11.4); an answer in any other form is a failure,
-        // and "not enough" is the sentence alone, with no title.
-        var read = DraftAnswers.Read(answer.Value);
+        // The prompt asks for the title, the description, the document it rests on and the public statement (design 8.11.4,
+        // 8.13); an answer in any other form is a failure, and "not enough" is the sentence alone, with no title.
+        var read = DraftAnswers.Read(answer.Value, documents.Count);
         return read.Kind switch
         {
-            DraftAnswerKind.Valid => new DescriptionDraft(read.Description!, read.Title),
-            DraftAnswerKind.NotEnough => new DescriptionDraft(SummaryRules.NotEnoughAnswer, null),
+            DraftAnswerKind.Valid => new DescriptionDraft(read.Description!, read.Title, read.Statement, DraftAddress(documents[read.Source - 1].Address)),
+            DraftAnswerKind.NotEnough => new DescriptionDraft(SummaryRules.NotEnoughAnswer, null, null, null),
             _ => Error.Conflict("draft.failed"),
         };
     }
+
+    /// <summary>A read document's address for the form's "Oficialaus teksto adresas", only when the field's rule accepts it.</summary>
+    private static string? DraftAddress(string? address) =>
+        address is not null && RecordRules.CheckDescriptionUrl(address) is null ? RecordRules.NormaliseDescriptionUrl(address) : null;
 
     /// <summary>The bill's page, where an argument's author is pointed to (design 8.12.1).</summary>
     private static string BillPath(string billNumber) => $"/seimas/{Uri.EscapeDataString(billNumber)}";

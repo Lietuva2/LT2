@@ -93,8 +93,8 @@ internal sealed class DescriptionSummaries(
                 break;
             }
 
-            var text = await texts.ReadAsync(bill.Number, cancellationToken);
-            if (text is null || string.IsNullOrWhiteSpace(text.Text) || text.Text.Length > AiDraftRules.SourceMaxLength)
+            var documents = AiDraftRules.Sendable(await texts.ReadAsync(bill.Number, cancellationToken));
+            if (documents.Count == 0)
             {
                 // Over-long text is not cut (design 8.11.4); like a missing one, it waits seven days.
                 await AttemptAsync(bill.Number, SummaryOutcomes.Unavailable, askedProvider: false, cancellationToken);
@@ -102,8 +102,8 @@ internal sealed class DescriptionSummaries(
             }
 
             asked++;
-            var answer = await assistant.DraftDescriptionAsync(new DraftSource(bill.Number, bill.Title, text.Text.Trim(), DraftPurpose.Summary), cancellationToken);
-            var read = answer.IsSuccess ? DraftAnswers.Read(answer.Value) : DraftAnswer.Invalid;
+            var answer = await assistant.DraftDescriptionAsync(new DraftSource(bill.Number, bill.Title, documents, DraftPurpose.Summary), cancellationToken);
+            var read = answer.IsSuccess ? DraftAnswers.Read(answer.Value, documents.Count) : DraftAnswer.Invalid;
             if (read.Kind == DraftAnswerKind.Invalid)
             {
                 logger.LogWarning("AI summary for bill {Bill} not made: the provider gave no usable answer", bill.Number);
@@ -118,7 +118,7 @@ internal sealed class DescriptionSummaries(
                 continue;
             }
 
-            if (await StoreAsync(bill.Number, read.Title!, read.Description!, text.Address, cancellationToken))
+            if (await StoreAsync(bill.Number, read, documents[read.Source - 1].Address, cancellationToken))
             {
                 made++;
             }
@@ -177,11 +177,16 @@ internal sealed class DescriptionSummaries(
 
     /// <summary>
     /// Stores the summary as the bill's description, creating the record if needed, unless a person wrote or removed one
-    /// meanwhile. Under the bill's lock, so a moderator's description cannot be written over (design 6.8). Audited with
-    /// the system as the actor: the bill, the model, the time; never the text.
+    /// meanwhile. Under the bill's lock, so a moderator's description cannot be written over (design 6.8). The address is
+    /// the one of the document the answer named, when the description's address rule accepts it; the answer's statement is
+    /// in the public history with it (design 8.13). Audited with the system as the actor: the bill, the model, the time;
+    /// never the text.
     /// </summary>
-    private async Task<bool> StoreAsync(string billNumber, string title, string summary, string address, CancellationToken ct)
+    private async Task<bool> StoreAsync(string billNumber, DraftAnswer answer, string? documentAddress, CancellationToken ct)
     {
+        var title = answer.Title!;
+        var summary = answer.Description!;
+        var address = documentAddress is not null && RecordRules.CheckDescriptionUrl(documentAddress) is null ? RecordRules.NormaliseDescriptionUrl(documentAddress) : null;
         var model = await settings.GetAsync(SettingKeys.AiDraftModel, ct);
         await using var db = await contexts.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -199,10 +204,16 @@ internal sealed class DescriptionSummaries(
 
         db.Revisions.Add(AppealsService.Revise("record", record.Id, "description", null, summary, null, now));
         db.Revisions.Add(AppealsService.Revise("record", record.Id, "plain_title", null, title, null, now));
+        if (address is not null)
+        {
+            db.Revisions.Add(AppealsService.Revise("record", record.Id, "description_url", null, address, null, now));
+        }
+
+        db.Revisions.Add(AppealsService.Revise("record", record.Id, "statement", null, answer.Statement!, null, now));
         record.Description = summary;
         record.PlainTitle = title;
         record.DescriptionSource = DescriptionSources.Ai;
-        record.DescriptionUrl = address.Length <= 500 ? address : null;
+        record.DescriptionUrl = address;
         record.DescriptionAt = now;
         record.ChangedAt = now;
         await BillCards.WriteAsync(db, bills, billNumber, title, ct); // the search copy holds the readable title (design 8.12.5)

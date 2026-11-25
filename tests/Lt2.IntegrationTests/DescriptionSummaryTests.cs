@@ -31,28 +31,47 @@ public sealed class SummaryAssistant : IAiAssistant
     /// <summary>The fake's summary of a bill; the marker lets tests find it anywhere it might leak.</summary>
     public static string Summary(string bill) => $"Projektas {bill} keičia rinkliavų nustatymo tvarką (DI santraukos bandymas).";
 
-    /// <summary>The fake's readable title of a bill (design 8.13.1): the answer is this, an empty line and the summary.</summary>
+    /// <summary>
+    /// The fake's readable title of a bill (design 8.13.1): the answer is this, an empty line, the summary and
+    /// <see cref="Tail"/>.
+    /// </summary>
     public static string Title(string bill) => $"Keičiama rinkliavų nustatymo tvarka ({bill})";
+
+    /// <summary>The fake's public statement on a bill (design 8.13), a list as the prompts allow.</summary>
+    public static string Statement(string bill) => $"Perskaitytas aiškinamasis raštas ({bill}). Praleista:\n- Vyriausybės argumentai už projektą";
+
+    /// <summary>What follows the summary in the fake's answer: the document it rests on (from 1) and the statement.</summary>
+    public static string Tail(string bill, int source = 1) => $"\n\nŠaltinis: {source}\nPaaiškinimas:\n{Statement(bill)}";
 
     public Task<Result<string>> DraftDescriptionAsync(DraftSource request, CancellationToken cancellationToken)
     {
         Asked.Enqueue(request);
-        return Task.FromResult<Result<string>>(Answers.TryGetValue(request.BillNumber, out var answer) ? answer : Title(request.BillNumber) + "\n\n" + Summary(request.BillNumber));
+        return Task.FromResult<Result<string>>(Answers.TryGetValue(request.BillNumber, out var answer)
+            ? answer
+            : Title(request.BillNumber) + "\n\n" + Summary(request.BillNumber) + Tail(request.BillNumber));
     }
 }
 
-/// <summary>A reader of the bills' official texts that serves what a test gives it: null for a bill means "unavailable".</summary>
+/// <summary>A reader of the bills' official documents that serves what a test gives it: null for a bill means "unavailable".</summary>
 public sealed class FakeBillTexts : IBillTextSource
 {
-    public ConcurrentDictionary<string, BillText?> Texts { get; } = new(StringComparer.Ordinal);
+    public ConcurrentDictionary<string, IReadOnlyList<BillDocument>?> Texts { get; } = new(StringComparer.Ordinal);
 
     public bool CanRead => true;
 
-    public Task<BillText?> ReadAsync(string billNumber, CancellationToken cancellationToken) =>
+    public Task<IReadOnlyList<BillDocument>?> ReadAsync(string billNumber, CancellationToken cancellationToken) =>
         Task.FromResult(Texts.GetValueOrDefault(billNumber));
 
-    public static BillText Note(string bill) =>
-        new($"Aiškinamasis raštas ({bill}). Projektu siūloma leisti savivaldybėms nustatyti rinkliavų dydį pagal sąnaudas.", $"https://e-seimas.lrs.lt/bandymas/{bill}");
+    public static BillDocument Note(string bill) =>
+        new(BillDocumentKinds.ExplanatoryNote,
+            $"Aiškinamasis raštas ({bill}). Projektu siūloma leisti savivaldybėms nustatyti rinkliavų dydį pagal sąnaudas.",
+            $"https://e-seimas.lrs.lt/bandymas/{bill}");
+
+    /// <summary>A bill's own text, read after its explanatory note (design 8.13).</summary>
+    public static BillDocument Text(string bill) =>
+        new(BillDocumentKinds.BillText,
+            $"Projekto tekstas ({bill}). 1 straipsnis. Rinkliavos dydį nustato savivaldybės taryba pagal sąnaudas.",
+            $"https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys-{bill}");
 }
 
 /// <summary>The web application with a fake provider and a fake text source in place of the "not configured" and "unavailable" ones.</summary>
@@ -62,8 +81,8 @@ public sealed class SummaryFactory(DatabaseFixture database) : Lt2Factory(databa
 
     public FakeBillTexts TextSource { get; } = new();
 
-    /// <summary>The texts the fake source serves, by bill.</summary>
-    public ConcurrentDictionary<string, BillText?> Texts => TextSource.Texts;
+    /// <summary>The documents the fake source serves, by bill.</summary>
+    public ConcurrentDictionary<string, IReadOnlyList<BillDocument>?> Texts => TextSource.Texts;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -193,7 +212,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         {
             foreach (var bill in Bills)
             {
-                Summaries.Texts[bill] = FakeBillTexts.Note(bill);
+                Summaries.Texts[bill] = [FakeBillTexts.Note(bill)];
             }
 
             // XVP-0533 is planned soonest, XVP-0618 later; XVP-0412 is not planned but has a participant.
@@ -215,7 +234,8 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             // Only the number, the title and the official text went to the provider, with the job's own prompt (decided
             // by the owner on 2026-11-14), not the moderator's draft prompt.
             var sent = Summaries.Assistant.Asked.Skip(asked).First();
-            sent.ShouldBe(new DraftSource(AppealSteps.SecondBill, "Vietinių rinkliavų įstatymo pataisa", FakeBillTexts.Note(AppealSteps.SecondBill).Text, DraftPurpose.Summary));
+            (sent.BillNumber, sent.BillTitle, sent.Purpose).ShouldBe((AppealSteps.SecondBill, "Vietinių rinkliavų įstatymo pataisa", DraftPurpose.Summary));
+            sent.Documents.ShouldBe([FakeBillTexts.Note(AppealSteps.SecondBill)]);
             Summaries.Assistant.Asked.Skip(asked).ShouldAllBe(a => a.Purpose == DraftPurpose.Summary);
 
             var made = await visitor.RecordAsync(AppealSteps.SecondBill);
@@ -230,6 +250,8 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             madeHistory.NewText.ShouldBe(SummaryAssistant.Summary(AppealSteps.SecondBill));
             (madeHistory.TextChanged, madeHistory.TitleChanged, madeHistory.OldTitle, madeHistory.NewTitle)
                 .ShouldBe((true, true, (string?)null, SummaryAssistant.Title(AppealSteps.SecondBill)), "one entry holds both");
+            (madeHistory.UrlChanged, madeHistory.NewUrl, madeHistory.Confirmed, madeHistory.Statement)
+                .ShouldBe((true, FakeBillTexts.Note(AppealSteps.SecondBill).Address, false, SummaryAssistant.Statement(AppealSteps.SecondBill)), "with the address and the answer's statement (design 8.13)");
             (await visitor.RecordAsync(AppealSteps.TaxBill)).Description.ShouldBeEmpty("the daily number was reached");
 
             // Audited with the system as the actor: the bill and the model, never the text.
@@ -265,9 +287,9 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         try
         {
             Summaries.Texts[AppealSteps.SecondBill] = null;
-            Summaries.Texts[AppealSteps.ThirdBill] = FakeBillTexts.Note(AppealSteps.ThirdBill);
+            Summaries.Texts[AppealSteps.ThirdBill] = [FakeBillTexts.Note(AppealSteps.ThirdBill)];
             Summaries.Assistant.Answers[AppealSteps.ThirdBill] = "„Iš pateikto teksto neaišku, ką projektas keičia.“";
-            Summaries.Texts[AppealSteps.TaxBill] = new BillText(new string('a', 20_001), "https://e-seimas.lrs.lt/bandymas/ilgas");
+            Summaries.Texts[AppealSteps.TaxBill] = [new BillDocument(BillDocumentKinds.ExplanatoryNote, new string('a', 20_001), "https://e-seimas.lrs.lt/bandymas/ilgas")];
 
             var asked = Summaries.Assistant.Asked.Count;
             (await RunAsync(Summaries)).ShouldBe(new SummaryRun("done", 1, 0));
@@ -278,7 +300,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             (await Database.ScalarAsync<string>("SELECT outcome FROM appeals.summary_attempt WHERE bill_number = @b", ("b", AppealSteps.TaxBill))).ShouldBe("unavailable");
 
             // Six days later: still waiting. Seven days: tried again.
-            Summaries.Texts[AppealSteps.SecondBill] = FakeBillTexts.Note(AppealSteps.SecondBill);
+            Summaries.Texts[AppealSteps.SecondBill] = [FakeBillTexts.Note(AppealSteps.SecondBill)];
             await AgeAttemptsAsync(6);
             (await RunAsync(Summaries)).ShouldBe(new SummaryRun("done", 0, 0));
             await AgeAttemptsAsync(1);
@@ -299,11 +321,11 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         await FreshAsync();
         try
         {
-            Summaries.Texts[AppealSteps.SecondBill] = FakeBillTexts.Note(AppealSteps.SecondBill);
-            Summaries.Texts[AppealSteps.ThirdBill] = FakeBillTexts.Note(AppealSteps.ThirdBill);
+            Summaries.Texts[AppealSteps.SecondBill] = [FakeBillTexts.Note(AppealSteps.SecondBill)];
+            Summaries.Texts[AppealSteps.ThirdBill] = [FakeBillTexts.Note(AppealSteps.ThirdBill)];
             Summaries.Texts[AppealSteps.TaxBill] = null;
             Summaries.Assistant.Answers[AppealSteps.SecondBill] = SummaryAssistant.Summary(AppealSteps.SecondBill);
-            Summaries.Assistant.Answers[AppealSteps.ThirdBill] = new string('x', 91) + "\n\n" + SummaryAssistant.Summary(AppealSteps.ThirdBill);
+            Summaries.Assistant.Answers[AppealSteps.ThirdBill] = new string('x', 91) + "\n\n" + SummaryAssistant.Summary(AppealSteps.ThirdBill) + SummaryAssistant.Tail(AppealSteps.ThirdBill);
 
             (await RunAsync(Summaries)).ShouldBe(new SummaryRun("done", 2, 0));
             (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.bill_record WHERE bill_number = ANY(@b)", ("b", Bills))).ShouldBe(0, "nothing stored, no record made");
@@ -327,7 +349,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         {
             foreach (var bill in Bills)
             {
-                Summaries.Texts[bill] = FakeBillTexts.Note(bill);
+                Summaries.Texts[bill] = [FakeBillTexts.Note(bill)];
             }
 
             // A moderator's own text on XVP-0533; an AI summary on XVP-0618 that a moderator then removes.
@@ -346,7 +368,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             }
 
             // A week later, with every text readable, the job writes neither.
-            Summaries.Texts[AppealSteps.TaxBill] = FakeBillTexts.Note(AppealSteps.TaxBill);
+            Summaries.Texts[AppealSteps.TaxBill] = [FakeBillTexts.Note(AppealSteps.TaxBill)];
             await AgeAttemptsAsync(8);
             var asked = Summaries.Assistant.Asked.Count;
             (await RunAsync(Summaries)).ShouldBe(new SummaryRun("done", 1, 1));
@@ -355,6 +377,42 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             (second.Description, second.DescriptionSource).ShouldBe((AppealSteps.Description, "moderator"));
             var third = await moderator.Browser.RecordAsync(AppealSteps.ThirdBill);
             (third.Description, third.DescriptionSource).ShouldBe(("", (string?)null));
+        }
+        finally
+        {
+            Summaries.Texts.Clear();
+            await FreshAsync();
+        }
+    }
+
+    /// <summary>
+    /// Design 8.13 (owner, 2026-11-25): a description an AI agent wrote in a moderator's session is "ai" like a summary, but
+    /// a person's revision stands behind it, so the job never writes over it.
+    /// </summary>
+    [Fact]
+    public async Task The_job_never_writes_over_a_description_an_AI_agent_wrote_in_a_moderators_session()
+    {
+        await FreshAsync();
+        using var moderator = await StaffMembers.SharedAsync(Summaries, Database, "moderator");
+        const string Agents = "Projektas leidžia savivaldybėms nustatyti vietinių rinkliavų dydį (agento tekstas).";
+        try
+        {
+            using (var written = await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill),
+                new ModeratorDescriptionRequest { Description = Agents, Statement = "Parengta pagal aiškinamąjį raštą.", WrittenByAi = true }))
+            {
+                written.StatusCode.ShouldBe(HttpStatusCode.NoContent, await written.Content.ReadAsStringAsync());
+            }
+
+            (await moderator.Browser.RecordAsync(AppealSteps.SecondBill)).DescriptionSource.ShouldBe("ai");
+            Summaries.Texts[AppealSteps.SecondBill] = [FakeBillTexts.Note(AppealSteps.SecondBill)];
+            var asked = Summaries.Assistant.Asked.Count;
+            (await RunAsync(Summaries)).Made.ShouldBe(0);
+            await AgeAttemptsAsync(8);
+            (await RunAsync(Summaries)).Made.ShouldBe(0, "not a week later either");
+            Summaries.Assistant.Asked.Skip(asked).ShouldNotContain(a => a.BillNumber == AppealSteps.SecondBill);
+
+            var after = await moderator.Browser.RecordAsync(AppealSteps.SecondBill);
+            (after.Description, after.DescriptionSource, after.DescriptionUrl).ShouldBe((Agents, "ai", (string?)null));
         }
         finally
         {
@@ -377,7 +435,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         {
             Summaries.Texts[AppealSteps.TaxBill] = null;
             Summaries.Texts[AppealSteps.SecondBill] = null;
-            Summaries.Texts[AppealSteps.ThirdBill] = FakeBillTexts.Note(AppealSteps.ThirdBill);
+            Summaries.Texts[AppealSteps.ThirdBill] = [FakeBillTexts.Note(AppealSteps.ThirdBill)];
             var record = await moderator.Browser.RecordIdAsync(AppealSteps.ThirdBill);
 
             // The moderator's save, as the service does it: under the bill's lock, not yet committed.
@@ -432,7 +490,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         {
             foreach (var bill in Bills)
             {
-                Summaries.Texts[bill] = FakeBillTexts.Note(bill);
+                Summaries.Texts[bill] = [FakeBillTexts.Note(bill)];
             }
 
             (await RunAsync(Summaries)).Made.ShouldBe(3);
@@ -535,7 +593,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         await FreshAsync();
         try
         {
-            Summaries.Texts[AppealSteps.SecondBill] = FakeBillTexts.Note(AppealSteps.SecondBill);
+            Summaries.Texts[AppealSteps.SecondBill] = [FakeBillTexts.Note(AppealSteps.SecondBill)];
             (await RunAsync(Summaries)).Made.ShouldBe(1);
 
             using var visitor = Summaries.NewBrowser();
@@ -570,6 +628,121 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         }
     }
 
+    /// <summary>
+    /// Design 8.13: the reader gives the explanatory note and the bill's text; the answer names the one the summary rests on,
+    /// whose address is stored when it is an lrs.lt address, and its statement is the history's entry's.
+    /// </summary>
+    [Fact]
+    public async Task The_job_stores_the_address_of_the_document_the_answer_names_and_its_statement_in_the_history()
+    {
+        await FreshAsync();
+        try
+        {
+            var bill = AppealSteps.SecondBill;
+            Summaries.Texts[bill] = [FakeBillTexts.Note(bill), FakeBillTexts.Text(bill)];
+            Summaries.Assistant.Answers[bill] = SummaryAssistant.Title(bill) + "\n\n" + SummaryAssistant.Summary(bill) + SummaryAssistant.Tail(bill, source: 2);
+
+            // A document read from outside lrs.lt gives no address, never a foreign one.
+            var foreign = AppealSteps.ThirdBill;
+            Summaries.Texts[foreign] = [new BillDocument(BillDocumentKinds.BillText, $"Projekto tekstas ({foreign}). Rinkliavos dydį nustato savivaldybė.", "https://pavyzdys.test/projektas")];
+
+            var asked = Summaries.Assistant.Asked.Count;
+            (await RunAsync(Summaries)).Made.ShouldBe(2);
+            var sent = Summaries.Assistant.Asked.Skip(asked).Single(a => a.BillNumber == bill);
+            sent.Documents.ShouldBe([FakeBillTexts.Note(bill), FakeBillTexts.Text(bill)], "both documents, the explanatory note first, whole");
+            sent.Purpose.ShouldBe(DraftPurpose.Summary);
+
+            using var visitor = Summaries.NewBrowser();
+            var made = await visitor.RecordAsync(bill);
+            (made.Description, made.DescriptionSource).ShouldBe((SummaryAssistant.Summary(bill), "ai"));
+            made.DescriptionUrl.ShouldBe(FakeBillTexts.Text(bill).Address, "the address of document 2, the one the answer named");
+            var first = (await visitor.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(bill))).ShouldHaveSingleItem();
+            (first.TextChanged, first.UrlChanged, first.OldUrl, first.NewUrl, first.Confirmed, first.Statement)
+                .ShouldBe((true, true, (string?)null, FakeBillTexts.Text(bill).Address, false, SummaryAssistant.Statement(bill)));
+            var page = System.Text.RegularExpressions.Regex.Replace(WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/seimas/{bill}/istorija")), @"\s+", " ");
+            page.ShouldContain("<span class=\"label\">Paaiškinimas</span>");
+            page.ShouldContain($"<p>Perskaitytas aiškinamasis raštas ({bill}). Praleista:</p>");
+            page.ShouldContain($"<span>nenurodytas</span> → <a href=\"{FakeBillTexts.Text(bill).Address}\"");
+
+            var other = await visitor.RecordAsync(foreign);
+            (other.DescriptionSource, other.DescriptionUrl).ShouldBe(("ai", (string?)null));
+            var otherEntry = (await visitor.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(foreign))).ShouldHaveSingleItem();
+            (otherEntry.UrlChanged, otherEntry.Statement).ShouldBe((false, SummaryAssistant.Statement(foreign)));
+        }
+        finally
+        {
+            Summaries.Texts.Clear();
+            Summaries.Assistant.Answers.Clear();
+            await FreshAsync();
+        }
+    }
+
+    /// <summary>
+    /// Design 8.11.4, 8.13: where a reader exists, a moderator may ask for a draft with the source empty; the bill's documents
+    /// as read are sent and the draft gives the address of the one it rests on (an lrs.lt one only). Pasted text has none;
+    /// nothing readable is refused at the source field.
+    /// </summary>
+    [Fact]
+    public async Task A_moderators_draft_from_the_documents_as_read_gives_the_address_of_the_one_it_rests_on()
+    {
+        await FreshAsync();
+        using var moderator = await StaffMembers.ActiveAsync(Summaries, Database, "moderator");
+        var browser = moderator.Browser;
+        var bill = AppealSteps.ThirdBill;
+        var route = AppealRoutes.DescriptionDraftOf(bill);
+        async Task<DescriptionDraftResponse> DraftAsync(string source)
+        {
+            using var drafted = await browser.PostAsync(route, new DescriptionDraftRequest { SourceText = source });
+            drafted.StatusCode.ShouldBe(HttpStatusCode.OK, await drafted.Content.ReadAsStringAsync());
+            return await drafted.ReadAsync<DescriptionDraftResponse>();
+        }
+
+        try
+        {
+            (await browser.GetJsonAsync<AiStatusResponse>(AppealRoutes.Ai)).ShouldBe(new AiStatusResponse(true, ReadsOfficialTexts: true));
+            Summaries.Texts[bill] = [FakeBillTexts.Note(bill), FakeBillTexts.Text(bill)];
+            Summaries.Assistant.Answers[bill] = SummaryAssistant.Title(bill) + "\n\n" + SummaryAssistant.Summary(bill) + SummaryAssistant.Tail(bill, source: 2);
+
+            var asked = Summaries.Assistant.Asked.Count;
+            (await DraftAsync("")).ShouldBe(new DescriptionDraftResponse(
+                SummaryAssistant.Summary(bill), SummaryAssistant.Title(bill), SummaryAssistant.Statement(bill), FakeBillTexts.Text(bill).Address));
+            var sent = Summaries.Assistant.Asked.Skip(asked).ShouldHaveSingleItem();
+            (sent.BillNumber, sent.Purpose).ShouldBe((bill, DraftPurpose.ModeratorDraft));
+            sent.Documents.ShouldBe([FakeBillTexts.Note(bill), FakeBillTexts.Text(bill)]);
+
+            Summaries.Assistant.Answers[bill] = SummaryAssistant.Title(bill) + "\n\n" + SummaryAssistant.Summary(bill) + SummaryAssistant.Tail(bill, source: 1);
+            (await DraftAsync("  ")).DescriptionUrl.ShouldBe(FakeBillTexts.Note(bill).Address, "document 1 is the explanatory note");
+
+            // Pasted text is one document whose address nobody knows, even where a reader exists.
+            const string Pasted = "Aiškinamasis raštas. Projektu siūloma leisti savivaldybėms nustatyti rinkliavų dydį.";
+            var pasted = await DraftAsync(Pasted);
+            (pasted.Statement, pasted.DescriptionUrl).ShouldBe((SummaryAssistant.Statement(bill), (string?)null));
+            Summaries.Assistant.Asked.Last().Documents.ShouldBe([new BillDocument(BillDocumentKinds.Pasted, Pasted, null)]);
+
+            // A document read from outside lrs.lt gives no address.
+            Summaries.Texts[bill] = [new BillDocument(BillDocumentKinds.BillText, "Projekto tekstas.", "https://pavyzdys.test/projektas")];
+            (await DraftAsync("")).DescriptionUrl.ShouldBeNull();
+
+            // Nothing readable: refused at the source field, and the provider is not asked.
+            var before = Summaries.Assistant.Asked.Count;
+            foreach (var none in new IReadOnlyList<BillDocument>?[] { null, [], [new BillDocument(BillDocumentKinds.ExplanatoryNote, "  ", "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys")] })
+            {
+                Summaries.Texts[bill] = none;
+                using var refused = await browser.PostAsync(route, new DescriptionDraftRequest { SourceText = "" });
+                await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "draft.source-unavailable");
+                (await refused.ProblemAsync()).GetProperty("errors").TryGetProperty("sourceText", out _).ShouldBeTrue("the refusal names the field");
+            }
+
+            Summaries.Assistant.Asked.Count.ShouldBe(before);
+        }
+        finally
+        {
+            Summaries.Texts.Clear();
+            Summaries.Assistant.Answers.Clear();
+            await FreshAsync();
+        }
+    }
+
     [Fact]
     public async Task Summaries_to_MPs_and_their_public_copies_carry_no_description()
     {
@@ -580,7 +753,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         var monday = ReasonsToComeSteps.MondayInWeeks(11);
         try
         {
-            Summaries.Texts[AppealSteps.ThirdBill] = FakeBillTexts.Note(AppealSteps.ThirdBill);
+            Summaries.Texts[AppealSteps.ThirdBill] = [FakeBillTexts.Note(AppealSteps.ThirdBill)];
             (await RunAsync(Summaries)).Made.ShouldBe(1);
             var record = (await moderator.Browser.RecordAsync(AppealSteps.ThirdBill)).Id!.Value;
             using (var set = await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.RecordThreshold, record), new ModeratorThresholdRequest { Threshold = 1, Statement = "Bandymas." }))

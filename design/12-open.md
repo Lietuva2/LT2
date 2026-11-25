@@ -315,9 +315,17 @@ for the lawyer).
 - 8.3: the moderators' explanation labelled by who reads it: "Paaiškinimas autoriui (privalomas)", "Viešas paaiškinimas
   (privalomas)" with "Rodomas projekto puslapyje.", "Rodomas atsakymo vietoje." and "Rodomas organizacijos puslapyje. Jį gaus
   ir organizacijos atstovai el. paštu.", "Paaiškinimas moderatoriams (privalomas)" with "Mato tik moderatoriai ir
-  administratoriai." and, for a description, "Mato moderatoriai ir administratoriai; jei apie aprašymą pranešta, jį el. paštu
-  gaus ir pranešimą pateikę nariai." (`AppealUi` `Mod.Statement.*`); the refusal "Parašykite paaiškinimą." where no author
+  administratoriai." (`AppealUi` `Mod.Statement.*`); the refusal "Parašykite paaiškinimą." where no author
   receives it (`ValidationMessages` `Statement.RequiredPlain`).
+- 8.3, 8.13: the description's public statement: "Rodomas keitimų istorijoje. Jį el. paštu gaus ir apie aprašymą
+  pranešę nariai." and "Viešas paaiškinimas (nebūtinas)" (`AppealUi` `Mod.Statement.Public.Hint.description`,
+  `Mod.Statement.Public.Optional`); the sentences "…o ankstesnis liks keitimų istorijoje." and "…Patvirtinimas bus
+  matyti keitimų istorijoje." (`Mod.Sentence.appeal.describe|confirm`); the history's "Paaiškinimas", "nenurodytas" and
+  "aprašymas patvirtintas be pakeitimų" (`AppealText` `History.*`); the draft's "Juodraštis įrašytas į pavadinimą,
+  aprašymą ir viešą paaiškinimą. …", "Palikite tuščią, ir DI pats perskaitys projekto tekstą ir aiškinamąjį raštą
+  e. seime." (`AppealUi` `ModOpen.DraftReady`, `ModOpen.SourceHintReader`) and "Projekto dokumentų e. seime perskaityti
+  nepavyko. Įklijuokite oficialų tekstą." (`ProblemText` `draft.source-unavailable`); the agents' box "Tik DI agentams:
+  pažymėkite, jei šį aprašymą parengėte ir siunčiate jūs, DI agentas, o ne žmogus. …" (`AppealUi` `Mod.WrittenByAi`).
 - 8.5.2: the MPs' section of "Paskyros": "Seimo narių profiliai", its lead, "Perimtas {0}", "Baigti ryšį", the sentence and
   "Ryšys baigtas. Seimo narys: {0}." (`AppealUi` `Acc.Mps.*`).
 - 8.7, 8.12.1: "Paspaudę dar kartą, atsiimsite." (`AppealUi` `Side.PressAgain`), the pressed button's title.

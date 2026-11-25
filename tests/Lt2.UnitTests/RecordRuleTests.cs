@@ -127,10 +127,25 @@ public sealed class RecordRuleTests
     [Fact]
     public void A_description_started_from_a_draft_keeps_its_label_through_later_corrections()
     {
-        RecordRules.SourceOfModeratorText(fromDraft: true, currentSource: null).ShouldBe(DescriptionSources.AiDraft);
-        RecordRules.SourceOfModeratorText(fromDraft: false, currentSource: null).ShouldBe(DescriptionSources.Moderator);
-        RecordRules.SourceOfModeratorText(fromDraft: false, currentSource: DescriptionSources.AiDraft).ShouldBe(DescriptionSources.AiDraft);
+        RecordRules.SourceOfModeratorText(fromDraft: true, writtenByAi: false, currentSource: null).ShouldBe(DescriptionSources.AiDraft);
+        RecordRules.SourceOfModeratorText(fromDraft: false, writtenByAi: false, currentSource: null).ShouldBe(DescriptionSources.Moderator);
+        RecordRules.SourceOfModeratorText(fromDraft: false, writtenByAi: false, currentSource: DescriptionSources.AiDraft).ShouldBe(DescriptionSources.AiDraft);
     }
+
+    /// <summary>
+    /// Design 8.13 (owner, 2026-11-25): a description an AI agent wrote and sent through the moderator's form is "ai"
+    /// ("Sukurta DI · žmonių neperžiūrėta"), whatever it started from and whatever it was before: nobody has read it.
+    /// </summary>
+    [Theory]
+    [InlineData(false, null)]
+    [InlineData(true, null)]
+    [InlineData(false, DescriptionSources.Moderator)]
+    [InlineData(true, DescriptionSources.Moderator)]
+    [InlineData(false, DescriptionSources.AiDraft)]
+    [InlineData(true, DescriptionSources.AiDraft)]
+    [InlineData(false, DescriptionSources.Ai)]
+    public void A_description_written_by_an_AI_agent_is_ai_whatever_it_started_from_or_was(bool fromDraft, string? currentSource) =>
+        RecordRules.SourceOfModeratorText(fromDraft, writtenByAi: true, currentSource).ShouldBe(DescriptionSources.Ai);
 
     [Theory]
     [InlineData(0, true, false, false)]

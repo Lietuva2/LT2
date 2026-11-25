@@ -47,7 +47,7 @@
                 {
                     <li>
                         <div class="rows__main">
-                            <span class="small num">@Display.DayTime(edit.ChangedAt)@(!edit.TextChanged ? "" : edit.OldText is null ? " · " + T["History.NoneBefore"] : edit.NewText is null ? " · " + T["History.Removed"] : "")</span>
+                            <span class="small num">@Display.DayTime(edit.ChangedAt)@(edit.Confirmed ? " · " + T["History.Confirmed"] : !edit.TextChanged ? "" : edit.OldText is null ? " · " + T["History.NoneBefore"] : edit.NewText is null ? " · " + T["History.Removed"] : "")</span>
                             @if (edit.TitleChanged)
                             {
                                 <div class="stack stack--tight history-title">
@@ -65,6 +65,22 @@
                                     <Lt2.Web.Client.Components.TextChanges Old="@edit.OldText" New="@edit.NewText" />
                                 </div>
                             }
+                            @if (edit.UrlChanged)
+                            {
+                                @* Design 8.13, 8.16.2: the official text's address is short, so "A → B"; every link to the Seimas's site opens in a new tab. *@
+                                <div class="stack stack--tight history-url">
+                                    <span class="label">@T["What.MadeFrom"]</span>
+                                    <p class="small">@Address(edit.OldUrl) → @Address(edit.NewUrl)</p>
+                                </div>
+                            }
+                            @if (edit.Statement is { Length: > 0 } statement)
+                            {
+                                @* Design 8.13 (owner, 2026-11-25): the moderator's public statement, laid out as typed (8.2). *@
+                                <div class="stack stack--tight history-statement">
+                                    <span class="label">@T["History.Statement"]</span>
+                                    <Lt2.Web.Client.Components.TypedText Text="@statement" Class="typed" />
+                                </div>
+                            }
                         </div>
                     </li>
                 }
@@ -78,6 +94,10 @@
     private IReadOnlyList<DescriptionRevisionResponse>? _history;
 
     [Parameter] public string Number { get; set; } = "";
+
+    private RenderFragment Address(string? url) => url is { Length: > 0 }
+        ? @<Lt2.Web.Client.Components.OfficialLink Href="@url">@url</Lt2.Web.Client.Components.OfficialLink>
+        : @<span>@T["History.NoAddress"]</span>;
 
     protected override async Task OnInitializedAsync()
     {

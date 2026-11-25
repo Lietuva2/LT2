@@ -200,7 +200,8 @@ public sealed class ModerationActionsTests : BunitContext
         var actions = Render("record", "open", openItems: true, description: "DI santrauka.", source: "ai");
         actions.Find($"#action-confirm-{Item}").Click();
         actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.confirm"));
-        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Note.Record"));
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Public.Optional"));
+        actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe(Text("Mod.Statement.Public.Hint.description"));
         actions.Find("form").Submit();
 
         actions.Markup.ShouldContain(Text("Mod.Done.confirm"));
@@ -215,8 +216,8 @@ public sealed class ModerationActionsTests : BunitContext
         _api.On("RemoveDescriptionAsync", ApiResult.Ok());
         var actions = Render("record", "open", description: "DI santrauka.", source: "ai");
         actions.Find($"#action-undescribe-{Item}").Click();
-        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Staff"));
-        actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe(Text("Mod.Statement.Staff.Hint.description"));
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Public"));
+        actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe(Text("Mod.Statement.Public.Hint.description"));
         actions.Find($"#statement-{Item}").Input("Santrauka klaidinga.");
         actions.Find("form").Submit();
 
@@ -639,5 +640,172 @@ public sealed class ModerationActionsTests : BunitContext
 
         actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe("Viešas paaiškinimas (privalomas)");
         actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe("Rodomas projekto puslapyje.");
+    }
+
+    /// <summary>
+    /// Design 8.13 (owner, 2026-11-25): a description's statement is public in its change history and laid out as typed, so
+    /// writing, removing and confirming a description label it as public, say where it is shown and carry the layout hint.
+    /// </summary>
+    [Theory]
+    [InlineData("describe", "Viešas paaiškinimas (privalomas)")]
+    [InlineData("undescribe", "Viešas paaiškinimas (privalomas)")]
+    [InlineData("confirm", "Viešas paaiškinimas (nebūtinas)")]
+    public void A_descriptions_statement_is_labelled_public_in_the_history_with_the_layout_hint(string action, string label)
+    {
+        var actions = Render("record", "open", description: "DI santrauka.", source: "ai");
+        actions.Find($"#action-{action}-{Item}").Click();
+
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(label);
+        actions.Find($"#statement-hint-{Item}").TextContent.ShouldBe("Rodomas keitimų istorijoje. Jį el. paštu gaus ir apie aprašymą pranešę nariai.");
+        actions.Find($"#statement-layout-{Item}").ClassList.ShouldContain("field__hint");
+        var box = actions.Find($"#statement-{Item}");
+        box.GetAttribute("rows").ShouldBe("5");
+        box.GetAttribute("aria-describedby").ShouldBe($"statement-hint-{Item} statement-layout-{Item}");
+    }
+
+    [Theory]
+    [InlineData("hold")]
+    [InlineData("planned")]
+    [InlineData("hide")]
+    [InlineData("close")]
+    public void Other_actions_statements_have_no_layout_hint(string action)
+    {
+        var actions = Render("record", "open", description: "DI santrauka.", source: "ai");
+        actions.Find($"#action-{action}-{Item}").Click();
+
+        actions.FindAll($"#statement-layout-{Item}").ShouldBeEmpty();
+        var box = actions.Find($"#statement-{Item}");
+        box.HasAttribute("rows").ShouldBeFalse();
+        (box.GetAttribute("aria-describedby") ?? "").ShouldNotContain("statement-layout");
+    }
+
+    /// <summary>Design 8.11.4, 8.13: the draft fills the public statement, and the address of the read document it rests on.</summary>
+    [Fact]
+    public void The_draft_fills_the_statement_and_the_address_of_the_document_it_rests_on()
+    {
+        const string Address = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys";
+        _api.On("DraftDescriptionAsync", ApiResult<DescriptionDraftResponse>.Ok(new DescriptionDraftResponse(
+            "Projektas keičia rinkliavas.", "Keičiamos rinkliavos", "Perskaitytas aiškinamasis raštas. Praleista:\n- Vyriausybės argumentai", Address)));
+        var actions = RenderWithTitle(null, draft: true);
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-source-{Item}").Input("Oficialus tekstas apie rinkliavas.");
+        actions.Find($"#describe-draft-{Item}").Click();
+
+        actions.Find($"#describe-{Item}").GetAttribute("value").ShouldBe("Projektas keičia rinkliavas.");
+        actions.Find($"#statement-{Item}").GetAttribute("value").ShouldBe("Perskaitytas aiškinamasis raštas. Praleista:\n- Vyriausybės argumentai");
+        actions.Find($"#describe-url-{Item}").GetAttribute("value").ShouldBe(Address);
+        actions.Markup.ShouldContain(Text("ModOpen.DraftReady"));
+    }
+
+    [Fact]
+    public void A_draft_without_an_address_keeps_the_address_the_field_holds()
+    {
+        const string Address = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys";
+        _api.On("DraftDescriptionAsync", ApiResult<DescriptionDraftResponse>.Ok(new DescriptionDraftResponse(
+            "Projektas keičia rinkliavas.", "Keičiamos rinkliavos", "Perskaitytas įklijuotas tekstas.", null)));
+        _api.On("GetAiAsync", ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(true)));
+        var actions = Render<ModerationActions>(p => p
+            .Add(c => c.Id, Item).Add(c => c.Number, Bill).Add(c => c.Kind, "record").Add(c => c.Status, "open")
+            .Add(c => c.Description, "Projektas keičia rinkliavas.").Add(c => c.DescriptionSource, "moderator").Add(c => c.DescriptionUrl, Address));
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-source-{Item}").Input("Oficialus tekstas apie rinkliavas.");
+        actions.Find($"#describe-draft-{Item}").Click();
+
+        actions.Find($"#statement-{Item}").GetAttribute("value").ShouldBe("Perskaitytas įklijuotas tekstas.");
+        actions.Find($"#describe-url-{Item}").GetAttribute("value").ShouldBe(Address, "pasted text has no address, so the field keeps its own");
+    }
+
+    [Fact]
+    public void A_draft_without_a_statement_keeps_what_the_moderator_typed()
+    {
+        _api.On("DraftDescriptionAsync", ApiResult<DescriptionDraftResponse>.Ok(new DescriptionDraftResponse(
+            "Iš pateikto teksto neaišku, ką projektas keičia.", null, null, null)));
+        var actions = RenderWithTitle(null, draft: true);
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#statement-{Item}").Input("Mano paaiškinimas.");
+        actions.Find($"#describe-source-{Item}").Input("Oficialus tekstas.");
+        actions.Find($"#describe-draft-{Item}").Click();
+
+        actions.Find($"#statement-{Item}").GetAttribute("value").ShouldBe("Mano paaiškinimas.");
+    }
+
+    /// <summary>Design 8.11.4: where a reader of the bills' documents exists, the draft may be asked for with the source empty.</summary>
+    [Fact]
+    public void With_a_reader_of_official_texts_the_draft_is_offered_on_an_empty_source_and_the_hint_says_so()
+    {
+        _api.On("GetAiAsync", ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(true, ReadsOfficialTexts: true)));
+        var actions = Render("record", "open");
+        actions.Find($"#action-describe-{Item}").Click();
+
+        actions.Find($"#describe-draft-{Item}").HasAttribute("disabled").ShouldBeFalse("the reader reads the bill's documents");
+        actions.Find($"#describe-source-hint-{Item}").TextContent.ShouldContain(Text("ModOpen.SourceHintReader"));
+    }
+
+    /// <summary>
+    /// Design 8.13 (owner, 2026-11-25): the description form has a box for an AI agent filling it in the moderator's session,
+    /// out of sight and out of the tab order but in the page's text; ticked, the description is sent as written by AI.
+    /// </summary>
+    [Fact]
+    public void The_describe_form_has_a_hidden_box_for_an_AI_agent_out_of_the_tab_order()
+    {
+        var actions = Render("record", "open", description: "Projektas keičia rinkliavas.");
+        actions.Find($"#action-describe-{Item}").Click();
+
+        var box = actions.Find($"#describe-by-ai-{Item}");
+        box.GetAttribute("type").ShouldBe("checkbox");
+        box.GetAttribute("name").ShouldBe("writtenByAi");
+        box.GetAttribute("tabindex").ShouldBe("-1");
+        box.HasAttribute("checked").ShouldBeFalse();
+        var hidden = actions.Find($"#describe-by-ai-box-{Item}");
+        hidden.ClassList.ShouldContain("visually-hidden");
+        hidden.Contains(box).ShouldBeTrue("the box is inside the hidden block");
+        hidden.QuerySelector("label")!.TextContent.Trim().ShouldBe(Text("Mod.WrittenByAi"));
+        Text("Mod.WrittenByAi").ShouldNotBeNullOrWhiteSpace();
+    }
+
+    [Theory]
+    [InlineData("undescribe")]
+    [InlineData("confirm")]
+    [InlineData("hold")]
+    [InlineData("planned")]
+    public void Only_the_describe_form_has_the_box_for_an_AI_agent(string action)
+    {
+        var actions = Render("record", "open", description: "DI santrauka.", source: "ai");
+        actions.Find($"#action-{action}-{Item}").Click();
+        actions.FindAll($"#describe-by-ai-{Item}").ShouldBeEmpty();
+        actions.FindAll($"#describe-by-ai-box-{Item}").ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void The_box_for_an_AI_agent_is_sent_with_the_description(bool ticked)
+    {
+        _api.On("WriteDescriptionAsync", ApiResult.Ok());
+        var actions = Render("record", "open", description: "Projektas keičia rinkliavas.");
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-{Item}").Input("Projektas keičia vietinių rinkliavų tvarką.");
+        actions.Find($"#statement-{Item}").Input("Parašyta pagal aiškinamąjį raštą.");
+        if (ticked)
+        {
+            actions.Find($"#describe-by-ai-{Item}").Change(true);
+        }
+
+        actions.Find("form").Submit();
+
+        var sent = (ModeratorDescriptionRequest)_api.Arguments[_api.Calls.IndexOf("WriteDescriptionAsync")][1]!;
+        sent.WrittenByAi.ShouldBe(ticked);
+        actions.Markup.ShouldContain(Text("Mod.Done.describe"));
+    }
+
+    [Fact]
+    public void Without_a_reader_the_source_hint_does_not_promise_reading()
+    {
+        _api.On("GetAiAsync", ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(true)));
+        var actions = Render("record", "open");
+        actions.Find($"#action-describe-{Item}").Click();
+
+        actions.Find($"#describe-draft-{Item}").HasAttribute("disabled").ShouldBeTrue();
+        actions.Find($"#describe-source-hint-{Item}").TextContent.ShouldNotContain(Text("ModOpen.SourceHintReader"));
     }
 }

@@ -319,7 +319,10 @@ public sealed record ReportRequest
 /// One edit of a bill's description and readable title (design 8.2, 8.13.1: it keeps its edit history; one action is one
 /// entry). Who edited is not shown. <c>OldText</c> and <c>NewText</c> mean something only when <c>TextChanged</c> (a null new
 /// text is a removal, a null old text the first text); <c>OldTitle</c> and <c>NewTitle</c> only when <c>TitleChanged</c> (null
-/// is none).
+/// is none); <c>OldUrl</c> and <c>NewUrl</c>, the official text's address, only when <c>UrlChanged</c> (null is none).
+/// <c>Confirmed</c>: a moderator confirmed an AI summary as it was. <c>Statement</c>: the public statement (design 8.13),
+/// a moderator's or the summary job's AI's; null where none was given.
 /// </summary>
 public sealed record DescriptionRevisionResponse(
-    DateTimeOffset ChangedAt, string? OldText, string? NewText, bool TextChanged, string? OldTitle, string? NewTitle, bool TitleChanged);
+    DateTimeOffset ChangedAt, string? OldText, string? NewText, bool TextChanged, string? OldTitle, string? NewTitle, bool TitleChanged,
+    string? OldUrl, string? NewUrl, bool UrlChanged, bool Confirmed, string? Statement);

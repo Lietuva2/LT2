@@ -120,9 +120,9 @@ public sealed class SummaryRuleTests
     [InlineData(DescriptionSources.Ai)]
     [InlineData(DescriptionSources.AiDraft)]
     public void A_moderators_correction_of_AI_text_is_labelled_as_corrected_by_people(string source) =>
-        RecordRules.SourceOfModeratorText(fromDraft: false, source).ShouldBe(DescriptionSources.AiDraft);
+        RecordRules.SourceOfModeratorText(fromDraft: false, writtenByAi: false, source).ShouldBe(DescriptionSources.AiDraft);
 
     [Fact]
     public void A_moderators_correction_of_a_moderators_text_is_a_moderators_text() =>
-        RecordRules.SourceOfModeratorText(fromDraft: false, DescriptionSources.Moderator).ShouldBe(DescriptionSources.Moderator);
+        RecordRules.SourceOfModeratorText(fromDraft: false, writtenByAi: false, DescriptionSources.Moderator).ShouldBe(DescriptionSources.Moderator);
 }

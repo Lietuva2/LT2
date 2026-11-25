@@ -12,5 +12,6 @@ internal sealed class UnavailableBillTextSource : IBillTextSource
 {
     public bool CanRead => false;
 
-    public Task<BillText?> ReadAsync(string billNumber, CancellationToken cancellationToken) => Task.FromResult<BillText?>(null);
+    public Task<IReadOnlyList<BillDocument>?> ReadAsync(string billNumber, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<BillDocument>?>(null);
 }
