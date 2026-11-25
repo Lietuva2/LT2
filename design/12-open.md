@@ -98,11 +98,12 @@ duomenyse dar nėra". The lrs.lt agenda page names each such bill's title: the w
 has the bill, and the rows would then rank as other bills. Not built. If no: as now.
 
 **8.11.2 Follower numbers.** Built as proposed: the number only on the thing's own page (a bill's, an MP's, an
-organisation's, a member's profile), never in list rows; nothing sorted, ranked or added up by it and no "most
-followed" list, until delegation is designed; nothing shown at zero; a hint "Kas yra sekėjai?" beside the number
-saying these are self-selected Lietuva 2.0 users who asked for emails, not support and not a representative poll, with
-the methodology's part on following saying it at length. Alternatives: a sort by followers on `/projektai` and/or the
-MPs' list and the number in list rows; "Sekėjai: 0"; the methodology only, without the hint.
+organisation's, a member's profile), never in list rows; no MP, member or organisation sorted, ranked or added up by
+it and no "most followed" list of them, until delegation is designed; lists of bills may order by it (owner,
+2026-11-25, 8.11.2); nothing shown at zero; a hint "Kas yra sekėjai?" beside the number saying these are self-selected
+Lietuva 2.0 users who asked for emails, not support and not a representative poll, with the methodology's part on
+following saying it at length; a bill's activity (8.12.5) counts its followers. Alternatives: the number in list rows; "Sekėjai: 0"; the methodology only,
+without the hint.
 
 **8.11.5, 8.22.5 The share link and link previews.** Built as proposed; "no" names what changes:
 1. A link's code is taken on any page by the site's own script (`js/lt2-invitation.js`, before Blazor starts) into the
@@ -435,7 +436,7 @@ them all once, before going live.
 | MPs see "Aptarimas" under their answers as a place of abuse: a pile-on under an answer, the expectation that the MP answers every comment, offices less willing to answer at all (8.23.2) | The switch for responses (`Comments:OnResponses`, decided again before real MPs are on the site); the MP's account and office comment only as the MP under its own response, never pressed to; no email to the MP about comments; nothing counts or lists comments an MP left unanswered; reports and moderation on the page; writing restrictions. |
 | One person's arguments and comments gathered into a picture of their political views (8.25) | A public profile only by the member's choice, said in the form before saving, indexing included; the address retired (410) when the profile goes off; no page, id or link for anyone else; nothing on a profile about sides, "Man svarbu", what the person follows, counts of their texts or rankings. What stays: a member who chose a profile can be collected by anyone who visits it. |
 | A followed member watched and pressed (8.25.5) | The profile switch is the consent to being followed and ends every follow at once; only the number of followers shows, nobody (the person included) is told who follows; harassment in comments answered by reports, hiding and the writing restriction. What stays: one particular follower cannot be blocked without showing followers. |
-| The product drifts from "people tell MPs" towards a social network (8.25, 8.11.2) | A number of followers on every thing that can be followed, members included, stands only on the thing's own page and nothing is ranked, sorted or listed by it; who follows is invisible to all but the follower; summaries carry no follower number. What stays: a visible count invites collecting followers, which is what a social network rewards. |
+| The product drifts from "people tell MPs" towards a social network (8.25, 8.11.2) | A number of followers on every thing that can be followed, members included, stands only on the thing's own page and no person or organisation is ranked, sorted or listed by it (bills may be ordered by it); who follows is invisible to all but the follower; summaries carry no follower number. What stays: a visible count invites collecting followers, which is what a social network rewards. |
 | MPs' follower numbers read as a popularity score or a scorecard (7.1, 8.11.2) | No ordering (no list sorted by it, no "most followed", no number in list rows), no comparison (no total per faction or party, nothing set beside another MP's number), and the note that these are self-selected users who asked for emails, not supporters and not a representative poll. What stays: anyone can open profiles one by one and build the table elsewhere; the site does not make it. |
 | A withdrawal or a rejection outside the confirmed motion stays open until a moderator records it (8.1 step 6). | Verify other terminal events and their bill links before using them for automatic closure. Analytics covers bills closed by an adoption-stage vote (8.26.2). |
 | A member's comparison kept in server memory (8.26.6) reveals their sides to anyone who can read the web process's memory | Kept only in memory, never in a table, a log or the browser, bounded to 10 000 members and dropped after 12 idle hours, at sign-out, account deletion and withdrawal of the positions consent; the same exposure as the sides themselves in the database. |
