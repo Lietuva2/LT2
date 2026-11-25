@@ -83,9 +83,10 @@ internal static class AppealMapping
 
     public static NewReport ToModule(ReportRequest r) => new(r.TargetKind, r.TargetId, r.Ground, r.Text);
 
-    public static ModeratorDescription ToModule(ModeratorDescriptionRequest r) => new(r.Description, r.Statement, r.FromDraft, r.DescriptionUrl, r.PlainTitle);
+    public static ModeratorDescription ToModule(ModeratorDescriptionRequest r) => new(r.Description, r.Statement, r.FromDraft, r.DescriptionUrl, r.PlainTitle, r.WrittenByAi);
 
-    public static DescriptionRevisionResponse Map(DescriptionRevision r) => new(r.ChangedAt, r.OldText, r.NewText, r.TextChanged, r.OldTitle, r.NewTitle, r.TitleChanged);
+    public static DescriptionRevisionResponse Map(DescriptionRevision r) =>
+        new(r.ChangedAt, r.OldText, r.NewText, r.TextChanged, r.OldTitle, r.NewTitle, r.TitleChanged, r.OldUrl, r.NewUrl, r.UrlChanged, r.Confirmed, r.Statement);
 
     public static RecordClosure ToModule(CloseRecordRequest r) => new(r.Reason, r.DecidedOn, r.SourceUrl, r.Statement);
 
@@ -329,7 +330,7 @@ internal sealed class ServerModerationApi(
 
     public async Task<ApiResult<AiStatusResponse>> GetAiAsync(CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
-            ? ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(moderation.DraftAvailable))
+            ? ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(moderation.DraftAvailable, moderation.ReadsOfficialTexts))
             : ApiResult<AiStatusResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
     public async Task<ApiResult<DescriptionDraftResponse>> DraftDescriptionAsync(string number, DescriptionDraftRequest request, CancellationToken cancellationToken = default)
@@ -341,7 +342,7 @@ internal sealed class ServerModerationApi(
 
         var http = accessor.HttpContext!;
         var moderator = await AppealMapping.ModeratorAsync(identity, http.User, ipHasher.Hash(http), cancellationToken);
-        return errors.ToApiResult(await moderation.DraftDescriptionAsync(number, request.SourceText, moderator, cancellationToken), d => new DescriptionDraftResponse(d.Draft, d.PlainTitle));
+        return errors.ToApiResult(await moderation.DraftDescriptionAsync(number, request.SourceText, moderator, cancellationToken), d => new DescriptionDraftResponse(d.Draft, d.PlainTitle, d.Statement, d.DescriptionUrl));
     }
 
     private Task<bool> IsModeratorAsync() => ServerStaff.IsAllowedAsync(accessor, Policies.Moderator);

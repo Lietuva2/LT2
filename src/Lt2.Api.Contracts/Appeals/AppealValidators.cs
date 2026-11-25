@@ -35,15 +35,16 @@ internal static class AppealValidation
             : rule.Must(t => t is null || t.Trim().Length <= AppealLimits.StatementMaxLength).WithMessage(l["Statement.TooLong"]);
 }
 
-/// <summary>The pasted official text for an AI draft (design 8.11.4): required, at most 20 000 characters, never cut.</summary>
+/// <summary>
+/// The pasted official text for an AI draft (design 8.11.4): at most 20 000 characters, never cut. An empty one is refused
+/// by the module unless a reader of the bills' documents exists (<c>draft.source-required</c>).
+/// </summary>
 public sealed class DescriptionDraftRequestValidator : AbstractValidator<DescriptionDraftRequest>
 {
     public const int SourceMaxLength = AppealLimits.DraftSourceMaxLength;
 
     public DescriptionDraftRequestValidator(IStringLocalizer<ValidationMessages> l) =>
-        RuleFor(x => x.SourceText).Cascade(CascadeMode.Stop)
-            .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["Draft.SourceRequired"])
-            .Must(t => t.Length <= SourceMaxLength).WithMessage(l["Draft.SourceTooLong"]);
+        RuleFor(x => x.SourceText).Must(t => t is null || t.Length <= SourceMaxLength).WithMessage(l["Draft.SourceTooLong"]);
 }
 
 public sealed class PositionRequestValidator : AbstractValidator<PositionRequest>

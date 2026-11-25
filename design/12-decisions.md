@@ -284,6 +284,16 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The moderators' queue is one page of tabs, each list loaded when opened, the tab in the address: work tabs with a
   neutral count chip only when something waits, then, set apart, "Be aprašymo", "Paslėpti" and "Apribojimai" with
   muted counts; the page never opens on those. Each list keeps its cut at a hundred, no paging (8.3, 2026-11-25).
+- A moderator's statement on a description (writing, correcting, removing, and a confirmation's optional one) is public:
+  shown under its entry in "Aprašymo keitimų istorija", where it says what was read and what was left out on purpose. It
+  is the one field, relabelled "Viešas paaiškinimas", not a second one beside a staff note. A change of the address
+  alone and a confirmation each get an entry of their own (8.3, 8.13, 2026-11-25).
+- The AI fills that statement too, in the draft and the summary job, and names the document its description rests on:
+  the explanatory note when it alone is enough, otherwise the bill's text, whose address becomes "Oficialaus teksto
+  adresas". Built as if a reader of the official documents existed, tested with a stand-in; without one, pasted text
+  keeps working as before (8.11.4, 8.13, 2026-11-25).
+- An AI agent writing a description in a moderator's form ticks a box hidden from sight for agents only; the text is
+  then `ai`, "Sukurta DI · žmonių neperžiūrėta", until a person confirms or corrects it (8.13, 2026-11-25).
 - Follower numbers may order lists of bills and be counted into their order; the rule against ranking by followers
   stays for MPs, members and organisations, at whom it was aimed. A bill's row still shows no follower number (8.11.2,
   2026-11-25).

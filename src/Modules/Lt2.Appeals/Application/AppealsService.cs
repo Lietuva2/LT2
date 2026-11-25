@@ -159,18 +159,25 @@ internal sealed class AppealsService(
             return Error.NotFound("record.not-found");
         }
 
+        string[] fields = ["description", "plain_title", "description_url", "description_source", "statement"];
         var rows = await db.Revisions.AsNoTracking()
-            .Where(r => r.EntityKind == "record" && r.EntityId == record.Id && (r.Field == "description" || r.Field == "plain_title"))
+            .Where(r => r.EntityKind == "record" && r.EntityId == record.Id && fields.Contains(r.Field))
             .OrderBy(r => r.ChangedAt)
             .Select(r => new { r.ChangedAt, r.Field, r.OldValue, r.NewValue })
             .ToListAsync(cancellationToken);
 
-        // One action writes its rows with one time (design 8.13.1): the rows of a time are one entry.
+        // One action writes its rows with one time (design 8.13.1): the rows of a time are one entry. A moderator's entry
+        // carries their public statement, and may be only an address's change or a confirmation (design 8.13).
         var entries = rows.GroupBy(r => r.ChangedAt).OrderBy(g => g.Key).Select(g =>
         {
             var text = g.FirstOrDefault(r => r.Field == "description");
             var title = g.FirstOrDefault(r => r.Field == "plain_title");
-            return new DescriptionRevision(g.Key, text?.OldValue, text?.NewValue, text is not null, title?.OldValue, title?.NewValue, title is not null);
+            var url = g.FirstOrDefault(r => r.Field == "description_url");
+            var confirmed = g.Any(r => r.Field == "description_source" && r.NewValue == DescriptionSources.AiDraft && r.OldValue == DescriptionSources.Ai);
+            var statement = g.FirstOrDefault(r => r.Field == "statement")?.NewValue;
+            return new DescriptionRevision(
+                g.Key, text?.OldValue, text?.NewValue, text is not null, title?.OldValue, title?.NewValue, title is not null,
+                url?.OldValue, url?.NewValue, url is not null, confirmed, statement);
         }).ToList();
         return Result<IReadOnlyList<DescriptionRevision>>.Success(entries);
     }

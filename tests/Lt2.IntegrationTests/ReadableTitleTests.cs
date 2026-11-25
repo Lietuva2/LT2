@@ -268,7 +268,9 @@ public sealed partial class ReadableTitleTests(DatabaseFixture database) : ApiTe
             edits[0].ShouldContain("Aprašymas", customMessage: "both changed: each under its label");
             edits[0].ShouldContain("pašalinta:", customMessage: "the removed title is struck through");
             edits[1].ShouldNotContain("Trumpas pavadinimas");
-            edits[1].ShouldNotContain("class=\"label\"", customMessage: "a text alone needs no label");
+            edits[1].ShouldNotContain("<span class=\"label\">Aprašymas</span>", customMessage: "a text alone needs no label");
+            edits[1].ShouldContain("<span class=\"label\">Paaiškinimas</span>", customMessage: "the moderator's public statement has its own (design 8.13)");
+            edits[1].ShouldContain("Tik tekstas.");
             edits[2].ShouldContain("Trumpas pavadinimas");
             edits[2].ShouldNotContain("Aprašymas");
             edits[2].ShouldContain("pridėta:");

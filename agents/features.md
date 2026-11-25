@@ -570,6 +570,27 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   apie klaidą"; a report reaches the queue, where a moderator confirms (an `ai` text becomes `ai-draft`), corrects or
   removes it. A description a person ever wrote, corrected or removed is never written over by the job. Without one the
   page says so and links to the Seimas page. Descriptions never go to MPs.
+- **The description's public statement** (design 8.13, owner 2026-11-25): writing, correcting, removing (required) and
+  confirming (optional) take a public statement, stored as an `appeals.revision` row `statement` with the action's time
+  (beside `description`, `plain_title`, `description_url` when the address changed, and `description_source` `ai` →
+  `ai-draft` for a confirmation), so an address-only change and a confirmation are history entries too.
+  `AppealsService.HistoryAsync` groups the rows of a time into `DescriptionRevision` (`UrlChanged`/`OldUrl`/`NewUrl`,
+  `Confirmed`, `Statement`); `RecordHistory.razor` shows them (`.history-url` "A → B" through `OfficialLink`,
+  `.history-statement` through `TypedText`, " · aprašymas patvirtintas be pakeitimų"). The moderators' log keeps its own
+  copy. The summary job's entry carries the AI's statement.
+- **The AI's document choice and statement** (design 8.11.4, 8.13, owner 2026-11-25): `IBillTextSource.ReadAsync` gives
+  `BillDocument`s (`BillDocumentKinds`: explanatory note, bill text; `pasted` for the form's text);
+  `AiDraftRules.Sendable` keeps them whole within 20 000 characters; `ClaudeDraftMapping.UserMessage` numbers them in
+  `<document>` elements; `DraftAnswers.Read(answer, documents)` wants the title, the description, `Šaltinis: N` and
+  `Paaiškinimas:` with the statement, or it is a failure. The draft (`DescriptionDraftResponse.Statement`,
+  `.DescriptionUrl`) fills the form's statement and, for a read document, "Oficialaus teksto adresas"; without pasted text
+  it reads the documents only where a reader exists (`AiStatusResponse.ReadsOfficialTexts`; `draft.source-unavailable`
+  when none can be read). The job stores the named document's address (the description's address rule) and the statement.
+  No reader exists yet: all of this runs on pasted text or a stand-in reader in tests.
+- **An AI agent in the moderator's form** (design 8.13, owner 2026-11-25): "describe" has a checkbox
+  `#describe-by-ai-{Key}` (`name=writtenByAi`, `tabindex=-1`) inside `.visually-hidden` `#describe-by-ai-box-{Key}`, label
+  `AppealUi` `Mod.WrittenByAi`; it sends `ModeratorDescriptionRequest.WrittenByAi`, and
+  `RecordRules.SourceOfModeratorText(fromDraft, writtenByAi, current)` makes a changed text or title `ai`.
 - **The readable title** ("Trumpas pavadinimas", design 8.13.1, built; owner, 2026-11-24): `bill_record.plain_title`, at most
   90 characters and one line, kept with the description (same source, label, day and history; a history entry holds both,
   `DescriptionRevisionResponse.TextChanged`/`TitleChanged`). The moderator's form (`ModerationActions`, "describe") has the
@@ -641,8 +662,9 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
 - **Who reads a moderator's explanation (design 8.3, owner 2026-11-22).** Each statement field's label says it:
   `AppealUi` `Mod.Statement.Author` (emailed to the author: an argument's hide, merge and restore, a comment's, "Apie
   mane", restoring an MP's response), `Mod.Statement.Public` with `Mod.Statement.Public.Hint.bill|response|organisation`
-  (hiding a record, its threshold; hiding a response; blocking an organisation) and `Mod.Statement.Staff` with
-  `Mod.Statement.Staff.Hint` (`.description` for writing or removing a description, which answers its reports); an
+  (hiding a record, its threshold; hiding a response; blocking an organisation; `.description` for writing, removing and,
+  with `Mod.Statement.Public.Optional`, confirming a description, shown in its history and emailed to its reporters;
+  these three carry the `TextLayoutHint`) and `Mod.Statement.Staff` with `Mod.Statement.Staff.Hint`; an
   organisation's other actions keep `OrgMod.Statement`. `ModerationActions.StatementLabel`/`StatementHint` pick them for a
   bill's and an argument's actions; `RestoreForm.StatementHint`, `DigestModeration`'s `StatementForm` and
   `VoteModerationPanel` carry the line under the label (`field__hint`, in `aria-describedby`). On the server one
@@ -895,7 +917,7 @@ unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
   blocked organisation none. `SecurityHeaders.IsPrivatePage` marks account, staff, sign-in, MP and one-time-link pages
   `noindex, nofollow`; `/img` is `Cross-Origin-Resource-Policy: cross-origin`. Tests: `LinkPreviewTests` (integration).
 - The AI draft is only in a moderator's "write or correct the description" form, on any active bill, from pasted official
-  text: the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
+  text (or, where a reader exists, the bill's documents as read): the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
   and a key in `deploy/secrets/ai_api_key`; otherwise nothing mentions a draft. The prompt is the public file
   `src/Modules/Lt2.Appeals/Ai/description-draft.prompt.md`. Audited without text, 20 an hour per moderator; a description
   that started from a draft says "Sukurta DI · taisė žmonės" for its whole life. The worker is configured the same way

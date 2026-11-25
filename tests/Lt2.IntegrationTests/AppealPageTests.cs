@@ -641,7 +641,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     public async Task The_edit_history_of_a_description_is_public_without_the_editor()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var moderator = (await ModeratorAsync()).Browser;
+        var staff = await ModeratorAsync();
+        var moderator = staff.Browser;
         var first = AppealSteps.Description.Replace("32 %", "30 %", StringComparison.Ordinal);
         foreach (var text in new[] { first, AppealSteps.Description })
         {
@@ -665,7 +666,11 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
             .ShouldBeTrue("the text before the change, whole");
         html.IndexOf("pašalinta: </span>30</del>", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf(first, StringComparison.Ordinal), "newest first");
         html.ShouldContain(AppealSteps.Description);
-        html.ShouldNotContain("Bandymas.", Case.Sensitive, "nor the statement");
+        // The moderator's statement is public with each entry (design 8.13, owner 2026-11-25); who wrote it is not.
+        html.ShouldContain("<span class=\"label\">Paaiškinimas</span>");
+        Regex.Count(html, "<p class=\"typed\">Bandymas\\.</p>").ShouldBe(2, "one statement for each of the two entries");
+        html.ShouldNotContain(staff.Email, Case.Insensitive, "nor the editor");
+        history.ShouldAllBe(h => h.Statement == "Bandymas.");
         (await PageAsync(stranger, "/seimas/XVP-0533")).Html.ShouldContain("href=\"/seimas/XVP-0533/istorija\"");
     }
 }

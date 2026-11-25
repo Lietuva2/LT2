@@ -69,7 +69,27 @@ internal static class ClaudeDraftMapping
         Fallbacks = new Default(),
         OutputConfig = new BetaOutputConfig { Effort = Effort.Low },
         System = SystemPrompt(source),
-        Messages = [new BetaUserMessageParam { Content = source.SourceText }],
+        Messages = [new BetaUserMessageParam { Content = UserMessage(source) }],
+    };
+
+    /// <summary>
+    /// The documents, each whole in its own numbered element with its kind, in the source's order (design 8.13): the answer
+    /// names the one the description rests on by its number. A closing tag inside a text is broken so a text cannot end its
+    /// element; nothing else is changed.
+    /// </summary>
+    public static string UserMessage(DraftSource source) => string.Join(
+        "\n\n",
+        source.Documents.Select((d, i) =>
+            $"<document index=\"{(i + 1).ToString(CultureInfo.InvariantCulture)}\" kind=\"{KindName(d.Kind)}\">\n"
+            + d.Text.Replace("</document", "< /document", StringComparison.OrdinalIgnoreCase)
+            + "\n</document>"));
+
+    /// <summary>The kind as the prompts name it.</summary>
+    public static string KindName(string kind) => kind switch
+    {
+        BillDocumentKinds.ExplanatoryNote => "explanatory note (aiškinamasis raštas)",
+        BillDocumentKinds.BillText => "bill text (projekto tekstas)",
+        _ => "official text pasted by the moderator",
     };
 
     /// <summary>

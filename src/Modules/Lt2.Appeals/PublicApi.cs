@@ -310,21 +310,28 @@ public sealed record ModerationItems(IReadOnlyList<QueueRecord> Records, IReadOn
 /// <c>DescriptionUrl</c>: the official text's address, which becomes the record's; empty or null clears it (decided by the
 /// owner on 2026-11-14).
 /// </summary>
-public sealed record ModeratorDescription(string Description, string Statement, bool FromDraft, string? DescriptionUrl = null, string? PlainTitle = null);
+public sealed record ModeratorDescription(
+    string Description, string Statement, bool FromDraft, string? DescriptionUrl = null, string? PlainTitle = null, bool WrittenByAi = false);
 
 /// <summary>
 /// One action on a bill's description and readable title (design 8.13.1), public: <c>ChangedAt</c> is shared by what one action changed.
 /// <c>OldText</c>/<c>NewText</c> mean something only when <c>TextChanged</c> (null new text: removed; null old: the first one);
-/// <c>OldTitle</c>/<c>NewTitle</c> only when <c>TitleChanged</c> (null: none).
+/// <c>OldTitle</c>/<c>NewTitle</c> only when <c>TitleChanged</c> (null: none); <c>OldUrl</c>/<c>NewUrl</c>, the official text's
+/// address, only when <c>UrlChanged</c> (null: none). <c>Confirmed</c>: a moderator confirmed an AI summary as it was.
+/// <c>Statement</c>: the public statement (design 8.13), a moderator's or the summary job's AI's; null where none was given.
 /// </summary>
 public sealed record DescriptionRevision(
-    DateTimeOffset ChangedAt, string? OldText, string? NewText, bool TextChanged, string? OldTitle, string? NewTitle, bool TitleChanged);
+    DateTimeOffset ChangedAt, string? OldText, string? NewText, bool TextChanged, string? OldTitle, string? NewTitle, bool TitleChanged,
+    string? OldUrl, string? NewUrl, bool UrlChanged, bool Confirmed, string? Statement);
 
 /// <summary>A bill's readable title with the source of the description it is kept with (design 8.13.1).</summary>
 public sealed record PlainTitleInfo(string Title, string Source);
 
-/// <summary>An AI draft (design 8.11.4): the description and, when the answer had a valid one, the readable title.</summary>
-public sealed record DescriptionDraft(string Draft, string? PlainTitle);
+/// <summary>
+/// An AI draft (design 8.11.4): the description and, when the answer was valid, the readable title, the public statement
+/// (8.13) and the address of the document it rests on (only for a document the reader read, never for pasted text).
+/// </summary>
+public sealed record DescriptionDraft(string Draft, string? PlainTitle, string? Statement, string? DescriptionUrl);
 
 /// <summary>
 /// The Appeals module (design 8). Every operation that acts for a person takes their account id; moderation operations
@@ -563,9 +570,14 @@ public interface IAppealsModeration
     /// <summary>Whether an AI draft of a description can be asked for: a provider is configured (design 8.11.4).</summary>
     bool DraftAvailable { get; }
 
+    /// <summary>Whether a reader of the bills' official documents exists, so a draft may be asked for without pasted text (design 8.11.4).</summary>
+    bool ReadsOfficialTexts { get; }
+
     /// <summary>
-    /// An AI draft of a neutral description from the pasted official text (design 8.11.4): <c>draft.not-configured</c>
-    /// without a provider; an answer not in the fixed form is <c>draft.failed</c>, one saying the source is not enough has no title.
+    /// An AI draft of a neutral description from the pasted official text, or, with an empty one where a reader exists,
+    /// from the bill's documents as read (design 8.11.4; <c>draft.source-unavailable</c> when none could be read):
+    /// <c>draft.not-configured</c> without a provider; an answer not in the fixed form is <c>draft.failed</c>, one saying
+    /// the source is not enough has no title.
     /// Audited (who, which bill, when; not the text), at most 20 an hour per moderator.
     /// </summary>
     Task<Result<DescriptionDraft>> DraftDescriptionAsync(string billNumber, string sourceText, StaffActor moderator, CancellationToken cancellationToken);

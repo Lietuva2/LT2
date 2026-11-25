@@ -496,7 +496,8 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
             "SELECT count(*) FROM audit.event WHERE action = 'moderation.record.describe' AND target = @t AND details->'extra'->>'descriptionUrl' = @u",
             ("t", "record:" + described.Id), ("u", Address))).ShouldBe(1, "the address is not personal data and is in the audit details");
 
-        // The same text and address change nothing; another address alone is a change, which leaves the text's history.
+        // The same text and address change nothing; another address alone is a change, an entry of the history of its own
+        // that leaves the text as it was (design 8.13, owner 2026-11-25).
         using (var unchanged = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas.", DescriptionUrl = Address }))
         {
             await unchanged.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "description.unchanged");
@@ -505,7 +506,12 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Tikslesnis adresas.", DescriptionUrl = Other }))
             .StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await stranger.RecordAsync(AppealSteps.SecondBill)).DescriptionUrl.ShouldBe(Other);
-        (await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill))).ShouldHaveSingleItem().NewText.ShouldBe(Text);
+        var addressHistory = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill));
+        addressHistory.Select(h => (h.TextChanged, h.NewText, h.UrlChanged, h.OldUrl, h.NewUrl)).ShouldBe(
+        [
+            (true, Text, true, null, Address),
+            (false, null, true, Address, Other),
+        ]);
 
         // An empty field clears it: the page no longer names an official text.
         (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text + " Taikoma nuo 2027 metų.", Statement = "Adresas netinka.", DescriptionUrl = "" }))
@@ -628,6 +634,8 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         (await moderator.ModerationBillAsync(AppealSteps.SecondBill)).PlainTitle.ShouldBeNull();
         var last = (await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill)))[^1];
         (last.TextChanged, last.OldText, last.NewText, last.TitleChanged, last.OldTitle, last.NewTitle).ShouldBe((true, Text, (string?)null, true, Title, (string?)null));
+        (last.Statement, last.Confirmed).ShouldBe(("Aprašymas klaidino.", false), "the removal's statement is public in the history (design 8.13)");
+        WebUtility.HtmlDecode(await stranger.Client.GetStringAsync($"/seimas/{AppealSteps.SecondBill}/istorija")).ShouldContain("<p class=\"typed\">Aprašymas klaidino.</p>");
     }
 
     [Fact]
@@ -795,5 +803,171 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         (await module.KeepRecordAsync(record.Id, new string('a', 1001), actor, CancellationToken.None)).Error.ShouldNotBeNull().Code.ShouldBe("staff-statement.too-long");
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.moderation_action WHERE target_id = @a AND action IN ('hold', 'release', 'planned', 'hide', 'keep')", ("a", record.Id)))
             .ShouldBe(0, "nothing was recorded");
+    }
+
+    /// <summary>
+    /// Design 8.13 (owner, 2026-11-25): a description's history shows the moderator's public statement with each action, and
+    /// a change of the official text's address, alone or with the text, as an entry; the page lays the statement out as typed
+    /// under "Paaiškinimas" and shows the address as "A → B".
+    /// </summary>
+    [Fact]
+    public async Task A_descriptions_history_shows_the_moderators_statement_and_an_address_change_even_alone()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var moderator = (await ModeratorAsync()).Browser;
+        var route = AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill);
+        const string Text = "Projektas leidžia savivaldybėms nustatyti vietinių rinkliavų dydį pagal sąnaudas.";
+        const string Address = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys";
+        const string Other = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys-ar";
+        const string Written = "Parašyta pagal aiškinamąjį raštą. Praleista:\n- Vyriausybės argumentai už projektą\n- Specialiųjų tyrimų tarnybos kritika";
+        const string AddressOnly = "Aprašymas parengtas iš aiškinamojo rašto, ne iš projekto teksto.";
+
+        using (var written = await moderator.SendAsync(HttpMethod.Put, route,
+            new ModeratorDescriptionRequest { Description = Text, Statement = "  " + Written + "\n", DescriptionUrl = Address }))
+        {
+            written.StatusCode.ShouldBe(HttpStatusCode.NoContent, await written.Content.ReadAsStringAsync());
+        }
+
+        using (var moved = await moderator.SendAsync(HttpMethod.Put, route,
+            new ModeratorDescriptionRequest { Description = Text, Statement = AddressOnly, DescriptionUrl = Other }))
+        {
+            moved.StatusCode.ShouldBe(HttpStatusCode.NoContent, await moved.Content.ReadAsStringAsync());
+        }
+
+        using (var cleared = await moderator.SendAsync(HttpMethod.Put, route,
+            new ModeratorDescriptionRequest { Description = Text + " Taikoma nuo 2027 metų.", Statement = "Adresas netiko.", DescriptionUrl = "" }))
+        {
+            cleared.StatusCode.ShouldBe(HttpStatusCode.NoContent, await cleared.Content.ReadAsStringAsync());
+        }
+
+        using var stranger = NewBrowser();
+        var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill));
+        history.Select(h => (h.TextChanged, h.TitleChanged, h.UrlChanged, h.OldUrl, h.NewUrl, h.Confirmed, h.Statement)).ShouldBe(
+        [
+            (true, false, true, null, Address, false, Written),
+            (false, false, true, Address, Other, false, AddressOnly),
+            (true, false, true, Other, null, false, "Adresas netiko."),
+        ]);
+        (history[1].OldText, history[1].NewText).ShouldBe(((string?)null, (string?)null), "an address alone leaves the text");
+
+        var (status, page) = await HistoryPageAsync(stranger, AppealSteps.SecondBill);
+        status.ShouldBe(HttpStatusCode.OK);
+        page.ShouldContain("class=\"stack stack--tight history-statement\"");
+        page.ShouldContain("<span class=\"label\">Paaiškinimas</span>");
+        page.ShouldContain("<p>Parašyta pagal aiškinamąjį raštą. Praleista:</p><ul class=\"typed-list\"><li>Vyriausybės argumentai už projektą</li><li>Specialiųjų tyrimų tarnybos kritika</li></ul>");
+        page.ShouldContain(AddressOnly);
+        page.ShouldContain("class=\"stack stack--tight history-url\"");
+        page.ShouldContain("<span class=\"label\">Oficialus tekstas, iš kurio parengta</span>");
+        page.ShouldContain($"<a href=\"{Address}\" target=\"_blank\" rel=\"external noopener\">{Address}</a> → <a href=\"{Other}\" target=\"_blank\" rel=\"external noopener\">{Other}</a>");
+        page.ShouldContain($"<span>nenurodytas</span> → <a href=\"{Address}\"");
+        page.ShouldContain($"{Other}</a> → <span>nenurodytas</span>");
+        page.ShouldNotContain("patvirtintas be pakeitimų");
+    }
+
+    /// <summary>
+    /// Design 8.13: confirming an AI summary as it was is an entry of the history, "aprašymas patvirtintas be pakeitimų", with
+    /// the moderator's note as its public statement when there is one; without one the entry has no statement.
+    /// </summary>
+    [Fact]
+    public async Task Confirming_an_AI_summary_is_an_entry_of_the_history_with_the_note_as_its_statement_when_given()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var moderator = (await ModeratorAsync()).Browser;
+        const string Text = "Projektas keičia vietinių rinkliavų tvarką.";
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill), new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var record = (await moderator.RecordAsync(AppealSteps.SecondBill)).Id!.Value;
+        await Database.ExecuteAsync("UPDATE appeals.bill_record SET description_source = 'ai' WHERE id = @a", ("a", record));
+
+        using (var withNote = await moderator.PostAsync(AppealRoutes.ConfirmDescriptionOf(AppealSteps.SecondBill), new ModerationRequest { Statement = " Perskaityta: tikslu. " }))
+        {
+            withNote.StatusCode.ShouldBe(HttpStatusCode.NoContent, await withNote.Content.ReadAsStringAsync());
+        }
+
+        using var stranger = NewBrowser();
+        var afterNote = (await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill)))[^1];
+        (afterNote.Confirmed, afterNote.Statement, afterNote.TextChanged, afterNote.TitleChanged, afterNote.UrlChanged)
+            .ShouldBe((true, "Perskaityta: tikslu.", false, false, false));
+        var (_, page) = await HistoryPageAsync(stranger, AppealSteps.SecondBill);
+        page.ShouldContain(" · aprašymas patvirtintas be pakeitimų</span>");
+        page.ShouldContain("Perskaityta: tikslu.");
+
+        await Database.ExecuteAsync("UPDATE appeals.bill_record SET description_source = 'ai' WHERE id = @a", ("a", record));
+        using (var withoutNote = await moderator.PostAsync(AppealRoutes.ConfirmDescriptionOf(AppealSteps.SecondBill), new ModerationRequest()))
+        {
+            withoutNote.StatusCode.ShouldBe(HttpStatusCode.NoContent, await withoutNote.Content.ReadAsStringAsync());
+        }
+
+        var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill));
+        history.Count.ShouldBe(3, "the write and two confirmations");
+        (history[^1].Confirmed, history[^1].Statement, history[^1].TextChanged).ShouldBe((true, (string?)null, false));
+        history[0].Confirmed.ShouldBeFalse("a moderator's own text is not a confirmation");
+    }
+
+    /// <summary>
+    /// Design 8.13 (owner, 2026-11-25): a description an AI agent wrote in the moderator's session and marked so is "ai",
+    /// "Sukurta DI · žmonių neperžiūrėta", until a moderator confirms it; the mark changes the source only with the text or
+    /// the title, never with an address alone.
+    /// </summary>
+    [Fact]
+    public async Task A_description_an_AI_agent_wrote_is_ai_until_confirmed_and_an_address_alone_keeps_the_source()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        var moderator = (await ModeratorAsync()).Browser;
+        const string Text = "Projektas leidžia savivaldybėms nustatyti vietinių rinkliavų dydį pagal sąnaudas.";
+
+        using (var written = await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill),
+            new ModeratorDescriptionRequest { Description = Text, Statement = "Parengta pagal aiškinamąjį raštą.", WrittenByAi = true }))
+        {
+            written.StatusCode.ShouldBe(HttpStatusCode.NoContent, await written.Content.ReadAsStringAsync());
+        }
+
+        using var stranger = NewBrowser();
+        (await stranger.RecordAsync(AppealSteps.SecondBill)).DescriptionSource.ShouldBe("ai");
+        WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.SecondBill)).ShouldContain("Sukurta DI · žmonių neperžiūrėta");
+
+        using (var confirmed = await moderator.PostAsync(AppealRoutes.ConfirmDescriptionOf(AppealSteps.SecondBill), new ModerationRequest { Statement = "Perskaityta: tikslu." }))
+        {
+            confirmed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await confirmed.Content.ReadAsStringAsync());
+        }
+
+        var afterConfirm = await stranger.RecordAsync(AppealSteps.SecondBill);
+        (afterConfirm.Description, afterConfirm.DescriptionSource).ShouldBe((Text, "ai-draft"));
+        WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.SecondBill)).ShouldContain("Sukurta DI · taisė žmonės");
+
+        // An address alone with the mark keeps a moderator's description a moderator's.
+        var route = AppealRoutes.BillDescriptionOf(AppealSteps.ThirdBill);
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await stranger.RecordAsync(AppealSteps.ThirdBill)).DescriptionSource.ShouldBe("moderator");
+        using (var addressOnly = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest
+        {
+            Description = Text, Statement = "Pridėtas adresas.", DescriptionUrl = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys", WrittenByAi = true,
+        }))
+        {
+            addressOnly.StatusCode.ShouldBe(HttpStatusCode.NoContent, await addressOnly.Content.ReadAsStringAsync());
+        }
+
+        var kept = await stranger.RecordAsync(AppealSteps.ThirdBill);
+        (kept.DescriptionSource, kept.DescriptionUrl).ShouldBe(("moderator", "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys"));
+
+        // With a changed text the mark makes it "ai".
+        using (var changed = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest
+        {
+            Description = Text + " Taikoma nuo 2027 metų.", Statement = "Pataisyta.", DescriptionUrl = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/pavyzdys", WrittenByAi = true,
+        }))
+        {
+            changed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await changed.Content.ReadAsStringAsync());
+        }
+
+        (await stranger.RecordAsync(AppealSteps.ThirdBill)).DescriptionSource.ShouldBe("ai");
+    }
+
+    private static async Task<(HttpStatusCode Status, string Html)> HistoryPageAsync(TestBrowser browser, string bill)
+    {
+        using var response = await browser.Client.GetAsync($"/seimas/{bill}/istorija");
+        // White space between elements collapsed, as the browser shows it.
+        return (response.StatusCode, System.Text.RegularExpressions.Regex.Replace(WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()), @"\s+", " "));
     }
 }

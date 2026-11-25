@@ -54,6 +54,10 @@
                             <label for="describe-source-@Key">@L["ModOpen.Source"]</label>
                             <p class="field__hint" id="describe-source-hint-@Key">
                                 @L["ModOpen.SourceHint"]
+                                @if (_ai.ReadsOfficialTexts)
+                                {
+                                    @(" ")@L["ModOpen.SourceHintReader"]
+                                }
                                 @if (ESeimasUrl is { } link)
                                 {
                                     @(" ")<OfficialLink Href="@link">@L["ModOpen.ESeimas"]</OfficialLink>
@@ -65,7 +69,7 @@
                             <p class="small num @(_source.Length > AppealLimits.DraftSourceMaxLength ? "field__error" : "")">@L.Format("ModOpen.SourceLength", Display.Number(_source.Length), Display.Number(AppealLimits.DraftSourceMaxLength))</p>
                             <FieldError Errors="Errors" Field="sourceText" For="@($"describe-source-{Key}")" />
                         </div>
-                        <p><button type="button" class="btn btn--plain" id="describe-draft-@Key" disabled="@(Locked || string.IsNullOrWhiteSpace(_source))" @onclick="DraftAsync">@L["ModOpen.Draft"]</button></p>
+                        <p><button type="button" class="btn btn--plain" id="describe-draft-@Key" disabled="@(Locked || (string.IsNullOrWhiteSpace(_source) && !_ai.ReadsOfficialTexts))" @onclick="DraftAsync">@L["ModOpen.Draft"]</button></p>
                     }
                     @* Design 8.13.1: the readable title, kept with the description under the same source and label. *@
                     <div class="field @ErrorClass("plainTitle")">
@@ -190,17 +194,34 @@
 
                 @* Design 8.3 (owner, 2026-11-22): the explanation says who reads it, the author by email, everyone on the
                    bill's page, or staff only; the note of "Palikti" goes to the members who reported, by email (2026-11-17). *@
-                @{ var hint = StatementHint(_open); }
+                @* A description's statement is public in its history and laid out as typed (design 8.13, owner 2026-11-25). *@
+                @{ var hint = StatementHint(_open); var typed = IsDescriptionAction(_open); }
                 <div class="field @ErrorClass("statement")">
                     <label for="statement-@Key">@StatementLabel(_open)</label>
                     @if (hint is not null)
                     {
                         <p class="field__hint" id="statement-hint-@Key">@hint</p>
                     }
-                    <textarea class="textarea" id="statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
-                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"statement-{Key}", hint is null ? "" : $"statement-hint-{Key}")"></textarea>
+                    <textarea class="textarea" id="statement-@Key" rows="@(typed ? "5" : null)" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"statement-{Key}", hint is null ? "" : $"statement-hint-{Key}", typed ? $"statement-layout-{Key}" : "")"></textarea>
+                    @if (typed)
+                    {
+                        <TextLayoutHint Id="@($"statement-layout-{Key}")" />
+                    }
                     <FieldError Errors="Errors" Field="statement" For="@($"statement-{Key}")" />
                 </div>
+                @if (_open == "describe")
+                {
+                    @* Design 8.13 (owner, 2026-11-25): for an AI agent filling the form in the moderator's session, out of sight
+                       and out of the tab order but in the page's text and accessibility tree, where agents read; ticked, the
+                       description is "ai", "Sukurta DI · žmonių neperžiūrėta". *@
+                    <div class="visually-hidden" id="describe-by-ai-box-@Key">
+                        <label class="check">
+                            <input type="checkbox" id="describe-by-ai-@Key" name="writtenByAi" tabindex="-1" @bind="_writtenByAi" disabled="@Locked" />
+                            <span>@L["Mod.WrittenByAi"]</span>
+                        </label>
+                    </div>
+                }
                 <div class="row">
                     <button type="submit" class="btn" id="action-submit-@Key" disabled="@Locked">@L[ActionLabel(_open)]</button>
                     <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="Close">@L["Cancel"]</button>
@@ -235,6 +256,7 @@
     private string? _urlNow;
     private string _source = "";
     private bool _fromDraft;
+    private bool _writtenByAi;
     private AiStatusResponse? _ai;
     private Guid? _record;
     private string? _closeReason;
@@ -407,11 +429,14 @@
     {
         "keep" => L["Mod.Note.Reporters"],
         "publish" => L["Mod.Note.Optional"],
-        "confirm" => L["Mod.Note.Record"],
+        "confirm" => L["Mod.Statement.Public.Optional"],
         _ when Kind == ReportTargets.Reason => L["Mod.Statement.Author"],
-        "hide" or "threshold" => L["Mod.Statement.Public"],
+        "hide" or "threshold" or "describe" or "undescribe" => L["Mod.Statement.Public"],
         _ => L["Mod.Statement.Staff"],
     };
+
+    /// <summary>The actions on a bill's description, whose statement is public in its history (design 8.13).</summary>
+    private static bool IsDescriptionAction(string? action) => action is "describe" or "undescribe" or "confirm";
 
     /// <summary>
     /// The line under the label on where the explanation goes, or null when the label says it all (the author's). A bill's
@@ -420,10 +445,10 @@
     private string? StatementHint(string action) => action switch
     {
         "keep" => L["Mod.Note.Reporters.Hint"].Value,
-        "publish" or "confirm" => null,
+        "publish" => null,
         _ when Kind == ReportTargets.Reason => null,
         "hide" or "threshold" => L["Mod.Statement.Public.Hint.bill"].Value,
-        "describe" or "undescribe" => L["Mod.Statement.Staff.Hint.description"].Value,
+        "describe" or "undescribe" or "confirm" => L["Mod.Statement.Public.Hint.description"].Value,
         _ => L["Mod.Statement.Staff.Hint"].Value,
     };
 
@@ -445,6 +470,7 @@
         _descriptionUrl = StartingUrl;
         _source = "";
         _fromDraft = false;
+        _writtenByAi = false;
         _closeReason = null;
         _decidedOn = null;
         _sourceUrl = null;
@@ -482,9 +508,21 @@
             return;
         }
 
-        // The draft fills the description; the moderator edits it. The label stays for the description's whole life.
+        // The draft fills the description, the title and the public statement; the moderator edits them. The label stays
+        // for the description's whole life. The address of a read document it rests on fills "Oficialaus teksto adresas";
+        // pasted text has none, so the field keeps what it holds (design 8.11.4, 8.13).
         _description = result.Value!.Draft;
         _plainTitle = result.Value.PlainTitle ?? "";
+        if (result.Value.Statement is { } statement)
+        {
+            _statement = statement;
+        }
+
+        if (result.Value.DescriptionUrl is { } address)
+        {
+            _descriptionUrl = address;
+        }
+
         _fromDraft = true;
         Info = L["ModOpen.DraftReady"];
     });
@@ -532,7 +570,7 @@
         {
             "confirm" => (CurrentDescription, DescriptionSources.AiDraft, CurrentUrl),
             "undescribe" => ("", null, null),
-            "describe" => (_description.Trim(), _fromDraft || CurrentSource is DescriptionSources.Ai or DescriptionSources.AiDraft ? DescriptionSources.AiDraft : DescriptionSources.Moderator, OfficialTextAddress.Normalise(_descriptionUrl)),
+            "describe" => (_description.Trim(), DescribedSource(), OfficialTextAddress.Normalise(_descriptionUrl)),
             _ => (_descriptionNow, _sourceNow, _urlNow),
         };
         _open = null;
@@ -606,7 +644,25 @@
     }
 
     private ModeratorDescriptionRequest DescribeRequest() =>
-        new() { Description = _description, PlainTitle = string.IsNullOrWhiteSpace(_plainTitle) ? null : _plainTitle, Statement = _statement, FromDraft = _fromDraft, DescriptionUrl = OfficialTextAddress.Normalise(_descriptionUrl) };
+        new()
+        {
+            Description = _description, PlainTitle = string.IsNullOrWhiteSpace(_plainTitle) ? null : _plainTitle, Statement = _statement, FromDraft = _fromDraft,
+            DescriptionUrl = OfficialTextAddress.Normalise(_descriptionUrl), WrittenByAi = _writtenByAi,
+        };
+
+    /// <summary>
+    /// The label after "describe", as the server decides it (RecordRules.SourceOfModeratorText): an address alone keeps it;
+    /// text an AI agent sent is "ai"; a draft or earlier AI text is "ai-draft"; otherwise the moderator's.
+    /// </summary>
+    private string? DescribedSource()
+    {
+        var changed = _description.Trim() != (CurrentDescription ?? "").Trim()
+            || (string.IsNullOrWhiteSpace(_plainTitle) ? null : _plainTitle.Trim()) != (string.IsNullOrWhiteSpace(PlainTitleNow) ? null : PlainTitleNow.Trim());
+        return !changed ? CurrentSource
+            : _writtenByAi ? DescriptionSources.Ai
+            : _fromDraft || CurrentSource is DescriptionSources.Ai or DescriptionSources.AiDraft ? DescriptionSources.AiDraft
+            : DescriptionSources.Moderator;
+    }
 
     private CloseRecordRequest CloseRequest() => new()
     {

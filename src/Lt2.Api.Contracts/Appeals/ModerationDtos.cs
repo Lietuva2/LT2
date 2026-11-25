@@ -161,6 +161,13 @@ public sealed record ModeratorDescriptionRequest
 
     /// <summary>"Trumpas pavadinimas" (design 8.13.1): one line of at most 90 characters; empty or absent leaves the record without one.</summary>
     public string? PlainTitle { get; init; }
+
+    /// <summary>
+    /// An AI agent filled in and sent the form in the moderator's session (design 8.13, owner 2026-11-25): the
+    /// description is then <c>ai</c>, "Sukurta DI · žmonių neperžiūrėta", whatever it was before, until a person confirms
+    /// or corrects it. The form's box for it is hidden from sight, for agents only.
+    /// </summary>
+    public bool WrittenByAi { get; init; }
 }
 
 /// <summary>
@@ -181,17 +188,26 @@ public sealed record ModerationBillResponse(
 /// <summary>The bill's record a moderator acts on (design 8.12.1: found, or created on an active bill).</summary>
 public sealed record BillRecordIdResponse(Guid Id);
 
-/// <summary>Whether an AI draft can be asked for (design 8.11.4): false until a provider is configured.</summary>
-public sealed record AiStatusResponse(bool DraftAvailable);
+/// <summary>
+/// Whether an AI draft can be asked for (design 8.11.4): false until a provider is configured. <c>ReadsOfficialTexts</c>:
+/// a reader of the bills' official documents exists, so the draft may be asked for without pasted text.
+/// </summary>
+public sealed record AiStatusResponse(bool DraftAvailable, bool ReadsOfficialTexts = false);
 
-/// <summary>The official text a moderator pasted (the relevant part of the explanatory note), at most 20 000 characters.</summary>
+/// <summary>
+/// The official text a moderator pasted (the relevant part of the explanatory note), at most 20 000 characters; empty asks
+/// for a draft from the bill's documents as read, where a reader exists.
+/// </summary>
 public sealed record DescriptionDraftRequest
 {
     public string SourceText { get; init; } = "";
 }
 
-/// <summary>The AI's draft: the description and, when the answer had one, the readable title (design 8.11.4, 8.13.1).</summary>
-public sealed record DescriptionDraftResponse(string Draft, string? PlainTitle = null);
+/// <summary>
+/// The AI's draft (design 8.11.4, 8.13, 8.13.1): the description and, when the answer had them, the readable title, the
+/// public statement and the address of the read document it rests on (none for pasted text).
+/// </summary>
+public sealed record DescriptionDraftResponse(string Draft, string? PlainTitle = null, string? Statement = null, string? DescriptionUrl = null);
 
 public sealed record MergeReasonRequest
 {

@@ -173,11 +173,15 @@ internal static class RecordRules
         recordStatus == BillRecordStatuses.Closed && closedReason is not null && ClosingReasons.ByModerator.Contains(closedReason);
 
     /// <summary>
-    /// The source a moderator's description gets: <c>ai-draft</c> when it started from a draft, and it stays <c>ai-draft</c>
-    /// when a moderator corrects such a description later (design 8.11.4: the label is for the description's whole life).
+    /// The source a description written in the moderator's form gets: <c>ai</c> when an AI agent wrote and sent it (design
+    /// 8.13: nobody has read it, whatever it was before); otherwise <c>ai-draft</c> when it started from a draft, and it stays
+    /// <c>ai-draft</c> when a moderator corrects such a description later (design 8.11.4: the label is for the description's
+    /// whole life).
     /// </summary>
-    public static string SourceOfModeratorText(bool fromDraft, string? currentSource) =>
-        fromDraft || currentSource is DescriptionSources.AiDraft or DescriptionSources.Ai ? DescriptionSources.AiDraft : DescriptionSources.Moderator;
+    public static string SourceOfModeratorText(bool fromDraft, bool writtenByAi, string? currentSource) =>
+        writtenByAi ? DescriptionSources.Ai
+        : fromDraft || currentSource is DescriptionSources.AiDraft or DescriptionSources.Ai ? DescriptionSources.AiDraft
+        : DescriptionSources.Moderator;
 
     /// <summary>
     /// A moderator confirms an AI summary nobody has read (design 8.13): only an <c>ai</c> description of an open record. It
@@ -254,21 +258,46 @@ internal static class AiDraftRules
     public static readonly TimeSpan DraftValidFor = TimeSpan.FromHours(24);
 
     /// <summary>
-    /// Without a source text there is no draft: the assistant never writes from the title alone. Then the hourly limit.
+    /// Without a source there is no draft: the assistant never writes from the title alone. A moderator pastes the text,
+    /// or leaves the field empty where a reader of the bills' official documents exists (design 8.11.4). Then the hourly limit.
     /// </summary>
-    public static string? CheckRequest(string? sourceText, int askedInLastHour)
+    public static string? CheckRequest(string? sourceText, bool canRead, int askedInLastHour)
     {
-        if (string.IsNullOrWhiteSpace(sourceText))
+        if (string.IsNullOrWhiteSpace(sourceText) && !canRead)
         {
             return "draft.source-required";
         }
 
-        if (sourceText.Length > SourceMaxLength)
+        if (sourceText?.Length > SourceMaxLength)
         {
             return "draft.source-too-long";
         }
 
         return askedInLastHour >= PerModeratorPerHour ? "draft.too-many" : null;
+    }
+
+    /// <summary>
+    /// The documents read for a bill that are sent to the assistant (design 8.13): in the reader's order (the explanatory
+    /// note first), each whole and not empty, while together they stay within <see cref="SourceMaxLength"/>; a document
+    /// that would pass it is left out, never cut. None left means the text is unavailable.
+    /// </summary>
+    public static IReadOnlyList<BillDocument> Sendable(IReadOnlyList<BillDocument>? documents)
+    {
+        var sent = new List<BillDocument>();
+        var length = 0;
+        foreach (var document in documents ?? [])
+        {
+            var text = document.Text.Trim();
+            if (text.Length == 0 || length + text.Length > SourceMaxLength)
+            {
+                continue;
+            }
+
+            sent.Add(document with { Text = text });
+            length += text.Length;
+        }
+
+        return sent;
     }
 
     /// <summary>

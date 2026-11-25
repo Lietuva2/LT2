@@ -19,9 +19,15 @@ public sealed class FakeAiAssistant : IAiAssistant
 
     public const string Draft = "Projektas įveda trečią pajamų mokesčio tarifą – 32 % metinėms pajamoms, viršijančioms 60 vidutinių darbo užmokesčių.";
 
+    /// <summary>The public statement the fake answers with (design 8.13), after "Šaltinis: 1".</summary>
+    public const string Statement = "Perskaitytas įklijuotas aiškinamojo rašto tekstas. Praleista:\n- Vyriausybės argumentai už projektą";
+
+    /// <summary>What follows <see cref="Draft"/> in the fake's answer: the document it rests on and the statement.</summary>
+    public const string Tail = "\n\nŠaltinis: 1\nPaaiškinimas: " + Statement;
+
     public ConcurrentQueue<DraftSource> Asked { get; } = new();
 
-    /// <summary>The answer a test sets; null is the title, an empty line and <see cref="Draft"/>. A test that sets it puts it back.</summary>
+    /// <summary>The answer a test sets; null is the title, an empty line, <see cref="Draft"/> and <see cref="Tail"/>. A test that sets it puts it back.</summary>
     public string? Answer { get; set; }
 
     public bool IsConfigured => true;
@@ -29,7 +35,7 @@ public sealed class FakeAiAssistant : IAiAssistant
     public Task<Result<string>> DraftDescriptionAsync(DraftSource request, CancellationToken cancellationToken)
     {
         Asked.Enqueue(request);
-        return Task.FromResult<Result<string>>(Answer ?? Title + "\n\n" + Draft);
+        return Task.FromResult<Result<string>>(Answer ?? Title + "\n\n" + Draft + Tail);
     }
 }
 
@@ -125,9 +131,11 @@ public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
         (await browser.GetJsonAsync<AiStatusResponse>(AppealRoutes.Ai)).DraftAvailable.ShouldBeTrue();
         await Database.FreeBillAsync(AppealSteps.SecondBill);
 
+        // Without a reader of the bills' documents an empty source is refused (design 8.11.4).
+        (await browser.GetJsonAsync<AiStatusResponse>(AppealRoutes.Ai)).ReadsOfficialTexts.ShouldBeFalse();
         using (var empty = await browser.PostAsync(AppealRoutes.DescriptionDraftOf(AppealSteps.SecondBill), new DescriptionDraftRequest { SourceText = " " }))
         {
-            empty.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            await empty.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "draft.source-required");
         }
 
         using (var tooLong = await browser.PostAsync(AppealRoutes.DescriptionDraftOf(AppealSteps.SecondBill), new DescriptionDraftRequest { SourceText = new string('a', 20_001) }))
@@ -140,8 +148,11 @@ public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
         var draft = await drafted.ReadAsync<DescriptionDraftResponse>();
         draft.Draft.ShouldBe(FakeAiAssistant.Draft);
         draft.PlainTitle.ShouldBe(FakeAiAssistant.Title);
+        draft.Statement.ShouldBe(FakeAiAssistant.Statement, "the answer's statement fills the form's public statement (design 8.13)");
+        draft.DescriptionUrl.ShouldBeNull("pasted text has no address");
         var sent = Ai.Assistant.Asked.Last();
-        sent.ShouldBe(new DraftSource(AppealSteps.SecondBill, "Vietinių rinkliavų įstatymo pataisa", Source));
+        (sent.BillNumber, sent.BillTitle, sent.Purpose).ShouldBe((AppealSteps.SecondBill, "Vietinių rinkliavų įstatymo pataisa", DraftPurpose.ModeratorDraft));
+        sent.Documents.ShouldBe([new BillDocument(BillDocumentKinds.Pasted, Source, null)], "the pasted text is the one document, whole");
 
         // Audited: who, which bill, when; never the source or the draft.
         var userId = await Database.UserIdAsync(moderator.Email);
@@ -187,15 +198,20 @@ public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
                 var read = await notEnough.ReadAsync<DescriptionDraftResponse>();
                 read.PlainTitle.ShouldBeNull();
                 read.Draft.ShouldBe(Lt2.Appeals.Domain.SummaryRules.NotEnoughAnswer);
+                (read.Statement, read.DescriptionUrl).ShouldBe(((string?)null, (string?)null));
             }
 
             foreach (var broken in new[]
             {
                 FakeAiAssistant.Draft,
-                FakeAiAssistant.Title + "\n" + FakeAiAssistant.Draft,
-                new string('x', 91) + "\n\n" + FakeAiAssistant.Draft,
-                "Pirma eilutė\nAntra eilutė\n\n" + FakeAiAssistant.Draft,
-                FakeAiAssistant.Title + "\n\n" + new string('x', 1501),
+                FakeAiAssistant.Title + "\n" + FakeAiAssistant.Draft + FakeAiAssistant.Tail,
+                new string('x', 91) + "\n\n" + FakeAiAssistant.Draft + FakeAiAssistant.Tail,
+                "Pirma eilutė\nAntra eilutė\n\n" + FakeAiAssistant.Draft + FakeAiAssistant.Tail,
+                FakeAiAssistant.Title + "\n\n" + new string('x', 1501) + FakeAiAssistant.Tail,
+                FakeAiAssistant.Title + "\n\n" + FakeAiAssistant.Draft, // the two-part form without a source or a statement
+                FakeAiAssistant.Title + "\n\n" + FakeAiAssistant.Draft + "\n\nŠaltinis: 2\nPaaiškinimas: " + FakeAiAssistant.Statement, // one document was sent
+                FakeAiAssistant.Title + "\n\n" + FakeAiAssistant.Draft + "\n\nŠaltinis: 1\nPaaiškinimas:",
+                FakeAiAssistant.Title + "\n\n" + FakeAiAssistant.Draft + "\n\nŠaltinis: 1\nPaaiškinimas: " + new string('x', 1001),
             })
             {
                 Ai.Assistant.Answer = broken;

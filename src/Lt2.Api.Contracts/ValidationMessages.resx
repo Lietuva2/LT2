@@ -47,7 +47,6 @@
 <data name="Closing.Date" xml:space="preserve"><value>Nurodykite sprendimo datą.</value></data>
 <data name="Closing.Url" xml:space="preserve"><value>Nurodykite šaltinio adresą lrs.lt svetainėje, prasidedantį https://.</value></data>
 <data name="Planned.Stage" xml:space="preserve"><value>Netinkama stadija.</value></data>
-<data name="Draft.SourceRequired" xml:space="preserve"><value>Įklijuokite oficialų tekstą: be jo juodraščio nebus.</value></data>
 <data name="Draft.SourceTooLong" xml:space="preserve"><value>Tekstas per ilgas: daugiausia 20 000 ženklų. Palikite tik tą dalį, kurioje aprašyta, ką projektas keičia.</value></data>
 <data name="Notices.Kind" xml:space="preserve"><value>Netinkami laiškų nustatymai.</value></data>
 <data name="Organisation.Name" xml:space="preserve"><value>Pavadinimas turi būti nuo 3 iki 120 ženklų.</value></data>

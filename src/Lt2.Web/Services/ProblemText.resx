@@ -119,6 +119,7 @@
 <data name="draft.too-many" xml:space="preserve"><value>Per valandą galima paprašyti ne daugiau kaip 20 juodraščių. Pabandykite vėliau.</value></data>
 <data name="draft.source-required" xml:space="preserve"><value>Įklijuokite oficialų tekstą: be jo juodraščio nebus.</value></data>
 <data name="draft.source-too-long" xml:space="preserve"><value>Tekstas per ilgas: daugiausia 20 000 ženklų.</value></data>
+<data name="draft.source-unavailable" xml:space="preserve"><value>Projekto dokumentų e. seime perskaityti nepavyko. Įklijuokite oficialų tekstą.</value></data>
 <data name="draft.none" xml:space="preserve"><value>Šiam projektui juodraščio neprašėte, todėl aprašymas negali būti pažymėtas kaip parengtas dirbtinio intelekto.</value></data>
 <data name="draft.failed" xml:space="preserve"><value>Juodraščio parengti nepavyko. Parašykite aprašymą patys arba pabandykite vėliau.</value></data>
 <data name="mp.not-found" xml:space="preserve"><value>Tokio Seimo nario nėra.</value></data>
