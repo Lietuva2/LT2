@@ -26,6 +26,10 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           global-json-file: global.json
+        # The pinned SDK goes to a directory of its own. In the runner's /usr/share/dotnet it would share the workload
+        # manifests of the newer preinstalled SDK of the same band, which change a pack version the lock files hold.
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
 
       # Design 6.7: the lock files (packages.lock.json) fix every package version, so a restore that would change one fails.
       - name: Restore
@@ -63,6 +67,10 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           global-json-file: global.json
+        # The pinned SDK goes to a directory of its own. In the runner's /usr/share/dotnet it would share the workload
+        # manifests of the newer preinstalled SDK of the same band, which change a pack version the lock files hold.
+        env:
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
 
       - name: Start the stack
         run: |
