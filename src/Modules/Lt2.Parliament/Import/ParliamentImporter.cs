@@ -13,7 +13,8 @@ using Microsoft.Extensions.Options;
 namespace Lt2.Parliament.Import;
 
 /// <summary>
-/// Design 7.2. Walks the chain terms → MPs → sessions → sittings → agenda → proceedings → vote results. For each request:
+/// Design 7.2. Walks the chain terms → MPs → sessions → sittings → agenda → proceedings → vote results, then the day's TAIS
+/// projects (<c>p2b.tais_docs</c>), which only create bills and fill a missing title or link. For each request:
 /// fetch, store the raw response (deduplicated by hash), then parse the stored body and upsert by Seimas identifiers,
 /// committing the data and "parsed" together. What was parsed and is old enough not to change is not asked again, so a
 /// run that broke off is resumed by the next one, and a second run over unchanged data changes nothing. An administrator's
@@ -194,6 +195,10 @@ internal sealed class ParliamentImporter(
                     ct);
             }
         }
+
+        // The day's TAIS projects, after the sittings: last, so its failure leaves everything above applied. At most hourly,
+        // and no manual job forces it (none of the parts names it, design 7.2).
+        await ImportAsync(SeimasRequest.Projects(), ImportParts.None, s => ImportSchedule.IsProjectsDue(now, s.FetchedAt), body => ApplyProjects(body, ct), ct);
     }
 
     /// <summary>
@@ -600,6 +605,42 @@ internal sealed class ParliamentImporter(
         var factionByLabel = labelFactions.GroupBy(x => x.Label, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.GroupBy(x => x.Faction).OrderByDescending(f => f.Count()).First().Key, StringComparer.Ordinal);
         await statistics.ApplyFactionPositionsAsync(voteId, parsed.Ballots.Select(b => (b.FactionLabel, b.Choice)), factionByLabel, ct);
+    }
+
+    /// <summary>
+    /// Design 7.2: a Seimas bill among the day's TAIS projects is created when the site does not know it, with TAIS's title
+    /// and link; a known bill takes the title and the link only where it has none, so an agenda's title and link stand.
+    /// A project without a title creates nothing: a bill is shown by its title.
+    /// </summary>
+    private async Task ApplyProjects(byte[] body, CancellationToken ct)
+    {
+        var parsed = SeimasParsers.Projects(body);
+        var numbers = parsed.Select(p => p.BillNumber).ToList();
+        var bills = await db.Bills.Where(b => numbers.Contains(b.Number)).ToDictionaryAsync(b => b.Number, ct);
+        foreach (var p in parsed)
+        {
+            if (!bills.TryGetValue(p.BillNumber, out var bill))
+            {
+                if (p.Title is null)
+                {
+                    continue;
+                }
+
+                bill = new Bill { Id = Ids.New(clock), Number = p.BillNumber };
+                db.Bills.Add(bill);
+                bills[p.BillNumber] = bill;
+            }
+
+            if (bill.Title.Length == 0 && p.Title is not null)
+            {
+                bill.Title = p.Title;
+            }
+
+            if (string.IsNullOrEmpty(bill.ESeimasUrl) && p.Url is not null)
+            {
+                bill.ESeimasUrl = p.Url;
+            }
+        }
     }
 
     /// <summary>

@@ -8,6 +8,7 @@ contract suite (`LT2_SEIMAS_LIVE=1`, see `Recorded/README.md`) and it reports on
 Sources of "seen":
 
 - **live XML**: official `apps.lrs.lt/sip` responses for term 10, session 145, sittings -502176 and -502205, and vote -60034;
+  and `p2b.tais_docs` of 2026-11-25 (lines marked with that date);
 - the following are from the September 2026 discovery work on the `docs` branch:
 
 - **notes**: `discovery/design-notes.md`, section 3 "Seimas open data";
@@ -114,6 +115,13 @@ name; a namespace on the real elements would contradict every element line.
 | R19 | p2b.ad_sp_balsavimo_rezultatai | behaviour | per-MP rows sum to the totals | BendriBalsavimoRezultatai | seen | notes (-60034 summed exactly); local import 2026-11-24 (all 6 295 results of term 10 summed exactly) | the ballot counts beside the result (design 8.17); a result whose rows do not sum carries lrs.lt's sentence (design 7.2) |
 | R20 | p2b.ad_sp_balsavimo_rezultatai | value | frakcija=MG | IndividualusBalsavimoRezultatas | seen | fetch_vote only: the September 2026 prototype places "MG" (the mixed group) last; seen nowhere else | nothing: the mixed group is recognised by its membership's body (M23, not a faction), never by this label |
 | R21 | p2b.ad_sp_balsavimo_rezultatai | behaviour | every result carries the same komentaras, "Elektroninėmis priemonėmis gauti individualūs balsavimo rezultatai neatitinka protokole įrašytų suminių rezultatų", whether or not its rows sum | BendriBalsavimoRezultatai | seen | local import 2026-11-24 (6 295 of 6 295 results of term 10, each summing exactly) | `VoteRules.OfficialNote` drops it unless the rows really do not add up (R19; design 7.2) |
+| D1 | p2b.tais_docs | element | Document | (document) | seen | live XML 2026-11-25 (133 documents) | one row per project with an event in TAIS that day |
+| D2 | p2b.tais_docs | attribute | projectRegistrationNo | Document | seen | live XML 2026-11-25 | the bill's number, its revision dropped (D5) |
+| D3 | p2b.tais_docs | attribute | title | Document | seen | live XML 2026-11-25 | a new bill's title; a known bill's only when it has none |
+| D4 | p2b.tais_docs | attribute | url | Document | seen | live XML 2026-11-25 (`https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/…`) | the bill's e-seimas link when it has none |
+| D5 | p2b.tais_docs | behaviour | a Seimas bill's projectRegistrationNo is its registration number, a revision written after it (XVP-1334(2), XIVP-3900(2)); other institutions' projects are numbered otherwise (26-14366) | Document | seen | live XML 2026-11-25 (21 of 133 documents are Seimas bills) | which projects are bills (`BillNumbers.Whole`); several revisions of one bill: the highest wins |
+| D6 | p2b.tais_docs | behaviour | one answer, without parameters, holds only the projects with an event in TAIS on the current day (eventsDate) | TAISProjEvents | seen | live XML 2026-11-25 (`eventsDate="2026-11-25"`) | a day not read is not read later; earlier bills come from the agendas |
+| D7 | p2b.tais_docs | behaviour | the answer is made anew during the day (creationDate), so a later request sees the day's later events | TAISProjEvents | assumed | one answer seen, `creationDate="2026-11-25 15:00:00"` | asked at most hourly (`ImportSchedule.IsProjectsDue`) |
 | F1 | (all) | format | dates are yyyy-MM-dd | data_nuo, data_iki | assumed | | dates |
 | F2 | (all) | format | times are Vilnius local time, yyyy-MM-dd HH:mm or with seconds | pradžia, pabaiga, balsavimo_laikas, balsavimas/nuo | assumed | | times, stored in UTC |
 | F3 | (all) | format | identifiers are integers and may be negative | *_id | seen | notes: vote -60034 | keys (bigint) |

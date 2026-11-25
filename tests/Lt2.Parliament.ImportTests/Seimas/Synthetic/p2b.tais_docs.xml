@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for tests and the local stand-in. NOT a recorded Seimas response.
+     Shape: as the live p2b.tais_docs of 2026-11-25 (../ASSUMPTIONS.md, D1-D6), trimmed. Every name, identifier and number is fictional. -->
+<TAISProjEvents eventsDate="2026-11-12" creationDate="2026-11-12 15:00:00">
+  <Events>
+    <Event action="action.dhs.infoLinkDocument" eventDate="2026-11-12 08:10:00" oid="99sintetinis000000000000000000001" relatedDocOid="99sintetinis000000000000000000011" linkName="Projektą lydintis dokumentas"/>
+    <Event action="action.dhs.infoLinkDocument" eventDate="2026-11-12 09:20:00" oid="99sintetinis000000000000000000002" relatedDocOid="99sintetinis000000000000000000012" linkName="Pasiūlymas keisti dokumento projektą"/>
+    <Event action="action.dhs.infoLinkDocument" eventDate="2026-11-12 10:30:00" oid="99sintetinis000000000000000000003" relatedDocOid="99sintetinis000000000000000000013" linkName="Suinteresuotos institucijos pastabos"/>
+  </Events>
+  <Documents>
+    <Document sort="Įstatymo projektas" title="Gyventojų pajamų mokesčio įstatymo pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0412" projectRegistrationDate="2026.03.03" currentStatus="registered" itemType="TAP" oid="99sintetinis000000000000000000001" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0412-TAIS">
+      <initiatorUnits><orgName>Lietuvos Respublikos Seimas</orgName></initiatorUnits>
+      <adoptionUnits><orgName>Lietuvos Respublikos Seimas</orgName></adoptionUnits>
+      <coordinatorUnit orgName="Lietuvos Respublikos Seimo kanceliarija"/>
+      <preparedBy><name>Seimo narys Jonas Petraitis</name></preparedBy>
+      <chronology><statusChronology><entry><dateFrom>2026-03-03 09:00:00</dateFrom><operation clsid="sintetinis" clsValue="Projektas užregistruotas registre"/><notes>XVP-0412</notes><id>1</id></entry></statusChronology><coordinationChronology></coordinationChronology></chronology>
+      <Links>
+        <Link typeCode="000009" typeValue="Projektą lydintis dokumentas"><relatedDoc sort="Aiškinamasis raštas" title="AIŠKINAMASIS RAŠTAS dėl Gyventojų pajamų mokesčio įstatymo pakeitimo įstatymo projekto" registrationNo="XVP-0412" registrationDate="2026.03.03" currentStatus="prepared" itemType="TAK" oid="99sintetinis000000000000000000011" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAK/SINTETINIS-XVP-0412-RASTAS"/></Link>
+      </Links>
+    </Document>
+    <Document sort="Įsakymo projektas" title="Dėl išgalvoto tvarkos aprašo patvirtinimo" projectRegistrationNo="26-00412" projectRegistrationDate="2026.11.10" currentStatus="inReviewal" itemType="TAP" oid="99sintetinis000000000000000000002" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-26-00412">
+      <initiatorUnits><orgName>Pavyzdžių ministerija</orgName></initiatorUnits>
+      <adoptionUnits><orgName>Pavyzdžių ministerija</orgName></adoptionUnits>
+      <coordinatorUnit orgName="Pavyzdžių ministerija"/>
+      <preparedBy></preparedBy>
+    </Document>
+    <Document sort="Įstatymo projektas" title="Atliekų tvarkymo įstatymo pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0618(2)" projectRegistrationDate="2026.11.12" currentStatus="registered" itemType="TAP" oid="99sintetinis000000000000000000003" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0618-2">
+      <initiatorUnits><orgName>Lietuvos Respublikos Seimas</orgName></initiatorUnits>
+      <adoptionUnits><orgName>Lietuvos Respublikos Seimas</orgName></adoptionUnits>
+      <coordinatorUnit orgName="Lietuvos Respublikos Seimo kanceliarija"/>
+      <preparedBy><name>Seimo narė Ona Jonaitienė</name></preparedBy>
+    </Document>
+  </Documents>
+</TAISProjEvents>

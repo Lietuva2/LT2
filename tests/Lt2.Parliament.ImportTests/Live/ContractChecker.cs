@@ -207,6 +207,13 @@ internal static class ContractChecker
                 return notes.Count == 0 ? new(line, Verdict.NotObserved, "no vote result in the sample")
                     : standing == notes.Count ? new(line, Verdict.Confirmed, $"{standing} of {notes.Count} result(s) carry the standing disclaimer")
                     : new(line, Verdict.Contradicted, $"{standing} of {notes.Count} result(s) carry the standing disclaimer; others: {string.Join(" | ", notes.Where(n => VoteRules.OfficialNote(n) is not null).Distinct().Take(5))}");
+            case "D5":
+                var numbers = elements.Where(e => e.Name.LocalName == N.Project).Select(e => e.Attribute(N.ProjectNumber)?.Value.Trim() ?? "").ToList();
+                var bills = numbers.Count(n => BillNumbers.Whole(n) is not null);
+                var others = string.Join(", ", numbers.Where(n => BillNumbers.Whole(n) is null).Distinct().Take(8).Select(n => $"\"{n}\""));
+                return numbers.Count == 0 ? new(line, Verdict.NotObserved, "no project in the answer")
+                    : bills > 0 ? new(line, Verdict.Confirmed, $"{bills} of {numbers.Count} projects are Seimas bills; others: {others}")
+                    : new(line, Verdict.NotObserved, $"no Seimas bill among {numbers.Count} projects today: {others}");
             case "V4":
                 var wordings = all.Where(f => f.Service == SeimasServices.Proceedings && f.Document is not null)
                     .SelectMany(f => f.Document!.Descendants().Where(e => e.Name.LocalName == N.Vote))
