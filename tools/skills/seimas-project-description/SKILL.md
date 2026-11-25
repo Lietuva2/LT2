@@ -93,8 +93,9 @@ Vyriausybės, pagrindinio komiteto išvada, protokolai) for context and for the 
 
 The bill page's "Moderavimas" panel holds the bill's actions. **Open the form:** press the menu trigger ("Veiksmai", or
 "Kiti veiksmai" when a main button stands beside it), then "Rašyti aprašymą" (a bill without a description) or "Taisyti
-aprašymą" (one that has it). Find the buttons with `find` and click by ref. The extension may report an error after
-these clicks though they worked: take a screenshot before trying again. Fields are disabled until the page's
+aprašymą" (one that has it). Find the trigger with `find` and click it by ref; then, with the menu open, run `find`
+again for the item and click that fresh ref (a ref found while the menu was closed does nothing). The extension may
+report an error after these clicks though they worked: take a screenshot before trying again. Fields are disabled until the page's
 interactive part has started; wait for them to be enabled.
 
 **Find fields by their labels, never by id** (the ids end in the bill's number, or in the record's id once the bill has
