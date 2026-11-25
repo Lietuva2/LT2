@@ -136,10 +136,11 @@ read-only file system and dropped capabilities.
 - **Lock files.** Every project has a `packages.lock.json` (`RestorePackagesWithLockFile` in `Directory.Build.props`); CI
   and the Dockerfile restore in locked mode, so a package version that is not in the lock file fails the build. After a
   package change, `dotnet restore --force-evaluate` rewrites the files, which are committed. The files hold the package
-  versions the SDK brings with it, so the Dockerfiles' SDK image is pinned to the version in `global.json`, and the two
-  change together. The image build's first restore (project files only) is not locked; the restore in its publish step is.
+  versions the SDK brings with it, so `global.json` pins the SDK exactly (no roll forward; CI installs that version), the
+  Dockerfiles' SDK image is pinned to the same version, and the two change together with the lock files. The image build's first restore (project files only) is not locked; the restore in its publish step is.
 - **Dependabot** (`.github/dependabot.yml`): weekly, for NuGet (minor and patch together, a major on its own), the base
-  images in `deploy/` and the workflow actions, with few pull requests open at once.
+  images in `deploy/` except the SDK image (changed by hand with `global.json`) and the workflow actions, with few pull
+  requests open at once.
 - **CodeQL** (`.github/workflows/codeql.yml`): GitHub's analysis of the C# code on every push to `master`, every pull
   request and weekly, with a manual `dotnet build`. Every action in the workflows is pinned to a full commit SHA with its
   version in a comment; Dependabot proposes the updates.

@@ -150,7 +150,8 @@ Other useful addresses: `/openapi/v1.json` (API description), `/health/live`, `/
 
 ## Build and test
 
-Needs the .NET SDK pinned in `global.json` (10.0.402). Warnings are errors.
+Needs exactly the .NET SDK pinned in `global.json` (10.0.402; a newer one is not used, because the lock files depend on
+the SDK). Warnings are errors.
 
 ```bash
 dotnet build
