@@ -187,6 +187,13 @@ public sealed record OrganisationModerationItems(IReadOnlyList<QueueOrganisation
     public int StatementsTotal { get; init; }
 }
 
+/// <summary>
+/// How many items this module's lists of organisations and statements hold (design 8.3, the tabs' counts), each by its own
+/// query with its list's filter: the queue's organisations and statements; blocked organisations, hidden statements and
+/// organisations kept out of summaries, in "Paslėpti".
+/// </summary>
+public sealed record OrganisationModerationCounts(int Organisations, int Statements, int Blocked, int HiddenStatements, int KeptOut);
+
 /// <summary>A blocked organisation on the moderators' list of hidden items; "Atkurti" lifts the block.</summary>
 public sealed record HiddenOrganisation(Guid Id, string Slug, string Name, DateTimeOffset? BlockedAt, string? BlockedBy, string? Statement);
 
@@ -293,6 +300,9 @@ public sealed record OrganisationCodeAccess(Guid OrganisationId, bool Active, IR
 public interface IOrganisationModeration
 {
     Task<OrganisationModerationItems> QueueAsync(CancellationToken cancellationToken);
+
+    /// <summary>How many items the queue's and the hidden lists hold (design 8.3), each by its own query, not by reading them.</summary>
+    Task<OrganisationModerationCounts> CountsAsync(CancellationToken cancellationToken);
 
     /// <summary>The bill's statements that wait, are flagged or reported, for the "Moderavimas" panel on its page.</summary>
     Task<Result<IReadOnlyList<QueueStatement>>> OnBillAsync(string billNumber, CancellationToken cancellationToken);

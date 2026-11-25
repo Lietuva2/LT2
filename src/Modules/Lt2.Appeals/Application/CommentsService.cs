@@ -588,14 +588,31 @@ internal sealed class CommentsService(
         return Result.Ok();
     }
 
+    public async Task<CommentModerationCounts> CountsAsync(CancellationToken cancellationToken)
+    {
+        // Design 8.3: each tab's count by its own query, with the filter its list uses (the same builders).
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return new CommentModerationCounts(await ReportedComments(db).CountAsync(cancellationToken), await HiddenComments(db).CountAsync(cancellationToken));
+    }
+
+    private static IQueryable<Report> OpenCommentReports(AppealsDb db) => db.Reports.AsNoTracking().Where(r => r.Status == "open" && r.TargetKind == Kind);
+
+    /// <summary>The reported comments of the moderators' list (design 8.23.8): published, with an open report. The one filter of the list and of its count.</summary>
+    private static IQueryable<Comment> ReportedComments(AppealsDb db)
+    {
+        var reported = OpenCommentReports(db).Select(r => r.TargetId);
+        return db.Comments.AsNoTracking().Where(c => reported.Contains(c.Id) && c.Status == CommentStatuses.Published);
+    }
+
+    private static IQueryable<Comment> HiddenComments(AppealsDb db) => db.Comments.AsNoTracking().Where(c => c.Status == CommentStatuses.Hidden);
+
     public async Task<CommentModerationItems> ItemsAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var reports = await db.Reports.AsNoTracking().Where(r => r.Status == "open" && r.TargetKind == Kind).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
-        var reportedIds = reports.Select(r => r.TargetId).Distinct().ToList();
-        var dueReported = db.Comments.AsNoTracking().Where(c => reportedIds.Contains(c.Id) && c.Status == CommentStatuses.Published);
+        var reports = await OpenCommentReports(db).OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
+        var dueReported = ReportedComments(db);
         var reported = await dueReported.OrderBy(c => c.CreatedAt).Take(ListLimit).ToListAsync(cancellationToken);
-        var allHidden = db.Comments.AsNoTracking().Where(c => c.Status == CommentStatuses.Hidden);
+        var allHidden = HiddenComments(db);
         var hidden = await allHidden.OrderByDescending(c => c.HiddenAt).Take(ListLimit).ToListAsync(cancellationToken);
 
         // Owner, 2026-11-18: the lists still show the first hundred, and say so when there are more.

@@ -29,10 +29,10 @@ public sealed record AgendaDayView<T>(IReadOnlyList<T> Shown, IReadOnlyList<T> R
 /// <summary>
 /// The order and the lengths of the agenda's lists (design 8.11.1, 8.7; owner, 2026-11-18). The agenda says nothing about
 /// the order or the time within a sitting day, so the rows of a day are ordered by what people do on them: activity first
-/// (participants on both sides together plus published arguments, the plain sum of <c>/projektai</c>, design 8.12.5), then
-/// how far the bill may go that day (priėmimas, svarstymas, pateikimas, none), then the bill's number. A bill the open data
-/// does not know yet comes after every known one. Nothing else ranks a bill: not how many follow it (design 8.11.2), and
-/// not whether the reader follows it (the server's page is the same for everyone). The numbers are the design's, not
+/// (participants on both sides together plus published arguments plus followers, the plain sum of <c>/projektai</c>, design
+/// 8.12.5, which the Appeals module counts), then how far the bill may go that day (priėmimas, svarstymas, pateikimas,
+/// none), then the bill's number. A bill the open data does not know yet comes after every known one. Nothing else ranks a
+/// bill: not whether the reader follows it (the server's page is the same for everyone). The numbers are the design's, not
 /// settings.
 /// </summary>
 public static class AgendaRules
@@ -74,9 +74,6 @@ public static class AgendaRules
     /// fit has none). Once it grows it keeps the line, with no link on the last page.
     /// </summary>
     public static bool Paged(int first, int known) => known > first;
-
-    /// <summary>Activity: participants on both sides together plus published arguments (design 8.12.5).</summary>
-    public static int Activity(int participants, int arguments) => participants + arguments;
 
     /// <summary>The stage's place in a day: priėmimas first, then svarstymas, then pateikimas, then none.</summary>
     public static int StageRank(string? stage) => stage switch

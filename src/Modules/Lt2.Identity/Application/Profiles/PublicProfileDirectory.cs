@@ -132,6 +132,8 @@ internal sealed class MemberProfiles(ProfileHandlers own, ProfileModerationHandl
 
     public Task<IReadOnlyList<ProfileModerationItem>> QueueAsync(CancellationToken cancellationToken) => moderation.QueueAsync(cancellationToken);
 
+    public Task<ProfileModerationCounts> ModerationCountsAsync(CancellationToken cancellationToken) => moderation.CountsAsync(cancellationToken);
+
     public Task<Result<Unit>> HideAboutAsync(Guid id, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
         moderation.HideAboutAsync(id, statement, moderator, contact, cancellationToken);
 

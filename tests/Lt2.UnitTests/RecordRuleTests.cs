@@ -144,16 +144,32 @@ public sealed class RecordRuleTests
 /// <summary>Design 8.12.5 (decided 2026-11-14): the orders of /projektai and the front page's cards, and the search.</summary>
 public sealed class BillListRuleTests
 {
-    private sealed record Bill(string Number, int Participants, int Arguments, DateOnly? Planned);
+    private sealed record Bill(string Number, int Participants, int Arguments, DateOnly? Planned, int Followers = 0);
 
     private static readonly DateOnly Soon = new(2026, 11, 17);
     private static readonly DateOnly Later = new(2026, 11, 24);
 
     private static string[] Order(string sort, params Bill[] bills) =>
-        BillListRules.Order(bills, sort, b => b.Participants, b => b.Arguments, b => b.Planned, b => b.Number).Select(b => b.Number).ToArray();
+        BillListRules.Order(bills, sort, b => b.Participants, b => b.Arguments, b => b.Followers, b => b.Planned, b => b.Number).Select(b => b.Number).ToArray();
 
     [Fact]
-    public void Activity_is_participants_plus_published_arguments() => BillListRules.Activity(participants: 10, arguments: 3).ShouldBe(13);
+    public void Activity_is_participants_plus_published_arguments_plus_followers() =>
+        BillListRules.Activity(participants: 10, arguments: 3, followers: 4).ShouldBe(17);
+
+    [Fact]
+    public void By_activity_followers_count_as_participants_and_arguments_and_a_bill_with_only_followers_has_activity()
+    {
+        Bill[] bills = [new("A", 2, 0, null), new("B", 0, 0, null, Followers: 3), new("C", 1, 1, Soon), new("D", 0, 0, Soon)];
+        Order(BillSorts.Activity, bills).ShouldBe(["B", "C", "A", "D"], "3, then 2 by the soonest planned date, then 2 without one, then nothing");
+    }
+
+    [Fact]
+    public void By_participants_and_by_arguments_followers_only_break_ties_through_activity()
+    {
+        Bill[] bills = [new("A", 2, 1, null), new("B", 2, 1, null, Followers: 1), new("C", 1, 0, null, Followers: 9)];
+        Order(BillSorts.Participants, bills).ShouldBe(["B", "A", "C"]);
+        Order(BillSorts.Arguments, bills).ShouldBe(["B", "A", "C"]);
+    }
 
     [Fact]
     public void By_the_latest_activity_the_last_touched_comes_first_and_bills_without_any_last()
@@ -161,7 +177,7 @@ public sealed class BillListRuleTests
         var at = new DateTimeOffset(2026, 11, 17, 10, 0, 0, TimeSpan.Zero);
         var last = new Dictionary<string, DateTimeOffset?> { ["A"] = at, ["B"] = at.AddMinutes(5), ["C"] = null, ["D"] = at.AddDays(-1) };
         Bill[] bills = [new("A", 50, 0, null), new("B", 1, 0, null), new("C", 99, 9, Soon), new("D", 3, 0, null)];
-        BillListRules.Order(bills, BillSorts.Latest, b => b.Participants, b => b.Arguments, b => b.Planned, b => b.Number, b => last[b.Number])
+        BillListRules.Order(bills, BillSorts.Latest, b => b.Participants, b => b.Arguments, b => b.Followers, b => b.Planned, b => b.Number, b => last[b.Number])
             .Select(b => b.Number).ShouldBe(["B", "A", "D", "C"], "owner, 2026-11-17: the latest first, none last whatever its activity");
         BillSorts.Of("latest").ShouldBe(BillSorts.Latest);
     }

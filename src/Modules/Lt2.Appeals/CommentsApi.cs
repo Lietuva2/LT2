@@ -97,6 +97,9 @@ public sealed record CommentModerationItems(IReadOnlyList<QueueComment> Reported
     public int HiddenTotal { get; init; }
 }
 
+/// <summary>How many comments the moderators' lists hold (design 8.3, the tabs' counts), each by its own query with its list's filter.</summary>
+public sealed record CommentModerationCounts(int Reported, int Hidden);
+
 /// <summary>
 /// Comments (design 8.23): read in public, written, deleted and agreed with by members. Rules are checked here, where the data
 /// is written (design 6.8): the switches, the bill open, the target shown, the voice, the writing restriction, pre-screening,
@@ -145,6 +148,9 @@ public interface IComments
 public interface ICommentModeration
 {
     Task<CommentModerationItems> ItemsAsync(CancellationToken cancellationToken);
+
+    /// <summary>How many comments are reported and hidden (design 8.3), each by its own query, not by reading the lists.</summary>
+    Task<CommentModerationCounts> CountsAsync(CancellationToken cancellationToken);
 
     /// <summary>The bill's published comments with their open reports, for the moderators' controls on the bill's page.</summary>
     Task<Result<IReadOnlyList<QueueComment>>> OnBillAsync(string billNumber, CancellationToken cancellationToken);

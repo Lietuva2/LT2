@@ -66,6 +66,56 @@ public sealed class ModerationTabsTests(DatabaseFixture database) : ApiTest(data
         }
     }
 
+    /// <summary>
+    /// The lists composed in memory (the bills' records in the queue, "Projektai be aprašymo") are counted as they decide who
+    /// is on them, without their rows: a reported record and a followed bill without a description each add one.
+    /// </summary>
+    [Fact]
+    public async Task The_counts_of_the_lists_composed_in_memory_follow_an_item_in()
+    {
+        async Task FreeAsync()
+        {
+            foreach (var bill in new[] { AppealSteps.TaxBill, AppealSteps.ThirdBill })
+            {
+                await Database.FreeBillAsync(bill);
+                await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+            }
+        }
+
+        await FreeAsync();
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        var (member, _) = await Factory.MemberAsync(consent: false);
+        using var _m = member;
+        var moderator = (await ModeratorAsync()).Browser;
+        try
+        {
+            var record = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
+            var before = await moderator.GetJsonAsync<ModerationCountsResponse>(AppealRoutes.ModerationCounts);
+            await MatchesTheListsAsync(moderator, before);
+
+            // A follower alone on a bill without a description puts it on "Be aprašymo".
+            await member.FollowBillAsync(AppealSteps.TaxBill);
+            var followed = await moderator.GetJsonAsync<ModerationCountsResponse>(AppealRoutes.ModerationCounts);
+            followed.Undescribed.ShouldBe(before.Undescribed + 1);
+            await MatchesTheListsAsync(moderator, followed);
+
+            // A report on the record's description puts the record in the queue.
+            using (var reported = await member.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "record", TargetId = record.Id, Ground = "insult", Text = "Įžeidžia." }))
+            {
+                reported.StatusCode.ShouldBe(HttpStatusCode.NoContent, await reported.Content.ReadAsStringAsync());
+            }
+
+            var queued = await moderator.GetJsonAsync<ModerationCountsResponse>(AppealRoutes.ModerationCounts);
+            queued.Records.ShouldBe(followed.Records + 1);
+            await MatchesTheListsAsync(moderator, queued);
+        }
+        finally
+        {
+            await FreeAsync();
+        }
+    }
+
     [Fact]
     public async Task Each_list_of_the_queue_is_read_alone()
     {

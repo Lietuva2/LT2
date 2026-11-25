@@ -10,7 +10,7 @@
 @inject NavigationManager Navigation
 
 @* The bills people can take part on (design 8.12.5, GET /appeals), server-rendered and readable without JavaScript: every
-   active bill, by activity (participants plus published arguments) unless sorted by planned date or by the latest activity
+   active bill, by activity (participants plus published arguments plus followers; no row shows the followers) unless sorted by planned date or by the latest activity
    (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form with the box "Planuojami per 14 dienų", applied with
    "Rodyti" (owner, 2026-11-21); the order (keeping the search and the filter), the closed view and "Rodyti daugiau" are
    plain links. The closed view is its own address, /projektai/uzdaryti (owner, 2026-11-23), the same page; every address the

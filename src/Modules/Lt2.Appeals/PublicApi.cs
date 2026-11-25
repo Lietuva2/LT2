@@ -134,8 +134,13 @@ public static class ReasonPages
 /// </summary>
 /// <param name="RecordId">The record; null while the bill has none.</param>
 /// <param name="Status"><c>open</c>, <c>closed</c>, or <c>rejected</c>.</param>
-/// <param name="Arguments">The record's published arguments, for the agenda's order by activity (design 8.11.1); 0 for a hidden record.</param>
-public sealed record BillRecordState(string BillNumber, Guid? RecordId, string Status, SideCounts Counts, ThresholdInfo Threshold, int Arguments = 0);
+/// <param name="Arguments">The record's published arguments; 0 for a hidden record.</param>
+/// <param name="Activity">
+/// The bill's activity, which orders a day's bills on the agenda and the front page (design 8.11.1, 8.12.5): participants,
+/// published arguments and followers added up, as every list of bills counts it; a bill without a record has its followers;
+/// 0 for a hidden record, which shows no numbers. Only an order: no row shows it or the follower number in it.
+/// </param>
+public sealed record BillRecordState(string BillNumber, Guid? RecordId, string Status, SideCounts Counts, ThresholdInfo Threshold, int Arguments = 0, int Activity = 0);
 
 /// <summary>
 /// The surge note (design 6.6): in the last <paramref name="WindowHours"/> hours, <paramref name="SharePercent"/> % of the
@@ -457,6 +462,12 @@ public interface IAppealsModeration
     /// </summary>
     Task<UndescribedBills> UndescribedAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// How many items the queue's two lists, "Be aprašymo", the hidden records and arguments and the restrictions hold
+    /// (design 8.3): each by its own query, with the same filter as its list, without reading the lists.
+    /// </summary>
+    Task<AppealsModerationCounts> CountsAsync(CancellationToken cancellationToken);
+
     /// <summary>"Palikti": keeps a reported or flagged record as it is; its open reports and date flags close.</summary>
     Task<Result<Unit>> KeepRecordAsync(Guid recordId, string? statement, StaffActor moderator, CancellationToken cancellationToken);
 
@@ -589,6 +600,14 @@ public sealed record UndescribedBill(
 
 /// <summary>"Projektai be aprašymo" (design 8.3): at most a hundred bills in the list's order, and how many there are in all.</summary>
 public sealed record UndescribedBills(IReadOnlyList<UndescribedBill> Bills, int Total);
+
+/// <summary>
+/// How many items this module's moderators' lists hold (design 8.3, the tabs' counts): each counted by its own query with the
+/// same filter as its list, numbers only. <paramref name="Records"/> and <paramref name="Reasons"/> are the queue's;
+/// <paramref name="HiddenRecords"/> and <paramref name="HiddenReasons"/> are in "Paslėpti"; <paramref name="Restrictions"/>
+/// are the restrictions that hold now.
+/// </summary>
+public sealed record AppealsModerationCounts(int Records, int Reasons, int Undescribed, int HiddenRecords, int HiddenReasons, int Restrictions);
 
 /// <summary>The caller's own writing restriction (design 8.3): its last day (null = until lifted) and the statement.</summary>
 public sealed record MyRestriction(DateOnly? Until, string Statement);

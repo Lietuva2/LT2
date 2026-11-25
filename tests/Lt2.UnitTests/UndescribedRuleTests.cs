@@ -11,7 +11,7 @@ public sealed class UndescribedRuleTests
     private sealed record Row(string Number, int Participants, int Arguments, int Followers, DateOnly? Planned);
 
     private static List<string> Order(params Row[] rows) =>
-        UndescribedRules.Order(rows, r => r.Participants, r => r.Arguments, r => r.Followers, r => r.Planned, r => r.Number).Select(r => r.Number).ToList();
+        UndescribedRules.Order(rows.Where(r => UndescribedRules.IsListed(r.Participants, r.Arguments, r.Followers)), r => r.Participants, r => r.Arguments, r => r.Followers, r => r.Planned, r => r.Number).Select(r => r.Number).ToList();
 
     [Theory]
     [InlineData("", null, true)]
@@ -21,9 +21,13 @@ public sealed class UndescribedRuleTests
     public void A_bill_wants_a_description_without_one_or_with_an_AI_summary_nobody_has_read(string description, string? source, bool wanted) =>
         UndescribedRules.WantsDescription(description, source).ShouldBe(wanted);
 
-    [Fact]
-    public void Attention_is_participants_published_arguments_and_followers_added_up() =>
-        UndescribedRules.Attention(participants: 3, arguments: 2, followers: 4).ShouldBe(9);
+    [Theory]
+    [InlineData(0, 0, 0, false)]
+    [InlineData(1, 0, 0, true)]
+    [InlineData(0, 1, 0, true)]
+    [InlineData(0, 0, 1, true)]
+    public void A_bill_is_listed_when_it_has_any_activity_participants_arguments_or_followers(int participants, int arguments, int followers, bool listed) =>
+        UndescribedRules.IsListed(participants, arguments, followers).ShouldBe(listed);
 
     [Fact]
     public void A_bill_nobody_touched_is_not_on_the_list_whatever_its_planned_date() =>
