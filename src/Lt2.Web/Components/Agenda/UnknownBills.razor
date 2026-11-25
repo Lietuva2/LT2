@@ -22,7 +22,7 @@
                 }
                 @if (item.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
                 {
-                    <a class="small" href="@source" rel="external">@T["Agenda.ToSource"]</a>
+                    <Lt2.Web.Client.Components.OfficialLink Class="small" Href="@source">@T["Agenda.ToSource"]</Lt2.Web.Client.Components.OfficialLink>
                 }
             </li>
         }

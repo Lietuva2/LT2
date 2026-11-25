@@ -56,7 +56,7 @@
                                 @L["ModOpen.SourceHint"]
                                 @if (ESeimasUrl is { } link)
                                 {
-                                    @(" ")<a href="@link" rel="external">@L["ModOpen.ESeimas"]</a>
+                                    @(" ")<OfficialLink Href="@link">@L["ModOpen.ESeimas"]</OfficialLink>
                                 }
                             </p>
                             @* No maxlength: the browser would cut a long paste silently; the length is checked and said instead. *@
@@ -381,6 +381,15 @@
 
     private string? CurrentUrl => _descriptionNow is null ? DescriptionUrl : _urlNow;
 
+    /// <summary>
+    /// What "Oficialaus teksto adresas" starts with (design 8.13): the description's own address; on a bill without a
+    /// description, the bill's e-seimas address when the field would accept it. A description that has text but no address
+    /// keeps the field empty, so correcting its text never adds an address nobody chose.
+    /// </summary>
+    private string? StartingUrl => string.IsNullOrEmpty(CurrentDescription) && OfficialTextAddress.IsAcceptable(ESeimasUrl)
+        ? ESeimasUrl
+        : CurrentUrl;
+
     /// <summary>"Rašyti aprašymą" for a bill without one, "Taisyti aprašymą" for one that has it.</summary>
     private string ActionLabel(string action) =>
         action == "describe" ? (string.IsNullOrEmpty(CurrentDescription) ? "Mod.Action.write" : "Mod.Action.describe") : "Mod.Action." + action;
@@ -430,7 +439,7 @@
         _mergeInto = null;
         _description = CurrentDescription ?? "";
         _plainTitle = PlainTitleNow ?? "";
-        _descriptionUrl = CurrentUrl;
+        _descriptionUrl = StartingUrl;
         _source = "";
         _fromDraft = false;
         _closeReason = null;

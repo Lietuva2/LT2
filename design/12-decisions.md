@@ -277,6 +277,10 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   title was tried and dropped: it fits only where the number is the row's one tag); an `ai` title is shown on the site too; off the site only one a
   person wrote or checked, and summaries to MPs keep the official title. Searches of bills match it, not the description
   (2026-11-24).
+- The description form fills "Oficialaus teksto adresas" with the bill's e-seimas address on a bill without a
+  description; every link to lrs.lt opens in a new tab. Moderators find the bills that most want a description in
+  "Projektai be aprašymo" (8.3): only bills with a participant, an argument or a follower, the most attention first.
+  Organisations do not write descriptions (8.14.7): their view goes in their statement (2026-11-25).
 - Every search of bills runs in PostgreSQL: a word is found by its stem (`lithuanian` configuration) or inside the
   text with case and Lithuanian letters ignored; the Appeals module keeps its own copy of the bill catalogue for it
   (`appeals.bill_card`), refreshed from the Parliament module after every import; the search returns the matching

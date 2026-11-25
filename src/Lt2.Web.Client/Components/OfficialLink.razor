@@ -1,0 +1,16 @@
+@* Design 8.13 (owner, 2026-11-25): a link to the Seimas's own site (lrs.lt, e-seimas: a bill's text, the official text a
+   description was made from, the agenda, a closed bill's source) opens in a new tab, so the reader keeps the page they came
+   from. Every such link uses this one component, in server-rendered pages and islands alike; never write one by hand. *@
+<a class="@(string.IsNullOrEmpty(Class) ? null : Class)" href="@Href" id="@Id" target="_blank" rel="external noopener">@ChildContent</a>
+
+@code {
+    /// <summary>The address on lrs.lt.</summary>
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+
+    /// <summary>The link's text.</summary>
+    [Parameter, EditorRequired] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter] public string? Id { get; set; }
+}

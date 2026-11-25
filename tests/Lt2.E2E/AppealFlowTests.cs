@@ -347,7 +347,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await PasskeyTests.RegisterAsync(r, "Klaidą Radusi Skaitytoja");
         await r.GotoAsync($"{Base}/seimas/{Bill}");
         await Assertions.Expect(r.Locator("#ai-label")).ToHaveTextAsync("Sukurta DI · žmonių neperžiūrėta", new() { Timeout = 10_000 });
-        await Assertions.Expect(r.Locator("#description-from")).ToHaveAttributeAsync("rel", "external");
+        await Assertions.Expect(r.Locator("#description-from")).ToHaveAttributeAsync("rel", "external noopener");
+        await Assertions.Expect(r.Locator("#description-from")).ToHaveAttributeAsync("target", "_blank");
         await Assertions.Expect(r.Locator("#description-made")).ToContainTextAsync("Parengta");
         await Assertions.Expect(r.Locator("#moderation-panel")).ToHaveCountAsync(0);
 

@@ -107,6 +107,9 @@ Read before changing a page, a component or an island. The rules behind it are d
   pages `<Lt2.Web.Client.Components.BillTitleLink …/>`): the readable title as the link (`Class`, default `tl-item__title`) and,
   when there is one, the official title in fine print under it (`span.fine.tl-item__official`); the row's tags keep their line above.
   Every list row that shows a bill's title uses it; never write that link by hand.
+- **A link to the Seimas's own site (lrs.lt, e-seimas) is `<OfficialLink Href Id Class>`** (design 8.13; `Lt2.Web.Client/Components`;
+  on server pages `<Lt2.Web.Client.Components.OfficialLink …/>`): a new tab, `rel="external noopener"`. Never write one by hand.
+  Links people wrote (organisations, comments, profiles) keep `rel="nofollow ugc noopener noreferrer"` and a new tab.
 - **Every public list's heading row stays at the top of the screen (design 8.16.5, owner 2026-11-21):** a new public
   list sheet puts its heading (h2, or h3 in a side column) and any link beside it in `div.row.list-head` as the sheet's
   first child (`position: sticky`, the sheet's colour, a `--rule` line under it, CSS only). The lengths are declared on
