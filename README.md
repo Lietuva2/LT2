@@ -261,7 +261,8 @@ and `tests/Lt2.ArchitectureTests/ReadonlyRoleTests.cs` fails until it is on one 
 For a production-shaped run, override `deploy/.env`: `LT2_SITE_ADDRESS` (the domain), `LT2_TLS` (the ACME contact
 address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mailpit), the `LT2_SMTP_*` values and
 `LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_MODERATION_CONTACT` (the real address), `LT2_SECURITY_CONTACT` (the address for security reports: a `mailto:` or https address; the site serves `/.well-known/security.txt` only when it is set), `LT2_AGENDA_BASE_ADDRESS`
-(the lrs.lt address, or empty), `LT2_SEIMAS_BASE_ADDRESS=` (the worker then imports from `https://apps.lrs.lt/sip/`),
+(the lrs.lt address, or empty), `LT2_SEIMAS_BASE_ADDRESS=` (the worker then imports from `https://apps.lrs.lt/sip/`), `LT2_SEIMAS_INTERVAL_MS=` (one
+request a second),
 `LT2_OUTBOUND_EXTRA_HOST` (the agenda page's host when `LT2_AGENDA_BASE_ADDRESS` is set, otherwise empty: then
 `apps.lrs.lt` is the only host the worker may call; a redirect to another host is refused too), and mount real secrets.
 
