@@ -33,8 +33,8 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
 
         outcome.Status.ShouldBe("succeeded");
         outcome.Synthetic.ShouldBeTrue();
-        outcome.Requests.ShouldBe(20);
-        (await CountAsync("raw_document")).ShouldBe(20);
+        outcome.Requests.ShouldBe(21);
+        (await CountAsync("raw_document")).ShouldBe(21);
         (await CountAsync("term")).ShouldBe(2);
         (await CountAsync("person")).ShouldBe(14);
         (await CountAsync("mandate")).ShouldBe(14);
@@ -205,10 +205,10 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         import.Clock.Advance(TimeSpan.FromHours(25));
         var third = await import.RunAsync();
         third.Changes.ShouldBe(0);
-        import.TakeRequests().Count.ShouldBe(4);
+        import.TakeRequests().Count.ShouldBe(5, "terms, MPs, sessions, the open session's sittings and the TAIS projects");
 
         (await database.SnapshotAsync()).ShouldBe(first);
-        (await CountAsync("raw_document")).ShouldBe(20, "an unchanged response is not stored twice");
+        (await CountAsync("raw_document")).ShouldBe(21, "an unchanged response is not stored twice");
     }
 
     [Fact]
@@ -387,7 +387,7 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
             .ShouldBe(["Komiteto pirmininko pavaduotojas"]);
         (await database.RowsAsync("SELECT c.value FROM parliament.contact c JOIN parliament.person p ON p.id = c.person_id WHERE p.seimas_person_id = 99000001"))
             .ShouldBe(["pavyzdys.j.petraitis@lrs.lt"]);
-        (await CountAsync("raw_document")).ShouldBe(21, "both versions of the response are kept");
+        (await CountAsync("raw_document")).ShouldBe(22, "both versions of the response are kept");
 
         // Ona's mandate now ends on 1 November; no recorded vote falls after it, so her counts stay.
         (await database.RowsAsync("SELECT s.votes_held FROM parliament.mp_stat s JOIN parliament.person p ON p.id = s.person_id WHERE p.seimas_person_id = 99000005"))
@@ -456,9 +456,9 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         import.Clock.Advance(TimeSpan.FromHours(1));
         import.TakeRequests();
 
-        // The scheduled run leaves the hour-old MP list alone.
+        // The scheduled run leaves the hour-old MP list alone; the hour-old TAIS projects are due.
         (await import.RunAsync()).Changes.ShouldBe(0);
-        import.TakeRequests().ShouldBe(["/sip/p2b.ad_seimo_posedziai?sesijos_id=99000102"]);
+        import.TakeRequests().ShouldBe(["/sip/p2b.ad_seimo_posedziai?sesijos_id=99000102", "/sip/p2b.tais_docs"]);
 
         import.Clock.Advance(TimeSpan.FromMinutes(1));
         var forced = await import.RunAsync(ImportParts.Members);
@@ -504,7 +504,7 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         asked.Count(r => r.Contains("p2b.ad_seimo_posedzio_eiga_full?", StringComparison.Ordinal)).ShouldBe(4);
         asked.Count.ShouldBe(10, "no MP list and no vote result: those parts keep their own rules");
         (await database.ScalarAsync<string>("SELECT title FROM parliament.agenda_item WHERE id = 99010001")).ShouldBe("Dėl posėdžio darbotvarkės tvirtinimo");
-        (await CountAsync("raw_document")).ShouldBe(21, "only the changed response is stored again");
+        (await CountAsync("raw_document")).ShouldBe(22, "only the changed response is stored again");
     }
 
     [Fact]
@@ -551,13 +551,13 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         var forced = await import.RunAsync(ImportParts.All);
 
         forced.Status.ShouldBe("succeeded");
-        forced.Requests.ShouldBe(20);
+        forced.Requests.ShouldBe(21);
         forced.Changes.ShouldBe(0, "a body already applied by this parser is not applied again");
         var asked = import.TakeRequests();
         asked.ShouldBe(first, "a full re-read as on an empty database: the MPs before the sittings, the sittings before the votes");
         asked.IndexOf("/sip/p2b.ad_seimo_nariai?kadencijos_id=10").ShouldBeLessThan(asked.FindIndex(r => r.Contains("balsavimo_id=", StringComparison.Ordinal)));
         (await database.SnapshotAsync()).ShouldBe(expected);
-        (await CountAsync("raw_document")).ShouldBe(20, "an unchanged response is not stored twice");
+        (await CountAsync("raw_document")).ShouldBe(21, "an unchanged response is not stored twice");
         (await database.ScalarAsync<string>("SELECT source FROM parliament.import_run ORDER BY started_at DESC LIMIT 1")).ShouldEndWith(" forced: members, sittings, votes");
     }
 
@@ -573,5 +573,100 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
 
         import.Clock.Advance(TimeSpan.FromMinutes(59));
         (await import.IsDueAsync()).ShouldBeTrue();
+    }
+
+    /// <summary>Design 7.2: the day's TAIS projects create a bill the site does not know and fill only what a known bill lacks.</summary>
+    [Fact]
+    public async Task The_tais_projects_create_an_unknown_bill_and_fill_only_a_known_bills_missing_title_and_link()
+    {
+        var responses = StandInFixture.Responses();
+        await using var import = new ImportHarness(database, responses);
+        (await import.RunAsync()).Status.ShouldBe("succeeded");
+        const string Bills = "SELECT number, title, coalesce(e_seimas_url, '-') FROM parliament.bill ORDER BY number";
+        const string Link = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-";
+        (await database.RowsAsync(Bills)).ShouldBe(
+        [
+            $"XVP-0412 | Gyventojų pajamų mokesčio įstatymo pataisa | {Link}XVP-0412",
+            $"XVP-0533 | Vietinių rinkliavų įstatymo pataisa | {Link}XVP-0533",
+            $"XVP-0618 | Atliekų tvarkymo įstatymo pataisa | {Link}XVP-0618",
+        ], "the stand-in's TAIS answer names known bills only, whose agenda title and link stand");
+
+        // A bill the agendas gave without a title or a link; then a later TAIS answer of the day.
+        await database.ScalarAsync<int>("WITH u AS (UPDATE parliament.bill SET e_seimas_url = NULL, title = '' WHERE number = 'XVP-0533' RETURNING 1) SELECT count(*)::int FROM u");
+        responses.Replace("p2b.tais_docs", """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <TAISProjEvents eventsDate="2026-11-12" creationDate="2026-11-12 16:00:00"><Events/><Documents>
+              <Document title="Gyventojų pajamų mokesčio įstatymo pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0412(3)" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0412-3"/>
+              <Document title="Vietinių rinkliavų įstatymo 3 straipsnio pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0533" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0533-TAIS"/>
+              <Document title="Vietos savivaldos įstatymo pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0745" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0745"/>
+              <Document title="Miškų įstatymo 2 straipsnio pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0746" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0746-1"/>
+              <Document title="Miškų įstatymo 2 ir 4 straipsnių pakeitimo įstatymo projektas" projectRegistrationNo="XVP-0746(2)" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0746-2"/>
+              <Document title="" projectRegistrationNo="XVP-0747" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0747"/>
+              <Document title="Dėl išgalvoto tvarkos aprašo patvirtinimo" projectRegistrationNo="26-00745" url="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-26-00745"/>
+            </Documents></TAISProjEvents>
+            """);
+        import.Clock.Advance(TimeSpan.FromHours(1));
+        import.TakeRequests();
+
+        var outcome = await import.RunAsync();
+
+        outcome.Status.ShouldBe("succeeded");
+        import.TakeRequests().ShouldContain("/sip/p2b.tais_docs");
+        (await database.RowsAsync(Bills)).ShouldBe(
+        [
+            $"XVP-0412 | Gyventojų pajamų mokesčio įstatymo pataisa | {Link}XVP-0412",
+            $"XVP-0533 | Vietinių rinkliavų įstatymo 3 straipsnio pakeitimo įstatymo projektas | {Link}XVP-0533-TAIS",
+            $"XVP-0618 | Atliekų tvarkymo įstatymo pataisa | {Link}XVP-0618",
+            $"XVP-0745 | Vietos savivaldos įstatymo pakeitimo įstatymo projektas | {Link}XVP-0745",
+            $"XVP-0746 | Miškų įstatymo 2 ir 4 straipsnių pakeitimo įstatymo projektas | {Link}XVP-0746-2",
+        ], "a known bill keeps its title and link; a missing one is filled; an unknown bill is created by its highest revision; no title, no bill; another institution's project is skipped");
+        (await database.ScalarAsync<long>("SELECT count(*) FROM parliament.agenda_item i JOIN parliament.bill b ON b.id = i.bill_id WHERE b.number IN ('XVP-0745', 'XVP-0746')"))
+            .ShouldBe(0, "TAIS links no agenda item");
+    }
+
+    [Fact]
+    public async Task The_tais_projects_are_asked_for_last_at_most_hourly_and_no_manual_job_forces_them()
+    {
+        await using var import = new ImportHarness(database);
+        await import.RunAsync();
+        import.TakeRequests()[^1].ShouldBe("/sip/p2b.tais_docs", "after the sittings and their votes");
+
+        import.Clock.Advance(TimeSpan.FromMinutes(30));
+        await import.RunAsync();
+        import.TakeRequests().ShouldBe(["/sip/p2b.ad_seimo_posedziai?sesijos_id=99000102"], "not again within the hour");
+
+        import.Clock.Advance(TimeSpan.FromMinutes(1));
+        (await import.RunAsync(ImportParts.All)).Status.ShouldBe("succeeded");
+        import.TakeRequests().ShouldNotContain("/sip/p2b.tais_docs", "a full re-read forces the chain's parts, not the TAIS projects");
+
+        import.Clock.Advance(TimeSpan.FromMinutes(29));
+        await import.RunAsync();
+        import.TakeRequests().ShouldBe(["/sip/p2b.ad_seimo_posedziai?sesijos_id=99000102", "/sip/p2b.tais_docs"], "an hour after it was last asked for");
+    }
+
+    [Fact]
+    public async Task An_outage_of_the_tais_projects_fails_the_run_only_after_everything_else_is_applied()
+    {
+        string expected;
+        await using (var clean = new ImportHarness(database))
+        {
+            await clean.RunAsync();
+            expected = await database.SnapshotAsync();
+        }
+
+        await database.ResetAsync();
+        await using var import = new ImportHarness(database);
+        import.StandIn.FailWhen = r => r.RequestUri!.AbsolutePath.EndsWith("/p2b.tais_docs", StringComparison.Ordinal);
+
+        var broken = await import.RunAsync();
+
+        broken.Status.ShouldBe("failed");
+        broken.Error.ShouldNotBeNull().ShouldContain("p2b.tais_docs");
+        (await database.SnapshotAsync()).ShouldBe(expected, "the chain before it is stored and applied, the statistics too");
+
+        import.StandIn.FailWhen = null;
+        import.TakeRequests();
+        (await import.RunAsync()).Status.ShouldBe("succeeded");
+        import.TakeRequests().ShouldBe(["/sip/p2b.ad_seimo_posedziai?sesijos_id=99000102", "/sip/p2b.tais_docs"], "never applied, so asked for again at once");
     }
 }

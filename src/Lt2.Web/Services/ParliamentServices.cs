@@ -122,9 +122,15 @@ internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IB
 
         var planned = (await agenda.ForBillsAsync([b.Number], ct)).GetValueOrDefault(b.Number);
 
-        // Design 8.4 (owner, 2026-11-16): the page a date is published on is the agenda page the watcher reads (one address,
-        // assumption A7), kept with every snapshot; the row's own link is the bill's document (A5) and shows no date.
-        var agendaPage = planned is { SetByModerator: false } ? (await queries.AgendaReadAsync(ct)).SourceUrl : null;
+        // Design 8.4 (owner, 2026-11-16, 2026-11-25): an entered date's source is the day's agenda document, its row's address;
+        // a date the watcher read is published on the agenda page it reads (one address, assumption A7), kept with every
+        // snapshot, since that row's own link is the bill's document (A5) and shows no date. A moderator's date has none.
+        var agendaPage = planned switch
+        {
+            null or { SetByModerator: true } => null,
+            { Entered: true } => planned.SourceUrl,
+            _ => (await queries.AgendaReadAsync(ct)).WatcherUrl,
+        };
         var votes = b.Votes.Select(Map).ToList();
         var titles = await PlainTitlesAsync(votes.Select(v => v.Vote), ct);
         return new BillResponse(b.Number, b.Title, b.ESeimasUrl, votes.Select(v => Titled(v, titles)).ToList(), AppealMapping.Map(planned), agendaPage);

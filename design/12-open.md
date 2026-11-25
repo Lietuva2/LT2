@@ -92,10 +92,16 @@ hiding deletes them.
 version `2026-11-13`) is given against the form's text, which states the value of `Digest:PartyGroupMinimum` as it
 holds then; a later lower value changes what that consent described.
 
-**8.11.1 The agenda.** About four in ten upcoming agenda rows are bills to be presented, which the open data does not
-know before their first sitting; they come last in their day, folded into "Dar N projektų, kurių atviruosiuose Seimo
-duomenyse dar nėra". The lrs.lt agenda page names each such bill's title: the watcher could keep it until the open data
-has the bill, and the rows would then rank as other bills. Not built. If no: as now.
+**8.4 The entered agenda.** A sitting the Seimas cancels keeps its entered rows: an empty list is refused, and a
+moderator's correction moves a bill but cannot take it off the agenda. If needed: "Posėdis atšauktas" on the agenda's
+entry page, clearing the day with a statement. The open data lists the upcoming sittings and their times
+(`p2b.ad_seimo_posedziai`, rows without a start time; `p2b.ad_sp_darbotvarke` gives the planned time, with no items
+until the agenda is approved): the entry could refuse a day without a planned sitting. Not built. How often
+`p2b.tais_docs` is made anew during the day is not known (seen at 15:00 on 2026-11-25); the hourly read assumes it may be.
+
+**8.11.1 The agenda.** The watcher's rows (when it runs) can name a bill the site does not know yet; they come last in
+their day, folded into "Dar N projektų, kurių atviruosiuose Seimo duomenyse dar nėra". The lrs.lt agenda page names
+each such bill's title: the watcher could create the bill, as an entered agenda does (8.4). Not built. If no: as now.
 
 **8.11.2 Follower numbers.** Built as proposed: the number only on the thing's own page (a bill's, an MP's, an
 organisation's, a member's profile), never in list rows; no MP, member or organisation sorted, ranked or added up by

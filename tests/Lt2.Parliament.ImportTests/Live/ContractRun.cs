@@ -82,6 +82,9 @@ internal static partial class ContractRun
             await Get(SeimasRequest.VoteResults(vote));
         }
 
+        // The day's TAIS projects, as the walk asks for them after the sittings (design 7.2).
+        await Get(SeimasRequest.Projects());
+
         var parseErrors = new List<string>();
         foreach (var item in fetched)
         {

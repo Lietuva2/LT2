@@ -34,6 +34,7 @@ internal static class AssumptionsRegister
         SeimasServices.Agenda => body => SeimasParsers.Agenda(body),
         SeimasServices.Proceedings => body => SeimasParsers.Proceedings(body),
         SeimasServices.VoteResults => body => SeimasParsers.VoteResult(body),
+        SeimasServices.Projects => body => SeimasParsers.Projects(body),
         _ => throw new ArgumentOutOfRangeException(nameof(service), service, null),
     };
 

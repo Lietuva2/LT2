@@ -30,6 +30,7 @@ public static class ClientServices
         services.AddScoped<Lt2.Api.Contracts.Comments.ICommentsApi, HttpCommentsApi>();
         services.AddScoped<Lt2.Api.Contracts.Parliament.IParliamentApi, HttpParliamentApi>();
         services.AddScoped<Lt2.Api.Contracts.Parliament.IVoteModerationApi, HttpVoteModerationApi>();
+        services.AddScoped<Lt2.Api.Contracts.Parliament.IAgendaEntryApi, HttpAgendaEntryApi>();
         services.AddScoped<Lt2.Api.Contracts.Comments.ICommentModerationApi, HttpCommentModerationApi>();
         services.AddScoped<IMyBillsApi, HttpMyBillsApi>();
         services.AddScoped<Lt2.Api.Contracts.Analytics.IAnalyticsApi, HttpAnalyticsApi>();

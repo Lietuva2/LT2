@@ -69,6 +69,7 @@ internal static class ApiEndpoints
         GetVotesEndpoint.Map(api);
         GetVoteEndpoint.Map(api);
         VoteClassificationEndpoints.Map(api);
+        AgendaEntryEndpoints.Map(api);
         GetImportsEndpoint.Map(api);
 
         GetAppealRulesEndpoint.Map(api);

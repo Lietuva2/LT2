@@ -205,12 +205,15 @@ public sealed record BillFinalVote(long VoteId, DateTimeOffset HeldAt);
 public sealed record BillRejection(long VoteId, DateTimeOffset HeldAt, string SourceUrl);
 
 /// <summary>
-/// A bill's planned date on the Seimas agenda (design 5.1 planned_item, 8.4): from the lrs.lt agenda pages, or entered
-/// by a moderator, whose row takes precedence. Shown as "Planuojama …", never as a countdown.
+/// A bill's planned date on the Seimas agenda (design 5.1 planned_item, 8.4): from the lrs.lt agenda pages, entered by staff
+/// a day at a time from the day's agenda document, or corrected by a moderator, whose row takes precedence. Shown as
+/// "Planuojama …", never as a countdown.
 /// </summary>
 /// <param name="Stage"><c>presentation</c>, <c>consideration</c>, <c>adoption</c>, or <c>null</c>.</param>
+/// <param name="SourceUrl">For an entered date, the day's agenda document.</param>
 /// <param name="SetByModerator">A moderator entered or corrected it.</param>
-public sealed record PlannedDate(string BillNumber, DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator);
+/// <param name="Entered">Staff entered it with the day's agenda (design 8.4, "Entering a day's agenda").</param>
+public sealed record PlannedDate(string BillNumber, DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator, bool Entered = false);
 
 /// <summary>Planned dates of bills. Implemented by the Parliament module.</summary>
 public interface IPlannedAgenda

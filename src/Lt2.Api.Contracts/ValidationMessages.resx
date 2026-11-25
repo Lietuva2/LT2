@@ -80,4 +80,7 @@
   <data name="VoteClassification.Stage" xml:space="preserve"><value>Pasirinkite projekto stadiją.</value></data>
   <data name="VoteClassification.NoStage" xml:space="preserve"><value>Stadija nurodoma tik stadijos balsavimui.</value></data>
   <data name="VoteClassification.Statement" xml:space="preserve"><value>Parašykite, kodėl taisote klasifikaciją.</value></data>
+  <data name="AgendaEntry.Day" xml:space="preserve"><value>Nurodykite posėdžio dieną.</value></data>
+  <data name="AgendaEntry.Source" xml:space="preserve"><value>Įrašykite darbotvarkės dokumento adresą.</value></data>
+  <data name="AgendaEntry.TooLong" xml:space="preserve"><value>Per ilgas tekstas vienai posėdžio dienai.</value></data>
 </root>

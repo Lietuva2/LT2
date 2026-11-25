@@ -137,7 +137,10 @@ public interface IParliamentQueries
     /// <summary>Stage-result votes on bills held at or after <paramref name="since"/>, newest first (design 8.11.1 "recently voted").</summary>
     Task<IReadOnlyList<VoteSummary>> StageResultsSinceAsync(DateTimeOffset since, CancellationToken cancellationToken);
 
-    /// <summary>When the lrs.lt agenda page was last read successfully, and its address (design 8.11.1).</summary>
+    /// <summary>
+    /// When the upcoming agenda was last read: the later of the watcher's last good read of the lrs.lt page and the last save of
+    /// an entered day, with that one's address (design 8.4, 8.11.1); and the watcher's own last good read's address.
+    /// </summary>
     Task<AgendaReadInfo> AgendaReadAsync(CancellationToken cancellationToken);
 
     /// <summary>
@@ -184,5 +187,9 @@ public sealed record VoteBallotsInfo(
     IReadOnlyDictionary<string, MpSummary> Mps,
     IReadOnlyDictionary<string, int> Seats);
 
-/// <summary>The last successful read of the upcoming agenda; both null when it was never read.</summary>
-public sealed record AgendaReadInfo(DateTimeOffset? ReadAt, string? SourceUrl);
+/// <summary>
+/// The last read of the upcoming agenda (design 8.4): the watcher's last good read or the last entered day's save, whichever
+/// is later, and its address; both null when it was never read nor entered. <paramref name="WatcherUrl"/> is the address of the
+/// watcher's last good read alone (null when it never read one), the source of a date the watcher read.
+/// </summary>
+public sealed record AgendaReadInfo(DateTimeOffset? ReadAt, string? SourceUrl, string? WatcherUrl = null);

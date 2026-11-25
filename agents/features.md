@@ -363,6 +363,32 @@ the hint `#classification-corrected` ("Klasifikaciją pataisė moderatoriai", `V
 unit `VoteClassificationTests`; integration `VoteClassificationTests`; import
 `ImportTests.A_moderators_correction_of_a_votes_classification_survives_a_re_parse_and_a_full_re_import`.
 
+**Staff enter the agenda a day at a time (design 8.3, 8.4 "Entering a day's agenda", owner 2026-11-25).** The rules are
+pure, `AgendaEntryRules` (Parliament `Domain/AgendaEntryRules.cs`): `Parse` (`number | stage | title`, exactly three
+fields, blank lines ignored; `BillNumbers` for the number; the stage by the watcher's own `AgendaParser.StageOf`, called,
+not copied; title non-empty, at most 2 000; a number's first line kept; refusals with their 1-based line and a code of
+`AgendaEntryRefusals`), `DayAccepted` (today to today+31, Vilnius), `Source` (https on `e-seimas.lrs.lt` or `www.lrs.lt`)
+and `Diff` (each line `AgendaEntryChanges` added / stage-changed / unchanged, the numbers taken off). The service
+`IAgendaEntries` (`AgendaEntries.cs`, `Application/AgendaEntries`): `DaysAsync`, `PreviewAsync` (no writes; refused lines in
+the outcome) and `SaveAsync` (one transaction under the day's advisory lock `lt2.agenda-entry:{day}`; only
+`planned_item` rows with source `entry` of that day: seen again, replaced on a changed stage, `gone_at` when missing; unknown
+bills inserted `ON CONFLICT DO NOTHING` with the line's title and no e-seimas link; `parliament.agenda_entry` keeps the text
+as sent and the counts; audit `agenda.entered`, target `agenda:{day}`, the address and counts). Refusals
+`AgendaEntryProblems` (`agenda-entry.day`, `.source`, `.lines`, `.empty`, `.too-long`, each on its field). The source values
+of `planned_item` are `PlannedSources` (`Domain/AgendaEntry.cs`; module-internal, the watcher's own literals untouched);
+`PlannedAgenda.Current` keeps the moderator's row first, then the row seen last, and `PlannedDate.Entered` says an entered
+date. Reads: `AgendaReadAsync` is the later of the watcher's last good read and the last save (`AgendaReadInfo.WatcherUrl`
+keeps the watcher's own address), and `ParliamentReads.BillAsync` links an entered date's own document as `PlannedAgendaUrl`.
+Routes `ParliamentRoutes.AgendaEntries`, `AgendaEntryPreview`, `AgendaEntryDay` (`Endpoints/Parliament/AgendaEntryEndpoints`,
+policy `Moderator`), contracts and validators in `Lt2.Api.Contracts/Parliament/AgendaEntryDtos.cs`, `IAgendaEntryApi`
+(`ServerAgendaEntryApi` and `AgendaEntryWrites` in `Services/AgendaEntryServices.cs`, which refreshes `IBillCards` after a save
+that created bills; `HttpAgendaEntryApi`). The page `/moderavimas/darbotvarke` (`Pages/AgendaEntryStaff.razor`, `AppealUi`
+`AgendaEntry.*`, linked `#agenda-entry-link` above the queue's tabs), ids a browser agent drives: `#agenda-day` (text +
+`DatePick`), `#agenda-source`, `#agenda-lines`, `#agenda-preview`, `#agenda-save` (only for a preview without refused lines of
+exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#agenda-counts`, `#agenda-bills` with
+`data-change`/`data-created`, `#agenda-removed`), `#agenda-errors` (`data-line`, `data-reason`), `#agenda-days`. Tests: unit
+`AgendaEntryRulesTests`; integration `AgendaEntryTests`.
+
 **MPs on the platform (design 8.5, built 2026-11-15: the link 8.5.1–8.5.4, then the response 8.5.5–8.5.7).**
 - The official address: an "El. p." contact of open data on `lrs.lt` (not a sub-domain), compared ignoring case, of an MP
   whose mandate has not ended; listed for two or more such MPs, it belongs to nobody (`OfficialAddresses` in Parliament,

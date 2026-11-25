@@ -43,6 +43,36 @@ public static class BillStages
     public static readonly IReadOnlyList<string> All = [Presentation, Consideration, Adoption];
 }
 
+/// <summary>
+/// Why a line of an entered agenda is refused (design 8.4, "Entering a day's agenda"): a line is <c>number | stage | title</c>,
+/// and nothing of the day is applied while any line is refused.
+/// </summary>
+public static class AgendaEntryRefusals
+{
+    /// <summary>Not exactly three fields separated by <c>|</c>.</summary>
+    public const string Fields = "fields";
+
+    /// <summary>No bill's registration number in the first field.</summary>
+    public const string Number = "number";
+
+    public const string TitleEmpty = "title-empty";
+
+    /// <summary>Longer than the rule's limit (2 000 characters).</summary>
+    public const string TitleTooLong = "title-too-long";
+
+    public static readonly IReadOnlyList<string> All = [Fields, Number, TitleEmpty, TitleTooLong];
+}
+
+/// <summary>What saving an entered day does to a bill listed on it (design 8.4); a bill taken off the day is listed apart.</summary>
+public static class AgendaEntryChanges
+{
+    public const string Added = "added";
+    public const string StageChanged = "stage-changed";
+    public const string Unchanged = "unchanged";
+
+    public static readonly IReadOnlyList<string> All = [Added, StageChanged, Unchanged];
+}
+
 /// <summary>An MP's choice in a vote. Not a member's side: a ballot may also abstain or be missing.</summary>
 public static class BallotChoices
 {

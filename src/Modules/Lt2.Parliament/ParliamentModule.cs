@@ -36,6 +36,9 @@ public static class ParliamentModule
         // Design 7.2: a moderator's correction of a vote's classification (needs IClosingVotes from Appeals and IAuditLog).
         services.AddScoped<IVoteClassifications, Application.VoteCorrections>();
 
+        // Design 8.4: staff enter a sitting day's agenda (needs IAuditLog).
+        services.AddScoped<IAgendaEntries, Application.AgendaEntries>();
+
         // Design 8.19.3: the one way an official address leaves this module, for sending MP mail only.
         services.AddScoped<IMpMailAddresses, MpDirectory>();
         return services;

@@ -167,6 +167,21 @@ public static class ParliamentRoutes
 
     public static string VoteClassificationOf(long id) =>
         $"{ApiRoutes.Prefix}/moderation/votes/{id.ToString(System.Globalization.CultureInfo.InvariantCulture)}/classification";
+
+    /// <summary>Design 8.4, moderator: the entered days of the agenda from today (<c>GET</c>).</summary>
+    public const string AgendaEntries = ApiRoutes.Prefix + "/moderation/agenda";
+
+    /// <summary>Design 8.4, moderator: what saving a day's lines would do; stores nothing (<c>POST</c>).</summary>
+    public const string AgendaEntryPreview = AgendaEntries + "/preview";
+
+    /// <summary>Design 8.4, moderator: a sitting day's whole entered agenda (<c>PUT</c>), the day as <c>yyyy-MM-dd</c>.</summary>
+    public const string AgendaEntryDay = AgendaEntries + "/{day}";
+
+    public static string AgendaEntryDayOf(DateOnly day) =>
+        AgendaEntries + "/" + day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>The page where staff enter the agenda ("Seimo darbotvarkė", design 8.3).</summary>
+    public const string AgendaEntryPage = "/moderavimas/darbotvarke";
 }
 
 /// <summary>Design 8.8, 8.12: bills as people take part on them, positions, arguments, endorsements, reports and moderation.</summary>

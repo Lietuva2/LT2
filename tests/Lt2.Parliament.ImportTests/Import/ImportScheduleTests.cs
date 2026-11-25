@@ -2,7 +2,7 @@ using Lt2.Parliament.Import;
 
 namespace Lt2.Parliament.ImportTests.Import;
 
-/// <summary>Design 7.2: when the import runs, and when a vote result that was missing is asked for again.</summary>
+/// <summary>Design 7.2: when the import runs, when a vote result that was missing is asked for again, and when the TAIS projects are.</summary>
 public sealed class ImportScheduleTests
 {
     private static readonly DateTimeOffset Now = new(2026, 11, 12, 12, 0, 0, TimeSpan.Zero);
@@ -16,11 +16,21 @@ public sealed class ImportScheduleTests
         ImportSchedule.IsMissingResultDue(Now, Now.AddDays(-voteAgeDays), Now.AddHours(-hoursSinceAsked)).ShouldBe(due);
 
     [Theory]
+    [InlineData(0, false)]
+    [InlineData(57, false)]
+    [InlineData(58, true)]
+    [InlineData(60, true)]
+    [InlineData(24 * 60, true)]
+    public void The_tais_projects_are_asked_for_at_most_hourly_with_the_runs_slack(int minutesSinceAsked, bool due) =>
+        ImportSchedule.IsProjectsDue(Now, Now.AddMinutes(-minutesSinceAsked)).ShouldBe(due);
+
+    [Theory]
     [InlineData(ImportParts.None, ImportParts.Members, false)]
     [InlineData(ImportParts.Members, ImportParts.Members, true)]
     [InlineData(ImportParts.Members, ImportParts.Votes, false)]
     [InlineData(ImportParts.Sittings | ImportParts.Votes, ImportParts.Votes, true)]
     [InlineData(ImportParts.All, ImportParts.Sittings, true)]
+    [InlineData(ImportParts.All, ImportParts.None, false)]
     public void A_request_is_forced_only_when_its_part_is(ImportParts force, ImportParts part, bool forced) =>
         ImportSchedule.IsForced(force, part).ShouldBe(forced);
 

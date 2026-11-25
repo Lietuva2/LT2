@@ -23,6 +23,16 @@ Read before touching the Parliament module's client or import. The design is [07
   number in the title's last "(Nr. …)" part that holds one, with its letters and without its revision
   (`(Nr. XIVP-4009GR(2))` is XIVP-4009GR; every revision is one bill). The proceedings only add a bill to an item the
   agenda listed without one; its title, stage and sitting stay the agenda's.
+- `p2b.tais_docs` (design 7.2) is read last in the walk, at most hourly (`ImportSchedule.IsProjectsDue`), and no manual
+  job forces it: it only creates bills and fills a missing title or e-seimas link, never links an agenda item
+  (`SeimasParsers.Projects`, `ParliamentImporter.ApplyProjects`). A document is a bill when its whole
+  `projectRegistrationNo` is a number (`BillNumbers.Whole`); of several revisions of one bill the highest wins. Seen
+  2026-11-25: root `TAISProjEvents` (`eventsDate`, `creationDate`), `Events/Event`, and `Documents/Document` with
+  `projectRegistrationNo`, `title`, `url`, `currentStatus`, `itemType`; about one in six documents is a Seimas bill
+  (`XVP-…`, revisions as `XVP-1334(2)`). The parser reads only `Document` and its number, title and url.
+- The upcoming agenda is not in the open data: the sittings are listed without a start time and their agendas are
+  empty until approved. Staff enter it from the e-seimas agenda documents (design 8.4); `www.lrs.lt` and `e-seimas.lrs.lt`
+  answer a server's request with a Cloudflare challenge (403), `apps.lrs.lt/sip/p2b.*` does not.
 - The proceedings preserve the official decision as part of `aprasas`. `Sprendimas nepriimtas` reports no decision
   on the motion and does not count as a stage result. A vote's outcome and the bill's status are distinct (design 8.1).
 - `BillCatalogue.RejectionsAsync` recognises the confirmed plenary wording for an approved motion to reject a specific
@@ -35,7 +45,7 @@ Read before touching the Parliament module's client or import. The design is [07
   through it too, and readers read `kind`/`stage` only.
 - The import (`ParliamentImporter.WalkAsync`) walks the chain once per run; each request has its own freshness rule
   (terms, MPs and sessions daily; open sessions' sittings every run; agendas, proceedings and results of sittings within
-  `Seimas:RefetchDays`; a missing result on `ImportSchedule.IsMissingResultDue`). `RunAsync(ImportParts force, …)`:
+  `Seimas:RefetchDays`; a missing result on `ImportSchedule.IsMissingResultDue`; the TAIS projects hourly). `RunAsync(ImportParts force, …)`:
   the scheduled job passes `None`; the manual jobs (`ParliamentImportPartsJob` in `Lt2.Jobs`, ids `parliament-members`,
   `-sittings`, `-votes`, `-everything`, registered with `Cron.Never()`) force a part, which skips its rule
   (`ImportSchedule.IsForced`) and nothing else. The forced parts are written after the address in `import_run.source`

@@ -33,7 +33,7 @@ public sealed class ResetTests(ImportDatabase database) : IAsyncLifetime
 
         var again = await import.RunAsync();
         again.Status.ShouldBe("succeeded");
-        again.Requests.ShouldBe(20, "nothing was left to skip");
+        again.Requests.ShouldBe(21, "nothing was left to skip");
         (await CountAsync("person")).ShouldBe(14);
     }
 
