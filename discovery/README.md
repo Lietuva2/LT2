@@ -1,34 +1,33 @@
-# Lietuva 2.0 — discovery
+# Lietuva 2.0 — information website and discovery notes
 
-Pre-implementation work for the new Lietuva 2.0: a Seimas monitoring and public engagement platform
-(bills from lrs.lt, AI summaries, public voting, vote delegation, verified politicians, Parliament vs. public analytics).
-
-The previous platform (2011–2020, ASP.NET MVC) is kept on the `legacy` branch.
+Lietuva 2.0 is a Seimas engagement platform. Stage 1 is built and runs as a closed trial at https://test.lietuva2.lt;
+its code and design are on the `master` branch (`design/README.md`). This branch holds the public information website
+and the team's notes. The previous platform (2011–2020) is on the `legacy` branch.
 
 ## Contents
 
-The website is the `../docs/` folder: its contents are uploaded as they are to lietuva2.lt, and all links between pages are relative. The pages are in Lithuanian and open directly in a browser. `../docs/index.html` (the citizens' short version) is the start page; `../docs/dokumentai.html` lists every page and is shared on request.
+The website is the `../docs/` folder: its contents are uploaded as they are to lietuva2.lt, and all links between pages
+are relative. The pages are in Lithuanian and open directly in a browser. `../docs/dokumentai.html` lists every page
+and is shared on request.
 
 | Path | Audience | What |
 |---|---|---|
-| `../docs/koncepcija.html` | Everyone | Full product concept with interactive mockups (the canonical version). |
-| `../docs/antroji-versija.html` | Everyone | The second version: posts, topics and answers from representatives, with mockups. |
-| `../docs/index.html` | Citizens | Start page (landing page): the short version with the key mockups, links to the audience versions and ways to contribute. |
-| `../docs/politikams.html` | Politicians | Short version with the invitation to discuss the concept before anything is built, and questions for politicians. |
-| `../docs/kas-nauja.html` | Former LT2 users | What changed since the 2011–2020 platform, lessons learned, what stays. |
-| `../docs/zurnalistams.html` | Journalists | What LT2 would offer journalists and story ideas. |
-| `design-notes.md` | Team | Decision history, rejected alternatives, research sources and open questions from the discovery work. |
-| `system-design.md` | Team | Proposed system design for implementation: stack, solution layout, security, MP profiles from open data, and appeals on bills with summary emails to MPs. Agreed 2026-11-12 as the basis for implementation. |
+| `../docs/index.html` | First-time visitors | Start page: what LT2 is, how it works, what is built, the stages, how to help. |
+| `../docs/kaip-veikia.html` | Everyone | Every part of stage 1 briefly, and what remains before a public launch. |
+| `../docs/idejos.html` | Everyone | Ideas for stage 2 (posts and questions) and stage 3 (voting with delegates). Not promises. |
+| `../docs/politikams.html` | MPs and their offices | Summaries, taking over the profile, one response for everyone, questions before the first summary. |
+| `../docs/organizacijoms.html` | Organisations | Profile, confirmation by domain, a statement on a bill: a voice, not control. |
+| `../docs/zurnalistams.html` | Journalists | What is there, how to cite the numbers, story ideas. |
+| `../docs/kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
+| `going-live.md` | Team | Questions to settle before a public launch of stage 1. |
+| `design-notes.md` | Team | Decision history of the 2026-09 concept (voting first). Historical. |
 | `prototypes/seimas-vote-hemicycle/` | Team | Feasibility check: renders a real Seimas vote from the open data API. |
-| `prototypes/logo-spin/` | Team | Demo and design history of `../docs/lt2-logo-spin.js` (`<lt2-logo-spin>`, the rotating logo at the top of every page): edge-on it is a man (left edge) or a woman (right edge), drawn so their clothes match the logo's colour bands. `index.html` is the demo (serve the repository over HTTP); `figuros.html` (flat figure options per edge) and `poros.html` (the chosen pair, R bodies with K4 legs, and the alternatives) are the design history. |
+| `prototypes/logo-spin/` | Team | Demo and design history of `../docs/lt2-logo-spin.js`, the rotating logo at the top of every page. |
 
-When adding or renaming a page, update `../docs/dokumentai.html` as well.
-
-All politicians, parties, bills and figures in the whitepaper mockups are fictional.
+When adding or renaming a page, update `../docs/dokumentai.html` as well. All politicians, parties, bills and figures in
+the examples are fictional.
 
 ## Seimas vote hemicycle prototype
-
-Fetches one vote from the Seimas open data service (`apps.lrs.lt/sip`, CC BY 4.0) and draws each MP's vote by faction.
 
 ```sh
 cd prototypes/seimas-vote-hemicycle
