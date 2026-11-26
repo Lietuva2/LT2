@@ -2,7 +2,6 @@
 @using Lt2.Api.Contracts.Parliament
 @using Lt2.Api.Contracts.Meta
 @inject IParliamentApi Api
-@inject Lt2.Api.Contracts.Appeals.IAppealsApi Appeals
 @inject IMetaApi Meta
 @inject Formats F
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
@@ -16,11 +15,11 @@
     var totals = v.Summary.Totals;
     var (heading, wording) = Heading(vote.Bill?.Title ?? v.AgendaItemTitle, vote.Wording);
     @* Design 8.13.1: a bill's readable title leads, as in the lists that link here; the official title follows it. The link
-       preview uses it as the bill's page does: only a title a person wrote or checked goes off the site, never an `ai` one. *@
+       preview carries it too, whoever wrote it (owner, 2026-11-26). *@
     var plainTitle = vote.Bill?.PlainTitle;
     var lead = plainTitle is null || wording is not null ? wording : heading == vote.Bill!.Title.Trim() ? null : heading;
     <PageTitle>@F.T["Vote.Label"] · @(plainTitle ?? heading) · Lietuva 2.0</PageTitle>
-    <LinkPreview Title="@($"{F.T["Vote.Label"]} · {PreviewTitle(heading, plainTitle)}")" />
+    <LinkPreview Title="@($"{F.T["Vote.Label"]} · {plainTitle ?? heading}")" />
 
     <div class="stack">
         @* Design 8.18: up to the history of votes, then the vote's bill. *@
@@ -135,7 +134,6 @@
     private VoteResponse? _vote;
     private DateTimeOffset? _updatedAt;
     private bool _moderator;
-    private string? _plainSource;
 
     [Parameter] public long Id { get; set; }
 
@@ -149,12 +147,6 @@
         }
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
-        if (_vote.Summary.Vote.Bill is { PlainTitle: not null } bill)
-        {
-            // Design 8.13.1, "Off the site": the source of the readable title decides whether the link preview may carry it.
-            _plainSource = (await Appeals.GetRecordAsync(bill.Number)).Value?.DescriptionSource ?? DescriptionSources.Moderator;
-        }
-
         if (Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
         {
             _moderator = (await Authorization.AuthorizeAsync(http.User, http, Lt2.Web.Security.Policies.Moderator)).Succeeded;
@@ -178,9 +170,6 @@
             : b.StartsWith(a, StringComparison.CurrentCultureIgnoreCase) ? (b, null)
             : (a, b);
     }
-
-    private string PreviewTitle(string heading, string? plainTitle) =>
-        plainTitle is not null && _plainSource is DescriptionSources.Moderator or DescriptionSources.AiDraft ? plainTitle : heading;
 
     private static bool SameText(string heading, string other) =>
         heading.Trim().StartsWith(other.Trim(), StringComparison.CurrentCultureIgnoreCase);

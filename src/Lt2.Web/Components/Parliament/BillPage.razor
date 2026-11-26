@@ -592,11 +592,11 @@
     private string PlainSource => _record?.DescriptionSource ?? DescriptionSources.Moderator;
 
     /// <summary>
-    /// The link preview's title (design 8.22.5): the readable title only when a person wrote or checked it (a moderator's or a
-    /// checked draft's), never an AI one nobody read; otherwise the official title.
+    /// The link preview's title (design 8.22.5): the readable title whoever wrote it, an AI one included (owner, 2026-11-26);
+    /// otherwise the official title.
     /// </summary>
     private string PreviewTitle(BillResponse b) =>
-        PlainTitle is { } title && PlainSource is DescriptionSources.Moderator or DescriptionSources.AiDraft ? title : b.Title;
+        PlainTitle ?? b.Title;
 
     private static int ToGo(ThresholdResponse t) => ShareLine.MissingOf(t);
 

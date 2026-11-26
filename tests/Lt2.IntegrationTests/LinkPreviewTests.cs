@@ -122,9 +122,9 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
         }
     }
 
-    /// <summary>Design 8.13.1, 8.22.5: off the site only a readable title a person wrote or checked; never an AI one nobody read.</summary>
+    /// <summary>Design 8.13.1, 8.22.5 (owner, 2026-11-26): the bill's preview carries its readable title whoever wrote it, an AI one included.</summary>
     [Fact]
-    public async Task The_bill_preview_uses_a_readable_title_a_person_wrote_or_checked_and_never_an_ai_one()
+    public async Task The_bill_preview_uses_the_readable_title_whatever_its_source()
     {
         const string Bill = AppealSteps.SecondBill;
         const string Readable = "Keičiama vietinių rinkliavų tvarka";
@@ -135,6 +135,7 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
             await using var site = new SiteFactory(Database);
             using var visitor = site.NewBrowser();
             var official = (await visitor.GetJsonAsync<Lt2.Api.Contracts.Parliament.BillResponse>(Lt2.Api.Contracts.ParliamentRoutes.BillByNumber(Bill))).Title;
+            (await PreviewAsync(visitor, "/seimas/" + Bill, "/seimas/" + Bill))["og:title"].ShouldBe($"{Bill} · {official}", "without a readable title");
 
             using (var described = await moderator.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.AppealRoutes.BillDescriptionOf(Bill),
                        new Lt2.Api.Contracts.Appeals.ModeratorDescriptionRequest { Description = "Projektas keičia vietinių rinkliavų tvarką.", Statement = "Bandymas.", PlainTitle = Readable }))
@@ -142,19 +143,11 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
                 described.StatusCode.ShouldBe(HttpStatusCode.NoContent, await described.Content.ReadAsStringAsync());
             }
 
-            // A moderator's title and a checked draft's are shown.
-            foreach (var source in new[] { "moderator", "ai-draft" })
+            foreach (var source in new[] { "moderator", "ai-draft", "ai" })
             {
                 await Database.ExecuteAsync("UPDATE appeals.bill_record SET description_source = @s WHERE bill_number = @n", ("s", source), ("n", Bill));
                 (await PreviewAsync(visitor, "/seimas/" + Bill, "/seimas/" + Bill))["og:title"].ShouldBe($"{Bill} · {Readable}", source);
             }
-
-            // An AI's, nobody has read: the official title, though the page's own heading is the readable one.
-            await Database.ExecuteAsync("UPDATE appeals.bill_record SET description_source = 'ai' WHERE bill_number = @n", ("n", Bill));
-            var tags = await PreviewAsync(visitor, "/seimas/" + Bill, "/seimas/" + Bill);
-            tags["og:title"].ShouldBe($"{Bill} · {official}");
-            tags.Values.ShouldAllBe(v => !v.Contains(Readable, StringComparison.Ordinal), "an AI title goes nowhere without its label");
-            WebUtility.HtmlDecode(await PageAsync(visitor, "/seimas/" + Bill)).ShouldContain($"<h1>{Readable}</h1>");
         }
         finally
         {

@@ -165,7 +165,7 @@ public sealed partial class ReadableTitleTests(DatabaseFixture database) : ApiTe
             var votePage = await PageAsync(visitor, $"/seimas/balsavimai/{voteId}");
             votePage.ShouldContain($"<h1>{Title}</h1>");
             votePage.ShouldContain($"id=\"official-title\">Oficialus pavadinimas: {official}</p>");
-            votePage.ShouldContain($"<meta property=\"og:title\" content=\"Balsavimas · {Title}\"", customMessage: "a moderator's readable title goes into the link preview");
+            votePage.ShouldContain($"<meta property=\"og:title\" content=\"Balsavimas · {Title}\"", customMessage: "the readable title goes into the link preview");
 
             // A vote without a bill keeps its wording; a bill without a readable title keeps its official one (VoteRow).
             await Database.FreeBillAsync(Votes);

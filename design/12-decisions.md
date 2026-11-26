@@ -279,9 +279,10 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   description; a moderator may record the official text's address for a description they write or correct (2026-11-14).
 - A bill may carry a readable title, made and moderated with its description (8.13.1). Lists show it as the link with
   the official title in fine print under it, the tags keeping their line above in every list (the number beside the
-  title was tried and dropped: it fits only where the number is the row's one tag); an `ai` title is shown on the site too; off the site only one a
-  person wrote or checked, and summaries to MPs keep the official title. Searches of bills match it, not the description
-  (2026-11-24).
+  title was tried and dropped: it fits only where the number is the row's one tag); an `ai` title is shown on the site too;
+  in members' emails only one a person wrote or checked, and summaries to MPs keep the official title. Searches of bills
+  match it, not the description (2026-11-24). Link previews carry the readable title wherever a page has one, an `ai` one
+  included, the bill's page and a vote's page alike (2026-11-26).
 - The description form fills "Oficialaus teksto adresas" with the bill's e-seimas address on a bill without a
   description; every link to lrs.lt opens in a new tab. Moderators find the bills that most want a description in
   "Projektai be aprašymo" (8.3): only bills with a participant, an argument or a follower, the most attention first.
