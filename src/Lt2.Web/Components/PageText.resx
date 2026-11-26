@@ -24,6 +24,7 @@
   <data name="Footer.About" xml:space="preserve"><value>Apie</value></data>
   <data name="Footer.TakePart" xml:space="preserve"><value>Dalyvauti</value></data>
   <data name="Notice.InventedParliament" xml:space="preserve"><value>Seimo narių ir balsavimų duomenys čia išgalvoti – tai tik bandymas.</value></data>
+  <data name="Notice.InventedMembers" xml:space="preserve"><value>Naudotojų pozicijos, argumentai, komentarai, organizacijos ir suvestinės čia išgalvoti – tai tik bandymas. Seimo duomenys tikri.</value></data>
   <data name="Notice.MpOffer" xml:space="preserve"><value>Prisijungėte oficialiu Seimo nario adresu. Seimo narys: {0}.</value></data>
   <data name="Notice.MpOfferLink" xml:space="preserve"><value>Perimti profilį</value></data>
   <data name="Footer.Line" xml:space="preserve"><value>Lietuva 2.0 · uždaras bandymas</value></data>

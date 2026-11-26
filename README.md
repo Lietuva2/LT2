@@ -380,7 +380,10 @@ copied over SSH; nothing goes to a registry):
    Later deploys leave it alone.
 
 Invitations and the demonstration data are made once with `run --rm migrator --seed-invitation CODE:USES` and, after
-the worker's first import from the stand-in, `run --rm --no-deps migrator --demo-appeal`.
+the worker's first import from the stand-in, `run --rm --no-deps migrator --demo-appeal`. A trial on the real Seimas data
+(`LT2_SEIMAS_BASE_ADDRESS`, `LT2_OUTBOUND_EXTRA_HOST` and `LT2_AGENDA_BASE_ADDRESS` empty, `COMPOSE_PROFILES=mailpit`,
+no stand-in) gets invented members' activity instead (design 8.26.5), with `LT2_DEMO_DATA=true` and `LT2_MAIL_CAUGHT=true`,
+after the first import: `run --rm --no-deps migrator --demo-activity`.
 
 **The caught emails** (design 9.2). Whoever reads Mailpit reads every sign-in code, so on a server Mailpit asks for a
 name and password itself: `compose.shared-proxy.yaml` gives it the password file `mailpit_ui_auth` from the secrets

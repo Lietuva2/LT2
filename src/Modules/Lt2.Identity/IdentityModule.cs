@@ -134,6 +134,8 @@ public static class IdentityModule
         services.AddScoped<IPoliticians>(sp => sp.GetRequiredService<Application.Politicians.PoliticianHandlers>());
         Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddScoped<IMpLinks, Application.Politicians.MpLinks>(services);
         services.AddScoped<IInvitations, Application.Invitations.InvitationHandlers>();
+        services.AddMemoryCache();
+        services.AddScoped<IInventedMembersNotice, InventedMembersNotice>();
         services.AddScoped<IOrganisationInvitations, Application.Invitations.OrganisationInvitationHandlers>();
         services.AddScoped<IFeedback, Application.Feedback.FeedbackHandlers>();
         services.AddSingleton<IParticipants, ParticipantDirectory>();

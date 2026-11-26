@@ -19,6 +19,13 @@ public static class InventedMembers
 {
     public const string Domain = "pavyzdys.test";
 
+    /// <summary>
+    /// How every invented demonstration member's address starts (<c>demo.…@pavyzdys.test</c>), so the pages can tell that the
+    /// accounts hold invented members (<see cref="IInventedMembersNotice"/>); the demonstration commands use it, tests' accounts
+    /// use other names.
+    /// </summary>
+    public const string Prefix = "demo.";
+
     /// <summary>Creates the accounts that do not exist yet (by address); returns how many were created.</summary>
     public static async Task<int> CreateAsync(string connectionString, IReadOnlyList<InventedMember> members, CancellationToken cancellationToken)
     {

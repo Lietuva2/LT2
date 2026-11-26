@@ -491,6 +491,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   Seimas's majority, and the order (newest closing vote, largest difference, most positions); no stage filter; the
   accounts filter combines with them; the filters' form is closed at first and open whenever a field is set
   (2026-11-18, 2026-11-19).
+- The trial shows invented members' activity on the real Seimas data: sides, arguments, comments, organisations, sides
+  on bills the Seimas finished and past summaries as dry runs, never a description or an MP's response, only where every
+  email is caught, never on a bill a real account took part on, with a notice on every page (8.26.5, 2026-11-26).
 
 ## 8.27 Usage statistics
 

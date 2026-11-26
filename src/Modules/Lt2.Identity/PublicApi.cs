@@ -79,6 +79,17 @@ public sealed record MpOffice(IReadOnlyList<OfficeMember> Members, int Limit);
 public sealed record OfficeInvitation(string Token, DateTimeOffset ExpiresAt, bool Emailed = false);
 
 /// <summary>
+/// For the pages (design 8.26.5): whether the accounts hold the demonstration's invented members (addresses
+/// <c>demo.…@pavyzdys.test</c>, written only by the migrator's demonstration commands), so every page says that members'
+/// activity is invented. Read from the data, not from a setting someone could forget.
+/// </summary>
+public interface IInventedMembersNotice
+{
+    /// <summary>True while any invented demonstration member exists; cached for a minute.</summary>
+    Task<bool> HoldsInventedMembersAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// MPs on the platform (design 8.5.1 to 8.5.4): the take-over of a profile through a link to the official address and a new
 /// passkey, the office, giving the profile up, an administrator's end of a link. Every request that speaks for an MP reads
 /// the link and the session from the database. Who is linked to which MP and who the office members are is never public.

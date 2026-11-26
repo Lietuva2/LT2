@@ -14,7 +14,7 @@ namespace Lt2.Web.Services;
 /// The parliament reads both the HTTP endpoints and the server-rendered pages use: the module's answers mapped to the
 /// API contracts, or <c>not-found</c>.
 /// </summary>
-internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IBillCards billCards, Lt2.Appeals.IAppealsModule appeals, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians, IFollowerCounts followers)
+internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IBillCards billCards, Lt2.Appeals.IAppealsModule appeals, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians, IFollowerCounts followers, Lt2.Identity.IInventedMembersNotice inventedMembers)
 {
     public const string ImportSource = "seimas-open-data";
     private static readonly Error NotFound = Error.NotFound("not-found");
@@ -170,7 +170,8 @@ internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IB
     public async Task<Result<ImportsResponse>> ImportsAsync(CancellationToken ct)
     {
         var info = await queries.ImportsAsync(ct);
-        return new ImportsResponse([new ImportSourceResponse(ImportSource, info.LastSuccessAt, info.LastRunAt, info.LastRunStatus)], info.ParliamentDataInvented);
+        return new ImportsResponse([new ImportSourceResponse(ImportSource, info.LastSuccessAt, info.LastRunAt, info.LastRunStatus)], info.ParliamentDataInvented,
+            await inventedMembers.HoldsInventedMembersAsync(ct));
     }
 
     /// <summary>Design 7.2: a vote's classification as the moderators see it.</summary>

@@ -36,9 +36,10 @@ There is no production.
 **The trial on the owner's VPS.** It deploys `master` as an isolated Compose project (`lt2`) on the owner's Hostinger
 VPS, which also runs the owner's other sites:
 
-- **Data and emails.** The parliament data is the stand-in's, invented, and every page says so; the demonstration
-  record and organisations are seeded; emails are caught by Mailpit and never delivered. Registration needs an
-  invitation code made for this server, not the one in `deploy/.env`. The request limits are the code's defaults.
+- **Data and emails.** The parliament data is the real Seimas open data (owner, 2026-11-25); the members' activity on
+  it is invented (`--demo-activity`, 8.26.5) and every page says so; emails are caught by Mailpit and never delivered.
+  Registration needs an invitation code made for this server, not the one in `deploy/.env`. The request limits are the
+  code's defaults.
 - **Behind the server's proxy.** Ports 80 and 443 belong to the Caddy that already serves the other sites. LT2 does
   not start its own Caddy there: that Caddy gets one site block for LT2's hostname and reaches `web` over its Docker
   network (`deploy/compose.shared-proxy.yaml`, `deploy/shared-proxy.Caddyfile`). The block keeps what LT2's own
@@ -58,8 +59,7 @@ VPS, which also runs the owner's other sites:
   is opened for it; the SMTP port stays on the internal network. Locally Mailpit stays without a password.
 - **Delivery.** Images are built from the deployed commit on the developer's machine, tagged with it (`LT2_IMAGE_TAG`)
   and copied to the server over SSH; nothing is pushed to a registry or to GitHub. The migrator runs once per deploy.
-- **Not built there:** the host hardening, two `web` instances, backups, telemetry and alerts (9.4), real email, the
-  real Seimas data.
+- **Not built there:** the host hardening, two `web` instances, backups, telemetry and alerts (9.4), real email.
 
 **Not built.** A separate staging and production pair: staging on its own small VPS or isolated project, synthetic
 data only, emails captured and never delivered, never receiving production data.

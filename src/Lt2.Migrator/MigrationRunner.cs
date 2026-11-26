@@ -29,6 +29,8 @@ namespace Lt2.Migrator;
 /// invented participants on XVP-0412 and the invented closed bills, refusing unless <c>Demo:Allowed</c> is set and the
 /// parliament data is invented), <c>--demo-sides-for ADDRESS|-</c> (one existing account's random sides on the invented
 /// closed bills, under the same refusals and only with that account's positions consent; the address is never logged),
+/// <c>--demo-activity</c> (the trial: invented members' activity on the real Seimas data, refusing unless <c>Demo:Allowed</c>
+/// and <c>Email:Caught</c> are set and the parliament data is real only; design 8.26.5),
 /// <c>--demo-emails</c> (one email of every outbox kind and variant, invented, to <c>NAME@pavyzdys.test</c>, so Mailpit shows how each looks; refusing unless <c>Demo:Allowed</c> and <c>Email:Caught</c> are set; writes outbox rows only).</item>
 /// </list>
 /// </summary>
@@ -176,6 +178,10 @@ public static class MigrationRunner
                     Log.Information(
                         "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}; invented accounts that accepted the terms of use now: {Terms}; invented accounts that gave the positions consent's newest text now: {Consents}; closed demonstration bill {ClosedBill}: {Closed}; invented closed bills: {ClosedBills}",
                         DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations, demo.TermsAccepted, demo.PositionConsentsGiven, DemoAppeal.ClosedBill, demo.ClosedBill, demo.ClosedBills);
+                    break;
+                case "--demo-activity":
+                    var activity = await DemoActivity.RunAsync(configuration, connectionString, TimeProvider.System, cancellationToken);
+                    Log.Information("Invented members' activity on the real Seimas data: {Outcome}", activity.ToString());
                     break;
                 case "--demo-sides-for" when i + 1 < args.Count:
                     // The address is never logged: only what was given (design 8.26.5).
