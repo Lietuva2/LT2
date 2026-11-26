@@ -57,7 +57,7 @@
   <data name="Agenda.Threshold" xml:space="preserve"><value>{0} dalyvių · riba {1}</value></data>
   <data name="Agenda.All" xml:space="preserve"><value>Visa darbotvarkė →</value></data>
   <data name="Home.Coming" xml:space="preserve"><value>Artimiausiu metu Seime</value></data>
-  <data name="Home.Recent" xml:space="preserve"><value>Neseniai balsuota</value></data>
+  <data name="Home.Recent" xml:space="preserve"><value>Paskutiniai balsavimai</value></data>
 <data name="Agenda.TakingPartClosed" xml:space="preserve"><value>Dalyvavimas uždarytas</value></data>
   <data name="Home.Lead" xml:space="preserve"><value>Matykite, ką Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko prašote.</value></data>
   <data name="Home.Slogan" xml:space="preserve"><value>Padėkite Seimui jus atstovauti.</value></data>

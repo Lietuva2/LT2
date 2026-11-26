@@ -23,7 +23,7 @@ internal sealed class AgendaReads(
         var now = clock.GetUtcNow();
         var today = VilniusTime.DateOf(now);
         var planned = await agenda.BetweenAsync(today, DateOnly.MaxValue, ct);
-        // Owner, 2026-11-26: the last voting days, however long ago, not a fixed window (design 8.7, "Neseniai balsuota").
+        // Owner, 2026-11-26: the last voting days, however long ago, not a fixed window (design 8.7, "Paskutiniai balsavimai").
         var recent = await parliament.StageResultsOfLastDaysAsync(AgendaRules.FrontDays, ct);
         var numbers = planned.Select(p => p.BillNumber).Concat(recent.Select(v => v.Vote.Bill!.Number)).Distinct().ToList();
         var facts = numbers.Count == 0 ? new Dictionary<string, BillFacts>() : await bills.FindManyAsync(numbers, ct);

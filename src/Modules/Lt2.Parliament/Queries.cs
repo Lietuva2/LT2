@@ -136,7 +136,7 @@ public interface IParliamentQueries
 
     /// <summary>
     /// Stage-result votes on bills held on the last <paramref name="days"/> Vilnius days that had one, however long ago,
-    /// newest first (design 8.7 "Neseniai balsuota"); at most 200.
+    /// newest first (design 8.7 "Paskutiniai balsavimai"); at most 200.
     /// </summary>
     Task<IReadOnlyList<VoteSummary>> StageResultsOfLastDaysAsync(int days, CancellationToken cancellationToken);
 

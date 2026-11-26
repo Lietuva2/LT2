@@ -446,7 +446,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         home.ShouldNotContain("id=\"home-no-recent\"");
         home.ShouldContain("<section class=\"sheet stack\" aria-labelledby=\"h-home-recent\" id=\"home-recent\">");
         var row = ReasonsToComeSteps.HeadRow(home, "h-home-recent");
-        row.ShouldContain("<h2 id=\"h-home-recent\">Neseniai balsuota</h2>");
+        row.ShouldContain("<h2 id=\"h-home-recent\">Paskutiniai balsavimai</h2>");
         row.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"home-votes-older\">Ankstesni balsavimai →</a>");
         home.ShouldNotContain("tl-older", customMessage: "no link at the end of the list");
         Regex.Count(home, "Ankstesni balsavimai").ShouldBe(1);
