@@ -4,8 +4,10 @@
 #
 # It keeps what deploy/Caddyfile does: compression, the 1 MB request limit and no Server header; Caddy's proxy sends
 # the scheme (X-Forwarded-Proto) and the client's address (X-Forwarded-For, any incoming value replaced) by default.
-# It adds X-Robots-Tag and a robots.txt that disallows everything, since a trial with invented data must be neither
-# crawled nor indexed (drop those lines for production).
+# It adds X-Robots-Tag and a robots.txt that disallows everything but the link-preview fetchers (Facebook and Messenger,
+# X, LinkedIn, Slack, Telegram, WhatsApp, Discord), since a trial with invented data must be neither crawled nor indexed,
+# while a shared link still shows its preview (design 8.22.5); those fetchers read the one page shared and index nothing.
+# Drop those lines for production.
 #
 # Logs: no `log` directive, so no access log for the site. Not covered: a request that Caddy itself fails with a 5xx
 # (web stopped or restarting: 502) goes to that Caddy's error log with the client's address, user agent and full
@@ -26,6 +28,16 @@ lt2.example.org {
 	}
 
 	respond /robots.txt <<TXT
+		User-agent: facebookexternalhit
+		User-agent: Facebot
+		User-agent: Twitterbot
+		User-agent: LinkedInBot
+		User-agent: Slackbot-LinkExpanding
+		User-agent: TelegramBot
+		User-agent: WhatsApp
+		User-agent: Discordbot
+		Allow: /
+		
 		User-agent: *
 		Disallow: /
 		TXT 200
