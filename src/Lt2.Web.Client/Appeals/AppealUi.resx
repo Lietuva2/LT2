@@ -244,7 +244,7 @@
 <data name="Mod.Action.urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
 <data name="Mod.Action.merge" xml:space="preserve"><value>Sujungti</value></data>
 <data name="Mod.Action.restrict" xml:space="preserve"><value>Riboti autoriaus rašymą</value></data>
-<data name="Mod.Sentence.appeal.keep" xml:space="preserve"><value>Projektas liks toks, koks yra; pranešimai apie aprašymą ir pastabos apie datą bus uždaryti.</value></data>
+<data name="Mod.Sentence.appeal.keep" xml:space="preserve"><value>Projektas liks toks, koks yra, ir išeis iš eilės; pranešimai apie aprašymą ir pastabos apie datą bus uždaryti. Į eilę jis grįš, jei pasikeis planuojama data ar stadija, dalyvių skaičius pasieks pusę ribos ar bus naujas pozicijų šuolis.</value></data>
 <data name="Mod.Sentence.appeal.hide" xml:space="preserve"><value>Dalyvavimas dėl projekto bus uždarytas: puslapyje liks tik projektas ir jūsų paaiškinimas. Pozicijos ir argumentai išsaugomi nematomi ir atkūrus grįžta.</value></data>
 <data name="Mod.Sentence.appeal.threshold" xml:space="preserve"><value>Projektas turės savo ribą vietoj bendros visiems projektams; ji liks, kol moderatorius jos nepakeis. Paaiškinimas rodomas projekto puslapyje.</value></data>
 <data name="Mod.Sentence.appeal.describe" xml:space="preserve"><value>Aprašymas bus rodomas iš karto projekto puslapyje su žyma „Parašė moderatorius“ (arba „Sukurta DI · taisė žmonės“, jei pradėjote nuo juodraščio ar taisote DI sukurtą aprašymą), o ankstesnis liks keitimų istorijoje.</value></data>

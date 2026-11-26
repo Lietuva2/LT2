@@ -85,14 +85,14 @@ internal sealed class ModerationService(
             .Where(a => a.Status == BillRecordStatuses.Open || (a.Status == BillRecordStatuses.Closed && reportedIds.Contains(a.Id)))
             .ToListAsync(cancellationToken);
         var openRecords = records.Where(a => a.Status == BillRecordStatuses.Open).ToList();
-        var surges = await reads.SurgesAsync(db, openRecords.Select(a => a.Id).ToList(), cancellationToken);
+        var surges = await reads.QueueSurgesAsync(db, openRecords.Select(a => a.Id).ToList(), cancellationToken);
         var openFlags = await db.Flags.AsNoTracking().Where(f => f.Status == "open").OrderBy(f => f.CreatedAt).ToListAsync(cancellationToken);
         var planned = await agenda.ForBillsAsync(openRecords.Select(a => a.BillNumber).ToList(), cancellationToken);
         var counts = await reads.ShownCountsAsync(db, records, cancellationToken);
         var threshold = await reads.ThresholdSettingsAsync(cancellationToken);
         var thresholds = records.ToDictionary(a => a.Id, a => AppealReads.Threshold(a, counts[a.Id], threshold));
         var underThresholdOnAgenda = openRecords
-            .Where(a => RecordRules.UnderThresholdOnAgenda(counts[a.Id].Total, planned.ContainsKey(a.BillNumber), thresholds[a.Id].Reached))
+            .Where(a => AgendaDue(a, counts[a.Id].Total, planned.GetValueOrDefault(a.BillNumber), thresholds[a.Id]))
             .Select(a => a.Id)
             .ToHashSet();
         var flagged = openFlags.Select(f => f.RecordId).ToHashSet();
@@ -102,6 +102,15 @@ internal sealed class ModerationService(
             .ToList();
         return new DueRecords(due, surges, openFlags, planned, counts, thresholds, underThresholdOnAgenda);
     }
+
+    /// <summary>
+    /// Whether an open record is in the queue as "under its threshold on the agenda" (design 8.3, 8.12.2): unless a moderator
+    /// kept it for this planned date and stage, or it came near its threshold since.
+    /// </summary>
+    private static bool AgendaDue(BillRecord record, int participants, PlannedDate? planned, ThresholdInfo threshold) =>
+        RecordRules.UnderThresholdOnAgendaDue(
+            participants, planned?.Date, planned?.Stage, threshold.Reached, threshold.Value,
+            record.AgendaKeptFor, record.AgendaKeptStage, record.AgendaKeptParticipants);
 
     /// <summary>The bills' records in the queue: the oldest change first, at most a hundred, and how many there are in all.</summary>
     private async Task<(IReadOnlyList<QueueRecord> Items, int Total)> DueRecordsAsync(AppealsDb db, List<Report> openReports, CancellationToken cancellationToken)
@@ -205,8 +214,16 @@ internal sealed class ModerationService(
                 return RuleErrors.Of(refused);
             }
 
-            // Kept as it is: its open date flags close (the reports close with the record of the action).
+            // Kept as it is: its open date flags close (the reports close with the record of the action). Every reason it is in
+            // the queue for is answered (design 8.3, owner 2026-11-26): the planned date and stage it is kept for, with its
+            // participants now, and the time, so neither the same agenda nor the same surge brings it back.
             await CloseFlagsAsync(db, record.Id, now, cancellationToken);
+            var planned = (await agenda.ForBillsAsync([record.BillNumber], cancellationToken)).GetValueOrDefault(record.BillNumber);
+            var counts = await reads.ShownCountsAsync(db, [record], cancellationToken);
+            record.AgendaKeptFor = planned?.Date;
+            record.AgendaKeptStage = planned?.Stage;
+            record.AgendaKeptParticipants = planned is null ? null : counts[record.Id].Total;
+            record.SurgeKeptAt = now;
             return Result.Ok();
         }, cancellationToken);
 
@@ -552,8 +569,16 @@ internal sealed class ModerationService(
             .OrderBy(r => r.CreatedAt)
             .Select(r => new QueueReport(r.Id, r.Ground, r.Text, r.CreatedAt))
             .ToListAsync(cancellationToken);
+        // "Palikti" answers whatever keeps the bill in the queue (design 8.3): reports, date flags, a surge, or being under its
+        // threshold on the agenda.
         var hasOpenItems = descriptionReports.Count > 0
             || await db.Flags.AsNoTracking().AnyAsync(f => f.RecordId == record.Id && f.Status == "open", cancellationToken);
+        if (!hasOpenItems && record.Status == BillRecordStatuses.Open)
+        {
+            var counts = await reads.ShownCountsAsync(db, [record], cancellationToken);
+            hasOpenItems = (await reads.QueueSurgesAsync(db, [record.Id], cancellationToken)).Count > 0
+                || AgendaDue(record, counts[record.Id].Total, planned.GetValueOrDefault(record.BillNumber), AppealReads.Threshold(record, counts[record.Id], threshold));
+        }
 
         // The bill's waiting and published arguments, for the controls on each and the panel's list (decided 2026-11-14).
         var reasons = await db.Reasons.AsNoTracking()

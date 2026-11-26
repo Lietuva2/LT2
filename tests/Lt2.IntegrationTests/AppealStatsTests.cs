@@ -95,6 +95,24 @@ public sealed class AppealStatsTests(DatabaseFixture database) : ApiTest(databas
             var queued = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.Single(a => a.Id == record.Id);
             queued.Surge.ShouldBe(new SurgeResponse(100, 72));
 
+            // "Palikti" clears this surge from the queue (design 8.3, owner 2026-11-26); the page keeps its note, and only
+            // positions taken afterwards make a surge that brings the bill back.
+            using (var kept = await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.KeepRecord, record.Id), new ModerationRequest()))
+            {
+                kept.StatusCode.ShouldBe(HttpStatusCode.NoContent, await kept.Content.ReadAsStringAsync());
+            }
+
+            (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.ShouldNotContain(a => a.Id == record.Id);
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Surge.ShouldNotBeNull("keeping changes only the queue");
+            for (var i = 0; i < 2; i++)
+            {
+                var (fresh, _) = await Factory.MemberAsync();
+                (await fresh.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+                fresh.Dispose();
+            }
+
+            (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.Single(a => a.Id == record.Id).Surge.ShouldNotBeNull("a new surge");
+
             await administrator.Browser.SetSettingAsync("Surge:MinimumShare", 1.0);
             (await stranger.RecordAsync(AppealSteps.ThirdBill)).Surge.ShouldNotBeNull("2 of 2 is 100 %");
         }
