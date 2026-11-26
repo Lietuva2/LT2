@@ -133,6 +133,7 @@ internal static class WebHost
         services.AddScoped<Lt2.Api.Contracts.Digests.IMpMailApi, ServerMpMailApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IMpSendingAdminApi, ServerMpSendingAdminApi>();
         services.AddScoped<Lt2.Web.Components.Parliament.Formats>();
+        services.AddSingleton<Previews.VotePreviewImages>();
         services.AddLt2ClientComponents();
     }
 
@@ -209,6 +210,7 @@ internal static class WebHost
         // database (design 9.5). They need no person; pages and the API still check the session on every request, so an
         // ended session stops working at once.
         app.MapStaticAssets().ShortCircuit();
+        Previews.VotePreviewImages.Map(app);
         app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
         app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
         app.MapOpenApi("/openapi/{documentName}.json");

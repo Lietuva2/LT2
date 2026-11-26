@@ -961,6 +961,13 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   bill uses its description unless it is `ai`, never counts; a member's page only while public and never "Apie mane"; a
   blocked organisation none. `SecurityHeaders.IsPrivatePage` marks account, staff, sign-in, MP and one-time-link pages
   `noindex, nofollow`; `/img` is `Cross-Origin-Resource-Policy: cross-origin`. Tests: `LinkPreviewTests` (integration).
+  A vote's page (owner 2026-11-26) passes `DrawnImage` and `ImageAlt` from `Previews/VotePreview` (pure: `Of`, `TitleOf`,
+  `Description` with the bill's description from `FromRecord`, `Alt`, the digest `Version`) and its text; the image is
+  `Previews/VotePreviewImage.Draw` (SkiaSharp with `SkiaSharp.NativeAssets.Linux.NoDependencies`, fonts
+  `Previews/Fonts/*.ttf` embedded, made from the web fonts by `tools/make_preview_fonts.py`), served by
+  `Previews/VotePreviewImages` at `GET|HEAD /img/votes/{id}/{version}.png` (short-circuited like the static files; drawn on
+  the first request, kept in a 12 MB memory cache; an old version redirects). Seats are placed by
+  `Lt2.Web.Client/Components/Hemicycle.Arrange`, shared with `SeatMap`. Texts `Preview.Vote*`. Tests: `VotePreviewTests`.
 - The AI draft is only in a moderator's "write or correct the description" form, on any active bill, from pasted official
   text (or, where a reader exists, the bill's documents as read): the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
   and a key in `deploy/secrets/ai_api_key`; otherwise nothing mentions a draft. The prompt is the public file
