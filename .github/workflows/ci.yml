@@ -61,7 +61,7 @@ jobs:
     needs: build-and-test
     # The end-to-end suite is not a merge gate (AGENTS.md): it runs only when started by hand.
     if: github.event_name == 'workflow_dispatch'
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       DOTNET_NOLOGO: "1"
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
