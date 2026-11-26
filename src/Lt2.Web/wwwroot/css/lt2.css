@@ -1322,6 +1322,8 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
 .top__nav > a[aria-current], .drop__toggle[aria-current] { border-bottom-color: var(--link); }
 @media (max-width: 54rem) {
   .top__nav { column-gap: var(--sp-4); }
+  /* "Pradžia" on a wide screen only (owner, 2026-11-26): on a phone the logo leads home and the menu keeps one line. */
+  .top__home { display: none; }
 }
 @media (max-width: 32rem) {
   .top__name {

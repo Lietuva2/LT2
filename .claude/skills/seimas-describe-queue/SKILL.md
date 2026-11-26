@@ -1,14 +1,16 @@
 ---
 name: seimas-describe-queue
-description: Work through the Lietuva 2.0 moderators' "Projektai be aprašymo" queue (https://<site>/moderavimas?skiltis=be-aprasymo), or through the bills planned on the Seimas agenda page (https://<site>/darbotvarke) - draft each undescribed Seimas bill's description from e-seimas, save it as written by an AI agent ("Sukurta DI · žmonių neperžiūrėta"), then report. Use when asked to "aprašyk eilę", "describe the queue", "užpildyk projektus be aprašymo", "aprašyk darbotvarkės projektus", "describe the agenda's bills", or after seimas-agenda has entered new days. Takes the queue's or the agenda's address as its argument, e.g. "/seimas-describe-queue https://<site>/moderavimas?skiltis=be-aprasymo". Needs Claude in Chrome and a moderator signed in to Lietuva 2.0 with a staff passkey. Uses seimas-project-description for each bill.
+description: Work through the Lietuva 2.0 moderators' "Projektai be aprašymo" queue (https://<site>/moderavimas?skiltis=be-aprasymo), through the bills planned on the Seimas agenda page (https://<site>/darbotvarke), or through the bills of the latest voting days on the start page (https://<site>/, "Paskutiniai balsavimai") - draft each undescribed Seimas bill's description from e-seimas, save it as written by an AI agent ("Sukurta DI · žmonių neperžiūrėta"), then report. Use when asked to "aprašyk eilę", "describe the queue", "užpildyk projektus be aprašymo", "aprašyk darbotvarkės projektus", "describe the agenda's bills", "aprašyk paskutinių balsavimų projektus", "describe the latest votes' bills", or after seimas-agenda has entered new days. Takes the queue's, the agenda's or the start page's address as its argument, e.g. "/seimas-describe-queue https://<site>/moderavimas?skiltis=be-aprasymo". Needs Claude in Chrome and a moderator signed in to Lietuva 2.0 with a staff passkey. Uses seimas-project-description for each bill.
 ---
 
-# Describe the bills in the "Be aprašymo" queue or on the agenda (Lietuva 2.0)
+# Describe the bills in the "Be aprašymo" queue, on the agenda or in the latest votes (Lietuva 2.0)
 
 Design: `design/08.13-description.md` (the description, its label, the statement, the agent box),
-`design/08.03-moderation.md` (the "Be aprašymo" tab) and `design/08.11-reasons-to-come.md` (the agenda page, 8.11.1).
+`design/08.03-moderation.md` (the "Be aprašymo" tab), `design/08.11-reasons-to-come.md` (the agenda page, 8.11.1) and
+`design/08.07-public-record.md` (the start page's "Paskutiniai balsavimai").
 The form is `src/Lt2.Web.Client/Appeals/ModerationActions.razor`, the queue `src/Lt2.Web.Client/Appeals/UndescribedList.razor`,
-the agenda `src/Lt2.Web/Components/Agenda/AgendaPage.razor` with its rows `PlannedDay.razor` and `TimelineItem.razor`;
+the agenda `src/Lt2.Web/Components/Agenda/AgendaPage.razor` with its rows `PlannedDay.razor` and `TimelineItem.razor`,
+the start page `src/Lt2.Web/Components/Pages/Home.razor` with `VotedDay.razor` and `VotedItem.razor`;
 when they change, this skill changes with them.
 
 Start on the page given as the skill's argument (`/seimas-describe-queue https://<site>/…`) or named in the user's
@@ -22,9 +24,14 @@ open, so with no address given, ask for it (the full address: the site varies). 
   after seimas-agenda saved days. It lists every bill the Seimas plans to consider, by day, including new bills nobody
   follows yet and that the queue does not show. If the user names days (or the address has `?diena=…`), take only those
   days; otherwise every planned day on the page.
+- **The latest votes:** `https://<site>/` (the start page), its sheet "Paskutiniai balsavimai": the last two days the
+  Seimas voted on a bill's stage, however long ago. It holds bills the Seimas has just finished too (adopted or
+  rejected); those can be described as well (a finished bill nobody took part in shows the "Moderavimas" panel with
+  only "Rašyti aprašymą"). If the user names days, take only those of the two; for older days use the agenda's way
+  with the vote history instead, as step 1 says.
 
 **Invoking this skill is the user's approval to save descriptions** for the bills collected in step 1 during this run,
-and only those: the queue's rows, or the agenda days' bills that step 2 says to write. It covers nothing else on the site
+and only those: the queue's rows, the agenda days' bills, or the voting days' bills that step 2 says to write. It covers nothing else on the site
 (arguments, hiding, restrictions, other actions or tabs, the agenda itself).
 
 For each bill, follow **seimas-project-description** (load it with the Skill tool; in the repository it is
@@ -56,11 +63,26 @@ the changes below.
 - On the agenda a described bill is normal, not a bug: in step 2 a person's description is skipped quietly
   ("jau aprašytas") rather than reported as a site bug.
 
+**From the latest votes:**
+
+- Each voting day is a `section.tl-day` with the id `home-voted-<yyyy-MM-dd>` inside `#home-recent`
+  (`#home-no-recent`: no vote yet, nothing to do). A day shows only its first five votes; open the start page with every
+  day you take grown at once: `https://<site>/?balsuota=<date>:1000&balsuota=<date>:1000`, and check that no
+  `#home-voted-<date>-more` is left.
+- Collect with JS, keeping the output short: for each `li[id^="recent-"]` of a taken day, the bill's number from its
+  `a.num[href^="/seimas/"]` and the title. A bill voted on several times (several stages, or both days) is taken once,
+  under its newest day. A row whose title link has `.tl-item__official` under it already has a readable title: put it
+  last, as on the agenda.
+- Older days: the vote history `https://<site>/seimas/balsavimai?iki=<date>` lists days back from that date
+  (`section` `#day-<date>`, rows `li.tl-item[id^="vote-"]` with the bill's `a[href^="/seimas/"]`); take only the days the
+  user named, and the stage results only (the default list).
+- As on the agenda, a described bill here is normal: "jau aprašytas", not a site bug.
+
 **Then:**
 
 - Create a task list with one item per bill plus a final "Report" item. If there are more than 30 bills, say how many and
   in which order you go, and carry on; the user can stop the run.
-- Use two tabs of your own: the one you opened the queue or agenda in, for the bill pages, and one for e-seimas, reused
+- Use two tabs of your own: the one you opened the queue, the agenda or the start page in, for the bill pages, and one for e-seimas, reused
   for every bill. Close both at the end.
 
 ## 2. Per bill
@@ -69,8 +91,8 @@ the changes below.
 2. **What is there already:**
    - "Šio projekto aprašymo dar nėra.": write one.
    - "Parašė moderatorius" or "Sukurta DI · taisė žmonės" (a person wrote or reviewed it): skip it, do not overwrite,
-     and note it. From the queue it should not be there, so report it as a possible site bug; from the agenda it is
-     simply "jau aprašytas".
+     and note it. From the queue it should not be there, so report it as a possible site bug; from the agenda or the
+     latest votes it is simply "jau aprašytas".
    - "Sukurta DI · žmonių neperžiūrėta": open `/seimas/<NUMBER>/istorija`. If the newest entry's "Paaiškinimas" starts
      with "Aprašymą automatiškai parengė ir išsaugojo Claude", an earlier run of this skill saved it and it waits for a
      moderator: skip it. Otherwise it is the site's own AI summary: write a fresh one from the sources (the old one stays
@@ -83,7 +105,7 @@ the changes below.
    must be accurate (nobody reads it before it is saved) and hold nothing that should not be public:
 
    ```
-   Aprašymą automatiškai parengė ir išsaugojo Claude (DI asistentas) moderatoriaus nurodymu, apdorojant <projektų be aprašymo eilę | Seimo darbotvarkės projektus>; prieš išsaugant žmogus jo neperžiūrėjo.
+   Aprašymą automatiškai parengė ir išsaugojo Claude (DI asistentas) moderatoriaus nurodymu, apdorojant <projektų be aprašymo eilę | Seimo darbotvarkės projektus | paskutinių Seimo balsavimų projektus>; prieš išsaugant žmogus jo neperžiūrėjo.
    Perskaityta:
    - <document>, <yyyy-MM-dd>
    - …
@@ -91,8 +113,8 @@ the changes below.
    Sąmoningai neįtraukta: <what and why>.
    ```
 
-   Keep the first sentence word for word, with "projektų be aprašymo eilę" from the queue or "Seimo darbotvarkės
-   projektus" from the agenda: step 2 recognises earlier runs by its opening words. Drop a line that has nothing to say.
+   Keep the first sentence word for word, with "projektų be aprašymo eilę" from the queue, "Seimo darbotvarkės
+   projektus" from the agenda or "paskutinių Seimo balsavimų projektus" from the latest votes: step 2 recognises earlier runs by its opening words. Drop a line that has nothing to say.
    If it replaces an AI summary, add "Pakeičia DI santrauką."
 5. **Fill the form** as that skill says (open it, find each field by its label, set it with `form_input`), and then,
    unlike that skill, **tick the checkbox labelled "Tik DI agentams: …"** (`input[name=writtenByAi]`). It is invisible
@@ -131,6 +153,9 @@ in a row and report.
 - From the agenda: reload it with the same grown days. Each bill saved in this run should now show its new short title
   as the row's link, with the official title in fine print under it. Note any that does not. Also count, per day, the
   bills the site does not know yet (no page) and those skipped as already described.
+- From the latest votes: reload the start page with the same grown days; each bill saved shows its new short title, the
+  official title in fine print under it. A finished bill saved in this run now has a closed record (its page says it is
+  closed, with nobody's side); that is expected.
 - Close both tabs.
 - Report in the user's language, one line per bill: the number (linked to `/seimas/<NUMBER>`), the short title saved,
   the status (saved / skipped and why) and notes (aiškinamasis raštas not readable, judgement calls). Remind the user

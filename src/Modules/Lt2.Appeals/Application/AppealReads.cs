@@ -224,9 +224,11 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
     /// bill's lock is held until it ends). <c>bill.not-found</c> for a bill not in the catalogue, <c>record.not-open</c>
     /// for a finished bill without a record. An existing record is returned whatever its status; the caller checks it.
     /// With <paramref name="forWrite"/> the bill's lock is taken first and the record comes back tracked: the caller
-    /// changes it, and writes to one bill's record are serialised (design 6.8).
+    /// changes it, and writes to one bill's record are serialised (design 6.8). With <paramref name="finishedClosed"/> a
+    /// finished bill without a record gets one too, created closed as the closing job would have closed it, with nobody's
+    /// side in it (a moderator describes a finished bill, design 8.12.3; owner, 2026-11-26).
     /// </summary>
-    public async Task<Result<BillRecord>> EnsureAsync(AppealsDb db, string billNumber, CancellationToken ct, bool forWrite = false)
+    public async Task<Result<BillRecord>> EnsureAsync(AppealsDb db, string billNumber, CancellationToken ct, bool forWrite = false, bool finishedClosed = false)
     {
         var number = AppealReads.NormaliseBillNumber(billNumber);
         if (forWrite)
@@ -245,7 +247,8 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
             return Error.NotFound("bill.not-found");
         }
 
-        if (RecordRules.CheckParticipation(null, await IsFinishedAsync(null, bill.Number, ct)) is { } finished)
+        var isFinished = await IsFinishedAsync(null, bill.Number, ct);
+        if (!finishedClosed && RecordRules.CheckParticipation(null, isFinished) is { } finished)
         {
             return RuleErrors.Of(finished);
         }
@@ -272,6 +275,17 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
             ChangedAt = now,
             ThresholdSetBy = ThresholdSetters.Default,
         };
+        if (isFinished)
+        {
+            // As AppealsMaintenance closes an open record: the final vote, or a rejection the open data holds.
+            var final = await bills.FinalVoteAsync(bill.Number, ct);
+            var rejection = final is null ? await PendingRejectionAsync(null, bill.Number, ct) : null;
+            record.LastAutomaticRejectionVoteId = rejection?.VoteId;
+            ClosingRules.Close(
+                record, new SideCounts(0, 0, 0, 0), now, rejection is null ? ClosingReasons.Vote : ClosingReasons.Rejected, final?.VoteId ?? rejection?.VoteId,
+                rejection is null ? null : VilniusTime.DateOf(rejection.HeldAt), rejection?.SourceUrl);
+        }
+
         db.BillRecords.Add(record);
         await db.SaveChangesAsync(ct);
         if (!forWrite)

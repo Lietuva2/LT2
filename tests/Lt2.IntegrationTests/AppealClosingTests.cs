@@ -82,6 +82,59 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
     }
 
     /// <summary>
+    /// Owner, 2026-11-26 (design 8.12.3): a finished bill nobody took part in can be described, as it is on the start page's
+    /// votes. The moderators' state says closed without a record, only "Rašyti aprašymą" applies, and writing it gives the
+    /// bill a record closed as the closing job would have closed it, with nobody's side; taking part stays refused.
+    /// </summary>
+    [Fact]
+    public async Task A_finished_bill_nobody_took_part_in_can_be_described_and_its_record_is_created_closed()
+    {
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        var mod = moderator.Browser;
+        await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO parliament.vote (id, agenda_item_id, bill_id, held_at, wording, type, kind, stage, is_consensus, has_result, "for", against, abstain, voted, seats)
+            SELECT @id, agenda_item_id, bill_id, held_at + interval '7 days', 'Priėmimas', type, 'StageResult', 'Adoption', false, true, "for", against, abstain, voted, seats
+            FROM parliament.vote WHERE id = 99100102
+            """,
+            ("id", FinalVote));
+        try
+        {
+            using var stranger = NewBrowser();
+            var state = await mod.ModerationBillAsync(AppealSteps.ThirdBill);
+            state.Id.ShouldBeNull("nobody took part: no record yet");
+            state.Status.ShouldBe("closed");
+            var page = WebUtility.HtmlDecode(await mod.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
+            page.ShouldContain("id=\"moderation-panel\"", customMessage: "the moderators' panel on a finished bill without a record");
+            WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill)).ShouldNotContain("id=\"moderation-panel\"");
+
+            using (var described = await mod.SendAsync(
+                HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.ThirdBill), new ModeratorDescriptionRequest { Description = "Aprašymas po galutinio balsavimo.", Statement = "Projektas tarp paskutinių balsavimų." }))
+            {
+                described.StatusCode.ShouldBe(HttpStatusCode.NoContent, await described.Content.ReadAsStringAsync());
+            }
+
+            var closed = await stranger.RecordAsync(AppealSteps.ThirdBill);
+            closed.Status.ShouldBe("closed");
+            closed.ClosingVoteId.ShouldBe(FinalVote);
+            closed.Description.ShouldBe("Aprašymas po galutinio balsavimo.");
+            closed.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
+            var (member, _) = await Factory.MemberAsync();
+            using var _m = member;
+            using (var late = await member.TakeSideAsync(AppealSteps.ThirdBill, "for"))
+            {
+                await late.ShouldBeProblemAsync(HttpStatusCode.Conflict, "record.not-open");
+            }
+        }
+        finally
+        {
+            await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id = @id", ("id", FinalVote));
+            await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        }
+    }
+
+    /// <summary>
     /// Design 6.8: a finished bill is finished for everyone at the same moment. Once the final vote is recorded, taking part
     /// is refused as an organisation's statement already is, before the hourly job has closed the record.
     /// </summary>

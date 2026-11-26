@@ -107,7 +107,10 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
             .ShouldBe(["bills", "seimas-votes", "digests", "mps"], "four entries in the dropdown");
         agenda.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\">Statistika</a>");
         agenda.ShouldContain("<a href=\"/prisijungti\" id=\"nav-sign-in\">Prisijungti</a>");
-        Regex.Count(agenda, "<a ").ShouldBe(8, "the logo, Seimas, the four tabs in the dropdown and two items");
+        // Owner, 2026-11-26: "Pradžia" first, shown on a wide screen only (CSS), current on the start page alone.
+        entries.ShouldContain("<a class=\"top__home\" href=\"/\" id=\"nav-home\">Pradžia</a>");
+        WebUtility.HtmlDecode(HeaderOf(await visitor.Client.GetStringAsync("/"))).ShouldContain("<a class=\"top__home\" href=\"/\" id=\"nav-home\" aria-current=\"page\">Pradžia</a>");
+        Regex.Count(agenda, "<a ").ShouldBe(9, "the logo, Pradžia, Seimas, the four tabs in the dropdown and two items");
         agenda.ShouldNotContain("Kaip skaičiuojama");
         agenda.ShouldNotContain("data-theme-switch", customMessage: "the theme switch is in the footer");
 
