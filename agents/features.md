@@ -953,10 +953,11 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   (`LandingPath.SignInLink`: `/prisijungti#tikslas=...`), so signing in and registering both end on the bill.
 - **Link previews (design 8.22.5, owner 2026-11-17).** `Components/Layout/LinkPreview` (`<HeadContent>`: `description`, Open
   Graph, `twitter:card`) placed by each public server-rendered page with `Title`, `Description` (default `Home.Lead`),
-  `Type` (`article` on a bill) and `Path` (default the requested path without its query); `og:url` and `og:image` only with
+  `Type` (`article` on a bill), `Image` (default `LinkPreviewText.Image`; the start page passes `HomeImage`, owner 2026-11-26) and `Path` (default the requested path without its query); `og:url` and `og:image` only with
   `Site:Address` (`SiteLinks.Absolute`). Text rules and the image's name are `LinkPreviewText` (pure; `Excerpt` keeps whole
   sentences up to 200 characters). The image is `wwwroot/img/link-preview.png` (1200×630, the logo with the name below it, inside the centred 630×630 square that phones crop to; made once
-  in a headless browser from the logo SVG and Sofia Sans Extra Condensed). The texts are `Preview.*` in `PageText.resx`. A
+  in a headless browser from the logo SVG and Sofia Sans Extra Condensed); the start page's `wwwroot/img/link-preview-home.png` is the
+  small logo and the name above the slogan and its subline (`Home.Slogan`, `Home.Subline`), made the same way. The texts are `Preview.*` in `PageText.resx`. A
   bill uses its description unless it is `ai`, never counts; a member's page only while public and never "Apie mane"; a
   blocked organisation none. `SecurityHeaders.IsPrivatePage` marks account, staff, sign-in, MP and one-time-link pages
   `noindex, nofollow`; `/img` is `Cross-Origin-Resource-Policy: cross-origin`. Tests: `LinkPreviewTests` (integration).

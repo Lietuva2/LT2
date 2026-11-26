@@ -11,7 +11,7 @@ src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per f
                            Security/TrustedProxy.cs; no-store on pages answered to a signed-in session; Security/TermsGate.cs,
                            design 8.22.2; Security/BrowserStorage.cs, the inventory of 8.22.1), the layout (Components/Layout:
                            the menu, AccountMenu with js/lt2-account.js, the footer, LinkPreview and LinkPreviewText (Open
-                           Graph tags, design 8.22.5, image wwwroot/img/link-preview.png); js/lt2-invitation.js takes a
+                           Graph tags, design 8.22.5, images wwwroot/img/link-preview.png and link-preview-home.png); js/lt2-invitation.js takes a
                            link's #kodas= on any page, 8.11.5) and the terms and privacy pages
                            (Components/Pages/Terms, Privacy, LegalText.resx); Jobs/JobsDashboard.cs: the Hangfire dashboard
                            "Foniniai darbai" at /administravimas/darbai (design 3, 6.3; agents/security.md), over the worker's

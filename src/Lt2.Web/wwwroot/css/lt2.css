@@ -1060,10 +1060,12 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 .home-head lt2-logo-spin { width: 100%; }
 .home-h1-s { font-size: var(--fs-5); }
 .home-head__signin { grid-column: 1 / -1; gap: var(--sp-2); }
-/* Owner, 2026-11-17: the headline is the lead sentence at the type scale's step nearest 2rem; from 54rem the headline and
-   the note are one column a line of text wide and the logo (about 15rem) is centred in the space to its right, across both
-   rows. */
-.home-head h1 { font-size: var(--fs-4); line-height: 1.15; max-width: var(--measure); }
+/* Owner, 2026-11-26: the headline is the slogan at the h2 step, its second half in the brand's green, and the subline under
+   it as a lead; from 54rem the slogan block and the note are one column a line of text wide and the logo (about 15rem) is
+   centred in the space to its right, across both rows. */
+.home-head__title { display: flex; flex-direction: column; gap: var(--sp-3); max-width: var(--measure); }
+.home-head h1 { font-size: var(--fs-5); line-height: 1; }
+.home-slogan__end { color: var(--brand); }
 /* The visitor's front page carries the invented-data notice as the head's first row (the layout leaves it out there), so the
    logo is centred across the notice as well; without the notice the head has no such row and the logo centres on the rest. */
 .home-head > #invented-data { grid-column: 1 / -1; }
@@ -1073,7 +1075,7 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   .home-head { grid-template-columns: minmax(0, var(--measure)) minmax(0, 1fr); grid-template-areas: "title logo" "signin logo"; }
   .home-head--notice { grid-template-areas: "notice logo" "title logo" "signin logo"; }
   .home-head > #invented-data { grid-area: notice; }
-  .home-head h1 { grid-area: title; }
+  .home-head__title { grid-area: title; }
   .home-head__signin { grid-area: signin; }
   .home-head lt2-logo-spin { grid-area: logo; width: min(15rem, 100%); justify-self: center; align-self: center; }
 }
@@ -1296,7 +1298,8 @@ html[data-mine-only] #appeal-results, html[data-mine-only] #sort { display: none
 }
 @media (max-width: 36rem) {
   .home-head { grid-template-columns: 5.25rem minmax(0, 1fr); gap: var(--sp-4); }
-  .home-head h1 { font-size: var(--fs-3); line-height: 1.25; }
+  .home-head h1 { font-size: var(--fs-4); line-height: 1.05; }
+  .home-head .lead { font-size: var(--fs-2); }
   .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
   .intro-steps > li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); }
   .intro-steps > li::before { grid-row: span 2; }

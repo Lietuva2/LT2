@@ -125,7 +125,7 @@ without the hint.
    todėl nuoroda atveria projektą be jo." If no: no link. "Jūsų projektai" shows the share link only with a usable code.
 4. A member's preview is the name and a generic line, never "Apie mane"; an organisation's is its own description while
    active and none while blocked. If no: "Apie mane" as the text.
-5. One image for every page, the logo and the name. If no: an image made per bill (needs a renderer on the server).
+5. One image for every page, the logo and the name; the front page has its own with the slogan (owner, 2026-11-26). If no: an image made per bill (needs a renderer on the server).
 6. Pages of one's own account, staff, sign-in and one-time links are `noindex, nofollow` by a path list
    (`SecurityHeaders.IsPrivatePage`); the image is served `Cross-Origin-Resource-Policy: cross-origin`.
 7. Without `Site:Address` (a development machine) `og:url` and `og:image` are left out rather than taken from the

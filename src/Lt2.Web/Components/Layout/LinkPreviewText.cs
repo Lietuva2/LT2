@@ -8,6 +8,9 @@ internal static class LinkPreviewText
     /// <summary>The default image, a static file under wwwroot: the logo and the name on the brand's colours.</summary>
     public const string Image = "img/link-preview.png";
 
+    /// <summary>The start page's image: the logo and the name above the slogan and its subline, all inside the centred square.</summary>
+    public const string HomeImage = "img/link-preview-home.png";
+
     public const int ImageWidth = 1200;
 
     public const int ImageHeight = 630;

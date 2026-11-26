@@ -19,8 +19,8 @@
    is a member's own (the panel, the marks and actions in the rows) is an island filled in the browser from their own
    answers, so the server renders the same page for every member and nothing per person is in it. *@
 <PageTitle>Lietuva 2.0</PageTitle>
-@* Design 8.22.5: the site's name and its lead sentence (the default description). *@
-<LinkPreview Title="Lietuva 2.0" Path="/" />
+@* Design 8.22.5 (owner, 2026-11-26): the slogan, what the site holds and the subline, with the start page's own image. *@
+<LinkPreview Title="@T["Home.Slogan"]" Description="@T["Home.Preview"]" Image="@LinkPreviewText.HomeImage" Path="/" />
 
 <AuthorizeView>
     <Authorized>
@@ -42,7 +42,11 @@
                 <p class="note" role="note" id="invented-data">@(_invented == Lt2.Web.Components.Layout.InventedData.Parliament ? T["Notice.InventedParliament"] : T["Notice.InventedMembers"])</p>
             }
             <lt2-logo-spin period="14"></lt2-logo-spin>
-            <h1 id="home-title">@T["Home.Lead"]</h1>
+            @* Owner, 2026-11-26: the slogan is the headline, its second half in the brand's green, and the subline under it. *@
+            <div class="home-head__title" id="home-slogan">
+                <h1 id="home-title">@T["Home.Slogan.Start"] <span class="home-slogan__end">@T["Home.Slogan.End"]</span></h1>
+                <p class="lead" id="home-subline">@T["Home.Subline"]</p>
+            </div>
             <div class="stack stack--tight home-head__signin" id="home-sign-in">
                 <p class="note">@T["Home.Trial"]</p>
                 <p class="small">@T["Home.HaveCode"] <a href="/prisijungti?registruotis=true" id="home-register">@T["Home.Register"]</a> · @T["Home.HaveAccount"] <a href="/prisijungti" id="home-sign-in-link">@T["Home.SignIn"]</a></p>
