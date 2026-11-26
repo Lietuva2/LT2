@@ -18,7 +18,7 @@ Prefer merge commits over squash.
 
 ## Stages (keep consistent everywhere)
 
-- **Stage 1 = built**, running as a closed trial (registration by invitation) at `https://test.lietuva2.lt`: MP profiles, votes and the agenda from Seimas open data; every active bill open on one page where members ask MPs to vote for or against and give reasons ("Man svarbu"); summaries to all MPs (made and published, not sent during the trial); one MP response per bill; organisations' statements; following and emails; comments ("Aptarimas"); optional public profiles; the statistics page; moderation after the fact. Not publicly launched.
+- **Stage 1 = built**, running as a closed trial (registration by invitation) at `https://test.lietuva2.lt`: MP profiles, votes and the agenda from Seimas open data; every active bill open on one page where members ask MPs to vote for or against and give reasons ("Man svarbu"); summaries to all MPs (prepared a day ahead for moderators to check; they go unless a moderator stops them; made and published, not sent during the trial); one MP response per bill; organisations' statements; following and emails; comments ("Aptarimas"); optional public profiles; the statistics page; moderation after the fact. Not publicly launched.
 - **Stage 2 = idea:** free posts and questions to representatives, grouped into topics, answered once for everyone.
 - **Stage 3 = idea:** voting on bills directly or through several delegates (*patikėtiniai*), the LT2 result beside the Seimas decision, election comparison.
 - Stages 2 and 3 are ideas, never promises: not designed, no dates, "jei pirmasis etapas pasiteisins". They are described only in `idejos.html` and in one short part of `index.html`; `kas-nauja.html` may map the old menu to them.
