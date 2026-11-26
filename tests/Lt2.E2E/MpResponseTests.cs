@@ -130,7 +130,8 @@ public sealed partial class MpResponseTests : E2ETest
             await Assertions.Expect(part.Locator("#responses-list")).ToContainTextAsync(Second, new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(part).ToContainTextAsync("Keista");
             var earlier = part.Locator("details").Filter(new() { HasText = "Ankstesnės versijos (1)" });
-            await earlier.Locator("summary").ClickAsync();
+            // Its own summary only: an earlier version holds "Rodyti tekstą prieš pakeitimą" (TextChanges), a details of its own.
+            await earlier.Locator(":scope > summary").ClickAsync();
             await Assertions.Expect(earlier).ToContainTextAsync(First);
             await E2ESteps.ShootBothAsync(page, Shots, "changed", part);
             await page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Dark });
