@@ -220,6 +220,13 @@
                 @StagesSheet(b, inAside: false)
             }
 
+            @if (_moderator && _record is null)
+            {
+                @* Owner, 2026-11-26: a finished bill nobody took part in can be described too (it is on the start page's
+                   votes); the panel offers only "Rašyti aprašymą", and saving it gives the bill a closed record. *@
+                <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
+            }
+
             <section class="sheet stack" aria-labelledby="h-votes">
                 <div class="row list-head"><h2 id="h-votes">@F.T["Bill.Votes"]</h2></div>
                 @if (b.Votes.Count == 0)
@@ -356,8 +363,9 @@
         }
 
         // Owner, 2026-11-19 (design 8.3, 8.12.3): the moderators' panel and "Moderuoti" on an open record and on a closed one,
-        // where only what applies there is offered ("Atšaukti uždarymą" among it).
-        if (_record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
+        // where only what applies there is offered ("Atšaukti uždarymą" among it); owner, 2026-11-26: the panel also on a
+        // finished bill nobody took part in, to describe it.
+        if (_record is null or { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
         {
             _moderator = (await Authorization.AuthorizeAsync(http.User, http, Lt2.Web.Security.Policies.Moderator)).Succeeded;
         }

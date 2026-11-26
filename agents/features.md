@@ -968,7 +968,7 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   `Previews/VotePreviewImages` at `GET|HEAD /img/votes/{id}/{version}.png` (short-circuited like the static files; drawn on
   the first request, kept in a 12 MB memory cache; an old version redirects). Seats are placed by
   `Lt2.Web.Client/Components/Hemicycle.Arrange`, shared with `SeatMap`. Texts `Preview.Vote*`. Tests: `VotePreviewTests`.
-- The AI draft is only in a moderator's "write or correct the description" form, on any active bill, from pasted official
+- The AI draft is only in a moderator's "write or correct the description" form, on any bill, from pasted official
   text (or, where a reader exists, the bill's documents as read): the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
   and a key in `deploy/secrets/ai_api_key`; otherwise nothing mentions a draft. The prompt is the public file
   `src/Modules/Lt2.Appeals/Ai/description-draft.prompt.md`. Audited without text, 20 an hour per moderator; a description

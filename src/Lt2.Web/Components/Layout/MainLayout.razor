@@ -6,12 +6,14 @@
 @inject IConfiguration Configuration
 @inject NavigationManager Navigation
 
-@* Design 8.21: the menu is the logo, "Seimas" (a dropdown with its three tabs "Projektai", "Suvestinės" and "Seimo nariai";
+@* Design 8.21: the menu is the logo, "Pradžia" (wide screens only), "Seimas" (a dropdown with its three tabs "Projektai", "Suvestinės" and "Seimo nariai";
    current on them and everything under them), "Statistika" (design 8.26, owner 2026-11-17), and "Prisijungti" or the account
    item; one line from 340 px up. What has no place there is in the footer. *@
 <header class="page top">
     <a class="top__brand" href="/"><Logo /><span class="top__name">Lietuva 2.0</span></a>
     <nav class="top__nav" aria-label="@T["Nav.Label"]">
+        @* Owner, 2026-11-26: "Pradžia" first, on a wide screen only; on a phone the logo alone leads home, so the line stays one. *@
+        <a class="top__home" href="/" id="nav-home" aria-current="@(Path.Length == 0 ? "page" : null)">@T["Nav.Home"]</a>
         @* Design 8.21 (owner, 2026-11-19): "Seimas" is two things in one place, and CSS chooses by the device, with no script.
            Where the device can hover (a mouse), it is a link to the agenda (SeimasHome) and its panel shows on hover and while
            focus is inside it, so the keyboard reaches the entries; js/lt2-account.js lets Escape close it. Where it cannot (a

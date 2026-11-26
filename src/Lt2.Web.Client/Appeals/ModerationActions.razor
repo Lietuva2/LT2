@@ -17,7 +17,7 @@
    sentence on what it does, and the focus moves into them. Only the actions that apply to the item's state are offered,
    one is open at a time, and the confirmation stays visible after the action closes. An action that finishes the item (publish, keep, hide,
    merge) leaves the confirmation in place of the controls. On a bill without a record (Id null) the first action creates
-   it (design 8.12.1). "Rašyti aprašymą" works on any active bill and offers the AI draft from pasted official text only
+   it (design 8.12.1). "Rašyti aprašymą" works on any bill, a finished one too (owner, 2026-11-26), and offers the AI draft from pasted official text only
    when a provider is configured (8.11.4); without one nothing here mentions a draft. A bill's description can also be
    confirmed (only an AI summary nobody has read) or removed (design 8.13). Under "Seime" an open record also offers
    "Uždaryti: projektas atmestas ar atsiimtas" (the reason, the day, the lrs.lt source) and a record a moderator closed
@@ -352,6 +352,8 @@
     private IReadOnlyList<string> Offered => (Kind, Status) switch
     {
         (ReportTargets.Record, BillRecordStatuses.Open) => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "planned", "threshold", "close", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
+        // A finished bill nobody took part in has no record: only its description can be written (owner, 2026-11-26).
+        (ReportTargets.Record, BillRecordStatuses.Closed) when Id is null => ClosedDescriptionActions,
         (ReportTargets.Record, BillRecordStatuses.Closed) => [.. (HasOpenItems ? new[] { "keep" } : []), .. ClosedDescriptionActions, .. (ClosingReasons.ByModerator.Contains(ClosedReason ?? "") ? new[] { "reopen" } : []), "hide"],
         (ReportTargets.Reason, ReasonStatuses.Published) when RecordStatus == BillRecordStatuses.Closed => [.. KeepReason, "hide"],
         (ReportTargets.Reason, _) when RecordStatus == BillRecordStatuses.Closed => ["hide"],

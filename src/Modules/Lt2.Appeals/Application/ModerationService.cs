@@ -398,9 +398,10 @@ internal sealed class ModerationService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        // On any active bill (design 8.12.3): the bill's record is created if it has none. Under the bill's lock, so the
-        // summary job or another moderator cannot write over it meanwhile (design 6.8).
-        var ensured = await records.EnsureAsync(db, billNumber, cancellationToken, forWrite: true);
+        // On any bill, a finished one too (design 8.12.3; owner, 2026-11-26): the bill's record is created if it has none,
+        // closed for a finished bill. Under the bill's lock, so the summary job or another moderator cannot write over it
+        // meanwhile (design 6.8).
+        var ensured = await records.EnsureAsync(db, billNumber, cancellationToken, forWrite: true, finishedClosed: true);
         if (!ensured.IsSuccess)
         {
             return ensured.Error!;
@@ -549,6 +550,14 @@ internal sealed class ModerationService(
         if (record is null)
         {
             var bill = await records.ActiveBillAsync(billNumber, cancellationToken);
+            if (bill.Error?.Code == "record.not-open")
+            {
+                // A finished bill nobody took part in: closed, with only the description to write (owner, 2026-11-26).
+                return new ModerationBillState(
+                    null, AppealReads.NormaliseBillNumber(billNumber), BillRecordStatuses.Closed, "", null, ThresholdRules.Effective(null, threshold.Default, threshold.Minimum),
+                    ThresholdSetters.Default, false, null, false, [], null, []);
+            }
+
             if (!bill.IsSuccess)
             {
                 return bill.Error!;

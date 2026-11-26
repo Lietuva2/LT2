@@ -5,6 +5,7 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav.Label" xml:space="preserve"><value>Pagrindinis meniu</value></data>
+  <data name="Nav.Home" xml:space="preserve"><value>Pradžia</value></data>
   <data name="Nav.Seimas" xml:space="preserve"><value>Seimas</value></data>
   <data name="Nav.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
   <data name="Nav.Account" xml:space="preserve"><value>Mano paskyra</value></data>
