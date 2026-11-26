@@ -3,18 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lietuva 2.0 dokumentai</title>
-<meta name="description" content="Lietuva 2.0 koncepcijos dokumentų ir prototipų sąrašas.">
 <meta name="robots" content="noindex">
+<title>Lietuva 2.0 dokumentai</title>
+<meta name="description" content="Visų Lietuva 2.0 svetainės puslapių sąrašas.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="lt_LT">
+<meta property="og:site_name" content="Lietuva 2.0">
+<meta property="og:title" content="Lietuva 2.0 dokumentai">
+<meta property="og:description" content="Visų Lietuva 2.0 svetainės puslapių sąrašas.">
+<meta property="og:image" content="https://lietuva2.lt/lt2-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lietuva 2.0 – padėkite Seimui jus atstovauti.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1f6b3a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='28 44 604 474'%3E%3Cg stroke-width='10' stroke-linejoin='round'%3E%3Cpath d='M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z' fill='%23a7b1ac' stroke='%23a7b1ac'/%3E%3Cpath d='M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z' fill='%237cc242' stroke='%237cc242'/%3E%3Cpath d='M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z' fill='%231f6b3a' stroke='%231f6b3a'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400&display=swap">
 <script src="lt2-logo-spin.js" defer></script>
 <style>
 :root{
   --bg:#f4f7f3; --surface:#ffffff; --surface-2:#eaf0e8;
   --ink:#13201a; --ink-2:#44524a; --muted:#6f7c75; --line:#d3dcd3; --line-strong:#b6c3b8;
-  --brand:#1f6b3a; --brand-soft:#dcebdc; --link:#1f6b3a; --leaf:#7cc242; --slate:#a7b1ac;
+  --brand:#1f6b3a; --brand-ink:#ffffff; --brand-soft:#dcebdc; --leaf:#7cc242; --slate:#a7b1ac; --link:#1f6b3a;
+  --v-for:#2a78d6; --v-against:#e34948;
+  --warn-bg:#fff4d6; --warn-ink:#6b4d00;
   --shadow:0 1px 2px rgba(19,32,26,.06),0 8px 24px rgba(19,32,26,.08);
   --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
   --f-body:"Newsreader",Georgia,"Times New Roman",serif;
@@ -25,7 +39,9 @@
     color-scheme:dark;
     --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620;
     --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
-    --brand:#3f9a5c; --brand-soft:#1f3326; --link:#7fd08f; --leaf:#8fd158; --slate:#6d7872;
+    --brand:#3f9a5c; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872; --link:#7fd08f;
+    --v-for:#3987e5; --v-against:#e66767;
+    --warn-bg:#3a2f10; --warn-ink:#f3d58a;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
   }
 }
@@ -33,76 +49,189 @@
   color-scheme:dark;
   --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620;
   --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
-  --brand:#3f9a5c; --brand-soft:#1f3326; --link:#7fd08f; --leaf:#8fd158; --slate:#6d7872;
+  --brand:#3f9a5c; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872; --link:#7fd08f;
+  --v-for:#3987e5; --v-against:#e66767;
+  --warn-bg:#3a2f10; --warn-ink:#f3d58a;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 18px/1.55 var(--f-body)}
-main{max-width:760px;margin:0 auto;padding:56px 16px 72px}
-h1,h2{font-family:var(--f-display);line-height:1.15;margin:0}
-h1{font-size:clamp(32px,6vw,44px);font-weight:700;letter-spacing:-.01em}
-h1 em{font-style:normal;color:var(--brand)}
-.doc-spin{display:block;width:200px;margin:0 0 20px;--lt2-slate:var(--slate);--lt2-leaf:var(--leaf);--lt2-brand:var(--brand)}
-.lede{color:var(--ink-2);margin:14px 0 0;max-width:60ch}
-h2{font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:44px 0 12px}
-ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
-a.card{display:block;text-decoration:none;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:19px;line-height:1.6;padding:0 16px 64px}
+a{color:var(--link);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.12;text-wrap:balance;margin:0;color:var(--ink)}
+h2{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.02em}
+h3{font-size:21px;font-weight:650;letter-spacing:-.01em}
+p{margin:0}
+.eyebrow{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--brand)}
+.muted{color:var(--muted)}
+
+.topbar{position:sticky;top:0;z-index:20;margin:0 -16px;padding:10px 16px;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px}
+.brandmark{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--f-display);font-weight:700;font-size:18px;white-space:nowrap}
+.brandmark svg{width:30px;height:30px}
+.topbar nav{margin-left:auto;display:flex;gap:18px;font-family:var(--f-display);font-size:14px}
+.topbar nav a{color:var(--ink-2);text-decoration:none;white-space:nowrap}
+.topbar nav a:hover{color:var(--brand)}
+.topbar nav a[aria-current="page"]{color:var(--ink);font-weight:650;box-shadow:inset 0 -2px 0 var(--brand)}
+@media (max-width:900px){.topbar nav{display:none}}
+
+.page{max-width:1040px;margin:0 auto}
+.hero{padding-top:44px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:44px;align-items:center}
+@media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr);gap:24px}}
+.hero h1{font-size:clamp(36px,5vw,54px);font-weight:800;letter-spacing:-.03em;line-height:1.04}
+.hero h1 em{font-style:normal;color:var(--brand)}
+.hero .kicker{font-family:var(--f-display);font-size:clamp(19px,2.2vw,24px);font-weight:600;line-height:1.25;margin-top:16px}
+.hero .lede{font-size:21px;color:var(--ink-2);margin-top:20px;max-width:580px}
+.hero-spin{display:block;width:100%;max-width:440px;margin:0 auto;--lt2-slate:var(--slate);--lt2-leaf:var(--leaf);--lt2-brand:var(--brand)}
+@media (max-width:900px){.hero-spin{max-width:260px}}
+.status{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:13px;color:var(--ink-2);background:var(--surface-2);border-radius:999px;padding:4px 12px;margin-bottom:18px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--leaf);flex:none}
+.status b{color:var(--ink);font-weight:650}
+.actions{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:26px}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:15.5px;font-weight:650;padding:11px 18px;border-radius:10px;text-decoration:none;border:1.5px solid var(--brand)}
+.btn.primary{background:var(--brand);color:var(--brand-ink)}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.ghost{color:var(--link)}
+.btn.ghost:hover{background:var(--brand-soft)}
+.notice{margin-top:26px;display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn-ink);font-family:var(--f-display);font-size:14.5px;line-height:1.45;max-width:580px}
+.notice svg{flex:none;width:18px;height:18px;margin-top:1px}
+.notice a{color:inherit;font-weight:650}
+
+section.chapter{padding-top:76px;scroll-margin-top:60px}
+section.chapter>header{display:grid;gap:12px;margin-bottom:24px;max-width:720px}
+section.chapter>header .lede{font-size:20px;color:var(--ink-2)}
+.prose{max-width:700px}
+.prose p+p{margin-top:1em}
+.prose ul{padding-left:1.2em;margin:1em 0 0}
+.prose li+li{margin-top:.45em}
+
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.grid,.grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.grid,.grid.two,.grid.four{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:6px;align-content:start}
+.card h3{font-size:19px}
+.card p{font-size:16.5px;line-height:1.5;color:var(--ink-2)}
+.card .num{font-family:var(--f-display);font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-.02em;line-height:1}
+.card .tag{font-family:var(--f-display);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card.idea{border-style:dashed}
+a.card{text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
 a.card:hover,a.card:focus-visible{border-color:var(--brand);transform:translateY(-1px)}
-a.card:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-.t{font-family:var(--f-display);font-weight:700;font-size:19px;color:var(--link)}
-.d{display:block;color:var(--ink-2);margin-top:4px;font-size:16px}
-.p{display:block;font-family:var(--f-mono);font-size:12px;color:var(--muted);margin-top:8px;overflow-wrap:anywhere}
-footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:15px}
-footer a{color:var(--link)}
+a.card .go{font-family:var(--f-display);font-weight:650;color:var(--link);font-size:15px;margin-top:4px}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:st}
+@media (max-width:900px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
+.steps li{counter-increment:st;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:6px;align-content:start}
+.steps li::before{content:counter(st);font-family:var(--f-display);font-weight:800;font-size:15px;color:var(--brand-ink);background:var(--brand);width:28px;height:28px;border-radius:50%;display:grid;place-items:center}
+.steps b{font-family:var(--f-display);font-size:18px}
+.steps span{font-size:16.5px;line-height:1.5;color:var(--ink-2)}
+
+.bul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 28px}
+.bul.one{grid-template-columns:minmax(0,1fr);max-width:760px}
+@media (max-width:720px){.bul{grid-template-columns:minmax(0,1fr)}}
+.bul li{display:grid;grid-template-columns:18px 1fr;gap:10px;font-size:17px;line-height:1.5;color:var(--ink-2)}
+.bul li::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--brand);margin-top:10px}
+.bul b{color:var(--ink);font-family:var(--f-display);font-weight:650}
+.bul.q li::before{content:"?";width:auto;height:auto;background:none;color:var(--brand);font-family:var(--f-display);font-weight:800;margin-top:0}
+
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-family:var(--f-display);font-size:14.5px;line-height:1.45}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
+tbody th{font-weight:650;width:170px}
+td.old{color:var(--muted)}
+tr:last-child>*{border-bottom:0}
+
+.mock{border:1px solid var(--line-strong);border-radius:16px;background:var(--surface);box-shadow:var(--shadow);padding:20px;font-family:var(--f-display);font-size:15px;line-height:1.45;display:grid;gap:14px}
+.mock .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mock .id{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.mock h3{font-size:20px;margin-top:2px}
+.bar{display:flex;height:26px;gap:2px;border-radius:6px;overflow:hidden}
+.bar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12.5px;font-weight:650;white-space:nowrap}
+.bar .f{background:var(--v-for)} .bar .a{background:var(--v-against)}
+.mock .row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--ink-2)}
+.chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.5;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface)}
+.chip.ok{background:var(--brand-soft);color:var(--brand);border-color:transparent}
+.resp{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:6px}
+.resp .who{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;background:#6b5bd2;flex:none}
+.resp small{display:block;color:var(--muted);font-size:12.5px}
+.resp q{font-family:var(--f-body);font-size:16px;color:var(--ink-2)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr);gap:24px}}
+
+.cta{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between;margin-top:30px;padding:20px 22px;border-radius:14px;background:var(--brand-soft);font-family:var(--f-display);font-size:15.5px;line-height:1.5}
+.cta span{flex:1 1 320px}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px}
+@media (max-width:1000px){.layout{grid-template-columns:minmax(0,1fr)}.toc{display:none}}
+.toc{position:sticky;top:76px;align-self:start;padding-top:44px;font-family:var(--f-display);font-size:14px}
+.toc ol{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:2px;counter-reset:toc}
+.toc li{counter-increment:toc}
+.toc a{display:grid;grid-template-columns:26px 1fr;padding:5px 8px;border-radius:6px;text-decoration:none;color:var(--ink-2)}
+.toc a::before{content:counter(toc,decimal-leading-zero);font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-top:3px}
+.toc a:hover{background:var(--surface-2);color:var(--ink)}
+.layout>main{min-width:0}
+.layout .hero{grid-template-columns:minmax(0,1fr)}
+
+footer.site{max-width:1040px;margin:72px auto 0;padding-top:20px;border-top:1px solid var(--line);font-family:var(--f-display);font-size:14.5px;color:var(--muted);display:grid;gap:10px}
+footer.site nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+footer.site a{color:var(--link)}
 </style>
 </head>
 <body>
-<main>
-  <lt2-logo-spin class="doc-spin" period="10"></lt2-logo-spin>
-  <h1>Lietuva 2.0 <em>dokumentai</em></h1>
-  <p class="lede">Naujosios Lietuva 2.0 platformos koncepcija ir auditorijoms skirtos versijos. Visi maketuose minimi politikai, partijos, projektai ir skaičiai yra išgalvoti.</p>
-
-  <h2>Visiems</h2>
-  <ul>
-    <li><a class="card" href="koncepcija.html">
-      <span class="t">Išsami produkto koncepcija</span>
-      <span class="d">Visa koncepcija su interaktyviais maketais: kaip LT2 paaiškina Seimo projektus, renka nuomones ir leidžia patikėti balsą.</span>
-      <span class="p">koncepcija.html</span></a></li>
-    <li><a class="card" href="antroji-versija.html">
-      <span class="t">Antroji versija: kas rūpi žmonėms</span>
-      <span class="d">Įrašai ir klausimai atstovams, temos vietoj daugybės laiškų ir atsakymai vieną kartą visiems – su maketais.</span>
-      <span class="p">antroji-versija.html</span></a></li>
-    <li><a class="card" href="index.html">
-      <span class="t">Lietuva 2.0 trumpai piliečiams</span>
-      <span class="d">Pradžios puslapis: trumpai apie LT2, projekto puslapio maketas ir kaip galima prisidėti.</span>
-      <span class="p">index.html</span></a></li>
-  </ul>
-
-  <h2>Politikams</h2>
-  <ul>
-    <li><a class="card" href="politikams.html">
-      <span class="t">Politikams ir kvietimas prisidėti</span>
-      <span class="d">Kaip išgirsti rinkėjus ir paaiškinti sprendimus, ir kaip platformą kartu aptartume prieš ją kuriant.</span>
-      <span class="p">politikams.html</span></a></li>
-  </ul>
-
-  <h2>Buvusiems LT2 naudotojams</h2>
-  <ul>
-    <li><a class="card" href="kas-nauja.html">
-      <span class="t">Kas pasikeitė nuo senosios LT2</span>
-      <span class="d">Ko išmokome per 2011–2020 m., kas naujoje platformoje kitaip ir kas lieka.</span>
-      <span class="p">kas-nauja.html</span></a></li>
-  </ul>
-
-  <h2>Žurnalistams</h2>
-  <ul>
-    <li><a class="card" href="zurnalistams.html">
-      <span class="t">Lietuva 2.0 žurnalistams</span>
-      <span class="d">Ką LT2 duotų žurnalistams ir kokias istorijas jo duomenyse būtų galima rasti.</span>
-      <span class="p">zurnalistams.html</span></a></li>
-  </ul>
-
-  <footer>Ankstesnės platformos (2011–2020) kodas saugomas <a href="https://github.com/Lietuva2/LT2/tree/legacy"><code>legacy</code></a> šakoje.</footer>
-</main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="28 44 604 474">
+      <g stroke-width="10" stroke-linejoin="round">
+        <path d="M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z" fill="var(--slate)" stroke="var(--slate)"/>
+        <path d="M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z" fill="var(--leaf)" stroke="var(--leaf)"/>
+        <path d="M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z" fill="var(--brand)" stroke="var(--brand)"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+<header class="topbar">
+  <a class="brandmark" href="index.html"><svg aria-hidden="true"><use href="#logo"/></svg>Lietuva 2.0</a>
+  <nav aria-label="Puslapiai">
+    <a href="kaip-veikia.html">Kaip veikia</a>
+    <a href="politikams.html">Politikams</a>
+    <a href="organizacijoms.html">Organizacijoms</a>
+    <a href="zurnalistams.html">Žurnalistams</a>
+    <a href="kas-nauja.html">Buvusiems naudotojams</a>
+    <a href="idejos.html">Kas toliau</a>
+  </nav>
+</header>
+<div class="page">
+  <section class="hero">
+    <div>
+      <h1>Lietuva 2.0 <em>dokumentai</em></h1>
+      <p class="lede">Visi šios svetainės puslapiai. Pavyzdžiuose minimi Seimo nariai, partijos, projektai ir skaičiai yra išgalvoti.</p>
+    </div>
+    <div><lt2-logo-spin class="hero-spin" period="10"></lt2-logo-spin></div>
+  </section>
+  <section class="chapter"><header><div class="eyebrow">Visiems</div></header>
+    <div class="grid two">
+      <a class="card" href="index.html"><h3>Lietuva 2.0 trumpai</h3><p>Pradžios puslapis: kas tai, kaip veikia ir kaip galima prisidėti.</p><span class="go">index.html</span></a>
+      <a class="card" href="kaip-veikia.html"><h3>Kaip veikia Lietuva 2.0</h3><p>Visos pirmojo etapo dalys trumpai ir kas liko iki viešo paleidimo.</p><span class="go">kaip-veikia.html</span></a>
+      <a class="card" href="idejos.html"><h3>Kas toliau</h3><p>Antrojo ir trečiojo etapo idėjos: pasisakymai ir klausimai, balsavimas su patikėtiniais.</p><span class="go">idejos.html</span></a>
+    </div>
+  </section>
+  <section class="chapter"><header><div class="eyebrow">Pagal auditoriją</div></header>
+    <div class="grid two">
+      <a class="card" href="politikams.html"><h3>Politikams</h3><p>Seimo nariams ir jų biurams: suvestinės, profilio perėmimas ir atsakymas visiems.</p><span class="go">politikams.html</span></a>
+      <a class="card" href="organizacijoms.html"><h3>Organizacijoms</h3><p>Organizacijos profilis ir pozicija dėl projekto savo vardu.</p><span class="go">organizacijoms.html</span></a>
+      <a class="card" href="zurnalistams.html"><h3>Žurnalistams</h3><p>Ką rasti duomenyse ir kaip teisingai cituoti skaičius.</p><span class="go">zurnalistams.html</span></a>
+      <a class="card" href="kas-nauja.html"><h3>Buvusiems naudotojams</h3><p>Ko išmokome per 2011–2020 m., kas kitaip ir kas lieka.</p><span class="go">kas-nauja.html</span></a>
+    </div>
+  </section>
+</div>
+<footer class="site">
+  <nav aria-label="Visi puslapiai"><a href="index.html">Pradžia</a> <a href="kaip-veikia.html">Kaip veikia</a> <a href="politikams.html">Politikams</a> <a href="organizacijoms.html">Organizacijoms</a> <a href="zurnalistams.html">Žurnalistams</a> <a href="kas-nauja.html">Buvusiems naudotojams</a> <a href="idejos.html">Kas toliau</a></nav>
+  <span>Pirmasis etapas veikia uždarame bandyme: <a href="https://test.lietuva2.lt">test.lietuva2.lt</a>. Klausimai ir pasiūlymai – <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a>.</span>
+  <span>Lietuva 2.0 · VšĮ LT2.0 · 2026 m. lapkritis</span>
+</footer>
 </body>
 </html>

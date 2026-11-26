@@ -1,20 +1,32 @@
 <!doctype html>
 <html lang="lt">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lietuva 2.0 politikams – trumpai</title>
+<title>Lietuva 2.0 politikams</title>
+<meta name="description" content="Seimo nariams ir jų biurams: viena suvestinė su abiem pusėmis vietoj šimtų laiškų, vienas atsakymas visiems ir profilis iš Seimo atvirųjų duomenų.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="lt_LT">
+<meta property="og:site_name" content="Lietuva 2.0">
+<meta property="og:title" content="Lietuva 2.0 politikams">
+<meta property="og:description" content="Seimo nariams ir jų biurams: viena suvestinė su abiem pusėmis vietoj šimtų laiškų, vienas atsakymas visiems ir profilis iš Seimo atvirųjų duomenų.">
+<meta property="og:image" content="https://lietuva2.lt/lt2-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lietuva 2.0 – padėkite Seimui jus atstovauti.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1f6b3a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='28 44 604 474'%3E%3Cg stroke-width='10' stroke-linejoin='round'%3E%3Cpath d='M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z' fill='%23a7b1ac' stroke='%23a7b1ac'/%3E%3Cpath d='M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z' fill='%237cc242' stroke='%237cc242'/%3E%3Cpath d='M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z' fill='%231f6b3a' stroke='%231f6b3a'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400&display=swap">
 <script src="lt2-logo-spin.js" defer></script>
 <style>
 :root{
-  --bg:#f4f7f3; --surface:#ffffff; --surface-2:#eaf0e8; --surface-3:#dde6db;
+  --bg:#f4f7f3; --surface:#ffffff; --surface-2:#eaf0e8;
   --ink:#13201a; --ink-2:#44524a; --muted:#6f7c75; --line:#d3dcd3; --line-strong:#b6c3b8;
-  --brand:#1f6b3a; --brand-ink:#ffffff; --brand-soft:#dcebdc; --leaf:#7cc242; --slate:#a7b1ac;
-  --link:#1f6b3a;
-  --v-for:#2a78d6; --v-against:#e34948; --v-abstain:#b5b4ae; --v-absent:#c9ccc6;
-  --s-seimas:#4a3aa7; --s-platform:#2e9a4a;
+  --brand:#1f6b3a; --brand-ink:#ffffff; --brand-soft:#dcebdc; --leaf:#7cc242; --slate:#a7b1ac; --link:#1f6b3a;
+  --v-for:#2a78d6; --v-against:#e34948;
   --warn-bg:#fff4d6; --warn-ink:#6b4d00;
   --shadow:0 1px 2px rgba(19,32,26,.06),0 8px 24px rgba(19,32,26,.08);
   --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
@@ -24,447 +36,151 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme:dark;
-    --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620; --surface-3:#243029;
+    --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620;
     --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
-    --brand:#3f9a5c; --brand-ink:#ffffff; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872;
-    --link:#7fd08f;
-    --v-for:#3987e5; --v-against:#e66767; --v-abstain:#6b6a66; --v-absent:#3a423d;
-    --s-seimas:#9085e9; --s-platform:#3fae5a;
+    --brand:#3f9a5c; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872; --link:#7fd08f;
+    --v-for:#3987e5; --v-against:#e66767;
     --warn-bg:#3a2f10; --warn-ink:#f3d58a;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
   }
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620; --surface-3:#243029;
+  --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620;
   --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
-  --brand:#3f9a5c; --brand-ink:#ffffff; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872;
-  --link:#7fd08f;
-  --v-for:#3987e5; --v-against:#e66767; --v-abstain:#6b6a66; --v-absent:#3a423d;
-  --s-seimas:#9085e9; --s-platform:#3fae5a;
+  --brand:#3f9a5c; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872; --link:#7fd08f;
+  --v-for:#3987e5; --v-against:#e66767;
   --warn-bg:#3a2f10; --warn-ink:#f3d58a;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
 }
-
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:19px;line-height:1.6;padding-inline:20px;padding-block:0 64px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:19px;line-height:1.6;padding:0 16px 64px}
 a{color:var(--link);text-underline-offset:3px}
 :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
-h1,h2,h3,h4{font-family:var(--f-display);line-height:1.12;text-wrap:balance;margin:0;color:var(--ink)}
-h2{font-size:clamp(30px,4vw,42px);font-weight:700;letter-spacing:-.02em}
-h3{font-size:23px;font-weight:650;letter-spacing:-.01em}
-h4{font-size:17px;font-weight:650}
+h1,h2,h3{font-family:var(--f-display);line-height:1.12;text-wrap:balance;margin:0;color:var(--ink)}
+h2{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.02em}
+h3{font-size:21px;font-weight:650;letter-spacing:-.01em}
 p{margin:0}
-.mono{font-family:var(--f-mono);font-size:.82em;letter-spacing:0}
 .eyebrow{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--brand)}
 .muted{color:var(--muted)}
-.tnum{font-variant-numeric:tabular-nums}
 
-/* ---------- page frame ---------- */
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin-inline:-20px;padding:10px 20px;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px}
-.topbar .brandmark{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--f-display);font-weight:700;font-size:18px}
-.topbar .brandmark svg{width:30px;height:30px}
-.topbar nav{margin-left:auto;display:flex;gap:18px;font-family:var(--f-display);font-size:14px;overflow-x:auto;scrollbar-width:none}
+.topbar{position:sticky;top:0;z-index:20;margin:0 -16px;padding:10px 16px;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px}
+.brandmark{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--f-display);font-weight:700;font-size:18px;white-space:nowrap}
+.brandmark svg{width:30px;height:30px}
+.topbar nav{margin-left:auto;display:flex;gap:18px;font-family:var(--f-display);font-size:14px}
 .topbar nav a{color:var(--ink-2);text-decoration:none;white-space:nowrap}
 .topbar nav a:hover{color:var(--brand)}
-@media (max-width:760px){.topbar nav{display:none}}
+.topbar nav a[aria-current="page"]{color:var(--ink);font-weight:650;box-shadow:inset 0 -2px 0 var(--brand)}
+@media (max-width:900px){.topbar nav{display:none}}
 
-.layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px}
-@media (max-width:1060px){.layout{grid-template-columns:minmax(0,1fr)}.toc{display:none}}
-.toc{position:sticky;top:84px;align-self:start;padding-top:40px;font-family:var(--f-display);font-size:14px}
-.toc ol{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:2px;counter-reset:toc}
-.toc li{counter-increment:toc}
-.toc a{display:grid;grid-template-columns:26px 1fr;padding:5px 8px;border-radius:6px;text-decoration:none;color:var(--ink-2)}
-.toc a::before{content:counter(toc,decimal-leading-zero);font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-top:3px}
-.toc a:hover,.toc a.on{background:var(--surface-2);color:var(--ink)}
-.toc a.on::before{color:var(--brand)}
-
-main{min-width:0}
-.prose{max-width:680px}
-.prose p+p{margin-top:1em}
-.prose ul,.prose ol{padding-left:1.2em;margin:1em 0 0}
-.prose li+li{margin-top:.45em}
-section.chapter{padding-top:84px;scroll-margin-top:60px}
-section.chapter>header{display:grid;gap:12px;margin-bottom:28px;max-width:720px}
-section.chapter>header .lede{font-size:21px;color:var(--ink-2)}
-
-/* ---------- hero ---------- */
-.hero{padding-top:48px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center}
-@media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}}
-.hero-fig{margin:0}
-.hero-spin{display:block;width:100%;max-width:520px;margin:0 auto;--lt2-slate:var(--slate);--lt2-leaf:var(--leaf);--lt2-brand:var(--brand)}
-@media (max-width:900px){.hero-spin{max-width:340px}}
-.hero-logo{display:flex;align-items:center;gap:14px;margin-bottom:28px}
-.hero-logo svg{width:64px;height:64px}
-.hero-logo .wm{font-family:var(--f-display);font-weight:800;font-size:30px;letter-spacing:-.02em;line-height:1}
-.hero-logo .wm span{color:var(--brand)}
-.hero-logo .tag{font-family:var(--f-display);font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:.02em}
-.hero h1{font-size:clamp(40px,6vw,68px);font-weight:800;letter-spacing:-.035em;line-height:1.02}
-.hero .kicker{font-family:var(--f-display);font-size:clamp(20px,2.4vw,26px);font-weight:600;letter-spacing:-.01em;line-height:1.25;color:var(--ink);margin-top:18px}
+.page{max-width:1040px;margin:0 auto}
+.hero{padding-top:44px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:44px;align-items:center}
+@media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr);gap:24px}}
+.hero h1{font-size:clamp(36px,5vw,54px);font-weight:800;letter-spacing:-.03em;line-height:1.04}
 .hero h1 em{font-style:normal;color:var(--brand)}
-.hero .lede{font-size:22px;color:var(--ink-2);margin-top:22px;max-width:560px}
-.hero-meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:26px;font-family:var(--f-display);font-size:14px;color:var(--muted)}
-.hero-meta b{color:var(--ink);font-weight:600}
-.notice{margin-top:28px;display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn-ink);font-family:var(--f-display);font-size:14px;line-height:1.45;max-width:560px}
+.hero .kicker{font-family:var(--f-display);font-size:clamp(19px,2.2vw,24px);font-weight:600;line-height:1.25;margin-top:16px}
+.hero .lede{font-size:21px;color:var(--ink-2);margin-top:20px;max-width:580px}
+.hero-spin{display:block;width:100%;max-width:440px;margin:0 auto;--lt2-slate:var(--slate);--lt2-leaf:var(--leaf);--lt2-brand:var(--brand)}
+@media (max-width:900px){.hero-spin{max-width:260px}}
+.status{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:13px;color:var(--ink-2);background:var(--surface-2);border-radius:999px;padding:4px 12px;margin-bottom:18px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--leaf);flex:none}
+.status b{color:var(--ink);font-weight:650}
+.actions{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:26px}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:15.5px;font-weight:650;padding:11px 18px;border-radius:10px;text-decoration:none;border:1.5px solid var(--brand)}
+.btn.primary{background:var(--brand);color:var(--brand-ink)}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.ghost{color:var(--link)}
+.btn.ghost:hover{background:var(--brand-soft)}
+.notice{margin-top:26px;display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn-ink);font-family:var(--f-display);font-size:14.5px;line-height:1.45;max-width:580px}
 .notice svg{flex:none;width:18px;height:18px;margin-top:1px}
+.notice a{color:inherit;font-weight:650}
 
-.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-size:13px;color:var(--ink-2)}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
-.legend i.ring{background:transparent!important;box-shadow:inset 0 0 0 2px var(--v-absent)}
-.split-bars{display:grid;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
-.sbar-row{display:grid;grid-template-columns:118px 1fr;gap:10px;align-items:center;font-size:13px}
-.sbar-row .lbl{color:var(--ink-2);line-height:1.2}
-.sbar-row .lbl b{display:block;color:var(--ink);font-weight:600}
-.sbar{display:flex;height:22px;gap:2px;border-radius:5px;overflow:hidden}
-.sbar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden}
-.sbar .f{background:var(--v-for)} .sbar .a{background:var(--v-against)} .sbar .n{background:var(--v-abstain);color:var(--ink)}
-.verdict{margin-top:14px;display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-2)}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-family:var(--f-display);font-size:12px;font-weight:600;line-height:1.5;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface)}
-.chip.gap{background:var(--warn-bg);color:var(--warn-ink);border-color:transparent}
-.chip.ok{background:var(--brand-soft);color:var(--brand);border-color:transparent}
-:root[data-theme="dark"] .chip.ok{color:var(--link)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip.ok{color:var(--link)}}
+section.chapter{padding-top:76px;scroll-margin-top:60px}
+section.chapter>header{display:grid;gap:12px;margin-bottom:24px;max-width:720px}
+section.chapter>header .lede{font-size:20px;color:var(--ink-2)}
+.prose{max-width:700px}
+.prose p+p{margin-top:1em}
+.prose ul{padding-left:1.2em;margin:1em 0 0}
+.prose li+li{margin-top:.45em}
 
-/* ---------- pillars ---------- */
-.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:8px}
-@media (max-width:980px){.pillars{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:520px){.pillars{grid-template-columns:minmax(0,1fr)}}
-.pillar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:8px;align-content:start}
-.pillar .verb{font-family:var(--f-display);font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--brand)}
-.pillar p{font-size:16px;line-height:1.5;color:var(--ink-2)}
-.pillar .src{font-family:var(--f-display);font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.grid,.grid.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.grid,.grid.two,.grid.four{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:6px;align-content:start}
+.card h3{font-size:19px}
+.card p{font-size:16.5px;line-height:1.5;color:var(--ink-2)}
+.card .num{font-family:var(--f-display);font-size:28px;font-weight:800;color:var(--brand);letter-spacing:-.02em;line-height:1}
+.card .tag{font-family:var(--f-display);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card.idea{border-style:dashed}
+a.card{text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
+a.card:hover,a.card:focus-visible{border-color:var(--brand);transform:translateY(-1px)}
+a.card .go{font-family:var(--f-display);font-weight:650;color:var(--link);font-size:15px;margin-top:4px}
 
-/* ---------- tables ---------- */
-.tbl-wrap{overflow-x:auto;margin-top:24px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
-table.cmp{border-collapse:collapse;width:100%;min-width:620px;font-family:var(--f-display);font-size:14.5px;line-height:1.45}
-table.cmp th,table.cmp td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
-table.cmp thead th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
-table.cmp tbody th{font-weight:600;color:var(--ink);width:150px}
-table.cmp td.old{color:var(--muted)}
-table.cmp tr:last-child>*{border-bottom:0}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;counter-reset:st}
+@media (max-width:900px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
+.steps li{counter-increment:st;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:6px;align-content:start}
+.steps li::before{content:counter(st);font-family:var(--f-display);font-weight:800;font-size:15px;color:var(--brand-ink);background:var(--brand);width:28px;height:28px;border-radius:50%;display:grid;place-items:center}
+.steps b{font-family:var(--f-display);font-size:18px}
+.steps span{font-size:16.5px;line-height:1.5;color:var(--ink-2)}
 
-/* ---------- diagram ---------- */
-figure{margin:28px 0 0}
-figure .fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
-figure svg{display:block;width:100%;height:auto;min-width:720px;color:var(--ink)}
-figcaption{font-family:var(--f-display);font-size:14px;color:var(--muted);margin-top:10px;max-width:680px}
-
-/* ---------- mockup frames ---------- */
-.mock{margin-top:32px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);box-shadow:var(--shadow);overflow:hidden;font-family:var(--f-display);font-size:15px;line-height:1.45}
-.mock-bar{display:flex;align-items:center;gap:12px;padding:9px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
-.mock-bar .dots{display:flex;gap:6px}
-.mock-bar .dots i{width:10px;height:10px;border-radius:50%;background:var(--line-strong)}
-.mock-bar .url{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:3px 10px;font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mock-label{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:32px;font-family:var(--f-display);font-size:13px;color:var(--muted)}
-.mock-label b{color:var(--ink);font-weight:600}
-.mock-label+.mock{margin-top:10px}
-.app-nav{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.app-nav .logo{display:flex;align-items:center;gap:8px;font-weight:800}
-.app-nav .logo svg{width:24px;height:24px}
-.app-nav a{color:var(--ink-2);text-decoration:none;font-size:14px}
-.app-nav a.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--brand);padding-bottom:3px}
-.app-nav .me{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
-.avatar{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex:none}
-
-/* bill page */
-.bill{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:0}
-@media (max-width:880px){.bill{grid-template-columns:minmax(0,1fr)}}
-.bill-main{padding:22px 24px;border-right:1px solid var(--line);min-width:0}
-@media (max-width:880px){.bill-main{border-right:0;border-bottom:1px solid var(--line)}}
-.bill-crumbs{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted)}
-.bill-main h3{font-size:25px;margin-top:10px;letter-spacing:-.015em}
-.stages{display:flex;gap:4px;margin-top:16px;flex-wrap:wrap}
-.stage{flex:1 1 110px;padding:8px 10px;border-radius:8px;background:var(--surface-2);font-size:12.5px;line-height:1.3;color:var(--muted)}
-.stage b{display:block;color:var(--ink-2);font-weight:600;font-size:13px}
-.stage.done{background:var(--brand-soft)} .stage.done b{color:var(--ink)}
-.stage.next{outline:2px solid var(--brand);outline-offset:-2px;background:var(--surface)} .stage.next b{color:var(--ink)}
-.tabs{display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line);overflow-x:auto}
-.tabs button{font:inherit;font-size:14px;background:none;border:0;padding:9px 12px;color:var(--ink-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
-.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--brand)}
-.tabpanel{padding-top:16px}
-.ai-flag{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-bottom:12px}
-.ai-flag .chip{font-size:11.5px}
-.sum-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
-.sum-list li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:15px}
-.sum-list li::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--brand);margin:8px 0 0 6px}
-.cite{font-family:var(--f-mono);font-size:11px;color:var(--link);background:var(--brand-soft);border-radius:4px;padding:0 5px;margin-left:4px;white-space:nowrap}
-.who{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
-@media (max-width:560px){.who{grid-template-columns:minmax(0,1fr)}}
-.who div{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink-2)}
-.who b{display:block;font-size:20px;color:var(--ink);letter-spacing:-.01em}
-.args{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media (max-width:560px){.args{grid-template-columns:1fr}}
-.args h4{font-size:14px;display:flex;align-items:center;gap:8px}
-.args h4 i{width:10px;height:10px;border-radius:50%}
-.args ul{margin:8px 0 0;padding-left:18px;font-size:14px;color:var(--ink-2)}
-.args li+li{margin-top:6px}
-.diff{font-family:var(--f-mono);font-size:12.5px;line-height:1.6;background:var(--surface-2);border-radius:10px;padding:12px 14px;overflow-x:auto}
-.diff del{color:var(--v-against);text-decoration:line-through}
-.diff ins{color:var(--v-for);text-decoration:none;font-weight:500}
-.tl{list-style:none;margin:0;padding:0;display:grid;gap:0}
-.tl li{display:grid;grid-template-columns:92px 14px 1fr;gap:12px;font-size:14px;padding-bottom:12px;position:relative}
-.tl li .d{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:2px}
-.tl li .dot{width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--line-strong);margin-top:5px;position:relative;z-index:1}
-.tl li.done .dot{background:var(--brand);border-color:var(--brand)}
-.tl li::after{content:"";position:absolute;left:111px;top:18px;bottom:0;width:2px;background:var(--line)}
-.tl li:last-child::after{display:none}
-
-.bill-side{padding:22px 20px;background:color-mix(in oklab,var(--surface-2) 45%,var(--surface));display:grid;gap:16px;align-content:start}
-.side-h{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.deadline{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink-2)}
-.deadline b{font-size:17px;color:var(--ink)}
-.my-status{border-radius:12px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);font-size:13.5px;line-height:1.45}
-.my-status .st{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
-.my-status .st i{width:10px;height:10px;border-radius:50%;flex:none}
-.vote-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.vote-btns button{font:inherit;font-size:14px;font-weight:600;padding:10px 6px;border-radius:9px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s}
-.vote-btns button:hover{border-color:var(--ink-2)}
-.vote-btns button[aria-pressed="true"][data-v="for"]{background:var(--v-for);border-color:var(--v-for);color:#fff}
-.vote-btns button[aria-pressed="true"][data-v="against"]{background:var(--v-against);border-color:var(--v-against);color:#fff}
-.vote-btns button[aria-pressed="true"][data-v="abstain"]{background:var(--v-abstain);border-color:var(--v-abstain);color:var(--ink)}
-.linkbtn{font:inherit;font-size:13px;background:none;border:0;padding:0;color:var(--link);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.seg{display:inline-flex;background:var(--surface-2);border-radius:9px;padding:3px;gap:2px}
-.seg button{font:inherit;font-size:12.5px;border:0;background:none;padding:5px 10px;border-radius:7px;color:var(--ink-2);cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.tally{display:grid;gap:10px}
-.tally .row{display:grid;gap:5px;font-size:13px}
-.tally .row .top{display:flex;justify-content:space-between;color:var(--ink-2)}
-.tally .row .top b{color:var(--ink)}
-.tally .note{font-size:12px;color:var(--muted);line-height:1.4}
-
-/* annotations */
-.annot{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 24px;margin-top:18px;font-family:var(--f-display);font-size:14.5px;line-height:1.45;color:var(--ink-2)}
-.annot div{display:grid;grid-template-columns:26px 1fr;gap:8px}
-.annot .n{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;display:grid;place-items:center}
-.annot b{color:var(--ink)}
-
-/* delegation simulator */
-.sim{margin-top:32px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0;border:1px solid var(--line-strong);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow);font-family:var(--f-display);font-size:14.5px}
-@media (max-width:900px){.sim{grid-template-columns:minmax(0,1fr)}}
-.sim-cfg{padding:22px;border-right:1px solid var(--line);display:grid;gap:18px;align-content:start}
-@media (max-width:900px){.sim-cfg{border-right:0;border-bottom:1px solid var(--line)}}
-.sim-out{padding:22px;background:color-mix(in oklab,var(--surface-2) 55%,var(--surface));display:grid;gap:14px;align-content:start}
-.topics{display:flex;flex-wrap:wrap;gap:6px}
-.topics button{font:inherit;font-size:13.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
-.topics button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.ladder{display:grid;gap:10px}
-.rung{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:10px;background:var(--surface)}
-.rung-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.rung-h .t{font-weight:700;font-size:14px}
-.rung-h .t small{font-weight:500;color:var(--muted);font-size:12.5px;margin-left:6px}
-.dlg{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center}
-.dlg .nm{line-height:1.25;min-width:0}
-.dlg .nm b{font-weight:600;display:inline-flex;align-items:center;gap:5px}
-.dlg .nm small{display:block;color:var(--muted);font-size:12px}
-.badge-v{width:14px;height:14px;flex:none}
-.wt{font-family:var(--f-mono);font-size:12px;color:var(--muted);background:var(--surface-2);padding:1px 6px;border-radius:5px}
-select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);max-width:100%}
-.ctl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-@media (max-width:480px){.ctl-grid{grid-template-columns:minmax(0,1fr)}}
-.ctl{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
-.trace{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.trace li{display:grid;grid-template-columns:24px 1fr;gap:10px;font-size:14px;line-height:1.4;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
-.trace li .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--surface-3);color:var(--ink-2)}
-.trace li.hit{border-color:var(--brand)}
-.trace li.hit .ic{background:var(--brand);color:var(--brand-ink)}
-.trace li.skip{opacity:.62}
-.trace li.pend .ic{background:var(--warn-bg);color:var(--warn-ink)}
-.result{border-radius:12px;padding:14px;background:var(--surface);border:1px solid var(--line-strong);display:grid;gap:10px}
-.result .h{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.result .v{font-size:22px;font-weight:800;letter-spacing:-.01em}
-.result .sbar{height:26px}
-
-/* rules */
-.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:28px}
-@media (max-width:720px){.rules{grid-template-columns:minmax(0,1fr)}}
-.rule{border-top:2px solid var(--ink);padding-top:12px}
-.rule h4{font-size:16px}
-.rule p{font-size:16.5px;color:var(--ink-2);margin-top:6px;line-height:1.5}
-
-/* politician profile */
-.prof{display:grid;grid-template-columns:300px minmax(0,1fr);gap:0}
-@media (max-width:880px){.prof{grid-template-columns:minmax(0,1fr)}}
-.prof-side{padding:22px;border-right:1px solid var(--line);display:grid;gap:14px;align-content:start}
-@media (max-width:880px){.prof-side{border-right:0;border-bottom:1px solid var(--line)}}
-.prof-id{display:flex;gap:14px;align-items:center}
-.prof-id .avatar{width:64px;height:64px;font-size:22px}
-.prof-id h3{font-size:21px;display:flex;align-items:center;gap:6px}
-.prof-id h3 svg{width:20px;height:20px}
-.prof-id p{font-size:13px;color:var(--muted);margin-top:2px}
-.verified{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.4;color:var(--ink-2);background:var(--brand-soft);border-radius:10px;padding:10px 12px}
-.verified svg{width:16px;height:16px;flex:none;margin-top:1px}
-.kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:13.5px;color:var(--ink-2)}
-.kv b{color:var(--ink);text-align:right}
-.trust{display:grid;gap:8px}
-.trust .r{display:grid;grid-template-columns:96px 1fr 52px;gap:8px;align-items:center;font-size:13px;color:var(--ink-2)}
-.trust .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
-.trust .bar span{display:block;height:100%;background:var(--brand);border-radius:4px}
-.trust .r b{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
-.prof-main{padding:22px;display:grid;gap:14px;align-content:start;min-width:0}
-.vrec{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
-.vrec-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
-.vrec-h .t{font-weight:600;font-size:15px}
-.vrec-h .t small{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);font-weight:400}
-.vpill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;color:#fff}
-.vpill.for{background:var(--v-for)} .vpill.against{background:var(--v-against)} .vpill.abstain{background:var(--v-abstain);color:var(--ink)}
-.cmp3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-size:12.5px;color:var(--muted)}
-.cmp3>div{background:var(--surface-2);border-radius:8px;padding:8px 10px;display:grid;gap:4px}
-.cmp3 b{color:var(--ink);font-size:13.5px}
-.explain{font-family:var(--f-body);font-size:15.5px;line-height:1.5;color:var(--ink-2);border-left:3px solid var(--brand);padding-left:12px}
-
-/* incentive list */
-.incent{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:28px;border-top:1px solid var(--line)}
-@media (max-width:720px){.incent{grid-template-columns:minmax(0,1fr)}}
-.incent>div{padding:18px 18px 18px 0;border-bottom:1px solid var(--line);display:grid;gap:6px;align-content:start}
-.incent>div:nth-child(odd){padding-right:28px}
-@media (min-width:721px){.incent>div:nth-child(even){padding-left:28px;border-left:1px solid var(--line)}}
-.incent h4{font-size:17px}
-.incent p{font-size:16.5px;color:var(--ink-2);line-height:1.5}
-.incent .for{font-family:var(--f-display);font-size:12px;color:var(--muted);letter-spacing:.04em}
-
-/* dashboard */
-.dash{padding:20px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
-.panel{grid-column:span 12;border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;align-content:start;min-width:0}
-.panel .ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.panel .ph h4{font-size:15px}
-.panel .ph span{font-size:12px;color:var(--muted)}
-@media (min-width:900px){.span-7{grid-column:span 7}.span-5{grid-column:span 5}}
-.filters{grid-column:span 12;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
-.kpis{grid-column:span 12;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.kpi{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:2px}
-.kpi .k{font-size:12px;color:var(--muted)}
-.kpi .v{font-size:28px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-.kpi .s{font-size:12px;color:var(--ink-2)}
-.dots-chart{overflow-x:auto}
-.dots-chart svg{width:100%;height:auto;display:block;min-width:480px}
-.cohesion{display:grid;gap:9px}
-.coh{display:grid;grid-template-columns:132px 1fr 48px;gap:10px;align-items:center;font-size:13px}
-.coh .bar{height:14px;background:var(--surface-2);border-radius:0 4px 4px 0;position:relative}
-.coh .bar span{position:absolute;left:0;top:0;bottom:0;background:var(--ink-2);border-radius:0 4px 4px 0}
-.coh b{text-align:right;font-variant-numeric:tabular-nums}
-.match-list{display:grid;gap:8px}
-.match{display:grid;grid-template-columns:28px minmax(0,1fr) 110px 44px;gap:10px;align-items:center;font-size:13.5px}
-.match .nm small{display:block;color:var(--muted);font-size:12px}
-.match .bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
-.match .bar span{display:block;height:100%;background:var(--brand)}
-.match b{text-align:right;font-variant-numeric:tabular-nums}
-.tview{font-size:12.5px}
-.tview summary{cursor:pointer;color:var(--link)}
-.tview table{border-collapse:collapse;margin-top:8px;width:100%;font-variant-numeric:tabular-nums}
-.tview th,.tview td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
-
-/* phone */
-.phones{display:flex;flex-wrap:wrap;gap:28px;margin-top:32px;align-items:flex-start}
-.phone{width:320px;max-width:100%;border-radius:34px;border:8px solid var(--ink);background:var(--surface);box-shadow:var(--shadow);overflow:hidden;font-family:var(--f-display);font-size:14px}
-.phone .notch{height:24px;display:flex;justify-content:center;align-items:center;background:var(--surface)}
-.phone .notch i{width:84px;height:6px;border-radius:3px;background:var(--line-strong)}
-.phone .scr{padding:6px 16px 18px;display:grid;gap:12px}
-.phone h4{font-size:19px;letter-spacing:-.01em}
-.phone .sub{font-size:12.5px;color:var(--muted)}
-.cand{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px}
-.cand .avatar{width:36px;height:36px}
-.cand .nm{line-height:1.25;min-width:0}
-.cand .nm b{font-weight:600;display:inline-flex;gap:4px;align-items:center}
-.cand .nm small{display:block;color:var(--muted);font-size:11.5px}
-.cand .pct{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
-.cand .basis{grid-column:2/4;font-size:11.5px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
-.qcard{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
-.qcard .q{font-weight:600;line-height:1.3}
-.qcard .ans{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.qcard .ans span{text-align:center;padding:7px 4px;border:1px solid var(--line-strong);border-radius:8px;font-size:12.5px}
-.qcard .ans span.sel{background:var(--v-for);border-color:var(--v-for);color:#fff;font-weight:600}
-.phone-note{flex:1 1 300px;min-width:0;font-size:18px}
-
-/* architecture + roadmap */
-.adapters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:28px}
-@media (max-width:900px){.adapters{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:480px){.adapters{grid-template-columns:minmax(0,1fr)}}
-.adapter{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--surface);display:grid;gap:8px;align-content:start;font-family:var(--f-display)}
-.adapter h4{font-size:16px}
-.adapter .src{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);word-break:break-word}
-.adapter p{font-size:14px;color:var(--ink-2);line-height:1.45}
-.adapter .lvl{font-size:12px;font-weight:600}
-.road{margin-top:28px;display:grid;gap:0;border-left:2px solid var(--line);margin-left:6px}
-.road>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;padding:0 0 26px 22px;position:relative}
-@media (max-width:620px){.road>div{grid-template-columns:minmax(0,1fr);gap:4px}}
-.road>div::before{content:"";position:absolute;left:-8px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--brand)}
-.road>div.now::before{background:var(--brand)}
-.road .when{font-family:var(--f-display);font-weight:700;font-size:15px}
-.road .when small{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
-.road h4{font-size:17px}
-.road p{font-size:16.5px;color:var(--ink-2);margin-top:4px;line-height:1.5}
-.road .milestone{display:inline-block;margin-top:8px}
-
-.qs{counter-reset:q;display:grid;gap:14px;margin-top:24px;padding:0;list-style:none}
-.qs li{counter-increment:q;display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;font-size:18px}
-.qs li::before{content:"Q" counter(q);font-family:var(--f-mono);font-size:13px;color:var(--brand);padding-top:5px}
-.qs li small{display:block;font-family:var(--f-display);font-size:13.5px;color:var(--muted);margin-top:2px}
-
-.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;margin-top:24px}
-@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
-.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:10px;align-content:start}
-.box h4{font-size:17px}
-.box ul{margin:0;padding-left:18px;font-size:16.5px;color:var(--ink-2);line-height:1.5}
-.box li+li{margin-top:6px}
-
-footer.end{margin-top:96px;padding-top:28px;border-top:1px solid var(--line);font-family:var(--f-display);font-size:13.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center}
-footer.end svg{width:28px;height:28px}
-
-/* tooltip */
-#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--bg);font-family:var(--f-display);font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:8px;max-width:240px;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
-#tip.on{opacity:1;transform:none}
-</style>
-
-<style>
-.short{max-width:980px;margin:0 auto}
-.verdict{flex-wrap:wrap}.verdict .chip{white-space:nowrap}
-.short .hero{padding-top:40px}
-.readtime{display:block;font-family:var(--f-display);font-size:13px;color:var(--muted);margin-bottom:18px}
-.readtime b{color:var(--brand);font-weight:600}
-.short section.chapter{padding-top:64px}
-.short section.chapter>header{margin-bottom:22px}
-.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:6px}
-.q .seg{flex-wrap:wrap}
-@media (max-width:760px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.node{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface);font-family:var(--f-display);display:grid;gap:4px;transition:border-color .15s,opacity .15s,background .15s}
-.node .lv{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.node b{font-size:15px}
-.node small{font-size:12.5px;color:var(--muted)}
-.node.used{border-color:var(--brand);background:var(--brand-soft)}
-.node.off{opacity:.45}
-.mini{margin-top:18px;border:1px solid var(--line-strong);border-radius:16px;background:var(--surface);padding:20px;display:grid;gap:18px;box-shadow:var(--shadow)}
-.qrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-@media (max-width:760px){.qrow{grid-template-columns:minmax(0,1fr)}}
-.q{display:grid;gap:6px;font-family:var(--f-display);font-size:13.5px;color:var(--ink-2);align-content:start}
-.outcome{font-family:var(--f-display);font-size:17px;line-height:1.45;padding:12px 14px;border-radius:10px;background:var(--surface-2)}
-.outcome b{font-weight:700}
 .bul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 28px}
+.bul.one{grid-template-columns:minmax(0,1fr);max-width:760px}
 @media (max-width:720px){.bul{grid-template-columns:minmax(0,1fr)}}
 .bul li{display:grid;grid-template-columns:18px 1fr;gap:10px;font-size:17px;line-height:1.5;color:var(--ink-2)}
 .bul li::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--brand);margin-top:10px}
 .bul b{color:var(--ink);font-family:var(--f-display);font-weight:650}
-.chartcard{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:18px;display:grid;gap:12px}
-.chartcard .dots-chart{max-width:680px}
-.short{display:flex;flex-direction:column}
-.short .hero{order:0}.short #how{order:1}.short #politicians{order:2}.short #experience{order:3}.short #delegation{order:4}.short #analytics{order:5}.short #plan{order:6}
-.short .hero h1{font-size:clamp(38px,5vw,56px)}
-.road3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-@media (max-width:720px){.road3{grid-template-columns:minmax(0,1fr)}}
-.road3>div{border-top:3px solid var(--line-strong);padding-top:12px;display:grid;gap:6px;align-content:start}
-.road3>div.goal{border-top-color:var(--brand)}
-.road3 .when{font-family:var(--f-display);font-weight:700;font-size:15px}
-.road3 p{font-size:16.5px;color:var(--ink-2);line-height:1.5}
-.cta{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin-top:28px;padding:18px 20px;border-radius:14px;background:var(--brand-soft);font-family:var(--f-display);font-size:15px}
-.cta a{font-weight:600}
-.extbl{width:100%;border-collapse:collapse;font-family:var(--f-display);font-size:14px}
-.extbl th,.extbl td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-.extbl th{font-size:12px;color:var(--muted);font-weight:600}
-.extbl small{display:block;font-size:12px;color:var(--muted)}
-</style>
+.bul.q li::before{content:"?";width:auto;height:auto;background:none;color:var(--brand);font-family:var(--f-display);font-weight:800;margin-top:0}
 
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-family:var(--f-display);font-size:14.5px;line-height:1.45}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
+tbody th{font-weight:650;width:170px}
+td.old{color:var(--muted)}
+tr:last-child>*{border-bottom:0}
+
+.mock{border:1px solid var(--line-strong);border-radius:16px;background:var(--surface);box-shadow:var(--shadow);padding:20px;font-family:var(--f-display);font-size:15px;line-height:1.45;display:grid;gap:14px}
+.mock .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mock .id{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.mock h3{font-size:20px;margin-top:2px}
+.bar{display:flex;height:26px;gap:2px;border-radius:6px;overflow:hidden}
+.bar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12.5px;font-weight:650;white-space:nowrap}
+.bar .f{background:var(--v-for)} .bar .a{background:var(--v-against)}
+.mock .row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--ink-2)}
+.chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;line-height:1.5;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface)}
+.chip.ok{background:var(--brand-soft);color:var(--brand);border-color:transparent}
+.resp{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:6px}
+.resp .who{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;background:#6b5bd2;flex:none}
+.resp small{display:block;color:var(--muted);font-size:12.5px}
+.resp q{font-family:var(--f-body);font-size:16px;color:var(--ink-2)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr);gap:24px}}
+
+.cta{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;justify-content:space-between;margin-top:30px;padding:20px 22px;border-radius:14px;background:var(--brand-soft);font-family:var(--f-display);font-size:15.5px;line-height:1.5}
+.cta span{flex:1 1 320px}
+.layout{display:grid;grid-template-columns:200px minmax(0,1fr);gap:48px}
+@media (max-width:1000px){.layout{grid-template-columns:minmax(0,1fr)}.toc{display:none}}
+.toc{position:sticky;top:76px;align-self:start;padding-top:44px;font-family:var(--f-display);font-size:14px}
+.toc ol{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:2px;counter-reset:toc}
+.toc li{counter-increment:toc}
+.toc a{display:grid;grid-template-columns:26px 1fr;padding:5px 8px;border-radius:6px;text-decoration:none;color:var(--ink-2)}
+.toc a::before{content:counter(toc,decimal-leading-zero);font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-top:3px}
+.toc a:hover{background:var(--surface-2);color:var(--ink)}
+.layout>main{min-width:0}
+.layout .hero{grid-template-columns:minmax(0,1fr)}
+
+footer.site{max-width:1040px;margin:72px auto 0;padding-top:20px;border-top:1px solid var(--line);font-family:var(--f-display);font-size:14.5px;color:var(--muted);display:grid;gap:10px}
+footer.site nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+footer.site a{color:var(--link)}
+</style>
+</head>
+<body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="logo" viewBox="28 44 604 474">
@@ -476,174 +192,134 @@ footer.end svg{width:28px;height:28px}
     </symbol>
   </defs>
 </svg>
-
-<div class="short">
+<header class="topbar">
+  <a class="brandmark" href="index.html"><svg aria-hidden="true"><use href="#logo"/></svg>Lietuva 2.0</a>
+  <nav aria-label="Puslapiai">
+    <a href="kaip-veikia.html">Kaip veikia</a>
+    <a href="politikams.html" aria-current="page">Politikams</a>
+    <a href="organizacijoms.html">Organizacijoms</a>
+    <a href="zurnalistams.html">Žurnalistams</a>
+    <a href="kas-nauja.html">Buvusiems naudotojams</a>
+    <a href="idejos.html">Kas toliau</a>
+  </nav>
+</header>
+<div class="page">
   <section class="hero">
     <div>
-      <div class="hero-logo">
-        <svg aria-label="Lietuva 2.0 logotipas" role="img"><use href="#logo"/></svg>
-        <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Seimo darbai ir pilietinis įsitraukimas</div></div>
+      <div class="status"><i aria-hidden="true"></i><span><b>Seimo nariams ir jų biurams</b> · skaitymo laikas apie 3 min.</span></div>
+      <h1>Viena suvestinė vietoj šimtų laiškų. <em>Vienas atsakymas visiems.</em></h1>
+      <p class="lede">Prieš ginčytiną balsavimą pašto dėžutė prisipildo beveik vienodų laiškų, o kitos pusės nesimato. Lietuva 2.0 tai pakeičia viena suvestine el. paštu: kiek skirtingų žmonių prašo balsuoti už ir kiek prieš, ir kokius argumentus jie laiko svarbiausiais. Atsakyti galite vieną kartą – ir atsakymą pamatys visi.</p>
+      <div class="actions">
+        <a class="btn primary" href="mailto:info@lietuva2.lt">Aptarkime</a>
+        <a class="btn ghost" href="#get">Ką gaunate</a>
       </div>
-      <div class="readtime"><b>Politikams</b> · skaitymo laikas apie 5 min.</div>
-      <h1>Išgirskite rinkėjus. <em>Paaiškinkite sprendimus.</em></h1>
-        <p class="kicker">Vienas kanalas tarp Seimo ir žmonių – ne tik per rinkimus.</p>
-      <p class="lede">Lietuva 2.0 svarstomus Seimo projektus paaiškina suprantama kalba, surenka LT2 naudotojų nuomonės signalą ir leidžia politikui ten pat paaiškinti savo balsą. Oficialūs balsai jau vieši; patvirtintas profilis suteikia jiems kontekstą.</p>
-      <div class="notice" role="note">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span>Maketuose ir pavyzdžiuose pateikti Seimo nariai, frakcijos, projektai ir skaičiai yra išgalvoti. Jie rodo, kaip atrodytų produktas, o ne kaip balsavo realūs politikai. Komandos patirties faktai yra tikri.</span>
+      <div class="notice" role="note"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Pirmasis etapas veikia bandomojoje svetainėje <a href="https://test.lietuva2.lt">test.lietuva2.lt</a>. Kol vyksta bandymas, suvestinės sudaromos ir skelbiamos, bet Seimo nariams nesiunčiamos. Prieš siųsdami pirmąją, norime ją aptarti su Seimo narių biurais.</span></div>
+    </div>
+    <div><lt2-logo-spin class="hero-spin" period="10"></lt2-logo-spin></div>
+  </section>
+
+  <section class="chapter" id="get">
+    <header>
+      <div class="eyebrow">Ką gaunate</div>
+      <h2>Aiškus vaizdas, ne lavina</h2>
+    </header>
+    <div class="grid">
+      <div class="card"><h3>Abi pusės viename laiške</h3><p>Kiekviename projekte – kiek žmonių prašo balsuoti už, kiek prieš ir kiek iš jų turi senesnes nei 30 dienų paskyras. Kiekvienas žmogus suskaičiuotas vieną kartą.</p></div>
+      <div class="card"><h3>Svarbiausi argumentai</h3><p>Ne šimtas to paties laiško kopijų, o abiejų pusių argumentai, kuriuos dalyviai pažymėjo kaip svarbiausius.</p></div>
+      <div class="card"><h3>Jūsų partijos rėmėjai</h3><p>Jei pakankamai dalyvių nurodė remiantys jūsų partiją, matysite, ko prašo jie. Apklausos tokių atsakymų beveik niekada neduoda.</p></div>
+    </div>
+    <p class="prose" style="margin-top:18px">Jūsų biurui pravers ir Seimo duomenys vienoje vietoje: darbotvarkė, kiekvieno balsavimo salės schema, frakcijų pasiskirstymas ir kolegų balsavimų istorija, atnaujinami kas 15 minučių posėdžių dienomis.</p>
+  </section>
+
+  <section class="chapter" id="when">
+    <header>
+      <div class="eyebrow">Laiškai</div>
+      <h2>Retai, nuspėjamai, be sekimo</h2>
+    </header>
+    <ul class="bul">
+      <li><span><b>Ne daugiau kaip du per savaitę.</b> Pirmadienio rytą, jei tą savaitę Seimas posėdžiauja ir yra ką pranešti, ir dieną prieš posėdį, kuriame planuojama svarstyti projektą, sulaukusį pakankamai dalyvių.</span></li>
+      <li><span><b>Tik projektai, pasiekę ribą.</b> Į suvestinę patenka projektas, kai abiejų pusių dalyvių kartu susidaro tiek, kiek nustatyta (pagal nutylėjimą 100). Riba vieša.</span></li>
+      <li><span><b>Visiems vienodai.</b> Suvestines oficialiu el. pašto adresu gauna visi Seimo nariai, taip pat ir neprisijungę. Niekas nerenka, kam rašyti.</span></li>
+      <li><span><b>Žmonės prižiūri.</b> Suvestinė paruošiama parą prieš išsiuntimą, kad moderatoriai galėtų paslėpti argumentą, sulaikyti projektą ar jos nesiųsti. Kiekviena skelbiama ir viešai.</span></li>
+      <li><span><b>Jūs sprendžiate.</b> Kiekviename laiške – nuoroda pasirinkti dažnį, pridėti padėjėjo adresą arba atsisakyti vienu paspaudimu. Laiškuose nėra sekimo.</span></li>
+      <li><span><b>Pirmiausia – pristatymas.</b> Prieš pirmąją suvestinę gausite žmogaus parašytą ir pasirašytą laišką apie tai, kas tai yra ir kodėl.</span></li>
+    </ul>
+  </section>
+
+  <section class="chapter" id="answer">
+    <header>
+      <div class="eyebrow">Atsakymas</div>
+      <h2>Atsakykite vieną kartą – visiems iš karto</h2>
+    </header>
+    <div class="split">
+      <div class="prose">
+        <p>Dėl kiekvieno projekto galite paskelbti vieną atsakymą: balsuosite už, prieš ar dar neapsisprendėte, ir kodėl. Jis rodomas projekto puslapyje ir jūsų profilyje, o visi projektą sekantys dalyviai gauna žinią, kad atsakėte.</p>
+        <p>Atsakymą galima pakeisti ar atsiimti iki galutinio balsavimo; ankstesnės versijos lieka matomos. Po balsavimo atsakymas rodomas šalia jūsų balso – du faktai, be jokio vertinimo.</p>
+        <p>Atsakymas – tai galimybė paaiškinti sprendimą tiems, kurie jo laukia, ir įtikinti abejojančius.</p>
+      </div>
+      <div class="mock" aria-label="Atsakymo pavyzdys">
+        <div class="lbl">Pavyzdys · išgalvoti duomenys</div>
+        <div><div class="id">XVP-0412 · Planuojama: priėmimas</div><h3>Gyventojų pajamų mokesčio įstatymo pataisa</h3></div>
+        <div class="row"><span>Prašo balsuoti už: 6 800</span><span>prieš: 4 280</span></div>
+        <div class="resp">
+          <div class="who"><span class="avatar">JP</span><span><b>Jonas Petraitis</b><small>Reformų partija · Seimo narys arba jo biuras</small></span></div>
+          <div><span class="chip">Balsuosiu prieš</span></div>
+          <q>Pritariu didesniam didžiausių pajamų indėliui, bet šis projektas apmokestintų ir vienkartinį šeimos verslo pardavimą. Siūliau pataisą, kuri tai išskirtų.</q>
+        </div>
       </div>
     </div>
-    <div class="hero-fig">
-      <lt2-logo-spin class="hero-spin" period="10"></lt2-logo-spin>
-    </div>
   </section>
 
-  <section class="chapter" id="how">
+  <section class="chapter" id="join">
     <header>
-      <div class="eyebrow">Vertė politikui</div>
-      <h2>Keturi dalykai vienoje vietoje</h2>
-      <p class="lede">LT2 – vieta, kur politikas tiesiogiai pasiekia jį sekančius ir juo pasitikinčius žmones.</p>
+      <div class="eyebrow">Kaip prisijungti</div>
+      <h2>Jūsų profilis jau yra</h2>
+      <p class="lede">Kiekvieno Seimo nario pareigos, frakcija, komitetai ir balsavimai rodomi iš Seimo atvirųjų duomenų, net jei neprisijungėte. Prisijungę galite kalbėti patys.</p>
     </header>
-    <div class="pillars">
-      <div class="pillar"><div class="verb">Išgirskite</div><p><b>Jūsų rėmėjų pozicija.</b> Apklausos rodo visuomenės nuomonę kai kuriais klausimais, bet retai – jūsų partijos rėmėjų, o konkrečiai jūsų asmeninių rėmėjų – beveik niekada. LT2 dėl kiekvieno svarstomo projekto rodo, kaip balsuoja jūsų partijos rėmėjai ir jums balsą patikėję žmonės, taip pat kiek jums patikėjusių balsavo patys ir kaip, – taip žinote, kur verta paaiškinti daugiau.</p></div>
-      <div class="pillar"><div class="verb">Paaiškinkite</div><p>Paaiškinimą prie konkretaus projekto mato visi, o jums balsą patikėję žmonės gauna apie jį pranešimą. Tai galimybė įtikinti rinkėjus savo sprendimo teisingumu, paveikti jų nuomonę dar prieš balsavimą ir išlikti patikimam, net kai balsuojate kitaip, nei jie tikėjosi.</p></div>
-      <div class="pillar"><div class="verb">Atstovaukite</div><p>Pasirinkti patikėtiniu – tiek Seimo nariai, tiek kandidatai – balsuodami LT2 lemiate ir balsus tų jums balsą patikėjusių žmonių, kurie nepareiškė savo nuomonės. Savo srityse turite pirmenybę.</p></div>
-      <div class="pillar"><div class="verb">Parodykite</div><p>Vienoje vietoje – jūsų balsas, paaiškinimas ir galutinis Seimo sprendimas.</p></div>
-    </div>
-  </section>
-
-  <section class="chapter" id="delegation">
-    <header>
-      <div class="eyebrow">Papildomas nuomonės signalas</div>
-      <h2>Delegavimas padeda dalyvauti dažniau</h2>
-      <p class="lede">LT2 naudotojas gali balsuoti pats arba patikėti balsą keliems patikėtiniams – piliečiams, ekspertams ar Seimo nariams. Jei pats nebalsuoja, jo balsą lemia patikėtinių dauguma, o projekto srities ekspertai turi pirmenybę. Seimo narys lemia jį pasirinkusių balsus tik tada, kai pats balsuoja LT2. Tai nėra teisinis įgaliojimas ar referendumo balsas – tik paaiškinamas būdas parodyti naudotojo poziciją, kai jis pats nebalsavo.</p>
-    </header>
-    <div class="chartcard">
-      <div class="legend"><span>Pavyzdys: 1. Rūta Mockutė (ekspertė: ekonomika) · 2. Jonas Petraitis (Seimo narys) · 3. Darius Stankus</span></div>
-      <div style="overflow-x:auto"><table class="extbl">
-        <thead><tr><th>Projektas</th><th>Kaip balsavo patikėtiniai</th><th>Jūsų balsas</th></tr></thead>
-        <tbody>
-          <tr><td>Pajamų mokestis<small>Ekonomika</small></td><td>Rūta prieš, Jonas prieš, Darius už</td><td><b>Prieš</b><small>sprendžia ekspertė Rūta</small></td></tr>
-          <tr><td>Dantų protezavimas<small>Sveikata</small></td><td>Rūta nebalsavo, Jonas už, Darius už</td><td><b>Už</b><small>ekspertų nėra – dauguma</small></td></tr>
-          <tr><td>Seimo narių išlaidų ataskaitos<small>Teisė</small></td><td>Visi trys už</td><td><b>Prieš</b><small>balsavote patys</small></td></tr>
-        </tbody></table></div>
-    </div>
-  </section>
-
-  <section class="chapter" id="analytics">
-    <header>
-      <div class="eyebrow">Signalas, ne referendumas</div>
-      <h2>Kur Seimo ir LT2 naudotojų pasirinkimai sutampa ir kur skiriasi</h2>
-    </header>
-    <div class="chartcard">
-      <div class="legend"><span><i style="background:var(--s-seimas)"></i>Seimas</span><span><i style="background:var(--s-platform)"></i>Lietuva 2.0 naudotojai</span><span class="muted">· balsų „už“ dalis, linija ties 50 % – dauguma, pavyzdiniai duomenys</span></div>
-      <div class="dots-chart"><svg id="dotplot" viewBox="0 0 560 300" role="img" aria-label="Taškinis grafikas, lyginantis balsų už dalį Seime ir platformoje šešiems projektams"></svg></div>
-    </div>
-    <div class="box" style="margin-top:24px"><h4>Kokias ribas nustatome iš anksto</h4><ul>
-      <li>LT2 rezultatai vadinami naudotojų signalu, ne visuomenės valia.</li>
-      <li>DI tekstai pažymėti, susieti su šaltiniais, prieš paskelbiant peržiūrimi žmogaus ir turi taisymų istoriją.</li>
-      <li>Apibendrinti duomenys apie grupes, pvz., jums balsą patikėjusius ar partijos rėmėjus, rodomi tik kai grupėje yra bent 20 žmonių.</li>
-      <li>Visi politikai rodomi vienodomis sąlygomis.</li>
-      <li>Delegavimas veikia tik LT2 ir neturi teisinės balsavimo galios.</li>
-    </ul></div>
-  </section>
-
-  <section class="chapter" id="experience">
-    <header>
-      <div class="eyebrow">Komandos patirtis</div>
-      <h2>Nepradedame nuo nulio</h2>
-      <p class="lede">2011–2020 m. veikė Lietuva 2.0 – pirmoji Lietuvoje tiesioginės e. demokratijos platforma. Piliečiai joje pateikė daugiau nei 320 pasiūlymų, surinko daugiau nei 12 000 parašų 9 iniciatyvoms, o 2013 m. VRK pirmą kartą Lietuvos istorijoje įskaitė elektroninius parašus.</p>
-    </header>
-      <p style="margin-top:14px;font-family:var(--f-display);font-weight:700"><a href="kas-nauja.html">Naudojotės senąja LT2? Kas pasikeitė ir ko išmokome →</a></p>
-  </section>
-
-  <section class="chapter" id="plan">
-    <header>
-      <div class="eyebrow">Kitas žingsnis</div>
-      <h2>Pirmiausia aptarti, tik tada kurti</h2>
-      <p class="lede">Prieš kurdami bet ką, koncepciją norime išsamiai aptarti su tais, kurie platforma naudotųsi: 5–8 skirtingų politinių pažiūrų politikais ir jų biurais, ekspertais, žurnalistais ir aktyviais piliečiais. Aptarimams naudojame šio dokumento ir <a href="koncepcija.html">išsamios koncepcijos</a> maketus, o po kiekvieno aptarimo juos pataisome. Dalyvavimas neįpareigoja pritarti visai platformos vizijai.</p>
-    </header>
-    <div class="road">
-      <div class="now"><div class="when">Pradžia</div><div><h4>Pradinis pokalbis</h4><p>Apie 45 min.: kas jums būtų naudinga, kas trukdytų ir kaip jums patogu dalyvauti toliau – susitikimuose, bendrame pokalbių kanale ar asmeniniuose pokalbiuose.</p></div></div>
-      <div><div class="when">Aptarimai</div><div><h4>Maketai pagal temas</h4><p>Kiekvieną kartą aptariame vieną temą: projekto puslapį ir santraukas, politiko profilį ir balsų paaiškinimus, delegavimą, rodiklius ir jų sąžiningumą, moderavimą. Tarp aptarimų maketus pataisome pagal pastabas.</p></div></div>
-      <div><div class="when">Apibendrinimas</div><div><h4>Sutariame, ką kurti</h4><p>Parengiame santrauką: ką dalyviai laiko naudingu, ko reikėtų atsisakyti ir kas turėtų patekti į pirmą versiją. Ją gauna visi dalyviai.</p></div></div>
-      <div><div class="when">Vėliau</div><div><h4>Uždaras bandymas su veikiančia versija</h4><p>Tik jei po aptarimų nuspręsime kurti: nedidelis bandymas su keliais tikrais Seimo projektais ir politikų balsų paaiškinimais. Jis parodytų tai, ko maketai neparodo: ar politikai iš tiesų paaiškintų savo balsus ir kiek laiko tai užima jų biurams.</p></div></div>
-    </div>
-    <div class="two">
-      <div class="box"><h4>Ko prašome iš dalyvio</h4><ul>
-        <li>Pradinio pokalbio (apie 45 min.).</li>
-        <li>Dalyvauti keliuose aptarimuose – jums patogiu būdu.</li>
-        <li>Atviro grįžtamojo ryšio, įskaitant priežastis nedalyvauti.</li>
-      </ul></div>
-      <div class="box"><h4>Ką dalyvis gauna</h4><ul>
-        <li>Galimybę paveikti, ką ir kaip kuriame – galimybes, santraukų, statistikos ir moderavimo taisykles – dar prieš tai, kai kas nors sukurta.</li>
-        <li>Aptarimų apibendrinimą prieš viešus sprendimus.</li>
-        <li>Pirmenybę dalyvauti bandyme su veikiančia versija, jei jis vyks.</li>
-      </ul></div>
-    </div>
-    <h3 style="margin-top:44px">Ką norime iš jūsų sužinoti</h3>
-    <ol class="qs">
-      <li><span>Kaip norėtumėte dalyvauti aptariant ir kuriant platformą: periodiniuose susitikimuose, bendrame pokalbių kanale, asmeniniuose pokalbiuose ar kitaip? Kiek laiko galėtumėte skirti?<small>Politikams, jų biurams, ekspertams ir visiems, norintiems prisidėti</small></span></li>
-      <li><span>Ar paaiškintumėte savo balsavimus tokioje platformoje? Kas jus sulaikytų?<small>Seimo nariams</small></span></li>
-      <li><span>Kurios iš siūlomų galimybių iš tiesų pakeistų jūsų darbą, o kurios – nebūtinos, o gal ir nepageidautinos?<small>Politikams ir jų biurams</small></span></li>
-      <li><span>Ar delegavimas keliems patikėtiniams, kai sprendžia jų dauguma, atrodo teisingas ir suprantamas? Ką keistumėte?<small>Visiems</small></span></li>
-      <li><span>Kuri siūloma statistika galėtų klaidinti ar būti nesąžininga, ir kaip ją reikėtų pateikti?<small>Visiems</small></span></li>
+    <ol class="steps">
+      <li><b>Prisiregistruokite</b><span>Oficialiu Seimo nario el. pašto adresu. Svetainė jį atpažįsta ir pasiūlo perimti profilį.</span></li>
+      <li><b>Perimkite profilį</b><span>Per patvirtinimo nuorodą, atsiųstą tuo adresu, susikuriate prieigos raktą. Slaptažodžio nėra.</span></li>
+      <li><b>Pakvieskite biurą</b><span>Iki penkių biuro narių gali rašyti jūsų vardu. Tekstai žymimi „Seimo narys arba jo biuras“.</span></li>
+      <li><b>Atsakykite</b><span>Puslapyje „Projektai, dėl kurių į jus kreipiamasi“ matyti suvestinių projektai ir kur dar neatsakėte.</span></li>
     </ol>
+  </section>
+
+  <section class="chapter" id="not">
+    <header>
+      <div class="eyebrow">Ko nedarome</div>
+      <h2>Ryšys ir paaiškinimas, ne kontrolė</h2>
+    </header>
+    <ul class="bul">
+      <li><span><b>Jokių reitingų.</b> Seimo nariai nerikiuojami ir nelyginami, nėra „atsakymų rodiklio“, išlaidų ar darbo vertinimo.</span></li>
+      <li><span><b>Visi vienodomis sąlygomis.</b> Visos partijos ir Seimo nariai rodomi vienodai, niekas negali nusipirkti vietos ar paminėjimo.</span></li>
+      <li><span><b>Ne apklausa.</b> Skaičiai – iš savanoriškai dalyvaujančių Lietuva 2.0 naudotojų, ir tai pasakyta kiekvienoje suvestinėje.</span></li>
+      <li><span><b>Seimo nario paskyra pozicijos neužima.</b> Perėmęs profilį Seimo narys kalba atsakymais, o ne pozicijomis ar argumentais.</span></li>
+    </ul>
+  </section>
+
+  <section class="chapter" id="ask">
+    <header>
+      <div class="eyebrow">Prieš pirmąją suvestinę</div>
+      <h2>Norime jus išgirsti</h2>
+      <p class="lede">Suvestinės Seimo nariams bus siunčiamos tik po pokalbių su biurais. Ypač norime žinoti:</p>
+    </header>
+    <ul class="bul q">
+      <li><span>Ar suvestinė padėtų jūsų biurui suprasti, ko prašo žmonės? Ko joje trūksta, o kas nereikalinga?</span></li>
+      <li><span>Ar tinka dažnis – pirmadienį ir dieną prieš posėdį? Ar reikėtų kopijos padėjėjui?</span></li>
+      <li><span>Ar dalyvių pastabos po jūsų atsakymu padeda, ar trukdo atsakyti?</span></li>
+      <li><span>Ką turėtų pasakyti pristatymo laiškas, kad jo neatmestumėte kaip šlamšto?</span></li>
+      <li><span>Ar sutiktumėte išbandyti svetainę ir paskelbti pirmąjį atsakymą bandyme?</span></li>
+    </ul>
     <div class="cta">
-      <span><b>Kviečiame</b> aptarti koncepciją ir maketus, kol dar niekas nesukurta. Rašykite <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a>.</span>
-      <a href="koncepcija.html">Išsami produkto koncepcija →</a>
+      <span><b>Esate Seimo narys ar dirbate biure?</b> Parašykite – susitiksime ar pakalbėsime taip, kaip jums patogu.</span>
+      <a class="btn primary" href="mailto:info@lietuva2.lt">Rašykite info@lietuva2.lt</a>
     </div>
-    <footer class="end">
-      <svg aria-hidden="true"><use href="#logo"/></svg>
-      <span>Lietuva 2.0 · versija politikams ir kvietimas prisidėti, 2026 m. rugsėjis</span>
-    </footer>
   </section>
 </div>
-
-<div id="tip" role="tooltip"></div>
-
-<script>
-(function(){
-  document.documentElement.lang="lt";
-  const $=(s,r=document)=>r.querySelector(s);
-  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
-  const NS="http://www.w3.org/2000/svg";
-  const el=(n,a={})=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
-
-  const tip=$("#tip");
-  function showTip(t,x,y){tip.textContent=t;tip.classList.add("on");const w=tip.offsetWidth,h=tip.offsetHeight;let L=x+14,T=y+14;if(L+w>innerWidth-8)L=x-w-14;if(T+h>innerHeight-8)T=y-h-14;tip.style.left=L+"px";tip.style.top=T+"px";}
-  const tipAt=e=>{const t=e.target.closest&&e.target.closest("[data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else tip.classList.remove("on");};
-  document.addEventListener("pointermove",tipAt);
-  document.addEventListener("pointerdown",tipAt);
-
-
-
-  /* dot plot */
-  const bills=[
-    {id:"XVP-0587",t:"Nemokamos I pakopos studijos",s:48,p:81,o:"Atmesta"},
-    {id:"XVP-0701",t:"Dantų protezavimas 65+",s:72,p:88,o:"Priimta"},
-    {id:"XVP-0633",t:"Gynybai – 3,5 % BVP",s:91,p:77,o:"Priimta"},
-    {id:"XVP-0690",t:"Akcizas saldintiems gėrimams",s:52,p:49,o:"Priimta"},
-    {id:"XVP-0412",t:"Progresinis pajamų mokestis",s:60,p:57,o:"Priimta"},
-    {id:"XVP-0655",t:"Saulės parkai ūkio žemėje",s:55,p:41,o:"Priimta"}];
-  (function(){
-    const svg=$("#dotplot"),L=200,R=540,top=24,rowH=42,x=v=>L+(R-L)*v/100;
-    const g=el("g",{"font-family":"Bricolage Grotesque, system-ui, sans-serif","font-size":"12"});
-    [0,25,50,75,100].forEach(v=>{g.appendChild(el("line",{x1:x(v),x2:x(v),y1:top-6,y2:top+rowH*bills.length-14,stroke:"var(--line)","stroke-width":v===50?1.5:1,"stroke-dasharray":v===50?"":"2 3"}));
-      const t=el("text",{x:x(v),y:top+rowH*bills.length+4,"text-anchor":"middle",fill:"var(--muted)"});t.textContent=v+" %";g.appendChild(t);});
-    
-    bills.forEach((b,i)=>{const y=top+i*rowH+8;
-      const hit=el("rect",{x:0,y:y-18,width:560,height:rowH-4,fill:"transparent"});
-      hit.setAttribute("data-tip",b.t+" ("+b.id+"): Seime "+b.s+" % už, platformoje "+b.p+" % už. Skirtumas "+Math.abs(b.s-b.p)+" p. p. "+b.o+".");g.appendChild(hit);
-      const t1=el("text",{x:0,y:y-2,fill:"var(--ink)","font-weight":"600"});t1.textContent=b.t;g.appendChild(t1);
-      const t2=el("text",{x:0,y:y+13,fill:"var(--muted)","font-family":"IBM Plex Mono, monospace","font-size":"10.5"});t2.textContent=b.id+" · "+b.o;g.appendChild(t2);
-      g.appendChild(el("line",{x1:x(Math.min(b.s,b.p)),x2:x(Math.max(b.s,b.p)),y1:y,y2:y,stroke:"var(--line-strong)","stroke-width":3,"stroke-linecap":"round"}));
-      g.appendChild(el("circle",{cx:x(b.s),cy:y,r:6.5,fill:"var(--s-seimas)",stroke:"var(--surface)","stroke-width":2}));
-      g.appendChild(el("circle",{cx:x(b.p),cy:y,r:6.5,fill:"var(--s-platform)",stroke:"var(--surface)","stroke-width":2}));
-      if(i===0){const a=el("text",{x:x(b.s),y:y-11,"text-anchor":"middle",fill:"var(--ink-2)","font-size":"11"});a.textContent="Seimas";g.appendChild(a);
-        const c=el("text",{x:x(b.p),y:y-11,"text-anchor":"middle",fill:"var(--ink-2)","font-size":"11"});c.textContent="Naudotojai";g.appendChild(c);}
-    });
-    svg.appendChild(g);
-  })();
-})();
-</script>
+<footer class="site">
+  <nav aria-label="Visi puslapiai"><a href="index.html">Pradžia</a> <a href="kaip-veikia.html">Kaip veikia</a> <a href="politikams.html">Politikams</a> <a href="organizacijoms.html">Organizacijoms</a> <a href="zurnalistams.html">Žurnalistams</a> <a href="kas-nauja.html">Buvusiems naudotojams</a> <a href="idejos.html">Kas toliau</a></nav>
+  <span>Pirmasis etapas veikia uždarame bandyme: <a href="https://test.lietuva2.lt">test.lietuva2.lt</a>. Klausimai ir pasiūlymai – <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a>.</span>
+  <span>Lietuva 2.0 · VšĮ LT2.0 · 2026 m. lapkritis</span>
+</footer>
+</body>
+</html>
