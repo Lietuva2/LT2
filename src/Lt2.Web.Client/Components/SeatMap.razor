@@ -3,7 +3,7 @@
 @inject IStringLocalizer<UiText> T
 
 @* Design 7.3: the seat map of a vote as SVG. In the client project, so the vote's page (rendered on the server) and the bill's
-   page (SeimasSeatMap, in the browser) draw it alike. Factions sit together, largest first (the open data has no seat order);
+   page (SeimasSeatMap, in the browser) draw it alike. Factions sit together, largest first (Hemicycle.Arrange, as the vote's preview image);
    each seat is coloured by the MP's choice and named in its title. *@
 @if (_seats.Count > 0)
 {
@@ -24,27 +24,15 @@
 }
 
 @code {
-    private static readonly string[] Order = [BallotChoices.For, BallotChoices.Against, BallotChoices.Abstain, BallotChoices.DidNotVote];
+    private static IReadOnlyList<string> Order => Hemicycle.ChoiceOrder;
 
-    private List<(Hemicycle.Seat Seat, BallotResponse Ballot)> _seats = [];
+    private IReadOnlyList<(Hemicycle.Seat Seat, BallotResponse Ballot)> _seats = [];
     private double _side;
 
     [Parameter, EditorRequired]
     public IReadOnlyList<BallotResponse> Ballots { get; set; } = [];
 
-    protected override void OnParametersSet()
-    {
-        var size = Ballots.GroupBy(b => b.FactionLabel ?? "").ToDictionary(g => g.Key, g => g.Count());
-        var ordered = Ballots
-            .OrderBy(b => string.IsNullOrEmpty(b.FactionLabel) ? 1 : 0)
-            .ThenByDescending(b => size[b.FactionLabel ?? ""])
-            .ThenBy(b => b.FactionLabel, StringComparer.Ordinal)
-            .ThenBy(b => Array.IndexOf(Order, b.Choice))
-            .ToList();
-        var (seats, side) = Hemicycle.Layout(ordered.Count);
-        _seats = seats.Zip(ordered).ToList();
-        _side = side;
-    }
+    protected override void OnParametersSet() => (_seats, _side) = Hemicycle.Arrange(Ballots);
 
     private static string ChoiceClass(string code) => code switch
     {

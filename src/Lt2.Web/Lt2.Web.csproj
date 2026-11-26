@@ -9,6 +9,10 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Hangfire.AspNetCore" />
     <PackageReference Include="Hangfire.PostgreSql" />
+    <!-- Design 8.22.5: a vote's link-preview image, drawn on request. The Linux library without dependencies, as the
+         chiselled image has no fontconfig; the fonts come from the assembly (Previews/Fonts). -->
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lt2.Api.Contracts\Lt2.Api.Contracts.csproj" />
@@ -22,6 +26,9 @@
     <ProjectReference Include="..\Modules\Lt2.Notifications\Lt2.Notifications.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Audit\Lt2.Audit.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Usage\Lt2.Usage.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Previews\Fonts\*.ttf;Previews\Fonts\OFL-*.txt" LogicalName="Lt2.Web.Previews.Fonts.%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lt2.IntegrationTests" />

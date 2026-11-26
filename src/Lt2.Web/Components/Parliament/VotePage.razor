@@ -9,6 +9,7 @@
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor Http
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService Authorization
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 
 @if (_vote is { } v)
 {
@@ -20,7 +21,10 @@
     var plainTitle = vote.Bill?.PlainTitle;
     var lead = plainTitle is null || wording is not null ? wording : heading == vote.Bill!.Title.Trim() ? null : heading;
     <PageTitle>@F.T["Vote.Label"] · @(plainTitle ?? heading) · Lietuva 2.0</PageTitle>
-    <LinkPreview Title="@($"{F.T["Vote.Label"]} · {(plainTitle is not null && !_reported ? plainTitle : heading)}")" />
+    @* Design 8.22.5 (owner, 2026-11-26): the day and the Seimas's numbers with the bill's description, and the seat map as
+       the image, drawn when first asked for (Previews/VotePreviewImages); a vote without ballots keeps the site's image. *@
+    <LinkPreview Title="@($"{F.T["Vote.Label"]} · {Lt2.Web.Previews.VotePreview.TitleOf(v, _reported)}")" Description="@Lt2.Web.Previews.VotePreview.Description(v, _billDescription, P)"
+                 DrawnImage="@_preview?.Path" ImageAlt="@_preview?.Alt(P)" />
 
     <div class="stack">
         @* Design 8.18: up to the history of votes, then the vote's bill. *@
@@ -136,6 +140,8 @@
     private DateTimeOffset? _updatedAt;
     private bool _moderator;
     private bool _reported;
+    private string? _billDescription;
+    private Lt2.Web.Previews.VotePreview? _preview;
 
     [Parameter] public long Id { get; set; }
 
@@ -149,11 +155,14 @@
         }
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
-        if (_vote.Summary.Vote.Bill is { PlainTitle: not null } bill)
+        if (_vote.Summary.Vote.Bill is { } bill)
         {
-            // Design 8.13.1, "Off the site": an open report about the description keeps the readable title out of the preview.
-            _reported = (await Appeals.GetRecordAsync(bill.Number)).Value?.DescriptionReported ?? false;
+            // Design 8.13.1, "Off the site": an open report about the description keeps the readable title and the description
+            // out of the preview.
+            (_reported, _billDescription) = Lt2.Web.Previews.VotePreview.FromRecord((await Appeals.GetRecordAsync(bill.Number)).Value);
         }
+
+        _preview = Lt2.Web.Previews.VotePreview.Of(_vote, _reported, F, P);
 
         if (Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
         {
