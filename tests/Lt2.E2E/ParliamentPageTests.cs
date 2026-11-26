@@ -22,7 +22,8 @@ public sealed class ParliamentPageTests : E2ETest
         ("bill", "/seimas/XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa"),
         ("votes", "/seimas/balsavimai", "Seimas"),
         ("vote", "/seimas/balsavimai/99100002", "Gyventojų pajamų mokesčio įstatymo pataisa"),
-        ("vote-consensus", "/seimas/balsavimai/99100003", "Vietinių rinkliavų įstatymo pataisa"),
+        // The vote page leads with the bill's readable title when it has one (XVP-0533 has the demonstration's).
+        ("vote-consensus", "/seimas/balsavimai/99100003", "Savivaldybės galės pačios nustatyti vietinių rinkliavų dydį"),
         ("vote-note", "/seimas/balsavimai/99100004", "Atliekų tvarkymo įstatymo pataisa"),
         ("methodology", "/metodika", "Metodika"),
         ("not-found", "/nera-tokio-puslapio", "Puslapis nerastas"),
