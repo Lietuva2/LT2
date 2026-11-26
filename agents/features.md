@@ -804,7 +804,7 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   furthest, `AgendaParser.StageOf`), then number, bills without a title last; the votes by Vilnius day, newest first, each
   day the same way. `AgendaRules.Day` cuts a day: the front page (`Home.razor`) shows `FrontDays` (2) planned and voted
   days of `FrontPerDay` (5), on two sheets (owner, 2026-11-21): `section#home-coming` (h2 `#h-home-coming`, "Visa
-  darbotvarkė" `a#home-agenda-all` beside it) and `section#home-recent` (h2 `#h-home-recent` "Neseniai balsuota",
+  darbotvarkė" `a#home-agenda-all` beside it) and `section#home-recent` (h2 `#h-home-recent` "Paskutiniai balsavimai",
   "Ankstesni balsavimai →" `a#home-votes-older` beside it; `#home-no-recent` under it when none), each heading row a
   sticky `div.row.list-head` (design 8.16.5); and `/darbotvarke` `PagePerDay` (10), and only those (owner, 2026-11-18: the hidden rows are
   not in the HTML). A day grows by the shared `<ShowMore>` (owner, 2026-11-19, design 8.16.4; "Rodyti likusius" and

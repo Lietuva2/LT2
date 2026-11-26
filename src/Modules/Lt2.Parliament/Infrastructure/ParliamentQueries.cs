@@ -353,11 +353,32 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
             return new ImportsInfo(success, last?.StartedAt, last?.Status, await notice.IsParliamentDataInventedAsync(cancellationToken));
         }))!;
 
-    public async Task<IReadOnlyList<VoteSummary>> StageResultsSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<VoteSummary>> StageResultsOfLastDaysAsync(int days, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var votes = await db.Votes.AsNoTracking()
-            .Where(v => v.Kind == VoteKind.StageResult && v.BillId != null && v.HeldAt >= since)
+        var stageResults = db.Votes.AsNoTracking().Where(v => v.Kind == VoteKind.StageResult && v.BillId != null);
+
+        // Day by day back from the latest stage result: the start of its Vilnius day bounds the next look (one query a day).
+        DateTimeOffset? since = null;
+        for (var day = 0; day < days; day++)
+        {
+            var earlier = since is { } before ? stageResults.Where(v => v.HeldAt < before) : stageResults;
+            var latest = await earlier.OrderByDescending(v => v.HeldAt).Select(v => (DateTimeOffset?)v.HeldAt).FirstOrDefaultAsync(cancellationToken);
+            if (latest is null)
+            {
+                break;
+            }
+
+            since = VilniusTime.StartOf(VilniusTime.DateOf(latest.Value));
+        }
+
+        if (since is null)
+        {
+            return [];
+        }
+
+        var votes = await stageResults
+            .Where(v => v.HeldAt >= since)
             .OrderByDescending(v => v.HeldAt).ThenByDescending(v => v.Id)
             .Take(200)
             .ToListAsync(cancellationToken);

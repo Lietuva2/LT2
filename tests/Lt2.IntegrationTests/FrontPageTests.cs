@@ -249,7 +249,7 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         coming.ShouldContain("<h2 id=\"h-home-coming\">Artimiausiu metu Seime</h2>");
         coming.ShouldContain("<a href=\"/darbotvarke\" id=\"home-agenda-all\">Visa darbotvarkė →</a>");
         var recent = ReasonsToComeSteps.HeadRow(html, "h-home-recent");
-        recent.ShouldContain("<h2 id=\"h-home-recent\">Neseniai balsuota</h2>");
+        recent.ShouldContain("<h2 id=\"h-home-recent\">Paskutiniai balsavimai</h2>");
         recent.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"home-votes-older\">Ankstesni balsavimai →</a>");
 
         // Nothing under the lists: no note on the numbers, no hint and no "not a representative poll" (the bill's page,
