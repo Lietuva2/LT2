@@ -4,8 +4,8 @@ using Microsoft.Playwright;
 namespace Lt2.E2E;
 
 /// <summary>
-/// Design 8.21 against the stack: the menu (logo, "Projektai", "Seimo nariai", "Statistika", "Prisijungti" or "Paskyra") on one
-/// line at 360, 390 and 1280 px in both themes, for a visitor and a member; the four tabs of "Projektai" reaching each other,
+/// Design 8.21 against the stack: the menu (logo, "Seimas", "Statistika", "Prisijungti" or "Paskyra") on one line at 360, 390
+/// and 1280 px in both themes, for a visitor and a member; the four tabs of "Seimas" reaching each other,
 /// and its dropdown (owner, 2026-11-17; "Balsavimai" a tab again, 2026-11-19); the account
 /// item with the keyboard, its name and links filled in the browser only. Screenshots go to <c>output/menu</c>.
 /// </summary>
@@ -23,7 +23,7 @@ public sealed class MenuTests : E2ETest
               const brand = document.querySelector('.top__brand').getBoundingClientRect();
               const items = [...document.querySelectorAll('.top__nav > *')].map(e => e.matches('details') ? e.querySelector('summary') : e)
                 .flatMap(e => [...e.getClientRects()]).filter(r => r.width > 0);
-              if (items.length !== 4) return 'expected four menu items, found ' + items.length;
+              if (items.length !== 3) return 'expected three menu items, found ' + items.length;
               const middles = [brand, ...items].map(r => Math.round(r.top + r.height / 2));
               if (Math.max(...middles) - Math.min(...middles) > 8) return 'not one line: ' + middles.join(',');
               if (Math.min(...items.map(r => r.left)) < brand.right) return 'an item runs into the brand';
