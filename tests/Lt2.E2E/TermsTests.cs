@@ -33,8 +33,10 @@ public sealed class TermsTests : E2ETest
         await page.GotoAsync(E2ESteps.Base + "/prisijungti#tikslas=/seimas/XVP-0412");
         await SignUpTests.WaitForInteractivityAsync(page);
         await page.GetByLabel("El. paštas").FillAsync(email);
+        // The registration's code is still in Mailpit (and no longer works): wait for the new one.
+        var codes = await Mailpit.CountAsync(Mailpit.CodeQuery(email));
         await page.GetByRole(AriaRole.Button, new() { Name = "Atsiųsti kodą" }).ClickAsync();
-        await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await Mailpit.CodeAsync(email));
+        await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await Mailpit.NewCodeAsync(email, codes));
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
         await page.WaitForURLAsync(new Regex("/taisykles/sutikimas"), new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Naudojimo taisyklės");

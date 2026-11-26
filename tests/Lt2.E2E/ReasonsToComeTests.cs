@@ -29,8 +29,10 @@ public sealed partial class ReasonsToComeTests : E2ETest
                 .ShouldBeLessThanOrEqualTo(0, $"{path}: no horizontal scrolling at 390 px");
         }
 
+        // Design 8.21, 8.16.5: the agenda is the view "Darbotvarkė" of the tab "Projektai" under the heading "Seimas".
         await page.GotoAsync(Base + "/darbotvarke");
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Seimo darbotvarkė", Level = 1 })).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Seimas", Level = 1 })).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Navigation, new() { Name = "Projektų sąrašai" })).ToContainTextAsync("Darbotvarkė");
         await Assertions.Expect(page.Locator("#agenda-coming")).ToContainTextAsync("Planuojama");
         // Owner, 2026-11-21: no "not a representative poll" under the lists; the bill's page has it.
         await Assertions.Expect(page.Locator("#not-a-poll")).ToHaveCountAsync(0);
@@ -174,18 +176,10 @@ public sealed partial class ReasonsToComeTests : E2ETest
         await Assertions.Expect(follow).ToHaveAttributeAsync("href", "/prisijungti#tikslas=%2Fseimas%2FXVP-0618", new() { Timeout = E2ESteps.Slow });
         await follow.ClickAsync();
         await SignUpTests.WaitForInteractivityAsync(again);
-        var registrationCode = await Mailpit.CodeAsync(email);
+        var codes = await Mailpit.CountAsync(Mailpit.CodeQuery(email));
         await again.GetByLabel("El. paštas").FillAsync(email);
         await again.GetByRole(AriaRole.Button, new() { Name = "Atsiųsti kodą" }).ClickAsync();
-        var code = registrationCode;
-        for (var tries = 0; code == registrationCode && tries < 90; tries++)
-        {
-            await Task.Delay(500);
-            code = await Mailpit.CodeAsync(email);
-        }
-
-        code.ShouldNotBe(registrationCode, "a new sign-in code arrives");
-        await again.GetByLabel("Šešių skaitmenų kodas").FillAsync(code);
+        await again.GetByLabel("Šešių skaitmenų kodas").FillAsync(await Mailpit.NewCodeAsync(email, codes));
         await again.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
         await again.WaitForURLAsync(new Regex(Bill + "$"), new() { Timeout = E2ESteps.Slow });
         returning.ConsoleErrors.ShouldBeEmpty();

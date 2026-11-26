@@ -11,6 +11,10 @@ Read before writing or changing a test. The commands are in [AGENTS.md](../AGENT
   setting, a role, an urgent summary), `LoggingFactory`). End-to-end tests: `tests/Lt2.E2E/E2ESteps.cs` (registration from any link, ticking the
   age and the terms of use, `Mailpit`, screenshots, API calls from the page, closing a test's organisation, `SqlAsync` against
   the stack's database); a staff fixture's `ConfirmFreshAsync` before an API call that needs a fresh confirmation.
+- **Mail in end-to-end tests.** Read a message the test has just caused by count, not as whatever is newest: count the
+  query first, act, then `Mailpit.NewAsync(query, before)` (a sign-in code: `Mailpit.NewCodeAsync(email, before)` with
+  `Mailpit.CodeQuery(email)`). An earlier code stays in Mailpit after it is used, and an MP's official address gets the
+  summaries and settings mail of other tests in the same run.
 - **Terms of use in tests (design 8.22.2).** Every member made through the shared steps accepts the terms (`TestBrowser`'s
   completion sends `AcceptsTerms`); an account older than them is made by deleting its `terms` consent (integration
   `TermsTests`) or setting an earlier `text_version` (E2E `TermsTests`). A new API write route needs nothing: the sweep in
