@@ -78,7 +78,7 @@ public sealed class ModerationTabsTests(DatabaseFixture database) : ApiTest(data
             foreach (var bill in new[] { AppealSteps.TaxBill, AppealSteps.ThirdBill })
             {
                 await Database.FreeBillAsync(bill);
-                await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+                await Database.UnfollowBillAsync(bill);
             }
         }
 

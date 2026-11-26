@@ -40,7 +40,7 @@ Read before writing or changing a test. The commands are in [AGENTS.md](../AGENT
   failure's full message (TRX report), the order the classes ran in and, for end-to-end runs, what tests could leave on the
   stack before and after the run (`tests/Lt2.E2E/leftovers.sql`): the two must read the same.
 - **Shared data:** the integration tests share one database and run one at a time; a test frees the bill it uses
-  (`FreeBillAsync`) and keeps to its own summary weeks (`MondayInWeeks`). A test that sends MP mail starts and ends with
+  (`FreeBillAsync`) and keeps to its own summary weeks (`MondayInWeeks`). `FreeBillAsync` leaves the bill's followers, and every earlier member who took a first side or MP who wrote a first response follows it; followers count into the lists' activity (design 8.12.5), so a test that expects bills in an order, or a list unchanged by an action that follows, first frees them of followers (`UnfollowBillAsync`) or undoes the follow ("Nebesekti"). A test that sends MP mail starts and ends with
   `ResetMpMailAsync` and puts `Digest:Sending` back: the letter, the MPs' choices, the links and the suppression list are
   shared by the run. A shared staff member (`ModeratorAsync()`, `AdministratorAsync()`) comes with a fresh passkey
   confirmation, so a setting can be saved whatever ran before. An MP's official address is shared by every test that uses
