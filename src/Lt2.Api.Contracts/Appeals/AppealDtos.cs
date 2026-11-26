@@ -167,7 +167,9 @@ public static class ReasonLimits
 /// 2026-11-19); the rest comes a page at a time (<see cref="IAppealsApi.GetReasonsAsync"/>). On a closed record
 /// <c>ClosedReason</c> says why (design 8.1 step 6): <c>vote</c>, the final vote <c>ClosingVoteId</c>; <c>rejected</c> or
 /// <c>withdrawn</c>, a moderator recorded that the Seimas rejected the bill or its initiators withdrew it on <c>ClosedDecidedOn</c>,
-/// as <c>ClosedSourceUrl</c> on lrs.lt says.
+/// as <c>ClosedSourceUrl</c> on lrs.lt says. <c>DescriptionReported</c> is true while a report about the description is open
+/// (design 8.13.1, "Off the site": the link preview then carries neither the description nor the readable title); it says
+/// nothing of the report or who made it.
 /// </summary>
 public sealed record BillRecordResponse(
     Guid? Id,
@@ -190,7 +192,8 @@ public sealed record BillRecordResponse(
     string? ClosedReason = null,
     DateOnly? ClosedDecidedOn = null,
     string? ClosedSourceUrl = null,
-    string? PlainTitle = null);
+    string? PlainTitle = null,
+    bool DescriptionReported = false);
 
 /// <summary>The bill's planned date on the Seimas agenda (design 8.4): shown as "Planuojama …", never a countdown.</summary>
 public sealed record PlannedDateResponse(DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator);

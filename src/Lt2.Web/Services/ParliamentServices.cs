@@ -156,16 +156,24 @@ internal sealed class ParliamentReads(IParliamentQueries queries, Lt2.Appeals.IB
         return new VoteListResponse(items.Select(i => i with { Summary = Titled(i.Summary, titles) }).ToList(), page.Total, page.NextCursor);
     }
 
-    public async Task<Result<VoteResponse>> VoteAsync(long id, CancellationToken ct) =>
-        await queries.VoteAsync(id, ct) is { } v
-            ? new VoteResponse(
-                Map(v.Summary),
-                v.SittingStartsAt,
-                v.AgendaItemTitle,
-                v.Factions.Select(Map).ToList(),
-                v.Ballots.Select(b => new BallotResponse(Map(b.Mp), b.FactionLabel, b.Choice)).ToList(),
-                v.ClassificationCorrected)
-            : NotFound;
+    /// <summary>Design 8.18, 8.13.1: a vote with its ballots; its bill carries the readable title, as in every list of votes.</summary>
+    public async Task<Result<VoteResponse>> VoteAsync(long id, CancellationToken ct)
+    {
+        if (await queries.VoteAsync(id, ct) is not { } v)
+        {
+            return NotFound;
+        }
+
+        var summary = Map(v.Summary);
+        var titles = await PlainTitlesAsync([summary.Vote], ct);
+        return new VoteResponse(
+            Titled(summary, titles),
+            v.SittingStartsAt,
+            v.AgendaItemTitle,
+            v.Factions.Select(Map).ToList(),
+            v.Ballots.Select(b => new BallotResponse(Map(b.Mp), b.FactionLabel, b.Choice)).ToList(),
+            v.ClassificationCorrected);
+    }
 
     public async Task<Result<ImportsResponse>> ImportsAsync(CancellationToken ct)
     {

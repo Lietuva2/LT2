@@ -27,7 +27,7 @@ internal sealed class ReportNotices(IParticipants participants, IOutbox outbox, 
 
         var kind = reports[0].TargetKind;
         var place = await PlaceAsync(db, kind, targetId, ct);
-        var bill = place.BillNumber is { } number ? await reads.BillAsync(number, ct) : null;
+        var bill = place.BillNumber is { } number ? await reads.MailBillAsync(number, ct) : null;
         var path = ReportOutcomes.StillShown(outcome) ? place.Path : null;
         var explanation = string.IsNullOrWhiteSpace(statement) ? null : statement.Trim();
         foreach (var reporter in reports.Select(r => r.ReporterUserId).Distinct())

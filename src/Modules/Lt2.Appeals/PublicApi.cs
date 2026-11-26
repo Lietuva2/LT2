@@ -102,7 +102,8 @@ public sealed record BillRecordInfo(
     string? ClosedReason = null,
     DateOnly? ClosedDecidedOn = null,
     string? ClosedSourceUrl = null,
-    string? PlainTitle = null);
+    string? PlainTitle = null,
+    bool DescriptionReported = false);
 
 /// <summary>The arguments' pages (design 8.12.1, owner 2026-11-19): the record carries the first of each side, the rest come a page at a time.</summary>
 public static class ReasonPages

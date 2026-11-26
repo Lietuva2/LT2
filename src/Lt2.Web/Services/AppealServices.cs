@@ -25,7 +25,8 @@ internal static class AppealMapping
     public static BillRecordResponse Map(BillRecordInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, Map(a.Counts), Map(a.Threshold),
         a.Reasons.Select(Map).ToList(), Map(a.Surge), a.ClosingVoteId, a.ClosedAt, Map(a.Planned), a.HiddenStatement, a.DescriptionUrl, a.DescriptionAt,
-        a.Cards?.Select(Map).ToList(), Map(a.ReasonTotals ?? ReasonTotals.None), a.ClosedReason, a.ClosedDecidedOn, a.ClosedSourceUrl, a.PlainTitle);
+        a.Cards?.Select(Map).ToList(), Map(a.ReasonTotals ?? ReasonTotals.None), a.ClosedReason, a.ClosedDecidedOn, a.ClosedSourceUrl, a.PlainTitle,
+        a.DescriptionReported);
 
     public static AuthorCardResponse Map(AuthorCard c) => new(c.ProfileId, c.Name, c.About);
 

@@ -577,12 +577,12 @@
         bill.Votes.LastOrDefault(v => v.Vote.Kind == VoteKinds.StageResult)?.Vote.Stage;
 
     /// <summary>
-    /// The link preview's text (design 8.22.5): the description when a person wrote or checked it (an AI text nobody read goes
-    /// nowhere without its label), otherwise the title with one sentence of what the page is; never the counts, which need
-    /// "not a representative poll" beside them.
+    /// The link preview's text (design 8.22.5): the description whoever wrote it, unless a report about it is open (owner,
+    /// 2026-11-26), otherwise the title with one sentence of what the page is; never the counts, which need "not a
+    /// representative poll" beside them.
     /// </summary>
     private string PreviewText(BillResponse b) =>
-        _record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed } r && r.Description.Length > 0 && r.DescriptionSource != DescriptionSources.Ai
+        _record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed, DescriptionReported: false } r && r.Description.Length > 0
             ? r.Description
             : P.Format(_record?.Status switch { BillRecordStatuses.Open => "Preview.Bill.Open", BillRecordStatuses.Closed => "Preview.Bill.Closed", _ => "Preview.Bill.Other" }, b.Title);
 
@@ -592,11 +592,11 @@
     private string PlainSource => _record?.DescriptionSource ?? DescriptionSources.Moderator;
 
     /// <summary>
-    /// The link preview's title (design 8.22.5): the readable title only when a person wrote or checked it (a moderator's or a
-    /// checked draft's), never an AI one nobody read; otherwise the official title.
+    /// The link preview's title (design 8.22.5): the readable title whoever wrote it, unless a report about the description is
+    /// open (owner, 2026-11-26); otherwise the official title.
     /// </summary>
     private string PreviewTitle(BillResponse b) =>
-        PlainTitle is { } title && PlainSource is DescriptionSources.Moderator or DescriptionSources.AiDraft ? title : b.Title;
+        _record is { DescriptionReported: false } && PlainTitle is { } title ? title : b.Title;
 
     private static int ToGo(ThresholdResponse t) => ShareLine.MissingOf(t);
 

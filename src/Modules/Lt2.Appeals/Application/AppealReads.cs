@@ -20,7 +20,8 @@ internal static class RecordQueries
 /// aggregates read from <c>appeals.position</c>; no read here returns who took which side.
 /// </summary>
 internal sealed class AppealReads(
-    IParticipants participants, IPublicProfiles profiles, IBillCatalogue bills, ISettings settings, IAiAssistant assistant, IBillTextSource texts, TimeProvider clock)
+    IParticipants participants, IPublicProfiles profiles, IBillCatalogue bills, IReadableTitles titles, ISettings settings, IAiAssistant assistant, IBillTextSource texts,
+    TimeProvider clock)
 {
     public async Task<int> MinimumAsync(CancellationToken ct) => await settings.GetAsync(SettingKeys.DigestThresholdMinimum, ct);
 
@@ -150,6 +151,10 @@ internal sealed class AppealReads(
 
     public async Task<BillFacts> BillAsync(string number, CancellationToken ct) =>
         await bills.FindAsync(number, ct) ?? new BillFacts(number, number);
+
+    /// <summary>The bill as members' emails name it: its readable title where one may go off the site (design 8.13.1), else the official one.</summary>
+    public async Task<BillFacts> MailBillAsync(string number, CancellationToken ct) =>
+        await bills.FindAsync(titles, number, ct) ?? new BillFacts(number, number);
 
     public async Task<IReadOnlyDictionary<string, BillFacts>> BillsAsync(IReadOnlyCollection<string> numbers, CancellationToken ct) =>
         numbers.Count == 0 ? new Dictionary<string, BillFacts>() : await bills.FindManyAsync(numbers, ct);

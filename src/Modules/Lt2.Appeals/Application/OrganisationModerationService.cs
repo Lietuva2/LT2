@@ -458,6 +458,7 @@ internal sealed class OrganisationModerationService(
     private async Task NotifyAsync(
         AppealsDb db, IDbContextTransaction transaction, Organisation o, string notice, string path, string? statement, string? contact, BillFacts? bill, CancellationToken ct)
     {
+        bill = bill is null ? null : await reads.MailBillAsync(bill.Number, ct); // design 8.13.1: the readable title
         foreach (var address in await reads.RepresentativeAddressesAsync(db, o.Id, ct))
         {
             await outbox.EnqueueAsync(

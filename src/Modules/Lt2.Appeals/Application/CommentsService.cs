@@ -909,7 +909,8 @@ internal sealed class CommentsService(
     /// </summary>
     private async Task NotifyAsync(AppealsDb db, IDbContextTransaction transaction, Comment comment, string notice, string? statement, string? contact, CancellationToken ct)
     {
-        var bill = await reads.BillAsync(comment.BillNumber, ct);
+        // Design 8.13.1: members are told with the readable title; the MP's account keeps the official one (8.4).
+        var bill = await reads.MailBillAsync(comment.BillNumber, ct);
         var path = "/seimas/" + Uri.EscapeDataString(bill.Number);
         var messages = new List<OutboxMessage>();
         switch (comment.SpeaksAs)
@@ -926,7 +927,7 @@ internal sealed class CommentsService(
                 if (await links.MpAccountAddressAsync(person, ct) is { } mpAddress)
                 {
                     var mpName = (await mps.MpsAsync([person], ct)).TryGetValue(person, out var mp) ? mp.FirstName + " " + mp.LastName : "";
-                    messages.Add(OutboxMessage.Create(MessageKinds.MpResponseNoticeEmail, new MpResponseNoticeEmail(mpAddress, notice, mpName, bill.Number, bill.Title, path, statement, contact)));
+                    messages.Add(OutboxMessage.Create(MessageKinds.MpResponseNoticeEmail, new MpResponseNoticeEmail(mpAddress, notice, mpName, bill.Number, (await reads.BillAsync(comment.BillNumber, ct)).Title, path, statement, contact)));
                 }
 
                 break;

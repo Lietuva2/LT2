@@ -68,6 +68,7 @@ public static class AppealsModule
         // Design 8.20.1: the responses the followers' daily email tells about (Notifications reads them through this).
         services.AddScoped<IMpResponseFeed, MpResponseFeed>();
         services.AddScoped<IRecordClosureFeed, RecordClosureFeed>();
+        services.AddScoped<IReadableTitles, ReadableTitles>();
 
         // Design 7.2: the Parliament module refuses correcting a record's closing vote out of the adoption stage.
         services.AddScoped<IClosingVotes, ClosingVotes>();

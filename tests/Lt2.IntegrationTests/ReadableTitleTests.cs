@@ -161,7 +161,7 @@ public sealed partial class ReadableTitleTests(DatabaseFixture database) : ApiTe
         }
     }
 
-    /// <summary>Design 8.13.1: every list of votes names the bill by its readable title, the official one under it.</summary>
+    /// <summary>Design 8.13.1: every list of votes names the bill by its readable title, the official one under it, and so does the vote's page.</summary>
     [Fact]
     public async Task The_lists_of_votes_lead_with_the_bills_readable_title()
     {
@@ -199,9 +199,19 @@ public sealed partial class ReadableTitleTests(DatabaseFixture database) : ApiTe
             (await PageAsync(visitor, "/seimas/balsavimai?q=" + Votes)).ShouldContain(link);
             (await PageAsync(visitor, "/p/jonas-petraitis")).ShouldContain(link);
 
+            // The vote's own page and its answer: the readable title is the heading, the official title follows it.
+            (await visitor.GetJsonAsync<VoteResponse>(ParliamentRoutes.VoteById(voteId))).Summary.Vote.Bill!.PlainTitle.ShouldBe(Title);
+            var votePage = await PageAsync(visitor, $"/seimas/balsavimai/{voteId}");
+            votePage.ShouldContain($"<h1>{Title}</h1>");
+            votePage.ShouldContain($"id=\"official-title\">Oficialus pavadinimas: {official}</p>");
+            votePage.ShouldContain($"<meta property=\"og:title\" content=\"Balsavimas · {Title}\"", customMessage: "the readable title goes into the link preview");
+
             // A vote without a bill keeps its wording; a bill without a readable title keeps its official one (VoteRow).
             await Database.FreeBillAsync(Votes);
             (await PageAsync(visitor, "/p/jonas-petraitis")).ShouldNotContain("tl-item__official");
+            var bare = await PageAsync(visitor, $"/seimas/balsavimai/{voteId}");
+            bare.ShouldNotContain("id=\"official-title\"");
+            bare.ShouldNotContain($"<h1>{Title}</h1>");
         }
         finally
         {

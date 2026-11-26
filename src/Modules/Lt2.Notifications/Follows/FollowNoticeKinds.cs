@@ -90,7 +90,7 @@ internal static class FollowEvents
 /// bill a Vilnius day; for the daily and weekly choices the date current when the email is made, and at once, alone, when the
 /// sitting comes before the person's next gathered email (design 8.24). A date already past, or no longer the bill's, is left out.
 /// </summary>
-internal sealed class PlannedNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IPlannedAgenda agenda) : IMemberNoticeKind
+internal sealed class PlannedNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IReadableTitles titles, IPlannedAgenda agenda) : IMemberNoticeKind
 {
     public async Task<int> RecordAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
@@ -136,7 +136,7 @@ internal sealed class PlannedNotices(IDbContextFactory<NotificationsDb> contexts
         var numbers = events.Select(e => e.BillNumber).Distinct().ToList();
         var followers = await FollowEvents.FollowersAsync(pass.Db, FollowKinds.Bill, numbers, cancellationToken);
         var planned = await agenda.ForBillsAsync(numbers, cancellationToken);
-        var facts = await bills.FindManyAsync(numbers, cancellationToken);
+        var facts = await bills.FindManyAsync(titles, numbers, cancellationToken);
 
         // Under "Iš karto": when each bill last had a "planned" email, for the limit of one a day (design 8.11.2).
         var lastSent = pass.Which != Pass.Immediate
@@ -214,7 +214,7 @@ internal sealed class PlannedNotices(IDbContextFactory<NotificationsDb> contexts
 /// The Seimas held a stage vote on a followed bill (design 8.11.2, kind <c>voted</c>, key: the vote): the result, the official
 /// note and how each MP the person follows voted. Told to those who followed before the vote was held and before it was seen.
 /// </summary>
-internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IMpDirectory mps) : IMemberNoticeKind
+internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IReadableTitles titles, IMpDirectory mps) : IMemberNoticeKind
 {
     private static readonly StringComparer LithuanianOrder = StringComparer.Create(CultureInfo.GetCultureInfo("lt-LT"), false);
 
@@ -268,7 +268,7 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
         var followers = await FollowEvents.FollowersAsync(pass.Db, FollowKinds.Bill, numbers, cancellationToken);
         var votes = (await bills.StageResultsAsync(numbers, pass.Now - FollowRules.EventLookBack, cancellationToken))
             .ToDictionary(v => FollowRules.VotedKey(v.VoteId), StringComparer.Ordinal);
-        var facts = await bills.FindManyAsync(numbers, cancellationToken);
+        var facts = await bills.FindManyAsync(titles, numbers, cancellationToken);
         var told = new List<(BillEvent Event, StageVoteFacts Vote, List<Guid> People)>();
         foreach (var e in events)
         {
@@ -330,7 +330,7 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
 /// the counts or anyone's side. Told to those who followed before the close; a close undone (reopened) by the time the email is
 /// made is left out.
 /// </summary>
-internal sealed class ClosedNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IRecordClosureFeed closures) : IMemberNoticeKind
+internal sealed class ClosedNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IReadableTitles titles, IRecordClosureFeed closures) : IMemberNoticeKind
 {
     public async Task<int> RecordAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
@@ -384,7 +384,7 @@ internal sealed class ClosedNotices(IDbContextFactory<NotificationsDb> contexts,
             .ToDictionary(c => (c.BillNumber, FollowRules.ClosedKey(c.ClosedAt)));
         var numbers = events.Select(e => e.BillNumber).Distinct().ToList();
         var followers = await FollowEvents.FollowersAsync(pass.Db, FollowKinds.Bill, numbers, cancellationToken);
-        var facts = await bills.FindManyAsync(numbers, cancellationToken);
+        var facts = await bills.FindManyAsync(titles, numbers, cancellationToken);
         var due = new List<DueNotice>();
         foreach (var e in events)
         {
@@ -417,7 +417,7 @@ internal sealed class ClosedNotices(IDbContextFactory<NotificationsDb> contexts,
 /// statement): the organisation with its label, the bill and the stance, never the text. Left out when it is no longer public or
 /// its organisation is blocked or closed by the time the email is made.
 /// </summary>
-internal sealed class StatementNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IOrganisationDirectory organisations) : IMemberNoticeKind
+internal sealed class StatementNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IReadableTitles titles, IOrganisationDirectory organisations) : IMemberNoticeKind
 {
     public async Task<int> RecordAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
@@ -466,7 +466,7 @@ internal sealed class StatementNotices(IDbContextFactory<NotificationsDb> contex
             .ToDictionary(s => FollowRules.IdKey(s.Id), StringComparer.Ordinal);
         var known = await organisations.FindManyAsync(ids, cancellationToken);
         var followers = await FollowEvents.FollowersAsync(pass.Db, FollowKinds.Organisation, ids.Select(FollowRules.IdKey).ToList(), cancellationToken);
-        var facts = await bills.FindManyAsync(events.Select(e => e.BillNumber).Distinct().ToList(), cancellationToken);
+        var facts = await bills.FindManyAsync(titles, events.Select(e => e.BillNumber).Distinct().ToList(), cancellationToken);
         var due = new List<DueNotice>();
         foreach (var e in events)
         {
@@ -510,7 +510,7 @@ internal sealed class StatementNotices(IDbContextFactory<NotificationsDb> contex
 /// withdrawn, hidden or changed again by the time the email is made is left out (design 8.24).
 /// </summary>
 internal sealed class ResponseNotices(
-    IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IMpDirectory mps, IMpResponseFeed responses, IMpLinks links) : IMemberNoticeKind
+    IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IReadableTitles titles, IMpDirectory mps, IMpResponseFeed responses, IMpLinks links) : IMemberNoticeKind
 {
     private static readonly StringComparer LithuanianOrder = StringComparer.Create(CultureInfo.GetCultureInfo("lt-LT"), false);
 
@@ -572,7 +572,7 @@ internal sealed class ResponseNotices(
         var persons = publicNow.Values.Select(r => r.SeimasPersonId).Distinct().ToList();
         var mpsOf = await mps.MpsAsync(persons, cancellationToken);
         var factions = await mps.FactionsAsync(persons, cancellationToken);
-        var facts = await bills.FindManyAsync(numbers, cancellationToken);
+        var facts = await bills.FindManyAsync(titles, numbers, cancellationToken);
         var due = new List<DueNotice>();
         foreach (var onBill in events.GroupBy(e => e.BillNumber))
         {
@@ -638,7 +638,7 @@ internal sealed class ResponseNotices(
 /// author; left out when by the time the email is made the text is no longer shown or the member's profile is switched off.
 /// </summary>
 internal sealed class MemberNotices(
-    IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IPublicProfiles profiles, IMemberTexts texts) : IMemberNoticeKind
+    IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IReadableTitles titles, IPublicProfiles profiles, IMemberTexts texts) : IMemberNoticeKind
 {
     public async Task<int> RecordAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
@@ -687,7 +687,7 @@ internal sealed class MemberNotices(
         var published = (await texts.PublishedSinceAsync(byAuthor.Keys.ToList(), pass.Now - FollowRules.EventLookBack, cancellationToken))
             .ToDictionary(a => FollowRules.IdKey(a.Id), StringComparer.Ordinal);
         var followers = await FollowEvents.FollowersAsync(pass.Db, FollowKinds.Member, shown.Keys.ToList(), cancellationToken);
-        var facts = await bills.FindManyAsync(events.Select(e => e.BillNumber).Distinct().ToList(), cancellationToken);
+        var facts = await bills.FindManyAsync(titles, events.Select(e => e.BillNumber).Distinct().ToList(), cancellationToken);
         var due = new List<DueNotice>();
         foreach (var e in events)
         {
@@ -736,7 +736,7 @@ internal sealed class MemberNotices(
 /// holds one line per argument however many runs found comments on it, with the day of the latest; an argument whose
 /// comments in those windows are all deleted or hidden by the time the email is made, or that is no longer shown, is left out.
 /// </summary>
-internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, ICommentFeed comments) : IMemberNoticeKind
+internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IReadableTitles titles, ICommentFeed comments) : IMemberNoticeKind
 {
     public async Task<int> RecordAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
@@ -818,7 +818,7 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
             FollowEvents.Taken(e, pass);
         }
 
-        var facts = await bills.FindManyAsync(told.Values.Select(t => t.Argument.BillNumber).Distinct().ToList(), cancellationToken);
+        var facts = await bills.FindManyAsync(titles, told.Values.Select(t => t.Argument.BillNumber).Distinct().ToList(), cancellationToken);
         var due = new List<DueNotice>();
         foreach (var (argument, firstSeen, lastSeen) in told.Values.OrderBy(t => t.Argument.BillNumber, StringComparer.Ordinal))
         {

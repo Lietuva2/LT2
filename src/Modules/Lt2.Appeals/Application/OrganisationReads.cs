@@ -39,6 +39,9 @@ internal sealed class OrganisationReads(IBillCatalogue bills, AppealReads reads,
         db.OrganisationRepresentatives.AnyAsync(r => r.OrganisationId == organisationId && r.UserId == userId && r.EndedAt == null, ct);
 
     /// <summary>The bill for statements, or null when it is not in the catalogue.</summary>
+    /// <summary>The bill as members' emails name it (design 8.13.1): <see cref="AppealReads.MailBillAsync"/>.</summary>
+    public Task<BillFacts> MailBillAsync(string number, CancellationToken ct) => reads.MailBillAsync(number, ct);
+
     public async Task<BillForStatements?> BillAsync(AppealsDb db, string billNumber, CancellationToken ct)
     {
         var number = AppealReads.NormaliseBillNumber(billNumber);
