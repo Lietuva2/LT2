@@ -143,4 +143,49 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
             await Database.ExecuteAsync("DELETE FROM parliament.agenda_snapshot WHERE id = @id", ("id", snapshot));
         }
     }
+
+    /// <summary>
+    /// Design 8.3 (owner, 2026-11-26): "Palikti" on a bill under its threshold on the agenda takes it out of the queue for that
+    /// planned date and stage; it comes back when either changes. The bill's page offers "Palikti" while it is in the queue.
+    /// </summary>
+    [Fact]
+    public async Task Kept_on_the_agenda_a_bill_comes_back_only_when_its_date_or_stage_changes()
+    {
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        var record = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 500);
+        var date = ReasonsToComeSteps.VilniusToday().AddDays(5);
+        await Database.PlanAsync(AppealSteps.ThirdBill, date, "consideration");
+        try
+        {
+            async Task<QueueRecordResponse?> QueuedAsync() =>
+                (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.SingleOrDefault(a => a.Id == record.Id);
+            async Task KeepAsync()
+            {
+                using var kept = await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.KeepRecord, record.Id), new ModerationRequest());
+                kept.StatusCode.ShouldBe(HttpStatusCode.NoContent, await kept.Content.ReadAsStringAsync());
+            }
+
+            (await QueuedAsync()).ShouldNotBeNull().UnderThresholdOnAgenda.ShouldBeTrue();
+            (await moderator.Browser.ModerationBillAsync(AppealSteps.ThirdBill)).HasOpenItems.ShouldBeTrue("the bill's page offers Palikti too");
+
+            await KeepAsync();
+            (await QueuedAsync()).ShouldBeNull("kept for this date and stage");
+            (await moderator.Browser.ModerationBillAsync(AppealSteps.ThirdBill)).HasOpenItems.ShouldBeFalse();
+
+            await Database.PlanAsync(AppealSteps.ThirdBill, date, "adoption");
+            (await QueuedAsync()).ShouldNotBeNull("the stage changed").UnderThresholdOnAgenda.ShouldBeTrue();
+
+            await KeepAsync();
+            (await QueuedAsync()).ShouldBeNull();
+            await Database.PlanAsync(AppealSteps.ThirdBill, date.AddDays(2), "adoption");
+            (await QueuedAsync()).ShouldNotBeNull("the date changed").UnderThresholdOnAgenda.ShouldBeTrue();
+        }
+        finally
+        {
+            await Database.UnplanAsync(AppealSteps.ThirdBill);
+            await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        }
+    }
 }

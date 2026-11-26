@@ -81,7 +81,17 @@ internal sealed class AppealReads(
     /// The surge note of each given record that has one (design 6.6, three settings): records where the rule does not hold
     /// are left out. One query for all of them.
     /// </summary>
-    public async Task<Dictionary<Guid, SurgeInfo>> SurgesAsync(AppealsDb db, IReadOnlyCollection<Guid> recordIds, CancellationToken ct)
+    public Task<Dictionary<Guid, SurgeInfo>> SurgesAsync(AppealsDb db, IReadOnlyCollection<Guid> recordIds, CancellationToken ct) =>
+        SurgesAsync(db, recordIds, sinceKept: false, ct);
+
+    /// <summary>
+    /// The surges that bring a record into the moderators' queue (design 8.3, owner 2026-11-26): as <see cref="SurgesAsync(AppealsDb, IReadOnlyCollection{Guid}, CancellationToken)"/>,
+    /// counting only positions taken after a moderator last kept the bill ("Palikti").
+    /// </summary>
+    public Task<Dictionary<Guid, SurgeInfo>> QueueSurgesAsync(AppealsDb db, IReadOnlyCollection<Guid> recordIds, CancellationToken ct) =>
+        SurgesAsync(db, recordIds, sinceKept: true, ct);
+
+    private async Task<Dictionary<Guid, SurgeInfo>> SurgesAsync(AppealsDb db, IReadOnlyCollection<Guid> recordIds, bool sinceKept, CancellationToken ct)
     {
         if (recordIds.Count == 0)
         {
@@ -92,8 +102,14 @@ internal sealed class AppealReads(
         var share = await settings.GetAsync(SettingKeys.SurgeMinimumShare, ct);
         var minimum = await settings.GetAsync(SettingKeys.SurgeMinimumAccounts, ct);
         var since = clock.GetUtcNow() - TimeSpan.FromHours(hours);
-        var rows = await db.Positions.AsNoTracking()
-            .Where(p => recordIds.Contains(p.RecordId) && p.CreatedAt >= since)
+        var positions = db.Positions.AsNoTracking().Where(p => recordIds.Contains(p.RecordId) && p.CreatedAt >= since);
+        if (sinceKept)
+        {
+            // The queue (design 8.3, owner 2026-11-26): once a moderator kept the bill, only positions taken after that count.
+            positions = positions.Where(p => db.BillRecords.Any(r => r.Id == p.RecordId && (r.SurgeKeptAt == null || p.CreatedAt > r.SurgeKeptAt)));
+        }
+
+        var rows = await positions
             .GroupBy(p => p.RecordId)
             .Select(g => new { RecordId = g.Key, Recent = g.Count(), New = g.Count(p => p.MemberSince >= since) })
             .ToListAsync(ct);

@@ -154,6 +154,38 @@ public sealed class RecordRuleTests
     [InlineData(1, true, true, false)]
     public void A_bill_under_its_threshold_on_the_agenda_needs_a_moderator_only_once_someone_takes_part(int participants, bool planned, bool reached, bool listed) =>
         RecordRules.UnderThresholdOnAgenda(participants, planned, reached).ShouldBe(listed);
+
+    private static readonly DateOnly Planned = new(2026, 12, 3);
+
+    [Theory]
+    [InlineData(null, null, null, 3, true)]                       // never kept
+    [InlineData("2026-12-03", "adoption", 3, 3, false)]           // kept for this date and stage
+    [InlineData("2026-12-03", "adoption", 3, 49, false)]          // more participants, still under half of 100
+    [InlineData("2026-12-03", "adoption", 3, 50, true)]           // reached half of its threshold after being kept below it
+    [InlineData("2026-12-03", "adoption", 60, 70, false)]         // kept when already over half: stays out
+    [InlineData("2026-12-01", "adoption", 3, 3, true)]            // the date changed
+    [InlineData("2026-12-03", "consideration", 3, 3, true)]       // the stage changed
+    public void A_bill_kept_on_the_agenda_comes_back_when_its_date_or_stage_changes_or_it_nears_its_threshold(
+        string? keptFor, string? keptStage, int? keptParticipants, int participants, bool listed) =>
+        RecordRules.UnderThresholdOnAgendaDue(
+            participants, Planned, "adoption", reached: false, threshold: 100,
+            keptFor is null ? null : DateOnly.Parse(keptFor, System.Globalization.CultureInfo.InvariantCulture), keptStage, keptParticipants).ShouldBe(listed);
+
+    [Fact]
+    public void A_bill_not_under_its_threshold_on_the_agenda_is_not_in_the_queue_for_it_kept_or_not()
+    {
+        RecordRules.UnderThresholdOnAgendaDue(0, Planned, "adoption", false, 100, null, null, null).ShouldBeFalse();
+        RecordRules.UnderThresholdOnAgendaDue(3, null, null, false, 100, null, null, null).ShouldBeFalse();
+        RecordRules.UnderThresholdOnAgendaDue(3, Planned, "adoption", true, 100, null, null, null).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(49, 100, false)]
+    [InlineData(50, 100, true)]
+    [InlineData(26, 51, true)]
+    [InlineData(25, 51, false)]
+    public void Near_its_threshold_is_at_least_half_of_it(int participants, int threshold, bool near) =>
+        RecordRules.NearThreshold(participants, threshold).ShouldBe(near);
 }
 
 /// <summary>Design 8.12.5 (decided 2026-11-14): the orders of /projektai and the front page's cards, and the search.</summary>

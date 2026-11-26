@@ -82,6 +82,25 @@ internal sealed class BillRecord
     /// <summary><c>automatic</c> or <c>held</c> (design 8.4; used by the summaries).</summary>
     public string Sending { get; set; } = "automatic";
 
+    /// <summary>
+    /// The planned date a moderator kept the bill for ("Palikti", design 8.3): while the bill is planned for this date and
+    /// stage it does not come back into the queue as "under its threshold on the agenda", unless it comes near its threshold
+    /// (<see cref="RecordRules.UnderThresholdOnAgendaDue"/>). Null while never kept on the agenda.
+    /// </summary>
+    public DateOnly? AgendaKeptFor { get; set; }
+
+    /// <summary>The planned stage when it was kept (with <see cref="AgendaKeptFor"/>); null for none.</summary>
+    public string? AgendaKeptStage { get; set; }
+
+    /// <summary>The participants when it was kept (with <see cref="AgendaKeptFor"/>).</summary>
+    public int? AgendaKeptParticipants { get; set; }
+
+    /// <summary>
+    /// When a moderator last kept the bill ("Palikti", design 8.3): a surge in the queue counts only positions taken after it,
+    /// so the same surge does not bring the bill back. The bill's page and the summaries' surge notes ignore it.
+    /// </summary>
+    public DateTimeOffset? SurgeKeptAt { get; set; }
+
     /// <summary>A moderator's own number for this bill (design 8.12.2); null = the default threshold of all bills.</summary>
     public int? Threshold { get; set; }
 

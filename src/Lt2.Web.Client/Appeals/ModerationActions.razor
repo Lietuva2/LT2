@@ -313,7 +313,10 @@
     /// <summary>For a bill: its text on e-seimas, beside the field for pasted official text.</summary>
     [Parameter] public string? ESeimasUrl { get; set; }
 
-    /// <summary>The item has open reports or date flags, so "keep" means something.</summary>
+    /// <summary>
+    /// The item has something "keep" answers (design 8.3, owner 2026-11-26): open reports or date flags, or for an open bill a
+    /// surge or being under its threshold on the agenda.
+    /// </summary>
     [Parameter] public bool HasOpenItems { get; set; }
 
     /// <summary>For an argument: a moderator has seen it (design 8.3).</summary>
@@ -358,10 +361,17 @@
     };
 
     /// <summary>
-    /// The one filled button (owner, 2026-11-17): the first action offered when it is what the item's state asks for (keep an
-    /// item with an open report or date flag, confirm an AI summary nobody has read, publish a waiting argument); otherwise none.
+    /// The one filled button (owner, 2026-11-17, 2026-11-26): what the reason the item is there asks for. "Palikti" when keep
+    /// answers something (reports, date flags, a surge, under its threshold on the agenda); else "Atnaujinti siuntimą" on a
+    /// held bill; else confirming an AI summary nobody has read, or publishing a waiting argument; otherwise none.
     /// </summary>
-    private string? Primary => Offered.FirstOrDefault() is { } first && first is "keep" or "confirm" or "publish" ? first : null;
+    private string? Primary => Offered.FirstOrDefault() switch
+    {
+        "keep" => "keep",
+        _ when Offered.Contains("release") => "release",
+        var first when first is "confirm" or "publish" => first,
+        _ => null,
+    };
 
     /// <summary>The offered actions as the menu shows them: a bill's under the headings of their kind, hiding set apart.</summary>
     private IReadOnlyList<ModerationChoice> Choices =>

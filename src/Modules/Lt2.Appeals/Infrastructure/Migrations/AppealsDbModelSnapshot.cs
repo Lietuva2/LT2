@@ -129,6 +129,19 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateOnly?>("AgendaKeptFor")
+                        .HasColumnType("date")
+                        .HasColumnName("agenda_kept_for");
+
+                    b.Property<int?>("AgendaKeptParticipants")
+                        .HasColumnType("integer")
+                        .HasColumnName("agenda_kept_participants");
+
+                    b.Property<string>("AgendaKeptStage")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("agenda_kept_stage");
+
                     b.Property<string>("BillNumber")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -233,6 +246,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("status");
+
+                    b.Property<DateTimeOffset?>("SurgeKeptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("surge_kept_at");
 
                     b.Property<int?>("Threshold")
                         .HasColumnType("integer")
