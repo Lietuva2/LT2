@@ -134,8 +134,11 @@ public interface IParliamentQueries
 
     Task<ImportsInfo> ImportsAsync(CancellationToken cancellationToken);
 
-    /// <summary>Stage-result votes on bills held at or after <paramref name="since"/>, newest first (design 8.11.1 "recently voted").</summary>
-    Task<IReadOnlyList<VoteSummary>> StageResultsSinceAsync(DateTimeOffset since, CancellationToken cancellationToken);
+    /// <summary>
+    /// Stage-result votes on bills held on the last <paramref name="days"/> Vilnius days that had one, however long ago,
+    /// newest first (design 8.7 "Neseniai balsuota"); at most 200.
+    /// </summary>
+    Task<IReadOnlyList<VoteSummary>> StageResultsOfLastDaysAsync(int days, CancellationToken cancellationToken);
 
     /// <summary>
     /// When the upcoming agenda was last read: the later of the watcher's last good read of the lrs.lt page and the last save of

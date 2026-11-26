@@ -173,6 +173,8 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The front page's head: a larger logo beside the title and the lead, the trial note under both; no paragraph on
   following and no "Organizacijos" block; following is explained at `/metodika#following` (8.16, 2026-11-16).
 - The front page shows the next two sitting days and the last two voting days, five rows of each (8.11.1, 2026-11-18).
+  The voting days are the last two the Seimas voted on a bill's stage, however long ago, not the last seven days (8.7,
+  2026-11-26).
   No row of links ("Visi projektai", "Suvestinės Seimo nariams", "Seimo nariai") under its agenda (2026-11-19).
 - The front page's planned days and voted days are two sheets, "Artimiausiu metu Seime" and "Neseniai balsuota" (both
   h2), each with its long form's link beside the heading ("Visa darbotvarkė →", "Ankstesni balsavimai →"; on

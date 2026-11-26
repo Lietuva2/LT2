@@ -18,15 +18,13 @@ namespace Lt2.Web.Services;
 internal sealed class AgendaReads(
     IPlannedAgenda agenda, IBillCatalogue bills, IParliamentQueries parliament, IAppealsModule appeals, IOrganisations organisations, RowSummaries summaries, TimeProvider clock)
 {
-    /// <summary>"Recently voted": the stage results of the last seven days.</summary>
-    public const int RecentDays = 7;
-
     public async Task<AgendaResponse> ReadAsync(CancellationToken ct)
     {
         var now = clock.GetUtcNow();
         var today = VilniusTime.DateOf(now);
         var planned = await agenda.BetweenAsync(today, DateOnly.MaxValue, ct);
-        var recent = await parliament.StageResultsSinceAsync(now.AddDays(-RecentDays), ct);
+        // Owner, 2026-11-26: the last voting days, however long ago, not a fixed window (design 8.7, "Neseniai balsuota").
+        var recent = await parliament.StageResultsOfLastDaysAsync(AgendaRules.FrontDays, ct);
         var numbers = planned.Select(p => p.BillNumber).Concat(recent.Select(v => v.Vote.Bill!.Number)).Distinct().ToList();
         var facts = numbers.Count == 0 ? new Dictionary<string, BillFacts>() : await bills.FindManyAsync(numbers, ct);
         var states = await appeals.BillStatesAsync(numbers, ct);

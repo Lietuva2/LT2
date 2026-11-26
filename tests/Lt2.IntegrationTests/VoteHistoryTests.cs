@@ -430,22 +430,24 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     // ---- The ways in -------------------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task The_start_page_and_the_agenda_link_to_the_history_beside_the_heading_also_without_a_recent_vote()
+    public async Task The_start_page_links_to_the_history_beside_the_heading_and_shows_the_last_voting_days_however_long_ago()
     {
         using var visitor = NewBrowser();
-        (await visitor.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda)).RecentVotes.ShouldBeEmpty("no vote in the last seven days");
+        var answer = await visitor.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda);
+        answer.RecentVotes.ShouldNotBeEmpty();
+        answer.RecentVotes.ShouldAllBe(v => v.HeldAt < DateTimeOffset.UtcNow.AddDays(-7), "the invented sittings are months old");
         ForgetFrontPage();
 
         // Owner, 2026-11-21: the voted days are a sheet of their own with an h2, and "Ankstesni balsavimai" stands beside the
         // heading, as "Visa darbotvarkė" beside the planned days' heading; the section shows without a vote too.
         var home = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/"));
-        home.ShouldNotContain("id=\"home-voted-");
+        // Owner, 2026-11-26: the last two voting days, however long ago, so the list is not empty for want of a recent vote.
+        home.ShouldContain("id=\"home-voted-");
+        home.ShouldNotContain("id=\"home-no-recent\"");
         home.ShouldContain("<section class=\"sheet stack\" aria-labelledby=\"h-home-recent\" id=\"home-recent\">");
         var row = ReasonsToComeSteps.HeadRow(home, "h-home-recent");
         row.ShouldContain("<h2 id=\"h-home-recent\">Neseniai balsuota</h2>");
         row.ShouldContain("<a href=\"/seimas/balsavimai\" id=\"home-votes-older\">Ankstesni balsavimai →</a>");
-        home.ShouldContain("<p id=\"home-no-recent\">Per pastarąsias septynias dienas Seimas dėl projektų etapų nebalsavo.</p>");
-        home.IndexOf("id=\"home-no-recent\"", StringComparison.Ordinal).ShouldBeGreaterThan(home.IndexOf("id=\"h-home-recent\"", StringComparison.Ordinal));
         home.ShouldNotContain("tl-older", customMessage: "no link at the end of the list");
         Regex.Count(home, "Ankstesni balsavimai").ShouldBe(1);
 

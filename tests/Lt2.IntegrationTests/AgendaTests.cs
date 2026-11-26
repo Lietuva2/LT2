@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Lt2.Api.Contracts.Agenda;
 using Lt2.Api.Contracts.Parliament;
 using Lt2.IntegrationTests.Infrastructure;
+using Lt2.SharedKernel;
 using Lt2.Web.Client.Agenda;
 using Lt2.Web.Services;
 using Microsoft.Extensions.Caching.Memory;
@@ -459,8 +460,19 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     }
 
     [Fact]
-    public async Task The_agenda_answer_holds_the_stage_votes_of_the_last_seven_days_only_and_the_page_lists_none()
+    public async Task The_agenda_answer_holds_the_stage_votes_of_the_last_two_voting_days_however_long_ago_and_the_page_lists_none()
     {
+        // Owner, 2026-11-26: the last two days with a stage vote, not a fixed window. The invented sittings are months old.
+        static List<DateOnly> DaysOf(AgendaResponse answer) =>
+            answer.RecentVotes.Select(v => VilniusTime.DateOf(v.HeldAt)).Distinct().ToList();
+        using (var before = NewBrowser())
+        {
+            var agenda = await before.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda);
+            agenda.RecentVotes.ShouldNotBeEmpty("the invented sittings' stage votes, however old");
+            agenda.RecentVotes.ShouldContain(v => v.HeldAt < DateTimeOffset.UtcNow.AddDays(-7));
+            DaysOf(agenda).Count.ShouldBe(2);
+        }
+
         var old = await Database.MoveVoteAsync(ReasonsToComeSteps.TaxConsiderationVote, DateTimeOffset.UtcNow.AddDays(-2));
         try
         {
@@ -470,7 +482,9 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             vote.Number.ShouldBe(AppealSteps.TaxBill);
             vote.Stage.ShouldBe("consideration");
             vote.Totals.For.ShouldBe(74);
-            agenda.RecentVotes.ShouldAllBe(v => v.HeldAt >= DateTimeOffset.UtcNow.AddDays(-7));
+            var days = DaysOf(agenda);
+            days.Count.ShouldBe(2, "the moved vote's day and the latest sitting's before it");
+            days[0].ShouldBe(VilniusTime.DateOf(vote.HeldAt), "newest day first");
 
             ForgetAgenda();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
@@ -483,7 +497,9 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
         }
 
         using var later = NewBrowser();
-        (await later.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda)).RecentVotes.ShouldNotContain(v => v.VoteId == ReasonsToComeSteps.TaxConsiderationVote);
+        var restored = await later.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda);
+        restored.RecentVotes.ShouldAllBe(v => v.HeldAt < DateTimeOffset.UtcNow.AddDays(-7), "back to the invented sittings only");
+        DaysOf(restored).Count.ShouldBe(2);
     }
 
     [Fact]

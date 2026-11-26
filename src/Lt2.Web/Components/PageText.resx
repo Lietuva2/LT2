@@ -47,7 +47,7 @@
   <data name="Agenda.SourceLink" xml:space="preserve"><value>Darbotvarkė lrs.lt</value></data>
   <data name="Agenda.NonePlanned" xml:space="preserve"><value>Šiuo metu darbotvarkėse projektų nėra. Kai Seimas juos suplanuos, jie atsiras čia.</value></data>
   <data name="Agenda.Day" xml:space="preserve"><value>Planuojama {0}</value></data>
-  <data name="Agenda.NoRecent" xml:space="preserve"><value>Per pastarąsias septynias dienas Seimas dėl projektų etapų nebalsavo.</value></data>
+  <data name="Agenda.NoRecent" xml:space="preserve"><value>Atviruosiuose Seimo duomenyse balsavimų dėl projektų etapų dar nėra.</value></data>
   <data name="Agenda.Result" xml:space="preserve"><value>už {0} · prieš {1} · susilaikė {2}</value></data>
   <data name="Agenda.ByModerator" xml:space="preserve"><value>datą patikslino moderatorius</value></data>
   <data name="Agenda.NoTitle" xml:space="preserve"><value>Projekto atviruosiuose Seimo duomenyse dar nėra.</value></data>
