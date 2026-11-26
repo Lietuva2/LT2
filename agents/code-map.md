@@ -125,7 +125,12 @@ src/Lt2.Migrator           creates the database roles, applies migrations and gr
                            invented AI summary on XVP-0533, a closed invented bill XVP-0707 and thirty more
                            (DemoClosedBills.cs) with invented positions (design 8.26.5) (--demo-appeal); gives one named
                            existing account with the positions consent random sides on those closed bills, the address
-                           never logged (--demo-sides-for ADDRESS|-, DemoSides.cs);
+                           never logged (--demo-sides-for ADDRESS|-, DemoSides.cs); on the trial's real Seimas data (only
+                           where Demo:Allowed and Email:Caught) invented members' activity: sides, arguments, comments,
+                           organisations, closed records before real votes, daily aggregates and past summaries as dry runs
+                           (--demo-activity, DemoActivity.cs with its bills and texts in DemoActivityBills.cs; the modules'
+                           parts are Appeals' InventedActivity, Notifications' InventedDigests, Parliament's
+                           ParliamentMaintenance.IsDataRealAsync and friends; design 8.26.5);
                            run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)

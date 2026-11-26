@@ -4,6 +4,9 @@ using Npgsql;
 
 namespace Lt2.Parliament;
 
+/// <summary>A bill's latest adoption-stage vote, for the trial's invented closed records (design 8.26.5).</summary>
+public sealed record AdoptionVote(string BillNumber, string Title, long VoteId, DateTimeOffset HeldAt, SeimasVoteNumbers Numbers);
+
 /// <summary>What emptying the parliament data did.</summary>
 public sealed record ParliamentReset(long ImportRuns, long RawDocuments, long People, long Votes);
 
@@ -139,6 +142,147 @@ public static class ParliamentMaintenance
         var read = reader.GetBoolean(3);
         int? Count(int i) => read && !reader.IsDBNull(i) ? reader.GetInt32(i) : null;
         return (reader.GetInt64(0), reader.GetFieldValue<DateTimeOffset>(1), new SeimasVoteNumbers(reader.GetBoolean(2), Count(4), Count(5), Count(6)));
+    }
+
+    /// <summary>
+    /// Whether the parliament data is the real Seimas service's only: something real is stored and no stored response, run or
+    /// agenda page came from the stand-in. The trial's invented members' activity (<c>--demo-activity</c>, design 8.26.5)
+    /// runs only on such data; invented parliament data has <c>--demo-appeal</c>.
+    /// </summary>
+    public static async Task<bool> IsDataRealAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        var synthetic = await ScalarAsync<long>(
+            connection,
+            null,
+            """
+            SELECT (SELECT count(*) FROM parliament.import_run WHERE synthetic)
+                 + (SELECT count(*) FROM parliament.raw_document WHERE synthetic)
+                 + (SELECT count(*) FROM parliament.agenda_snapshot WHERE synthetic)
+            """,
+            cancellationToken);
+        return synthetic == 0 && await ScalarAsync<long>(connection, null, RealRows, cancellationToken) > 0;
+    }
+
+    /// <summary>
+    /// Of the given bill numbers, those in the parliament data that the Seimas has not finished (no stage result at the adoption
+    /// stage, the rule of <see cref="IBillCatalogue.ActiveAsync"/>), with their official titles (design 8.26.5, the trial).
+    /// </summary>
+    public static async Task<IReadOnlyDictionary<string, string>> ActiveBillsAsync(
+        string connectionString, IReadOnlyCollection<string> numbers, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(numbers);
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT b.number, b.title FROM parliament.bill b
+            WHERE b.number = ANY(@numbers)
+              AND NOT EXISTS (SELECT 1 FROM parliament.vote v WHERE v.bill_id = b.id AND v.kind = 'StageResult' AND v.stage = 'Adoption')
+            """,
+            connection);
+        command.Parameters.AddWithValue("numbers", numbers.ToArray());
+        var bills = new Dictionary<string, string>(StringComparer.Ordinal);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            bills[reader.GetString(0)] = reader.GetString(1);
+        }
+
+        return bills;
+    }
+
+    /// <summary>
+    /// The bills whose adoption-stage vote was held in [<paramref name="from"/>, <paramref name="to"/>), each with its latest
+    /// such vote and the Seimas's numbers (null numbers while the result is not read), oldest first (design 8.26.5, the trial:
+    /// invented members' sides are given before the real vote).
+    /// </summary>
+    public static async Task<IReadOnlyList<AdoptionVote>> AdoptionVotesAsync(
+        string connectionString, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT * FROM (
+              SELECT DISTINCT ON (b.number) b.number, b.title, v.id, v.held_at, v.is_consensus, v.has_result, v."for", v.against, v.abstain
+              FROM parliament.vote v JOIN parliament.bill b ON b.id = v.bill_id
+              WHERE v.kind = 'StageResult' AND v.stage = 'Adoption'
+              ORDER BY b.number, v.held_at DESC) latest
+            WHERE held_at >= @from AND held_at < @to
+            ORDER BY held_at, number
+            """,
+            connection);
+        command.Parameters.AddWithValue("from", from);
+        command.Parameters.AddWithValue("to", to);
+        var votes = new List<AdoptionVote>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var read = reader.GetBoolean(5);
+            int? Count(int i) => read && !reader.IsDBNull(i) ? reader.GetInt32(i) : null;
+            votes.Add(new AdoptionVote(
+                reader.GetString(0), reader.GetString(1), reader.GetInt64(2), reader.GetFieldValue<DateTimeOffset>(3),
+                new SeimasVoteNumbers(reader.GetBoolean(4), Count(6), Count(7), Count(8))));
+        }
+
+        return votes;
+    }
+
+    /// <summary>The Vilnius days with a Seimas sitting in [<paramref name="from"/>, <paramref name="to"/>], in order.</summary>
+    public static async Task<IReadOnlyList<DateOnly>> SittingDaysAsync(string connectionString, DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT DISTINCT (starts_at AT TIME ZONE 'Europe/Vilnius')::date AS day FROM parliament.sitting
+            WHERE (starts_at AT TIME ZONE 'Europe/Vilnius')::date BETWEEN @from AND @to ORDER BY day
+            """,
+            connection);
+        command.Parameters.AddWithValue("from", from);
+        command.Parameters.AddWithValue("to", to);
+        var days = new List<DateOnly>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            days.Add(reader.GetFieldValue<DateOnly>(0));
+        }
+
+        return days;
+    }
+
+    /// <summary>
+    /// The sitting MPs of the current term who have an official address (the summaries' recipients, as
+    /// <c>IMpDirectory.SittingMpsAsync</c> finds them): profile address and Seimas identifier, never the address itself. For the
+    /// trial's invented past summaries (design 8.26.5), which list who a dry run would have gone to.
+    /// </summary>
+    public static async Task<IReadOnlyList<(string Slug, long SeimasPersonId)>> SittingMpsWithAddressAsync(string connectionString, DateOnly today, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            WITH term AS (
+              SELECT t.id FROM parliament.term t WHERE EXISTS (SELECT 1 FROM parliament.mandate m WHERE m.term_id = t.id)
+              ORDER BY (t."to" IS NULL) DESC, t.id DESC LIMIT 1)
+            SELECT DISTINCT p.slug, p.seimas_person_id FROM parliament.mandate m JOIN parliament.person p ON p.id = m.person_id
+            WHERE m.term_id = (SELECT id FROM term) AND (m."to" IS NULL OR m."to" >= @today)
+              AND EXISTS (SELECT 1 FROM parliament.contact c WHERE c.person_id = p.id AND c.kind = @kind AND c.value <> '')
+            ORDER BY p.slug
+            """,
+            connection);
+        command.Parameters.AddWithValue("today", today);
+        command.Parameters.AddWithValue("kind", Infrastructure.OfficialAddresses.EmailKind);
+        var mps = new List<(string, long)>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            mps.Add((reader.GetString(0), reader.GetInt64(1)));
+        }
+
+        return mps;
     }
 
     private static async Task<string?> BillColumnAsync(string connectionString, string sql, string number, CancellationToken cancellationToken)

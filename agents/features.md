@@ -981,6 +981,17 @@ from `--demo-appeal`'s own invented accounts (`DemoClosedBills`, `InventedMember
 (`DemoSides`) gives one named account with the consent in force (a real account consents itself, never by a script)
 random sides on them and adds them to the frozen counts (`InventedRecord.GiveClosedSidesAsync`), the address never logged.
 Integration: `DemoAppealTests`, `DemoSidesTests`.
+Invented members' activity on the trial's real data (design 8.26.5, owner 2026-11-26): `--demo-activity` (`DemoActivity`,
+content in `DemoActivityBills`; refuses unless `Demo:Allowed` and `Email:Caught` and `ParliamentMaintenance.IsDataRealAsync`).
+3 200 members `demo.bandymas.NNNNN@pavyzdys.test` with identifiers `0193b000-7a1a-…` (`InventedActivity.IdPrefix` is every
+invented account's prefix: a record with any position, argument or comment outside it is a real account's and is left);
+`InventedActivity.AddToBillAsync` writes sides, arguments with spread marks and comments on a free open record (made with
+an empty description when none) or, `newRecordOnly`, a finished bill's record, then `InventedRecord.CloseAsync`;
+`AggregateDaysAsync` backfills `daily_stat`; `SnapshotAsync` gives the numbers at a past moment, which
+`InventedDigests.WriteDryRunsAsync` stores as weekly dry runs with a dry-run delivery per sitting MP
+(`ParliamentMaintenance.SittingMpsWithAddressAsync`), never an outbox row. The notice: Identity's `IInventedMembersNotice`
+(any profile `demo.%@pavyzdys.test`, cached a minute) → `ImportsResponse.MembersInvented` → `InventedDataNotice`
+(`InventedData.Parliament` wins over `Members`), text `Notice.InventedMembers`. Integration: `DemoActivityTests`.
 **Organisations (design 8.14, 8.14.14).**
 - A voice on a bill, not control. A signed-in member registers an organisation (`/organizacijos/nauja`; at most
   `Organisations:PerAccount`, 3, not counting closed ones), shown at once with nobody approving it, and is its first

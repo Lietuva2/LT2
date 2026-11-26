@@ -48,9 +48,9 @@
     </nav>
 </header>
 
-@if (_parliamentDataInvented && !NoticeInPage)
+@if (_invented != InventedData.None && !NoticeInPage)
 {
-    <div class="page"><p class="note" role="note" id="invented-data">@T["Notice.InventedParliament"]</p></div>
+    <div class="page"><p class="note" role="note" id="invented-data">@(_invented == InventedData.Parliament ? T["Notice.InventedParliament"] : T["Notice.InventedMembers"])</p></div>
 }
 
 <AuthorizeView>
@@ -122,7 +122,7 @@
 <FeedbackBalloon />
 
 @code {
-    private bool _parliamentDataInvented;
+    private InventedData _invented;
 
     /// <summary>The page's path without the leading <c>/</c>, query or fragment.</summary>
     private string Path => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].TrimEnd('/');
@@ -143,5 +143,5 @@
     // Read before the page renders (InventedDataNotice): an error or a re-executed "not found" page does not wait for an
     // asynchronous read here. The read below is only for a render without that answer.
     protected override async Task OnInitializedAsync() =>
-        _parliamentDataInvented = InventedDataNotice.Of(HttpContext) ?? (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;
+        _invented = await InventedDataNotice.ReadAsync(HttpContext, Meta);
 }

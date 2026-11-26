@@ -34,12 +34,12 @@
            with its links, in a column a line of text wide, so the note has the same edges as the invented-data notice above
            the page; the turning logo stands in the space to the right of that column, across both rows. On a phone the small
            logo stands beside the headline and the note goes under both. *@
-        <div class="home-head @(_invented ? "home-head--notice" : "")" id="home-head">
-            @if (_invented)
+        <div class="home-head @(_invented != Lt2.Web.Components.Layout.InventedData.None ? "home-head--notice" : "")" id="home-head">
+            @if (_invented != Lt2.Web.Components.Layout.InventedData.None)
             {
                 @* The layout leaves the invented-data notice to this head on the visitor's front page (owner, 2026-11-17), so the
                    logo is centred between the menu and the rule above "Kaip tai veikia", the notice included. *@
-                <p class="note" role="note" id="invented-data">@T["Notice.InventedParliament"]</p>
+                <p class="note" role="note" id="invented-data">@(_invented == Lt2.Web.Components.Layout.InventedData.Parliament ? T["Notice.InventedParliament"] : T["Notice.InventedMembers"])</p>
             }
             <lt2-logo-spin period="14"></lt2-logo-spin>
             <h1 id="home-title">@T["Home.Lead"]</h1>
@@ -123,7 +123,7 @@
     private string _sending = "off";
 
     /// <summary>The parliament data is invented: the visitor's head carries the notice (the layout leaves it out here).</summary>
-    private bool _invented;
+    private Lt2.Web.Components.Layout.InventedData _invented;
 
     [CascadingParameter] public HttpContext? HttpContext { get; set; }
 
@@ -133,7 +133,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _invented = Lt2.Web.Components.Layout.InventedDataNotice.Of(HttpContext) ?? (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;
+        _invented = await Lt2.Web.Components.Layout.InventedDataNotice.ReadAsync(HttpContext, Meta);
         _agenda = await Agenda.ReadAsync(CancellationToken.None);
         _sending = (await Digests.GetRulesAsync()).Value?.Sending ?? "off";
         var planned = AgendaPaging.Read(Planned);
