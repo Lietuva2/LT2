@@ -281,7 +281,7 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
   the official title in fine print under it, the tags keeping their line above in every list (the number beside the
   title was tried and dropped: it fits only where the number is the row's one tag); an `ai` title is shown on the site too;
   summaries to MPs keep the official title. Searches of bills match it, not the description (2026-11-24). Off the site
-  (link previews, members' emails) the readable title and the description go whatever their source, an `ai` one
+  (link previews; members' emails name the bill by it) the readable title and the description go whatever their source, an `ai` one
   included, the bill's page and a vote's page alike, except while a report about the description is open; summaries to
   MPs stay as they are until it is discussed with the MPs (2026-11-26).
 - The description form fills "Oficialaus teksto adresas" with the bill's e-seimas address on a bill without a

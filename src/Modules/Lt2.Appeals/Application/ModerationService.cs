@@ -1014,7 +1014,7 @@ internal sealed class ModerationService(
             return;
         }
 
-        var bill = await reads.BillAsync(billNumber, ct);
+        var bill = await reads.MailBillAsync(billNumber, ct);
         await outbox.EnqueueAsync(
             OutboxMessage.Create(MessageKinds.ModerationNoticeEmail, new ModerationNoticeEmail(author.Email, notice, bill.Number, bill.Title, statement, excerpt, BillPath(bill.Number))),
             transaction.GetDbTransaction(),

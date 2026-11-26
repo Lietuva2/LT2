@@ -109,6 +109,64 @@ public sealed class FollowTests(DatabaseFixture database) : ApiTest(database)
         }
     }
 
+    /// <summary>
+    /// Design 8.13.1, "Off the site" (owner, 2026-11-26): members' emails name a bill by its readable title whoever wrote it,
+    /// an AI one included, and by the official title while a report about the description is open.
+    /// </summary>
+    [Fact]
+    public async Task A_follow_email_names_the_bill_by_its_readable_title_unless_its_description_is_reported()
+    {
+        const string Readable = "Keičiama vietinių rinkliavų tvarka";
+        await Database.ForgetEventsAsync(AppealSteps.SecondBill);
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var moderator = (await ModeratorAsync()).Browser;
+        var (follower, email) = await Factory.MemberAsync();
+        using var _f = follower;
+        var (reporter, _) = await Factory.MemberAsync(consent: false);
+        using var _r = reporter;
+        await follower.FollowBillAsync(AppealSteps.SecondBill);
+        await Database.AgeFollowsAsync(email, TimeSpan.FromHours(1));
+        Guid? recordId = null;
+        try
+        {
+            using (var described = await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill),
+                       new Lt2.Api.Contracts.Appeals.ModeratorDescriptionRequest { Description = AppealSteps.Description, Statement = "Bandymas.", PlainTitle = Readable }))
+            {
+                described.StatusCode.ShouldBe(HttpStatusCode.NoContent, await described.Content.ReadAsStringAsync());
+            }
+
+            await Database.ExecuteAsync("UPDATE appeals.bill_record SET description_source = 'ai' WHERE bill_number = @n", ("n", AppealSteps.SecondBill));
+            await Database.PlanAsync(AppealSteps.SecondBill, ReasonsToComeSteps.VilniusToday().AddDays(5), "adoption");
+            await RunJobAsync();
+            using (var payload = JsonDocument.Parse((await Database.LatestEmailAsync("email.follow-planned", email))!))
+            {
+                payload.RootElement.GetProperty("billTitle").GetString().ShouldBe(Readable);
+            }
+
+            // An open report about the description: the official title again.
+            recordId = await moderator.RecordIdAsync(AppealSteps.SecondBill);
+            using (var reported = await reporter.PostAsync(AppealRoutes.Reports,
+                       new Lt2.Api.Contracts.Appeals.ReportRequest { TargetKind = "record", TargetId = recordId.Value, Ground = "inaccurate", Text = "Netikslu." }))
+            {
+                reported.StatusCode.ShouldBe(HttpStatusCode.NoContent, await reported.Content.ReadAsStringAsync());
+            }
+
+            await using var scope = Factory.Services.CreateAsyncScope();
+            (await scope.ServiceProvider.GetRequiredService<Lt2.SharedKernel.IReadableTitles>()
+                .ShareableAsync([AppealSteps.SecondBill], TestContext.Current.CancellationToken)).ShouldBeEmpty();
+        }
+        finally
+        {
+            if (recordId is { } id)
+            {
+                await Database.ExecuteAsync("DELETE FROM appeals.report WHERE target_id = @id", ("id", id));
+            }
+
+            await Database.UnplanAsync(AppealSteps.SecondBill);
+            await Database.FreeBillAsync(AppealSteps.SecondBill);
+        }
+    }
+
     [Fact]
     public async Task A_follower_gets_one_voted_email_with_how_the_MPs_they_follow_voted_and_no_side()
     {
