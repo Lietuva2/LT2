@@ -389,6 +389,21 @@ public sealed class ModerationActionsTests : BunitContext
         offered.ShouldNotContain("keep");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-26: the filled button is what the reason the item is there asks for. A held bill's is "Atnaujinti
+    /// siuntimą"; "Palikti" comes first when it answers something, even on a held bill.
+    /// </summary>
+    [Fact]
+    public void The_filled_button_of_a_held_bill_is_release_unless_keep_answers_something()
+    {
+        var held = Render("record", "open", held: true, description: "DI santrauka.", source: "ai");
+        held.Find("button.btn:not(.btn--plain)").GetAttribute("data-action").ShouldBe("release");
+        Offered(held)[0].ShouldBe("release");
+
+        Render("record", "open", held: true, openItems: true).Find("button.btn:not(.btn--plain)").GetAttribute("data-action").ShouldBe("keep");
+        Render("record", "open", description: "DI santrauka.", source: "ai").Find("button.btn:not(.btn--plain)").GetAttribute("data-action").ShouldBe("confirm");
+    }
+
     /// <summary>Design 8.23.7: the merge's confirmation says how many comments go with the merged argument.</summary>
     [Fact]
     public void The_merge_confirmation_says_how_many_comments_go_with_the_argument()

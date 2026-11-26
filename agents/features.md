@@ -655,6 +655,13 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   a bill's record closes taking part on it (sides and arguments kept unseen; "Atkurti" brings them back). A moderator
   in a staff-passkey session gets the queue's argument actions on the bill's page too (owner, 2026-11-14), from the
   moderators-only answer `GET /moderation/bills/{number}`; nobody else sees a control or anything from it.
+- **"Palikti" on a bill answers its reason (design 8.3, owner 2026-11-26).** `KeepRecordAsync` closes date flags (reports close
+  with the action) and stores `agenda_kept_for`/`_stage`/`_participants` and `surge_kept_at`. The queue's agenda reason is
+  `RecordRules.UnderThresholdOnAgendaDue` (back when the date or stage changes, or at `NearThreshold`, half the threshold, after
+  being kept below it); its surges are `AppealReads.QueueSurgesAsync` (positions after `surge_kept_at`; the page and summaries
+  keep `SurgesAsync`). `HasOpenItems` (queue and `BillStateAsync`) offers "Palikti" for any of them; `ModerationActions.Primary`
+  is keep, else release on a held bill, else confirm or publish. Tests: `RecordRuleTests`, `ModerationActionsTests`,
+  `PlannedDateTests.Kept_on_the_agenda_…`, `AppealStatsTests` (surge).
 - **The moderators' page is tabs (design 8.3, owner 2026-11-25).** `/moderavimas` (`Pages/Moderation.razor`), the tab in
   `?skiltis=` (`Lt2.Web.Client/Appeals/ModerationTabs`: the codes, the order, `Open` the pure rule for the tab without one,
   `ModerationTabRuleTests`): work tabs `projektai` (`RecordQueueList`), `argumentai` (`ReasonQueueList`), `organizacijos` and

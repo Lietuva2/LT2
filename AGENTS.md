@@ -78,6 +78,11 @@ docker exec lt2-worker-1 dotnet Lt2.Worker.dll jobs list               # the rec
 docker exec lt2-worker-1 dotnet Lt2.Worker.dll jobs trigger parliament-members   # "Trigger now", audited
 ```
 
+In a Claude Code cloud session, `.claude/hooks/session-start.sh` installs the pinned SDK (from the SDK image on
+mcr.microsoft.com; the usual download host is blocked there) and starts Docker with `postgres:17` in the background, so
+build, unit, architecture and integration tests run there too; it does nothing on a PC. If an integration test fails
+to start its container, see `/tmp/lt2-session-start.log`.
+
 If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose command. End-to-end tests run only with
 `LT2_E2E_BASE_URL` set (`tools/run_tests.py e2e` sets it; `README.md` lists the variables).
 

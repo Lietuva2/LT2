@@ -209,6 +209,31 @@ internal static class RecordRules
     /// (design 8.12.2): at least one participant, a planned date, and the threshold not reached.
     /// </summary>
     public static bool UnderThresholdOnAgenda(int participants, bool planned, bool reached) => participants > 0 && planned && !reached;
+
+    /// <summary>
+    /// Whether a bill under its threshold on the agenda is in the queue for it (design 8.3, owner 2026-11-26): it is, unless a
+    /// moderator kept it ("Palikti") for the same planned date and stage; then it comes back only when the date or the stage
+    /// changes, or when it comes near its threshold (<see cref="NearThreshold"/>) after being kept below that.
+    /// </summary>
+    public static bool UnderThresholdOnAgendaDue(
+        int participants, DateOnly? plannedDate, string? plannedStage, bool reached, int threshold,
+        DateOnly? keptFor, string? keptStage, int? keptParticipants)
+    {
+        if (!UnderThresholdOnAgenda(participants, plannedDate is not null, reached))
+        {
+            return false;
+        }
+
+        if (keptFor is null || keptFor != plannedDate || !string.Equals(keptStage, plannedStage, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return NearThreshold(participants, threshold) && !NearThreshold(keptParticipants ?? 0, threshold);
+    }
+
+    /// <summary>Near its threshold (design 8.3, owner 2026-11-26): at least half of it.</summary>
+    public static bool NearThreshold(int participants, int threshold) => participants * 2L >= threshold;
 }
 
 /// <summary>
