@@ -513,7 +513,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
     public async Task Bills_mps_and_organisations_show_how_many_follow_them_and_nothing_with_none()
     {
         var bill = AppealSteps.ThirdBill;
-        await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+        await Database.UnfollowBillAsync(bill);
         using var visitor = NewBrowser();
         (await visitor.GetJsonAsync<FollowersResponse>(FollowRoutes.BillFollowersOf(bill))).Followers.ShouldBe(0);
         (await visitor.Client.GetStringAsync("/seimas/" + bill, TestContext.Current.CancellationToken)).ShouldNotContain("id=\"followers\"");

@@ -19,7 +19,7 @@ public sealed class UndescribedBillsTests(DatabaseFixture database) : ApiTest(da
         foreach (var bill in Bills)
         {
             await Database.FreeBillAsync(bill);
-            await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+            await Database.UnfollowBillAsync(bill);
         }
     }
 

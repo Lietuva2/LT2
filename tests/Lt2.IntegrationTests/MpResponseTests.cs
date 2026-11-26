@@ -348,6 +348,16 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             await mp.Browser.RespondOkAsync(Counted, "for", "Balsuosiu už.");
             await other.Browser.RespondOkAsync(Counted, "against", "Balsuosiu prieš.");
             (await visitor.ResponsesAsync(Counted)).Counts.Answered.ShouldBe(2, "the responses are there");
+
+            // A first response follows the bill (A_first_response_follows_the_bill...), and followers count into the lists'
+            // activity (design 8.12.5): the two follows would move the bill up the lists whenever it ties with another. They go
+            // through "Nebesekti", which keeps the responses, so what is compared is what the responses themselves change.
+            foreach (var account in new[] { mp, other })
+            {
+                using var unfollowed = await account.Browser.SendAsync(HttpMethod.Delete, FollowRoutes.BillOf(Counted));
+                unfollowed.IsSuccessStatusCode.ShouldBeTrue(await unfollowed.Content.ReadAsStringAsync());
+            }
+
             foreach (var route in routes)
             {
                 Stable(await visitor.Client.GetStringAsync(route)).ShouldBe(before[route], route);

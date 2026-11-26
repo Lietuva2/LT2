@@ -328,7 +328,9 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     [Fact]
     public async Task The_list_shows_active_bills_by_activity_with_participants_and_arguments_and_one_number_a_side()
     {
+        // XVP-0533 with nothing, not even the followers earlier tests left (they count into activity), after XVP-0618 with a side.
         await Database.FreeBillAsync(AppealSteps.SecondBill);
+        await Database.UnfollowBillAsync(AppealSteps.SecondBill);
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "for");
@@ -520,7 +522,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         // tie the two. XVP-0618: 2 participants, 1 argument (activity 3); XVP-0533: 0 participants, 3 arguments (activity 3).
         foreach (var bill in new[] { AppealSteps.SecondBill, AppealSteps.ThirdBill })
         {
-            await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+            await Database.UnfollowBillAsync(bill);
         }
 
         using var stranger = NewBrowser();

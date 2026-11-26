@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Agenda;
 using Lt2.Api.Contracts.Appeals;
@@ -36,7 +38,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         var before = new Dictionary<string, string>();
         foreach (var route in PublicAnswers)
         {
-            before[route] = Followerless(await visitor.Client.GetStringAsync(route));
+            before[route] = Followerless(route, await visitor.Client.GetStringAsync(route));
         }
 
         var billFollowers = (await visitor.GetJsonAsync<Lt2.Api.Contracts.Me.FollowersResponse>(FollowRoutes.BillFollowersOf(AppealSteps.SecondBill))).Followers;
@@ -47,7 +49,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         foreach (var route in PublicAnswers)
         {
             var after = await visitor.Client.GetStringAsync(route);
-            Followerless(after).ShouldBe(before[route], route);
+            Followerless(route, after).ShouldBe(before[route], route);
             after.ShouldNotContain("Sekanti Pavyzdytė");
         }
 
@@ -55,8 +57,36 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         await member.SendAsync(HttpMethod.Delete, FollowRoutes.MpOf(ReasonsToComeSteps.Petraitis));
     }
 
-    /// <summary>The answer without its "followers" number, the one thing following may change.</summary>
-    private static string Followerless(string json) => System.Text.RegularExpressions.Regex.Replace(json, "\"followers\":\\d+", "\"followers\":_");
+    /// <summary>
+    /// The answer without what following may change: the "followers" number, and in the lists of bills their order. Followers
+    /// count into a bill's activity (design 8.12.5), which orders <c>/projektai</c> and a day's bills on the agenda, so one more
+    /// follower may move the followed bill up; what each row holds stays the same. The lists' rows are compared as a set.
+    /// </summary>
+    private static string Followerless(string route, string json)
+    {
+        var plain = Regex.Replace(json, "\"followers\":\\d+", "\"followers\":_");
+        return route is AppealRoutes.Appeals or AgendaRoutes.Agenda ? RowsInAnyOrder(JsonNode.Parse(plain))?.ToJsonString() ?? plain : plain;
+    }
+
+    /// <summary>The same JSON with every array of objects sorted by its elements' own text, so only the set of rows counts.</summary>
+    private static JsonNode? RowsInAnyOrder(JsonNode? node)
+    {
+        switch (node)
+        {
+            case JsonObject o:
+                foreach (var name in o.Select(p => p.Key).ToList())
+                {
+                    o[name] = RowsInAnyOrder(o[name]?.DeepClone());
+                }
+
+                return o;
+            case JsonArray a when a.All(e => e is JsonObject):
+                return new JsonArray(
+                    a.Select(e => RowsInAnyOrder(e!.DeepClone())!).OrderBy(e => e.ToJsonString(), StringComparer.Ordinal).ToArray());
+            default:
+                return node;
+        }
+    }
 
     [Fact]
     public async Task Nobody_sees_another_persons_follows_or_requests()

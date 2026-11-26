@@ -24,7 +24,7 @@ public sealed class BillActivityTests(DatabaseFixture database) : ApiTest(databa
         {
             await Database.FreeBillAsync(bill);
             await Database.UnplanAsync(bill);
-            await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+            await Database.UnfollowBillAsync(bill);
         }
 
         Factory.Services.GetRequiredService<IMemoryCache>().Remove(FrontPageAgenda.CacheKey);

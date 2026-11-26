@@ -42,6 +42,14 @@ public static class ReasonsToComeSteps
     public static Task UnplanAsync(this DatabaseFixture database, string bill) =>
         database.ExecuteAsync("UPDATE parliament.planned_item SET gone_at = now() WHERE bill_number = @b AND gone_at IS NULL", ("b", bill));
 
+    /// <summary>
+    /// The bill has no followers any more. Followers count into a bill's activity (design 8.12.5), which orders the lists, and
+    /// every earlier test's member who took a first side on it follows it (8.11.2): a test that puts bills in an order frees
+    /// them of followers first. <see cref="AppealSteps.FreeBillAsync"/> leaves them, since some tests follow before freeing.
+    /// </summary>
+    public static Task UnfollowBillAsync(this DatabaseFixture database, string bill) =>
+        database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", bill));
+
     /// <summary>Moves a vote's time, returning the old one so the test can put it back.</summary>
     public static async Task<DateTime> MoveVoteAsync(this DatabaseFixture database, long voteId, DateTimeOffset heldAt)
     {
