@@ -122,6 +122,45 @@ public sealed partial class ReadableTitleTests(DatabaseFixture database) : ApiTe
         }
     }
 
+    /// <summary>
+    /// Design 8.3, 8.13.1: a bill's record in the moderators' tab "Projektai" leads with its title as every list does, linked to
+    /// the bill's page: the readable title with the official one under it, or the official title alone.
+    /// </summary>
+    [Fact]
+    public async Task The_moderators_queue_links_the_bills_title_and_shows_the_readable_one()
+    {
+        await Database.FreeBillAsync(Bill);
+        var moderator = (await ModeratorAsync()).Browser;
+        var official = await OfficialTitleAsync();
+        try
+        {
+            var id = await moderator.RecordIdAsync(Bill);
+            using (var held = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldRecord, id), new StatementRequest { Statement = "Bandymas." }))
+            {
+                held.StatusCode.ShouldBe(HttpStatusCode.NoContent, await held.Content.ReadAsStringAsync());
+            }
+
+            var href = "/seimas/" + Bill;
+            async Task<string> ItemAsync()
+            {
+                var page = await PageAsync(moderator, "/moderavimas?skiltis=projektai");
+                var start = page.IndexOf($"id=\"queue-appeal-{id}\"", StringComparison.Ordinal);
+                start.ShouldBeGreaterThan(0, "the held record is in the queue");
+                var item = page[start..];
+                return item[..item.IndexOf("</article>", StringComparison.Ordinal)];
+            }
+
+            ShouldLeadWith(await ItemAsync(), official, null, href);
+
+            await DescribeAsync(moderator, Title);
+            ShouldLeadWith(await ItemAsync(), Title, official, href);
+        }
+        finally
+        {
+            await Database.FreeBillAsync(Bill);
+        }
+    }
+
     /// <summary>Design 8.13.1: every list of votes names the bill by its readable title, the official one under it.</summary>
     [Fact]
     public async Task The_lists_of_votes_lead_with_the_bills_readable_title()

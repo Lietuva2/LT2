@@ -23,9 +23,9 @@ else
         {
             <article class="sheet stack" id="queue-appeal-@record.Id" aria-labelledby="qa-@record.Id" @key="record.Id">
                 <div class="row">
-                    <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(record.Bill.Number)">@record.Bill.Number</a>
+                    <a class="tag tag--ink num" href="@BillPath(record.Bill.Number)">@record.Bill.Number</a>
                 </div>
-                <h3 id="qa-@record.Id">@record.Bill.Title</h3>
+                <h3 id="qa-@record.Id"><BillTitleLink Href="@BillPath(record.Bill.Number)" Title="@record.Bill.Title" PlainTitle="@record.PlainTitle" /></h3>
                 @if (record.Planned is { } plan)
                 {
                     <p class="small num">@L.Format("Mod.Planned", Display.Day(plan.Date), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
@@ -90,4 +90,6 @@ else
             }
         }
     }
+
+    private static string BillPath(string number) => "/seimas/" + Uri.EscapeDataString(number);
 }
