@@ -6,6 +6,7 @@
 @* Link previews (design 8.22.5, owner 2026-11-17): what a link to a public page shows where it is shared (Facebook, messengers,
    X, LinkedIn), as Open Graph and Twitter card meta tags in the page's head, plus the plain description. A public,
    server-rendered page puts this component in itself; a page without it (behind sign-in, staff, a token page) gives none.
+   The start page has an image of its own with the slogan (owner, 2026-11-26); every other page the logo and the name.
    Meta tags only: no script, pixel or SDK of anyone. The page's address and the image are absolute from Site:Address
    (design 5.6), never from the request's host, and the address is the page's own path: no query, no fragment, no token.
    Without Site:Address (a development machine) the two are left out, as a relative address is no preview's address. *@
@@ -23,7 +24,7 @@
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="@LinkPreviewText.ImageWidth" />
         <meta property="og:image:height" content="@LinkPreviewText.ImageHeight" />
-        <meta property="og:image:alt" content="@T["Preview.ImageAlt"]" />
+        <meta property="og:image:alt" content="@(Image == LinkPreviewText.HomeImage ? T["Preview.HomeImageAlt"] : T["Preview.ImageAlt"])" />
     }
     <meta name="twitter:card" content="summary_large_image" />
 </HeadContent>
@@ -41,12 +42,15 @@
     /// <summary>The page's own path (for example a member's current address); the requested path without its query otherwise.</summary>
     [Parameter] public string? Path { get; set; }
 
+    /// <summary>The image under wwwroot: <see cref="LinkPreviewText.Image"/> on every page but the start page.</summary>
+    [Parameter] public string Image { get; set; } = LinkPreviewText.Image;
+
     private string Text => LinkPreviewText.Excerpt(string.IsNullOrWhiteSpace(Description) ? T["Home.Lead"] : Description);
 
     private string PagePath => LinkPreviewText.PagePath(Path ?? "/" + Navigation.ToBaseRelativePath(Navigation.Uri));
 
     /// <summary>The image's address as the static assets serve it (with its fingerprint, so a changed image is a new address).</summary>
-    private string ImagePath => "/" + Assets[LinkPreviewText.Image].TrimStart('/');
+    private string ImagePath => "/" + Assets[Image].TrimStart('/');
 
     private string? Absolute(string path) =>
         Lt2.SharedKernel.SiteLinks.Absolute(Site.Value.Address, path) is { } absolute && absolute.StartsWith("https://", StringComparison.Ordinal) ? absolute : null;
