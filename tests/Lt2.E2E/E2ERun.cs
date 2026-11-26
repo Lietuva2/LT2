@@ -330,7 +330,7 @@ internal static class TestAccounts
 
         using (var client = Client(null))
         {
-            var before = await Mailpit.CountAsync($"to:\"{account.Email}\" subject:\"prisijungimo kodas\"");
+            var before = await Mailpit.CountAsync(Mailpit.CodeQuery(account.Email));
             var asked = await SendAsync(client, HttpMethod.Post, "/api/v1/auth/code", new { email = account.Email, botCheck = await E2ESteps.BotCheckAsync(client) });
             asked.ShouldBeOneOf([HttpStatusCode.OK, HttpStatusCode.NoContent, HttpStatusCode.Accepted], $"a sign-in code for {account.Email} to delete it");
             var code = await Mailpit.NewCodeAsync(account.Email, before);

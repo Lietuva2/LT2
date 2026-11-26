@@ -5,7 +5,11 @@ using Microsoft.Playwright;
 
 namespace Lt2.E2E;
 
-/// <summary>The local Mailpit the stack sends to: the newest message to an address, waited for.</summary>
+/// <summary>
+/// The local Mailpit the stack sends to: the newest message to an address, waited for. An address that gets other mail while
+/// a test runs (an MP's official address gets the summaries) is read by subject, and a message the test has just caused is
+/// waited for by count (<see cref="NewAsync"/>, <see cref="NewCodeAsync"/>), never taken as whatever is newest.
+/// </summary>
 internal static partial class Mailpit
 {
     public static readonly string Url = Environment.GetEnvironmentVariable("LT2_E2E_MAILPIT_URL") ?? "http://localhost:8025";
@@ -60,6 +64,25 @@ internal static partial class Mailpit
         }
     }
 
+    /// <summary>
+    /// The newest email matching <paramref name="query"/> once more than <paramref name="before"/> match it: the one the test
+    /// has just caused, not an earlier one with the same subject. Waits up to <paramref name="wait"/> (60 s).
+    /// </summary>
+    public static async Task<(string Id, string Subject, string Text, string Html, JsonElement Headers)> NewAsync(string query, int before, TimeSpan? wait = null)
+    {
+        var until = DateTime.UtcNow + (wait ?? TimeSpan.FromSeconds(60));
+        while (await CountAsync(query) <= before)
+        {
+            DateTime.UtcNow.ShouldBeLessThan(until, $"a new email matching {query} arrives in Mailpit");
+            await Task.Delay(500);
+        }
+
+        return await FullAsync(query);
+    }
+
+    /// <summary>The Mailpit query for the sign-in code emails to <paramref name="email"/>.</summary>
+    public static string CodeQuery(string email) => $"to:\"{email}\" subject:\"prisijungimo kodas\"";
+
     /// <summary>How many emails match a Mailpit <paramref name="query"/> now.</summary>
     public static async Task<int> CountAsync(string query)
     {
@@ -74,7 +97,7 @@ internal static partial class Mailpit
     /// </summary>
     public static async Task<string> NewCodeAsync(string email, int before)
     {
-        var query = $"to:\"{email}\" subject:\"prisijungimo kodas\"";
+        var query = CodeQuery(email);
         var until = DateTime.UtcNow + TimeSpan.FromSeconds(45);
         while (await CountAsync(query) <= before)
         {
@@ -93,10 +116,13 @@ internal static partial class Mailpit
         response.EnsureSuccessStatusCode();
     }
 
-    /// <summary>The six-digit code of the newest sign-in email to <paramref name="email"/>.</summary>
+    /// <summary>
+    /// The six-digit code of the newest sign-in email to <paramref name="email"/>, for an address that has had one code only;
+    /// after asking for another, use <see cref="NewCodeAsync"/>.
+    /// </summary>
     public static async Task<string> CodeAsync(string email)
     {
-        var (subject, text) = await MessageAsync(email);
+        var (subject, text) = await MessageAsync(email, "prisijungimo kodas");
         subject.ShouldStartWith("Lietuva 2.0 prisijungimo kodas");
         return SixDigits().Match(text).Value;
     }
@@ -198,8 +224,10 @@ internal static class E2ESteps
             await page.GetByLabel("Kvietimo kodas").FillAsync(invitation);
         }
 
+        // An MP's official address may hold an earlier code (another test's registration) and other mail: only the new code.
+        var codes = await Mailpit.CountAsync(Mailpit.CodeQuery(email));
         await page.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
-        await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await Mailpit.CodeAsync(email));
+        await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await Mailpit.NewCodeAsync(email, codes));
         // From here the account exists (pending until it is completed): the test deletes it when it is over (E2ETest).
         await TestAccounts.RegisteredAsync(email, page.Context);
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();

@@ -154,13 +154,17 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
                 await page.GotoAsync(preferences);
                 await Assertions.Expect(page.Locator("#mp-mail-who")).ToContainTextAsync($"Seimo narys: {Name}.", new() { Timeout = E2ESteps.Slow });
                 await E2ESteps.ShootBothAsync(page, Shots, "preferences");
+                // Each change is told to the official address; read the one just caused, not an earlier one (count first).
+                var changedQuery = $"to:\"{Official}\" subject:\"Lietuva 2.0: suvestinių nustatymai pakeisti\"";
+                var changes = await Mailpit.CountAsync(changedQuery);
                 await page.Locator("#mp-mail-weekly").CheckAsync();
                 await page.Locator("#mp-mail-save").ClickAsync();
                 await Assertions.Expect(page.Locator("#mp-mail-info")).ToContainTextAsync("Išsaugota.", new() { Timeout = E2ESteps.Slow });
                 await Assertions.Expect(page.Locator("#mp-mail-weekly")).ToBeCheckedAsync();
-                var changed = await Mailpit.FullAsync($"to:\"{Official}\" subject:\"Lietuva 2.0: suvestinių nustatymai pakeisti\"");
+                var changed = await Mailpit.NewAsync(changedQuery, changes);
                 changed.Text.ShouldContain("Dabar: Tik kas savaitę.");
 
+                changes = await Mailpit.CountAsync(changedQuery);
                 using (var mailProgram = Insecure())
                 {
                     using var stop = await mailProgram.PostAsync(
@@ -171,13 +175,15 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
                 // Opened again (not reloaded: a reload would post the form once more).
                 await page.GotoAsync(preferences);
                 await Assertions.Expect(page.Locator("#mp-mail-stopped")).ToBeCheckedAsync(new() { Timeout = E2ESteps.Slow });
-                (await Mailpit.FullAsync($"to:\"{Official}\" subject:\"Lietuva 2.0: suvestinių nustatymai pakeisti\"")).Text.ShouldContain("Dabar: Nesiųsti.");
+                (await Mailpit.NewAsync(changedQuery, changes)).Text.ShouldContain("Dabar: Nesiųsti.");
 
                 // 7. An extra recipient, confirmed from the official address; copies come only after that.
+                var confirmQuery = $"to:\"{Official}\" subject:\"Lietuva 2.0: patvirtinkite papildomą gavėją\"";
+                var confirms = await Mailpit.CountAsync(confirmQuery);
                 await page.Locator("#mp-mail-extra-address").FillAsync(extra);
                 await page.Locator("#mp-mail-extra-ask").ClickAsync();
                 await Assertions.Expect(page.Locator("#mp-mail-extra-state")).ToHaveTextAsync("laukia patvirtinimo oficialiu adresu", new() { Timeout = E2ESteps.Slow });
-                var confirm = await Mailpit.FullAsync($"to:\"{Official}\" subject:\"Lietuva 2.0: patvirtinkite papildomą gavėją\"");
+                var confirm = await Mailpit.NewAsync(confirmQuery, confirms);
                 confirm.Text.ShouldContain(extra);
                 var confirmLink = ConfirmLink().Match(confirm.Text).Value;
                 confirmLink.ShouldNotBeNullOrEmpty();
