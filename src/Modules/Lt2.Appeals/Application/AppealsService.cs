@@ -1014,6 +1014,11 @@ internal sealed class AppealsService(
         var forPage = await ReasonPageAsync(db, record.Id, Sides.For, 0, ReasonPages.First, ct);
         var againstPage = await ReasonPageAsync(db, record.Id, Sides.Against, 0, ReasonPages.First, ct);
 
+        // Design 8.13.1, "Off the site" (owner, 2026-11-26): while a report about the description is open, the link preview
+        // carries neither the description nor the readable title. Only that there is one, never what or by whom.
+        var reported = record.Description.Length > 0
+            && await db.Reports.AsNoTracking().AnyAsync(r => r.Status == "open" && r.TargetId == record.Id, ct);
+
         return new BillRecordInfo(
             record.Id,
             bill,
@@ -1035,7 +1040,8 @@ internal sealed class AppealsService(
             record.Status == BillRecordStatuses.Closed ? record.ClosedReason : null,
             record.Status == BillRecordStatuses.Closed ? record.ClosedDecidedOn : null,
             record.Status == BillRecordStatuses.Closed ? record.ClosedSourceUrl : null,
-            record.Description.Length == 0 ? null : record.PlainTitle);
+            record.Description.Length == 0 ? null : record.PlainTitle,
+            reported);
     }
 
     public async Task<Result<ReasonPage>> ReasonsAsync(string billNumber, string side, string? cursor, int? limit, CancellationToken cancellationToken)

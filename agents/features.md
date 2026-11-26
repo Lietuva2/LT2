@@ -638,9 +638,10 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   summaries (`DigestPage`), MP responses, the moderation queues' bill lines or emails. The bill's page (`BillPage`): the
   readable title is the `<h1>` and the `<PageTitle>`, then `#official-title` ("Oficialus pavadinimas: …") and `#title-source`
   (the tag of an `ai`/`ai-draft` source, the words "Parašė moderatorius" for a moderator's); the link preview carries it
-  whatever its source (owner, 2026-11-26). The vote's page (`VotePage`, `ParliamentReads.VoteAsync` titles `VoteResponse`'s bill too):
+  and the description whatever their source, unless a report about the description is open
+  (`BillRecordResponse.DescriptionReported`, owner, 2026-11-26). The vote's page (`VotePage`, `ParliamentReads.VoteAsync` titles `VoteResponse`'s bill too):
   the readable title is the `<h1>` and the `<PageTitle>`, then `#official-title`, the wording as the lead; no source tag;
-  the link preview carries it. The history page (`RecordHistory`) leads with it and shows a title change under "Trumpas
+  the link preview carries it unless `BillRecordResponse.DescriptionReported` (read with `IAppealsApi.GetRecordAsync`). The history page (`RecordHistory`) leads with it and shows a title change under "Trumpas
   pavadinimas" (and the description under "Aprašymas" when both changed). Tests: `ReadableTitleTests`, `LinkPreviewTests`,
   `AnalyticsTests` (integration); `BillTitleLinkTests`, `ModerationActionsTests` (unit).
 - **The summary job** (worker, hourly): active bills without a description, planned first (soonest first), then the most

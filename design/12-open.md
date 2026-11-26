@@ -92,6 +92,10 @@ hiding deletes them.
 version `2026-11-13`) is given against the form's text, which states the value of `Digest:PartyGroupMinimum` as it
 holds then; a later lower value changes what that consent described.
 
+**8.4 The readable title and the description in summaries to MPs.** Summaries and their public copy carry the
+official title and no description (8.13.1). Whether they may carry the readable title or the AI description is to be
+discussed with MPs first.
+
 **8.4 The entered agenda.** A sitting the Seimas cancels keeps its entered rows: an empty list is refused, and a
 moderator's correction moves a bill but cannot take it off the agenda. If needed: "Posėdis atšauktas" on the agenda's
 entry page, clearing the day with a statement. The open data lists the upcoming sittings and their times
@@ -119,14 +123,12 @@ without the hint.
    finished account. If no: the sign-in form first, the code filled in only when "Registruotis" is pressed.
 3. A member whose code is off or used up shares the bill's plain address, with "Jūsų kvietimo kodas šiuo metu neveikia,
    todėl nuoroda atveria projektą be jo." If no: no link. "Jūsų projektai" shows the share link only with a usable code.
-4. A bill's preview uses the description only when a person wrote or checked it (not `ai`), and never the counts. If
-   no: the AI text too, with "(sukurta DI)" after it.
-5. A member's preview is the name and a generic line, never "Apie mane"; an organisation's is its own description while
+4. A member's preview is the name and a generic line, never "Apie mane"; an organisation's is its own description while
    active and none while blocked. If no: "Apie mane" as the text.
-6. One image for every page, the logo and the name. If no: an image made per bill (needs a renderer on the server).
-7. Pages of one's own account, staff, sign-in and one-time links are `noindex, nofollow` by a path list
+5. One image for every page, the logo and the name. If no: an image made per bill (needs a renderer on the server).
+6. Pages of one's own account, staff, sign-in and one-time links are `noindex, nofollow` by a path list
    (`SecurityHeaders.IsPrivatePage`); the image is served `Cross-Origin-Resource-Policy: cross-origin`.
-8. Without `Site:Address` (a development machine) `og:url` and `og:image` are left out rather than taken from the
+7. Without `Site:Address` (a development machine) `og:url` and `og:image` are left out rather than taken from the
    request's host.
 
 **8.11.8 What is new since the last visit.** Built as proposed; "no" names what changes:

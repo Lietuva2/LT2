@@ -122,23 +122,31 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
         }
     }
 
-    /// <summary>Design 8.13.1, 8.22.5 (owner, 2026-11-26): the bill's preview carries its readable title whoever wrote it, an AI one included.</summary>
+    /// <summary>
+    /// Design 8.13.1, 8.22.5 (owner, 2026-11-26): the bill's preview carries its readable title and description whoever wrote
+    /// them, an AI one included, and neither while a report about the description is open.
+    /// </summary>
     [Fact]
-    public async Task The_bill_preview_uses_the_readable_title_whatever_its_source()
+    public async Task The_bill_preview_uses_the_readable_title_and_description_whatever_their_source_but_not_while_reported()
     {
         const string Bill = AppealSteps.SecondBill;
         const string Readable = "Keičiama vietinių rinkliavų tvarka";
+        const string Description = "Projektas keičia vietinių rinkliavų tvarką.";
         await Database.FreeBillAsync(Bill);
         var moderator = (await ModeratorAsync()).Browser;
+        var (member, _) = await Factory.MemberAsync(consent: false);
+        using var _m = member;
+        Guid? recordId = null;
         try
         {
             await using var site = new SiteFactory(Database);
             using var visitor = site.NewBrowser();
+            var path = "/seimas/" + Bill;
             var official = (await visitor.GetJsonAsync<Lt2.Api.Contracts.Parliament.BillResponse>(Lt2.Api.Contracts.ParliamentRoutes.BillByNumber(Bill))).Title;
-            (await PreviewAsync(visitor, "/seimas/" + Bill, "/seimas/" + Bill))["og:title"].ShouldBe($"{Bill} · {official}", "without a readable title");
+            (await PreviewAsync(visitor, path, path))["og:title"].ShouldBe($"{Bill} · {official}", "without a readable title");
 
             using (var described = await moderator.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.AppealRoutes.BillDescriptionOf(Bill),
-                       new Lt2.Api.Contracts.Appeals.ModeratorDescriptionRequest { Description = "Projektas keičia vietinių rinkliavų tvarką.", Statement = "Bandymas.", PlainTitle = Readable }))
+                       new Lt2.Api.Contracts.Appeals.ModeratorDescriptionRequest { Description = Description, Statement = "Bandymas.", PlainTitle = Readable }))
             {
                 described.StatusCode.ShouldBe(HttpStatusCode.NoContent, await described.Content.ReadAsStringAsync());
             }
@@ -146,11 +154,32 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
             foreach (var source in new[] { "moderator", "ai-draft", "ai" })
             {
                 await Database.ExecuteAsync("UPDATE appeals.bill_record SET description_source = @s WHERE bill_number = @n", ("s", source), ("n", Bill));
-                (await PreviewAsync(visitor, "/seimas/" + Bill, "/seimas/" + Bill))["og:title"].ShouldBe($"{Bill} · {Readable}", source);
+                var tags = await PreviewAsync(visitor, path, path);
+                tags["og:title"].ShouldBe($"{Bill} · {Readable}", source);
+                tags["og:description"].ShouldBe(Description, source);
             }
+
+            // An open report about the description: the official title and the generic line, though the page itself is unchanged.
+            recordId = await moderator.RecordIdAsync(Bill);
+            using (var reported = await member.PostAsync(Lt2.Api.Contracts.AppealRoutes.Reports,
+                       new Lt2.Api.Contracts.Appeals.ReportRequest { TargetKind = "record", TargetId = recordId.Value, Ground = "inaccurate", Text = "Netikslu." }))
+            {
+                reported.StatusCode.ShouldBe(HttpStatusCode.NoContent, await reported.Content.ReadAsStringAsync());
+            }
+
+            (await visitor.GetJsonAsync<Lt2.Api.Contracts.Appeals.BillRecordResponse>(Lt2.Api.Contracts.AppealRoutes.RecordOf(Bill))).DescriptionReported.ShouldBeTrue();
+            var withheld = await PreviewAsync(visitor, path, path);
+            withheld["og:title"].ShouldBe($"{Bill} · {official}");
+            withheld.Values.ShouldAllBe(v => !v.Contains(Readable, StringComparison.Ordinal) && !v.Contains(Description, StringComparison.Ordinal));
+            WebUtility.HtmlDecode(await PageAsync(visitor, path)).ShouldContain($"<h1>{Readable}</h1>");
         }
         finally
         {
+            if (recordId is { } id)
+            {
+                await Database.ExecuteAsync("DELETE FROM appeals.report WHERE target_id = @id", ("id", id));
+            }
+
             await Database.FreeBillAsync(Bill);
         }
     }
