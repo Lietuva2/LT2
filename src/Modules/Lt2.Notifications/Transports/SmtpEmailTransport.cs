@@ -136,7 +136,7 @@ internal sealed class SmtpEmailTransport(IOptions<SmtpOptions> options, IOptions
                 }
             }
 
-            await _client.SendAsync(mime, cancellationToken);
+            await _client.SendAsync(new SmtpSendRequest(mime), cancellationToken);
         }
 
         public async ValueTask DisposeAsync()
