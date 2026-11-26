@@ -36,6 +36,7 @@ Prefer merge commits over squash.
 | `docs/zurnalistams.html` | Journalists | What is there, how to cite the numbers, story ideas. |
 | `docs/kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
 | `docs/dokumentai.html` | People who want everything | Lists every page; `noindex`, not linked from any page. Update it when a page is added, renamed or removed. |
+| `docs/lt2-preview.png` | – | The link preview image (1200 × 630) of every page: logo, "Padėkite Seimui jus atstovauti." Pages name it as `https://lietuva2.lt/lt2-preview.png` in `og:image`, the one absolute address allowed (share previews need one). |
 | `docs/lt2-logo-spin.js` | – | `<lt2-logo-spin>`: the logo turning in 3D, edge-on a man and a woman, in the hero of every page. The only shared file the pages load. |
 | `discovery/README.md` | – | English overview and table of pages. Keep in sync with `docs/dokumentai.html`. |
 | `discovery/design-notes.md` | Team | Decision history of the 2026-09 concept (voting first). Historical: the pages and `master`'s design win where it disagrees. |

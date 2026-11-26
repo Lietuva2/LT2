@@ -9,7 +9,12 @@
 <meta property="og:locale" content="lt_LT">
 <meta property="og:site_name" content="Lietuva 2.0">
 <meta property="og:title" content="Lietuva 2.0 – padėkite Seimui jus atstovauti">
-<meta property="og:description" content="Seimo projektai, balsavimai ir Seimo nariai vienoje vietoje. Pasakykite Seimo nariams, ko prašote, ir pamatykite, ką jie nusprendė. Pirmasis etapas veikia uždarame bandyme.">
+<meta property="og:description" content="Pasakykite Seimo nariams, ko prašote dėl svarstomų projektų, ir pamatykite, ką jie nusprendė.">
+<meta property="og:image" content="https://lietuva2.lt/lt2-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lietuva 2.0 – padėkite Seimui jus atstovauti.">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#1f6b3a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='28 44 604 474'%3E%3Cg stroke-width='10' stroke-linejoin='round'%3E%3Cpath d='M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z' fill='%23a7b1ac' stroke='%23a7b1ac'/%3E%3Cpath d='M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z' fill='%237cc242' stroke='%237cc242'/%3E%3Cpath d='M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z' fill='%231f6b3a' stroke='%231f6b3a'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -73,6 +78,11 @@ p{margin:0}
 .page{max-width:1040px;margin:0 auto}
 .hero{padding-top:44px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:44px;align-items:center}
 @media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr);gap:24px}}
+.hero-logo{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.hero-logo svg{width:60px;height:60px;flex:none}
+.hero-logo .wm{font-family:var(--f-display);font-weight:800;font-size:30px;letter-spacing:-.02em;line-height:1}
+.hero-logo .wm span{color:var(--brand)}
+.hero-logo .tag{font-family:var(--f-display);font-size:14px;color:var(--muted);margin-top:4px}
 .hero h1{font-size:clamp(36px,5vw,54px);font-weight:800;letter-spacing:-.03em;line-height:1.04}
 .hero h1 em{font-style:normal;color:var(--brand)}
 .hero .kicker{font-family:var(--f-display);font-size:clamp(19px,2.2vw,24px);font-weight:600;line-height:1.25;margin-top:16px}
@@ -201,9 +211,13 @@ footer.site a{color:var(--link)}
 <div class="page">
   <section class="hero">
     <div>
+      <div class="hero-logo">
+        <svg aria-hidden="true"><use href="#logo"/></svg>
+        <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Seimo darbai ir pilietinis įsitraukimas</div></div>
+      </div>
       <div class="status"><i aria-hidden="true"></i><span><b>Pirmasis etapas veikia</b> · uždaras bandymas</span></div>
-      <h1>Pasakykite Seimui, ko prašote, <em>ir pamatykite, ką jis nusprendė.</em></h1>
-      <p class="kicker">Padėkite Seimui jus atstovauti.</p>
+      <h1>Padėkite Seimui <em>jus atstovauti.</em></h1>
+      <p class="kicker">Pasakykite Seimui, ko prašote, ir pamatykite, ką jis nusprendė.</p>
       <p class="lede">Lietuva 2.0 rodo, ką Seimas svarsto ir kaip balsuoja. Dėl kiekvieno svarstomo projekto galite paprašyti Seimo narių balsuoti už arba prieš ir paaiškinti kodėl. Seimo nariai el. paštu gauna vieną suvestinę su abiem pusėmis, o ne šimtus vienodų laiškų, ir gali atsakyti visiems iš karto.</p>
       <div class="actions">
         <a class="btn primary" href="https://test.lietuva2.lt">Bandomoji svetainė</a>
