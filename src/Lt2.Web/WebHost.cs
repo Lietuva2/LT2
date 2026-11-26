@@ -218,7 +218,23 @@ internal static class WebHost
         MapOldAppealAddresses(app);
         app.MapRazorComponents<App>()
             .AddInteractiveWebAssemblyRenderMode()
-            .AddAdditionalAssemblies(typeof(ClientAssembly).Assembly);
+            .AddAdditionalAssemblies(typeof(ClientAssembly).Assembly)
+            .Add(AnswerHead);
+    }
+
+    /// <summary>
+    /// Pages answer HEAD as they answer GET, headers only (the server sends no body for HEAD): link-preview fetchers and
+    /// checkers ask with HEAD before they read a page (design 8.22.5), and a 405 makes Facebook give up on the preview.
+    /// The last method metadata is the one routing uses.
+    /// </summary>
+    private static void AnswerHead(EndpointBuilder endpoint)
+    {
+        if (endpoint.Metadata.OfType<HttpMethodMetadata>().LastOrDefault() is { } methods
+            && methods.HttpMethods.Contains(HttpMethods.Get, StringComparer.OrdinalIgnoreCase)
+            && !methods.HttpMethods.Contains(HttpMethods.Head, StringComparer.OrdinalIgnoreCase))
+        {
+            endpoint.Metadata.Add(new HttpMethodMetadata([.. methods.HttpMethods, HttpMethods.Head], methods.AcceptCorsPreflight));
+        }
     }
 
     /// <summary>

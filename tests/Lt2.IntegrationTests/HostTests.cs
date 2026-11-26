@@ -34,6 +34,22 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
         headers.GetValues("Permissions-Policy").Single().ShouldContain("camera=()");
     }
 
+    /// <summary>
+    /// Design 8.22.5: link-preview fetchers ask with HEAD first; a page answers it as GET (Kestrel then sends no body; the
+    /// test server does not drop it, so only the status and type are checked here).
+    /// </summary>
+    [Fact]
+    public async Task A_page_answers_head_as_get()
+    {
+        using var browser = NewBrowser();
+        foreach (var path in new[] { "/", "/projektai", "/metodika" })
+        {
+            using var head = await browser.Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, path), TestContext.Current.CancellationToken);
+            head.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK, path);
+            head.Content.Headers.ContentType?.MediaType.ShouldBe("text/html", path);
+        }
+    }
+
     [Fact]
     public async Task The_start_page_is_server_rendered_in_lithuanian_without_inline_script()
     {
