@@ -60,6 +60,12 @@
   <data name="Home.Recent" xml:space="preserve"><value>Neseniai balsuota</value></data>
 <data name="Agenda.TakingPartClosed" xml:space="preserve"><value>Dalyvavimas uždarytas</value></data>
   <data name="Home.Lead" xml:space="preserve"><value>Matykite, ką Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko prašote.</value></data>
+  <data name="Home.Slogan" xml:space="preserve"><value>Padėkite Seimui jus atstovauti.</value></data>
+  <data name="Home.Slogan.Start" xml:space="preserve"><value>Padėkite Seimui</value></data>
+  <data name="Home.Slogan.End" xml:space="preserve"><value>jus atstovauti.</value></data>
+  <data name="Home.Subline" xml:space="preserve"><value>Pasakykite Seimui, ko prašote, ir pamatykite, ką jis nusprendė.</value></data>
+  <data name="Home.Preview" xml:space="preserve"><value>Seimo projektai, balsavimai ir Seimo nariai vienoje vietoje. Pasakykite Seimui, ko prašote, ir pamatykite, ką jis nusprendė.</value></data>
+  <data name="Preview.HomeImageAlt" xml:space="preserve"><value>Lietuva 2.0: padėkite Seimui jus atstovauti.</value></data>
   <data name="Home.HaveCode" xml:space="preserve"><value>Turite kvietimo kodą?</value></data>
   <data name="Home.Register" xml:space="preserve"><value>Registruokitės</value></data>
   <data name="Home.HaveAccount" xml:space="preserve"><value>Jau turite paskyrą?</value></data>

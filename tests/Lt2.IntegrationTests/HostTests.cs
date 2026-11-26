@@ -41,8 +41,9 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
         var html = await browser.Client.GetStringAsync("/");
 
         html.ShouldContain("<html lang=\"lt\">");
-        // Owner, 2026-11-17: the headline says what the site does; the title stays the name.
-        System.Net.WebUtility.HtmlDecode(html).ShouldContain("<h1 id=\"home-title\">Matykite, ką Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko prašote.</h1>");
+        // Owner, 2026-11-26: the headline is the slogan with its subline under it; the title stays the name.
+        System.Net.WebUtility.HtmlDecode(html).ShouldContain("<h1 id=\"home-title\">Padėkite Seimui <span class=\"home-slogan__end\">jus atstovauti.</span></h1>");
+        System.Net.WebUtility.HtmlDecode(html).ShouldContain("<p class=\"lead\" id=\"home-subline\">Pasakykite Seimui, ko prašote, ir pamatykite, ką jis nusprendė.</p>");
         html.ShouldContain("<title>Lietuva 2.0</title>");
         System.Net.WebUtility.HtmlDecode(html).ShouldContain("Vyksta uždaras bandymas");
         html.ShouldContain("_framework/blazor.web");

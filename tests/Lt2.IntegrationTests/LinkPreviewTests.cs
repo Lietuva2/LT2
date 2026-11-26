@@ -109,8 +109,13 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
         mp["og:type"].ShouldBe("website");
 
         var front = await PreviewAsync(visitor, "/", "/");
-        front["og:title"].ShouldBe("Lietuva 2.0");
-        front["og:description"].ShouldBe("Matykite, ką Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko prašote.");
+        // Owner, 2026-11-26: the start page's preview is the slogan, with an image of its own; every other page has the logo's.
+        front["og:title"].ShouldBe("Padėkite Seimui jus atstovauti.");
+        front["og:description"].ShouldBe("Seimo projektai, balsavimai ir Seimo nariai vienoje vietoje. Pasakykite Seimui, ko prašote, ir pamatykite, ką jis nusprendė.");
+        front["og:image"].ShouldStartWith(Site + "/img/link-preview-home");
+        front["og:image:alt"].ShouldBe("Lietuva 2.0: padėkite Seimui jus atstovauti.");
+        bill["og:image"].ShouldNotStartWith(Site + "/img/link-preview-home");
+        mp["og:image"].ShouldNotStartWith(Site + "/img/link-preview-home");
 
         foreach (var (path, heading) in new[] { ("/darbotvarke", "Seimo darbotvarkė"), ("/projektai", "Projektai"), ("/statistika", null), ("/metodika", "Metodika") })
         {
