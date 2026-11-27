@@ -65,7 +65,11 @@
                         @* The wording "Pritarta – dėl pritarimo po svarstymo": the Seimas's outcome as a neutral tag, then
                            what the motion was. *@
                         var (outcome, motion) = Motion(lead);
-                        <p class="lead" id="vote-wording">@if (outcome is not null) { <span class="tag" id="vote-outcome">@outcome</span><text> </text> }@motion</p>
+                        @if (outcome is not null)
+                        {
+                            <p><span class="tag" id="vote-outcome">@outcome</span></p>
+                        }
+                        <p class="lead" id="vote-wording">@motion</p>
                     }
                     @if (_billDescription is { } about)
                     {
@@ -220,7 +224,7 @@
 
     /// <summary>
     /// The Seimas's wording split at its dash: "Pritarta – dėl pritarimo po svarstymo" is the outcome "Pritarta" and the
-    /// motion "dėl pritarimo po svarstymo". A wording without one of the four outcomes before " – " is all motion.
+    /// motion "Dėl pritarimo po svarstymo", capitalised as it stands on its own line. A wording without one of the four outcomes before " – " is all motion.
     /// </summary>
     internal static (string? Outcome, string Motion) Motion(string wording)
     {
@@ -232,7 +236,8 @@
             if (outcome.Equals("Pritarta", StringComparison.CurrentCultureIgnoreCase) || outcome.Equals("Nepritarta", StringComparison.CurrentCultureIgnoreCase)
                 || outcome.Equals("Pritarta bendru sutarimu", StringComparison.CurrentCultureIgnoreCase) || outcome.Equals("Sprendimas nepriimtas", StringComparison.CurrentCultureIgnoreCase))
             {
-                return (outcome, w[(dash + 3)..].Trim());
+                var motion = w[(dash + 3)..].Trim();
+                return (outcome, motion.Length > 0 ? char.ToUpper(motion[0], System.Globalization.CultureInfo.GetCultureInfo("lt-LT")) + motion[1..] : motion);
             }
         }
 
