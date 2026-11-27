@@ -70,9 +70,11 @@ internal static class AppealMapping
         q.RecordsTotal,
         q.ReasonsTotal);
 
+    public static DescriptionAskResponse Map(DescriptionAskState s) => new(s.Asks, s.Asked, s.Open);
+
     public static UndescribedBillsResponse Map(UndescribedBills u) => new(
         u.Bills.Select(b => new UndescribedBillResponse(
-            new BillRefResponse(b.Bill.Number, b.Bill.Title, b.PlainTitle), b.DescriptionSource, b.Participants, b.Arguments, b.Followers, Map(b.Planned))).ToList(),
+            new BillRefResponse(b.Bill.Number, b.Bill.Title, b.PlainTitle), b.DescriptionSource, b.Participants, b.Arguments, b.Followers, Map(b.Planned), b.Asks, b.Finished)).ToList(),
         u.Total);
 
     public static HiddenItemsResponse Map(HiddenItems h) => new(
@@ -119,7 +121,8 @@ internal static class AppealMapping
 /// Server-side <see cref="IAppealsApi"/> (design 3.1): the server-rendered pages and the prerendered interactive
 /// components call the module in-process, as the signed-in person of the current request.
 /// </summary>
-internal sealed class ServerAppealsApi(IAppealsModule appeals, BillListReads list, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
+internal sealed class ServerAppealsApi(
+    IAppealsModule appeals, IDescriptionAsks asks, BillListReads list, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
 {
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 
@@ -171,6 +174,15 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, BillListReads lis
 
     public async Task<ApiResult> EndorseAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.EndorseAsync(reasonId, id, cancellationToken));
+
+    public async Task<ApiResult<DescriptionAskResponse>> GetDescriptionAskAsync(string number, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await asks.StateAsync(number, UserId, cancellationToken), AppealMapping.Map);
+
+    public async Task<ApiResult> AskDescriptionAsync(string number, CancellationToken cancellationToken = default) =>
+        await AsMemberAsync(id => asks.AskAsync(number, id, cancellationToken));
+
+    public async Task<ApiResult> WithdrawDescriptionAskAsync(string number, CancellationToken cancellationToken = default) =>
+        await AsMemberAsync(id => asks.WithdrawAsync(number, id, cancellationToken));
 
     public async Task<ApiResult> RemoveEndorsementAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.RemoveEndorsementAsync(reasonId, id, cancellationToken));

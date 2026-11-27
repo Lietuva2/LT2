@@ -345,7 +345,7 @@ internal static class RuleErrors
     public static Error Of(string code) => code switch
     {
         "consent.required" or "reason.limit" or "endorsement.limit" or "endorsement.own-reason"
-            or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" or "reason.reacted" => Error.Conflict(code),
+            or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" or "reason.reacted" or "description-ask.not-wanted" => Error.Conflict(code),
         "reason.not-found" => Error.NotFound(code),
         "reason.edit-author-only" or "report.own" => Error.Forbidden(code),
         "draft.too-many" => new Error(ErrorKind.TooManyRequests, code),

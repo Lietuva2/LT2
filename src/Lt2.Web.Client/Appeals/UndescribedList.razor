@@ -1,9 +1,9 @@
 @inherits InteractiveBase<AppealUi>
 @inject IModerationApi ModerationApi
 
-@* The moderators' tab "Be aprašymo" (design 8.3, owner 2026-11-25): active bills without a description, or with an AI
-   summary nobody has read, that people already pay attention to, the most attention first; at most a hundred, with the
-   total. Each row leads to the bill's page, where the "Moderavimas" panel has "Rašyti aprašymą"; nothing is moderated here.
+@* The moderators' tab "Be aprašymo" (design 8.3, owner 2026-11-25): bills without a description, or with an AI summary
+   nobody has read, that members asked a description for (8.13.2; a finished bill too, tagged) or, while active, people
+   already pay attention to; the most asks first, then the most attention; at most a hundred, with the total. Each row leads to the bill's page, where the "Moderavimas" panel has "Rašyti aprašymą"; nothing is moderated here.
    Only numbers the bill's page shows, nothing about who. *@
 <Messages Message="@Message" Info="@Info" />
 
@@ -33,8 +33,16 @@ else
                             {
                                 <span class="tag" id="undescribed-ai-@row.Bill.Number">@L["Mod.Source.ai"]</span>
                             }
+                            @if (row.Finished)
+                            {
+                                <span class="tag" id="undescribed-finished-@row.Bill.Number">@L["Undescribed.Finished"]</span>
+                            }
                         </span>
                         <BillTitleLink Href="@BillPath(row.Bill.Number)" Title="@row.Bill.Title" PlainTitle="@row.Bill.PlainTitle" />
+                        @if (row.Asks > 0)
+                        {
+                            <span class="small num" id="undescribed-asks-@row.Bill.Number">@L.Format("DescriptionAsk.Count", Display.Number(row.Asks))</span>
+                        }
                         <span class="small num" id="undescribed-counts-@row.Bill.Number">@L.Format("Undescribed.Counts", Display.Number(row.Participants), Display.Number(row.Arguments), Display.Number(row.Followers))</span>
                     </div>
                     @if (row.Planned is { } plan)

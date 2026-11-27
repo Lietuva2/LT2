@@ -77,6 +77,7 @@ public static class DatabaseRoles
         "appeals.organisation", "appeals.organisation_code", "appeals.organisation_invite", "appeals.organisation_representative",
         "appeals.organisation_statement", "appeals.mp_response",
         "appeals.comment", // design 8.23.11: holds the account behind an organisation's or an MP's comment
+        "appeals.description_ask", // design 8.13.2: who asked for which bill's description, shown to nobody
         "audit.event",
         "identity.consent", "identity.data_protection_key", "identity.feedback", "identity.invitation", "identity.invitation_daily",
         "identity.known_device",

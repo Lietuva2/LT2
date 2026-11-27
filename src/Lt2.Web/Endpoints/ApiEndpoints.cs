@@ -86,6 +86,7 @@ internal static class ApiEndpoints
         EditReasonEndpoint.Map(api);
         EndorseEndpoint.Map(api);
         RemoveEndorsementEndpoint.Map(api);
+        DescriptionAskEndpoints.Map(api);
         WithdrawReasonEndpoint.Map(api);
         GetMyRestrictionEndpoint.Map(api);
         Me.InvitationEndpoints.Map(api);

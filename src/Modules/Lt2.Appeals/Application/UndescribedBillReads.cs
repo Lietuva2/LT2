@@ -9,7 +9,7 @@ namespace Lt2.Appeals.Application;
 /// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): where a description is most wanted. Composed in memory like the
 /// active list of <c>/projektai</c> (<see cref="AppealsService"/>): the active bills and their planned dates are the
 /// Parliament module's (<see cref="IPlannedAgenda"/>), the followers the Notifications module's (<see cref="IFollowerCounts"/>,
-/// numbers only), the records, sides and arguments this module's. Inclusion and order are <see cref="UndescribedRules"/>.
+/// numbers only), the records, sides, arguments and members' asks for a description (8.13.2) this module's. Inclusion and order are <see cref="UndescribedRules"/>.
 /// Holds only numbers the bill's page shows, never who.
 /// </summary>
 internal sealed class UndescribedBillReads(
@@ -33,9 +33,11 @@ internal sealed class UndescribedBillReads(
                 b.Participants,
                 b.Arguments,
                 b.Followers,
-                planned.GetValueOrDefault(b.Bill.Number));
+                planned.GetValueOrDefault(b.Bill.Number),
+                b.Asks,
+                b.Finished);
         });
-        var ordered = UndescribedRules.Order(rows, r => r.Participants, r => r.Arguments, r => r.Followers, r => r.Planned?.Date, r => r.Bill.Number);
+        var ordered = UndescribedRules.Order(rows, r => r.Asks, r => r.Participants, r => r.Arguments, r => r.Followers, r => r.Planned?.Date, r => r.Bill.Number);
         return new UndescribedBills(ordered.Take(Limit).ToList(), ordered.Count);
     }
 
@@ -47,25 +49,36 @@ internal sealed class UndescribedBillReads(
     }
 
     /// <summary>A bill on the list and the numbers that put it there.</summary>
-    private sealed record Listed(BillFacts Bill, BillRecord? Record, int Participants, int Arguments, int Followers);
+    private sealed record Listed(BillFacts Bill, BillRecord? Record, int Asks, bool Finished, int Participants, int Arguments, int Followers);
 
     /// <summary>The bills on the list, unordered: the one filter of the list and of its count.</summary>
     private async Task<List<Listed>> ListedAsync(AppealsDb db, CancellationToken cancellationToken)
     {
-        // Active bills (design 8.12.1) with an open record or none; a hidden or closed record is not active.
+        // Active bills (design 8.12.1), and every bill members asked a description for (8.13.2), a finished one too.
         var active = await records.ActiveAsync(db, cancellationToken);
-        var numbers = active.Select(b => b.Number).ToList();
+        var activeNumbers = active.Select(b => b.Number).ToHashSet(StringComparer.Ordinal);
+        var asks = await db.DescriptionAsks.AsNoTracking()
+            .GroupBy(a => a.BillNumber)
+            .Select(g => new { Bill = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(a => a.Bill, a => a.Count, StringComparer.Ordinal, cancellationToken);
+        var askedElsewhere = asks.Keys.Where(n => !activeNumbers.Contains(n)).ToList();
+        var finished = await reads.BillsAsync(askedElsewhere, cancellationToken);
+        var candidates = active.Concat(askedElsewhere.Select(n => finished.GetValueOrDefault(n)).OfType<BillFacts>()).ToList();
+
+        var numbers = candidates.Select(b => b.Number).ToList();
         var recordsOnBills = await db.BillRecords.AsNoTracking().Records()
             .Where(a => numbers.Contains(a.BillNumber))
             .ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, cancellationToken);
-        var wanted = active
+
+        // Without a record, or with an open or closed one that wants a description; a hidden record is not listed.
+        var wanted = candidates
             .Where(b => recordsOnBills.GetValueOrDefault(b.Number) is not { } r
-                || (r.Status == BillRecordStatuses.Open && UndescribedRules.WantsDescription(r.Description, r.DescriptionSource)))
+                || (r.Status != BillRecordStatuses.Rejected && UndescribedRules.WantsDescription(r.Description, r.DescriptionSource)))
             .ToList();
 
-        var openIds = wanted.Select(b => recordsOnBills.GetValueOrDefault(b.Number)?.Id).OfType<Guid>().ToList();
-        var counts = await reads.CountsAsync(db, openIds, cancellationToken);
-        var arguments = await AppealReads.ArgumentCountsAsync(db, openIds, cancellationToken);
+        var recordIds = wanted.Select(b => recordsOnBills.GetValueOrDefault(b.Number)?.Id).OfType<Guid>().ToList();
+        var counts = await reads.CountsAsync(db, recordIds, cancellationToken);
+        var arguments = await AppealReads.ArgumentCountsAsync(db, recordIds, cancellationToken);
         var following = await followers.BillsAsync(wanted.Select(b => b.Number).ToList(), cancellationToken);
         return wanted
             .Select(b =>
@@ -74,11 +87,13 @@ internal sealed class UndescribedBillReads(
                 return new Listed(
                     b,
                     record,
+                    asks.GetValueOrDefault(b.Number),
+                    !activeNumbers.Contains(b.Number) || record?.Status == BillRecordStatuses.Closed,
                     record is null ? 0 : (counts.GetValueOrDefault(record.Id) ?? SideCounts.None).Total,
                     record is null ? 0 : arguments.GetValueOrDefault(record.Id),
                     following.GetValueOrDefault(b.Number));
             })
-            .Where(b => UndescribedRules.IsListed(b.Participants, b.Arguments, b.Followers))
+            .Where(b => UndescribedRules.IsListed(b.Asks, !b.Finished, b.Participants, b.Arguments, b.Followers))
             .ToList();
     }
 }

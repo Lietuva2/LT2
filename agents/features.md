@@ -687,13 +687,30 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
 - **"Projektai be aprašymo" (design 8.3, owner 2026-11-25).** The tab `be-aprasymo` (`Appeals/UndescribedList.razor`), from
   `GET /moderation/undescribed` (`GetUndescribedEndpoint`,
   moderators only; `IModerationApi.GetUndescribedAsync`, `IAppealsModeration.UndescribedAsync`, handler
-  `Application/UndescribedBillReads`). Active bills (an open record or none) without a description or with an `ai` one, that
-  have some activity (a participant, a published argument or a follower); the rule is `Domain/UndescribedRules`
-  (`WantsDescription`; `IsListed`: `BillListRules.Activity` above 0; `Order`: `BillListRules.Order` by activity, the most
-  first, then the soonest planned date, then the number; `UndescribedRuleTests`). Followers come through `IFollowerCounts.BillsAsync` (Notifications, numbers only), planned
-  dates through `IPlannedAgenda`. At most 100 rows with the total (`<QueueCut>`); each row `#undescribed-{number}`: the
-  number, `<BillTitleLink>`, "Dalyviai: n · Argumentai: n · Sekėjai: n", the planned date, the `ai` label; the links lead to
-  the bill's page, whose "Moderavimas" panel writes the description. Tests: `UndescribedBillsTests` (integration).
+  `Application/UndescribedBillReads`). Bills without a description or with an `ai` one, whose record (if any) is not
+  hidden, that members asked a description for (any bill, finished too) or, while active, that have some activity (a
+  participant, a published argument or a follower); the rule is `Domain/UndescribedRules` (`WantsDescription`;
+  `IsListed(asks, active, …)`: an ask, or active with `BillListRules.Activity` above 0; `Order`: the most asks first, then
+  `BillListRules.Order` by activity, the most first, then the soonest planned date, then the number; `UndescribedRuleTests`).
+  Followers come through `IFollowerCounts.BillsAsync` (Notifications, numbers only), planned dates through `IPlannedAgenda`,
+  the asked finished bills' facts through `IBillCatalogue.FindManyAsync`. At most 100 rows with the total (`<QueueCut>`);
+  each row `#undescribed-{number}`: the number, the `ai` label, "Baigtas" (`#undescribed-finished-{number}`),
+  `<BillTitleLink>`, "Aprašymo paprašė: n" (`#undescribed-asks-{number}`, when any), "Dalyviai: n · Argumentai: n ·
+  Sekėjai: n", the planned date; the links lead to the bill's page, whose "Moderavimas" panel writes the description.
+  Tests: `UndescribedBillsTests`, `DescriptionAskTests` (integration).
+- **"Prašau aprašymo" (design 8.13.2, owner 2026-11-27).** The island `Appeals/DescriptionAsk.razor` under
+  `#no-description` on `BillPage` (`#description-ask`: the toggle `#description-ask-toggle` with `aria-pressed`, or for a
+  visitor the sign-in link `#description-ask-sign-in`; `#description-asks` "Aprašymo paprašė: n"; the hint
+  `#description-ask-what`, more at `/metodika#description-asks`); nothing when asking is closed. `GET/PUT/DELETE
+  /bills/{number}/description-ask` (`DescriptionAskEndpoints`; `IAppealsApi.GetDescriptionAskAsync`,
+  `AskDescriptionAsync`, `WithdrawDescriptionAskAsync`; `DescriptionAskResponse(Asks, Asked, Open)`), handler
+  `Application/DescriptionAsks` (`IDescriptionAsks`), table `appeals.description_ask` (withheld from `lt2_readonly`).
+  Asking is `Policies.Member` (no positions consent) and `RateLimits:Participation`; `UndescribedRules.CheckAsk` refuses
+  (`description-ask.not-wanted`, 409) a bill that shows a description or whose record is hidden; an ask is written under
+  the bill's lock. `ModerationService.WriteDescriptionAsync` (a text that no longer `WantsDescription`) and
+  `ConfirmDescriptionAsync` delete the bill's asks (`DescriptionAsks.ClearAsync`) in their transaction. `AccountData`
+  exports `descriptionAsks` and deletes them with the account. Tests: `UndescribedRuleTests` (unit), `DescriptionAskTests`
+  (integration).
 - **After the final vote** (design 6.9, owner 2026-11-15): a report about an argument or the description of a closed
   record reaches the queue. On a closed record a moderator can only hide and restore an argument, correct or remove the
   description and answer a report with "Palikti" (and hide the whole record, as before, or undo a moderator's close,
@@ -937,7 +954,7 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   those with new comments, their discussions open, the responses hidden by the stylesheet from `NewMark`'s `.new-out`
   marker. "Jūsų projektai" and the follow list show the counts (`BillNewsCountsResponse`, `NewsLine` with `NumberForms`:
   "3 nauji argumentai · 5 nauji komentarai"), one read per list.
-- Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations), "Man svarbu" and changing
+- Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations), "Man svarbu", "Prašau aprašymo" and changing
   the display name share one per-account request limit, `RateLimits:Participation` (60 a minute): a guard against a runaway script, not a rule.
 - Links in emails: a message carries the site path, and the template makes it a full address with
   `SiteLinks.Absolute` from `Site:Address` (design 5.6). That is deployment configuration, never a runtime setting.

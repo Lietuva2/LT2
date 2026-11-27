@@ -184,9 +184,17 @@
 <data name="Mod.Note.Reporters" xml:space="preserve"><value>Paaiškinimas pranešusiems (nebūtinas)</value></data>
 <data name="Mod.Note.Reporters.Hint" xml:space="preserve"><value>Jį gaus pranešimą pateikę nariai el. paštu.</value></data>
 <data name="Undescribed.Title" xml:space="preserve"><value>Projektai be aprašymo</value></data>
-<data name="Undescribed.Lead" xml:space="preserve"><value>Aktyvūs projektai be aprašymo arba su žmonių neperžiūrėta DI santrauka, kuriais žmonės jau domisi: daugiausia dėmesio sulaukę pirmi. Aprašymą galima parašyti projekto puslapyje, skiltyje „Moderavimas“.</value></data>
+<data name="Undescribed.Lead" xml:space="preserve"><value>Projektai be aprašymo arba su žmonių neperžiūrėta DI santrauka. Pirmi tie, kurių aprašymo paprašė daugiausia narių, taip pat ir Seimo jau baigti svarstyti; paskui aktyvūs projektai, kuriais žmonės jau domisi, daugiausia dėmesio sulaukę pirmi. Aprašymą galima parašyti projekto puslapyje, skiltyje „Moderavimas“.</value></data>
 <data name="Undescribed.Counts" xml:space="preserve"><value>Dalyviai: {0} · Argumentai: {1} · Sekėjai: {2}</value></data>
 <data name="Undescribed.None" xml:space="preserve"><value>Projektų be aprašymo, kuriais žmonės domisi, nėra.</value></data>
+<data name="Undescribed.Finished" xml:space="preserve"><value>Baigtas</value></data>
+<data name="DescriptionAsk.Ask" xml:space="preserve"><value>Prašau aprašymo</value></data>
+<data name="DescriptionAsk.Withdraw" xml:space="preserve"><value>Atšaukti prašymą</value></data>
+<data name="DescriptionAsk.Count" xml:space="preserve"><value>Aprašymo paprašė: {0}</value></data>
+<data name="DescriptionAsk.Hint" xml:space="preserve"><value>Kam to reikia?</value></data>
+<data name="DescriptionAsk.What" xml:space="preserve"><value>Moderatoriai pirmiausia aprašo projektus, kurių aprašymo paprašė daugiausia narių.</value></data>
+<data name="DescriptionAsk.SignIn" xml:space="preserve"><value>Prisijungę galite paprašyti, kad moderatoriai aprašytų šį projektą: pirmiausia aprašomi projektai, kurių aprašymo paprašė daugiausia narių.</value></data>
+<data name="DescriptionAsk.Private" xml:space="preserve"><value>Kas paprašė, niekas nemato: rodomas tik skaičius.</value></data>
 <data name="Mod.Tabs.Label" xml:space="preserve"><value>Moderavimo sąrašai</value></data>
 <data name="Mod.Tab.Records" xml:space="preserve"><value>Projektai</value></data>
 <data name="Mod.Tab.Reasons" xml:space="preserve"><value>Argumentai</value></data>

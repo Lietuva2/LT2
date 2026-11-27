@@ -458,6 +458,13 @@ internal sealed class ModerationService(
         record.DescriptionUrl = address;
         record.ChangedAt = now;
 
+        // A person's description answers the members' "Prašau aprašymo" (design 8.13.2): their asks go, in this transaction,
+        // under the bill's lock that an ask takes too. An AI agent's text, read by nobody, leaves them.
+        if (!UndescribedRules.WantsDescription(record.Description, record.DescriptionSource))
+        {
+            await DescriptionAsks.ClearAsync(db, record.BillNumber, cancellationToken);
+        }
+
         // The search copy of the bill holds the readable title as it is written (design 8.12.5), in this transaction.
         await BillCards.WriteAsync(db, bills, record.BillNumber, record.PlainTitle, cancellationToken);
         await recorder.RecordAsync(
@@ -483,11 +490,11 @@ internal sealed class ModerationService(
 
         // The text stays as it is; a person has now read it, so it is "Sukurta DI · taisė žmonės" for its whole life (design 8.13).
         // The label's change is an entry of the public history, with the statement when there is one.
-        return await OnRecordAsync(record.Id, moderator, "confirm", note, answersReports: true, (inner, record, now) =>
+        return await OnRecordAsync(record.Id, moderator, "confirm", note, answersReports: true, async (inner, record, now) =>
         {
             if (RecordRules.CheckConfirm(record.Status, record.Description.Length == 0 ? null : record.DescriptionSource) is { } refused)
             {
-                return Task.FromResult<Result<Unit>>(RuleErrors.Of(refused));
+                return RuleErrors.Of(refused);
             }
 
             inner.Revisions.Add(AppealsService.Revise("record", record.Id, "description_source", record.DescriptionSource, DescriptionSources.AiDraft, moderator.UserId, now));
@@ -497,7 +504,10 @@ internal sealed class ModerationService(
             }
 
             record.DescriptionSource = DescriptionSources.AiDraft;
-            return Task.FromResult(Result.Ok());
+
+            // Read by a person now: the members' asks for a description are answered (design 8.13.2).
+            await DescriptionAsks.ClearAsync(inner, record.BillNumber, cancellationToken);
+            return Result.Ok();
         }, cancellationToken);
     }
 

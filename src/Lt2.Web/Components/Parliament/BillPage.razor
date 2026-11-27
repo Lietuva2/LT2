@@ -149,6 +149,8 @@
                         else
                         {
                             <p id="no-description">@A["What.None"]</p>
+                            @* Design 8.13.2 (owner, 2026-11-27): any bill without a description, open or finished. *@
+                            <Lt2.Web.Client.Appeals.DescriptionAsk Number="@b.Number" @rendermode="InteractiveWebAssembly" />
                             @if (b.ESeimasUrl is { } link)
                             {
                                 <p class="fine"><Lt2.Web.Client.Components.OfficialLink Href="@link">@A["What.ESeimas"]</Lt2.Web.Client.Components.OfficialLink></p>

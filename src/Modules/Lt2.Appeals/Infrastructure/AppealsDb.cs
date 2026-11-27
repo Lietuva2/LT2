@@ -34,6 +34,8 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
 
     public DbSet<AiDraftRequest> AiDraftRequests => Set<AiDraftRequest>();
 
+    public DbSet<DescriptionAsk> DescriptionAsks => Set<DescriptionAsk>();
+
     public DbSet<SummaryAttempt> SummaryAttempts => Set<SummaryAttempt>();
 
     public DbSet<Organisation> Organisations => Set<Organisation>();
@@ -196,6 +198,14 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.HasKey(r => r.Id);
             e.Property(r => r.BillNumber).HasMaxLength(40);
             e.HasIndex(r => new { r.ModeratorUserId, r.RequestedAt });
+        });
+
+        modelBuilder.Entity<DescriptionAsk>(e =>
+        {
+            e.ToTable("description_ask");
+            e.HasKey(a => new { a.UserId, a.BillNumber });
+            e.Property(a => a.BillNumber).HasMaxLength(40);
+            e.HasIndex(a => a.BillNumber);
         });
 
         modelBuilder.Entity<SummaryAttempt>(e =>

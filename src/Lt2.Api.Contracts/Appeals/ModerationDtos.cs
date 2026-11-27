@@ -82,15 +82,17 @@ public sealed record ModerationQueueResponse(
 
 /// <summary>
 /// A bill on "Projektai be aprašymo" (design 8.3): no description, or an AI summary nobody has read
-/// (<c>DescriptionSource</c> <c>ai</c>; null without a description), with the numbers its page shows. <c>Bill.PlainTitle</c> is
-/// the readable title of such a summary, if it has one.
+/// (<c>DescriptionSource</c> <c>ai</c>; null without a description), with the numbers its page shows: <c>Asks</c>, the members'
+/// "Prašau aprašymo" (8.13.2), first. <c>Bill.PlainTitle</c> is the readable title of such a summary, if it has one;
+/// <c>Finished</c>, the Seimas has finished the bill.
 /// </summary>
 public sealed record UndescribedBillResponse(
-    BillRefResponse Bill, string? DescriptionSource, int Participants, int Arguments, int Followers, PlannedDateResponse? Planned);
+    BillRefResponse Bill, string? DescriptionSource, int Participants, int Arguments, int Followers, PlannedDateResponse? Planned, int Asks = 0, bool Finished = false);
 
 /// <summary>
-/// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): active bills people pay attention to that still want a
-/// description, the most attention first; at most a hundred, with how many there are in all. Holds nothing about who.
+/// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): bills that still want a description and that members asked one
+/// for (open or finished) or, while active, people pay attention to; the most asks first, then the most attention; at most a
+/// hundred, with how many there are in all. Holds nothing about who.
 /// </summary>
 public sealed record UndescribedBillsResponse(IReadOnlyList<UndescribedBillResponse> Bills, int Total);
 

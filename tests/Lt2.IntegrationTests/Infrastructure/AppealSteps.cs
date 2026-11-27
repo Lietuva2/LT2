@@ -45,6 +45,7 @@ public static class AppealSteps
             """,
             ("n", number));
         await database.ExecuteAsync("DELETE FROM appeals.organisation_statement WHERE bill_number = @n", ("n", number));
+        await database.ExecuteAsync("DELETE FROM appeals.description_ask WHERE bill_number = @n", ("n", number));
         await database.ExecuteAsync("DELETE FROM appeals.bill_record WHERE bill_number = @n", ("n", number));
 
         // The bill's search card (design 8.12.5) held the record's readable title: with the record gone, it holds none.

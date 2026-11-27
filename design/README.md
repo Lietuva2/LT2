@@ -37,7 +37,7 @@ that starts with it. Read the files a change touches, not the whole design.
 | [08.10-feedback.md](08.10-feedback.md) | Feedback from members |
 | [08.11-reasons-to-come.md](08.11-reasons-to-come.md) | The agenda, following, the AI draft, the share line, what is new since the last visit |
 | [08.12-one-object.md](08.12-one-object.md) | Every bill is open: what a bill offers, threshold, moderation after the fact, lists |
-| [08.13-description.md](08.13-description.md) | The description ("Apie ką projektas") and the AI summary job |
+| [08.13-description.md](08.13-description.md) | The description ("Apie ką projektas"), the AI summary job, the readable title and members asking for a description |
 | [08.14-organisations.md](08.14-organisations.md) | Organisations: what one is, statements, goals, bringing members, keeping it honest, how it works |
 | [08.15-explanatory-text.md](08.15-explanatory-text.md) | Explanatory text on screens; hints and disclosures |
 | [08.16-surfaces.md](08.16-surfaces.md) | Surfaces (sheet and ground), the action row, version histories, one green for the sides and the bubbles, one "show more" under every long list, a list's heading that stays in view |

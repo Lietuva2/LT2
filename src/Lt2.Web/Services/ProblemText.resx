@@ -65,6 +65,7 @@
 <data name="description-url.invalid" xml:space="preserve"><value>Nurodykite oficialaus teksto adresą lrs.lt svetainėje, prasidedantį https://, arba palikite laukelį tuščią.</value></data>
 <data name="record.not-open" xml:space="preserve"><value>Dėl šio projekto dabar negalima nurodyti, ko prašote, ir rašyti argumentų.</value></data>
 <data name="bill.not-found" xml:space="preserve"><value>Tokio projekto nėra.</value></data>
+<data name="description-ask.not-wanted" xml:space="preserve"><value>Šis projektas jau turi aprašymą arba jo paprašyti negalima.</value></data>
 <data name="member.required" xml:space="preserve"><value>Pirmiausia baikite registraciją.</value></data>
 <data name="consent.required" xml:space="preserve"><value>Kad galėtume išsaugoti jūsų poziciją ar „Man svarbu“ žymą, reikia jūsų aiškaus sutikimo.</value></data>
 <data name="consent.outdated" xml:space="preserve"><value>Galioja kitas sutikimo tekstas. Perkraukite puslapį ir perskaitykite jį.</value></data>
