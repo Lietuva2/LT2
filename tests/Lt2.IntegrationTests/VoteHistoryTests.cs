@@ -411,15 +411,25 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     }
 
     [Fact]
-    public async Task A_votes_page_links_to_its_bill_by_a_button_under_the_heading()
+    public async Task A_votes_page_links_to_its_bill_from_a_sheet_above_the_result()
     {
         var page = await OkAsync($"/seimas/balsavimai/{Midnight}");
         var button = $"<a class=\"btn btn--plain\" href=\"/seimas/{Bill}\" id=\"to-bill\">Projekto {Bill} puslapis</a>";
         page.ShouldContain(button);
+        page.IndexOf("id=\"vote-subject\"", StringComparison.Ordinal).ShouldBeLessThan(page.IndexOf(button, StringComparison.Ordinal), "on the subject's sheet");
         page.IndexOf(button, StringComparison.Ordinal).ShouldBeLessThan(page.IndexOf("id=\"h-result\"", StringComparison.Ordinal), "above the result");
 
         (await OkAsync($"/seimas/balsavimai/{Procedural}")).ShouldNotContain("id=\"to-bill\"", customMessage: "a vote without a bill has none");
     }
+
+    [Theory]
+    [InlineData("Pritarta – dėl pritarimo po svarstymo", "Pritarta", "dėl pritarimo po svarstymo")]
+    [InlineData("Nepritarta – dėl Seimo nario pasiūlymo dėl 2 straipsnio", "Nepritarta", "dėl Seimo nario pasiūlymo dėl 2 straipsnio")]
+    [InlineData("Sprendimas nepriimtas – dėl šio įstatymo priėmimo", "Sprendimas nepriimtas", "dėl šio įstatymo priėmimo")]
+    [InlineData("Pritarti po svarstymo", null, "Pritarti po svarstymo")]
+    [InlineData("Dėl pasiūlymo Nr. 3 – kitas", null, "Dėl pasiūlymo Nr. 3 – kitas")]
+    public void A_wording_is_split_into_the_Seimas_outcome_and_the_motion(string wording, string? outcome, string motion) =>
+        Lt2.Web.Components.Parliament.VotePage.Motion(wording).ShouldBe((outcome, motion));
 
     [Fact]
     public async Task The_page_is_the_same_for_a_visitor_and_a_member_who_took_a_side()
