@@ -17,9 +17,10 @@ Start on the page given as the skill's argument (`/seimas-describe-queue https:/
 message, and use its site. Claude in Chrome works only in tabs of its own group and cannot see the tab the user has
 open, so with no address given, ask for it (the full address: the site varies). The page is one of:
 
-- **The queue:** `https://<site>/moderavimas?skiltis=be-aprasymo` ("Projektai be aprašymo"). It lists active bills without
-  a description or with an AI summary nobody has read, but only those people already pay attention to, most attention
-  first.
+- **The queue:** `https://<site>/moderavimas?skiltis=be-aprasymo` ("Projektai be aprašymo"). It lists bills without a
+  description or with an AI summary nobody has read that members asked a description for ("Prašau aprašymo", finished
+  bills too, tagged "Baigtas"), the most asks first, and the active ones people already pay attention to, most attention
+  first. A finished bill is described the same way (its "Moderavimas" panel has only "Rašyti aprašymą").
 - **The agenda:** `https://<site>/darbotvarke` (the tab "Darbotvarkė"), or the staff page `/moderavimas/darbotvarke` right
   after seimas-agenda saved days. It lists every bill the Seimas plans to consider, by day, including new bills nobody
   follows yet and that the queue does not show. If the user names days (or the address has `?diena=…`), take only those

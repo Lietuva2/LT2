@@ -1,0 +1,71 @@
+@inherits InteractiveBase<AppealUi>
+@inject NavigationManager Navigation
+@inject IAppealsApi Appeals
+
+@* "Prašau aprašymo" (design 8.13.2, owner 2026-11-27) under "Šio projekto aprašymo dar nėra.", on any bill without a
+   description, open or finished. One compact line like "Sekti": the button (a member) or a link to sign in that comes back
+   here (a visitor, also without script), then "Aprašymo paprašė: n" when anyone asked, then one hint saying what it does and
+   that nobody sees who asked. The button is a toggle, pressed while the member's ask holds. Nothing when asking is not open
+   (a hidden record). *@
+@if (State is not { Open: false })
+{
+    <div class="row follow" id="description-ask">
+        @if (!_signedIn)
+        {
+            <a class="btn btn--plain btn--compact" href="@SignInHref" id="description-ask-sign-in">@L["DescriptionAsk.Ask"]</a>
+        }
+        else
+        {
+            <button type="button" class="btn btn--plain btn--compact" id="description-ask-toggle" aria-pressed="@(State?.Asked == true ? "true" : "false")"
+                    disabled="@(Locked || State is null)" @onclick="ToggleAsync">@L[State?.Asked == true ? "DescriptionAsk.Withdraw" : "DescriptionAsk.Ask"]</button>
+        }
+        @if (State is { Asks: > 0 } s)
+        {
+            <span class="small num" id="description-asks">@L.Format("DescriptionAsk.Count", Display.Number(s.Asks))</span>
+        }
+        <span class="small"><Lt2.Web.Client.Components.Hint Id="description-ask-what" Icon="true" Text="@L["DescriptionAsk.Hint"]" Answer="@Answer" More="/metodika#description-asks" /></span>
+        <Messages Message="@Message" Info="@Info" />
+    </div>
+}
+
+@code {
+    /// <summary>The sign-in page that brings the visitor back to this bill's page (design 6.9).</summary>
+    private string SignInHref => LandingPath.SignInLink(LandingPath.PathOf(Navigation.Uri, Navigation.BaseUri));
+
+    /// <summary>What an ask does (a visitor's sentence says that signing in comes first), then that nobody sees who asked.</summary>
+    private string Answer => L[_signedIn ? "DescriptionAsk.What" : "DescriptionAsk.SignIn"] + " " + L["DescriptionAsk.Private"];
+
+    private bool _signedIn;
+
+    /// <summary>The bill's number.</summary>
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    /// <summary>The count, the member's own ask and whether asking is open, read once on the server and carried over.</summary>
+    [PersistentState] public DescriptionAskResponse? State { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _signedIn = await IsSignedInAsync();
+        if (State is null && (await Appeals.GetDescriptionAskAsync(Number)).Value is { } state)
+        {
+            State = state;
+        }
+    }
+
+    private Task ToggleAsync() => RunAsync(async () =>
+    {
+        if (State is not { } before)
+        {
+            return;
+        }
+
+        var ask = before.Asked != true;
+        var result = ask ? await Appeals.AskDescriptionAsync(Number) : await Appeals.WithdrawDescriptionAskAsync(Number);
+        if (!Succeeded(result))
+        {
+            return;
+        }
+
+        State = before with { Asked = ask, Asks = Math.Max(0, before.Asks + (ask ? 1 : -1)) };
+    });
+}

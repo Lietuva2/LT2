@@ -68,8 +68,12 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
                                 orderby a.CreatedAt
                                 select new { bill = c.BillNumber, comment = c.Id, agreedAt = a.CreatedAt })
             .ToListAsync(cancellationToken);
+        // Design 8.13.2: the bills the person asked a description for and when, while the asks wait.
+        var descriptionAsks = await db.DescriptionAsks.AsNoTracking().Where(a => a.UserId == userId).OrderBy(a => a.AskedAt)
+            .Select(a => new { bill = a.BillNumber, askedAt = a.AskedAt }).ToListAsync(cancellationToken);
         return new
         {
+            descriptionAsks,
             positions = myPositions, reasons, endorsements, reports, dateFlags = flags, writingRestrictions = restrictions, aiDraftRequests = drafts,
             organisationRoles = roles, organisationStatements = written, mpResponses = responses, comments, commentAgreements = agreements,
         };
@@ -105,6 +109,9 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
 
             // With the account (design 8.3); no hash of the address is kept anywhere.
             "DELETE FROM appeals.writing_restriction WHERE user_id = @user",
+
+            // The person's asks for a description go with the account (design 8.13.2).
+            "DELETE FROM appeals.description_ask WHERE user_id = @user",
 
             // A moderator's draft requests go with the account (design 8.11.4).
             "DELETE FROM appeals.ai_draft_request WHERE moderator_user_id = @user",

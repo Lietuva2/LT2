@@ -463,10 +463,11 @@ public interface IAppealsModeration
     Task<ModerationItems> QueueAsync(bool records, bool reasons, CancellationToken cancellationToken);
 
     /// <summary>
-    /// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): active bills (an open record or none) without a description
-    /// or with an AI summary nobody has read, that at least one participant, published argument or follower pays attention
-    /// to, most attention first (<c>UndescribedRules</c>); at most a hundred, with the total. Only numbers the bill's page
-    /// shows; nothing about who.
+    /// "Projektai be aprašymo" (design 8.3, owner 2026-11-25): bills without a description or with an AI summary nobody has
+    /// read, that members asked a description for ("Prašau aprašymo", 8.13.2, open or finished bills alike) or, while active,
+    /// that at least one participant, published argument or follower pays attention to; the most asks first, then the most
+    /// attention (<c>UndescribedRules</c>); at most a hundred, with the total. Only numbers the bill's page shows; nothing
+    /// about who.
     /// </summary>
     Task<UndescribedBills> UndescribedAsync(CancellationToken cancellationToken);
 
@@ -603,13 +604,39 @@ public sealed record HiddenItems(IReadOnlyList<HiddenRecord> Records, IReadOnlyL
 }
 
 /// <summary>
-/// A bill on the moderators' list "Projektai be aprašymo" (design 8.3): an active bill without a description, or with an AI
-/// summary nobody has read (<paramref name="DescriptionSource"/> <c>ai</c>; null without a description), and the numbers its
-/// page shows: participants, published arguments and followers. <paramref name="PlainTitle"/> is the readable title of an
-/// <c>ai</c> summary, null without one.
+/// A bill on the moderators' list "Projektai be aprašymo" (design 8.3): a bill without a description, or with an AI summary
+/// nobody has read (<paramref name="DescriptionSource"/> <c>ai</c>; null without a description), and the numbers its page
+/// shows: members' asks for a description (8.13.2), participants, published arguments and followers.
+/// <paramref name="PlainTitle"/> is the readable title of an <c>ai</c> summary, null without one. <paramref name="Finished"/>:
+/// the Seimas has finished the bill (its record closed, or no record and the bill not active).
 /// </summary>
 public sealed record UndescribedBill(
-    BillFacts Bill, string? PlainTitle, string? DescriptionSource, int Participants, int Arguments, int Followers, PlannedDate? Planned);
+    BillFacts Bill, string? PlainTitle, string? DescriptionSource, int Participants, int Arguments, int Followers, PlannedDate? Planned, int Asks = 0, bool Finished = false);
+
+/// <summary>
+/// "Prašau aprašymo" on one bill (design 8.13.2): how many members asked for its description, whether the caller did (null
+/// for a visitor), and whether asking is possible now (the bill shows no description and its record is not hidden).
+/// </summary>
+public sealed record DescriptionAskState(int Asks, bool? Asked, bool Open);
+
+/// <summary>
+/// Members' asks for a bill's description (design 8.13.2, owner 2026-11-27): any bill that shows none, open or finished; once
+/// per member per bill; only the count is public, never who asked.
+/// </summary>
+public interface IDescriptionAsks
+{
+    /// <summary>The count, the caller's own ask (with <paramref name="userId"/>) and whether asking is open; <c>bill.not-found</c>.</summary>
+    Task<Result<DescriptionAskState>> StateAsync(string billNumber, Guid? userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Asks for the bill's description; asking again changes nothing. <c>bill.not-found</c>; <c>description-ask.not-wanted</c>
+    /// when the bill shows a description or its record is hidden.
+    /// </summary>
+    Task<Result<Unit>> AskAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Takes the caller's ask back; without one, nothing changes.</summary>
+    Task<Result<Unit>> WithdrawAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
+}
 
 /// <summary>"Projektai be aprašymo" (design 8.3): at most a hundred bills in the list's order, and how many there are in all.</summary>
 public sealed record UndescribedBills(IReadOnlyList<UndescribedBill> Bills, int Total);

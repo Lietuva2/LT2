@@ -177,6 +177,20 @@ internal sealed class AiDraftRequest
 }
 
 /// <summary>
+/// <c>appeals.description_ask</c>: that a member pressed "Prašau aprašymo" on a bill without a description (design 8.13.2):
+/// who, which bill, when. Keyed by the bill's number, since a finished bill nobody took part in has no record. Shown only
+/// as a count; who asked is shown to nobody. Goes when a person's description is saved, and with the account.
+/// </summary>
+internal sealed class DescriptionAsk
+{
+    public Guid UserId { get; set; }
+
+    public string BillNumber { get; set; } = "";
+
+    public DateTimeOffset AskedAt { get; set; }
+}
+
+/// <summary>
 /// <c>appeals.position</c>: one person's side on one bill (design 5.3). One row per person per record; changing the side
 /// overwrites it, and no history of earlier sides is kept anywhere.
 /// </summary>

@@ -63,6 +63,18 @@ public interface IAppealsApi
 
     Task<ApiResult> EndorseAsync(Guid reasonId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Public: "Prašau aprašymo" on a bill (design 8.13.2): how many members asked for its description, whether the caller did
+    /// (null for a visitor) and whether asking is open now.
+    /// </summary>
+    Task<ApiResult<DescriptionAskResponse>> GetDescriptionAskAsync(string number, CancellationToken cancellationToken = default);
+
+    /// <summary>The caller asks for the bill's description (once; again changes nothing); 409 <c>description-ask.not-wanted</c>.</summary>
+    Task<ApiResult> AskDescriptionAsync(string number, CancellationToken cancellationToken = default);
+
+    /// <summary>The caller takes their ask for the bill's description back.</summary>
+    Task<ApiResult> WithdrawDescriptionAskAsync(string number, CancellationToken cancellationToken = default);
+
     Task<ApiResult> RemoveEndorsementAsync(Guid reasonId, CancellationToken cancellationToken = default);
 
     /// <summary>

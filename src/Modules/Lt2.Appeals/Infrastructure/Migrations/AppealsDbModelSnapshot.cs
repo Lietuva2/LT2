@@ -436,6 +436,30 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.ToTable("daily_stat", "appeals");
                 });
 
+            modelBuilder.Entity("Lt2.Appeals.Domain.DescriptionAsk", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("BillNumber")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("bill_number");
+
+                    b.Property<DateTimeOffset>("AskedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("asked_at");
+
+                    b.HasKey("UserId", "BillNumber")
+                        .HasName("pk_description_ask");
+
+                    b.HasIndex("BillNumber")
+                        .HasDatabaseName("ix_description_ask_bill_number");
+
+                    b.ToTable("description_ask", "appeals");
+                });
+
             modelBuilder.Entity("Lt2.Appeals.Domain.Endorsement", b =>
                 {
                     b.Property<Guid>("ReasonId")

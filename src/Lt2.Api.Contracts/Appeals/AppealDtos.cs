@@ -329,3 +329,10 @@ public sealed record ReportRequest
 public sealed record DescriptionRevisionResponse(
     DateTimeOffset ChangedAt, string? OldText, string? NewText, bool TextChanged, string? OldTitle, string? NewTitle, bool TitleChanged,
     string? OldUrl, string? NewUrl, bool UrlChanged, bool Confirmed, string? Statement);
+
+/// <summary>
+/// "Prašau aprašymo" on one bill (design 8.13.2): <c>Asks</c>, how many members asked for its description; <c>Asked</c>, whether
+/// the caller did (null for a visitor); <c>Open</c>, whether asking is possible now (the bill shows no description and its
+/// record is not hidden). Never who asked.
+/// </summary>
+public sealed record DescriptionAskResponse(int Asks, bool? Asked, bool Open);

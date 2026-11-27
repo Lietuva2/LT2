@@ -218,6 +218,14 @@ public static class AppealRoutes
 
     public static string DescriptionDraftOf(string number) => ModerationBillOf(number) + "/description-draft";
 
+    /// <summary>
+    /// "Prašau aprašymo" (design 8.13.2): <c>GET</c> how many asked and whether the caller did; <c>PUT</c> asks, <c>DELETE</c>
+    /// takes the ask back (a signed-in member).
+    /// </summary>
+    public const string DescriptionAsk = ApiRoutes.Prefix + "/bills/{number}/description-ask";
+
+    public static string DescriptionAskOf(string number) => $"{ApiRoutes.Prefix}/bills/{Uri.EscapeDataString(number)}/description-ask";
+
     public const string Position = Record + "/position";
     public const string Reasons = Record + "/reasons";
     public const string SimilarReasons = Record + "/reasons/similar";
