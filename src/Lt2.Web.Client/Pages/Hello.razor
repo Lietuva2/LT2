@@ -20,7 +20,7 @@ else
     <section class="stack" aria-labelledby="account-profile-title" id="profile">
         <h2 id="account-profile-title">@L["Parts.Profile"]</h2>
         <p class="row" id="account-level">
-            <span class="tag @(Me.VerificationLevel == "email" ? "tag--people" : "")">@L["Level." + Me.VerificationLevel]</span>
+            <span class="tag @(Me.VerificationLevel == VerificationLevels.Email ? "tag--people" : "")">@L["Level." + Me.VerificationLevel]</span>
             @foreach (var role in Me.Roles)
             {
                 <span class="tag tag--brand">@L["Role." + role]</span>

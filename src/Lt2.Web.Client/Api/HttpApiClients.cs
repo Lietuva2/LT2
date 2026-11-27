@@ -8,8 +8,8 @@ namespace Lt2.Web.Client.Api;
 
 internal sealed class HttpAuthApi(ApiHttp http) : IAuthApi
 {
-    public Task<ApiResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default) =>
-        http.SendAsync(HttpMethod.Post, ApiRoutes.Auth.Register, request, cancellationToken);
+    public Task<ApiResult<RegisterResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<RegisterResponse>(HttpMethod.Post, ApiRoutes.Auth.Register, request, cancellationToken);
 
     public Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Auth.Code, request, cancellationToken);

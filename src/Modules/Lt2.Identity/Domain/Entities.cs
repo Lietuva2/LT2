@@ -8,16 +8,6 @@ internal sealed class User : IdentityUser<Guid>;
 
 internal sealed class Role : IdentityRole<Guid>;
 
-/// <summary>How strongly the account's link to a real person was checked (design 6.2).</summary>
-internal static class VerificationLevels
-{
-    /// <summary>Registered, but no code has been confirmed yet.</summary>
-    public const string None = "none";
-
-    /// <summary>The person proved control of the email address.</summary>
-    public const string Email = "email";
-}
-
 /// <summary>
 /// <c>identity.profile</c>: the application's own facts about an account. While the account is pending (design 6.2) it
 /// holds only the normalised address and the invitation code that was entered.

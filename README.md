@@ -283,6 +283,7 @@ MP mail (design 8.19) adds:
 | Variable | Meaning |
 |---|---|
 | `LT2_MAIL_CAUGHT` | `Email:Caught` for web and worker: `true` only where every email lands in a catcher (Mailpit). Default `false`. Where the data is invented (`LT2_DEMO_DATA`, or any synthetic parliament data) no MP mail is sent unless it is `true`. |
+| `LT2_TRIAL_NO_EMAIL` | `Registration:WithoutEmail` for web (design 6.2): `true` only on a trial site that sends no email; a new address with a working invitation code is signed in at registration, with no code. Default `false`; the web does not start with it `true` unless `LT2_MAIL_CAUGHT` is `true`. |
 | `LT2_MAIL_FROM_MP` | `Email:Mp:FromAddress`: the sender of MP mail, an address of the sending domain. |
 | `LT2_MP_SMTP_HOST`, `LT2_MP_SMTP_PORT`, `LT2_MP_SMTP_SECURITY`, `LT2_MP_SMTP_USERNAME` | `Email:Mp:Smtp`: MP mail's own SMTP account (port 587 and `StartTls` by default); with the host empty MP mail uses the common account (`LT2_SMTP_*`). Its password is the secret `mp_smtp_password`. |
 | `LT2_RATE_MP_MAIL` | Requests per client address to an MP's link pages and token routes in 15 minutes (default 60); only the local `.env` raises it. |
