@@ -423,9 +423,9 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     }
 
     [Theory]
-    [InlineData("Pritarta – dėl pritarimo po svarstymo", "Pritarta", "dėl pritarimo po svarstymo")]
-    [InlineData("Nepritarta – dėl Seimo nario pasiūlymo dėl 2 straipsnio", "Nepritarta", "dėl Seimo nario pasiūlymo dėl 2 straipsnio")]
-    [InlineData("Sprendimas nepriimtas – dėl šio įstatymo priėmimo", "Sprendimas nepriimtas", "dėl šio įstatymo priėmimo")]
+    [InlineData("Pritarta – dėl pritarimo po svarstymo", "Pritarta", "Dėl pritarimo po svarstymo")]
+    [InlineData("Nepritarta – dėl Seimo nario pasiūlymo dėl 2 straipsnio", "Nepritarta", "Dėl Seimo nario pasiūlymo dėl 2 straipsnio")]
+    [InlineData("Sprendimas nepriimtas – dėl šio įstatymo priėmimo", "Sprendimas nepriimtas", "Dėl šio įstatymo priėmimo")]
     [InlineData("Pritarti po svarstymo", null, "Pritarti po svarstymo")]
     [InlineData("Dėl pasiūlymo Nr. 3 – kitas", null, "Dėl pasiūlymo Nr. 3 – kitas")]
     public void A_wording_is_split_into_the_Seimas_outcome_and_the_motion(string wording, string? outcome, string motion) =>
