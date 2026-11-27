@@ -47,6 +47,7 @@
   <data name="Code.Title" xml:space="preserve"><value>Įveskite kodą</value></data>
   <data name="Code.SentAfterRegister.Before" xml:space="preserve"><value>Kodą išsiuntėme adresu</value></data>
   <data name="Code.SentAfterRegister.After" xml:space="preserve"><value>. Jis galioja 10 minučių.</value></data>
+  <data name="Code.OfficialAddress" xml:space="preserve"><value>Registruojatės oficialiu Seimo nario adresu? Tada laiške rasite ne kodą, o nuorodą: ja baigsite registraciją ir perimsite Seimo nario profilį.</value></data>
   <data name="Code.SentAfterRequest.Before" xml:space="preserve"><value>Jei adresu</value></data>
   <data name="Code.SentAfterRequest.After" xml:space="preserve"><value>yra paskyra, kodą jau išsiuntėme. Jis galioja 10 minučių.</value></data>
   <data name="Code.Label" xml:space="preserve"><value>Šešių skaitmenų kodas</value></data>
@@ -197,6 +198,8 @@
   <data name="MpOffice.CodeLabel" xml:space="preserve"><value>Kvietimo kodas</value></data>
   <data name="MpTakeover.CodeLead" xml:space="preserve"><value>Įveskite kodą iš laiško, kurį gavote oficialiu Seimo nario adresu.</value></data>
   <data name="MpTakeover.CodeLabel" xml:space="preserve"><value>Kodas</value></data>
+  <data name="MpTakeover.RegistrationLead" xml:space="preserve"><value>Pirmiausia baikite registraciją. Tada šiame puslapyje perimsite Seimo nario profilį.</value></data>
+  <data name="MpTakeover.SignedOutCodeLead" xml:space="preserve"><value>Registruojatės oficialiu Seimo nario adresu? Įveskite kodą iš registracijos laiško.</value></data>
   <data name="OneTimeCode.Placeholder" xml:space="preserve"><value>ABCD-EFGH-JKMN</value></data>
   <data name="OneTimeCode.Hint" xml:space="preserve"><value>12 raidžių ir skaitmenų; didžiosios ar mažosios raidės ir brūkšneliai nesvarbu.</value></data>
   <data name="OneTimeCode.Go" xml:space="preserve"><value>Toliau</value></data>

@@ -180,7 +180,11 @@ public static class MpResponseNotices
 /// <param name="ValidHours">How long the link is good for.</param>
 /// <param name="PagePath">The take-over page without the code, where the code can be typed instead (owner, 2026-11-17).</param>
 /// <param name="Code">The link's one-time code, <c>XXXX-XXXX-XXXX</c>.</param>
-public sealed record MpTakeoverLinkEmail(string To, string MpName, string Path, int ValidHours, string PagePath = "", string Code = "");
+/// <param name="AtRegistration">
+/// The registration's email to the official address (design 8.5.2): the link also completes the registration, and no
+/// six-digit code goes with it.
+/// </param>
+public sealed record MpTakeoverLinkEmail(string To, string MpName, string Path, int ValidHours, string PagePath = "", string Code = "", bool AtRegistration = false);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.MpOfficeInvitationEmail"/> (design 8.5.3, owner 2026-11-17): an invitation to an MP's

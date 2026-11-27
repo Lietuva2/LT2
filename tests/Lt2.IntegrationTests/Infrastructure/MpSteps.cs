@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
 using Lt2.Api.Contracts.Mps;
 using Lt2.SharedKernel;
@@ -56,22 +57,60 @@ public static class MpSteps
     {
         await factory.Database.ForgetAccountAsync(address ?? mp.Address);
         var browser = factory.NewBrowser();
-        var code = await browser.RegisterAsync(address ?? mp.Address, invitation);
-        await browser.SignInWithCodeAsync(address ?? mp.Address, code);
+        var start = await factory.Database.ScalarAsync<DateTime>("SELECT now()");
+        using (var registered = await browser.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = address ?? mp.Address, InvitationCode = invitation }))
+        {
+            registered.StatusCode.ShouldBe(HttpStatusCode.Accepted, await registered.Content.ReadAsStringAsync());
+        }
+
+        // An official address gets the take-over link in place of the code (design 8.5.2); a former MP's gets the code.
+        var link = await factory.Database.ScalarAsync<string>(
+            "SELECT payload->>'code' FROM notify.outbox WHERE kind = @k AND lower(payload->>'to') = lower(@to) AND (payload->>'atRegistration')::boolean AND created_at >= @start ORDER BY created_at DESC, id DESC LIMIT 1",
+            ("k", MessageKinds.MpTakeoverLinkEmail), ("to", address ?? mp.Address), ("start", start));
+        if (link is null)
+        {
+            await browser.SignInWithCodeAsync(address ?? mp.Address);
+        }
+        else
+        {
+            using var signedIn = await browser.PostAsync(MpRoutes.RegistrationSignIn, new MpRegistrationSignInRequest { Token = link });
+            signedIn.StatusCode.ShouldBe(HttpStatusCode.OK, await signedIn.Content.ReadAsStringAsync());
+        }
+
         await browser.CompleteRegistrationAsync(mp.Name);
         using var given = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, new PositionConsentRequest { TextVersion = PositionConsent.TextVersion });
         given.StatusCode.ShouldBe(HttpStatusCode.NoContent, await given.Content.ReadAsStringAsync());
         return browser;
     }
 
+    /// <summary>
+    /// Registers an official address and signs the pending account in with the take-over link its registration email carries in
+    /// place of the code (design 8.5.2); returns the link's token, which then takes the profile over too.
+    /// </summary>
+    public static async Task<string> RegisterWithRegistrationLinkAsync(this TestBrowser browser, DatabaseFixture database, string address, string? invitation = TestData.Invitation)
+    {
+        using (var registered = await browser.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = address, InvitationCode = invitation }))
+        {
+            registered.StatusCode.ShouldBe(HttpStatusCode.Accepted, await registered.Content.ReadAsStringAsync());
+        }
+
+        var token = await database.TakeoverTokenAsync(address, atRegistration: true);
+        using var signedIn = await browser.PostAsync(MpRoutes.RegistrationSignIn, new MpRegistrationSignInRequest { Token = token });
+        signedIn.StatusCode.ShouldBe(HttpStatusCode.OK, await signedIn.Content.ReadAsStringAsync());
+        return token;
+    }
+
     public static Task<HttpResponseMessage> ClaimAsync(this TestBrowser browser, string slug) => browser.PostAsync(MpRoutes.ClaimOf(slug), new { });
 
     /// <summary>The token of the newest take-over link in the outbox to <paramref name="to"/> (the part after the <c>#</c>).</summary>
-    public static async Task<string> TakeoverTokenAsync(this DatabaseFixture database, string to)
+    /// <remarks>
+    /// <paramref name="atRegistration"/>: the link sent with a registration (design 8.5.2) rather than one sent by "Perimti profilį".
+    /// </remarks>
+    public static async Task<string> TakeoverTokenAsync(this DatabaseFixture database, string to, bool atRegistration = false)
     {
         var path = await database.ScalarAsync<string>(
-            "SELECT payload->>'path' FROM notify.outbox WHERE kind = @k AND lower(payload->>'to') = lower(@to) ORDER BY created_at DESC, id DESC LIMIT 1",
-            ("k", MessageKinds.MpTakeoverLinkEmail), ("to", to));
+            "SELECT payload->>'path' FROM notify.outbox WHERE kind = @k AND lower(payload->>'to') = lower(@to) AND coalesce((payload->>'atRegistration')::boolean, false) = @r ORDER BY created_at DESC, id DESC LIMIT 1",
+            ("k", MessageKinds.MpTakeoverLinkEmail), ("to", to), ("r", atRegistration));
         path.ShouldNotBeNull($"a take-over link to {to} is in the outbox");
         path.ShouldStartWith(MpRoutes.TakeoverPage + "#", Case.Sensitive, "design 6.8: the token after the #");
         return path[(path.IndexOf('#', StringComparison.Ordinal) + 1)..];

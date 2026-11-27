@@ -468,7 +468,7 @@ internal sealed class PoliticianToken
 {
     public Guid Id { get; set; }
 
-    /// <summary><see cref="PoliticianTokenKinds.Takeover"/> or <see cref="PoliticianTokenKinds.Office"/>.</summary>
+    /// <summary><see cref="PoliticianTokenKinds.Takeover"/>, <see cref="PoliticianTokenKinds.Registration"/> or <see cref="PoliticianTokenKinds.Office"/>.</summary>
     public string Kind { get; set; } = "";
 
     public long SeimasPersonId { get; set; }
@@ -490,6 +490,12 @@ internal static class PoliticianTokenKinds
 {
     public const string Takeover = "takeover";
     public const string Office = "office";
+
+    /// <summary>
+    /// A take-over link sent with a registration to an official address (design 8.5.2): it signs the pending account in as well,
+    /// and is limited and replaced on its own, apart from the links "Perimti profilį" sends.
+    /// </summary>
+    public const string Registration = "register";
 }
 
 /// <summary>

@@ -12,6 +12,9 @@ internal sealed class HttpMpApi(ApiHttp http) : IMpApi
     public Task<ApiResult<MpLinkResponse>> TakeOverAsync(MpTakeoverRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<MpLinkResponse>(HttpMethod.Post, MpRoutes.Takeover, request, cancellationToken);
 
+    public Task<ApiResult<Lt2.Api.Contracts.Auth.SignInResponse>> SignInWithRegistrationLinkAsync(MpRegistrationSignInRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<Lt2.Api.Contracts.Auth.SignInResponse>(HttpMethod.Post, MpRoutes.RegistrationSignIn, request, cancellationToken);
+
     public Task<ApiResult> EndAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, MpRoutes.Mine, null, cancellationToken);
 

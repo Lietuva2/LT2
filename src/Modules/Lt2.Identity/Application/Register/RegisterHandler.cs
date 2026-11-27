@@ -17,6 +17,8 @@ namespace Lt2.Identity.Application.Register;
 /// <item>an address that is still pending keeps its account, and the invitation code it holds is replaced;</item>
 /// <item>an address with a completed account is not changed; what was typed is discarded.</item>
 /// </list>
+/// A pending account at an MP's official address whose profile nobody has taken over gets the take-over link in place of the
+/// code (design 8.5.2, <see cref="Politicians.RegistrationTakeoverLinks"/>).
 /// On a trial site without email (<see cref="RegistrationWithoutEmail"/>) a new address with a working invitation code, or a
 /// pending one whose address was never proven, gets no code: it is signed in at once and goes on to complete the registration.
 /// An address with a completed account, or one already proven, is answered as above, so nobody gets into an account by typing
@@ -26,6 +28,7 @@ internal sealed class RegisterHandler(
     IdentityDb db,
     UserManager<User> users,
     SignInCodeIssuer codes,
+    Politicians.RegistrationTakeoverLinks takeoverLinks,
     ISettings settings,
     IMpDirectory mps,
     BotCheck botCheck,
@@ -91,7 +94,8 @@ internal sealed class RegisterHandler(
         }
 
         // The trial switch (design 6.2) covers registrations by invitation code only: not an office invitation, not an MP's address.
-        var signInNow = withoutEmail.On && invited;
+        // An MP's official address always gets its email (design 8.5.2: the take-over link), whatever else was typed.
+        var signInNow = withoutEmail.On && invited && await mps.OfficialAddressOwnerAsync(registration.Email, cancellationToken) is null;
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var existing = await db.Profiles.FirstOrDefaultAsync(p => p.NormalizedEmail == normalized, cancellationToken);
         if (existing is not null)
@@ -111,7 +115,7 @@ internal sealed class RegisterHandler(
 
             if (existingUser is not null)
             {
-                await codes.IssueAsync(existingUser, transaction, cancellationToken);
+                await SendAsync(existingUser, existing.IsPending, transaction, cancellationToken);
             }
 
             await transaction.CommitAsync(cancellationToken);
@@ -145,7 +149,7 @@ internal sealed class RegisterHandler(
                 return await SignInAsync(user);
             }
 
-            await codes.IssueAsync(user, transaction, cancellationToken);
+            await SendAsync(user, pending: true, transaction, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return CodeSent;
         }
@@ -155,6 +159,20 @@ internal sealed class RegisterHandler(
             await transaction.RollbackAsync(cancellationToken);
             return CodeSent;
         }
+    }
+
+    /// <summary>
+    /// The registration's email: for a pending account at an MP's official address whose profile is free, the take-over link in
+    /// place of the code (design 8.5.2); otherwise the sign-in code. The answer is the same either way.
+    /// </summary>
+    private async Task SendAsync(User user, bool pending, Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction, CancellationToken cancellationToken)
+    {
+        if (pending && await takeoverLinks.TryIssueAsync(user, transaction, cancellationToken))
+        {
+            return;
+        }
+
+        await codes.IssueAsync(user, transaction, cancellationToken);
     }
 
     /// <summary>

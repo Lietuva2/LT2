@@ -171,6 +171,9 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The MP's own account takes no part, and the forms it would be refused are not shown to it (8.5.4, 2026-11-17).
 - `Registration:OfficialAddressesWithoutInvitation` is on for the trial site, as on the local stack; off by default
   elsewhere (8.5.1, 2026-11-19).
+- Registering with an MP's official address is the take-over: the registration email carries the take-over link and its
+  typeable code in place of the six-digit code, and the link signs the pending account in, completes the registration and
+  takes the profile over on one page, without a second email (8.5.2, 2026-11-27).
 
 ## 8.7 The front page and the lists of the agenda
 

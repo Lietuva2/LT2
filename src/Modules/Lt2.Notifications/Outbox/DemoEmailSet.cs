@@ -71,6 +71,8 @@ internal static class DemoEmailSet
         Add(MessageKinds.OrganisationCodeEmail, "organisation-code", to => new OrganisationCodeEmail(to, "204817", 30, Organisation, "pavyzdys.test"));
         Add(MessageKinds.MpTakeoverLinkEmail, "mp-takeover-link", to => new MpTakeoverLinkEmail(
             to, Mp, "/seimo-narys/perimti#" + LinkCode, 24, "/seimo-narys/perimti", LinkCode));
+        Add(MessageKinds.MpTakeoverLinkEmail, "mp-registration-link", to => new MpTakeoverLinkEmail(
+            to, Mp, "/seimo-narys/perimti#" + LinkCode, 24, "/seimo-narys/perimti", LinkCode, AtRegistration: true));
         foreach (var notice in AccountNotices.All)
         {
             Add(MessageKinds.AccountNoticeEmail, "account-notice-" + notice, to => notice switch

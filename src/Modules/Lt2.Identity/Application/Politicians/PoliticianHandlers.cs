@@ -131,6 +131,36 @@ internal sealed class PoliticianHandlers(
         return Result.Ok();
     }
 
+    public async Task<Result<SignInOutcome>> SignInWithRegistrationLinkAsync(string token, CancellationToken cancellationToken)
+    {
+        var hash = OneTimeCode.Hash(token);
+        var found = await db.PoliticianTokens.AsNoTracking().FirstOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
+        if (PoliticianRules.CheckRegistrationSignIn(found, clock.GetUtcNow()) != PoliticianTokenCheck.Valid)
+        {
+            return LinkInvalid;
+        }
+
+        // Only while the registration is not completed: a member signs in with a code or a passkey (design 8.5.2). A locked account
+        // is refused as any wrong link is (design 8.3).
+        var profile = await db.Profiles.FirstOrDefaultAsync(p => p.UserId == found!.UserId, cancellationToken);
+        var user = await users.FindByIdAsync(found!.UserId.ToString());
+        if (profile is not { IsPending: true, LockedAt: null } || user is null || !await signIn.CanSignInAsync(user))
+        {
+            return LinkInvalid;
+        }
+
+        // The link proves the address, as the first correct code does (design 6.2); the account stays pending until completed.
+        if (!user.EmailConfirmed)
+        {
+            user.EmailConfirmed = true;
+            profile.VerificationLevel = VerificationLevels.Email;
+            await users.UpdateAsync(user);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        return new SignInOutcome(await SessionSignIn.SignInAsync(signIn, user, AuthenticationMethods.EmailCode));
+    }
+
     public async Task<Result<MpLinkState>> TakeOverAsync(ClaimsPrincipal principal, string token, string credentialJson, string? ipHash, CancellationToken cancellationToken)
     {
         if (await MemberAsync(principal, cancellationToken) is not { } user)

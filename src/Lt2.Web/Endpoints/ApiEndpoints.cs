@@ -148,6 +148,7 @@ internal static class ApiEndpoints
 
         Mps.ClaimProfileEndpoint.Map(api);
         Mps.TakeOverProfileEndpoint.Map(api);
+        Mps.RegistrationSignInEndpoint.Map(api);
         Mps.MyMpEndpoints.Map(api);
         Mps.MpResponseEndpoints.Map(api);
         Comments.CommentEndpoints.Map(api);
