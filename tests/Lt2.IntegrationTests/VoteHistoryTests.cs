@@ -411,11 +411,12 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     }
 
     [Fact]
-    public async Task A_votes_page_links_to_its_bill_by_a_button_under_the_heading()
+    public async Task A_votes_page_links_to_its_bill_from_a_sheet_above_the_result()
     {
         var page = await OkAsync($"/seimas/balsavimai/{Midnight}");
         var button = $"<a class=\"btn btn--plain\" href=\"/seimas/{Bill}\" id=\"to-bill\">Projekto {Bill} puslapis</a>";
         page.ShouldContain(button);
+        page.IndexOf("id=\"vote-subject\"", StringComparison.Ordinal).ShouldBeLessThan(page.IndexOf(button, StringComparison.Ordinal), "on the subject's sheet");
         page.IndexOf(button, StringComparison.Ordinal).ShouldBeLessThan(page.IndexOf("id=\"h-result\"", StringComparison.Ordinal), "above the result");
 
         (await OkAsync($"/seimas/balsavimai/{Procedural}")).ShouldNotContain("id=\"to-bill\"", customMessage: "a vote without a bill has none");

@@ -47,16 +47,6 @@
         {
             <Lt2.Web.Client.Components.NeedsScript />
         }
-        @if (lead is not null)
-        {
-            <p class="lead">@lead</p>
-        }
-        @* Design 8.18: besides the breadcrumb, the bill's page is one plain button under the heading, where its number and
-           its people's positions are (owner, 2026-11-27). *@
-        @if (vote.Bill is { } toBill)
-        {
-            <p><a class="btn btn--plain" href="/seimas/@toBill.Number" id="to-bill">@F.T.Format("Vote.ToBill", toBill.Number)</a></p>
-        }
     </div>
 
     @* Design 7.2 and 8.18 (owner, 2026-11-23): as the bill's page has its side column, a moderator's part (correcting the
@@ -64,6 +54,22 @@
        else has a side column; then the page is one stack, as before. The ballots span both columns below the main one. *@
     <div class="@(_moderator ? "bill-body" : "stack stack--loose")">
         <div class="stack stack--loose bill-body__main">
+            @* Design 8.18 (owner, 2026-11-27): what was voted on, the vote's wording, and the way to the bill's page share one
+               sheet above the result; the breadcrumb keeps the bill's number too. *@
+            @if (lead is not null || vote.Bill is not null)
+            {
+                <section class="sheet stack" id="vote-subject" aria-labelledby="h-subject">
+                    <h2 id="h-subject" class="visually-hidden">@F.T["Vote.Subject"]</h2>
+                    @if (lead is not null)
+                    {
+                        <p class="lead">@lead</p>
+                    }
+                    @if (vote.Bill is { } toBill)
+                    {
+                        <p><a class="btn btn--plain" href="/seimas/@toBill.Number" id="to-bill">@F.T.Format("Vote.ToBill", toBill.Number)</a></p>
+                    }
+                </section>
+            }
             <section class="sheet sheet--cut stack" aria-labelledby="h-result">
                 <h2 id="h-result" class="visually-hidden">@F.T["Vote.Result"]</h2>
                 @if (vote.IsConsensus)
