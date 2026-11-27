@@ -109,10 +109,10 @@ public sealed class ParliamentPageTests : E2ETest
         await page.GetByRole(AriaRole.Button, new() { Name = "Rodyti" }).ClickAsync();
         await AtAsync(page, @"/seimo-nariai\?.*frakcija=pilietines-sajungos-frakcija");
         await Assertions.Expect(page.GetByRole(AriaRole.Status)).ToHaveTextAsync("Rasta: 28");
-        await Assertions.Expect(page.GetByRole(AriaRole.Link, new() { Name = "Ona Jonaitienė" })).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Link, new() { Name = "Jonaitienė Ona" })).ToBeVisibleAsync();
 
         // A link from the list to a profile and on to a vote, all without scripts.
-        await page.GetByRole(AriaRole.Link, new() { Name = "Ona Jonaitienė" }).ClickAsync();
+        await page.GetByRole(AriaRole.Link, new() { Name = "Jonaitienė Ona" }).ClickAsync();
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Ona Jonaitienė");
         // Her latest votes are whatever the invented Seimas held last; any of them leads to a vote page.
         await page.Locator("main a[href^='/seimas/balsavimai/9']").First.ClickAsync();
@@ -163,7 +163,7 @@ public sealed class ParliamentPageTests : E2ETest
         ground.ShouldBe("rgb(14, 20, 17)", "the dark ground token");
 
         // Enhanced navigation to another page: the choice and the button stay.
-        await page.GetByRole(AriaRole.Link, new() { Name = "Jonas Petraitis" }).ClickAsync();
+        await page.GetByRole(AriaRole.Link, new() { Name = "Petraitis Jonas" }).ClickAsync();
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Jonas Petraitis");
         await Assertions.Expect(button).ToBeVisibleAsync();
         await Assertions.Expect(button).ToHaveTextAsync("Tema: tamsi");

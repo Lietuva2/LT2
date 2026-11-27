@@ -130,7 +130,9 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
         if (!string.IsNullOrWhiteSpace(filter.Query))
         {
             var query = Fold(filter.Query);
-            list = list.Where(m => Fold(m.FirstName + " " + m.LastName).Contains(query, StringComparison.Ordinal));
+            // The list shows the last name first (design 7.3), so a name typed either way round finds the MP.
+            list = list.Where(m => Fold(m.FirstName + " " + m.LastName).Contains(query, StringComparison.Ordinal)
+                || Fold(m.LastName + " " + m.FirstName).Contains(query, StringComparison.Ordinal));
         }
 
         var ordered = list.OrderBy(m => m.LastName, ByLithuanian).ThenBy(m => m.FirstName, ByLithuanian).ToList();
