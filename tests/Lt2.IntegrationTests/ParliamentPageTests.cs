@@ -240,7 +240,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         var html = await OkAsync("/seimas/balsavimai/99100101");
 
         html.ShouldContain("<h1>Dėl posėdžio darbotvarkės patvirtinimo</h1>");
-        html.ShouldNotContain("<p class=\"lead\">");
+        html.ShouldNotContain("id=\"vote-wording\"");
         Regex.Count(html[html.IndexOf("<main", StringComparison.Ordinal)..], "Dėl posėdžio darbotvarkės").ShouldBe(1);
     }
 
@@ -250,7 +250,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         var html = await OkAsync("/seimas/balsavimai/99100002");
 
         html.ShouldContain("<h1>Gyventojų pajamų mokesčio įstatymo pataisa</h1>");
-        html.ShouldContain("<p class=\"lead\">Pritarti projektui po pateikimo</p>");
+        html.ShouldContain("<p class=\"lead\" id=\"vote-wording\">Pritarti projektui po pateikimo</p>");
         Regex.IsMatch(html, "Posėdžio pradžia:\\s*<span class=\"num\">2026 m. kovo 17 d. 10:00</span>").ShouldBeTrue(html[html.IndexOf("Posėdžio", StringComparison.Ordinal)..][..120]);
     }
 
