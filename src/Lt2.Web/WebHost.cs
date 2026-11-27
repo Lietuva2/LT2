@@ -134,6 +134,7 @@ internal static class WebHost
         services.AddScoped<Lt2.Api.Contracts.Digests.IMpSendingAdminApi, ServerMpSendingAdminApi>();
         services.AddScoped<Lt2.Web.Components.Parliament.Formats>();
         services.AddSingleton<Previews.VotePreviewImages>();
+        services.AddSingleton<Previews.BillPreviewImages>();
         services.AddLt2ClientComponents();
     }
 
@@ -211,6 +212,7 @@ internal static class WebHost
         // ended session stops working at once.
         app.MapStaticAssets().ShortCircuit();
         Previews.VotePreviewImages.Map(app);
+        Previews.BillPreviewImages.Map(app);
         app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
         app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
         app.MapOpenApi("/openapi/{documentName}.json");

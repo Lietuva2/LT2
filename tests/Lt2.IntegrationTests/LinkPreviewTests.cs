@@ -77,7 +77,7 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
         tags["og:image:alt"].ShouldNotBeNullOrWhiteSpace();
 
         var image = tags["og:image"];
-        image.ShouldStartWith(Site + "/img/link-preview");
+        image.ShouldStartWith(Site + "/img/");
         using var served = await browser.Client.GetAsync(image[Site.Length..], TestContext.Current.CancellationToken);
         served.StatusCode.ShouldBe(HttpStatusCode.OK, image);
         served.Content.Headers.ContentType?.MediaType.ShouldBe("image/png");
@@ -91,7 +91,7 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
     }
 
     [Fact]
-    public async Task The_bill_page_an_mp_and_the_front_page_carry_a_preview_with_their_own_address_and_the_sites_image()
+    public async Task The_bill_page_an_mp_and_the_front_page_carry_a_preview_with_their_own_address_and_an_image()
     {
         await using var site = new SiteFactory(Database);
         using var visitor = site.NewBrowser();
@@ -102,6 +102,8 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
         title.ShouldNotBeNullOrWhiteSpace();
         bill["og:title"].ShouldBe("XVP-0412 · " + title);
         bill["og:type"].ShouldBe("article");
+        // Owner, 2026-11-27: a bill's image is its own title card (BillPreviewTests).
+        bill["og:image"].ShouldMatch($@"^{Regex.Escape(Site)}/img/bills/XVP-0412/[0-9a-f]{{16}}\.png$");
 
         var mp = await PreviewAsync(visitor, "/p/jonas-petraitis", "/p/jonas-petraitis");
         mp["og:title"].ShouldBe("Jonas Petraitis");
@@ -115,7 +117,7 @@ public sealed partial class LinkPreviewTests(DatabaseFixture database) : ApiTest
         front["og:image"].ShouldStartWith(Site + "/img/link-preview-home");
         front["og:image:alt"].ShouldBe("Lietuva 2.0: padėkite Seimui jus atstovauti.");
         bill["og:image"].ShouldNotStartWith(Site + "/img/link-preview-home");
-        mp["og:image"].ShouldNotStartWith(Site + "/img/link-preview-home");
+        mp["og:image"].ShouldStartWith(Site + "/img/link-preview.");
 
         foreach (var (path, heading) in new[] { ("/darbotvarke", "Seimo darbotvarkė"), ("/projektai", "Projektai"), ("/statistika", null), ("/metodika", "Metodika") })
         {

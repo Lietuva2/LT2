@@ -93,6 +93,11 @@
   <data name="Preview.Bill.Open" xml:space="preserve"><value>{0}. Seimo projektas. Lietuva 2.0 naudotojai prašo balsuoti už ar prieš ir pateikia argumentus.</value></data>
   <data name="Preview.Bill.Closed" xml:space="preserve"><value>{0}. Seimo projektas. Lietuva 2.0 naudotojai prašė balsuoti už ar prieš ir pateikė argumentus.</value></data>
   <data name="Preview.Bill.Other" xml:space="preserve"><value>{0}. Seimo projektas: stadijos ir balsavimai Seime.</value></data>
+  <data name="Preview.Bill.Label" xml:space="preserve"><value>Seimo projektas</value></data>
+  <data name="Preview.Bill.Planned" xml:space="preserve"><value>Planuojama {0}</value></data>
+  <data name="Preview.Bill.ClosedTag" xml:space="preserve"><value>Uždarytas</value></data>
+  <data name="Preview.Bill.Call" xml:space="preserve"><value>Paprašykite Seimo narių balsuoti už ar prieš</value></data>
+  <data name="Preview.Bill.ImageAlt" xml:space="preserve"><value>Seimo projektas {0}: {1}</value></data>
   <data name="Preview.Vote" xml:space="preserve"><value>Seimo balsavimas {0}: už {1}, prieš {2}, susilaikė {3}.</value></data>
   <data name="Preview.Vote.Consensus" xml:space="preserve"><value>Seimo balsavimas {0}: pritarta bendru sutarimu.</value></data>
   <data name="Preview.Vote.Label" xml:space="preserve"><value>Seimo balsavimas</value></data>
