@@ -89,6 +89,25 @@ public sealed class MpLinkRuleTests
     }
 
     [Fact]
+    public void A_registrations_link_takes_over_like_a_takeover_link_and_signs_in_only_as_itself()
+    {
+        var account = Guid.CreateVersion7(Now);
+        var registration = Takeover(account);
+        registration.Kind = PoliticianTokenKinds.Registration;
+
+        PoliticianRules.Check(registration, PoliticianTokenKinds.Takeover, account, Now.AddHours(23)).ShouldBe(PoliticianTokenCheck.Valid);
+        PoliticianRules.Check(registration, PoliticianTokenKinds.Takeover, Guid.CreateVersion7(Now), Now).ShouldBe(PoliticianTokenCheck.OtherAccount);
+        PoliticianRules.Check(registration, PoliticianTokenKinds.Office, account, Now).ShouldBe(PoliticianTokenCheck.WrongKind);
+
+        PoliticianRules.CheckRegistrationSignIn(registration, Now.AddHours(23)).ShouldBe(PoliticianTokenCheck.Valid);
+        PoliticianRules.CheckRegistrationSignIn(registration, Now.AddHours(24)).ShouldBe(PoliticianTokenCheck.Expired);
+        PoliticianRules.CheckRegistrationSignIn(Takeover(account), Now).ShouldBe(PoliticianTokenCheck.WrongKind, "a link sent by \"Perimti profilį\" signs nobody in");
+        PoliticianRules.CheckRegistrationSignIn(null, Now).ShouldBe(PoliticianTokenCheck.Unknown);
+        registration.UsedAt = Now;
+        PoliticianRules.CheckRegistrationSignIn(registration, Now).ShouldBe(PoliticianTokenCheck.Used);
+    }
+
+    [Fact]
     public void An_office_invitation_is_for_whoever_the_mps_account_gives_it_to_within_seven_days()
     {
         var mpAccount = Guid.CreateVersion7(Now);

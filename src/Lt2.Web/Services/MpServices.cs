@@ -1,3 +1,4 @@
+using Lt2.SharedKernel;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Mps;
 using Lt2.Identity;
@@ -23,7 +24,8 @@ internal static class MpMapping
 /// <see cref="IMpApi"/> in-process, for components rendered on the server: the same module operations the endpoints call.
 /// The take-over marks the front page's agenda out of date, as the endpoint does.
 /// </summary>
-internal sealed class ServerMpApi(IPoliticians politicians, FrontPageFreshness frontPage, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IMpApi
+internal sealed class ServerMpApi(
+    IPoliticians politicians, FrontPageFreshness frontPage, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, AnalyticsCopies analytics) : IMpApi
 {
     public async Task<ApiResult> ClaimAsync(string slug, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await politicians.ClaimAsync(User, slug, IpHash, cancellationToken));
@@ -38,6 +40,22 @@ internal sealed class ServerMpApi(IPoliticians politicians, FrontPageFreshness f
         }
 
         return errors.ToApiResult(result, MpMapping.Map);
+    }
+
+    public async Task<ApiResult<Lt2.Api.Contracts.Auth.SignInResponse>> SignInWithRegistrationLinkAsync(MpRegistrationSignInRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var before = User.UserId();
+        return errors.ToApiResult(await politicians.SignInWithRegistrationLinkAsync(request.Token, cancellationToken), outcome =>
+        {
+            // The other account's session ended as by signing out, and its kept analytics comparison with it (design 8.26.6).
+            if (outcome.AccountChanged && before is { } previous)
+            {
+                analytics.Forget(previous);
+            }
+
+            return new Lt2.Api.Contracts.Auth.SignInResponse(outcome.AccountChanged);
+        });
     }
 
     public async Task<ApiResult> EndAsync(CancellationToken cancellationToken = default) =>

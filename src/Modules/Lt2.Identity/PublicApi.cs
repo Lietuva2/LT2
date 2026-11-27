@@ -115,6 +115,13 @@ public interface IPoliticians
     /// </summary>
     Task<Result<MpLinkState>> TakeOverAsync(ClaimsPrincipal user, string token, string credentialJson, string? ipHash, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Design 8.5.2: the take-over link sent with a registration to an official address signs its pending account in, under a new
+    /// session key; the link proves the address as a code does and stays for the take-over. Every link that does not work, and an
+    /// account that is not pending, gets the one answer <c>mp.link-invalid</c>.
+    /// </summary>
+    Task<Result<SignInOutcome>> SignInWithRegistrationLinkAsync(string token, CancellationToken cancellationToken);
+
     /// <summary>The MP's account gives the profile up; an office member leaves. A passkey session.</summary>
     Task<Result<Unit>> EndOwnAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
 

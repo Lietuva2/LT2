@@ -403,6 +403,18 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
 - `Registration:OfficialAddressesWithoutInvitation` (off by default; on for the local stack and the trial site, owner
   2026-11-19): both invitation gates ask `OfficialAddressGate`. The local `.env` and the trial's deploy switch it on
   through the migrator (`--official-addresses-without-invitation`).
+- Owner, 2026-11-27: registering with the official address is the take-over. `RegisterHandler` asks
+  `RegistrationTakeoverLinks` (Identity, `Politicians/`) before sending a code to a pending account: when the address is the
+  official address of an MP nobody has taken over, it stores a `PoliticianTokenKinds.Registration` token (the sign-in codes'
+  two limits counted over these tokens of the account; a new one replaces only the account's own earlier one) and sends
+  `MpTakeoverLinkEmail` with `AtRegistration` (`MpTemplates`, keys `Mp.Registration.*`) in place of the code. `POST
+  /mps/registration-sign-in` (`RegistrationSignInEndpoint`, `MpRegistrationSignInRequest`, `IPoliticians.SignInWithRegistrationLinkAsync`)
+  signs the pending account in with it and proves the address; refused once the account is completed. `MpTakeover.razor`
+  signs a visitor in with the link (or the code typed), completes the registration through `<SignInFlow ReturnTo=…>` and
+  then takes over with the same token (`PoliticianRules.Check` lets a `register` token take over). Claim tokens are not
+  counted with them nor replaced by them. On a trial without email an official address is never signed in at registration.
+  Tests: `MpLinkTests` (`Registering_an_official_address_…`, `Registering_again_…`), `RegistrationWithoutEmailTests`,
+  `MpLinkRuleTests`.
 - "Perimti profilį" (`POST /mps/{slug}/claim`) sends a 24-hour one-time link (its secret a typeable one-time code, hashed, a
   new one replaces the old, three a day per MP) to the account's own address; the email also gives `/seimo-narys/perimti` and
   the code to type there. `POST /me/mp/takeover` (token and passkey) does everything in one

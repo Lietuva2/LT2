@@ -15,6 +15,12 @@ public static class MpRoutes
     /// <summary><c>POST</c>: the link's token and the new passkey (design 8.5.2, step 3).</summary>
     public const string Takeover = Mine + "/takeover";
 
+    /// <summary>
+    /// <c>POST</c>, no session needed: the take-over link sent with a registration to an official address signs its pending
+    /// account in (design 8.5.2).
+    /// </summary>
+    public const string RegistrationSignIn = ApiRoutes.Prefix + "/mps/registration-sign-in";
+
     public const string Office = Mine + "/office";
     public const string OfficeInvitations = Office + "/invitations";
     public const string OfficeMember = Office + "/{id:guid}";
@@ -61,6 +67,12 @@ public sealed record MpTakeoverRequest
 
     /// <summary>The output of the browser's <c>PublicKeyCredential.toJSON()</c>, as for adding a passkey.</summary>
     public string Credential { get; init; } = "";
+}
+
+/// <summary>The take-over link's token sent with a registration (design 8.5.2), read from the page's <c>#</c>.</summary>
+public sealed record MpRegistrationSignInRequest
+{
+    public string Token { get; init; } = "";
 }
 
 /// <summary>
@@ -124,6 +136,12 @@ public sealed class MpTakeoverRequestValidator : AbstractValidator<MpTakeoverReq
     }
 }
 
+public sealed class MpRegistrationSignInRequestValidator : AbstractValidator<MpRegistrationSignInRequest>
+{
+    public MpRegistrationSignInRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.Token).Cascade(CascadeMode.Stop).NotEmpty().WithMessage(l["MpLink.Required"]).MaximumLength(100).WithMessage(l["MpLink.Required"]);
+}
+
 public sealed class MpOfficeAcceptanceRequestValidator : AbstractValidator<MpOfficeAcceptanceRequest>
 {
     public MpOfficeAcceptanceRequestValidator(IStringLocalizer<ValidationMessages> l)
@@ -143,6 +161,12 @@ public interface IMpApi
 
     /// <summary>Finishes the take-over with the link's token and a new passkey; the session becomes a passkey session.</summary>
     Task<ApiResult<MpLinkResponse>> TakeOverAsync(MpTakeoverRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The take-over link sent with a registration signs its pending account in (design 8.5.2); the answer says whether the
+    /// browser was signed in to another account, as any sign-in's does.
+    /// </summary>
+    Task<ApiResult<Auth.SignInResponse>> SignInWithRegistrationLinkAsync(MpRegistrationSignInRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Gives the profile up (the MP's account) or leaves the office (an office member).</summary>
     Task<ApiResult> EndAsync(CancellationToken cancellationToken = default);

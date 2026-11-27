@@ -8,26 +8,30 @@ namespace Lt2.Notifications.Templates;
 /// <summary>
 /// The take-over link of an MP's profile (design 8.5.2), to the official address only: a full address
 /// (<see cref="SiteLinks.Absolute"/>) whose code is after the <c>#</c>, so no server log ever holds it, and the way without the
-/// link (owner, 2026-11-17): the page to open and the code to type there; no tracking.
+/// link (owner, 2026-11-17): the page to open and the code to type there; no tracking. Sent with a registration (design 8.5.2),
+/// the same link in the words of a registration that it also completes.
 /// </summary>
 internal sealed class MpTemplates(IStringLocalizer<EmailTemplates> l, IOptions<SiteOptions> site)
 {
     public EmailMessage Render(MpTakeoverLinkEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
+
+        // Design 8.5.2: sent with a registration, the same link also completes the registration, in its own words.
+        var keys = model.AtRegistration ? "Mp.Registration" : "Mp.Takeover";
         string[] paragraphs =
         [
             l[EmailText.Greeting],
-            l.Format("Mp.Takeover.Intro", model.MpName),
-            EmailLayout.LinkLine(l["Mp.Takeover.Link"], SiteLinks.Absolute(site.Value.Address, model.Path)),
+            l.Format(keys + ".Intro", model.MpName),
+            EmailLayout.LinkLine(l[keys + ".Link"], SiteLinks.Absolute(site.Value.Address, model.Path)),
             l.Format(EmailText.WithoutLink, SiteLinks.Absolute(site.Value.Address, model.PagePath)),
             model.Code,
-            l.Format("Mp.Takeover.Validity", model.ValidHours.ToString(CultureInfo.InvariantCulture)),
-            l["Mp.Takeover.What"],
-            l["Mp.Takeover.Ignore"],
+            l.Format(keys + ".Validity", model.ValidHours.ToString(CultureInfo.InvariantCulture)),
+            l[keys + ".What"],
+            l[keys + ".Ignore"],
             l[EmailText.Signature],
         ];
-        return EmailLayout.Build(model.To, l["Mp.Takeover.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address), highlighted: 4);
+        return EmailLayout.Build(model.To, l[keys + ".Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address), highlighted: 4);
     }
 
     /// <summary>

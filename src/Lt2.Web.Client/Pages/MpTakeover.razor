@@ -3,15 +3,20 @@
 @using Lt2.Api.Contracts.Mps
 @inherits InteractiveBase<UiText>
 @inject IMpApi MpApi
+@inject IMeApi MeApi
 @inject IAuthApi Auth
 @inject NavigationManager Navigation
 @inject Passkeys PasskeyBrowser
+@inject IJSRuntime JS
 
 @* Design 8.5.2, steps 2 and 3: the take-over link opens this page for the signed-in account. It says what taking over means,
    then "Sukurti prieigos raktą ir perimti" makes the passkey in the browser and sends it with the link's token in one
    request. Design 6.8: the token is after the "#", read in the browser and sent in the request body, so the page rendered on
    the server knows nothing of it and no log or referrer holds it. Opened without it, the page asks for the same code, typed
-   (owner, 2026-11-17: the email gives it beside the link). *@
+   (owner, 2026-11-17: the email gives it beside the link).
+   Design 8.5.2, "Registering with the official address is the take-over": the link sent with a registration signs its pending
+   account in here, the registration is completed here (SignInFlow, which comes back to this page with its "#" intact), and the
+   take-over follows with the same token. A link that cannot sign in (one sent by "Perimti profilį") asks to sign in first. *@
 <PageTitle>@L["MpTakeover.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -19,7 +24,18 @@
     <NeedsScript />
     @if (_read && !_signedIn)
     {
+        @if (_token is null)
+        {
+            <p id="takeover-code-lead">@L["MpTakeover.SignedOutCodeLead"]</p>
+            <CodeEntry Label="@L["MpTakeover.CodeLabel"]" Entered="SignInWithCodeAsync" IdPrefix="takeover-" />
+        }
         <p class="note" id="takeover-sign-in">@L["MpTakeover.SignInFirst"] <a href="/prisijungti">@L["MpLink.SignIn"]</a></p>
+    }
+    else if (_read && _me is { RegistrationComplete: false })
+    {
+        @* Design 8.5.2: signed in by the registration's link, the registration is completed here, then the page comes back. *@
+        <p id="takeover-registration-lead">@L["MpTakeover.RegistrationLead"]</p>
+        <div class="takeover-registration" id="takeover-registration"><SignInFlow ReturnTo="@_here" /></div>
     }
     else if (_read && _token is null)
     {
@@ -47,6 +63,8 @@
     private bool _read;
     private bool _signedIn;
     private string? _token;
+    private string _here = MpRoutes.TakeoverPage;
+    private MeResponse? _me;
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,9 +74,60 @@
             return;
         }
 
-        _token = InvitationLink.Fragment(Navigation.Uri);
+        var address = await BrowserAddressAsync();
+        _token = InvitationLink.Fragment(address);
+        _here = MpRoutes.TakeoverPage + (_token is null ? "" : "#" + _token);
         _signedIn = await IsSignedInAsync();
+        if (_signedIn)
+        {
+            var me = await MeApi.GetAsync();
+            _me = me.IsSuccess ? me.Value : null;
+        }
+        else if (_token is not null && await SignInWithLinkAsync(_token, showRefusal: false))
+        {
+            return;
+        }
+
         _read = true;
+    }
+
+    /// <summary>The code typed by a visitor: the registration's link signs in with it as with the link itself.</summary>
+    private Task SignInWithCodeAsync(string code) => RunAsync(() => SignInWithLinkAsync(code, showRefusal: true));
+
+    /// <summary>
+    /// Design 8.5.2: the registration's link signs its pending account in; the page is then loaded again with the token after its
+    /// "#", so the new session's requests carry their own antiforgery token and the registration and the take-over follow. A link
+    /// that does not sign in leaves the page asking to sign in first (a typed code also says it did not work).
+    /// </summary>
+    private async Task<bool> SignInWithLinkAsync(string token, bool showRefusal)
+    {
+        var signedIn = await MpApi.SignInWithRegistrationLinkAsync(new MpRegistrationSignInRequest { Token = token });
+        if (!signedIn.IsSuccess)
+        {
+            if (showRefusal)
+            {
+                Show(signedIn.Problem);
+            }
+
+            return false;
+        }
+
+        await JS.InvokeVoidAsync("history.replaceState", null, "", MpRoutes.TakeoverPage + "#" + token);
+        await JS.InvokeVoidAsync("location.reload");
+        return true;
+    }
+
+    /// <summary>The address the browser shows, with its "#" part (the navigation manager's when the browser cannot be asked).</summary>
+    private async Task<string> BrowserAddressAsync()
+    {
+        try
+        {
+            return await JS.InvokeAsync<string?>("location.toString") ?? Navigation.Uri;
+        }
+        catch (JSException)
+        {
+            return Navigation.Uri;
+        }
     }
 
     private Task TakeOverAsync() => RunAsync(async () =>

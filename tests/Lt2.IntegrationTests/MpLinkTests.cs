@@ -151,8 +151,8 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
                 claimed.StatusCode.ShouldBe(HttpStatusCode.Accepted, await claimed.Content.ReadAsStringAsync());
             }
 
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE kind = @k AND created_at >= @start AND payload->>'to' = @to", ("k", MessageKinds.MpTakeoverLinkEmail), ("start", start), ("to", MpSteps.Pusinskiene.Address)))
-                .ShouldBe(1, "the link went to the official address");
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE kind = @k AND created_at >= @start AND payload->>'to' = @to AND NOT coalesce((payload->>'atRegistration')::boolean, false)", ("k", MessageKinds.MpTakeoverLinkEmail), ("start", start), ("to", MpSteps.Pusinskiene.Address)))
+                .ShouldBe(1, "the link went to the official address (besides the registration's own)");
             (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE kind = @k AND created_at >= @start AND payload->>'to' <> @to", ("k", MessageKinds.MpTakeoverLinkEmail), ("start", start), ("to", MpSteps.Pusinskiene.Address)))
                 .ShouldBe(0, "and to no other address");
             var first = await Database.TakeoverTokenAsync(MpSteps.Pusinskiene.Address);
@@ -647,4 +647,169 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             await mp.DeleteAccountAsync();
         }
     }
+    /// <summary>
+    /// Design 8.5.2, "Registering with the official address is the take-over": the registration email to a pending official address
+    /// carries the take-over link and no six-digit code; the link signs the pending account in (and proves the address), the
+    /// registration is completed, and the same link takes the profile over. The answer to the registration is the same as for any
+    /// address, and the link no longer signs in once the registration is completed.
+    /// </summary>
+    [Fact]
+    public async Task Registering_an_official_address_sends_the_takeover_link_in_place_of_the_code_and_the_link_finishes_both()
+    {
+        var mp = MpSteps.Eglaite;
+        await Database.ForgetAccountAsync(mp.Address);
+        var start = await Database.ScalarAsync<DateTime>("SELECT now()");
+        var slug = (await Database.SlugAsync(mp))!;
+        var other = TestData.Email();
+        using var browser = NewBrowser();
+        using var otherBrowser = NewBrowser();
+        using var stranger = NewBrowser();
+        using var key = new SoftwareAuthenticator();
+        try
+        {
+            using (var registered = await browser.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = mp.Address, InvitationCode = TestData.Invitation }))
+            using (var ordinary = await otherBrowser.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = other, InvitationCode = TestData.Invitation }))
+            {
+                registered.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+                (await registered.Content.ReadAsStringAsync()).ShouldBe(await ordinary.Content.ReadAsStringAsync(), "the answer says nothing about the address");
+            }
+
+            (await CodesSinceAsync(mp.Address, start)).ShouldBe(0, "no six-digit code goes with the link");
+            (await CodesSinceAsync(other, start)).ShouldBe(1, "an ordinary address gets its code");
+            (await LinksSinceAsync(other, start)).ShouldBe(0);
+            var token = await Database.TakeoverTokenAsync(mp.Address, atRegistration: true);
+            var payload = await Database.ScalarAsync<string>(
+                "SELECT payload::text FROM notify.outbox WHERE kind = @k AND lower(payload->>'to') = lower(@to) ORDER BY created_at DESC, id DESC LIMIT 1",
+                ("k", MessageKinds.MpTakeoverLinkEmail), ("to", mp.Address));
+            using (var document = JsonDocument.Parse(payload!))
+            {
+                document.RootElement.GetProperty("mpName").GetString().ShouldBe(mp.Name);
+                document.RootElement.GetProperty("code").GetString().ShouldBe(token);
+            }
+
+            // A guess signs nobody in; the link, typed in any case, signs the pending account in and proves its address.
+            using (var guessed = await stranger.PostAsync(MpRoutes.RegistrationSignIn, new MpRegistrationSignInRequest { Token = OneTimeCode.New() }))
+            {
+                await guessed.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "mp.link-invalid");
+            }
+
+            using (var signedIn = await browser.PostAsync(MpRoutes.RegistrationSignIn, new MpRegistrationSignInRequest { Token = token.ToLowerInvariant() }))
+            {
+                signedIn.StatusCode.ShouldBe(HttpStatusCode.OK, await signedIn.Content.ReadAsStringAsync());
+            }
+
+            var pending = await browser.MeAsync();
+            pending.RegistrationComplete.ShouldBeFalse();
+            pending.VerificationLevel.ShouldBe(VerificationLevels.Email);
+            await browser.CompleteRegistrationAsync(mp.Name);
+
+            // Completed, the link signs in no more; it takes the profile over, once.
+            using (var again = await stranger.PostAsync(MpRoutes.RegistrationSignIn, new MpRegistrationSignInRequest { Token = token }))
+            {
+                await again.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "mp.link-invalid");
+            }
+
+            using (var taken = await browser.TakeOverAsync(key, token))
+            {
+                taken.StatusCode.ShouldBe(HttpStatusCode.OK, await taken.Content.ReadAsStringAsync());
+            }
+
+            (await browser.MeAsync()).Mp!.Slug.ShouldBe(slug);
+            using (var reused = await browser.TakeOverAsync(key, token))
+            {
+                await reused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "mp.link-invalid");
+            }
+        }
+        finally
+        {
+            await Database.ForgetAccountAsync(mp.Address);
+            await Database.ForgetAccountAsync(other);
+        }
+    }
+
+    /// <summary>
+    /// Design 8.5.2: registering an official address again, by anyone, replaces only the account's own earlier registration link,
+    /// never a link sent by "Perimti profilį", and is not counted against their three a day; a completed account gets the
+    /// ordinary code; while the profile is taken over, a pending registration of the address gets the ordinary code too.
+    /// </summary>
+    [Fact]
+    public async Task Registering_again_replaces_only_its_own_link_and_a_completed_account_or_an_mp_taken_over_gets_the_code()
+    {
+        var mp = MpSteps.Kadagyte;
+        await Database.ForgetAccountAsync(mp.Address);
+        var slug = (await Database.SlugAsync(mp))!;
+        var moved = TestData.Email();
+        using var browser = NewBrowser();
+        using var stranger = NewBrowser();
+        using var key = new SoftwareAuthenticator();
+        try
+        {
+            var first = await browser.RegisterWithRegistrationLinkAsync(Database, mp.Address);
+            using (var again = await stranger.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = mp.Address, InvitationCode = TestData.Invitation }))
+            {
+                again.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+            }
+
+            var second = await Database.TakeoverTokenAsync(mp.Address, atRegistration: true);
+            second.ShouldNotBe(first);
+            await browser.CompleteRegistrationAsync(mp.Name);
+
+            // Three links by "Perimti profilį" still: the registrations' links were not counted.
+            for (var i = 0; i < 3; i++)
+            {
+                using var claimed = await browser.ClaimAsync(slug);
+                claimed.StatusCode.ShouldBe(HttpStatusCode.Accepted, await claimed.Content.ReadAsStringAsync());
+            }
+
+            // The registration again, of a completed account: the ordinary code, and the "Perimti profilį" link stays.
+            var claimedToken = await Database.TakeoverTokenAsync(mp.Address);
+            var start = await Database.ScalarAsync<DateTime>("SELECT now()");
+            using (var completed = await stranger.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = mp.Address, InvitationCode = TestData.Invitation }))
+            {
+                completed.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+            }
+
+            (await CodesSinceAsync(mp.Address, start)).ShouldBe(1, "a completed account gets the ordinary code");
+            (await LinksSinceAsync(mp.Address, start)).ShouldBe(0);
+            using (var replaced = await browser.TakeOverAsync(key, first))
+            {
+                await replaced.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "mp.link-invalid");
+            }
+
+            using (var taken = await browser.TakeOverAsync(key, claimedToken))
+            {
+                taken.StatusCode.ShouldBe(HttpStatusCode.OK, await taken.Content.ReadAsStringAsync());
+            }
+
+            // Taken over, the account moves to another address (as by changing it); a pending registration of the official
+            // address then gets the ordinary code, not a link.
+            await Database.ExecuteAsync(
+                "UPDATE identity.\"user\" SET email = @n, normalized_email = upper(@n) WHERE lower(email) = lower(@e)", ("n", moved), ("e", mp.Address));
+            await Database.ExecuteAsync(
+                "UPDATE identity.profile SET normalized_email = lower(@n) WHERE normalized_email = lower(@e)", ("n", moved), ("e", mp.Address));
+            start = await Database.ScalarAsync<DateTime>("SELECT now()");
+            using (var pending = await stranger.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = mp.Address, InvitationCode = TestData.Invitation }))
+            {
+                pending.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+            }
+
+            (await CodesSinceAsync(mp.Address, start)).ShouldBe(1, "an MP taken over: the ordinary code");
+            (await LinksSinceAsync(mp.Address, start)).ShouldBe(0);
+        }
+        finally
+        {
+            await Database.ForgetAccountAsync(mp.Address);
+            await Database.ForgetAccountAsync(moved);
+        }
+    }
+
+    private Task<long> CodesSinceAsync(string to, DateTime start) =>
+        Database.ScalarAsync<long>(
+            "SELECT count(*) FROM notify.outbox WHERE kind = @k AND lower(payload->>'to') = lower(@to) AND created_at >= @start",
+            ("k", MessageKinds.SignInCodeEmail), ("to", to), ("start", start));
+
+    private Task<long> LinksSinceAsync(string to, DateTime start) =>
+        Database.ScalarAsync<long>(
+            "SELECT count(*) FROM notify.outbox WHERE kind = @k AND lower(payload->>'to') = lower(@to) AND created_at >= @start",
+            ("k", MessageKinds.MpTakeoverLinkEmail), ("to", to), ("start", start));
 }

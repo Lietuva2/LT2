@@ -154,6 +154,11 @@
                     <FieldError Errors="Errors" Field="code" For="code" />
                 </div>
                 <button class="btn btn--wide" type="submit" disabled="@Locked">@L["Code.Submit"]</button>
+                @if (_registered)
+                {
+                    @* Design 8.5.2: an MP's official address gets the take-over link in place of the code; said to everyone alike. *@
+                    <p class="small" id="code-official-address">@L["Code.OfficialAddress"]</p>
+                }
                 <p class="small">
                     @L["Code.NewestOnly"]
                     <button type="button" class="linkish" disabled="@Locked" @onclick="ResendAsync">@L["Code.Resend"]</button>

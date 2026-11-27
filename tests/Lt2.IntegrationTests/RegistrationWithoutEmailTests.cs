@@ -37,6 +37,31 @@ public sealed class RegistrationWithoutEmailTests(DatabaseFixture database) : Ap
         me.PasskeyCount.ShouldBe(0);
     }
 
+    /// <summary>
+    /// An MP's official address is never signed in without email (design 6.2, 8.5.2), invitation code or not: it gets the
+    /// registration's take-over link, which on a trial the team reads in the mail catcher.
+    /// </summary>
+    [Fact]
+    public async Task An_official_address_with_an_invitation_code_gets_the_takeover_link_and_no_session()
+    {
+        await using var trial = new TrialFactory(Database, withoutEmail: true);
+        await Database.ForgetAccountAsync(MpSteps.Berzinyte.Address);
+        using var browser = trial.NewBrowser();
+        try
+        {
+            var answer = await RegisterAsync(browser, MpSteps.Berzinyte.Address);
+
+            answer.ShouldBe(new RegisterResponse(SignedIn: false, AccountChanged: false));
+            (await Database.TakeoverTokenAsync(MpSteps.Berzinyte.Address, atRegistration: true)).ShouldNotBeNullOrEmpty();
+            using var me = await browser.Client.GetAsync(ApiRoutes.Me.Root);
+            me.StatusCode.ShouldBe(HttpStatusCode.Unauthorized, "nobody is signed in by typing an MP's address");
+        }
+        finally
+        {
+            await Database.ForgetAccountAsync(MpSteps.Berzinyte.Address);
+        }
+    }
+
     [Fact]
     public async Task A_registered_address_gets_a_code_as_everywhere_and_no_session()
     {

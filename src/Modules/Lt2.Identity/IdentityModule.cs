@@ -110,6 +110,7 @@ public static class IdentityModule
         services.AddScoped<BotCheck>();
         services.AddScoped<KnownBrowsers>();
         services.AddScoped<SignInCodeIssuer>();
+        services.AddScoped<Application.Politicians.RegistrationTakeoverLinks>();
         services.AddSingleton(RegistrationWithoutEmail.From(configuration));
         services.AddScoped<RegisterHandler>();
         services.AddScoped<CompleteRegistrationHandler>();

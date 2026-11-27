@@ -47,13 +47,34 @@ internal static class PoliticianRules
     /// </summary>
     public static PoliticianTokenCheck Check(PoliticianToken? token, string kind, Guid userId, DateTimeOffset now) =>
         token is null ? PoliticianTokenCheck.Unknown
-        : token.Kind != kind ? PoliticianTokenCheck.WrongKind
+        : !IsKind(token.Kind, kind) ? PoliticianTokenCheck.WrongKind
         : token.UsedAt is not null ? PoliticianTokenCheck.Used
         : now >= token.ExpiresAt ? PoliticianTokenCheck.Expired
         : kind == PoliticianTokenKinds.Takeover && token.UserId != userId ? PoliticianTokenCheck.OtherAccount
         : PoliticianTokenCheck.Valid;
 
-    /// <summary>Whether another take-over link may be sent for an MP that had <paramref name="sentInLastDay"/> in the last 24 hours.</summary>
+    /// <summary>
+    /// A take-over link sent with a registration (design 8.5.2) takes the profile over as one sent by "Perimti profilį" does;
+    /// otherwise a token is only of its own kind.
+    /// </summary>
+    private static bool IsKind(string tokenKind, string kind) =>
+        tokenKind == kind || (kind == PoliticianTokenKinds.Takeover && tokenKind == PoliticianTokenKinds.Registration);
+
+    /// <summary>
+    /// A registration's take-over link presented to sign in (design 8.5.2): known, sent with a registration, unused and unexpired;
+    /// the account it was sent for must still be pending, which the handler checks.
+    /// </summary>
+    public static PoliticianTokenCheck CheckRegistrationSignIn(PoliticianToken? token, DateTimeOffset now) =>
+        token is null ? PoliticianTokenCheck.Unknown
+        : token.Kind != PoliticianTokenKinds.Registration ? PoliticianTokenCheck.WrongKind
+        : token.UsedAt is not null ? PoliticianTokenCheck.Used
+        : now >= token.ExpiresAt ? PoliticianTokenCheck.Expired
+        : PoliticianTokenCheck.Valid;
+
+    /// <summary>
+    /// Whether another take-over link may be sent for an MP that had <paramref name="sentInLastDay"/> in the last 24 hours by
+    /// "Perimti profilį"; links sent with a registration are not counted (design 8.5.2), they have the sign-in codes' limits.
+    /// </summary>
     public static bool MaySendTakeoverLink(int sentInLastDay) => sentInLastDay < TakeoverLinksPerDay;
 
     /// <summary>Whether the MP's office may take one more member, with <paramref name="members"/> now.</summary>
