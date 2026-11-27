@@ -32,7 +32,7 @@ Prefer merge commits over squash.
 | `docs/kaip-veikia.html` | Everyone | Every part of stage 1 briefly, and what remains before a public launch. |
 | `docs/idejos.html` | Everyone | Stage 2 and 3 ideas. |
 | `docs/politikams.html` | MPs and their offices | Summaries, taking over the profile, the office, one response, what we do not do, questions before the first summary. |
-| `docs/organizacijoms.html` | Organisations | Profile, confirmation, statement on a bill, a voice not control. |
+| `docs/organizacijoms.html` | Organisations | Profile, confirmation, statement on a bill, what an organisation gets. |
 | `docs/zurnalistams.html` | Journalists | What is there, how to cite the numbers, story ideas. |
 | `docs/kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
 | `docs/dokumentai.html` | People who want everything | Lists every page; `noindex`, not linked from any page. Update it when a page is added, renamed or removed. |
