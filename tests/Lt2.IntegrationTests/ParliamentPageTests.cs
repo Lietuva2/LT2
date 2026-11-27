@@ -53,21 +53,27 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimo-nariai\"", customMessage: "design 8.16: the filters lie on the ground above the list's sheet");
         // Design 8.21: the list is the tab "Seimo nariai" of Seimas: the heading and the tab row are its head, the filters follow.
         ListHeadSteps.SeimasHead(html).ShouldContain("<a href=\"/seimo-nariai\" id=\"tab-mps\" aria-current=\"page\">Seimo nariai</a>");
-        foreach (var name in new[] { "Jonas Petraitis", "Ona Jonaitienė", "Aurelija Kadagytė" })
+        // Design 7.3: a list in the order of the last names shows the last name first.
+        foreach (var name in new[] { "Petraitis Jonas", "Jonaitienė Ona", "Kadagytė Aurelija" })
         {
-            html.ShouldContain(name);
+            html.ShouldContain($">{name}</a>");
         }
 
+        html.ShouldNotContain(">Jonas Petraitis</a>");
+
         html.IndexOf("Dabartiniai Seimo nariai", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("Buvę šios kadencijos Seimo nariai", StringComparison.Ordinal));
-        html[html.IndexOf("Buvę šios kadencijos Seimo nariai", StringComparison.Ordinal)..].ShouldContain("Tadas Alksninis");
+        html[html.IndexOf("Buvę šios kadencijos Seimo nariai", StringComparison.Ordinal)..].ShouldContain("Alksninis Tadas</a>");
         // Design 8.16.5 (owner, 2026-11-21): each group's heading row stays at the top of the screen.
         ListHeadSteps.StickyRow(html, ">Dabartiniai Seimo nariai</h2>").ShouldBe("<div class=\"row list-head\"><h2>Dabartiniai Seimo nariai</h2></div>");
         ListHeadSteps.StickyRow(html, ">Buvę šios kadencijos Seimo nariai</h2>").ShouldBe("<div class=\"row list-head\"><h2>Buvę šios kadencijos Seimo nariai</h2></div>");
 
         var filtered = await OkAsync("/seimo-nariai?frakcija=reformu-partijos-frakcija");
         filtered.ShouldContain("Rasta: 4");
-        filtered.ShouldNotContain("Ona Jonaitienė</a>");
+        filtered.ShouldNotContain("Jonaitienė Ona</a>");
         (await OkAsync("/seimo-nariai?q=azuol")).ShouldContain("Rasta: 1");
+        // The list shows the last name first, so a name typed either way round finds the MP.
+        (await OkAsync("/seimo-nariai?q=jonas+petraitis")).ShouldContain(">Petraitis Jonas</a>");
+        (await OkAsync("/seimo-nariai?q=petraitis+jonas")).ShouldContain(">Petraitis Jonas</a>");
     }
 
     [Fact]
@@ -187,7 +193,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         var html = await OkAsync("/frakcijos/regionu-aljanso-frakcija");
 
         html.ShouldContain("<h1>Regionų aljanso frakcija</h1>");
-        html.ShouldContain("Darius Liepaitis");
+        html.ShouldContain(">Liepaitis Darius</a>", customMessage: "design 7.3: the members, in the order of their last names, show the last name first");
         html.ShouldContain("Buvę nariai");
         html.ShouldContain("balsavo laisvai");
     }
@@ -199,6 +205,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
 
         html.ShouldContain("<h1>Biudžeto ir finansų komitetas</h1>");
         html.ShouldContain("Komiteto pirmininkė");
+        html.ShouldContain(">Beržinytė Eglė</a>", customMessage: "design 7.3: the members, in the order of their last names, show the last name first");
     }
 
     [Fact]

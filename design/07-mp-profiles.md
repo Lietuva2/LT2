@@ -148,6 +148,10 @@ Also: the list of MPs (`/seimo-nariai`: search by name, filter by faction and co
 (`/seimas/balsavimai/{id}`), a bill page with its stages and votes (`/seimas/{number}`), and a public methodology page
 (`/metodika`) that states each formula above in plain language.
 
+Every list of MPs in the order of their names (the list of MPs, a faction's and a committee's members, a vote's ballots,
+8.17) shows the last name first, as the list is read: "Petraitis Jonas". The list of MPs finds a name typed either way
+round. Elsewhere (a profile's heading, a response, a comment, an email) the name stays first name first.
+
 ## 7.4 API (all public, cached, with ETags)
 
 ```

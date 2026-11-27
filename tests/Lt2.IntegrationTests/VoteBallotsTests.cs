@@ -102,9 +102,9 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
         var names = Name().Matches(list).Select(m => m.Groups[1].Value).ToList();
 
         names.Count.ShouldBe(141);
-        names[0].ShouldBe("Tadas Alksninis", "Ą sorts with A: Alksninis before Ąžuolaitis");
-        names[^1].ShouldBe("Indrė Žolynaitė");
-        var lastNames = names.Select(n => n[(n.LastIndexOf(' ') + 1)..]).ToList();
+        names[0].ShouldBe("Alksninis Tadas", "Ą sorts with A: Alksninis before Ąžuolaitis; the last name comes first (design 7.3)");
+        names[^1].ShouldBe("Žolynaitė Indrė");
+        var lastNames = names.Select(n => n[..n.IndexOf(' ')]).ToList();
         lastNames.ShouldBe(lastNames.Order(StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("lt-LT"), true)).ToList());
     }
 
@@ -133,7 +133,7 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
     {
         var found = List(await OkAsync(Page + "?q=zolynaite"));
         Row().Count(found).ShouldBe(1);
-        found.ShouldContain("Indrė Žolynaitė");
+        found.ShouldContain("Žolynaitė Indrė");
         found.ShouldContain("value=\"zolynaite\"");
         found.ShouldContain("href=\"/seimas/balsavimai/99199701?q=zolynaite&balsas=nebalsavo\"");
 
@@ -227,7 +227,7 @@ public sealed partial class VoteBallotsTests(DatabaseFixture database) : ApiTest
         var list = List(await OkAsync(Page + "?q=zolynaite&frakcija=reformu-partijos-frakcija&balsas=nebalsavo"));
 
         Row().Count(list).ShouldBe(1);
-        list.ShouldContain("Indrė Žolynaitė");
+        list.ShouldContain("Žolynaitė Indrė");
         list.ShouldContain("<input type=\"hidden\" name=\"balsas\" value=\"nebalsavo\"");
         list.ShouldContain("href=\"/seimas/balsavimai/99199701?q=zolynaite&frakcija=reformu-partijos-frakcija&balsas=uz\"");
         list.ShouldContain("href=\"/seimas/balsavimai/99199701?balsas=nebalsavo\" id=\"ballot-clear\"");
