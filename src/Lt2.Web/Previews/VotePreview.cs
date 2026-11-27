@@ -18,12 +18,13 @@ internal sealed record VotePreviewChoice(string Code, string Label, int Count);
 /// each MP's choice and the legend with the numbers. Only a vote with per-MP ballots has one; the rest keep the site's image.
 /// The MPs are not named: the image is the seats' colours only.
 /// </summary>
-/// <param name="Choices">Each seat's choice, in the order <see cref="Hemicycle.Arrange"/> seats them.</param>
+/// <param name="Seats">Each seat where <see cref="Hemicycle.Arrange"/> puts it, with its MP's choice.</param>
+/// <param name="Side">The side of a seat's square.</param>
 /// <param name="Version">A digest of everything drawn, part of the image's address, so a changed image is a new address.</param>
-internal sealed record VotePreview(long VoteId, string Title, string Label, IReadOnlyList<VotePreviewChoice> Legend, IReadOnlyList<string> Choices, string Version)
+internal sealed record VotePreview(long VoteId, string Title, string Label, IReadOnlyList<VotePreviewChoice> Legend, IReadOnlyList<(Hemicycle.Seat Seat, string Choice)> Seats, double Side, string Version)
 {
     /// <summary>Raised when the drawing itself changes, so every image gets a new address.</summary>
-    private const int Drawing = 2;
+    private const int Drawing = 3;
 
     /// <summary>The image's address on this site: under <c>/img</c>, which other sites may fetch (design 8.22.5).</summary>
     public string Path => $"/img/votes/{VoteId.ToString(CultureInfo.InvariantCulture)}/{Version}.png";
@@ -58,8 +59,9 @@ internal sealed record VotePreview(long VoteId, string Title, string Label, IRea
             .Select(code => new VotePreviewChoice(code, formats.Choice(code), vote.Ballots.Count(b => b.Choice == code)))
             .Where(choice => choice.Count > 0)
             .ToList();
-        var choices = Hemicycle.Arrange(vote.Ballots).Seats.Select(s => s.Ballot.Choice).ToList();
-        return new VotePreview(link.Id, title, label, legend, choices, VersionOf(title, label, legend, choices));
+        var (arranged, side) = Hemicycle.Arrange(vote.Ballots);
+        var seats = arranged.Select(s => (s.Seat, s.Ballot.Choice)).ToList();
+        return new VotePreview(link.Id, title, label, legend, seats, side, VersionOf(title, label, legend, seats));
     }
 
     /// <summary>
@@ -99,12 +101,12 @@ internal sealed record VotePreview(long VoteId, string Title, string Label, IRea
         return text["Preview.Vote.ImageAlt", string.Join(", ", Legend.Select(c => $"{c.Label.ToLower(CultureInfo.GetCultureInfo("lt-LT"))} {Display.Number(c.Count)}"))];
     }
 
-    private static string VersionOf(string title, string label, IReadOnlyList<VotePreviewChoice> legend, IReadOnlyList<string> choices)
+    private static string VersionOf(string title, string label, IReadOnlyList<VotePreviewChoice> legend, IReadOnlyList<(Hemicycle.Seat Seat, string Choice)> seats)
     {
         var all = new StringBuilder()
             .Append(Drawing).Append('\n').Append(title).Append('\n').Append(label).Append('\n')
             .AppendJoin(';', legend.Select(c => $"{c.Code}={c.Label}={c.Count}")).Append('\n')
-            .AppendJoin(',', choices);
+            .AppendJoin(',', seats.Select(s => string.Create(CultureInfo.InvariantCulture, $"{s.Seat.X:0.##}:{s.Seat.Y:0.##}:{s.Choice}")));
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(all.ToString())))[..16];
     }
 }

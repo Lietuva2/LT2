@@ -76,7 +76,7 @@ internal static class VotePreviewImage
         }
 
         y += 12;
-        DrawSeats(canvas, preview.Choices, Centre - mapWidth / 2, y, mapWidth / (float)Hemicycle.Width);
+        DrawSeats(canvas, preview.Seats, preview.Side, Centre - mapWidth / 2, y, mapWidth / (float)Hemicycle.Width);
         y += mapHeight + 14;
         foreach (var row in legend)
         {
@@ -85,15 +85,13 @@ internal static class VotePreviewImage
         }
     }
 
-    private static void DrawSeats(SKCanvas canvas, IReadOnlyList<string> choices, float left, float top, float scale)
+    private static void DrawSeats(SKCanvas canvas, IReadOnlyList<(Hemicycle.Seat Seat, string Choice)> seats, double side, float left, float top, float scale)
     {
-        var (seats, side) = Hemicycle.Layout(choices.Count);
         var half = (float)side / 2;
         using var paint = new SKPaint { IsAntialias = true };
-        for (var i = 0; i < seats.Count; i++)
+        foreach (var (seat, choice) in seats)
         {
-            var seat = seats[i];
-            paint.Color = ColourOf(choices[i]);
+            paint.Color = ColourOf(choice);
             canvas.Save();
             canvas.Translate(left + (float)seat.X * scale, top + (float)seat.Y * scale);
             canvas.Scale(scale);

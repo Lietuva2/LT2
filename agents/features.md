@@ -984,7 +984,8 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   `Previews/Fonts/*.ttf` embedded, made from the web fonts by `tools/make_preview_fonts.py`), served by
   `Previews/VotePreviewImages` at `GET|HEAD /img/votes/{id}/{version}.png` (short-circuited like the static files; drawn on
   the first request, kept in a 12 MB memory cache; an old version redirects). Seats are placed by
-  `Lt2.Web.Client/Components/Hemicycle.Arrange`, shared with `SeatMap`. Texts `Preview.Vote*`. Tests: `VotePreviewTests`.
+  `Lt2.Web.Client/Components/Hemicycle.Arrange` from the hand-copied `SeatingPlan` (design 7.3), shared with `SeatMap`;
+  tests `HemicycleTests`. Texts `Preview.Vote*`. Tests: `VotePreviewTests`.
   A bill's page (owner 2026-11-27) passes its title card the same way: `Previews/BillPreview` (pure: `Of`, `TitleOf`, the
   stage line from `BillPage.LastStage`, `Alt`, `Version`; never the counts), drawn by `Previews/BillPreviewImage.Draw`, served
   by `Previews/BillPreviewImages` at `GET|HEAD /img/bills/{number}/{version}.png` (10 MB cache). The ground, band, mark,

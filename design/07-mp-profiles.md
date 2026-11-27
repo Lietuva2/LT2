@@ -148,6 +148,13 @@ Also: the list of MPs (`/seimo-nariai`: search by name, filter by faction and co
 (`/seimas/balsavimai/{id}`), a bill page with its stages and votes (`/seimas/{number}`), and a public methodology page
 (`/metodika`) that states each formula above in plain language.
 
+The seat map shows each MP where they sit in the plenary hall, coloured by their choice and named on hover: four sectors
+with aisles between them, six rows each, as the Seimas's seating plan draws them ("Seimo narių vietos Seimo posėdžių
+salėje", a PDF on lrs.lt; owner, 2026-11-27). The open data has no seats, so the plan is copied by hand into the code
+(`SeatingPlan`, with the plan's date) and copied again by hand when the Seimas publishes a new one. An MP who came after
+the plan takes one of its free seats; a vote with more such MPs than free seats (an earlier term) is drawn as a plain
+hemicycle with the factions together, largest first.
+
 Every list of MPs in the order of their names (the list of MPs, a faction's and a committee's members, a vote's ballots,
 8.17) shows the last name first, as the list is read: "Petraitis Jonas". The list of MPs finds a name typed either way
 round. Elsewhere (a profile's heading, a response, a comment, an email) the name stays first name first.

@@ -3,8 +3,8 @@
 @inject IStringLocalizer<UiText> T
 
 @* Design 7.3: the seat map of a vote as SVG. In the client project, so the vote's page (rendered on the server) and the bill's
-   page (SeimasSeatMap, in the browser) draw it alike. Factions sit together, largest first (Hemicycle.Arrange, as the vote's preview image);
-   each seat is coloured by the MP's choice and named in its title. *@
+   page (SeimasSeatMap, in the browser) draw it alike. MPs sit where the Seimas's seating plan puts them, or factions
+   together for a vote the plan does not cover (Hemicycle.Arrange, as the vote's preview image); each seat is coloured by the MP's choice and named in its title. *@
 @if (_seats.Count > 0)
 {
     <figure class="stack stack--tight">
