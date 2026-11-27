@@ -12,7 +12,7 @@ internal static class BillPreviewImage
     public const int TitleLines = 4;
 
     /// <summary>The title's size.</summary>
-    public const float TitleSize = 56;
+    public const float TitleSize = 64;
 
     public static byte[] Draw(BillPreview preview)
     {
@@ -25,32 +25,33 @@ internal static class BillPreviewImage
     {
         const float centre = PreviewDrawing.Centre;
         const float width = PreviewDrawing.ContentWidth;
-        using var labelFont = new SKFont(PreviewDrawing.Text, 26);
+        using var labelFont = new SKFont(PreviewDrawing.Text, 34);
         using var titleFont = new SKFont(PreviewDrawing.Display, TitleSize);
-        using var callFont = new SKFont(PreviewDrawing.Bold, 26);
-        var title = PreviewDrawing.Lines(preview.Title, titleFont, width, TitleLines);
-        var call = preview.Call is null ? [] : PreviewDrawing.Lines(preview.Call, callFont, width, 2);
-        const float labelLine = 32;
-        const float titleLine = 60;
-        const float smallLine = 32;
+        using var callFont = new SKFont(PreviewDrawing.Bold, 34);
+        var title = PreviewDrawing.Balanced(preview.Title, titleFont, width, TitleLines);
+        var call = preview.Call is null ? [] : PreviewDrawing.Balanced(preview.Call, callFont, width, 2);
+        const float labelLine = 40;
+        const float titleLine = 66;
+        const float smallLine = 42;
         var height = labelLine + 12 + title.Count * titleLine + (preview.Stage is null ? 0 : 14 + smallLine) + (call.Count == 0 ? 0 : 22 + call.Count * smallLine);
         var y = top + Math.Max(0, (bottom - top - height) / 2);
 
         using var ink2 = new SKPaint { IsAntialias = true, Color = PreviewDrawing.Ink2 };
         using var ink = new SKPaint { IsAntialias = true, Color = PreviewDrawing.Ink };
         using var brand = new SKPaint { IsAntialias = true, Color = PreviewDrawing.Brand };
-        canvas.DrawText(PreviewDrawing.Fit(preview.Label, labelFont, width), centre, y + 26, SKTextAlign.Center, labelFont, ink2);
+        canvas.DrawText(PreviewDrawing.Fit(preview.Label, labelFont, width), centre, y + 33, SKTextAlign.Center, labelFont, ink2);
         y += labelLine + 12;
         foreach (var line in title)
         {
-            canvas.DrawText(line, centre, y + 48, SKTextAlign.Center, titleFont, ink);
+            canvas.DrawText(line, centre, y + 54, SKTextAlign.Center, titleFont, ink);
             y += titleLine;
         }
 
         if (preview.Stage is { } stage)
         {
             y += 14;
-            canvas.DrawText(PreviewDrawing.Fit(stage, labelFont, width), centre, y + 26, SKTextAlign.Center, labelFont, ink2);
+            using var stageFont = new SKFont(PreviewDrawing.Text, PreviewDrawing.SizeToFit(stage, PreviewDrawing.Text, width, 34, 28));
+            canvas.DrawText(PreviewDrawing.Fit(stage, stageFont, width), centre, y + 33, SKTextAlign.Center, stageFont, ink2);
             y += smallLine;
         }
 
@@ -59,7 +60,7 @@ internal static class BillPreviewImage
             y += 22;
             foreach (var line in call)
             {
-                canvas.DrawText(line, centre, y + 26, SKTextAlign.Center, callFont, brand);
+                canvas.DrawText(line, centre, y + 33, SKTextAlign.Center, callFont, brand);
                 y += smallLine;
             }
         }

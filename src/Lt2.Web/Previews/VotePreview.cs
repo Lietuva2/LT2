@@ -23,7 +23,7 @@ internal sealed record VotePreviewChoice(string Code, string Label, int Count);
 internal sealed record VotePreview(long VoteId, string Title, string Label, IReadOnlyList<VotePreviewChoice> Legend, IReadOnlyList<string> Choices, string Version)
 {
     /// <summary>Raised when the drawing itself changes, so every image gets a new address.</summary>
-    private const int Drawing = 1;
+    private const int Drawing = 2;
 
     /// <summary>The image's address on this site: under <c>/img</c>, which other sites may fetch (design 8.22.5).</summary>
     public string Path => $"/img/votes/{VoteId.ToString(CultureInfo.InvariantCulture)}/{Version}.png";

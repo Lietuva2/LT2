@@ -19,7 +19,7 @@ namespace Lt2.Web.Previews;
 internal sealed record BillPreview(string Number, string Title, string Label, string? Stage, string? Call, string Version)
 {
     /// <summary>Raised when the drawing itself changes, so every image gets a new address.</summary>
-    private const int Drawing = 1;
+    private const int Drawing = 2;
 
     /// <summary>The image's address on this site: under <c>/img</c>, which other sites may fetch (design 8.22.5).</summary>
     public string Path => $"/img/bills/{Uri.EscapeDataString(Number)}/{Version}.png";

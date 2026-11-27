@@ -79,11 +79,11 @@ internal static class PreviewDrawing
     /// <summary>The logo and "Lietuva 2.0", centred; returns the y below them.</summary>
     private static float DrawMark(SKCanvas canvas, float top)
     {
-        const float logoHeight = 44;
+        const float logoHeight = 50;
         const float scale = logoHeight / 474f;
         const float logoWidth = 604 * scale;
         const float gap = 14;
-        using var font = new SKFont(Display, 38);
+        using var font = new SKFont(Display, 44);
         using var ink = new SKPaint { IsAntialias = true, Color = Ink };
         const string name = "Lietuva 2.0";
         var nameWidth = font.MeasureText(name);
@@ -133,6 +133,50 @@ internal static class PreviewDrawing
         return [.. lines.Select(l => Fit(l, font, width))];
     }
 
+    /// <summary>
+    /// The text in as many lines as <see cref="Lines"/> takes, but balanced: the narrowest width that still takes no more lines
+    /// and cuts nothing, so a title does not leave one word alone on a line.
+    /// </summary>
+    public static IReadOnlyList<string> Balanced(string text, SKFont font, float width, int max)
+    {
+        var lines = Lines(text, font, width, max);
+        if (lines.Count < 2 || lines[^1].EndsWith('…'))
+        {
+            return lines;
+        }
+
+        float low = width / 2, high = width;
+        var best = lines;
+        while (high - low > 4)
+        {
+            var mid = (low + high) / 2;
+            var tried = Lines(text, font, mid, max);
+            if (tried.Count == lines.Count && !tried.Any(l => l.EndsWith('…')) && tried.All(l => font.MeasureText(l) <= mid))
+            {
+                best = tried;
+                high = mid;
+            }
+            else
+            {
+                low = mid;
+            }
+        }
+
+        return best;
+    }
+
+    /// <summary>The font size at most <paramref name="size"/> and at least <paramref name="least"/> at which the text fits the width.</summary>
+    public static float SizeToFit(string text, SKTypeface face, float width, float size, float least)
+    {
+        using var font = new SKFont(face, size);
+        while (font.Size > least && font.MeasureText(text) > width)
+        {
+            font.Size -= 1;
+        }
+
+        return font.Size;
+    }
+
     /// <summary>The text as it is when it fits, otherwise cut at a word with "…".</summary>
     public static string Fit(string text, SKFont font, float width)
     {
@@ -144,13 +188,13 @@ internal static class PreviewDrawing
         }
 
         var cut = text;
-        while (cut.Length > 1 && font.MeasureText(cut.TrimEnd(',', ';', ':', ' ', '–', '-', '·') + "…") > width)
+        while (cut.Length > 1 && font.MeasureText(cut.TrimEnd(',', ';', ':', '.', ' ', '–', '-', '·') + "…") > width)
         {
             var space = cut.LastIndexOf(' ');
             cut = space > 0 ? cut[..space] : cut[..^1];
         }
 
-        return cut.TrimEnd(',', ';', ':', ' ', '–', '-', '·') + "…";
+        return cut.TrimEnd(',', ';', ':', '.', ' ', '–', '-', '·') + "…";
     }
 
     private static SKTypeface Load(string file)
