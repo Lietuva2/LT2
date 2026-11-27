@@ -110,6 +110,7 @@ public static class IdentityModule
         services.AddScoped<BotCheck>();
         services.AddScoped<KnownBrowsers>();
         services.AddScoped<SignInCodeIssuer>();
+        services.AddSingleton(RegistrationWithoutEmail.From(configuration));
         services.AddScoped<RegisterHandler>();
         services.AddScoped<CompleteRegistrationHandler>();
         services.AddScoped<RequestCodeHandler>();
@@ -269,7 +270,7 @@ internal sealed class IdentityModuleFacade(
     public Task<Result<Unit>> RestoreEmailAsync(string token, string? ipHash, CancellationToken cancellationToken) =>
         emailChange.RestoreAsync(token, ipHash, cancellationToken);
 
-    public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
+    public Task<Result<RegistrationOutcome>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
         register.HandleAsync(registration, cancellationToken);
 
     public Task<Result<Unit>> CompleteRegistrationAsync(ClaimsPrincipal user, RegistrationCompletion completion, CancellationToken cancellationToken) =>

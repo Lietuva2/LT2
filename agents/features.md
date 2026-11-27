@@ -117,7 +117,10 @@ refusal sends `BotCheck = ""` or a raw string body; end-to-end steps that post s
 
 **Accounts.** Registration is by email only, by invitation during the closed trial (an MP office member's invitation counts
 as one, owner 2026-11-17, design 8.5.3), with a self-declared age of 18 or older. An account is pending until its address is proven; the display name, the age declaration and the terms of use are
-asked after the code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); the EU Digital Identity Wallet
+asked after the code, never before. One account per normalised address. Each account has a `verification_level` (`email` once proven; `none` stays on an account registered on a trial site
+without email, `Registration:WithoutEmail`, where `RegisterHandler` signs a new invited address in and answers
+`RegisterResponse.SignedIn`; `RegistrationWithoutEmail` refuses to start without `Email:Caught`; `RegistrationWithoutEmailTests`,
+and `AccountHeader` asks for a passkey, `#passkey-needed`); the EU Digital Identity Wallet
 as a further level is designed, not built (owner, 2026-11-19). Every member has one personal invitation code (replaceable; uses unlimited unless
 `Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
 code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.

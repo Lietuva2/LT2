@@ -22,6 +22,7 @@
     <Using Include="Lt2.Api.Contracts.Digests.RowSummaryKinds" Alias="RowSummaryKinds" />
     <Using Include="Lt2.Api.Contracts.Feedback.FeedbackKinds" Alias="FeedbackKinds" />
     <Using Include="Lt2.Api.Contracts.Feedback.FeedbackStatuses" Alias="FeedbackStatuses" />
+    <Using Include="Lt2.Api.Contracts.Me.VerificationLevels" Alias="VerificationLevels" />
     <Using Include="Lt2.Api.Contracts.Mps.PoliticianParts" Alias="PoliticianParts" />
     <Using Include="Lt2.Api.Contracts.Mps.ResponseStances" Alias="ResponseStances" />
     <Using Include="Lt2.Api.Contracts.Mps.ResponseStatuses" Alias="ResponseStatuses" />

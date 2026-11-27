@@ -13,8 +13,13 @@ namespace Lt2.Web.Services;
 /// </summary>
 internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, AnalyticsCopies analytics) : IAuthApi
 {
-    public async Task<ApiResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.RegisterAsync(Mapping.ToRegistration(request), cancellationToken));
+    public async Task<ApiResult<RegisterResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
+    {
+        var before = accessor.HttpContext?.User.UserId();
+        return errors.ToApiResult(
+            await identity.RegisterAsync(Mapping.ToRegistration(request), cancellationToken),
+            outcome => new RegisterResponse(outcome.SignedIn, Answer(new SignInOutcome(outcome.AccountChanged), before).AccountChanged));
+    }
 
     public async Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.RequestSignInCodeAsync(request.Email, request.BotCheck, cancellationToken));

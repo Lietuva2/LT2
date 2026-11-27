@@ -19,6 +19,9 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
 {
+    /// <summary>The one answer to a registration where email is sent (design 6.2): a code went out, nobody is signed in.</summary>
+    private const string CodeSentAnswer = """{"signedIn":false,"accountChanged":false}""";
+
     [Fact]
     public async Task Registration_creates_a_pending_account_with_nothing_but_the_address_and_the_invitation_code()
     {
@@ -144,7 +147,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         using var again = await browser.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = email, InvitationCode = other.ToLowerInvariant() });
 
         again.StatusCode.ShouldBe(HttpStatusCode.Accepted);
-        (await again.Content.ReadAsStringAsync()).ShouldBeEmpty();
+        (await again.Content.ReadAsStringAsync()).ShouldBe(CodeSentAnswer, "the same answer for every address");
         (await ProfileAsync<string>("invitation_code", email)).ShouldBe(other);
         (await Factory.OutboxCountAsync(email)).ShouldBe(2);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.profile WHERE normalized_email = @e", ("e", email.ToLowerInvariant()))).ShouldBe(1);
@@ -162,7 +165,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
             new RegisterRequest { Email = email.ToUpperInvariant(), InvitationCode = TestData.Invitation });
 
         again.StatusCode.ShouldBe(HttpStatusCode.Accepted);
-        (await again.Content.ReadAsStringAsync()).ShouldBeEmpty();
+        (await again.Content.ReadAsStringAsync()).ShouldBe(CodeSentAnswer, "the same answer for every address");
         (await UsesLeftAsync()).ShouldBe(usesBefore);
         (await Factory.OutboxCountAsync(email)).ShouldBe(2, "the existing account receives a sign-in code");
         (await Factory.OutboxCountAsync(email.ToUpperInvariant())).ShouldBe(0, "what was typed is discarded");

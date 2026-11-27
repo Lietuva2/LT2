@@ -178,7 +178,7 @@ public sealed class SignInComponentTests : BunitContext
         module.SetupVoid("prepare", _ => true).SetVoidResult();
         module.Setup<string?>("take", _ => true).SetResult("SOLVED");
         var registered = new List<RegisterRequest>();
-        _auth.Register = request => { registered.Add(request); return Task.FromResult(ApiResult.Ok()); };
+        _auth.Register = request => { registered.Add(request); return Task.FromResult(CodeSent); };
         var page = Render<SignIn>();
         page.FindAll("button.linkish")[0].Click();
 
@@ -188,6 +188,50 @@ public sealed class SignInComponentTests : BunitContext
 
         page.WaitForElement("#code");
         registered.ShouldHaveSingleItem().BotCheck.ShouldBe("SOLVED");
+    }
+
+    [Fact]
+    public void On_a_trial_site_without_email_a_registration_signed_in_loads_the_page_again_with_no_code_asked()
+    {
+        var module = JSInterop.SetupModule("./js/lt2-botcheck.js");
+        module.SetupVoid("prepare", _ => true).SetVoidResult();
+        module.Setup<string?>("take", _ => true).SetResult("SOLVED");
+        _auth.Register = _ => Task.FromResult(ApiResult<RegisterResponse>.Ok(new RegisterResponse(SignedIn: true, AccountChanged: false)));
+        var page = Render<SignIn>();
+        page.FindAll("button.linkish")[0].Click();
+
+        page.Find("#reg-email").Input(Email);
+        page.Find("#reg-invite").Input("BANDYMAS-2026");
+        page.Find("form").Submit();
+
+        var navigation = Services.GetRequiredService<BunitNavigationManager>();
+        page.WaitForAssertion(() => navigation.History.ShouldHaveSingleItem().Options.ForceLoad.ShouldBeTrue("the new session's antiforgery token comes with the load"));
+        page.FindAll("#code").ShouldBeEmpty("no code is asked for");
+    }
+
+    [Fact]
+    public void A_pending_account_whose_address_is_not_proven_is_not_told_that_it_is()
+    {
+        SignedIn(FakeMeApi.Pending with { VerificationLevel = "none" });
+        var page = Render<SignIn>();
+
+        page.Find("#complete-unproven").TextContent.ShouldContain(Text("Complete.Unproven.Before"), Case.Sensitive);
+        page.Markup.ShouldNotContain(Text("Complete.Confirmed.After"));
+    }
+
+    [Fact]
+    public void An_account_with_no_proven_address_and_no_passkey_is_told_on_every_screen_that_a_passkey_is_the_way_back_in()
+    {
+        var me = new MeResponse { Email = Email, RegistrationComplete = true, VerificationLevel = "none", Roles = ["member"] };
+
+        var header = Render<AccountHeader>(p => p.Add(h => h.Me, me).Add(h => h.Current, AccountScreens.Profile));
+
+        header.Find("#passkey-needed").TextContent.ShouldContain(Text("Hello.PasskeyNeeded"), Case.Sensitive);
+        header.Find("#passkey-needed-link").GetAttribute("href").ShouldBe("/paskyra/saugumas#passkeys");
+        Render<AccountHeader>(p => p.Add(h => h.Me, me with { PasskeyCount = 1 }).Add(h => h.Current, AccountScreens.Profile))
+            .FindAll("#passkey-needed").ShouldBeEmpty("a passkey is there");
+        Render<AccountHeader>(p => p.Add(h => h.Me, me with { VerificationLevel = "email" }).Add(h => h.Current, AccountScreens.Profile))
+            .FindAll("#passkey-needed").ShouldBeEmpty("codes reach a proven address");
     }
 
     [Fact]
@@ -1104,13 +1148,16 @@ public sealed class SignInComponentTests : BunitContext
         Render<Messages>(p => p.Add(m => m.Message, "Klaida")).Find(".note").TextContent.ShouldBe("Klaida");
     }
 
+    /// <summary>A registration's usual answer: a code was emailed.</summary>
+    private static readonly ApiResult<RegisterResponse> CodeSent = ApiResult<RegisterResponse>.Ok(new RegisterResponse(false, false));
+
     private sealed class FakeAuthApi : IAuthApi
     {
         public Func<RequestCodeRequest, Task<ApiResult>> RequestCode { get; set; } = _ => Task.FromResult(ApiResult.Ok());
 
-        public Func<RegisterRequest, Task<ApiResult>> Register { get; set; } = _ => Task.FromResult(ApiResult.Ok());
+        public Func<RegisterRequest, Task<ApiResult<RegisterResponse>>> Register { get; set; } = _ => Task.FromResult(CodeSent);
 
-        public Task<ApiResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default) =>
+        public Task<ApiResult<RegisterResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default) =>
             Register(request);
 
         public Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default) =>

@@ -17,6 +17,10 @@ namespace Lt2.Identity.Application.Register;
 /// <item>an address that is still pending keeps its account, and the invitation code it holds is replaced;</item>
 /// <item>an address with a completed account is not changed; what was typed is discarded.</item>
 /// </list>
+/// On a trial site without email (<see cref="RegistrationWithoutEmail"/>) a new address with a working invitation code, or a
+/// pending one whose address was never proven, gets no code: it is signed in at once and goes on to complete the registration.
+/// An address with a completed account, or one already proven, is answered as above, so nobody gets into an account by typing
+/// its address.
 /// </summary>
 internal sealed class RegisterHandler(
     IdentityDb db,
@@ -25,9 +29,13 @@ internal sealed class RegisterHandler(
     ISettings settings,
     IMpDirectory mps,
     BotCheck botCheck,
+    RegistrationWithoutEmail withoutEmail,
+    SignInManager<User> signIn,
     TimeProvider clock)
 {
-    public async Task<Result<Unit>> HandleAsync(Registration registration, CancellationToken cancellationToken)
+    private static readonly RegistrationOutcome CodeSent = new(SignedIn: false, AccountChanged: false);
+
+    public async Task<Result<RegistrationOutcome>> HandleAsync(Registration registration, CancellationToken cancellationToken)
     {
         // The proof of work first (design 6.4): before anything about the address, so a refusal never depends on it.
         if (await botCheck.CheckAsync(registration.BotCheck, cancellationToken) is { } notChecked)
@@ -49,6 +57,7 @@ internal sealed class RegisterHandler(
         // The invitation is checked before the address is looked up, so the answer never depends on the address.
         var now = clock.GetUtcNow();
         string? invitationCode = null;
+        var invited = false;
         if (!string.IsNullOrWhiteSpace(registration.InvitationCode))
         {
             // Case, dashes and spaces do not matter (design 6.2). One answer for every code that does not work.
@@ -63,6 +72,7 @@ internal sealed class RegisterHandler(
             // An organisation's code is not written to the pending account (design 8.14.14, stage B): the browser sends it
             // again when the registration is completed, so no row ever ties this address to the organisation.
             invitationCode = InvitationRules.HeldWhilePending(invitation.Kind, invitation.Code);
+            invited = true;
         }
         else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken)
             && !await OfficialAddressGate.LetsThroughAsync(settings, mps, registration.Email, cancellationToken))
@@ -80,6 +90,8 @@ internal sealed class RegisterHandler(
             }
         }
 
+        // The trial switch (design 6.2) covers registrations by invitation code only: not an office invitation, not an MP's address.
+        var signInNow = withoutEmail.On && invited;
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var existing = await db.Profiles.FirstOrDefaultAsync(p => p.NormalizedEmail == normalized, cancellationToken);
         if (existing is not null)
@@ -90,13 +102,20 @@ internal sealed class RegisterHandler(
                 await db.SaveChangesAsync(cancellationToken);
             }
 
-            if (await users.FindByIdAsync(existing.UserId.ToString()) is { } existingUser)
+            var existingUser = await users.FindByIdAsync(existing.UserId.ToString());
+            if (signInNow && existing.IsPending && existingUser is { EmailConfirmed: false } && existing.LockedAt is null)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return await SignInAsync(existingUser);
+            }
+
+            if (existingUser is not null)
             {
                 await codes.IssueAsync(existingUser, transaction, cancellationToken);
             }
 
             await transaction.CommitAsync(cancellationToken);
-            return Result.Ok();
+            return CodeSent;
         }
 
         var user = new User { Id = Ids.New(clock), Email = registration.Email.Trim(), EmailConfirmed = false };
@@ -120,15 +139,31 @@ internal sealed class RegisterHandler(
             });
             await db.SaveChangesAsync(cancellationToken);
 
+            if (signInNow)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return await SignInAsync(user);
+            }
+
             await codes.IssueAsync(user, transaction, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return Result.Ok();
+            return CodeSent;
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
             // A concurrent registration of the same address won; answer as for an existing account.
             await transaction.RollbackAsync(cancellationToken);
-            return Result.Ok();
+            return CodeSent;
         }
+    }
+
+    /// <summary>
+    /// The trial's sign-in at registration (design 6.2): a new session under a new key, as after a code, whichever account the
+    /// browser held before. The address stays unproven (<c>none</c>); a code typed later proves it as usual.
+    /// </summary>
+    private async Task<Result<RegistrationOutcome>> SignInAsync(User user)
+    {
+        var changed = await SessionSignIn.SignInAsync(signIn, user, AuthenticationMethods.EmailCode);
+        return new RegistrationOutcome(SignedIn: true, AccountChanged: changed);
     }
 }
