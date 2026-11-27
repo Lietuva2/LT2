@@ -51,6 +51,12 @@
         {
             <p class="lead">@lead</p>
         }
+        @* Design 8.18: besides the breadcrumb, the bill's page is one plain button under the heading, where its number and
+           its people's positions are (owner, 2026-11-27). *@
+        @if (vote.Bill is { } toBill)
+        {
+            <p><a class="btn btn--plain" href="/seimas/@toBill.Number" id="to-bill">@F.T.Format("Vote.ToBill", toBill.Number)</a></p>
+        }
     </div>
 
     @* Design 7.2 and 8.18 (owner, 2026-11-23): as the bill's page has its side column, a moderator's part (correcting the
