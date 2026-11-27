@@ -62,7 +62,22 @@
                     <h2 id="h-subject" class="visually-hidden">@F.T["Vote.Subject"]</h2>
                     @if (lead is not null)
                     {
-                        <p class="lead">@lead</p>
+                        @* The wording "Pritarta – dėl pritarimo po svarstymo": the Seimas's outcome as a neutral tag, then
+                           what the motion was. *@
+                        var (outcome, motion) = Motion(lead);
+                        <p class="lead" id="vote-wording">@if (outcome is not null) { <span class="tag" id="vote-outcome">@outcome</span><text> </text> }@motion</p>
+                    }
+                    @if (_billDescription is { } about)
+                    {
+                        @* Design 8.13: the bill's description, with its label, as on the bill's page. *@
+                        <div class="stack" id="vote-bill-about">
+                            <h3 class="label">@A["What.Heading"]</h3>
+                            <Lt2.Web.Client.Components.TypedText Text="@about" />
+                            @if (_descriptionSource is DescriptionSources.AiDraft or DescriptionSources.Ai)
+                            {
+                                <p class="fine"><span class="tag">@A["What.Source." + _descriptionSource]</span></p>
+                            }
+                        </div>
                     }
                     @if (vote.Bill is { } toBill)
                     {
@@ -153,6 +168,7 @@
     private bool _moderator;
     private bool _reported;
     private string? _billDescription;
+    private string? _descriptionSource;
     private Lt2.Web.Previews.VotePreview? _preview;
 
     [Parameter] public long Id { get; set; }
@@ -171,7 +187,9 @@
         {
             // Design 8.13.1, "Off the site": an open report about the description keeps the readable title and the description
             // out of the preview.
-            (_reported, _billDescription) = Lt2.Web.Previews.VotePreview.FromRecord((await Appeals.GetRecordAsync(bill.Number)).Value);
+            var record = (await Appeals.GetRecordAsync(bill.Number)).Value;
+            (_reported, _billDescription) = Lt2.Web.Previews.VotePreview.FromRecord(record);
+            _descriptionSource = record?.DescriptionSource;
         }
 
         _preview = Lt2.Web.Previews.VotePreview.Of(_vote, _reported, F, P);
@@ -198,6 +216,27 @@
         return a.StartsWith(b, StringComparison.CurrentCultureIgnoreCase) ? (a, null)
             : b.StartsWith(a, StringComparison.CurrentCultureIgnoreCase) ? (b, null)
             : (a, b);
+    }
+
+    /// <summary>
+    /// The Seimas's wording split at its dash: "Pritarta – dėl pritarimo po svarstymo" is the outcome "Pritarta" and the
+    /// motion "dėl pritarimo po svarstymo". A wording without one of the four outcomes before " – " is all motion.
+    /// </summary>
+    internal static (string? Outcome, string Motion) Motion(string wording)
+    {
+        var w = wording.Trim();
+        var dash = w.IndexOf(" – ", StringComparison.Ordinal);
+        if (dash > 0)
+        {
+            var outcome = w[..dash];
+            if (outcome.Equals("Pritarta", StringComparison.CurrentCultureIgnoreCase) || outcome.Equals("Nepritarta", StringComparison.CurrentCultureIgnoreCase)
+                || outcome.Equals("Pritarta bendru sutarimu", StringComparison.CurrentCultureIgnoreCase) || outcome.Equals("Sprendimas nepriimtas", StringComparison.CurrentCultureIgnoreCase))
+            {
+                return (outcome, w[(dash + 3)..].Trim());
+            }
+        }
+
+        return (null, w);
     }
 
     private static bool SameText(string heading, string other) =>

@@ -205,6 +205,8 @@ public sealed partial class ReadableTitleTests(DatabaseFixture database) : ApiTe
             votePage.ShouldContain($"<h1>{Title}</h1>");
             votePage.ShouldContain($"id=\"official-title\">Oficialus pavadinimas: {official}</p>");
             votePage.ShouldContain($"<meta property=\"og:title\" content=\"Balsavimas · {Title}\"", customMessage: "the readable title goes into the link preview");
+            var about = votePage[votePage.IndexOf("id=\"vote-bill-about\"", StringComparison.Ordinal)..];
+            about.ShouldContain("Apie ką projektas", customMessage: "the bill's description is on the vote's page");
 
             // A vote without a bill keeps its wording; a bill without a readable title keeps its official one (VoteRow).
             await Database.FreeBillAsync(Votes);
@@ -212,6 +214,7 @@ public sealed partial class ReadableTitleTests(DatabaseFixture database) : ApiTe
             var bare = await PageAsync(visitor, $"/seimas/balsavimai/{voteId}");
             bare.ShouldNotContain("id=\"official-title\"");
             bare.ShouldNotContain($"<h1>{Title}</h1>");
+            bare.ShouldNotContain("id=\"vote-bill-about\"", customMessage: "a bill without a description has none to show");
         }
         finally
         {
