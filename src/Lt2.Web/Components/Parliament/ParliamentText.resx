@@ -116,6 +116,7 @@
   <data name="Bill.Votes" xml:space="preserve"><value>Visi balsavimai dėl projekto</value></data>
   <data name="Bill.NoVotes" xml:space="preserve"><value>Balsavimų dar nėra.</value></data>
   <data name="Vote.Label" xml:space="preserve"><value>Balsavimas</value></data>
+  <data name="Vote.ToBill" xml:space="preserve"><value>Projekto {0} puslapis</value></data>
   <data name="Vote.Result" xml:space="preserve"><value>Rezultatas</value></data>
   <data name="Vote.Voted" xml:space="preserve"><value>balsavo {0} iš {1}</value></data>
   <data name="Vote.VotedOnly" xml:space="preserve"><value>balsavo {0}</value></data>

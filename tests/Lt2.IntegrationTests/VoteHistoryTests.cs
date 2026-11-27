@@ -411,6 +411,17 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
     }
 
     [Fact]
+    public async Task A_votes_page_links_to_its_bill_by_a_button_under_the_heading()
+    {
+        var page = await OkAsync($"/seimas/balsavimai/{Midnight}");
+        var button = $"<a class=\"btn btn--plain\" href=\"/seimas/{Bill}\" id=\"to-bill\">Projekto {Bill} puslapis</a>";
+        page.ShouldContain(button);
+        page.IndexOf(button, StringComparison.Ordinal).ShouldBeLessThan(page.IndexOf("id=\"h-result\"", StringComparison.Ordinal), "above the result");
+
+        (await OkAsync($"/seimas/balsavimai/{Procedural}")).ShouldNotContain("id=\"to-bill\"", customMessage: "a vote without a bill has none");
+    }
+
+    [Fact]
     public async Task The_page_is_the_same_for_a_visitor_and_a_member_who_took_a_side()
     {
         await Database.FreeBillAsync(AppealSteps.TaxBill);
