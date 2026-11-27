@@ -428,7 +428,7 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   invitations a day per MP (`mp.office-invitation-limit`). The invitation counts as the closed trial's invitation
   (`OfficeInvitationGate`, Identity, in both registration gates; `RegisterRequest`/`CompleteRegistrationRequest.OfficeInvitation`;
   the account keeps only a level, one below the MP's account). Owner, 2026-11-17: the link's page `/seimo-narys/biuras#…` (`MpOfficeInvitation`) does
-  everything: `<SignInFlow ReturnTo=…>` signs in or registers there and reloads the page with its `#` intact; a code session
+  everything: `<SignInFlow ReturnTo=… OfficeInvitation=…>` asks only for the address, on the registration's form with the office title and "Atsiųsti kodą" (a new address registers; one with an account gets a sign-in code), signs in or registers there and reloads the page with its `#` intact; a code session
   sends `NewPasskey` (made now) or `Passkey` (an assertion) with the token in `POST /me/mp/office/acceptance`, checked before
   anything is stored, and the session becomes a passkey session under a new key (`SessionRotation`); `GET /me` says
   `passkeySession`. Giving the profile up (`DELETE /me/mp`), an administrator's end
