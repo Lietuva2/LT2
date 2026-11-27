@@ -420,6 +420,41 @@ public sealed class SignInComponentTests : BunitContext
     }
 
     [Fact]
+    public void An_office_invitations_page_opens_on_the_registration_which_sends_the_invitation_and_asks_for_no_code()
+    {
+        // Design 8.5.3: whoever got an office invitation most likely has no account yet; an address that has one gets a
+        // sign-in code from the same form (design 6.2), and the sign-in is one click away for a passkey.
+        var registered = new List<RegisterRequest>();
+        _auth.Register = request => { registered.Add(request); return Task.FromResult(CodeSent); };
+        var page = Render<SignInFlow>(p => p
+            .Add(f => f.ReturnTo, "/seimo-narys/biuras#K7QM-2XRA")
+            .Add(f => f.OfficeInvitation, "K7QM2XRA"));
+
+        page.FindAll("#reg-invite").ShouldBeEmpty("the office invitation counts as the invitation");
+        page.Find("#reg-email").Input(Email);
+        page.Find("form").Submit();
+
+        page.WaitForElement("#code");
+        var request = registered.ShouldHaveSingleItem();
+        request.OfficeInvitation.ShouldBe("K7QM2XRA");
+        request.InvitationCode.ShouldBeNull();
+    }
+
+    [Fact]
+    public void An_office_invitations_page_asks_only_for_the_address_with_no_word_about_registering_or_signing_in()
+    {
+        var page = Render<SignInFlow>(p => p
+            .Add(f => f.ReturnTo, "/seimo-narys/biuras#K7QM-2XRA")
+            .Add(f => f.OfficeInvitation, "K7QM2XRA"));
+
+        page.Find("#form-title").TextContent.ShouldBe(Text("Register.OfficeTitle"));
+        page.Find("button[type=submit]").TextContent.ShouldBe(Text("SignIn.SendCode"));
+        page.FindAll("button.linkish").ShouldBeEmpty("no way to the sign-in: the same form does both");
+        page.Markup.ShouldNotContain(Text("Register.Title"));
+        page.Markup.ShouldNotContain(Text("Register.HaveAccount"));
+    }
+
+    [Fact]
     public void The_code_step_says_only_the_newest_code_works()
     {
         var page = Render<SignIn>();

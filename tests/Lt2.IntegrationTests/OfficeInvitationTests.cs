@@ -297,6 +297,41 @@ public sealed class OfficeInvitationTests(DatabaseFixture database) : ApiTest(da
     }
 
     [Fact]
+    public async Task A_member_who_fills_in_the_office_pages_registration_gets_a_sign_in_code_and_the_account_is_unchanged()
+    {
+        // Design 8.5.3: the office page opens on the registration. An address with an account gets the same answer and a
+        // sign-in code (design 6.2), signs in to its own account as it was, and accepts.
+        using var mp = await Factory.MpAccountAsync(MpSteps.Eglaite);
+        var (existing, address) = await Factory.MemberAsync("Biuro Narė");
+        using var _e = existing;
+        using var person = NewBrowser();
+        using var key = new SoftwareAuthenticator();
+        try
+        {
+            var code = await TokenAsync(mp);
+            using (var registered = await person.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = address, OfficeInvitation = code }))
+            {
+                registered.StatusCode.ShouldBe(HttpStatusCode.Accepted, await registered.Content.ReadAsStringAsync());
+            }
+
+            await person.SignInWithCodeAsync(address);
+            var me = await person.GetJsonAsync<MeResponse>(ApiRoutes.Me.Root);
+            (me.RegistrationComplete, me.DisplayName).ShouldBe((true, "Biuro Narė"));
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.politician_token WHERE token_hash = @h AND used_at IS NULL", ("h", OneTimeCode.Hash(code)))).ShouldBe(1, "registering does not use the invitation up");
+
+            using var creation = await person.PostAsync(ApiRoutes.Auth.PasskeyCreationOptions);
+            var joined = await person.PostJsonAsync<MpLinkResponse>(
+                MpRoutes.OfficeAcceptance, new MpOfficeAcceptanceRequest { Token = code, NewPasskey = key.Create(await creation.Content.ReadAsStringAsync()) });
+            (joined.Part, joined.MayWrite).ShouldBe(("office", true));
+        }
+        finally
+        {
+            await person.DeleteAccountAsync();
+            await mp.Browser.DeleteAccountAsync();
+        }
+    }
+
+    [Fact]
     public async Task A_used_or_expired_or_unknown_office_invitation_lets_no_registration_through_and_gets_one_answer()
     {
         using var mp = await Factory.MpAccountAsync(MpSteps.Kadagyte);

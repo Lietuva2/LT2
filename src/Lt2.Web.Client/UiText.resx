@@ -22,9 +22,9 @@
   <data name="SignIn.OtherAccount" xml:space="preserve"><value>Prisijungėte kaip kitas narys.</value></data>
 <data name="SignIn.OtherAccountNamed" xml:space="preserve"><value>Prisijungėte kaip kitas narys: {0}.</value></data>
 <data name="SignIn.Continue" xml:space="preserve"><value>Tęsti</value></data>
-<data name="SignIn.ToRegisterByOffice" xml:space="preserve"><value>Užsiregistruokite: kvietimas į biurą tinka ir registracijai.</value></data>
   <data name="Register.Label" xml:space="preserve"><value>Registracija</value></data>
   <data name="Register.Title" xml:space="preserve"><value>Nauja paskyra</value></data>
+  <data name="Register.OfficeTitle" xml:space="preserve"><value>Gaukite prisijungimo kodą</value></data>
   <data name="MyInvitation.Title" xml:space="preserve"><value>Jūsų kvietimo kodas</value></data>
 <data name="MyInvitation.Lead" xml:space="preserve"><value>Pakvieskite kitus: nuoroda atveria registraciją su jūsų kodu, o kodą galima įvesti ir ranka.</value></data>
 <data name="MyInvitation.Code" xml:space="preserve"><value>Kodas:</value></data>
@@ -204,7 +204,6 @@
   <data name="OneTimeCode.Hint" xml:space="preserve"><value>12 raidžių ir skaitmenų; didžiosios ar mažosios raidės ir brūkšneliai nesvarbu.</value></data>
   <data name="OneTimeCode.Go" xml:space="preserve"><value>Toliau</value></data>
   <data name="OneTimeCode.Invalid" xml:space="preserve"><value>Kodą sudaro 12 raidžių ir skaitmenų, pvz. ABCD-EFGH-JKMN.</value></data>
-  <data name="MpOffice.SignInHere" xml:space="preserve"><value>Prisijunkite arba užsiregistruokite čia pat: po to grįšite į šį puslapį ir galėsite priimti kvietimą.</value></data>
   <data name="MpOffice.PasskeyHint" xml:space="preserve"><value>Biuro nariui reikia prieigos rakto. Prisijunkite juo – kvietimas bus priimtas iš karto.</value></data>
   <data name="MpOffice.NewPasskeyHint" xml:space="preserve"><value>Biuro nariui reikia prieigos rakto. Jis bus sukurtas šiame įrenginyje, o kvietimas priimtas iš karto.</value></data>
   <data name="MpOffice.SignInAndAccept" xml:space="preserve"><value>Prisijungti prieigos raktu ir priimti</value></data>

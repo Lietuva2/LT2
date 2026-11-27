@@ -39,8 +39,7 @@
         @if (_read && _me is not { RegistrationComplete: true })
         {
             @* Not signed in, or a registration still to finish: the steps are here and come back to this page. *@
-            <p class="note" id="office-sign-in">@L["MpOffice.SignInHere"]</p>
-            <div class="office-sign-in"><SignInFlow ReturnTo="@_here" OfficeInvitation="@_token" /></div>
+            <div class="office-sign-in" id="office-sign-in"><SignInFlow ReturnTo="@_here" OfficeInvitation="@_token" /></div>
         }
         else
         {

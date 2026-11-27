@@ -33,7 +33,7 @@
                 <button class="btn btn--wide" type="submit" disabled="@Locked">@L["SignIn.SendCode"]</button>
                 <button class="btn btn--plain btn--wide" type="button" disabled="@Locked" @onclick="SignInWithPasskeyAsync">@L["SignIn.Passkey"]</button>
                 <p class="small">@L["SignIn.PasskeyHint"]</p>
-                <p class="small">@L["SignIn.NoAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.Register)">@L[OfficeInvitation is null ? "SignIn.ToRegister" : "SignIn.ToRegisterByOffice"]</button></p>
+                <p class="small">@L["SignIn.NoAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.Register)">@L["SignIn.ToRegister"]</button></p>
                 <p class="small" id="verification-hint">@L["SignIn.Verification"]</p>
                 <Messages Message="@Message" Info="@Info" />
             </form>
@@ -41,8 +41,17 @@
 
         case Step.Register:
             <form class="sheet sheet--cut stack" action="@FormAction" @onsubmit="RegisterAsync" novalidate aria-labelledby="form-title">
+                @if (OfficeInvitation is null)
+                {
                 <p class="label">@L["Register.Label"]</p>
                 <h2 id="form-title">@L["Register.Title"]</h2>
+                }
+                else
+                {
+                @* Design 8.5.3 (owner, 2026-11-27): only the address. A new one registers, one with an account gets a sign-in
+                   code; the form says neither, as the person need not know which it is. *@
+                <h2 id="form-title">@L["Register.OfficeTitle"]</h2>
+                }
                 <div class="field @ErrorClass("email")">
                     <label for="reg-email">@L["Email.Label"]</label>
                     <input class="input" id="reg-email" type="email" autocomplete="email" inputmode="email"
@@ -61,10 +70,17 @@
                     <FieldError Errors="Errors" Field="invitationCode" For="reg-invite" />
                 </div>
                 }
+                @if (OfficeInvitation is null)
+                {
                 <button class="btn btn--wide" type="submit" disabled="@Locked">@L["Register.Submit"]</button>
                 <p class="fine">@L["Register.Fine"]</p>
                 <p class="small" id="verification-hint">@L["SignIn.Verification"]</p>
                 <p class="small">@L["Register.HaveAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.SignIn)">@L["Register.ToSignIn"]</button></p>
+                }
+                else
+                {
+                <button class="btn btn--wide" type="submit" disabled="@Locked">@L["SignIn.SendCode"]</button>
+                }
                 <Messages Message="@Message" Info="@Info" />
             </form>
             break;
@@ -299,7 +315,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (StartWithRegistration == true)
+        // An office invitation's page (design 8.5.3) asks only for the address, on the registration's form: a new address
+        // registers, and one with an account gets a sign-in code from it (design 6.2), so it works for both.
+        if (StartWithRegistration == true || OfficeInvitation is not null)
         {
             _step = Step.Register;
         }
