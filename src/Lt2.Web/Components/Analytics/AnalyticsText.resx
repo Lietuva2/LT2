@@ -24,6 +24,10 @@
   <data name="Figures.Mps" xml:space="preserve"><value>Seimo nariai, perėmę profilį</value></data>
   <data name="Figures.MpsOf.One" xml:space="preserve"><value>iš {0} Seimo nario</value></data>
   <data name="Figures.MpsOf.Many" xml:space="preserve"><value>iš {0} Seimo narių</value></data>
+  <data name="Figures.Members" xml:space="preserve"><value>Registruoti naudotojai</value></data>
+  <data name="Figures.MembersRecent" xml:space="preserve"><value>per pastarąsias 30 dienų užsiregistravo: {0}</value></data>
+  <data name="Figures.Organisations" xml:space="preserve"><value>Užsiregistravusios organizacijos</value></data>
+  <data name="Figures.OrganisationsList" xml:space="preserve"><value>Organizacijų sąrašas</value></data>
   <data name="CountedAt" xml:space="preserve"><value>Suskaičiuota {0}; skaičiai atnaujinami kas valandą.</value></data>
   <data name="SmallSample" xml:space="preserve"><value>maža imtis</value></data>
   <data name="SmallSample.Answer" xml:space="preserve"><value>Kai skaičiuojama mažiau nei {0} pozicijų ar balsavimų, dalis procentais nerodoma – tik patys skaičiai.</value></data>

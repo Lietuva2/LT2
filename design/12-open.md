@@ -233,7 +233,7 @@ for the lawyer).
 - 8.25.9: changing the supported party withdraws the consent to show it, as removing it does (built so).
 
 **8.26 Analytics.**
-- The list of closed bills on `/statistika`, built so and awaiting the owner's look: four figures follow only the
+- The list of closed bills on `/statistika`, built so and awaiting the owner's look: the figures follow only the
   period and the accounts, not the list's filters; the filters are a second form; the label column at 38 % / 12rem (on
   a phone about 14 letters of a title show); the axis names only 0, 50 and 100 % on a phone; the table opens at once
   when none of the bills shown can stand in the plot; on a narrow screen the table's rows are blocks.

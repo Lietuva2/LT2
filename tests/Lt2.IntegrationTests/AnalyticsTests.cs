@@ -176,7 +176,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task The_four_figures_count_exactly_what_the_design_says()
+    public async Task The_figures_count_exactly_what_the_design_says()
     {
         using var moderator = await ModeratorAsync();
         var (member, _) = await Factory.MemberAsync();
@@ -215,6 +215,19 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             figures.MpsSitting.ShouldBe((int)(await Database.ScalarAsync<long>($"SELECT count(*) FROM ({Sitting}) s"))!);
             figures.MpsTakenOver.ShouldBe((int)(await Database.ScalarAsync<long>(
                 $"SELECT count(DISTINCT seimas_person_id) FROM identity.politician_link WHERE part <> 'office' AND ended_at IS NULL AND seimas_person_id IN ({Sitting})"))!);
+
+            // Completed registrations of today, and those of the last 30 days; the active organisations (design 8.26.1).
+            figures.Members.ShouldBe((int)(await Database.ScalarAsync<long>("SELECT count(*) FROM identity.profile WHERE registered_at IS NOT NULL"))!);
+            figures.Members.ShouldBeGreaterThanOrEqualTo(1, "the test's own member is counted");
+            figures.MembersRecent.ShouldBe((int)(await Database.ScalarAsync<long>(
+                "SELECT count(*) FROM identity.profile WHERE registered_at >= now() - interval '30 days'"))!);
+            figures.MembersRecent.ShouldBeGreaterThanOrEqualTo(1, "the test's own member registered just now");
+            figures.Organisations.ShouldBe((int)(await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.organisation WHERE status = 'active'"))!);
+            var shown = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
+            Regex.Match(shown, "<div[^>]*id=\"figure-members\".*?</div>", RegexOptions.Singleline).Value
+                .ShouldContain($"per pastarąsias 30 dienų užsiregistravo: {Lt2.Web.Client.Display.Number(figures.MembersRecent)}");
+            Regex.Match(shown, "<div[^>]*id=\"figure-organisations\".*?</div>", RegexOptions.Singleline).Value
+                .ShouldContain("<a href=\"/organizacijos\">Organizacijų sąrašas</a>");
 
             // Faction unity, faction by faction, from the stored positions: counts always, no share under 20, no mixed group.
             var unity = (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics)).Factions;

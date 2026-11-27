@@ -71,6 +71,12 @@ public static class AnalyticsRules
 
     private static readonly CompareInfo Lithuanian = CultureInfo.GetCultureInfo("lt-LT").CompareInfo;
 
+    /// <summary>"Per pastarąsias 30 dienų" under the members' figure (design 8.26.1): the last 30 full days, not a calendar month.</summary>
+    public static readonly TimeSpan RecentMembers = TimeSpan.FromDays(30);
+
+    /// <summary>The moment from which a member counts as registered in the last 30 days (that moment included).</summary>
+    public static DateTimeOffset RecentMembersSince(DateTimeOffset now) => now - RecentMembers;
+
     /// <summary>A sample of <paramref name="size"/> is large enough for a share.</summary>
     public static bool IsEnough(int size) => size >= SmallSample;
 

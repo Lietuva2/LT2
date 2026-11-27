@@ -9,6 +9,13 @@ public sealed class BillComparisonRuleTests
     private static SeimasVoteNumbers Vote(int @for, int against, int abstain) => new(false, @for, against, abstain);
 
     [Fact]
+    public void Members_registered_in_the_last_30_days_are_counted_from_30_full_days_before_the_counting()
+    {
+        var now = new DateTimeOffset(2026, 11, 27, 14, 0, 0, TimeSpan.Zero);
+        AnalyticsRules.RecentMembersSince(now).ShouldBe(new DateTimeOffset(2026, 10, 28, 14, 0, 0, TimeSpan.Zero));
+    }
+
+    [Fact]
     public void The_seimas_share_for_is_for_out_of_for_against_and_abstain() =>
         AnalyticsRules.SeimasShareFor(Vote(60, 20, 20)).ShouldBe(0.6m);
 

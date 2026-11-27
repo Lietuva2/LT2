@@ -27,6 +27,12 @@ internal sealed class OrganisationsService(
     private const int ListLimit = 500;
     private const string FallbackSlug = "organizacija";
 
+    public async Task<int> ActiveCountAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await db.Organisations.AsNoTracking().CountAsync(o => o.Status == OrganisationStatuses.Active, cancellationToken);
+    }
+
     public async Task<OrganisationListPage> ListAsync(string? search, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
