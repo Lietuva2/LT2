@@ -19,6 +19,7 @@ and is shared on request.
 | `../docs/organizacijoms.html` | Organisations | Profile, confirmation by domain, a statement on a bill: a voice, not control. |
 | `../docs/zurnalistams.html` | Journalists | What is there, how to cite the numbers, story ideas. |
 | `../docs/kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
+| `../docs/vadovas-*.html` | Members, MPs, organisations, journalists | Step-by-step guides with screenshots (`../docs/vadovas/`), taken with invented data. |
 | `going-live.md` | Team | Questions to settle before a public launch of stage 1. |
 | `design-notes.md` | Team | Decision history of the 2026-09 concept (voting first). Historical. |
 | `prototypes/seimas-vote-hemicycle/` | Team | Feasibility check: renders a real Seimas vote from the open data API. |

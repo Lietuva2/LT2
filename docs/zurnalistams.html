@@ -178,6 +178,14 @@ tr:last-child>*{border-bottom:0}
 footer.site{max-width:1040px;margin:72px auto 0;padding-top:20px;border-top:1px solid var(--line);font-family:var(--f-display);font-size:14.5px;color:var(--muted);display:grid;gap:10px}
 footer.site nav{display:flex;flex-wrap:wrap;gap:6px 18px}
 footer.site a{color:var(--link)}
+
+.teaser{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;align-items:center;margin-top:44px;padding:20px;background:var(--surface);border:1.5px solid var(--brand);border-radius:16px;text-decoration:none;color:inherit;box-shadow:var(--shadow);transition:transform .15s}
+.teaser:hover,.teaser:focus-visible{transform:translateY(-2px)}
+.teaser img{display:block;width:100%;height:auto;border:1px solid var(--line-strong);border-radius:10px}
+.teaser h2{font-size:clamp(24px,3vw,30px);margin-top:6px}
+.teaser p{font-size:17px;line-height:1.5;color:var(--ink-2);margin-top:10px}
+.teaser .btn{margin-top:16px}
+@media (max-width:760px){.teaser{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -213,6 +221,11 @@ footer.site a{color:var(--link)}
     </div>
     <div><lt2-logo-spin class="hero-spin" period="10"></lt2-logo-spin></div>
   </section>
+  <a class="teaser" href="vadovas-zurnalistams.html">
+    <img src="vadovas/j-02-vote.webp" width="1600" height="1983" loading="lazy" alt="">
+    <div><div class="eyebrow">Žingsnis po žingsnio</div><h2>Kaip tai atrodo svetainėje</h2><p>Ekrano nuotraukos: balsavimai, salės schema, Seimo nariai, darbotvarkė ir statistika – be registracijos.</p><span class="btn primary">Atverti vadovą (6 žingsniai) →</span></div>
+  </a>
+
 
   <section class="chapter" id="what">
     <header>
