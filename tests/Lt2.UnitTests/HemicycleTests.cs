@@ -8,6 +8,8 @@ public sealed class HemicycleTests
 {
     private static readonly string[] Choices = ["for", "against", "abstain", "did-not-vote"];
 
+    private static int FreeSeats => SeatingPlan.Rows.Sum(r => r.Seats.Count(s => s.Length == 0));
+
     private static IEnumerable<string> PlanSlugs => SeatingPlan.Rows.SelectMany(r => r.Seats).Where(s => s.Length > 0);
 
     private static BallotResponse Ballot(string slug, int i, string? faction = "RPF") =>
@@ -18,9 +20,10 @@ public sealed class HemicycleTests
     [Fact]
     public void The_plan_seats_each_MP_once_in_four_sectors_of_six_rows()
     {
-        PlanSlugs.Count().ShouldBe(140);
-        PlanSlugs.Distinct().Count().ShouldBe(140);
-        SeatingPlan.Rows.SelectMany(r => r.Seats).Count(s => s.Length == 0).ShouldBe(2);
+        // The Seimas has 141 seats; the hall holds them all, some perhaps free.
+        PlanSlugs.Count().ShouldBeInRange(130, 141);
+        PlanSlugs.Distinct().Count().ShouldBe(PlanSlugs.Count());
+        SeatingPlan.Rows.Sum(r => r.Seats.Count).ShouldBeGreaterThanOrEqualTo(141);
         SeatingPlan.Rows.Select(r => (r.Sector, r.Row)).Distinct().Count().ShouldBe(SeatingPlan.Rows.Count);
         SeatingPlan.Rows.Select(r => r.Sector).Distinct().Order().ShouldBe([1, 2, 3, 4]);
         SeatingPlan.Rows.Select(r => r.Row).Distinct().Order().ShouldBe([1, 2, 3, 4, 5, 6]);
@@ -32,7 +35,7 @@ public sealed class HemicycleTests
     {
         var (seats, side) = Hemicycle.Arrange(PlanVote());
 
-        seats.Count.ShouldBe(140);
+        seats.Count.ShouldBe(PlanSlugs.Count());
         var rowOf = SeatingPlan.Rows.SelectMany(r => r.Seats.Where(s => s.Length > 0).Select(s => (s, r.Row, r.Sector))).ToDictionary(x => x.s);
         foreach (var (seat, ballot) in seats)
         {
@@ -47,9 +50,9 @@ public sealed class HemicycleTests
     [Fact]
     public void Seats_in_the_hall_do_not_overlap()
     {
-        var (seats, side) = Hemicycle.Arrange(PlanVote().Append(Ballot("vardas-pavarde", 0)).Append(Ballot("kitas-vardas", 1)).ToList());
+        var (seats, side) = Hemicycle.Arrange(PlanVote().Concat(Enumerable.Range(0, FreeSeats).Select(i => Ballot($"vardas-{i}", i))).ToList());
 
-        seats.Count.ShouldBe(142);
+        seats.Count.ShouldBe(PlanSlugs.Count() + FreeSeats);
         var closest = seats.SelectMany((a, i) => seats.Skip(i + 1).Select(b => Math.Sqrt(Math.Pow(a.Seat.X - b.Seat.X, 2) + Math.Pow(a.Seat.Y - b.Seat.Y, 2)))).Min();
         closest.ShouldBeGreaterThan(side * 1.2);
     }
@@ -59,7 +62,7 @@ public sealed class HemicycleTests
     {
         var (seats, _) = Hemicycle.Arrange(PlanVote().Append(Ballot("vardas-pavarde", 0)).ToList());
 
-        seats.Count.ShouldBe(141);
+        seats.Count.ShouldBe(PlanSlugs.Count() + 1);
         var newcomer = seats.Single(s => s.Ballot.Mp.Slug == "vardas-pavarde").Seat;
         seats.Count(s => s.Seat == newcomer).ShouldBe(1);
     }
@@ -67,8 +70,8 @@ public sealed class HemicycleTests
     [Fact]
     public void A_vote_with_more_MPs_off_the_plan_than_free_seats_seats_factions_together()
     {
-        var ballots = PlanVote().Take(120)
-            .Concat(Enumerable.Range(0, 21).Select(i => Ballot($"vardas-{i}", i, i % 2 == 0 ? "PSF" : null)))
+        var ballots = PlanVote().Take(141 - FreeSeats - 1)
+            .Concat(Enumerable.Range(0, FreeSeats + 1).Select(i => Ballot($"vardas-{i}", i, i % 2 == 0 ? "PSF" : null)))
             .ToList();
 
         var (seats, side) = Hemicycle.Arrange(ballots);
@@ -78,5 +81,18 @@ public sealed class HemicycleTests
         side.ShouldBe(plainSide);
         // Factions together, largest first, MPs without one last.
         seats.Select(s => s.Ballot.FactionLabel ?? "").Distinct().ShouldBe(["RPF", "PSF", ""]);
+    }
+
+    [Fact]
+    public void The_plan_differs_from_the_sitting_MPs_by_who_is_missing_from_it_and_who_left()
+    {
+        var sitting = PlanSlugs.Skip(1).Append("vardas-pavarde").ToList();
+
+        var (notOnPlan, gone) = SeatingPlan.Differences(sitting);
+
+        notOnPlan.ShouldBe(["vardas-pavarde"]);
+        gone.ShouldBe([PlanSlugs.First()]);
+        SeatingPlan.Differences(PlanSlugs).NotOnPlan.ShouldBeEmpty();
+        SeatingPlan.Differences(PlanSlugs).NoLongerSitting.ShouldBeEmpty();
     }
 }

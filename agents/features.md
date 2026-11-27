@@ -985,7 +985,9 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   `Previews/VotePreviewImages` at `GET|HEAD /img/votes/{id}/{version}.png` (short-circuited like the static files; drawn on
   the first request, kept in a 12 MB memory cache; an old version redirects). Seats are placed by
   `Lt2.Web.Client/Components/Hemicycle.Arrange` from the hand-copied `SeatingPlan` (design 7.3), shared with `SeatMap`;
-  tests `HemicycleTests`. Texts `Preview.Vote*`. Tests: `VotePreviewTests`.
+  tests `HemicycleTests`. `SeatingPlan.Differences` (pure) feeds `Components/SeatingPlanNote` on the moderators' page
+  (reads `GET /mps`, texts `Seating.*` in `AppealUi.resx`, tests `SeatingPlanNoteTests`); `.claude/skills/seimas-seating`
+  refreshes the file. Texts `Preview.Vote*`. Tests: `VotePreviewTests`.
   A bill's page (owner 2026-11-27) passes its title card the same way: `Previews/BillPreview` (pure: `Of`, `TitleOf`, the
   stage line from `BillPage.LastStage`, `Alt`, `Version`; never the counts), drawn by `Previews/BillPreviewImage.Draw`, served
   by `Previews/BillPreviewImages` at `GET|HEAD /img/bills/{number}/{version}.png` (10 MB cache). The ground, band, mark,

@@ -15,6 +15,22 @@ public static class SeatingPlan
     /// <summary>The plan's date, as printed on it.</summary>
     public const string Date = "2026-10-14";
 
+    /// <summary>The Seimas's page that links the plan, where a moderator checks for a newer one.</summary>
+    public const string Source = "https://www.lrs.lt/sip/portal.show?p_r=15278&p_k=1";
+
+    /// <summary>
+    /// Where the plan and the Seimas's list of sitting MPs differ (design 7.3): sitting MPs it does not seat, and MPs it seats who
+    /// no longer sit. Both empty while the plan is current; otherwise a newer plan is due (the moderators' page says so).
+    /// </summary>
+    public static (IReadOnlyList<string> NotOnPlan, IReadOnlyList<string> NoLongerSitting) Differences(IEnumerable<string> sitting)
+    {
+        ArgumentNullException.ThrowIfNull(sitting);
+        var now = sitting.ToHashSet(StringComparer.Ordinal);
+        var seated = Rows.SelectMany(r => r.Seats).Where(s => s.Length > 0).ToHashSet(StringComparer.Ordinal);
+        return (now.Where(s => !seated.Contains(s)).Order(StringComparer.Ordinal).ToList(),
+            seated.Where(s => !now.Contains(s)).Order(StringComparer.Ordinal).ToList());
+    }
+
     public static readonly IReadOnlyList<(int Sector, int Row, IReadOnlyList<string> Seats)> Rows =
     [
         (1, 6, ["mindaugas-linge", "ingrida-simonyte", "radvile-morkunaite-mikuleniene", "laurynas-kasciunas", "zygimantas-pavilionis", "dalia-asanaviciute-gruzauskiene", "gintare-skaiste", "aiste-gedviliene", "virgilijus-alekna"]),
