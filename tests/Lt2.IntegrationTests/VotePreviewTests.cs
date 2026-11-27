@@ -157,8 +157,8 @@ public sealed partial class VotePreviewTests(DatabaseFixture database) : ApiTest
         var png = VotePreviewImage.Draw(preview);
         SizeOf(png).ShouldBe((1200, 630));
 
-        using var font = new SKFont(VotePreviewImage.TitleFace, 48);
-        var lines = VotePreviewImage.Lines(string.Join(' ', Enumerable.Repeat("Gyventojų pajamų mokesčio įstatymo pataisa", 6)), font, 600, 2);
+        using var font = new SKFont(PreviewDrawing.Display, 48);
+        var lines = PreviewDrawing.Lines(string.Join(' ', Enumerable.Repeat("Gyventojų pajamų mokesčio įstatymo pataisa", 6)), font, 600, 2);
         lines.Count.ShouldBe(2);
         lines[^1].ShouldEndWith("…");
         lines.ShouldAllBe(l => font.MeasureText(l) <= 600);

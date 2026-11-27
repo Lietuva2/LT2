@@ -36,7 +36,10 @@
 @if (_bill is { } b)
 {
     <PageTitle>@b.Number · @(PlainTitle ?? b.Title) · Lietuva 2.0</PageTitle>
-    <LinkPreview Title="@($"{b.Number} · {PreviewTitle(b)}")" Description="@PreviewText(b)" Type="article" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" />
+    @* Design 8.22.5 (owner, 2026-11-27): the image is the bill's title card, drawn when first asked for (Previews/BillPreviewImages). *@
+    var preview = Lt2.Web.Previews.BillPreview.Of(b, _record, F, P);
+    <LinkPreview Title="@($"{b.Number} · {preview.Title}")" Description="@PreviewText(b)" Type="article" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")"
+                 DrawnImage="@preview.Path" ImageAlt="@preview.Alt(P)" />
     @* Owner, 2026-11-18 (option A): the header stands one step (--sp-4) above the page's first part, the parts below it a
        loose stack apart as on every page (.stack--snug, design 8.12.1). *@
     <div class="stack stack--snug">
@@ -581,7 +584,7 @@
     }
 
     /// <summary>The latest stage the Seimas voted on, shown when nothing is planned.</summary>
-    private static string? LastStage(BillResponse bill) =>
+    internal static string? LastStage(BillResponse bill) =>
         bill.Votes.LastOrDefault(v => v.Vote.Kind == VoteKinds.StageResult)?.Vote.Stage;
 
     /// <summary>
@@ -598,13 +601,6 @@
     private string? PlainTitle => _record is { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed, PlainTitle: { Length: > 0 } title } ? title : null;
 
     private string PlainSource => _record?.DescriptionSource ?? DescriptionSources.Moderator;
-
-    /// <summary>
-    /// The link preview's title (design 8.22.5): the readable title whoever wrote it, unless a report about the description is
-    /// open (owner, 2026-11-26); otherwise the official title.
-    /// </summary>
-    private string PreviewTitle(BillResponse b) =>
-        _record is { DescriptionReported: false } && PlainTitle is { } title ? title : b.Title;
 
     private static int ToGo(ThresholdResponse t) => ShareLine.MissingOf(t);
 

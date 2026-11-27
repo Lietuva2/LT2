@@ -968,6 +968,10 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   `Previews/VotePreviewImages` at `GET|HEAD /img/votes/{id}/{version}.png` (short-circuited like the static files; drawn on
   the first request, kept in a 12 MB memory cache; an old version redirects). Seats are placed by
   `Lt2.Web.Client/Components/Hemicycle.Arrange`, shared with `SeatMap`. Texts `Preview.Vote*`. Tests: `VotePreviewTests`.
+  A bill's page (owner 2026-11-27) passes its title card the same way: `Previews/BillPreview` (pure: `Of`, `TitleOf`, the
+  stage line from `BillPage.LastStage`, `Alt`, `Version`; never the counts), drawn by `Previews/BillPreviewImage.Draw`, served
+  by `Previews/BillPreviewImages` at `GET|HEAD /img/bills/{number}/{version}.png` (10 MB cache). The ground, band, mark,
+  fonts and line cutting both images share are `Previews/PreviewDrawing`. Texts `Preview.Bill.*`. Tests: `BillPreviewTests`.
 - The AI draft is only in a moderator's "write or correct the description" form, on any bill, from pasted official
   text (or, where a reader exists, the bill's documents as read): the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
   and a key in `deploy/secrets/ai_api_key`; otherwise nothing mentions a draft. The prompt is the public file
