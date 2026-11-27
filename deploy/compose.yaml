@@ -85,6 +85,9 @@ services:
       # caught (Email:Caught: true only where Mailpit takes every email, the local .env). Both false by default.
       Demo__Allowed: ${LT2_DEMO_DATA:-false}
       Email__Caught: ${LT2_MAIL_CAUGHT:-false}
+      # Design 6.2: a trial site that sends no email signs a new address with a working invitation code in at registration,
+      # with no code to type. Off by default; the web refuses to start with it on unless LT2_MAIL_CAUGHT is true.
+      Registration__WithoutEmail: ${LT2_TRIAL_NO_EMAIL:-false}
       # The AI draft of an appeal's description (design 8.11.4): "claude" with a key in deploy/secrets/ai_api_key turns it
       # on; empty (the default) keeps it off and nothing offers a draft. Its host is then the only one the web may call.
       Ai__Provider: ${LT2_AI_PROVIDER:-}

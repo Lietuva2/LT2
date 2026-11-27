@@ -20,6 +20,14 @@ public sealed record RegisterRequest
     public string? BotCheck { get; init; }
 }
 
+/// <summary>
+/// A registration's answer (design 6.2). <see cref="SignedIn"/> only on a trial site without email
+/// (<c>Registration:WithoutEmail</c>): a new address with a working invitation code is signed in at once, with no code to type, and
+/// <see cref="AccountChanged"/> says whether the browser was signed in to another account, whose session ended. Everywhere else
+/// both are false and a code was emailed.
+/// </summary>
+public sealed record RegisterResponse(bool SignedIn, bool AccountChanged);
+
 public sealed record RequestCodeRequest
 {
     public string Email { get; init; } = "";

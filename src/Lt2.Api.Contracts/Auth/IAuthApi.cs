@@ -3,7 +3,8 @@ namespace Lt2.Api.Contracts.Auth;
 /// <summary>Sign-in, registration and passkeys. Implemented over HTTP in the browser and in-process on the server.</summary>
 public interface IAuthApi
 {
-    Task<ApiResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default);
+    /// <summary>Registers an address; the answer says whether the browser is signed in already (a trial site without email, design 6.2).</summary>
+    Task<ApiResult<RegisterResponse>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default);
 

@@ -52,6 +52,12 @@ public sealed record AccountSummary(
 public sealed record SignInOutcome(bool AccountChanged);
 
 /// <summary>
+/// A registration's outcome (design 6.2): <paramref name="SignedIn"/> only on a trial site without email
+/// (<c>Registration:WithoutEmail</c>), with <paramref name="AccountChanged"/> as for a sign-in.
+/// </summary>
+public sealed record RegistrationOutcome(bool SignedIn, bool AccountChanged);
+
+/// <summary>
 /// Design 8.5.1: the account's proven address is this MP's official address and the account is not linked yet; it is
 /// offered "Perimti profilį". Only the account's own answer says so.
 /// </summary>
@@ -250,7 +256,7 @@ public interface IIdentityModule
     /// Creates a pending account (or, for an address that already has one, does nothing visible) and emails a sign-in
     /// code.
     /// </summary>
-    Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken);
+    Task<Result<RegistrationOutcome>> RegisterAsync(Registration registration, CancellationToken cancellationToken);
 
     /// <summary>Completes the signed-in person's pending registration and makes the account a member.</summary>
     Task<Result<Unit>> CompleteRegistrationAsync(ClaimsPrincipal user, RegistrationCompletion completion, CancellationToken cancellationToken);

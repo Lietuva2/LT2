@@ -15,6 +15,13 @@
     <p class="note" id="terms-required">@L["Hello.TermsRequired"] <a href="@TermsText.AcceptanceLink(Current)">@L["Hello.TermsLink"]</a></p>
 }
 
+@* Design 6.2: an account registered on a trial site without email has no proven address and gets no codes it could read, so
+   until it has a passkey every screen says that a passkey is the way back in. *@
+@if (Me is { RegistrationComplete: true, PasskeyCount: 0 } && Me.VerificationLevel == VerificationLevels.None)
+{
+    <p class="note" id="passkey-needed">@L["Hello.PasskeyNeeded"] <a href="@AccountScreens.Passkeys" id="passkey-needed-link">@L["Hello.PasskeyLink"]</a></p>
+}
+
 @code {
     [Parameter, EditorRequired] public MeResponse Me { get; set; } = default!;
 

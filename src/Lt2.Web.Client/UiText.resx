@@ -63,6 +63,8 @@
   <data name="Complete.Title" xml:space="preserve"><value>Dar keli dalykai</value></data>
   <data name="Complete.Confirmed.Before" xml:space="preserve"><value>Adresas</value></data>
   <data name="Complete.Confirmed.After" xml:space="preserve"><value>patvirtintas.</value></data>
+  <data name="Complete.Unproven.Before" xml:space="preserve"><value>Prisijungėte adresu</value></data>
+  <data name="Complete.Unproven.After" xml:space="preserve"><value>. Bandomojoje svetainėje laiškai nesiunčiami, todėl adreso tvirtinti kodu nereikia.</value></data>
   <data name="Complete.Submit" xml:space="preserve"><value>Baigti registraciją</value></data>
   <data name="Complete.SignOut" xml:space="preserve"><value>Atsijungti</value></data>
   <data name="BotCheck.Working" xml:space="preserve"><value>Tikrinama, ar jūs ne robotas…</value></data>
@@ -259,6 +261,8 @@
   <data name="TermsAccept.Leave.Link" xml:space="preserve"><value>Jūsų duomenys</value></data>
   <data name="Hello.TermsRequired" xml:space="preserve"><value>Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis, atšaukti duotus sutikimus (ir išjungti viešą profilį) ir ištrinti paskyrą.</value></data>
   <data name="Hello.TermsLink" xml:space="preserve"><value>Peržiūrėti ir sutikti</value></data>
+  <data name="Hello.PasskeyNeeded" xml:space="preserve"><value>Bandomojoje svetainėje laiškai nesiunčiami, todėl kitą kartą prisijungti galėsite tik prieigos raktu. Sukurkite jį, kol esate prisijungę.</value></data>
+  <data name="Hello.PasskeyLink" xml:space="preserve"><value>Sukurti prieigos raktą</value></data>
   <data name="StaffKey.PageTitle" xml:space="preserve"><value>Darbuotojo prieigos raktas · Lietuva 2.0</value></data>
   <data name="StaffKey.Title" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>
   <data name="StaffKey.Text" xml:space="preserve"><value>Šioje sesijoje prisijungėte ne darbuotojo prieigos raktu, todėl darbuotojo darbai joje neveikia. Patvirtinkite darbuotojo prieigos raktu – atsijungti nereikia.</value></data>

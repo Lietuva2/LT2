@@ -71,9 +71,16 @@
 
         case Step.Complete:
             <form class="sheet sheet--cut stack" action="@FormAction" @onsubmit="CompleteAsync" novalidate aria-labelledby="form-title">
-                <p class="label">@L["Complete.Label"]</p>
+                <p class="label">@L[_unproven ? "Register.Label" : "Complete.Label"]</p>
                 <h2 id="form-title">@L["Complete.Title"]</h2>
-                <p>@L["Complete.Confirmed.Before"] <b>@Masked</b> @L["Complete.Confirmed.After"]</p>
+                @if (_unproven)
+                {
+                    <p id="complete-unproven">@L["Complete.Unproven.Before"] <b>@Masked</b>@L["Complete.Unproven.After"]</p>
+                }
+                else
+                {
+                    <p>@L["Complete.Confirmed.Before"] <b>@Masked</b> @L["Complete.Confirmed.After"]</p>
+                }
                 <div class="field @ErrorClass("displayName")">
                     <label for="reg-name">@L["DisplayName.Label"]</label>
                     <input class="input" id="reg-name" autocomplete="nickname" placeholder="@L["DisplayName.Placeholder"]"
@@ -181,6 +188,9 @@
     private bool _adult;
     private bool _terms;
     private bool _askInvitation;
+
+    /// <summary>Signed in with the address not proven: a trial site without email (design 6.2).</summary>
+    private bool _unproven;
     private string _code = "";
     private string? _otherName;
     private string? _next;
@@ -312,6 +322,7 @@
             }
 
             _email = me.Value.Email;
+            _unproven = me.Value.VerificationLevel == VerificationLevels.None;
             _step = Step.Complete;
         }
     }
@@ -417,7 +428,8 @@
     /// the background since the form was shown. If the server refuses the proof alone (it was used, or has expired), the request is
     /// sent once more with a new one, silently; a status line shows only when the work takes longer than a moment.
     /// </summary>
-    private async Task<ApiResult> SendCheckedAsync(Func<string?, Task<ApiResult>> send)
+    private async Task<TResult> SendCheckedAsync<TResult>(Func<string?, Task<TResult>> send)
+        where TResult : ApiResult
     {
         var result = await send(await SolutionAsync());
         if (result.Problem?.Code == "bot-check.failed")
@@ -468,7 +480,8 @@
         ClearMessages();
         return !Valid(RegisterValidator.Validate(request)) ? Task.CompletedTask : RunAsync(async () =>
         {
-            if (Succeeded(await SendCheckedAsync(solution => Auth.RegisterAsync(request with { BotCheck = solution })), FieldsOnThisStep))
+            var registered = await SendCheckedAsync(solution => Auth.RegisterAsync(request with { BotCheck = solution }));
+            if (Succeeded(registered, FieldsOnThisStep))
             {
                 if (request.InvitationCode is { } code)
                 {
@@ -476,6 +489,23 @@
                 }
 
                 _registered = true;
+                if (registered.Value is { SignedIn: true } answer)
+                {
+                    // A trial site without email (design 6.2): signed in already. This page is loaded again, as after a code, so
+                    // its requests carry the new session's antiforgery token; it then shows the name and the declarations. When the
+                    // browser held another account, that is said first.
+                    _next = ReturnTo ?? FormAction;
+                    if (answer.AccountChanged)
+                    {
+                        _otherName = null;
+                        _step = Step.OtherAccount;
+                        return;
+                    }
+
+                    await GoAsync(_next);
+                    return;
+                }
+
                 _step = Step.Code;
             }
         });

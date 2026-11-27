@@ -45,6 +45,9 @@ public static class AccountScreens
     /// <summary>The known browsers (design 8.20.2).</summary>
     public const string KnownBrowsers = Security + "#known-browsers";
 
+    /// <summary>The account's passkeys on "Saugumas ir duomenys" (design 6.2, 8.21).</summary>
+    public const string Passkeys = Security + "#passkeys";
+
     /// <summary>The export and deleting the account (design 6.5); the legal texts link here.</summary>
     public const string MyData = Security + "#my-data";
 
