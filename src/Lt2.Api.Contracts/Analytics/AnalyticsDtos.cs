@@ -168,9 +168,15 @@ public sealed record AnalyticsResponse(
     IReadOnlyList<BillComparisonResponse> Bills,
     IReadOnlyList<FactionUnityResponse> Factions);
 
-/// <summary>The four figures (design 8.26.1). <paramref name="AgreedShare"/> only from 20 compared bills.</summary>
+/// <summary>
+/// The figures (design 8.26.1). <paramref name="AgreedShare"/> only from 20 compared bills. The MPs', the members' and the
+/// organisations' numbers are of today, whatever the period and the accounts counted: <paramref name="Members"/> the
+/// completed registrations, <paramref name="MembersRecent"/> those of them completed in the last 30 days,
+/// <paramref name="Organisations"/> the active organisations.
+/// </summary>
 public sealed record AnalyticsFiguresResponse(
-    int BillsTakenPart, int BillsDiscussed, int Positions, int Agreed, int Compared, decimal? AgreedShare, int MpsTakenOver, int MpsSitting);
+    int BillsTakenPart, int BillsDiscussed, int Positions, int Agreed, int Compared, decimal? AgreedShare, int MpsTakenOver, int MpsSitting,
+    int Members, int MembersRecent, int Organisations);
 
 /// <summary>
 /// A closed bill of the period with at least one position (design 8.26.1–2). <paramref name="MembersShareFor"/> only from

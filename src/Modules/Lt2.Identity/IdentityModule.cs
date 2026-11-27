@@ -137,6 +137,7 @@ public static class IdentityModule
         services.AddScoped<IInvitations, Application.Invitations.InvitationHandlers>();
         services.AddMemoryCache();
         services.AddScoped<IInventedMembersNotice, InventedMembersNotice>();
+        services.AddScoped<IMemberCounts, MemberCountReads>();
         services.AddScoped<IOrganisationInvitations, Application.Invitations.OrganisationInvitationHandlers>();
         services.AddScoped<IFeedback, Application.Feedback.FeedbackHandlers>();
         services.AddSingleton<IParticipants, ParticipantDirectory>();

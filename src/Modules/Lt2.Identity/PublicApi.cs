@@ -95,6 +95,18 @@ public interface IInventedMembersNotice
     Task<bool> HoldsInventedMembersAsync(CancellationToken cancellationToken);
 }
 
+/// <summary>How many members there are (design 8.26.1, "Registruoti naudotojai"): one number for everybody, nobody in it.</summary>
+/// <param name="Members">Accounts whose registration is completed; one still waiting for completion is not counted.</param>
+/// <param name="JoinedSince">Of those, the ones that completed it at or after the moment asked for.</param>
+public sealed record MemberCounts(int Members, int JoinedSince);
+
+/// <summary>For the statistics page (design 8.26.1): the number of members, today.</summary>
+public interface IMemberCounts
+{
+    /// <summary>The members, and of them those who became members at or after <paramref name="since"/>.</summary>
+    Task<MemberCounts> CountAsync(DateTimeOffset since, CancellationToken cancellationToken);
+}
+
 /// <summary>
 /// MPs on the platform (design 8.5.1 to 8.5.4): the take-over of a profile through a link to the official address and a new
 /// passkey, the office, giving the profile up, an administrator's end of a link. Every request that speaks for an MP reads

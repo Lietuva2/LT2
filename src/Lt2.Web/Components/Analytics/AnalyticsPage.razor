@@ -100,6 +100,16 @@
                 <span class="figure__num">@Display.Number(figures.MpsTakenOver)</span>
                 <span class="small num">@MpsOf(figures.MpsSitting)</span>
             </div>
+            <div class="figure figure--m" id="figure-members">
+                <span class="label">@T["Figures.Members"]</span>
+                <span class="figure__num">@Display.Number(figures.Members)</span>
+                <span class="small num" id="figure-members-recent">@T.Format("Figures.MembersRecent", Display.Number(figures.MembersRecent))</span>
+            </div>
+            <div class="figure figure--m" id="figure-organisations">
+                <span class="label">@T["Figures.Organisations"]</span>
+                <span class="figure__num">@Display.Number(figures.Organisations)</span>
+                <span class="small"><a href="/organizacijos">@T["Figures.OrganisationsList"]</a></span>
+            </div>
         </div>
         <p class="small" id="analytics-not-a-poll">
             @A["NotAPoll"]@(" ")

@@ -146,11 +146,13 @@ internal sealed class AnalyticsCopies(IServiceScopeFactory scopes, TimeProvider 
 /// <summary>
 /// The public analytics (design 8.26.1–8.26.3), composed by the host: the Parliament module gives the term, the bills
 /// discussed, the closing votes' numbers and faction unity; the Appeals module the bills' shown and frozen counts; the
-/// Identity module which sitting MPs took over their profile. Nothing about the caller; the rules are
+/// Identity module which sitting MPs took over their profile and how many members there are; the active organisations
+/// come from Appeals too. Nothing about the caller; the rules are
 /// <see cref="AnalyticsRules"/>; kept in <see cref="AnalyticsCopies"/>.
 /// </summary>
 internal sealed class AnalyticsReads(
-    IParliamentQueries parliament, IAppealsModule appeals, IBillCards billCards, IMpDirectory mps, IPoliticians politicians, AnalyticsCopies copies, TimeProvider clock)
+    IParliamentQueries parliament, IAppealsModule appeals, IBillCards billCards, IMpDirectory mps, IPoliticians politicians,
+    IMemberCounts members, IOrganisations organisations, AnalyticsCopies copies, TimeProvider clock)
 {
     /// <summary>What a kept copy was made from: the closed records and the last finished import (design 8.26.6).</summary>
     public async Task<string> DataVersionAsync(CancellationToken ct)
@@ -220,11 +222,13 @@ internal sealed class AnalyticsReads(
         var term = await parliament.CurrentTermAsync(ct);
         var sitting = await mps.SittingMpsAsync(ct);
         var takenOver = (await politicians.TakenOverAsync(sitting.Select(m => m.SeimasPersonId).ToList(), ct)).Count;
+        var memberCounts = await members.CountAsync(AnalyticsRules.RecentMembersSince(countedAt), ct);
+        var organisationCount = await organisations.ActiveCountAsync(ct);
         if (term is null)
         {
             return new AnalyticsResponse(
                 "", [], null, olderAccounts, AnalyticsRules.SmallSample, countedAt,
-                new AnalyticsFiguresResponse(0, 0, 0, 0, 0, null, takenOver, sitting.Count), new AnalyticsBillQuery(), 0, 0, [], []);
+                new AnalyticsFiguresResponse(0, 0, 0, 0, 0, null, takenOver, sitting.Count, memberCounts.Members, memberCounts.JoinedSince, organisationCount), new AnalyticsBillQuery(), 0, 0, [], []);
         }
 
         var today = VilniusTime.Today(clock);
@@ -232,7 +236,7 @@ internal sealed class AnalyticsReads(
         var shownYear = year is { } y && years.Contains(y) ? year : null;
         var (from, to) = AnalyticsRules.Period(term.From, term.To, today, shownYear);
 
-        // The four figures (design 8.26.1): the bills discussed in the period and their counts as their pages show them.
+        // The bills' figures (design 8.26.1): the bills discussed in the period and their counts as their pages show them.
         var discussed = await parliament.BillsDiscussedAsync(from, to, ct);
         var states = (await appeals.BillStatesAsync(discussed, ct)).Values.Where(s => s.Status != BillRecordStatuses.Rejected).ToList();
         var takenPart = states.Count(s => Sample(s.Counts, olderAccounts) > 0);
@@ -303,7 +307,8 @@ internal sealed class AnalyticsReads(
             AnalyticsRules.SmallSample,
             countedAt,
             new AnalyticsFiguresResponse(
-                takenPart, discussed.Count, positions, agreed, comparedCount, AnalyticsRules.ShareFromSample(agreed, comparedCount), takenOver, sitting.Count),
+                takenPart, discussed.Count, positions, agreed, comparedCount, AnalyticsRules.ShareFromSample(agreed, comparedCount), takenOver, sitting.Count,
+                memberCounts.Members, memberCounts.JoinedSince, organisationCount),
             new AnalyticsBillQuery(Limit: AnalyticsBillQuery.MaxLimit),
             bills.Count,
             bills.Count,

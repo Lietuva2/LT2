@@ -1003,7 +1003,7 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   for the summary job (compose passes `Ai__Provider` and the key to both). Pre-screening of users' texts stays
   rule-based. Tests never call the real API.
 **Analytics (design 8.26, owner 2026-11-16).** "Statistika", `/statistika` (`MenuSections.Statistics`; owner 2026-11-17: in the main menu, no tab row) (`Components/Analytics/AnalyticsPage`), public and
-server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the four figures, the
+server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the six figures (the members' from `IMemberCounts` in Identity, the organisations' from `IOrganisations.ActiveCountAsync`), the
 Seimas's share "for" beside the members' frozen counts on closed bills, faction unity (`FactionUnityRule` in Parliament).
 The closed bills are one dot plot (`#compare-plot`: rows `li.dotplot__row#bill-{nr}`, a label column with the
 number and the title cut by CSS, a per-row SVG track on one shared axis) and "Rodyti lentelę" (`#compare-table`, rows `row-{nr}`,

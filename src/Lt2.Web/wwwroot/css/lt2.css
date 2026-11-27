@@ -640,7 +640,7 @@ body > .page { width: 100%; }
 
 /* Analytics (design 8.26): the four figures, the dot plot, the faction and agreement bars. SVG drawn on the server or in
    the island, coloured here (the content security policy allows no inline styles). */
-.analytics-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: var(--sp-5); }
+.analytics-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--sp-5); }
 /* The dot plot of the closed bills (owner, 2026-11-19): one row per bill, a label column on the left (the number, the
    title under it cut with an ellipsis to the column, at most 38 % of the plot and 12rem) and the bill's track on the same
    row to the right. A track is an SVG laid over its cell, so the row is as tall as the label's two lines and the grid

@@ -219,6 +219,9 @@ public interface IOrganisations
     /// <summary><c>/organizacijos</c>: active organisations in the order of the alphabet, with a search by name.</summary>
     Task<OrganisationListPage> ListAsync(string? search, CancellationToken cancellationToken);
 
+    /// <summary>The statistics page (design 8.26.1): how many active organisations there are, the ones <c>/organizacijos</c> lists.</summary>
+    Task<int> ActiveCountAsync(CancellationToken cancellationToken);
+
     /// <summary>The public profile; <c>organisation.not-found</c> for an unknown slug.</summary>
     Task<Result<OrganisationProfile>> ProfileAsync(string slug, CancellationToken cancellationToken);
 
