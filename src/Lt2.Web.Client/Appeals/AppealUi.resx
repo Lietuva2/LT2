@@ -222,6 +222,10 @@
 <data name="Hidden.RestoreAppeal.Sentence.open" xml:space="preserve"><value>Dalyvavimas dėl projekto vėl bus atviras: pozicijos, argumentai ir „Man svarbu“ žymos grįš tokie, kokie buvo.</value></data>
 <data name="Hidden.RestoreAppeal.Sentence.closed" xml:space="preserve"><value>Projektas vėl bus rodomas uždarytas, su užfiksuotais skaičiais ir argumentais, kaip buvo.</value></data>
 <data name="Hidden.RestoreReason.Sentence" xml:space="preserve"><value>Argumentas vėl bus rodomas. „Man svarbu“ žymos, ištrintos paslepiant, negrįš.</value></data>
+<data name="Seating.Stale" xml:space="preserve"><value>Seimo salės schema ({0}) nesutampa su Seimo narių sąrašu, todėl balsavimų schemose kai kurie Seimo nariai sėdi ne savo vietose. Perkelkite vėlesnę Seimo paskelbtą schemą.</value></data>
+<data name="Seating.NotOnPlan" xml:space="preserve"><value>Schemoje nėra:</value></data>
+<data name="Seating.NoLongerSitting" xml:space="preserve"><value>Schemoje dar yra:</value></data>
+<data name="Seating.Source" xml:space="preserve"><value>Seimo narių vietos posėdžių salėje (lrs.lt)</value></data>
 <data name="Mod.Refused" xml:space="preserve"><value>Moderuoti galima tik prisijungus darbuotojo prieigos raktu, kai moderatoriaus vaidmuo aktyvintas.</value></data>
 <data name="Mod.Appeals" xml:space="preserve"><value>Projektai</value></data>
 <data name="Mod.Reasons" xml:space="preserve"><value>Argumentai</value></data>

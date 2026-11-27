@@ -78,6 +78,10 @@ sections say how each is built; what is still open is in [12-open.md](12-open.md
 - The scheduled Seimas import stays one recurring job with its freshness rules; beside it, manual jobs an administrator
   starts on the jobs dashboard, never on a schedule, force the MPs, the sittings, the votes or everything (MPs before
   votes); the scheduled job triggered when not due says so in the log and on its dashboard page (7.2, 2026-11-18).
+- The seat map shows the MPs' real seats, copied by hand once from the Seimas's seating plan (a PDF without text) and
+  again when a new plan is published; votes the plan does not cover keep the factions together (7.3, 2026-11-27: "lets
+  try this out"). The refresh is a browser-agent skill plus a note on the moderators' page when the plan and the
+  sitting MPs differ, not a server import (2026-11-27).
 - A bill's number and title are one link in an MP's list of bills and in the follow list, as on a member's page
   (2026-11-17).
 - The bills registered or changed in TAIS are imported periodically from `p2b.tais_docs`, the latest data in a readable

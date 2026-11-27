@@ -162,6 +162,7 @@ tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open da
 .claude/skills/<name>/SKILL.md browser-agent skills that drive staff pages in the moderator's Chrome: seimas-agenda (enters
                            the agenda, design 8.4), seimas-project-description (fills a bill's description form, unsaved)
                            and seimas-describe-queue (saves descriptions for the "Be aprašymo" tab as an AI agent, 8.13);
+                           seimas-seating reads the Seimas's seating plan PDF and rewrites SeatingPlan.cs on a branch (7.3);
                            they name element ids and labels, so a change to those pages corrects them in the same change
 tools/standin_overlay.py    writes every file of Recent/ (fixed seeds; --check compares and names stray files), from
                            invented_seimas.py (the MPs, group-line ballots), demo_closed_bills.py, standin_agenda.py

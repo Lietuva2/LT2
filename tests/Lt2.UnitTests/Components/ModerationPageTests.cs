@@ -29,6 +29,9 @@ public sealed class ModerationPageTests : BunitContext
         Moderation.On("GetQueueAsync", ApiResult<ModerationQueueResponse>.Ok(new([], [], 0, 0)));
         Moderation.On("GetUndescribedAsync", ApiResult<UndescribedBillsResponse>.Ok(new([], 7)));
         Services.AddSingleton(moderation);
+        var parliament = DispatchProxy.Create<Lt2.Api.Contracts.Parliament.IParliamentApi, ApiFake>();
+        ((ApiFake)(object)parliament).On("GetMpsAsync", ApiResult<Lt2.Api.Contracts.Parliament.MpListResponse>.Ok(new([], 0, null)));
+        Services.AddSingleton(parliament);
         AddAuthorization().SetAuthorized("moderatore@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));

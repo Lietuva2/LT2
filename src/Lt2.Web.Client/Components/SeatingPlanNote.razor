@@ -1,0 +1,59 @@
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Web.Client.Appeals
+@inject IParliamentApi ParliamentApi
+@inject IStringLocalizer<AppealUi> L
+
+@* Design 7.3, 8.3: on the moderators' page, a note when the hand-copied seating plan (SeatingPlan) and the Seimas's list of
+   sitting MPs differ, naming who is missing or gone and linking the Seimas's page with the plan. Nothing while they agree,
+   or while the list cannot be read. *@
+@if (_notOnPlan.Count + _gone.Count > 0)
+{
+    <div class="note stack stack--tight" id="seating-plan-note">
+        <p>@L["Seating.Stale", SeatingPlan.Date]</p>
+        @if (_notOnPlan.Count > 0)
+        {
+            <p class="small" id="seating-plan-missing">@L["Seating.NotOnPlan"] @string.Join(", ", _notOnPlan)</p>
+        }
+        @if (_gone.Count > 0)
+        {
+            <p class="small" id="seating-plan-gone">@L["Seating.NoLongerSitting"] @string.Join(", ", _gone)</p>
+        }
+        <p class="small"><a href="@SeatingPlan.Source" target="_blank" rel="external noopener">@L["Seating.Source"]</a></p>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<string> _notOnPlan = [];
+    private IReadOnlyList<string> _gone = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var all = new List<MpListItem>();
+        string? cursor = null;
+        for (var page = 0; page < 20; page++)
+        {
+            var result = await ParliamentApi.GetMpsAsync(cursor: cursor);
+            if (!result.IsSuccess || result.Value is null)
+            {
+                return;
+            }
+
+            all.AddRange(result.Value.Items);
+            cursor = result.Value.NextCursor;
+            if (cursor is null)
+            {
+                break;
+            }
+        }
+
+        if (!all.Any(m => m.Sitting))
+        {
+            return;
+        }
+
+        var (notOnPlan, gone) = SeatingPlan.Differences(all.Where(m => m.Sitting).Select(m => m.Slug));
+        var names = all.DistinctBy(m => m.Slug).ToDictionary(m => m.Slug, m => $"{m.FirstName} {m.LastName}");
+        _notOnPlan = notOnPlan.Select(s => names[s]).ToList();
+        _gone = gone.Select(s => names.GetValueOrDefault(s, s)).ToList();
+    }
+}

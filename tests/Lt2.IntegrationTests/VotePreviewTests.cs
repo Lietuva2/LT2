@@ -124,7 +124,7 @@ public sealed partial class VotePreviewTests(DatabaseFixture database) : ApiTest
         preview.Label.ShouldBe("Seimo balsavimas · " + formats.Stage(BillStages.Consideration) + " · 2026-11-20");
         preview.Legend.Select(c => (c.Code, c.Count)).ShouldBe(
             [(BallotChoices.For, 81), (BallotChoices.Against, 40), (BallotChoices.Abstain, 10), (BallotChoices.DidNotVote, 10)]);
-        preview.Choices.Count.ShouldBe(141);
+        preview.Seats.Count.ShouldBe(141);
         preview.Path.ShouldBe($"/img/votes/42/{preview.Version}.png");
         preview.Alt(text).ShouldBe("Seimo salės schema, kurioje kiekvieno Seimo nario vieta nuspalvinta pagal balsą: už 81, prieš 40, susilaikė 10, nebalsavo 10.");
 
