@@ -1,4 +1,5 @@
 @using Lt2.Api.Contracts.Agenda
+@inject Lt2.Web.Services.Islands Islands
 
 @* One stage vote of the last seven days in a timeline: the front page's "Balsuota" (design 8.7) and the agenda page's
    recently voted (8.11.1). The vote's main column (VotedItemMain: the title leads to the vote's page, the number to the
@@ -11,7 +12,7 @@
     <VotedItemMain VoteId="Vote.VoteId" Number="@Vote.Number" Title="@Vote.Title" PlainTitle="@Vote.PlainTitle" Stage="@Vote.Stage" OfficialNote="@Vote.OfficialNote">
         @if (Member)
         {
-            <MyAgendaMark @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
+            <MyAgendaMark @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" @rendermode="Islands.Mode" />
         }
     </VotedItemMain>
     <div class="tl-item__side">
@@ -20,7 +21,7 @@
         {
             @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's agenda is up to a minute
                old); the votes' rows offer no sides (design 8.7). *@
-            <MyAgendaSide @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" Record="nobodyYet" Voted="true" @rendermode="InteractiveWebAssembly" />
+            <MyAgendaSide @key="Place" Number="@Vote.Number" Numbers="Numbers" Place="@Place" Record="nobodyYet" Voted="true" @rendermode="Islands.Mode" />
         }
         else if (Vote.Record is { Status: not BillRecordStatuses.Rejected } record)
         {

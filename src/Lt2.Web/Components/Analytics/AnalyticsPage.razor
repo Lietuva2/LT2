@@ -4,6 +4,7 @@
 @using Lt2.Api.Contracts.Analytics
 @using Lt2.Api.Contracts.Meta
 @using Lt2.Web.Client.Analytics
+@inject Lt2.Web.Services.Islands Islands
 @inject IStringLocalizer<Lt2.Web.Components.PageText> P
 @inject IAnalyticsApi Api
 @inject IMetaApi Meta
@@ -27,7 +28,10 @@
 
 <div class="stack">
     <h1>@T["Title"]</h1>
-    <NeedsScript />
+    @if (Islands.On)
+    {
+        <NeedsScript />
+    }
     <p class="lead">@T["Lead"]</p>
     <form class="filters" method="get" action="@AnalyticsList.Path" id="analytics-filters">
         <div class="field">
@@ -411,7 +415,7 @@
 <section class="sheet stack" aria-labelledby="h-mine" id="my-agreement">
     <div class="row list-head"><h2 id="h-mine">@T["Mine.Title"]</h2></div>
     <p class="small">@T["Mine.Lead"]</p>
-    <MyAgreement @rendermode="InteractiveWebAssembly" />
+    <MyAgreement @rendermode="Islands.Mode" />
 </section>
 
 <SourceLine UpdatedAt="@_updatedAt" />

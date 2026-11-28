@@ -93,17 +93,31 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
     }
 
     [Fact]
-    public async Task For_a_visitor_nothing_in_an_island_can_be_used_before_it_has_started()
+    public async Task For_a_visitor_public_pages_load_no_WebAssembly_and_nothing_in_an_island_can_be_used_before_it_has_started()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
         await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT" });
-        // The front page has no island for a visitor (design 8.7: no sign-in form there), so it is checked for a member.
-        foreach (var path in new[] { "/prisijungti", "/seimas/XVP-0412", "/seimas/XVP-0533", "/p/jonas-petraitis", "/o/pavyzdine-mokesciu-aiskumo-asociacija", "/statistika", "/paskyra/el-pastas/grazinti#nebandomas" })
+        // Owner, 2026-11-28: public pages serve a visitor their islands as plain HTML (VisitorIslandTests), so only the pages
+        // that are islands themselves are checked for a visitor; the public pages are checked for a member.
+        foreach (var path in new[] { "/prisijungti", "/paskyra/el-pastas/grazinti#nebandomas" })
         {
             await NothingUsableBeforeStartAsync(context, path);
         }
+
+        // ... and a visitor's browser never asks for the WebAssembly runtime on a public page.
+        var page = await context.NewPageAsync();
+        var requested = new List<string>();
+        page.Request += (_, request) => { if (WebAssemblyFiles().IsMatch(request.Url)) requested.Add(request.Url); };
+        foreach (var path in new[] { "/", "/projektai", "/darbotvarke", "/seimas/XVP-0412", "/seimas/XVP-0533", "/p/jonas-petraitis", "/o/pavyzdine-mokesciu-aiskumo-asociacija", "/statistika" })
+        {
+            await page.GotoAsync(Base + path);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            requested.ShouldBeEmpty($"{path}: a visitor's browser loads no WebAssembly");
+        }
+
+        await page.CloseAsync();
     }
 
     [Fact]

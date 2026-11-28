@@ -40,7 +40,8 @@ The product is a client application over a full API, in Blazor. The options weig
 
 **Blazor Web App on .NET 10 with per-page render modes.** Most visitors arrive from social networks on a phone and only
 read, so MP profiles and bill pages are static server-rendered HTML with proper Open Graph tags and no WebAssembly
-download. Everything a signed-in person does (taking a side, writing a reason, settings, moderation, administration) is an
+download: a page's islands reach a visitor as the plain HTML they show a visitor (a link to sign in, how to report, the
+texts), and start only in a signed-in session. Everything a signed-in person does (taking a side, writing a reason, settings, moderation, administration) is an
 Interactive WebAssembly component that talks only to `/api/v1`. Until such an island has started, everything in it is
 disabled (fields, choices and buttons alike): what was typed would be emptied when the island takes over, and a form sent
 natively would reload the page. Without JavaScript the island never starts, and the page says so in one note. An

@@ -3,6 +3,7 @@
 @using Lt2.Api.Contracts.Me
 @using Lt2.Web.Client.Appeals
 @using Lt2.Web.Client.Organisations
+@inject Lt2.Web.Services.Islands Islands
 @inject IStringLocalizer<PageText> T
 @inject IStringLocalizer<AppealUi> U
 @inject Formats F
@@ -73,12 +74,12 @@
         }
         @if (Member && Item.Title is not null)
         {
-            <MyAgendaMark @key="Place" Number="@Item.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
+            <MyAgendaMark @key="Place" Number="@Item.Number" Numbers="Numbers" Place="@Place" @rendermode="Islands.Mode" />
         }
     </div>
     @if (Member && Item.Record is { Status: BillRecordStatuses.Open } open)
     {
-        <MyAgendaSide @key="Place" Number="@Item.Number" Numbers="Numbers" Place="@Place" Record="open" @rendermode="InteractiveWebAssembly" />
+        <MyAgendaSide @key="Place" Number="@Item.Number" Numbers="Numbers" Place="@Place" Record="open" @rendermode="Islands.Mode" />
     }
     else
     {

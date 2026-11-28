@@ -113,7 +113,8 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
                 .ShouldContain(LithuanianCounts.Pick(sitting, $"iš {sitting} Seimo nario", $"iš {sitting} Seimo narių", $"iš {sitting} Seimo narių"));
             html.ShouldContain("Tai nėra reprezentatyvi apklausa");
             html.ShouldContain("id=\"analytics-counted-at\"");
-            html.ShouldContain("id=\"needs-script\"");
+            // A visitor gets no islands, so no note that they need JavaScript (VisitorIslandTests).
+            html.ShouldNotContain("id=\"needs-script\"");
 
             // A record the moderators hid is left out (design 8.12.3: its page shows no taking part).
             var record = await moderator.Browser.RecordAsync(Bill);

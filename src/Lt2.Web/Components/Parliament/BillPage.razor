@@ -5,6 +5,7 @@
 @using Lt2.Api.Contracts.Meta
 @using Lt2.Web.Client.Appeals
 @using Lt2.Web.Client.Organisations
+@inject Lt2.Web.Services.Islands Islands
 @inject IParliamentApi Api
 @inject IMetaApi Meta
 @inject IAppealsApi Appeals
@@ -65,7 +66,10 @@
                     }
                 </p>
             }
-            <Lt2.Web.Client.Components.NeedsScript />
+            @if (Islands.On)
+            {
+                <Lt2.Web.Client.Components.NeedsScript />
+            }
             @* Owner, 2026-11-17: one compact line under the title: the stage tags, then "Sekti" and "Sekėjai: n" (design 8.11.2:
                how many follow, apart from the sides' figures, kept current by the button). *@
             <div class="row follow-line">
@@ -87,7 +91,7 @@
                         <span class="tag" id="appeal-status">@A["Status.closed"]</span>
                     }
                 </p>
-                <FollowButton Kind="@FollowButton.Bill" Key="@b.Number" Followers="_followers" @rendermode="InteractiveWebAssembly" />
+                <FollowButton Kind="@FollowButton.Bill" Key="@b.Number" Followers="_followers" @rendermode="Islands.Mode" />
             </div>
         </div>
 
@@ -143,14 +147,14 @@
                             </p>
                             @if (a.Id is { } describedRecord)
                             {
-                                <ReportDescription RecordId="describedRecord" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                                <ReportDescription RecordId="describedRecord" Contact="@Contact" @rendermode="Islands.Mode" />
                             }
                         }
                         else
                         {
                             <p id="no-description">@A["What.None"]</p>
                             @* Design 8.13.2 (owner, 2026-11-27): any bill without a description, open or finished. *@
-                            <Lt2.Web.Client.Appeals.DescriptionAsk Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                            <Lt2.Web.Client.Appeals.DescriptionAsk Number="@b.Number" @rendermode="Islands.Mode" />
                             @if (b.ESeimasUrl is { } link)
                             {
                                 <p class="fine"><Lt2.Web.Client.Components.OfficialLink Href="@link">@A["What.ESeimas"]</Lt2.Web.Client.Components.OfficialLink></p>
@@ -169,7 +173,7 @@
                             <div class="view-switch stack">
                                 <div class="views views--wide" id="sides-switch" role="radiogroup" aria-label="@A["Sides.Switch"]">
                                     <input type="radio" class="visually-hidden" name="sides-view" id="view-public" checked />
-                                    <label for="view-public">@A["Sides.View.Public"] · <SideScore Number="@b.Number" Counts="a.Counts" @rendermode="InteractiveWebAssembly" /></label>
+                                    <label for="view-public">@A["Sides.View.Public"] · <SideScore Number="@b.Number" Counts="a.Counts" @rendermode="Islands.Mode" /></label>
                                     <input type="radio" class="visually-hidden" name="sides-view" id="view-seimas" />
                                     <label for="view-seimas">@A["Sides.View.Seimas"]@SeimasScore(seimas)</label>
                                 </div>
@@ -207,15 +211,15 @@
                    everyone), then organisations' statements (8.14.14; never counted), each only when there is something to show, then
                    the members' arguments, always (they hold "Parašyti argumentą"). *@
                 @* Design 8.11.8: what is new since the reader's last visit, on the ground above the texts; empty in the served HTML. *@
-                <WhatsNew Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                <WhatsNew Number="@b.Number" @rendermode="Islands.Mode" />
                 <BillResponses Number="@b.Number" Moderator="_moderator" Linked="_linked" />
-                <OrganisationPositions Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" @rendermode="InteractiveWebAssembly" />
-                <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" LinkedReason="_linkedReason" @rendermode="InteractiveWebAssembly" />
+                <OrganisationPositions Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" @rendermode="Islands.Mode" />
+                <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" LinkedReason="_linkedReason" @rendermode="Islands.Mode" />
             }
             else if (_record is null)
             {
                 @* A finished bill nobody took part in shows the bill only, and the MPs' responses written while it was open. *@
-                <WhatsNew Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                <WhatsNew Number="@b.Number" @rendermode="Islands.Mode" />
                 <BillResponses Number="@b.Number" Linked="_linked" />
             }
 
@@ -229,7 +233,7 @@
             {
                 @* Owner, 2026-11-26: a finished bill nobody took part in can be described too (it is on the start page's
                    votes); the panel offers only "Rašyti aprašymą", and saving it gives the bill a closed record. *@
-                <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
+                <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="Islands.Mode" />
             }
 
             <section class="sheet stack" aria-labelledby="h-votes">
@@ -256,8 +260,8 @@
 
                     @if (_moderator)
                     {
-                        <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
-                        <StatementModerationPanel Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                        <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="Islands.Mode" />
+                        <StatementModerationPanel Number="@b.Number" @rendermode="Islands.Mode" />
                     }
 
                     <section class="sheet stack stack--tight" aria-labelledby="h-digests" id="digests">
@@ -398,10 +402,10 @@
                stands between the counts and the surge note. *@
             <SideFigures Number="@b.Number" Status="@a.Status" Counts="a.Counts" Surge="a.Surge"
                          Frozen="@(a.Status == BillRecordStatuses.Closed && a.ClosedAt is { } closedAt ? A.Format(a.ClosingVoteId is null ? "Closed.Frozen.Ended" : "Closed.Frozen", F.Date(closedAt)) : null)"
-                         @rendermode="InteractiveWebAssembly" />
+                         @rendermode="Islands.Mode" />
             @if (a.Status == BillRecordStatuses.Open)
             {
-                <SidePicker Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                <SidePicker Number="@b.Number" @rendermode="Islands.Mode" />
             }
             @* Owner, 2026-11-18: "not a representative poll" right under the counts and the side buttons, in the
                same sheet on every width (it stood at the side column's end, which on a phone is the page's end). *@
@@ -414,7 +418,7 @@
                     <Lt2.Web.Client.Components.Hint Id="threshold-what" Icon="true" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#threshold" />
                 </div>
                 <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" Status="@a.Status" NextDay="_nextDigest" Trial="@(_sending == "off")"
-                                   LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == DigestRunStatuses.Sent)" @rendermode="InteractiveWebAssembly" />
+                                   LastDay="@LastGone?.RunDate" LastSent="@(LastGone?.Status == DigestRunStatuses.Sent)" @rendermode="Islands.Mode" />
                 @* Design 8.15: what the threshold is and what it does, in place (the hint beside the heading), with the number
                    that holds now for this bill; the rest on the methodology page. A bill's own threshold stays said here with
                    the moderator's statement (design 8.12). *@
@@ -428,7 +432,7 @@
                 }
                 @if (a.Status == BillRecordStatuses.Open)
                 {
-                    <ShareLine Number="@b.Number" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="InteractiveWebAssembly" />
+                    <ShareLine Number="@b.Number" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="Islands.Mode" />
                 }
             </div>
         </text>;
@@ -476,7 +480,7 @@
             </p>
             @if (result.Vote is { HasResult: true, IsConsensus: false })
             {
-                <Lt2.Web.Client.Parliament.SeimasSeatMap VoteId="result.Vote.Id" @rendermode="InteractiveWebAssembly" />
+                <Lt2.Web.Client.Parliament.SeimasSeatMap VoteId="result.Vote.Id" @rendermode="Islands.Mode" />
             }
         </text>;
 
@@ -557,7 +561,7 @@
             {
                 @* Design 8.4, 8.12.1 (owner, 2026-11-17): "Data neteisinga?" beside the planned stage's date it reports, for
                    participants only, and only while a date is shown. *@
-                <DateFlagForm Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+                <DateFlagForm Number="@b.Number" @rendermode="Islands.Mode" />
             }
             @if (!inAside && b.ESeimasUrl is { } documents)
             {

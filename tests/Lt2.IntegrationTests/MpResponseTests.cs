@@ -219,7 +219,8 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
 
             var part = await PartAsync(visitor, "/seimas/" + Bill);
             part.ShouldContain("Atsakė: balsuos už. Balsavo: prieš.");
-            MpResponseSteps.WithoutIslands(part).ShouldNotContain("%");
+            // Never added up into a share: the server-rendered part, as a signed-in reader gets it with its islands apart.
+            MpResponseSteps.WithoutIslands(await PartAsync(mp.Browser, "/seimas/" + Bill)).ShouldNotContain("%");
             var profile = await PartAsync(visitor, "/p/" + mp.Slug);
             profile.ShouldContain(Bill);
             profile.ShouldContain("Atsakė: balsuos už. Balsavo: prieš.");
@@ -415,16 +416,22 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
                 item.GetProperty("response").GetProperty("text").GetString().ShouldBe(Text);
             }
 
-            // The part of the bill's page is the same for a visitor, the MP's account and the office member who wrote it,
-            // apart from the islands' own content; the profile too.
-            var forVisitor = MpResponseSteps.WithoutIslands(await PartAsync(visitor, "/seimas/" + Bill));
+            // The part of the bill's page is the same for any signed-in reader, the MP's account and the office member who
+            // wrote it, apart from the islands' own content; the profile too. A visitor gets the islands as plain HTML
+            // (VisitorIslandTests), all of it free of who wrote the response.
+            var forVisitor = await PartAsync(visitor, "/seimas/" + Bill);
             forVisitor.ShouldContain(Text);
             forVisitor.ShouldContain("Seimo narys arba jo biuras");
-            MpResponseSteps.WithoutIslands(await PartAsync(mp.Browser, "/seimas/" + Bill)).ShouldBe(forVisitor);
-            MpResponseSteps.WithoutIslands(await PartAsync(member, "/seimas/" + Bill)).ShouldBe(forVisitor);
-            var profileForVisitor = MpResponseSteps.WithoutIslands(await PartAsync(visitor, "/p/" + mp.Slug));
+            using var reader = logged.NewBrowser();
+            await reader.RegisterAndSignInAsync();
+            var forReader = MpResponseSteps.WithoutIslands(await PartAsync(reader, "/seimas/" + Bill));
+            forReader.ShouldContain(Text);
+            MpResponseSteps.WithoutIslands(await PartAsync(mp.Browser, "/seimas/" + Bill)).ShouldBe(forReader);
+            MpResponseSteps.WithoutIslands(await PartAsync(member, "/seimas/" + Bill)).ShouldBe(forReader);
+            var profileForVisitor = await PartAsync(visitor, "/p/" + mp.Slug);
             profileForVisitor.ShouldContain(Text);
-            MpResponseSteps.WithoutIslands(await PartAsync(mp.Browser, "/p/" + mp.Slug)).ShouldBe(profileForVisitor);
+            var profileForReader = MpResponseSteps.WithoutIslands(await PartAsync(reader, "/p/" + mp.Slug));
+            MpResponseSteps.WithoutIslands(await PartAsync(mp.Browser, "/p/" + mp.Slug)).ShouldBe(profileForReader);
             foreach (var secret in secrets)
             {
                 json.ShouldNotContain(secret, Case.Insensitive);

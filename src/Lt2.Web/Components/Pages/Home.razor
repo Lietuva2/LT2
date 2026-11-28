@@ -4,6 +4,7 @@
 @using Lt2.Web.Client.Appeals
 @using Lt2.Web.Client.Parliament
 @using Lt2.Web.Components.Agenda
+@inject Lt2.Web.Services.Islands Islands
 @inject IStringLocalizer<PageText> T
 @inject IStringLocalizer<AppealUi> U
 @inject Lt2.Web.Services.FrontPageAgenda Agenda
@@ -26,8 +27,8 @@
     <Authorized>
         @* Design 8.28.3: the greeting ("Sveiki" as served, completed in the browser) and, for a member who has never taken a
            side, the start on the ground between the greeting and the agenda, both from the member's own answer. *@
-        <MyStart Numbers="_numbers" Sending="@_sending" @rendermode="InteractiveWebAssembly" />
-        <MyAgendaPanel Numbers="_numbers" @rendermode="InteractiveWebAssembly" />
+        <MyStart Numbers="_numbers" Sending="@_sending" @rendermode="Islands.Mode" />
+        <MyAgendaPanel Numbers="_numbers" @rendermode="Islands.Mode" />
     </Authorized>
     <NotAuthorized>
         @* Owner, 2026-11-17: the headline is what the site does (the header already names it), and under it the trial note

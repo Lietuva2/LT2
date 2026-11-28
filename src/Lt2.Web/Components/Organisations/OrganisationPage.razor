@@ -2,6 +2,7 @@
 @using Lt2.Api.Contracts.Organisations
 @using Lt2.Web.Client.Appeals
 @using Lt2.Web.Client.Organisations
+@inject Lt2.Web.Services.Islands Islands
 @inject IOrganisationsApi Organisations
 @inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> L
 @inject NavigationManager Navigation
@@ -32,7 +33,10 @@
             </ol>
             <p class="label">@L["Org.Profile.Label"]</p>
             <h1 id="organisation-name">@p.Name</h1>
-            <Lt2.Web.Client.Components.NeedsScript />
+            @if (Islands.On)
+            {
+                <Lt2.Web.Client.Components.NeedsScript />
+            }
             @* Owner, 2026-11-17: one compact line under the name, as on a bill's page: the tags, then "Sekti" an active
                organisation (design 8.14.14, stage B: an email when it makes a statement public; who follows is private, the
                organisation included) and how many follow (design 8.11.2). *@
@@ -50,7 +54,7 @@
                 </p>
                 @if (p.Status == OrganisationStatuses.Active)
                 {
-                    <FollowButton Kind="@FollowButton.Organisation" Key="@p.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
+                    <FollowButton Kind="@FollowButton.Organisation" Key="@p.Slug" Followers="p.Followers" @rendermode="Islands.Mode" />
                 }
                 else
                 {
@@ -109,7 +113,7 @@
                         @* Design 8.16: the report form is a quiet sheet, so it opens inside this sheet, not on the ground. *@
                         @if (p.Status == OrganisationStatuses.Active)
                         {
-                            <ReportOrganisation OrganisationId="p.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                            <ReportOrganisation OrganisationId="p.Id" Contact="@Contact" @rendermode="Islands.Mode" />
                         }
                     </section>
 
@@ -184,7 +188,7 @@
                 </div>
 
                 <aside class="stack">
-                    <OrganisationManage Slug="@p.Slug" Status="@p.Status" Label="p.Label" Contact="@Contact" Initial="Initial(p)" @rendermode="InteractiveWebAssembly" />
+                    <OrganisationManage Slug="@p.Slug" Status="@p.Status" Label="p.Label" Contact="@Contact" Initial="Initial(p)" @rendermode="Islands.Mode" />
                     <p class="note note--quiet">@L["Org.Section.NotCounted"]</p>
                 </aside>
             </div>
