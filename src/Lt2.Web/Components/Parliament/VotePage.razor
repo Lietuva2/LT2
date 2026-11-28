@@ -1,6 +1,7 @@
 @page "/seimas/balsavimai/{Id:long}"
 @using Lt2.Api.Contracts.Parliament
 @using Lt2.Api.Contracts.Meta
+@inject Lt2.Web.Services.Islands Islands
 @inject IParliamentApi Api
 @inject Lt2.Api.Contracts.Appeals.IAppealsApi Appeals
 @inject IMetaApi Meta
@@ -158,7 +159,7 @@
         @if (_moderator)
         {
             <aside class="stack bill-body__aside" aria-label="@F.T["Vote.Moderation"]">
-                <Lt2.Web.Client.Parliament.VoteModerationPanel VoteId="vote.Id" @rendermode="InteractiveWebAssembly" />
+                <Lt2.Web.Client.Parliament.VoteModerationPanel VoteId="vote.Id" @rendermode="Islands.Mode" />
             </aside>
         }
     </div>

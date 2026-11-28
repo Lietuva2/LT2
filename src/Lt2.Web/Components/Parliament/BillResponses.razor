@@ -2,6 +2,7 @@
 @using Lt2.Api.Contracts.Comments
 @using Lt2.Web.Client.Mps
 @using Lt2.Web.Client.Comments
+@inject Lt2.Web.Services.Islands Islands
 @inject IMpResponsesApi Responses
 @inject ICommentsApi Comments
 @inject Formats F
@@ -15,7 +16,7 @@
    account, brings the part with it. *@
 @if (_view is { Items.Count: 0, Open: true })
 {
-    <Lt2.Web.Client.Mps.MyMpResponse Number="@Number" Section="true" @rendermode="InteractiveWebAssembly" />
+    <Lt2.Web.Client.Mps.MyMpResponse Number="@Number" Section="true" @rendermode="Islands.Mode" />
 }
 else if (_view is { Items.Count: > 0 } view)
 {
@@ -38,11 +39,11 @@ else if (_view is { Items.Count: > 0 } view)
                             <CommentThread Kind="@CommentKinds.Response" TargetId="item.Response.Id" Number="@Number" Thread="thread" Count="thread.Count"
                                            Open="@(CommentPaging.Asked(CommentsShown, item.Response.Id, Linked) is not null)" Asked="@CommentPaging.Asked(CommentsShown, item.Response.Id, Linked)"
                                            Marked="@CommentPaging.Marked(item.Response.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator"
-                                           @rendermode="InteractiveWebAssembly" />
+                                           @rendermode="Islands.Mode" />
                         }
                         @if (item.Response.Status is ResponseStatuses.Published or ResponseStatuses.Withdrawn)
                         {
-                            <Lt2.Web.Client.Mps.ReportResponse ResponseId="item.Response.Id" MpSlug="@item.Mp.Slug" Contact="@Contact" Moderator="Moderator" @rendermode="InteractiveWebAssembly" />
+                            <Lt2.Web.Client.Mps.ReportResponse ResponseId="item.Response.Id" MpSlug="@item.Mp.Slug" Contact="@Contact" Moderator="Moderator" @rendermode="Islands.Mode" />
                         }
                     </MpResponseItem>
                 </li>
@@ -56,7 +57,7 @@ else if (_view is { Items.Count: > 0 } view)
         }
         @if (view.Open)
         {
-            <Lt2.Web.Client.Mps.MyMpResponse Number="@Number" @rendermode="InteractiveWebAssembly" />
+            <Lt2.Web.Client.Mps.MyMpResponse Number="@Number" @rendermode="Islands.Mode" />
         }
     </section>
 }
@@ -66,7 +67,7 @@ else if (_view is { Items.Count: > 0 } view)
     /// Design 8.11.8: "Nauja" beside a response the reader has not seen, and its place under "Rodyti tik naujus", from the
     /// browser only (an island), so this part stays the same for everyone.
     /// </summary>
-    private RenderFragment Mark(Guid id) => @<Lt2.Web.Client.Appeals.NewMark Number="@Number" Id="id" MarksOut="true" @rendermode="InteractiveWebAssembly" />;
+    private RenderFragment Mark(Guid id) => @<Lt2.Web.Client.Appeals.NewMark Number="@Number" Id="id" MarksOut="true" @rendermode="Islands.Mode" />;
 
     private BillMpResponsesResponse? _view;
     private int _shown;

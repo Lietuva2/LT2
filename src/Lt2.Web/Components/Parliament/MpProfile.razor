@@ -1,6 +1,7 @@
 @page "/p/{Slug}"
 @using Lt2.Api.Contracts.Parliament
 @using Lt2.Api.Contracts.Meta
+@inject Lt2.Web.Services.Islands Islands
 @inject IParliamentApi Api
 @inject IMetaApi Meta
 @inject Formats F
@@ -37,7 +38,10 @@
                 @* Design 8.5.2: the one public trace of a take-over; a profile nobody took over says nothing about joining. *@
                 <p class="small" id="managed-by">@F.T["Mp.ManagedBy"] <span class="num">@F.T.Format("Mp.ManagedSince", Display.Day(since))</span></p>
             }
-            <Lt2.Web.Client.Components.NeedsScript />
+            @if (Islands.On)
+            {
+                <Lt2.Web.Client.Components.NeedsScript />
+            }
             @* The MP's faction and committee links (design 7.3), then "Sekti" and the follower count (design 8.11.2). *@
             <div class="row follow-line">
                 @if (p.Memberships.Where(m => m.Current && m.Body.Kind is BodyKinds.Faction or BodyKinds.Committee).ToList() is { Count: > 0 } tags)
@@ -49,7 +53,7 @@
                         }
                     </p>
                 }
-                <Lt2.Web.Client.Appeals.FollowButton Kind="@Lt2.Web.Client.Appeals.FollowButton.Mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
+                <Lt2.Web.Client.Appeals.FollowButton Kind="@Lt2.Web.Client.Appeals.FollowButton.Mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="Islands.Mode" />
             </div>
         </div>
 

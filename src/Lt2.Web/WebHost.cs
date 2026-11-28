@@ -83,6 +83,7 @@ internal static class WebHost
             .AddAuthenticationStateSerialization();
         services.AddCascadingAuthenticationState();
         services.AddHttpContextAccessor();
+        services.AddScoped<Islands>();
         services.AddScoped<IAuthApi, ServerAuthApi>();
         services.AddScoped<IMeApi, ServerMeApi>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpApi, ServerMpApi>();

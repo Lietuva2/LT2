@@ -3,6 +3,7 @@
 @using Lt2.Api.Contracts.Agenda
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Web.Client.Appeals
+@inject Lt2.Web.Services.Islands Islands
 @inject IStringLocalizer<Lt2.Web.Components.PageText> P
 @inject IAppealsApi Appeals
 @inject IStringLocalizer<AppealText> T
@@ -48,7 +49,7 @@
             <label class="check small"><input type="checkbox" id="planned-only" name="planuojami" value="taip" checked="@Planned" /><span>@T["List.Planned"]</span></label>
         }
         @* "Tik mano": a member's own bills instead of the list (design 8.12.5); an island, so nothing of any member is in this page. *@
-        <MineOnlyBox @rendermode="InteractiveWebAssembly" />
+        <MineOnlyBox @rendermode="Islands.Mode" />
         <div class="row">
             <button class="btn" type="submit">@T["List.SearchButton"]</button>
             @if (Filtered)
@@ -83,7 +84,7 @@
 }
 
 @* "Mano projektai" while "Tik mano" is ticked; the list below and its order line are then hidden by CSS (lt2.css). *@
-<MineBills @rendermode="InteractiveWebAssembly" />
+<MineBills @rendermode="Islands.Mode" />
 
 @if (_page is { } page)
 {

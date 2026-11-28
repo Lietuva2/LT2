@@ -2,6 +2,11 @@
 
 Read before changing a page, a component or an island. The rules behind it are design 8.15 (explanatory text), 8.16 (surfaces) and 8.21 (navigation).
 
+- **A visitor gets no WebAssembly (owner, 2026-11-28).** On a server-rendered public page an island is placed with
+  `@rendermode="Islands.Mode"` (`@inject Lt2.Web.Services.Islands Islands`), never a literal `InteractiveWebAssembly`: in a
+  signed-in session it runs in WebAssembly, for a visitor it is the same component rendered as plain HTML, so what it shows
+  a visitor (a sign-in link, how to report, the texts, a plain "Rodyti daugiau" link) must work without it. Such a page's
+  `<NeedsScript />` stands under `@if (Islands.On)`. `VisitorIslandTests` (integration) checks the public pages.
 - **Island controls stay disabled until the island is interactive** (`InteractiveBase<TText>.Locked`, or `!RendererInfo.IsInteractive`),
   fields included, and the page carries `<NeedsScript />`; a button that only shows a popover ("⋯", a hint's trigger) works
   without script and stays enabled. `tests/Lt2.E2E/IslandsBeforeStartTests.cs` walks the pages with the
