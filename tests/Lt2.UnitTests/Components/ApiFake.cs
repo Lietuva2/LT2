@@ -58,6 +58,7 @@ public static class CommentFakes
         var c = (ApiFake)(object)comments;
         var m = (ApiFake)(object)moderation;
         c.On("GetThreadAsync", ApiResult<Lt2.Api.Contracts.Comments.CommentThreadResponse>.Ok(new("reason", Guid.Empty, "XVP-0412", 0, true, true, [])));
+        c.On("GetThreadsAsync", ApiResult<IReadOnlyList<Lt2.Api.Contracts.Comments.CommentThreadResponse>>.Ok([]));
         c.On("GetMineAsync", ApiResult<Lt2.Api.Contracts.Comments.MyCommentsResponse>.Ok(new(false, false, false, [], [], [], [], 0, new Dictionary<Guid, int>())));
         m.On("GetOnBillAsync", ApiResult<IReadOnlyList<Lt2.Api.Contracts.Comments.QueueCommentResponse>>.Ok([]));
         Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton(services, comments);

@@ -91,7 +91,7 @@ public sealed class WhatsNewTests : BunitContext
         reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{Second}", $"reason-{Third}"]));
         reasons.Find($"#discussion-{Second:N}").HasAttribute("open").ShouldBeTrue("its discussion holds a new comment");
         reasons.Find($"#discussion-{Third:N}").HasAttribute("open").ShouldBeFalse();
-        _comments.Calls.ShouldContain("GetThreadAsync");
+        _comments.Calls.ShouldContain("GetThreadsAsync", "the new arguments' discussions are read, all in one request");
 
         toggle.Find("#only-new").Change(false);
 

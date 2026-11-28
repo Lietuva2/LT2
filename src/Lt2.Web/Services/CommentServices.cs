@@ -27,12 +27,26 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
         }
 
         var t = result.Value!;
-        var names = await MpNamesAsync(t.Items.Select(i => i.Author.SeimasPersonId), ct);
-        return new CommentThreadResponse(
-            t.Kind, t.TargetId, t.BillNumber, t.Count, t.Open, t.BillOpen, t.Items.Select(i => Map(i, names)).ToList(),
-            t.Cards.Select(c => new AuthorCardResponse(c.ProfileId, c.Name, c.About)).ToList(),
-            t.NextCursor);
+        return Map(t, await MpNamesAsync(t.Items.Select(i => i.Author.SeimasPersonId), ct));
     }
+
+    /// <summary>The first page of several targets' threads (design 8.23.11), the MPs' names read once for all of them.</summary>
+    public async Task<Result<IReadOnlyList<CommentThreadResponse>>> ThreadsAsync(string kind, IReadOnlyList<Guid> targetIds, CancellationToken ct)
+    {
+        if (targetIds.Count > CommentLimits.ThreadsAtOnce)
+        {
+            return Error.Validation("comment.too-many-targets", "id");
+        }
+
+        var threads = await comments.ThreadsAsync(kind, targetIds, ct);
+        var names = await MpNamesAsync(threads.SelectMany(t => t.Items).Select(i => i.Author.SeimasPersonId), ct);
+        return threads.Select(t => Map(t, names)).ToList();
+    }
+
+    private static CommentThreadResponse Map(CommentThread t, IReadOnlyDictionary<long, MpFacts> names) => new(
+        t.Kind, t.TargetId, t.BillNumber, t.Count, t.Open, t.BillOpen, t.Items.Select(i => Map(i, names)).ToList(),
+        t.Cards.Select(c => new AuthorCardResponse(c.ProfileId, c.Name, c.About)).ToList(),
+        t.NextCursor);
 
     public async Task<Result<CommentPlaceResponse>> PlaceAsync(Guid commentId, CancellationToken ct)
     {
@@ -153,6 +167,9 @@ internal sealed class ServerCommentsApi(CommentReads reads, IComments comments, 
 {
     public async Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? limit = null, string? cursor = null, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.ThreadAsync(kind, targetId, limit, cursor, cancellationToken), r => r);
+
+    public async Task<ApiResult<IReadOnlyList<CommentThreadResponse>>> GetThreadsAsync(string kind, IReadOnlyList<Guid> targetIds, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.ThreadsAsync(kind, targetIds, cancellationToken), r => r);
 
     public async Task<ApiResult<CommentPlaceResponse>> GetPlaceAsync(Guid commentId, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.PlaceAsync(commentId, cancellationToken), r => r);

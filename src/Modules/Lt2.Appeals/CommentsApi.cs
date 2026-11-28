@@ -114,6 +114,12 @@ public interface IComments
     Task<Result<CommentThread>> ThreadAsync(string kind, Guid targetId, string? cursor, int? limit, CancellationToken cancellationToken);
 
     /// <summary>
+    /// The first page of each of several targets' threads (as <see cref="ThreadAsync"/> with no cursor and no limit), in the
+    /// order asked: a bill's page reads all its shown arguments' threads in one call. A target that is not shown is left out.
+    /// </summary>
+    Task<IReadOnlyList<CommentThread>> ThreadsAsync(string kind, IReadOnlyCollection<Guid> targetIds, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Where a shown comment stands, for a link to it (design 8.23.6): its target, its bill and its place among the target's
     /// shown comments, oldest first (1-based). <c>comment.not-found</c> for a hidden, deleted, merged-away or unknown comment and
     /// for one whose target or bill's record is not shown: the same answer, so nothing tells a hidden comment from none.

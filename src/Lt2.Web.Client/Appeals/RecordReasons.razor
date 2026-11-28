@@ -602,21 +602,12 @@
     /// </summary>
     private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync(IEnumerable<Guid>? only = null)
     {
-        var threads = new Dictionary<Guid, CommentThreadResponse>();
         if (Record is not { Status: BillRecordStatuses.Open or BillRecordStatuses.Closed })
         {
-            return threads;
+            return [];
         }
 
-        foreach (var id in only ?? AllShownReasons.Select(r => r.Id))
-        {
-            if ((await CommentsApi.GetThreadAsync(CommentKinds.Reason, id, AskedFor(id))).Value is { } thread)
-            {
-                threads[id] = thread;
-            }
-        }
-
-        return threads;
+        return await CommentThreads.ReadAsync(CommentsApi, CommentKinds.Reason, only ?? AllShownReasons.Select(r => r.Id), AskedFor);
     }
 
     /// <summary>

@@ -185,6 +185,21 @@ internal sealed class AppealReads(
                 .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
 
     /// <summary>
+    /// The counted "Man svarbu" marks of every published argument on one record (<see cref="AppealRules.MarkCounts"/>: a mark
+    /// counts while the argument's side is its giver's current side), as <see cref="EndorsementCountsAsync"/> counts them, in
+    /// one query that reads only this record's marks and positions (by their keys), never the whole table of positions.
+    /// </summary>
+    public static async Task<Dictionary<Guid, int>> CountedMarksOnRecordAsync(AppealsDb db, Guid recordId, CancellationToken ct) =>
+        await (from e in db.Endorsements.AsNoTracking()
+               join r in db.Reasons.AsNoTracking() on e.ReasonId equals r.Id
+               join p in db.Positions.AsNoTracking() on new { e.RecordId, e.UserId } equals new { p.RecordId, p.UserId }
+               where e.RecordId == recordId && p.RecordId == recordId && r.RecordId == recordId
+                     && r.Status == ReasonStatuses.Published && p.Side == r.Side
+               group e by e.ReasonId into g
+               select new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
+
+    /// <summary>
     /// Every "Man svarbu" of the given arguments, counted or not: any mark is a reaction to the words (design 8.2, editing
     /// until someone reacts), whether or not it counts.
     /// </summary>

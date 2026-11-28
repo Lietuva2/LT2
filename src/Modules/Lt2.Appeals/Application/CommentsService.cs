@@ -65,6 +65,111 @@ internal sealed class CommentsService(
             CommentRules.NextCursor(offset, taken.Count, count));
     }
 
+    public async Task<IReadOnlyList<CommentThread>> ThreadsAsync(string kind, IReadOnlyCollection<Guid> targetIds, CancellationToken cancellationToken)
+    {
+        var ids = targetIds.Distinct().ToList();
+        if (!CommentKinds.All.Contains(kind) || ids.Count == 0)
+        {
+            return [];
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var targets = await TargetsAsync(db, kind, ids, cancellationToken);
+
+        // Each bill is checked once, however many of its targets are asked for (a bill page asks for all its shown arguments).
+        var onBills = new Dictionary<string, BillForStatements?>(StringComparer.Ordinal);
+        foreach (var number in targets.Values.Select(t => t.BillNumber).Distinct(StringComparer.Ordinal))
+        {
+            onBills[number] = await bills.BillAsync(db, number, cancellationToken);
+        }
+
+        var shownIds = ids.Where(id => targets.TryGetValue(id, out var t)
+                && onBills[t.BillNumber] is { } b && CommentRules.IsShown(CommentStatuses.Published, t.Shown, b.Hidden))
+            .ToList();
+        if (shownIds.Count == 0)
+        {
+            return [];
+        }
+
+        var counts = await CommentCascade.CountsAsync(db, kind, shownIds, cancellationToken);
+        var on = await SwitchAsync(kind, cancellationToken);
+        var limit = CommentRules.Limit(null, 0);
+
+        // The first pages: the threads that fit on one (most) in one query; a longer one by itself, its first page only.
+        var whole = shownIds.Where(id => counts.GetValueOrDefault(id) is > 0 and var n && n <= limit).ToList();
+        var rows = whole.Count == 0
+            ? []
+            : await db.Comments.AsNoTracking()
+                .Where(c => c.TargetKind == kind && whole.Contains(c.TargetId) && c.Status == CommentStatuses.Published)
+                .ToListAsync(cancellationToken);
+        foreach (var id in shownIds.Where(id => counts.GetValueOrDefault(id) > limit))
+        {
+            rows.AddRange(await db.Comments.AsNoTracking()
+                .Where(c => c.TargetKind == kind && c.TargetId == id && c.Status == CommentStatuses.Published)
+                .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
+                .Take(limit)
+                .ToListAsync(cancellationToken));
+        }
+
+        // Every page's agreements, names and profiles in one pass; each thread then takes its own, in the thread's order
+        // (oldest first, then by id, as the database orders them).
+        var (views, profiles, people) = await ViewDetailsAsync(db, rows, cancellationToken);
+        var byTarget = rows.ToLookup(c => c.TargetId);
+        var threads = new List<CommentThread>(shownIds.Count);
+        foreach (var id in shownIds)
+        {
+            var target = targets[id];
+            var bill = onBills[target.BillNumber]!;
+            var count = counts.GetValueOrDefault(id);
+            var taken = byTarget[id].OrderBy(c => c.CreatedAt).ThenBy(c => c.Id.ToString("D"), StringComparer.Ordinal).ToList();
+            var cards = taken.SelectMany(c => people[c.Id]).Distinct()
+                .Select(profiles.GetValueOrDefault).OfType<PublicProfileFacts>()
+                .DistinctBy(p => p.ProfileId)
+                .OrderBy(p => p.ProfileId, StringComparer.Ordinal)
+                .Select(p => new AuthorCard(p.ProfileId, p.DisplayName, p.About))
+                .ToList();
+            threads.Add(new CommentThread(
+                kind, id, bill.Bill.Number, count, bill.Open && on && target.Writable, bill.Open && target.Writable,
+                taken.Select(c => views[c.Id]).ToList(), cards, CommentRules.NextCursor(0, taken.Count, count)));
+        }
+
+        return threads;
+    }
+
+    /// <summary>
+    /// <see cref="TargetAsync"/> for several targets of one kind: the arguments with their records in one query; a statement or
+    /// a response one at a time. An unknown target is missing.
+    /// </summary>
+    private static async Task<Dictionary<Guid, TargetState>> TargetsAsync(AppealsDb db, string kind, IReadOnlyCollection<Guid> ids, CancellationToken ct)
+    {
+        if (kind == CommentKinds.Reason)
+        {
+            var rows = await (from r in db.Reasons.AsNoTracking()
+                              join a in db.BillRecords.AsNoTracking() on r.RecordId equals a.Id
+                              where ids.Contains(r.Id)
+                              select new { r.Id, r.Status, r.Text, r.AuthorUserId, a.BillNumber, RecordStatus = a.Status })
+                .ToListAsync(ct);
+            return rows.ToDictionary(
+                r => r.Id,
+                r =>
+                {
+                    var shown = r.Status == ReasonStatuses.Published && r.RecordStatus is BillRecordStatuses.Open or BillRecordStatuses.Closed;
+                    return new TargetState(r.BillNumber, shown, shown, null, null, r.Text, r.AuthorUserId);
+                });
+        }
+
+        var found = new Dictionary<Guid, TargetState>();
+        foreach (var id in ids)
+        {
+            if (await TargetAsync(db, kind, id, ct) is { } target)
+            {
+                found[id] = target;
+            }
+        }
+
+        return found;
+    }
+
     public async Task<Result<CommentPlace>> PlaceAsync(Guid commentId, CancellationToken cancellationToken)
     {
         var notFound = Error.NotFound("comment.not-found");
@@ -790,6 +895,18 @@ internal sealed class CommentsService(
     /// </summary>
     private async Task<(IReadOnlyList<CommentView> Views, IReadOnlyList<AuthorCard> Cards)> ViewsAsync(AppealsDb db, IReadOnlyList<Comment> rows, CancellationToken ct)
     {
+        var (views, profiles, _) = await ViewDetailsAsync(db, rows, ct);
+        var cards = profiles.Values.OrderBy(p => p.ProfileId, StringComparer.Ordinal).Select(p => new AuthorCard(p.ProfileId, p.DisplayName, p.About)).ToList();
+        return (rows.Select(c => views[c.Id]).ToList(), cards);
+    }
+
+    /// <summary>
+    /// What <see cref="ViewsAsync"/> builds, kept apart for several threads at once: each comment's view, the public profiles
+    /// among the names, and the people each comment names (its author in their own voice, and who agreed).
+    /// </summary>
+    private async Task<(Dictionary<Guid, CommentView> Views, IReadOnlyDictionary<Guid, PublicProfileFacts> Profiles, ILookup<Guid, Guid> People)> ViewDetailsAsync(
+        AppealsDb db, IReadOnlyList<Comment> rows, CancellationToken ct)
+    {
         var ids = rows.Select(c => c.Id).ToList();
         var agreements = ids.Count == 0
             ? []
@@ -799,15 +916,18 @@ internal sealed class CommentsService(
         var people = rows.Where(c => c.SpeaksAs == CommentVoices.Person && c.AuthorUserId is not null).Select(c => c.AuthorUserId!.Value).Concat(agreements.Select(a => a.UserId)).Distinct().ToList();
         var profiles = await reads.ProfilesAsync(people, ct);
         var byComment = agreements.ToLookup(a => a.CommentId);
-        var views = rows.Select(c => new CommentView(
+        var views = rows.ToDictionary(c => c.Id, c => new CommentView(
                 c.Id,
                 c.SpeaksAs == CommentVoices.Person && c.AuthorUserId is { } a ? authors[c.Id] with { ProfileId = profiles.GetValueOrDefault(a)?.ProfileId } : authors[c.Id],
                 c.Text,
                 c.CreatedAt,
-                byComment[c.Id].Select(x => new CommentAgreer(names.GetValueOrDefault(x.UserId), profiles.GetValueOrDefault(x.UserId)?.ProfileId)).ToList()))
-            .ToList();
-        var cards = profiles.Values.OrderBy(p => p.ProfileId, StringComparer.Ordinal).Select(p => new AuthorCard(p.ProfileId, p.DisplayName, p.About)).ToList();
-        return (views, cards);
+                byComment[c.Id].Select(x => new CommentAgreer(names.GetValueOrDefault(x.UserId), profiles.GetValueOrDefault(x.UserId)?.ProfileId)).ToList()));
+        var named = rows
+            .SelectMany(c => (c.SpeaksAs == CommentVoices.Person && c.AuthorUserId is { } author ? [author] : Array.Empty<Guid>())
+                .Concat(byComment[c.Id].Select(x => x.UserId))
+                .Select(user => (c.Id, user)))
+            .ToLookup(x => x.Id, x => x.user);
+        return (views, profiles, named);
     }
 
     /// <summary>The name each comment is shown under (design 8.23.2): never the person behind an organisation's or an MP's comment.</summary>

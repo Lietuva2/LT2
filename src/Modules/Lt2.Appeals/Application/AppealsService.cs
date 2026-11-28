@@ -1010,9 +1010,11 @@ internal sealed class AppealsService(
         var counts = (await reads.ShownCountsAsync(db, [record], ct))[record.Id];
 
         // Owner, 2026-11-19: the answer carries each side's first page only (two, design 8.12.1) and how many each side has; the
-        // rest is read a page at a time (ReasonsAsync), so a bill with many arguments is not sent whole.
-        var forPage = await ReasonPageAsync(db, record.Id, Sides.For, 0, ReasonPages.First, ct);
-        var againstPage = await ReasonPageAsync(db, record.Id, Sides.Against, 0, ReasonPages.First, ct);
+        // rest is read a page at a time (ReasonsAsync), so a bill with many arguments is not sent whole. Both sides come from
+        // one list of the record's arguments and one count of its marks.
+        var order = await ReasonOrderAsync(db, record.Id, side: null, ct);
+        var forPage = await ReasonPageAsync(db, order, Sides.For, 0, ReasonPages.First, ct);
+        var againstPage = await ReasonPageAsync(db, order, Sides.Against, 0, ReasonPages.First, ct);
 
         // Design 8.13.1, "Off the site" (owner, 2026-11-26): while a report about the description is open, the link preview
         // carries neither the description nor the readable title. Only that there is one, never what or by whom.
@@ -1059,7 +1061,7 @@ internal sealed class AppealsService(
             return Error.NotFound("record.not-found");
         }
 
-        return await ReasonPageAsync(db, record.Id, side, ReasonPages.Offset(cursor), ReasonPages.Limit(limit), cancellationToken);
+        return await ReasonPageAsync(db, await ReasonOrderAsync(db, record.Id, side, cancellationToken), side, ReasonPages.Offset(cursor), ReasonPages.Limit(limit), cancellationToken);
     }
 
     public async Task<Result<ReasonOnBill>> ReasonAsync(Guid reasonId, CancellationToken cancellationToken)
@@ -1081,32 +1083,56 @@ internal sealed class AppealsService(
     }
 
     /// <summary>
-    /// One page of a side's published arguments, ordered in the database (owner, 2026-11-19): the counted "Man svarbu" marks
-    /// (as <see cref="AppealReads.EndorsementCountsAsync"/> counts them: the giver's current side is the argument's), most
-    /// first, then the oldest first, then by id, so pages follow on without a gap while nothing changes.
+    /// The order of a record's published arguments (owner, 2026-11-19), of one side or of both: the counted "Man svarbu" marks
+    /// (<see cref="AppealReads.CountedMarksOnRecordAsync"/>: the giver's current side is the argument's), most first, then the
+    /// oldest first, then by id (ordinal, as PostgreSQL orders a uuid), so pages follow on without a gap while nothing
+    /// changes. Two queries however many arguments and marks the record has: the arguments' ids and times, and the marks
+    /// counted once for all of them (a bill page used to count them again for every page it read).
     /// </summary>
-    private async Task<ReasonPage> ReasonPageAsync(AppealsDb db, Guid recordId, string side, int offset, int limit, CancellationToken ct)
+    private static async Task<ReasonOrder> ReasonOrderAsync(AppealsDb db, Guid recordId, string? side, CancellationToken ct)
     {
-        var shown = db.Reasons.AsNoTracking().Where(r => r.RecordId == recordId && r.Status == ReasonStatuses.Published && r.Side == side);
-        var total = await shown.CountAsync(ct);
-        List<Reason> page = total <= offset
-            ? []
-            : await shown
-                .OrderByDescending(r => (from e in db.Endorsements
-                                         join p in db.Positions on new { e.RecordId, e.UserId } equals new { p.RecordId, p.UserId }
-                                         where e.ReasonId == r.Id && p.Side == r.Side
-                                         select e).Count())
-                .ThenBy(r => r.CreatedAt)
-                .ThenBy(r => r.Id)
-                .Skip(offset)
-                .Take(limit)
-                .ToListAsync(ct);
-        var (items, cards) = await ReasonInfosAsync(db, page, ct);
+        var shown = db.Reasons.AsNoTracking().Where(r => r.RecordId == recordId && r.Status == ReasonStatuses.Published);
+        if (side is not null)
+        {
+            shown = shown.Where(r => r.Side == side);
+        }
+
+        var rows = await shown.Select(r => new ReasonOrderRow(r.Id, r.Side, r.CreatedAt)).ToListAsync(ct);
+        var marks = rows.Count == 0 ? [] : await AppealReads.CountedMarksOnRecordAsync(db, recordId, ct);
+        var ordered = rows
+            .OrderByDescending(r => marks.GetValueOrDefault(r.Id))
+            .ThenBy(r => r.CreatedAt)
+            .ThenBy(r => r.Id.ToString("D"), StringComparer.Ordinal)
+            .ToList();
+        return new ReasonOrder(ordered, marks);
+    }
+
+    /// <summary>One page of a side's published arguments in <paramref name="order"/>; only the page's own rows are read in full.</summary>
+    private async Task<ReasonPage> ReasonPageAsync(AppealsDb db, ReasonOrder order, string side, int offset, int limit, CancellationToken ct)
+    {
+        var ofSide = order.Rows.Where(r => r.Side == side).ToList();
+        var total = ofSide.Count;
+        var ids = ofSide.Skip(offset).Take(limit).Select(r => r.Id).ToList();
+        List<Reason> page = [];
+        if (ids.Count > 0)
+        {
+            var found = await db.Reasons.AsNoTracking().Where(r => ids.Contains(r.Id)).ToDictionaryAsync(r => r.Id, ct);
+            page = ids.Where(found.ContainsKey).Select(id => found[id]).ToList();
+        }
+
+        var (items, cards) = await ReasonInfosAsync(db, page, ct, order.Marks);
         return new ReasonPage(side, items, total, ReasonPages.NextCursor(offset, page.Count, total), cards);
     }
 
+    private sealed record ReasonOrderRow(Guid Id, string Side, DateTimeOffset CreatedAt);
+
+    /// <summary>A record's published arguments in their order, and their counted marks.</summary>
+    private sealed record ReasonOrder(IReadOnlyList<ReasonOrderRow> Rows, IReadOnlyDictionary<Guid, int> Marks);
+
     /// <summary>The arguments as the public answers show them, in the given order, with their marks, comments, names and cards.</summary>
-    private async Task<(IReadOnlyList<ReasonInfo> Items, IReadOnlyList<AuthorCard> Cards)> ReasonInfosAsync(AppealsDb db, List<Reason> reasons, CancellationToken ct)
+    /// <param name="marks">The counted marks, when the caller has already counted them for the record.</param>
+    private async Task<(IReadOnlyList<ReasonInfo> Items, IReadOnlyList<AuthorCard> Cards)> ReasonInfosAsync(
+        AppealsDb db, List<Reason> reasons, CancellationToken ct, IReadOnlyDictionary<Guid, int>? marks = null)
     {
         if (reasons.Count == 0)
         {
@@ -1114,7 +1140,7 @@ internal sealed class AppealsService(
         }
 
         var ids = reasons.Select(r => r.Id).ToList();
-        var endorsements = await AppealReads.EndorsementCountsAsync(db, ids, ct);
+        var endorsements = marks ?? await AppealReads.EndorsementCountsAsync(db, ids, ct);
         var names = await reads.NamesAsync(reasons.Select(r => r.AuthorUserId), ct);
         var profiles = await reads.ProfilesAsync(reasons.Select(r => r.AuthorUserId), ct);
         var comments = await CommentCascade.CountsAsync(db, CommentKinds.Reason, ids, ct);

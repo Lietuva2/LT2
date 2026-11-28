@@ -1,5 +1,4 @@
 using Lt2.Api.Contracts.Digests;
-using Lt2.Appeals;
 using Lt2.Notifications;
 using Lt2.Web.Services;
 
@@ -19,6 +18,6 @@ internal static class GetRecordDigestsEndpoint
             .Produces<IReadOnlyList<RecordDigestResponse>>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-    private static async Task<IResult> HandleAsync(HttpContext http, string number, IAppealsModule appeals, IDigests digests, ErrorMapper errors, CancellationToken ct) =>
-        PublicJson.From(http, errors, await DigestMapping.ForRecordAsync(appeals, digests, number, ct), maxAgeSeconds: 0);
+    private static async Task<IResult> HandleAsync(HttpContext http, string number, RecordOfRequest records, IDigests digests, ErrorMapper errors, CancellationToken ct) =>
+        PublicJson.From(http, errors, await DigestMapping.ForRecordAsync(records, digests, number, ct), maxAgeSeconds: 0);
 }
