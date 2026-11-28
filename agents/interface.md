@@ -174,7 +174,8 @@ opens on server-rendered pages and in an island before it starts; an island neve
 loaded on every page, gives a disclosure the person opened before the island started the same state once the island
 has replaced the markup; it remembers for the page being read only and forgets when the path changes, and `js/lt2-return.js`
 keeps the reader's place on Back and Forward while enhanced navigation patches the page in, in memory only; owner,
-2026-11-17); the summary
+2026-11-17; `js/lt2-navigation.js` shows `#nav-progress` while an enhanced navigation waits and, on a link to another path,
+undoes blazor.web.js's scroll to the top at the press and goes to the top once the page is patched in, design 8.21); the summary
 names what opens ("Kaip tai veikia"; a bare "Plačiau" only when it is the only one on the screen).
 **New screens follow the rule from the start** (design 8.15).
 
