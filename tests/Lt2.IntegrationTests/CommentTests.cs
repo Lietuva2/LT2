@@ -246,6 +246,70 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
+    public async Task Several_threads_come_in_one_request_each_as_its_own_first_page_and_targets_not_shown_are_left_out()
+    {
+        var moderator = await ModeratorAsync();
+        var bill = await Factory.PrepareCommentedBillAsync(Database, moderator.Browser, Bill);
+        var (writer, _) = await Factory.MemberAsync("Rašanti Narė");
+        var (agreer, _) = await Factory.MemberAsync("Sutinkanti Narė");
+        using var visitor = NewBrowser();
+        try
+        {
+            // A thread longer than its first page (ten) and one that fits on it, with a "Sutinku" on each.
+            using var wrote = await writer.WriteReasonAsync(Bill, "against", "Reikia ilgesnio pereinamojo laikotarpio smulkiam verslui.");
+            wrote.StatusCode.ShouldBe(HttpStatusCode.Created, await wrote.Content.ReadAsStringAsync());
+            var second = await wrote.ReadAsync<ReasonCreatedResponse>();
+            using (var seen = await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.PublishReason, second.Id), new ModerationRequest()))
+            {
+                seen.StatusCode.ShouldBe(HttpStatusCode.NoContent, await seen.Content.ReadAsStringAsync());
+            }
+
+            var first = await writer.CommentOkAsync("reason", bill.ReasonId, "Komentaras numeris 1.");
+            for (var i = 2; i <= 11; i++)
+            {
+                await writer.CommentOkAsync("reason", bill.ReasonId, $"Komentaras numeris {i}.");
+            }
+
+            var onSecond = await writer.CommentOkAsync("reason", second.Id, "Vienintelis komentaras.");
+            (await agreer.AgreeAsync(first)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await agreer.AgreeAsync(onSecond)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+            // In the order asked, an unknown target and a statement asked as an argument left out.
+            var unknown = Guid.CreateVersion7();
+            var threads = await visitor.GetJsonAsync<List<CommentThreadResponse>>(
+                CommentRoutes.ThreadsOf("reason", [second.Id, unknown, bill.StatementId, bill.ReasonId]));
+            threads.Select(t => t.TargetId).ShouldBe([second.Id, bill.ReasonId]);
+
+            // Each exactly as its own first page: the same fields, items, names, cards and cursor.
+            foreach (var target in new[] { second.Id, bill.ReasonId })
+            {
+                var alone = await visitor.ThreadAsync("reason", target);
+                JsonSerializer.Serialize(threads.Single(t => t.TargetId == target), JsonSerializerOptions.Web)
+                    .ShouldBe(JsonSerializer.Serialize(alone, JsonSerializerOptions.Web), target.ToString());
+            }
+
+            var longer = threads.Single(t => t.TargetId == bill.ReasonId);
+            (longer.Count, longer.Items.Count, longer.NextCursor is null).ShouldBe((11, CommentLimits.First, false));
+            longer.Items[0].AgreedBy.Select(a => a.Name).ShouldBe(["Sutinkanti Narė"]);
+
+            // Once the argument is withdrawn its discussion is not shown, here as by itself; none asked, none given.
+            using (var withdrawn = await writer.SendAsync(HttpMethod.Delete, AppealRoutes.ReasonOf(second.Id)))
+            {
+                withdrawn.StatusCode.ShouldBe(HttpStatusCode.NoContent, await withdrawn.Content.ReadAsStringAsync());
+            }
+
+            (await visitor.GetJsonAsync<List<CommentThreadResponse>>(CommentRoutes.ThreadsOf("reason", [second.Id]))).ShouldBeEmpty();
+            (await visitor.GetJsonAsync<List<CommentThreadResponse>>(CommentRoutes.ThreadsOf("reason", []))).ShouldBeEmpty();
+            await (await visitor.Client.GetAsync(CommentRoutes.ThreadsOf("reason", Enumerable.Range(0, CommentLimits.ThreadsAtOnce + 1).Select(_ => Guid.CreateVersion7()))))
+                .ShouldBeProblemAsync(HttpStatusCode.BadRequest, "comment.too-many-targets");
+        }
+        finally
+        {
+            await Database.FreeBillAsync(Bill);
+        }
+    }
+
+    [Fact]
     public async Task The_author_deletes_their_own_comment_with_its_sutinku_and_nobody_deletes_or_marks_once_the_bill_is_closed()
     {
         const long vote = 99199811;

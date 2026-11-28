@@ -99,6 +99,7 @@ internal static class WebHost
         services.AddScoped<IVoteModerationApi, ServerVoteModerationApi>();
         services.AddScoped<AgendaEntryWrites>();
         services.AddScoped<IAgendaEntryApi, ServerAgendaEntryApi>();
+        services.AddScoped<RecordOfRequest>();
         services.AddScoped<IAppealsApi, ServerAppealsApi>();
         services.AddScoped<ModerationCountReads>();
         services.AddScoped<IModerationApi, ServerModerationApi>();

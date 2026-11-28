@@ -38,9 +38,9 @@ internal static class DigestMapping
     /// not found like the bill itself, and not found for a hidden record.
     /// </summary>
     public static async Task<Result<List<RecordDigestResponse>>> ForRecordAsync(
-        Lt2.Appeals.IAppealsModule appeals, IDigests digests, string number, CancellationToken ct)
+        RecordOfRequest records, IDigests digests, string number, CancellationToken ct)
     {
-        var record = await appeals.GetAsync(number, ct);
+        var record = await records.GetAsync(number, ct);
         if (!record.IsSuccess)
         {
             return record.Error!;
@@ -67,9 +67,9 @@ internal static class DigestMapping
     /// none for a bill without a record or a closed one; not found like the bill itself, and for a hidden record.
     /// </summary>
     public static async Task<Result<RecordNextDigestResponse>> NextForRecordAsync(
-        Lt2.Appeals.IAppealsModule appeals, IDigests digests, string number, CancellationToken ct)
+        RecordOfRequest records, IDigests digests, string number, CancellationToken ct)
     {
-        var record = await appeals.GetAsync(number, ct);
+        var record = await records.GetAsync(number, ct);
         if (!record.IsSuccess)
         {
             return record.Error!;
@@ -100,7 +100,7 @@ internal static class DigestMapping
 
 /// <summary>Server-side <see cref="IDigestsApi"/> for the pages; the moderators' calls need an active moderator role.</summary>
 internal sealed class ServerDigestsApi(
-    IDigests digests, IMpMailAdministration mpMail, Lt2.Appeals.IAppealsModule appeals, ISettings settings, IHttpContextAccessor accessor, ErrorMapper errors) : IDigestsApi
+    IDigests digests, IMpMailAdministration mpMail, RecordOfRequest records, ISettings settings, IHttpContextAccessor accessor, ErrorMapper errors) : IDigestsApi
 {
     public async Task<ApiResult<DigestRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default) =>
         ApiResult<DigestRulesResponse>.Ok(await RulesAsync(settings, digests, cancellationToken));
@@ -159,10 +159,10 @@ internal sealed class ServerDigestsApi(
         ApiResult<IReadOnlyList<DigestRunResponse>>.Ok((await digests.OnDateAsync(date, cancellationToken)).Select(DigestMapping.Map).ToList());
 
     public async Task<ApiResult<IReadOnlyList<RecordDigestResponse>>> GetRecordDigestsAsync(string number, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await DigestMapping.ForRecordAsync(appeals, digests, number, cancellationToken), list => (IReadOnlyList<RecordDigestResponse>)list);
+        errors.ToApiResult(await DigestMapping.ForRecordAsync(records, digests, number, cancellationToken), list => (IReadOnlyList<RecordDigestResponse>)list);
 
     public async Task<ApiResult<RecordNextDigestResponse>> GetRecordNextDigestAsync(string number, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await DigestMapping.NextForRecordAsync(appeals, digests, number, cancellationToken), next => next);
+        errors.ToApiResult(await DigestMapping.NextForRecordAsync(records, digests, number, cancellationToken), next => next);
 
     private async Task<bool> IsModeratorAsync()
     {

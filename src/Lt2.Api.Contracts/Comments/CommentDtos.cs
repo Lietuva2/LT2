@@ -21,6 +21,13 @@ public static class CommentRoutes
     /// </summary>
     public const string Thread = ApiRoutes.Prefix + "/comments/{kind}/{targetId:guid}";
 
+    /// <summary>
+    /// <c>GET</c> (public) the first page of several targets' threads of one kind, each as <see cref="Thread"/> answers it with
+    /// no cursor and no limit, in the order asked (<c>?id=…&amp;id=…</c>, at most <see cref="CommentLimits.ThreadsAtOnce"/>);
+    /// a target that is not shown is left out. A bill's page reads all its shown arguments' threads in one request.
+    /// </summary>
+    public const string Threads = ApiRoutes.Prefix + "/comments/{kind}";
+
     /// <summary><c>DELETE</c>: whoever may delete it, while the bill is open; <c>PUT</c>: its author edits it until someone agrees.</summary>
     public const string One = ApiRoutes.Prefix + "/comments/{id:guid}";
 
@@ -62,6 +69,10 @@ public static class CommentRoutes
         return $"{ApiRoutes.Prefix}/comments/{Uri.EscapeDataString(kind)}/{targetId}" + (query.Count == 0 ? "" : "?" + string.Join("&", query));
     }
 
+    /// <summary>The address of several targets' first pages (<see cref="Threads"/>).</summary>
+    public static string ThreadsOf(string kind, IEnumerable<Guid> targetIds) =>
+        $"{ApiRoutes.Prefix}/comments/{Uri.EscapeDataString(kind)}?" + string.Join("&", targetIds.Select(id => "id=" + id.ToString()));
+
     public static string OneOf(Guid id) => $"{ApiRoutes.Prefix}/comments/{id}";
 
     public static string PlaceOf(Guid id) => OneOf(id) + "/place";
@@ -82,6 +93,9 @@ public static class CommentLimits
 
     /// <summary>The comments a thread shows first.</summary>
     public const int First = 10;
+
+    /// <summary>The most targets one request for several threads names (<see cref="CommentRoutes.Threads"/>).</summary>
+    public const int ThreadsAtOnce = 100;
 
     /// <summary>The comments "Rodyti daugiau komentarų" adds (owner, 2026-11-19: a list of texts, 20 a press).</summary>
     public const int Step = ListPaging.TextStep;
@@ -192,6 +206,12 @@ public interface ICommentsApi
     /// least 10; "Rodyti daugiau komentarų" in an island asks for the next <see cref="CommentLimits.Step"/>).
     /// </summary>
     Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? limit = null, string? cursor = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Public: the first page of each target's thread (<see cref="CommentRoutes.Threads"/>), in the order asked; targets not
+    /// shown are left out. At most <see cref="CommentLimits.ThreadsAtOnce"/> targets.
+    /// </summary>
+    Task<ApiResult<IReadOnlyList<CommentThreadResponse>>> GetThreadsAsync(string kind, IReadOnlyList<Guid> targetIds, CancellationToken cancellationToken = default);
 
     /// <summary>Public: where a shown comment stands, for the page a link to it lands on (design 8.23.6); not found otherwise.</summary>
     Task<ApiResult<CommentPlaceResponse>> GetPlaceAsync(Guid commentId, CancellationToken cancellationToken = default);

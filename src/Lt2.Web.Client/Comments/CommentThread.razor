@@ -258,6 +258,18 @@
     /// <summary>"Aptarimas (n)": the shown comments, from the thread once it is read.</summary>
     private int ShownCount => _thread?.Count ?? Count;
 
+    /// <summary>
+    /// The thread the page read, once it has one: the page may render this component before its own reads are done (a read
+    /// the request already made answers at once), and hand the thread over on its next render.
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        if (_thread is null && Thread is not null)
+        {
+            _thread = Thread;
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         _thread = Thread;

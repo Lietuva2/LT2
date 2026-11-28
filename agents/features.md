@@ -533,7 +533,9 @@ exactly the form's day, address and text), `#agenda-result` (`data-saved`, `#age
   `consent.required`; the island disables it on one's own argument from the never-cached answer and asks for the consent in
   place, `PositionConsentForm ForMark`, before a first mark; a merge drops a mark that would land on its giver's own
   argument). **A mark counts only while its giver's current side is the argument's side** (`AppealRules.MarkCounts`):
-  `AppealReads.EndorsementCountsAsync` joins `endorsement` to `reason` and `position` on read, so the figure, the order on
+  `AppealReads.EndorsementCountsAsync` joins `endorsement` to `reason` and `position` on read (the bill's page counts all
+  its published arguments' marks once, over that record only: `CountedMarksOnRecordAsync`, used by `ReasonOrderAsync`
+  for the order and the figures), so the figure, the order on
   the bill's page, `MineAsync`'s own arguments, the similar arguments, the moderators' merge candidates and the summaries'
   pool (`DigestSource.ReasonPoolAsync`, hence `ChoiceRules` and the snapshot) all use counted marks; nothing is stored, so
   taking, changing or withdrawing a side (`TakePositionAsync`, `ClearPositionAsync`) deletes no mark. Editing until someone

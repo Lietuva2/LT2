@@ -107,14 +107,9 @@ else if (_view is { Items.Count: > 0 } view)
         }
 
         // Design 8.23.6: the comments of the responses on this page only, each the first ten or as many as asked.
-        _threads = [];
-        foreach (var item in _view?.Items.Take(_shown) ?? [])
-        {
-            if (item.Response.Status is ResponseStatuses.Published or ResponseStatuses.Withdrawn
-                && (await Comments.GetThreadAsync(CommentKinds.Response, item.Response.Id, CommentPaging.Asked(CommentsShown, item.Response.Id, Linked))).Value is { } thread)
-            {
-                _threads[item.Response.Id] = thread;
-            }
-        }
+        _threads = await Lt2.Web.Client.Comments.CommentThreads.ReadAsync(
+            Comments, CommentKinds.Response,
+            (_view?.Items.Take(_shown) ?? []).Where(i => i.Response.Status is ResponseStatuses.Published or ResponseStatuses.Withdrawn).Select(i => i.Response.Id),
+            id => CommentPaging.Asked(CommentsShown, id, Linked));
     }
 }

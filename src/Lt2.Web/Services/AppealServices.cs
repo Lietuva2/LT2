@@ -122,7 +122,7 @@ internal static class AppealMapping
 /// components call the module in-process, as the signed-in person of the current request.
 /// </summary>
 internal sealed class ServerAppealsApi(
-    IAppealsModule appeals, IDescriptionAsks asks, BillListReads list, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
+    IAppealsModule appeals, RecordOfRequest record, IDescriptionAsks asks, BillListReads list, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
 {
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 
@@ -133,7 +133,7 @@ internal sealed class ServerAppealsApi(
         ApiResult<BillListResponse>.Ok(await list.ListAsync(new BillListQuery(search, planned, closed, cursor, sort, BillListLimits.Of(limit?.ToString(System.Globalization.CultureInfo.InvariantCulture))), cancellationToken));
 
     public async Task<ApiResult<BillRecordResponse>> GetRecordAsync(string number, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await appeals.GetAsync(number, cancellationToken), AppealMapping.Map);
+        errors.ToApiResult(await record.GetAsync(number, cancellationToken), AppealMapping.Map);
 
     public async Task<ApiResult<IReadOnlyList<DescriptionRevisionResponse>>> GetHistoryAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(

@@ -115,6 +115,11 @@ A host that does not set a size gets 10, never Npgsql's default of 100. Each poo
 (`lt2-web`, `lt2-worker`, `lt2-hangfire`, `lt2-migrator`) so `pg_stat_activity` shows who holds what. A burst larger
 than a pool waits for a free connection (up to Npgsql's 15-second timeout) instead of opening more.
 
+A bill's page is built from a few reads, however many arguments and marks it has: the record is read once per request
+and shared by the page, its islands and the summaries' lines (`RecordOfRequest`, never kept between requests, so the
+page stays live); the arguments' order counts the bill's marks once, over that bill's positions only; the discussions
+of a list come in one request (8.23).
+
 Static files (the WebAssembly runtime, styles, scripts, images) are answered straight after routing, before
 authentication, so a signed-in browser's start (dozens of parallel downloads) never looks up the session in the
 database. Pages and the API still check the session on every request, so an ended session stops working at once. A

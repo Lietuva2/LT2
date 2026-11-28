@@ -319,19 +319,9 @@
     private bool MayReport(StatementResponse statement) =>
         !RendererInfo.IsInteractive || (!Moderator && Mine?.Any(o => o.Statement?.Id == statement.Id) != true);
 
-    private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync()
-    {
-        var threads = new Dictionary<Guid, CommentThreadResponse>();
-        foreach (var item in Statements?.Items ?? [])
-        {
-            if ((await CommentsApi.GetThreadAsync(CommentKinds.Statement, item.Statement.Id, CommentPaging.Asked(CommentsShown, item.Statement.Id, Linked))).Value is { } thread)
-            {
-                threads[item.Statement.Id] = thread;
-            }
-        }
-
-        return threads;
-    }
+    private Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync() =>
+        Lt2.Web.Client.Comments.CommentThreads.ReadAsync(
+            CommentsApi, CommentKinds.Statement, (Statements?.Items ?? []).Select(i => i.Statement.Id), id => CommentPaging.Asked(CommentsShown, id, Linked));
 
 
     /// <summary>The setting Texts:MaxLength (0 = no limit; design 5.6, owner 2026-11-16), read when a statement is opened.</summary>
