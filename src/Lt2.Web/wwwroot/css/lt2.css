@@ -1646,3 +1646,25 @@ a.said__name { color: inherit; font-weight: 700; }
 /* An organisation's confirmed label (design 8.14.2, owner 2026-11-18): "Patvirtinta" in the chip, how it was confirmed in a
    hint; the trigger keeps the chip's colour and type, with the hint's dotted underline. */
 .org-label .hint__trigger { color: inherit; font-weight: inherit; }
+
+/* Design 8.21 (owner, 2026-11-28): while a link's page is on its way, a thin bar at the very top of the screen
+   (js/lt2-navigation.js shows it after a short wait, so a fast page shows nothing). A segment runs across it; with
+   reduced motion the bar stands still and full. */
+.nav-progress {
+  position: fixed; inset: 0 0 auto 0; block-size: 3px; z-index: 1001; pointer-events: none; overflow: hidden;
+  opacity: 0; visibility: hidden;
+}
+.nav-progress::before {
+  content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; inline-size: 100%; background: var(--action);
+}
+.nav-progress--on { opacity: 1; visibility: visible; }
+html:has(.nav-progress--on) { cursor: progress; }
+@media (prefers-reduced-motion: no-preference) {
+  .nav-progress { transition: opacity 0.2s, visibility 0s 0.2s; }
+  .nav-progress--on { transition: opacity 0.2s; }
+  .nav-progress::before { inline-size: 40%; animation: nav-progress 1.1s ease-in-out infinite; }
+}
+@keyframes nav-progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}

@@ -13,6 +13,8 @@
     <HeadOutlet />
 </head>
 <body>
+    @* Shown by js/lt2-navigation.js while an enhanced navigation waits for the next page (design 8.21). *@
+    <div class="nav-progress" id="nav-progress" aria-hidden="true"></div>
     <Routes />
     <div id="blazor-error-ui" role="alert">
         @T["Error.Ui"] <a href="" class="reload">@T["Error.Reload"]</a>
@@ -27,6 +29,7 @@
     <script src="@Assets["js/lt2-disclosures.js"]"></script>
     <script src="@Assets["js/lt2-switch.js"]"></script>
     <script src="@Assets["js/lt2-return.js"]"></script>
+    <script src="@Assets["js/lt2-navigation.js"]"></script>
     <script src="@Assets["js/lt2-hints.js"]" defer></script>
     <script src="@Assets["js/lt2-dates.js"]" defer></script>
     <script src="@Assets["js/lt2-cards.js"]" defer></script>
