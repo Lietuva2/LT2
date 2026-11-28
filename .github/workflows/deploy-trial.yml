@@ -1,0 +1,97 @@
+name: deploy-trial
+
+# Deploys a commit to the trial server (design 9.2, "Delivery"; README.md, "Deploying from GitHub"). Started only by
+# hand (Actions tab, "Run workflow"): it builds the images from a clean archive of the commit, as a developer's machine
+# would, and streams them over SSH to the server's deploy command, which does the rest. The deploy key can run only
+# that command (deploy/trial-deploy.sh, installed on the server by root).
+#
+# The "trial" environment holds the secrets and asks the owner to approve each run:
+#   TRIAL_SSH_HOST         the server's address
+#   TRIAL_SSH_KNOWN_HOSTS  its line for known_hosts (ssh-keyscan -t ed25519 <host>, checked against the server)
+#   TRIAL_SSH_KEY          the private half of the deploy key
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit to deploy
+        default: master
+        required: true
+      action:
+        description: deploy, or rollback to the version before the one that runs
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-trial
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: ${{ inputs.action }} ${{ inputs.ref }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment: trial
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: inputs.action == 'deploy'
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Build the images from a clean archive
+        if: inputs.action == 'deploy'
+        id: build
+        run: |
+          set -euo pipefail
+          commit="$(git rev-parse HEAD)"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "Deploying $commit" >> "$GITHUB_STEP_SUMMARY"
+          out="$RUNNER_TEMP/out"
+          mkdir -p "$out" "$RUNNER_TEMP/tree"
+          git archive -o "$out/lt2-app.tar.gz" "$commit"
+          tar -x -z -f "$out/lt2-app.tar.gz" -C "$RUNNER_TEMP/tree"
+          cd "$RUNNER_TEMP/tree"
+          LT2_IMAGE_TAG="$commit" docker compose -f deploy/compose.yaml --progress plain build web worker migrator seimas-standin
+          docker save "lt2/web:$commit" "lt2/worker:$commit" "lt2/migrator:$commit" "lt2/seimas-standin:$commit" \
+            | gzip -1 > "$out/lt2-images.tar.gz"
+          ls -l "$out"
+
+      - name: Set up SSH
+        env:
+          KEY: ${{ secrets.TRIAL_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.TRIAL_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/trial
+          chmod 600 ~/.ssh/trial
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Deploy on the server
+        if: inputs.action == 'deploy'
+        env:
+          HOST: ${{ secrets.TRIAL_SSH_HOST }}
+          COMMIT: ${{ steps.build.outputs.commit }}
+        run: |
+          set -euo pipefail
+          tar -c -f - -C "$RUNNER_TEMP/out" lt2-app.tar.gz lt2-images.tar.gz \
+            | ssh -i ~/.ssh/trial -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+                -o ServerAliveInterval=30 "root@$HOST" "deploy $COMMIT"
+
+      - name: Roll back on the server
+        if: inputs.action == 'rollback'
+        env:
+          HOST: ${{ secrets.TRIAL_SSH_HOST }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/trial -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "root@$HOST" rollback < /dev/null
+
+      - name: Remove the key
+        if: always()
+        run: rm -f ~/.ssh/trial

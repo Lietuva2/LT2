@@ -59,8 +59,11 @@ VPS, which also runs the owner's other sites:
   repository and on no developer's machine. Whoever changes the password replaces the owner's copy too. Its own
   hostname, not a path of the site: the viewer shows the HTML of emails and must not share the site's origin. No port
   is opened for it; the SMTP port stays on the internal network. Locally Mailpit stays without a password.
-- **Delivery.** Images are built from the deployed commit on the developer's machine, tagged with it (`LT2_IMAGE_TAG`)
-  and copied to the server over SSH; nothing is pushed to a registry or to GitHub. The migrator runs once per deploy.
+- **Delivery.** Images are built from the deployed commit, tagged with it (`LT2_IMAGE_TAG`), and copied to the server
+  over SSH; nothing is pushed to a registry. They are built either on the developer's machine or by the `deploy-trial`
+  GitHub Actions workflow, which only the owner approves (owner, 2026-11-28); its key can run nothing on the server but
+  the deploy command (`deploy/trial-deploy.sh`), which also rolls back to the version before. The migrator runs once
+  per deploy.
 - **Not built there:** the host hardening, two `web` instances, backups, telemetry and alerts (9.4), real email.
 
 **Not built.** A separate staging and production pair: staging on its own small VPS or isolated project, synthetic

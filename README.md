@@ -381,6 +381,27 @@ copied over SSH; nothing goes to a registry):
    inode), validates it with `caddy validate` and applies it with `caddy reload` (graceful; never restart that Caddy).
    Later deploys leave it alone.
 
+**Deploying from GitHub** (the trial only). The `deploy-trial` workflow (Actions tab, "Run workflow") does steps 1 to 3
+for a branch, tag or commit: it builds the images on GitHub's runner from a clean archive, as above, and streams both
+files over SSH to the server's deploy command, `deploy/trial-deploy.sh`, which loads them, swaps the app (keeping
+`app.previous` and `lt2.env.previous`), runs the migrator, restarts the services and checks `/health/ready` through the
+site; if the migrator fails, the previous version is put back and nothing restarts. The same workflow with `rollback`
+puts back the version before (the database stays as migrated). Images older than the two last commits are removed.
+
+The deploy key can run only that command. Set it up once, as root on the server, from a checkout of the commit:
+
+```sh
+install -m 755 -o root -g root deploy/trial-deploy.sh /usr/local/sbin/lt2-deploy
+ssh-keygen -t ed25519 -N '' -C lt2-deploy-github -f /root/lt2-deploy-github     # the private half goes to GitHub, then is deleted here
+printf 'command="/usr/local/sbin/lt2-deploy",restrict %s\n' "$(cat /root/lt2-deploy-github.pub)" >> /root/.ssh/authorized_keys
+```
+
+In the repository's settings, an environment `trial` with the owner as required reviewer and three secrets:
+`TRIAL_SSH_HOST` (the server's address), `TRIAL_SSH_KNOWN_HOSTS` (its `known_hosts` line, from `ssh-keyscan -t ed25519`
+checked against the server's own `/etc/ssh/ssh_host_ed25519_key.pub`) and `TRIAL_SSH_KEY` (the private key); then delete
+`/root/lt2-deploy-github`. A changed `trial-deploy.sh` in a deployed commit changes nothing on the server until root
+installs it again. To stop deploys from GitHub, remove the key's line from `authorized_keys`.
+
 Invitations and the demonstration data are made once with `run --rm migrator --seed-invitation CODE:USES` and, after
 the worker's first import from the stand-in, `run --rm --no-deps migrator --demo-appeal`. A trial on the real Seimas data
 (`LT2_SEIMAS_BASE_ADDRESS`, `LT2_OUTBOUND_EXTRA_HOST` and `LT2_AGENDA_BASE_ADDRESS` empty, `COMPOSE_PROFILES=mailpit`,

@@ -141,8 +141,8 @@ tests/Lt2.E2E              Playwright and stack checks against a running compose
 tests/Shared/TestOrder.cs  the order tests run in, from LT2_TEST_ORDER (compiled into every test project)
 tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumptions (Seimas/ASSUMPTIONS.md), import against
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
-.github/                  workflows/ci.yml (build, test, audit, e2e; locked restore), workflows/codeql.yml, dependabot.yml (design 6.7); actions pinned by commit SHA
-deploy/                    Dockerfile (restore layer first, from the csproj and packages.lock.json files, in locked mode; .dockerignore at the root), compose.yaml, Caddyfile, .env (local defaults), init-secrets.py (optional target
+.github/                  workflows/ci.yml (build, test, audit, e2e; locked restore), workflows/deploy-trial.yml (by hand: build, SSH to the trial's deploy command), workflows/codeql.yml, dependabot.yml (design 6.7); actions pinned by commit SHA
+deploy/                    Dockerfile (restore layer first, from the csproj and packages.lock.json files, in locked mode; .dockerignore at the root), compose.yaml, Caddyfile, .env (local defaults), trial-deploy.sh (the trial server's forced-command deploy and rollback), init-secrets.py (optional target
                            directory; as root on Linux gives each secret to the container user reading it), secrets/;
                            compose.shared-proxy.yaml and shared-proxy.Caddyfile: behind a server's existing Caddy, with
                            the Mailpit viewer on its own hostname behind Mailpit's password file (design 9.2,
